@@ -58,6 +58,7 @@ namespace ngraph
                 ~GPUMemoryManager();
 
                 void allocate();
+                size_t get_allocation_size() { return m_allocation_size; }
                 GPUAllocator build_allocator() { return GPUAllocator(this); }
             private:
                 GPUMemoryManager(GPUPrimitiveEmitter* emitter);
@@ -67,6 +68,7 @@ namespace ngraph
                 static constexpr const uint16_t alignment = 4;
                 void* m_argspace;
                 void* m_workspace;
+                size_t m_allocation_size;
 
                 GPUPrimitiveEmitter* m_primitive_emitter;
             };

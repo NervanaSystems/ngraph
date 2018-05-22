@@ -30,6 +30,7 @@ runtime::gpu::GPUMemoryManager::GPUMemoryManager(GPUPrimitiveEmitter* emitter)
     , m_workspace_manager(alignment)
     , m_argspace(nullptr)
     , m_workspace(nullptr)
+    , m_allocation_size(0)
     , m_primitive_emitter(emitter)
 {
 }
@@ -44,13 +45,16 @@ void runtime::gpu::GPUMemoryManager::allocate()
 {
     if (m_buffer_offset)
     {
+        m_buffer_offset = pass::MemoryManager::align(m_buffer_offset, alignment);
         m_argspace = runtime::gpu::create_gpu_buffer(m_buffer_offset);
         runtime::gpu::cuda_memcpyHtD(m_argspace, m_buffered_mem.data(), m_buffer_offset);
+        m_allocation_size += m_buffer_offset;
     }
     auto workspace_size = m_workspace_manager.max_allocated();
     if (workspace_size)
     {
         m_workspace = runtime::gpu::create_gpu_buffer(workspace_size);
+        m_allocation_size += workspace_size;
     }
 }
 
@@ -74,6 +78,10 @@ size_t runtime::gpu::GPUAllocator::reserve_argspace(const void* data, size_t siz
     // return a lambda that will yield the gpu memory address. this
     // should only be evaluated by the runtime invoked primitive
     gpu::memory_primitive mem_primitive = [=]() {
+        if (manager->m_argspace == nullptr)
+        {
+            throw std::runtime_error("An attempt was made to use unallocated device memory.");
+        }
         auto gpu_mem = static_cast<uint8_t*>(manager->m_argspace);
         return static_cast<void*>(gpu_mem + offset);
     };
@@ -90,6 +98,10 @@ size_t runtime::gpu::GPUAllocator::reserve_workspace(size_t size)
     // return a lambda that will yield the gpu memory address. this
     // should only be evaluated by the runtime invoked primitive
     gpu::memory_primitive mem_primitive = [=]() {
+        if (manager->m_workspace == nullptr)
+        {
+            throw std::runtime_error("An attempt was made to use unallocated device memory.");
+        }
         auto gpu_mem = static_cast<uint8_t*>(manager->m_workspace);
         return static_cast<void*>(gpu_mem + offset);
     };

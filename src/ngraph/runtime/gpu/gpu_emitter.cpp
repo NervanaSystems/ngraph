@@ -1477,7 +1477,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                     shape_to_pool,
                                                     padding_below,
                                                     padding_above,
-                                                    /*padding_interior*/ {},
+                                                    Shape{},
                                                     ss.str());
 
                         writer << "gpu::invoke_primitive(ctx, " << pad_index << ", ";
