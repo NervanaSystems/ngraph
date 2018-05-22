@@ -185,17 +185,17 @@ TEST(close_g, example)
     NGRAPH_INFO << val_4;
     NGRAPH_INFO << val_5;
 
-    EXPECT_FLOAT_EQ(0.f, val0);
-    EXPECT_FLOAT_EQ(0.f, val1);
-    EXPECT_FLOAT_EQ(0.f, val2);
-    EXPECT_FLOAT_EQ(0.f, val3);
-    EXPECT_FLOAT_EQ(0.f, val4);
-    EXPECT_FLOAT_EQ(0.f, val5);
+    NGRAPH_INFO << test::close_g(0.f, val0, 24);
+    NGRAPH_INFO << test::close_g(0.f, val1, 24);
+    NGRAPH_INFO << test::close_g(0.f, val2, 24);
+    NGRAPH_INFO << test::close_g(0.f, val3, 24);
+    NGRAPH_INFO << test::close_g(0.f, val4, 24);
+    NGRAPH_INFO << test::close_g(0.f, val5, 24);
 
-    EXPECT_FLOAT_EQ(0.f, val_0);
-    EXPECT_FLOAT_EQ(0.f, val_1);
-    EXPECT_FLOAT_EQ(0.f, val_2);
-    EXPECT_FLOAT_EQ(0.f, val_3);
-    EXPECT_FLOAT_EQ(0.f, val_4);
-    EXPECT_FLOAT_EQ(0.f, val_5);
+    NGRAPH_INFO << test::close_g(0.f, val_0, 24);
+    NGRAPH_INFO << test::close_g(0.f, val_1, 24);
+    NGRAPH_INFO << test::close_g(0.f, val_2, 24);
+    NGRAPH_INFO << test::close_g(0.f, val_3, 24);
+    NGRAPH_INFO << test::close_g(0.f, val_4, 24);
+    NGRAPH_INFO << test::close_g(0.f, val_5, 24);
 }
