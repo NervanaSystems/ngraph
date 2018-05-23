@@ -1509,7 +1509,6 @@ TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
     }
 }
 
-
 TEST(cpu_fusion, sigmoid_multiply_fusion)
 {
     pass::Manager pass_manager;
@@ -1933,4 +1932,3 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
                                                  expected_1);
     }
 }
-

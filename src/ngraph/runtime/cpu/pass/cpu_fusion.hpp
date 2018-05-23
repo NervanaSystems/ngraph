@@ -80,7 +80,7 @@ private:
     void construct_fprop_bn();
     void construct_sigmoid();
     void construct_sigmoid_bprop();
-	void construct_sigmoid_multiply();
+    void construct_sigmoid_multiply();
     void construct_zero_padded_reshaped_conv();
     void construct_zero_padded_conv();
     void construct_zero_padded_conv_backprop_filters();
