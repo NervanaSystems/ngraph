@@ -2481,7 +2481,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_6d)
 
 NGRAPH_TEST(${BACKEND_NAME}, sin)
 {
-    Shape shape{9};
+    Shape shape{11};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Sin>(A), op::ParameterVector{A});
 
@@ -2489,64 +2489,78 @@ NGRAPH_TEST(${BACKEND_NAME}, sin)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
-    vector<float> input{0.f, 0.5f, -0.5f, 1.f, -1.f, 3.f, -3.f, 5.f, -5.f};
+    vector<float> input{0.f, 0.25f, -0.25f, 0.5f, -0.5f, 1.f, -1.f, 2.f, -2.f, 4.f, -4.f};
     copy_data(a, input);
     auto result = backend->create_tensor(element::f32, shape);
     backend->call(f, {result}, {a});
-    EXPECT_TRUE(test::all_close_g(vector<float>{0.f,
+    EXPECT_TRUE(test::all_close_g(vector<float>{0.00000000f,
+                                                0.24740396f,
+                                                -0.24740396f,
                                                 0.47942554f,
                                                 -0.47942554f,
                                                 0.84147098f,
                                                 -0.84147098f,
-                                                0.14112001f,
-                                                -0.14112001f,
-                                                -0.95892427f,
-                                                0.95892427f},
+                                                0.90929743f,
+                                                -0.90929743f,
+                                                -0.75680250f,
+                                                0.75680250f},
                                   read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, cos)
 {
-    Shape shape{6};
+    Shape shape{11};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Cos>(A), op::ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    float pi = acosf(-1);
     auto a = backend->create_tensor(element::f32, shape);
-    vector<float> input{pi / 2, 0.0f, -0.0f, pi / 3, -pi, pi};
+    vector<float> input{0.f, 0.25f, -0.25f, 0.5f, -0.5f, 1.f, -1.f, 2.f, -2.f, 4.f, -4.f};
     copy_data(a, input);
     auto result = backend->create_tensor(element::f32, shape);
-
-    std::transform(
-        input.begin(), input.end(), input.begin(), [](float x) -> float { return cosf(x); });
-
     backend->call(f, {result}, {a});
-    EXPECT_TRUE(test::all_close_f(input, read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_g(vector<float>{1.00000000f,
+                                                0.96891242f,
+                                                0.96891242f,
+                                                0.87758256f,
+                                                0.87758256f,
+                                                0.54030231f,
+                                                0.54030231f,
+                                                -0.41614684f,
+                                                -0.41614684f,
+                                                -0.65364362f,
+                                                -0.65364362f},
+                                  read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, tan)
 {
-    Shape shape{6};
+    Shape shape{11};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Tan>(A), op::ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    float pi = acosf(-1);
     auto a = backend->create_tensor(element::f32, shape);
-    vector<float> input{pi / 4, 0.0f, -0.0f, 7 * pi / 4, 3 * pi / 4, 5 * pi / 4};
+    vector<float> input{0.f, 0.25f, -0.25f, 0.5f, -0.5f, 1.f, -1.f, 2.f, -2.f, 4.f, -4.f};
     copy_data(a, input);
     auto result = backend->create_tensor(element::f32, shape);
-
-    std::transform(
-        input.begin(), input.end(), input.begin(), [](float x) -> float { return tanf(x); });
-
     backend->call(f, {result}, {a});
-    EXPECT_TRUE(test::all_close_f(input, read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_g(vector<float>{0.00000000f,
+                                                0.25534192f,
+                                                -0.25534192f,
+                                                0.54630249f,
+                                                -0.54630249f,
+                                                1.55740772f,
+                                                -1.55740772f,
+                                                -2.18503986f,
+                                                2.18503986f,
+                                                1.15782128f,
+                                                -1.15782128f},
+                                  read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, asin)
