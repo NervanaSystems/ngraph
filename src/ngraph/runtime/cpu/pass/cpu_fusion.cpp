@@ -977,16 +977,30 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
         }
 
         using FunctionType = op::SigmoidMultiply::FunctionType;
-        auto input_0_type = op::SigmoidMultiply::identify_node_type(pattern_map[sigmoid_0]);
-        auto input_1_type = op::SigmoidMultiply::identify_node_type(pattern_map[sigmoid_1]);
-        auto input_0 = (input_0_type == FunctionType::Identity)
-                           ? pattern_map[sigmoid_0]
-                           : pattern_map[sigmoid_0]->get_argument(0);
-        auto input_1 = (input_1_type == FunctionType::Identity)
-                           ? pattern_map[sigmoid_1]
-                           : pattern_map[sigmoid_1]->get_argument(0);
-        auto sigmoid_mul_node =
-            std::make_shared<op::SigmoidMultiply>(input_0, input_1, input_0_type, input_1_type);
+        const int max_inputs{2};
+        std::array<std::shared_ptr<ngraph::Node>, max_inputs> match_nodes{pattern_map[sigmoid_0],
+                                                                          pattern_map[sigmoid_1]};
+        std::array<std::shared_ptr<ngraph::Node>, max_inputs> input_nodes;
+        std::array<FunctionType, max_inputs> input_type;
+        for (int i = 0; i < max_inputs; ++i)
+        {
+            input_type[i] = op::SigmoidMultiply::identify_node_type(match_nodes[i]);
+            if (input_type[i] != FunctionType::Identity)
+            {
+                if (match_nodes[i]->get_users().size() > 1)
+                {
+                    NGRAPH_DEBUG << "input node has multiple users, skipping fusion.";
+                    return false;
+                }
+                input_nodes[i] = match_nodes[i]->get_argument(0);
+            }
+            else
+            {
+                input_nodes[i] = match_nodes[i];
+            }
+        }
+        auto sigmoid_mul_node = std::make_shared<op::SigmoidMultiply>(
+            input_nodes[0], input_nodes[1], input_type[0], input_type[1]);
         ngraph::replace_node(m.get_match_root(), sigmoid_mul_node);
         return true;
     };
