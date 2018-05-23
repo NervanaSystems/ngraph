@@ -20,21 +20,27 @@
 
 namespace ngraph
 {
-    namespace pass
+    namespace runtime
     {
-        class CoreFusion;
+        namespace cpu
+        {
+            namespace pass
+            {
+                class ConcatInputs;
+            }
+        }
     }
 }
 
-class ngraph::pass::CoreFusion : public ngraph::pass::GraphRewrite
+class ngraph::runtime::cpu::pass::ConcatInputs : public ngraph::pass::GraphRewrite
 {
 public:
-    CoreFusion()
+    ConcatInputs()
         : GraphRewrite()
     {
-        construct_relu();
-        construct_folded_batch_norm();
+        concat_lstm_inputs();
     }
-    void construct_relu();
-    void construct_folded_batch_norm();
+
+private:
+    void concat_lstm_inputs();
 };

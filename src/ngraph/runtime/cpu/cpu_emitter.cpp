@@ -97,8 +97,10 @@
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
@@ -366,6 +368,213 @@ namespace ngraph
                 }
 
                 writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Lstm)
+            {
+                const ngraph::op::Lstm* lstm_node = static_cast<const ngraph::op::Lstm*>(node);
+                if (args.size() != 5 || !lstm_node->get_fused_inputs())
+                {
+                    throw ngraph_error(
+                        "Lstm op doesnt have the required number of inputs to emit MKLDNN kernel");
+                }
+                const int src_sequence_length_max = lstm_node->get_src_sequence_length();
+                const int direction = lstm_node->get_direction();
+                const int num_fused_layers = lstm_node->get_num_fused_layers();
+                const int lstm_cell_n_gates = lstm_node->get_gates_per_cell();
+                const int lstm_cell_n_states = lstm_node->get_num_cell_states();
+                const int feature_size = lstm_node->get_src_iter_feature_size();
+                const int batch = lstm_node->get_batch_size();
+
+                if (out[0].get_shape().size() == 2 && (out[0].get_shape()[1] != feature_size))
+                {
+                    throw ngraph_error(
+                        "input slc{ht} feature size is not equal to output dlc{ht} feature size ");
+                }
+
+                if (out[1].get_shape().size() == 2 && (out[1].get_shape()[1] != feature_size) &&
+                    lstm_node->get_num_timesteps() != 1)
+                {
+                    throw ngraph_error(
+                        "input sic{ht_1|ct_1} feature size is not equal to output dlc{ht_1|ct_1} "
+                        "feature size ");
+                }
+
+                NGRAPH_DEBUG << "slc: " << lstm_node->get_src_layer_feature_size()
+                             << " sic: " << feature_size;
+                NGRAPH_DEBUG << "batch_size: " << batch << " lstm_cell_n_states "
+                             << lstm_cell_n_states << " lstm_cell_n_gates: " << lstm_cell_n_gates
+                             << " src_sequence_length_max: " << src_sequence_length_max;
+                mkldnn::memory::dims src_layer_tz = {
+                    src_sequence_length_max, batch, lstm_node->get_src_layer_feature_size()};
+                mkldnn::memory::dims src_iter_tz = {
+                    num_fused_layers, direction, lstm_cell_n_states, batch, feature_size};
+                mkldnn::memory::dims weights_layer_tz = {num_fused_layers,
+                                                         direction,
+                                                         lstm_node->get_src_layer_feature_size(),
+                                                         lstm_cell_n_gates,
+                                                         feature_size};
+                mkldnn::memory::dims weights_iter_tz = {
+                    num_fused_layers, direction, feature_size, lstm_cell_n_gates, feature_size};
+                mkldnn::memory::dims bias_tz = {
+                    num_fused_layers, direction, lstm_cell_n_gates, feature_size};
+                mkldnn::memory::dims dst_layer_tz = {src_sequence_length_max, batch, feature_size};
+                mkldnn::memory::dims dst_iter_tz = {
+                    num_fused_layers, direction, lstm_cell_n_states, batch, feature_size};
+
+                // We create the memory descriptors used by the user
+                auto src_layer_md = mkldnn::memory::desc(
+                    {src_layer_tz}, mkldnn::memory::data_type::f32, mkldnn::memory::format::tnc);
+
+                auto src_iter_md = mkldnn::memory::desc(
+                    {src_iter_tz}, mkldnn::memory::data_type::f32, mkldnn::memory::format::ldsnc);
+
+                auto wei_layer_md = mkldnn::memory::desc({weights_layer_tz},
+                                                         mkldnn::memory::data_type::f32,
+                                                         mkldnn::memory::format::ldigo);
+
+                auto wei_iter_md = mkldnn::memory::desc({weights_iter_tz},
+                                                        mkldnn::memory::data_type::f32,
+                                                        mkldnn::memory::format::ldigo);
+
+                auto bias_md = mkldnn::memory::desc(
+                    {bias_tz}, mkldnn::memory::data_type::f32, mkldnn::memory::format::ldgo);
+
+                auto dst_layer_md = mkldnn::memory::desc(
+                    {dst_layer_tz}, mkldnn::memory::data_type::f32, mkldnn::memory::format::tnc);
+
+                auto dst_iter_md = mkldnn::memory::desc(
+                    {dst_iter_tz}, mkldnn::memory::data_type::f32, mkldnn::memory::format::ldsnc);
+
+                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto lstm_index = mkldnn_emitter->build_rnn_forward(src_layer_md,
+                                                                    src_iter_md,
+                                                                    wei_layer_md,
+                                                                    wei_iter_md,
+                                                                    bias_md,
+                                                                    dst_layer_md,
+                                                                    dst_iter_md);
+                auto& deps = mkldnn_emitter->get_primitive_deps(lstm_index);
+
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
+                       << args[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
+                       << args[1].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2]) << ", "
+                       << args[2].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3]) << ", "
+                       << args[3].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4]) << ", "
+                       << args[4].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[5]) << ", "
+                       << out[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[6]) << ", "
+                       << out[1].get_name() << ");\n";
+
+                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                       << to_string(lstm_index) << ");\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Rnn)
+            {
+                const ngraph::op::Rnn* rnn_node = static_cast<const ngraph::op::Rnn*>(node);
+
+                const int src_sequence_length_max = rnn_node->get_src_sequence_length();
+                const int direction = rnn_node->get_direction();
+                const int num_fused_layers = rnn_node->get_num_fused_layers();
+                const int rnn_cell_n_gates = rnn_node->get_gates_per_cell();
+                const int rnn_cell_n_states = rnn_node->get_num_cell_states();
+                const int feature_size = rnn_node->get_src_iter_feature_size();
+                const int batch = rnn_node->get_batch_size();
+
+                if (out[0].get_shape().size() == 2 && (out[0].get_shape()[1] != feature_size))
+                {
+                    throw ngraph_error(
+                        "input slc{ht} feature size is not equal to output dlc{ht} feature size ");
+                }
+
+                if (out[1].get_shape().size() == 2 && (out[1].get_shape()[1] != feature_size))
+                {
+                    throw ngraph_error(
+                        "input sic{ht_1|ct_1} feature size is not equal to output dlc{ht_1|ct_1} "
+                        "feature size ");
+                }
+
+                NGRAPH_DEBUG << "slc: " << rnn_node->get_src_layer_feature_size()
+                             << " sic: " << feature_size;
+                NGRAPH_DEBUG << "batch_size: " << batch << " rnn_cell_n_states "
+                             << rnn_cell_n_states << " rnn_cell_n_gates: " << rnn_cell_n_gates
+                             << " src_sequence_length_max: " << src_sequence_length_max;
+                mkldnn::memory::dims src_layer_tz = {
+                    src_sequence_length_max, batch, rnn_node->get_src_layer_feature_size()};
+                mkldnn::memory::dims src_iter_tz = {
+                    num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
+                mkldnn::memory::dims weights_layer_tz = {num_fused_layers,
+                                                         direction,
+                                                         rnn_node->get_src_layer_feature_size(),
+                                                         rnn_cell_n_gates,
+                                                         feature_size};
+                mkldnn::memory::dims weights_iter_tz = {
+                    num_fused_layers, direction, feature_size, rnn_cell_n_gates, feature_size};
+                mkldnn::memory::dims bias_tz = {
+                    num_fused_layers, direction, rnn_cell_n_gates, feature_size};
+                mkldnn::memory::dims dst_layer_tz = {src_sequence_length_max, batch, feature_size};
+                mkldnn::memory::dims dst_iter_tz = {
+                    num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
+
+                // We create the memory descriptors used by the user
+                auto src_layer_md = mkldnn::memory::desc(
+                    {src_layer_tz}, mkldnn::memory::data_type::f32, mkldnn::memory::format::tnc);
+
+                auto src_iter_md = mkldnn::memory::desc(
+                    {src_iter_tz}, mkldnn::memory::data_type::f32, mkldnn::memory::format::ldsnc);
+
+                auto wei_layer_md = mkldnn::memory::desc({weights_layer_tz},
+                                                         mkldnn::memory::data_type::f32,
+                                                         mkldnn::memory::format::ldigo);
+
+                auto wei_iter_md = mkldnn::memory::desc({weights_iter_tz},
+                                                        mkldnn::memory::data_type::f32,
+                                                        mkldnn::memory::format::ldigo);
+
+                auto bias_md = mkldnn::memory::desc(
+                    {bias_tz}, mkldnn::memory::data_type::f32, mkldnn::memory::format::ldgo);
+
+                auto dst_layer_md = mkldnn::memory::desc(
+                    {dst_layer_tz}, mkldnn::memory::data_type::f32, mkldnn::memory::format::tnc);
+
+                auto dst_iter_md = mkldnn::memory::desc(
+                    {dst_iter_tz}, mkldnn::memory::data_type::f32, mkldnn::memory::format::ldsnc);
+
+                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto rnn_index = mkldnn_emitter->build_rnn_forward(src_layer_md,
+                                                                   src_iter_md,
+                                                                   wei_layer_md,
+                                                                   wei_iter_md,
+                                                                   bias_md,
+                                                                   dst_layer_md,
+                                                                   dst_iter_md);
+                auto& deps = mkldnn_emitter->get_primitive_deps(rnn_index);
+
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
+                       << args[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
+                       << args[1].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2]) << ", "
+                       << args[2].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3]) << ", "
+                       << args[3].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4]) << ", "
+                       << args[4].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[5]) << ", "
+                       << out[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[6]) << ", "
+                       << out[1].get_name() << ");\n";
+
+                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, " << to_string(rnn_index)
+                       << ");\n";
             }
 
             void CPU_Emitter::emitBatchNorm(CPU_ExternalFunction* external_function,
