@@ -1324,7 +1324,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     if (out[0].get_size() != 0)
                     {
-                        // one of args[] axes has zero size, zero output
+                        // one of args[] axes has zero size, fill output with 1
                         if (args[0].get_size() == 0)
                         {
                             writer << "float init_value = 1;\n";
