@@ -157,7 +157,9 @@ add_subdirectory(codegen)
 add_subdirectory(runtime)
 
 add_library(ngraph SHARED ${SRC})
-add_dependencies(ngraph ext_json)
+add_definitions("-DSHARED_LIB_EXT=\"${CMAKE_SHARED_LIBRARY_SUFFIX}\"")
+add_definitions("-DLIBRARY_VERSION=\"${NGRAPH_VERSION}\"")
+set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
 target_link_libraries(ngraph PUBLIC libjson)
 
 if (NOT APPLE)
@@ -200,3 +202,17 @@ install(DIRECTORY
     DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph"
     FILES_MATCHING PATTERN "*.hpp"
 )
+
+set(CPACK_GENERATOR "DEB")
+
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A most excellent graph library")
+set(CPACK_PACKAGE_NAME "nGraph")
+set(CPACK_PACKAGE_CONTACT "Robert Kimball")
+# set(CPACK_PACKAGE_VERSION
+set(CPACK_PACKAGE_VENDOR "Intel Nervana")
+# set(CPACK_PACKAGE_DESCRIPTION_FILE "")
+
+set(CPACK_PACKAGE_VERSION_MAJOR ${NGRAPH_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${NGRAPH_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${NGRAPH_VERSION_PATCH})
+include(CPack)
