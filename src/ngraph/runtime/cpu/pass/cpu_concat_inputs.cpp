@@ -13,14 +13,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *******************************************************************************/
-#include <typeindex>
-#include <typeinfo>
+#include "cpu_concat_inputs.hpp"
 
 #include <algorithm>
 #include <iostream>
 #include <numeric>
+#include <typeindex>
+#include <typeinfo>
 #include <unordered_set>
-#include "concat_lstm_inputs.hpp"
+
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
@@ -48,7 +49,8 @@
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 
 using namespace ngraph;
-void ngraph::runtime::cpu::pass::LSTMFuseInput::construct_lstm_mkldnn()
+
+void ngraph::runtime::cpu::pass::ConcatInputs::concat_lstm_inputs()
 {
     auto ht_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
     auto weights_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});

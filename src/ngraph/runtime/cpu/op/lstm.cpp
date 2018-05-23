@@ -23,7 +23,7 @@ using namespace ngraph;
 
 shared_ptr<Node> op::Lstm::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (!m_mkldnn_flag)
+    if (!m_fused_inputs)
     {
         if (new_args.size() != 7)
         {
@@ -39,7 +39,7 @@ shared_ptr<Node> op::Lstm::copy_with_new_args(const NodeVector& new_args) const
     }
     else
     {
-        if (new_args.size() != 5 && m_mkldnn_flag)
+        if (new_args.size() != 5 && m_fused_inputs)
         {
             throw ngraph_error("Incorrect number of new arguments");
         }
@@ -73,7 +73,7 @@ op::Lstm::Lstm(std::shared_ptr<Node> input_xt_1,
     , m_num_cell_states(2)
     , m_direction(1)
     , m_num_fused_layers(1)
-    , m_mkldnn_flag(false)
+    , m_fused_inputs(false)
 {
     if (input_xt_1->get_shape().size() != i2h_weights->get_shape().size())
     {
@@ -135,7 +135,7 @@ op::Lstm::Lstm(std::shared_ptr<Node> src_layer,
     , m_num_cell_states(2)
     , m_direction(1)
     , m_num_fused_layers(1)
-    , m_mkldnn_flag(true)
+    , m_fused_inputs(true)
 {
     if (src_layer->get_shape().size() != weights_layer->get_shape().size())
     {

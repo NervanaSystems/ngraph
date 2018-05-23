@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 
 namespace ngraph
 {
@@ -26,21 +27,37 @@ namespace ngraph
         {
             namespace pass
             {
-                class LSTMFuseInput;
+                class LSTMFusion;
+                class RNNFusion;
             }
         }
     }
 }
 
-class ngraph::runtime::cpu::pass::LSTMFuseInput : public ngraph::pass::GraphRewrite
+class ngraph::runtime::cpu::pass::LSTMFusion : public ngraph::pass::GraphRewrite
 {
 public:
-    LSTMFuseInput()
+    LSTMFusion()
         : GraphRewrite()
     {
-        construct_lstm_mkldnn();
+        construct_sigmoid();
+        construct_lstm_fprop();
     }
 
 private:
-    void construct_lstm_mkldnn();
+    void construct_sigmoid();
+    void construct_lstm_fprop();
+};
+
+class ngraph::runtime::cpu::pass::RNNFusion : public ngraph::pass::RecurrentGraphRewrite
+{
+public:
+    RNNFusion()
+        : RecurrentGraphRewrite()
+    {
+        construct_rnn_lstm_fprop();
+    }
+
+private:
+    void construct_rnn_lstm_fprop();
 };

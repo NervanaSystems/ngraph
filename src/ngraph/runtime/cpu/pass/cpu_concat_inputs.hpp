@@ -26,37 +26,21 @@ namespace ngraph
         {
             namespace pass
             {
-                class LSTMFusion;
-                class RNNFusion;
+                class ConcatInputs;
             }
         }
     }
 }
 
-class ngraph::runtime::cpu::pass::LSTMFusion : public ngraph::pass::GraphRewrite
+class ngraph::runtime::cpu::pass::ConcatInputs : public ngraph::pass::GraphRewrite
 {
 public:
-    LSTMFusion()
+    ConcatInputs()
         : GraphRewrite()
     {
-        construct_sigmoid();
-        construct_lstm_fprop();
+        concat_lstm_inputs();
     }
 
 private:
-    void construct_sigmoid();
-    void construct_lstm_fprop();
-};
-
-class ngraph::runtime::cpu::pass::RNNFusion : public ngraph::pass::RecurrentGraphRewrite
-{
-public:
-    RNNFusion()
-        : RecurrentGraphRewrite()
-    {
-        construct_rnn_lstm_fprop();
-    }
-
-private:
-    void construct_rnn_lstm_fprop();
+    void concat_lstm_inputs();
 };

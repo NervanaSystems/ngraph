@@ -51,7 +51,7 @@ namespace ngraph
                 std::shared_ptr<Node> weights_layer,
                 std::shared_ptr<Node> weights_iter,
                 std::shared_ptr<Node> bias,
-                const int number_of_timesteps,
+                const int num_timesteps,
                 const int num_gates_per_cell,
                 const int src_sequence_length,
                 const int src_layer_feature_size,

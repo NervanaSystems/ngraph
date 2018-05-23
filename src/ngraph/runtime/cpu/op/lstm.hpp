@@ -78,7 +78,7 @@ namespace ngraph
             int get_num_cell_states() const { return m_num_cell_states; }
             int get_direction() const { return m_direction; }
             int get_num_fused_layers() const { return m_num_fused_layers; }
-            int get_mkldnn_flag() const { return m_mkldnn_flag; }
+            int get_fused_inputs() const { return m_fused_inputs; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -94,7 +94,7 @@ namespace ngraph
             int m_num_cell_states;
             int m_direction;
             int m_num_fused_layers;
-            bool m_mkldnn_flag;
+            bool m_fused_inputs; // True if node gets fused inputs/weights
         };
     }
 }

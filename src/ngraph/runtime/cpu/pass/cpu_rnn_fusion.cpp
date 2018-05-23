@@ -13,13 +13,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *******************************************************************************/
-#include <typeindex>
-#include <typeinfo>
 
 #include <algorithm>
 #include <iostream>
 #include <numeric>
+#include <typeindex>
+#include <typeinfo>
 #include <unordered_set>
+
+#include "cpu_rnn_fusion.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
@@ -45,7 +47,6 @@
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
-#include "rnn_fusion.hpp"
 
 using namespace ngraph;
 void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
@@ -178,7 +179,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         }
 
         // Determine which is ht_1 and xt. but if both xt and ht_1 have the same shape we need to capture this
-        // reliablily in the RNN fusion.
+        // reliably in the RNN fusion.
         std::shared_ptr<op::Lstm> lstm = nullptr;
         bool intermediate_lstm = false;
 
@@ -187,8 +188,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             intermediate_lstm = true;
         }
 
-        // this checks if its a first LSTM cell and uses constant initlization of hiddent states to
-        // differntiate between hiddent state ht and input symbols xt.
+        // this checks if its a first LSTM cell and uses constant initialization of hidden states to
+        // differentiate between hidden state ht and input symbols xt.
         if (!intermediate_lstm &&
             (std::dynamic_pointer_cast<op::Broadcast>(pattern_map[hidden_ht]) &&
              std::dynamic_pointer_cast<op::Constant>(pattern_map[hidden_ht]->get_argument(0))))
@@ -400,7 +401,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         }
         else
         {
-            // dont fuse, if the PM dint discover all the cell's belonging to RNN layer.
+            // dont fuse, if the PM didn't discover all the cells belonging to RNN layer.
             // we dont want to throw an assertion, if pattern matcher cannot discover all
             // nodes belonging to RNN, instead we will return and can compute LSTM cell wise
             return false;
