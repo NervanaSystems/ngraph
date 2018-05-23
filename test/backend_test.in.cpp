@@ -2593,7 +2593,7 @@ NGRAPH_TEST(${BACKEND_NAME}, asin)
 
 NGRAPH_TEST(${BACKEND_NAME}, acos)
 {
-    Shape shape{6};
+    Shape shape{11};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Acos>(A), op::ParameterVector{A});
 
@@ -2601,15 +2601,22 @@ NGRAPH_TEST(${BACKEND_NAME}, acos)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
-    vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
+    vector<float> input{-1.f, -0.75f, -0.5f, -0.25f, -0.125f, 0.f, 0.125f, 0.25f, 0.5f, 0.75f, 1.f};
     copy_data(a, input);
     auto result = backend->create_tensor(element::f32, shape);
-
-    std::transform(
-        input.begin(), input.end(), input.begin(), [](float x) -> float { return acosf(x); });
-
     backend->call(f, {result}, {a});
-    EXPECT_TRUE(test::all_close_f(input, read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_g(vector<float>{3.14159265f,
+                                                2.41885841f,
+                                                2.09439510f,
+                                                1.82347658f,
+                                                1.69612416f,
+                                                1.57079633f,
+                                                1.44546850f,
+                                                1.31811607f,
+                                                1.04719755f,
+                                                0.72273425f,
+                                                0.00000000f},
+                                  read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, atan)
