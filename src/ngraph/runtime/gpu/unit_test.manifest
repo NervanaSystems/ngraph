@@ -4,7 +4,6 @@ backwards_dot_tensor_vector
 backwards_replace_slice
 backwards_reverse_sequence_n4d2c3h2w2
 backwards_reverse_sequence_n3_c2_h3
-#backwards_select_nested
 backwards_slice
 backwards_softmax_3d
 backwards_softmax_all
@@ -52,7 +51,6 @@ dot_4d_5d_multi_axis_more
 dot_matrix_vector_int64
 function_call
 mkldnn_layouts
-#negative
 numeric_double_nan
 numeric_float_inf
 numeric_float_nan
