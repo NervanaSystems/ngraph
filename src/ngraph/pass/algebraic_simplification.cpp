@@ -23,12 +23,15 @@
 #include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/pattern/matcher.hpp"
@@ -280,12 +283,97 @@ static bool simplify_reduction(std::shared_ptr<Node> n)
     return true;
 }
 
+std::shared_ptr<Node> set_or_check_if_same(std::shared_ptr<Node> oldn, std::shared_ptr<Node> newn)
+{
+    if (!oldn)
+    {
+        return newn;
+    }
+    else
+    {
+        if (oldn != newn)
+        {
+            NGRAPH_DEBUG << " different data nodes";
+            return nullptr;
+        }
+        return oldn;
+    }
+}
+
+static bool is_trivial_convolution(std::shared_ptr<op::Convolution> conv)
+{
+    Strides stride_1{1, 1};
+    CoordinateDiff pad_0{0, 0};
+    return conv->get_window_dilation_strides() == stride_1 ||
+           conv->get_data_dilation_strides() == stride_1 || conv->get_padding_above() == pad_0 ||
+           conv->get_padding_below() == pad_0;
+}
+
+static bool simplify_concat(std::shared_ptr<Node> n)
+{
+    Shape win_size_1{1, 1, 1, 1};
+    auto data_label = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 4, 9});
+    auto weights_label = std::make_shared<pattern::op::Label>(element::f32, Shape{4, 2, 3});
+
+    auto slice_data = std::make_shared<op::Slice>(
+        data_label, Coordinate{0, 0, 0}, Coordinate{1, 2, 9}, Strides{1, 1, 1});
+    auto slice_weights = std::make_shared<op::Slice>(
+        weights_label, Coordinate{0, 0, 0}, Coordinate{2, 2, 3}, Strides{1, 1, 1});
+    auto conv = std::make_shared<op::Convolution>(slice_data, slice_weights);
+    auto matcher = std::make_shared<pattern::Matcher>(conv, nullptr);
+
+    NGRAPH_DEBUG << "In simplify_concat (group convolution) for " << n->get_name();
+
+    std::shared_ptr<Node> data;
+    std::shared_ptr<Node> weights;
+
+    auto concat = std::dynamic_pointer_cast<op::Concat>(n);
+
+    if (concat->get_concatenation_axis() > 2)
+    {
+        //TODO this could be relaxed when we figure out which checks
+        //we need to do on strides and window sizes
+        NGRAPH_DEBUG << "can't merge on non batch/channel axis";
+        return false;
+    }
+
+    for (auto arg : n->get_arguments())
+    {
+        if (!matcher->match(arg))
+        {
+            NGRAPH_DEBUG << arg->get_name() << " doesn't match";
+            return false;
+        }
+
+        if (!is_trivial_convolution(std::dynamic_pointer_cast<op::Convolution>(arg)))
+        {
+            NGRAPH_DEBUG << arg->get_name() << " isn't trivial convolution";
+            return false;
+        }
+
+        auto pattern_map = matcher->get_pattern_map();
+        data = set_or_check_if_same(data, pattern_map[data_label]);
+        weights = set_or_check_if_same(weights, pattern_map[weights_label]);
+
+        if (!data || !weights)
+        {
+            NGRAPH_DEBUG << "data or weights nodes are different among slices";
+            return false;
+        }
+    }
+
+    auto new_conv = std::make_shared<op::Convolution>(data, weights);
+    ngraph::replace_node(n, new_conv);
+    return true;
+}
+
 static std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>
     initialize_ops_to_simplifiers()
 {
     return std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>(
         {{TI(op::Add), simplify_add},
          {TI(op::Multiply), simplify_multiply},
+         {TI(op::Concat), simplify_concat},
          {TI(op::Sum),
           std::function<bool(std::shared_ptr<Node>)>{
               simplify_reduction<op::Sum, get_sum_constant>}},
