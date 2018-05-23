@@ -1327,7 +1327,12 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         // one of args[] axes has zero size, zero output
                         if (args[0].get_size() == 0)
                         {
-                            kernel::emit_memset(writer, out[0], 0);
+                            writer << "float init_value = 1;\n";
+                            writer << "std::vector<float> temp(" << out[0].get_size()
+                                   << ", init_value);\n";
+                            writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
+                                   << ", (void*)temp.data(), " << out[0].get_size() << " * "
+                                   << out[0].get_element_type().size() << ");\n";
                         }
                         else if (args[0].get_shape().size() == out[0].get_shape().size())
                         {

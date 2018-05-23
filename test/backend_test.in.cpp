@@ -6783,10 +6783,11 @@ NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_scalar)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((vector<float>{1.0f * 10.0f * 9.0f * 4.0f * 13.0f * 6.0f * 7.0f * 12.0f * 3.0f *
-                             2.0f * 11.0f * 8.0f * 5.0f * 14.0f * 5.0f * 8.0f * 11.0f * 2.0f *
-                             3.0f * 12.0f * 7.0f * 6.0f * 13.0f * 4.0f * 9.0f * 10.0f * 1.0f}),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(vector<float>{1.0f * 10.0f * 9.0f * 4.0f * 13.0f * 6.0f * 7.0f *
+                                              12.0f * 3.0f * 2.0f * 11.0f * 8.0f * 5.0f * 14.0f *
+                                              5.0f * 8.0f * 11.0f * 2.0f * 3.0f * 12.0f * 7.0f *
+                                              6.0f * 13.0f * 4.0f * 9.0f * 10.0f * 1.0f},
+                                read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, product_3d_eliminate_zero_dim)
