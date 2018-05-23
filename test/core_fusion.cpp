@@ -55,3 +55,39 @@ TEST(core_fusion, core_fusion_pass_basic)
     pass_manager.run_passes(func);
     ASSERT_NE(std::dynamic_pointer_cast<op::Relu>(graph->get_argument(0)), nullptr);
 }
+
+TEST(core_fusion, optimized_strided_convolution)
+{
+    Shape win_size_3{1, 1, 3, 3};
+    Shape win_size_1{1, 1, 1, 1};
+    Strides stride_2{2, 2};
+    auto data_stride3 = std::make_shared<op::Parameter>(element::f32, Shape{1, 1, 58, 58});
+    auto weights_stride3 = std::make_shared<op::Parameter>(element::f32, win_size_3);
+
+    auto conv_stride3 = std::make_shared<op::Convolution>(data_stride3, weights_stride3);
+
+    std::cout << "conv_stride3 shape is " << vector_to_string(conv_stride3->get_shape())
+              << std::endl;
+
+    auto weights_stride1 = std::make_shared<op::Parameter>(element::f32, win_size_1);
+    auto conv_stride1 = std::make_shared<op::Convolution>(conv_stride3, weights_stride1);
+    auto eltwise_arg2 = std::make_shared<op::Parameter>(element::f32, conv_stride1->get_shape());
+    auto eltwise = conv_stride1 + eltwise_arg2;
+    auto weights_eltwise1 = std::make_shared<op::Parameter>(element::f32, win_size_1);
+    auto eltwise_conv1 = std::make_shared<op::Convolution>(eltwise, weights_eltwise1, stride_2);
+
+    std::cout << "eltwise_conv1 shape is " << vector_to_string(eltwise_conv1->get_shape())
+              << std::endl;
+    auto weights_eltwise2 = std::make_shared<op::Parameter>(element::f32, win_size_1);
+    auto eltwise_conv2 = std::make_shared<op::Convolution>(eltwise, weights_eltwise2, stride_2);
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CoreFusion>();
+    auto params = op::ParameterVector{data_stride3,
+                                      weights_stride3,
+                                      weights_stride1,
+                                      eltwise_arg2,
+                                      weights_eltwise1,
+                                      weights_eltwise2};
+    auto func = make_shared<Function>(NodeVector{eltwise_conv1, eltwise_conv2}, params);
+    pass_manager.run_passes(func);
+}

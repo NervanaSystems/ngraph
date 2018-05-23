@@ -27,6 +27,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
@@ -160,5 +161,157 @@ void pass::CoreFusion::construct_folded_batch_norm()
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(bn, callback);
+    this->add_matcher(m);
+}
+
+static bool is_trivial_convolution(std::shared_ptr<op::Convolution> conv)
+{
+    Strides stride_1{1, 1};
+    CoordinateDiff pad_0{0, 0};
+    return conv->get_window_dilation_strides() == stride_1 ||
+           conv->get_data_dilation_strides() == stride_1 || conv->get_padding_above() == pad_0 ||
+           conv->get_padding_below() == pad_0;
+}
+
+static bool are_img_dims_equal(Shape conv_shape, Shape image_shape)
+{
+    if (conv_shape.size() != 4)
+    {
+        return false;
+    }
+
+    return conv_shape[2] == image_shape[0] && conv_shape[3] == image_shape[1];
+}
+
+//   conv(56w3s1)                        conv(28w3s2)
+//	      |                           	    |
+//   conv(56w1s1)              ==>      conv(28w1s1)
+//       |                                 |
+//elt------------56               elt------------pool(28s2)
+// |            |                  |               |
+//conv(28w1s1) conv(28w1s)        conv(28w1s2)  conv(28w1s2)
+void pass::CoreFusion::construct_optimized_strided_conv()
+{
+    Shape win_size_1{1, 1, 1, 1};
+    auto data_stride3 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1, 128, 128});
+    auto weights_stride3 = std::make_shared<pattern::op::Label>(element::f32, win_size_1);
+
+    auto conv_stride3 = std::make_shared<op::Convolution>(data_stride3, weights_stride3);
+
+    auto weights_stride1 = std::make_shared<pattern::op::Label>(element::f32, win_size_1);
+    auto conv_stride1 = std::make_shared<op::Convolution>(conv_stride3, weights_stride1);
+    auto conv_stride1_label =
+        std::make_shared<pattern::op::Label>(conv_stride1, nullptr, NodeVector{conv_stride1});
+
+    auto is_bea = ngraph::pattern::has_class<op::util::BinaryElementwiseArithmetic>();
+    auto eltwise_arg_label =
+        std::make_shared<pattern::op::Label>(element::f32, conv_stride1->get_shape());
+    auto eltwise_any = std::make_shared<pattern::op::Any>(
+        conv_stride1, is_bea, NodeVector{conv_stride1_label, eltwise_arg_label});
+    auto eltwise_label =
+        std::make_shared<pattern::op::Label>(conv_stride1, nullptr, NodeVector{eltwise_any});
+
+    auto weights_eltwise = std::make_shared<pattern::op::Label>(element::f32, win_size_1);
+    auto eltwise_conv = std::make_shared<op::Convolution>(eltwise_label, weights_eltwise);
+
+    pattern::graph_rewrite_callback callback = [win_size_1,
+                                                eltwise_label,
+                                                conv_stride1_label,
+                                                eltwise_arg_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_conv_skip against "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+        auto m_eltwise = pattern_map[eltwise_label];
+        auto strided_convs = m_eltwise->get_users();
+        if (strided_convs.size() != 2)
+        {
+            NGRAPH_DEBUG << "Number of users of element wise operation isn't equal to 2";
+            return false;
+        }
+
+        Shape shape_28{28, 28};
+        Shape shape_56{56, 56};
+        Shape shape_1{1, 1};
+        Shape shape_3{3, 3};
+
+        Strides stride_2{2, 2};
+        Strides stride_1{1, 1};
+        CoordinateDiff pad_0{0, 0};
+
+        Shape win_size_3{1, 1, 3, 3};
+
+        NodeVector sconvs;
+        for (auto sc : strided_convs)
+        {
+            auto sconv = std::dynamic_pointer_cast<op::Convolution>(sc);
+            if (!are_img_dims_equal(sconv->get_shape(), shape_28) ||
+                !are_img_dims_equal(sconv->get_argument(1)->get_shape(), shape_1) ||
+                sconv->get_window_movement_strides() != stride_2 || !is_trivial_convolution(sconv))
+            {
+                NGRAPH_DEBUG << "sconv->get_shape() = " << vector_to_string(sconv->get_shape());
+                NGRAPH_DEBUG << "sconv->get_argument(1)->get_shape() = "
+                             << vector_to_string(sconv->get_argument(1)->get_shape());
+                NGRAPH_DEBUG << "get_window_movement_strides = "
+                             << vector_to_string(sconv->get_window_movement_strides());
+                NGRAPH_DEBUG << " sconv failed is_trivial = " << is_trivial_convolution(sconv);
+                return false;
+            }
+            sconvs.push_back(sconv);
+        }
+
+        auto m_conv_stride1 =
+            std::dynamic_pointer_cast<op::Convolution>(pattern_map[conv_stride1_label]);
+        auto other_arg = pattern_map
+            [eltwise_arg_label]; //ngraph::pattern::Matcher::other(m_eltwise, m_conv_stride1);
+
+        if (!are_img_dims_equal(m_conv_stride1->get_shape(), shape_56) ||
+            !are_img_dims_equal(m_conv_stride1->get_argument(1)->get_shape(), win_size_1) ||
+            m_conv_stride1->get_window_movement_strides() != stride_1 ||
+            !is_trivial_convolution(m_conv_stride1))
+        {
+            NGRAPH_DEBUG << " m_conv_stride1 failed";
+            return false;
+        }
+
+        auto m_conv_stride3 =
+            std::dynamic_pointer_cast<op::Convolution>(m_conv_stride1->get_argument(0));
+
+        if (!are_img_dims_equal(m_conv_stride3->get_shape(), shape_56) ||
+            !are_img_dims_equal(m_conv_stride3->get_argument(1)->get_shape(), shape_3) ||
+            m_conv_stride3->get_window_movement_strides() != stride_1 ||
+            !is_trivial_convolution(m_conv_stride1))
+        {
+            NGRAPH_DEBUG << " m_conv_stride1 failed";
+            return false;
+        }
+
+        auto conv_28w3s2 = std::make_shared<op::Convolution>(
+            m_conv_stride3->get_argument(0), m_conv_stride3->get_argument(1), stride_2);
+        auto conv_28w1s1 = std::make_shared<op::Convolution>(
+            conv_28w3s2, m_conv_stride1->get_argument(1), stride_1);
+        auto maxpool = std::make_shared<op::MaxPool>(other_arg, Shape{1, 1}, stride_2);
+
+        NodeVector new_eltwise_args{conv_28w1s1, maxpool};
+
+        if (other_arg == m_eltwise->get_argument(0))
+        {
+            std::iter_swap(new_eltwise_args.begin(), new_eltwise_args.begin() + 1);
+        }
+
+        auto new_eltwise = m_eltwise->copy_with_new_args(new_eltwise_args);
+
+        for (auto sconv : sconvs)
+        {
+            auto sconv_28w1s1 =
+                std::make_shared<op::Convolution>(new_eltwise, sconv->get_argument(1), stride_1);
+            NGRAPH_DEBUG << "Replacing " << sconv->get_name() << " with "
+                         << sconv_28w1s1->get_name();
+            ngraph::replace_node(sconv, sconv_28w1s1);
+        }
+        return true;
+    };
+
+    auto m = make_shared<pattern::Matcher>(eltwise_conv, callback);
     this->add_matcher(m);
 }
