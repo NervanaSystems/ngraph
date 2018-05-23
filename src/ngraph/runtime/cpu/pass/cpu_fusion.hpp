@@ -63,6 +63,7 @@ public:
             construct_batch_norm_relu();
             construct_batch_norm_relu_global_stats();
             construct_conv_relu();
+            construct_conv_bias_relu();
         }
 
         if (fusions & DIFFERENTIABLE_FUSIONS)
@@ -79,11 +80,12 @@ private:
     void construct_fprop_bn();
     void construct_sigmoid();
     void construct_sigmoid_bprop();
+	void construct_sigmoid_multiply();
     void construct_zero_padded_reshaped_conv();
     void construct_zero_padded_conv();
     void construct_zero_padded_conv_backprop_filters();
     void construct_batch_norm_relu();
     void construct_batch_norm_relu_global_stats();
     void construct_conv_relu();
-    void construct_sigmoid_multiply();
+    void construct_conv_bias_relu();
 };

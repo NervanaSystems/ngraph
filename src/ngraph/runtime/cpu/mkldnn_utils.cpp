@@ -23,6 +23,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/relu.hpp"
@@ -46,6 +47,7 @@ static const std::unordered_set<std::type_index> s_op_registry{
     TI(ngraph::op::AvgPoolBackprop),
     TI(ngraph::op::BatchNorm),
     TI(ngraph::op::BatchNormBackprop),
+    TI(ngraph::op::Concat),
     TI(ngraph::op::Convolution),
     TI(ngraph::op::ConvolutionBackpropData),
     TI(ngraph::op::ConvolutionBackpropFilters),
@@ -113,6 +115,10 @@ static const std::map<memory::format, const std::string> s_mkldnn_format_string_
     {memory::format::Ohwi8o, "memory::format::Ohwi8o"},
     {memory::format::Ohwi16o, "memory::format::Ohwi16o"},
     {memory::format::OhIw16o4i, "memory::format::OhIw16o4i"},
+    {memory::format::tnc, "memory::format::tnc"},
+    {memory::format::ldsnc, "memory::format::ldsnc"},
+    {memory::format::ldigo, "memory::format::ldigo"},
+    {memory::format::ldgo, "memory::format::ldgo"},
 };
 
 static const std::set<memory::format> s_filter_formats{
