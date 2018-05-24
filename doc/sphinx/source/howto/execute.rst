@@ -8,14 +8,14 @@ This section explains how to manually perform the steps that would normally be
 performed by a framework :term:`bridge` to execute a computation. The nGraph 
 library is targeted toward automatic construction; it is far easier for a 
 processing unit (GPU, CPU, or an `Intel Nervana NNP`_) to run a computation than 
-it is for a user to map out how that computation happens. Unfortunately, things 
+it is for a human to map out how that computation happens. Unfortunately, things 
 that make by-hand graph construction simpler tend to make automatic construction 
 more difficult, and vice versa.
 
 Here we will do all the bridge steps manually. The :term:`model description` 
 walk-through below is based on the :file:`abc.cpp` code in the ``/doc/examples/`` 
-directory. We'll be deconstructing the steps that an entity (framework or 
-user) must be able to carry out in order to successfully execute a computation:
+directory. We'll be deconstructing the steps that must happen (either programmatically 
+or manually) in order to successfully execute a computation:
 
 * :ref:`define_cmp`
 * :ref:`specify_bkd`
@@ -25,7 +25,7 @@ user) must be able to carry out in order to successfully execute a computation:
 * :ref:`invoke_cmp`
 * :ref:`access_outputs`
 
-The final code is at the :ref:`end of this page <all_together>`.
+The full code is at the :ref:`end of this page <all_together>`.
 
 
 .. _define_cmp:
@@ -36,12 +36,12 @@ Define the computation
 To a :term:`framework`, a computation is simply a transformation of inputs to 
 outputs. While a :term:`bridge` can programmatically construct the graph 
 from a framework's representation of the computation, graph construction can be 
-somewhat more tedious for users. To a user, who is usually interested in 
-specific nodes (vertices) or edges of a computation that reveal "what is 
-happening where", it can be helpful to think of a computation as a zoomed-out 
-and *stateless* :term:`data-flow graph` where all of the nodes are well-defined 
-tensor operations and all of the edges denote use of an output from one 
-operation as an input for another operation.
+somewhat more tedious when done manually. For anyone interested in specific 
+nodes (vertices) or edges of a computation that reveal "what is happening where", 
+it can be helpful to think of a computation as a zoomed-out and *stateless* 
+:term:`data-flow graph` where all of the nodes are well-defined tensor 
+operations and all of the edges denote use of an output from one operation as an 
+input for another operation.
 
 Most of the public portion of the nGraph API is in the ``ngraph`` namespace, so 
 we will omit the namespace. Use of namespaces other than ``std`` will be 
@@ -52,7 +52,7 @@ Not all graphs are computation, but all graphs are composed entirely of
 instances of ``Node``.  Computation graphs contain only ``op::Op`` nodes.
 
 We mostly use :term:`shared pointers<shared pointer>` for nodes, i.e.
-``std::shared_ptr<Node>`` so that they will be automatically deallocated when 
+``std::shared_ptr<Node>``, so that they will be automatically deallocated when 
 they are no longer needed. More detail on shared pointers is given in the 
 glossary.
 
@@ -172,8 +172,9 @@ the three parameters and the return value as follows:
    :language: cpp
    :lines: 41-46
 
-Each tensor is a shared pointer to a ``runtime::TensorView``, the interface 
-backends implement for tensor use. When there are no more references to the 
+
+Each tensor is a shared pointer to a :doc:`../programmable/index/tensorview`, 
+the interface backends implement for tensor use. When there are no more references to the 
 tensor view, it will be freed when convenient for the backend. See the 
 :doc:`../programmable/index` documentation for details on ``TensorView ``.
 

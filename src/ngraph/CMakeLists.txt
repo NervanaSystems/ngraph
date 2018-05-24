@@ -216,11 +216,15 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
         runtime/cpu/op/conv_relu.cpp
         runtime/cpu/op/convert_layout.cpp
         runtime/cpu/op/sigmoid.cpp
+        runtime/cpu/op/rnn.cpp
+        runtime/cpu/op/lstm.cpp
         runtime/cpu/op/matmul_bias.cpp
         runtime/cpu/op/max_pool_with_indices.cpp
         runtime/cpu/op/batch_norm_relu.cpp
         runtime/cpu/pass/cpu_assignment.cpp
         runtime/cpu/pass/cpu_fusion.cpp
+        runtime/cpu/pass/cpu_rnn_fusion.cpp
+        runtime/cpu/pass/cpu_concat_inputs.cpp
         runtime/cpu/pass/cpu_workspace_insertion.cpp
         runtime/cpu/pass/cpu_layout.cpp
         runtime/cpu/pass/cpu_rnn_mat_fusion.cpp
@@ -251,6 +255,8 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
 if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_CXX_INCLUDE_PATH)
+    find_package(MPI REQUIRED)
+    string(REPLACE ";" "\\;" MPI_C_INCLUDE_PATH "${MPI_C_INCLUDE_PATH}")
     include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
     link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
 

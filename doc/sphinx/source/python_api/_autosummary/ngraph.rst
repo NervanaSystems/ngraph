@@ -9,24 +9,24 @@ ngraph package
 Submodules
 ----------
 
-ngraph\.exceptions module
--------------------------
+ngraph.exceptions module
+------------------------
 
 .. automodule:: ngraph.exceptions
     :members:
     :undoc-members:
     :show-inheritance:
 
-ngraph\.ops module
-------------------
+ngraph.ops module
+-----------------
 
 .. automodule:: ngraph.ops
     :members:
     :undoc-members:
     :show-inheritance:
 
-ngraph\.runtime module
-----------------------
+ngraph.runtime module
+---------------------
 
 .. automodule:: ngraph.runtime
     :members:

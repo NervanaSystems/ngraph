@@ -44,10 +44,14 @@
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
+#include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_concat_inputs.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_mat_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
 #include "ngraph/serializer.hpp"
@@ -1078,7 +1082,6 @@ TEST(cpu_fusion, rnn_fusion_from_json_model)
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
-
     const size_t NUM_STEPS = 10;
     auto mmb_predicate = [](std::shared_ptr<Node> node) {
         auto users = node->get_users();
@@ -1233,4 +1236,273 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
 
     backend->call(df, {output}, {input, ep});
     ASSERT_TRUE(read_vector<float>(output) == expected);
+}
+
+TEST(cpu_fusion, batch_norm_folding)
+{
+    Shape shape_input{1, 8, 3, 3};
+    Shape shape_weights{2, 8, 1, 1};
+    Shape shape_norm{2};
+
+    auto make_function = [shape_input, shape_weights, shape_norm]() {
+        auto input = std::make_shared<op::Parameter>(element::f32, shape_input);
+        auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
+        double eps = 0.001;
+        auto gamma = std::make_shared<op::Parameter>(element::f32, shape_norm);
+        auto beta = std::make_shared<op::Parameter>(element::f32, shape_norm);
+        auto mean = std::make_shared<op::Parameter>(element::f32, shape_norm);
+        auto var = std::make_shared<op::Parameter>(element::f32, shape_norm);
+        auto conv = std::make_shared<op::Convolution>(input, weights, Strides{1, 1}, Strides{1, 1});
+        auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, conv, mean, var);
+        auto f = make_shared<Function>(NodeVector{bn},
+                                       op::ParameterVector{input, weights, gamma, beta, mean, var});
+        return f;
+    };
+
+    auto int_f = make_function();
+    auto cpu_f = make_function();
+
+    vector<vector<float>> args{
+        {1.25f,  2.25f, 5.25f, 6.25f,  -1.25f, -1.25f, 3.25f, -4.25f, 7.25f,  8.25f,  -1.25f,
+         -1.25f, 1.25f, 2.25f, -3.25f, 2.25f,  4.25f,  4.25f, 1.25f,  2.25f,  -4.25f, 2.25f,
+         4.25f,  4.25f, 0.f,   0.f,    -1.f,   0.f,    2.f,   2.f,    0.f,    0.f,    0.f,
+         0.f,    2.f,   2.f,   1.25f,  2.25f,  5.25f,  6.25f, 1.25f,  1.25f,  3.25f,  4.25f,
+         -7.25f, 8.25f, 1.25f, -1.25f, -1.25f, 2.25f,  3.25f, 2.25f,  -4.25f, -4.25f, -1.25f,
+         -2.25f, 4.25f, 2.25f, 4.25f,  4.25f,  0.f,    0.f,   1.f,    0.f,    -2.f,   2.f,
+         0.f,    0.f,   0.f,   0.f,    -2.f,   -2.f},
+        {1.25f,
+         2.25f,
+         5.25f,
+         6.25f,
+         -1.25f,
+         -1.25f,
+         3.25f,
+         -4.25f,
+         7.25f,
+         8.25f,
+         -1.25f,
+         0.f,
+         0.f,
+         0.f,
+         0.f,
+         -2.f},
+        {-0.9384f, 0.01875f},
+        {11.0f, 1.3f},
+        {0.12f, 0.31f},
+        {0.01f, 0.11f},
+    };
+
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+}
+
+TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
+{
+    auto src_layer = make_shared<op::Parameter>(element::f32, Shape{10, 100});
+    auto src_iter = make_shared<op::Parameter>(element::f32, Shape{20, 100});
+    auto weights_layer = make_shared<op::Parameter>(element::f32, Shape{400, 100});
+    auto weights_iter = make_shared<op::Parameter>(element::f32, Shape{400, 100});
+    auto biases = make_shared<op::Parameter>(element::f32, Shape{400});
+    const int number_of_timesteps = 1;
+    const int number_of_gates_per_cell = 4;
+    const int src_seq_length = 1;
+    const int src_layer_feature_size = 100;
+    const int feature_size = 100;
+    const int num_rnn_cell_states = 2;
+    const int rnn_direction = 1;
+    const int num_of_rnn_fused_layer = 1;
+    auto rnn_node = make_shared<op::Rnn>(src_layer,
+                                         src_iter,
+                                         weights_layer,
+                                         weights_iter,
+                                         biases,
+                                         number_of_timesteps,
+                                         number_of_gates_per_cell,
+                                         src_seq_length,
+                                         src_layer_feature_size,
+                                         feature_size,
+                                         num_rnn_cell_states,
+                                         rnn_direction,
+                                         num_of_rnn_fused_layer);
+    auto rnn_ht_output = make_shared<op::GetOutputElement>(rnn_node, 0);
+    auto rnn_ct_output = make_shared<op::GetOutputElement>(rnn_node, 1);
+
+    auto func = make_shared<Function>(
+        NodeVector{rnn_ht_output, rnn_ct_output},
+        op::ParameterVector{src_layer, src_iter, weights_layer, weights_iter, biases});
+    auto backend = runtime::Backend::create("CPU");
+
+    shared_ptr<runtime::TensorView> src_layer_t =
+        backend->create_tensor(element::f32, src_layer->get_shape());
+    shared_ptr<runtime::TensorView> src_iter_t =
+        backend->create_tensor(element::f32, src_iter->get_shape());
+    shared_ptr<runtime::TensorView> weights_layer_t =
+        backend->create_tensor(element::f32, weights_layer->get_shape());
+    shared_ptr<runtime::TensorView> weights_iter_t =
+        backend->create_tensor(element::f32, weights_iter->get_shape());
+    shared_ptr<runtime::TensorView> biases_t =
+        backend->create_tensor(element::f32, biases->get_shape());
+    shared_ptr<runtime::TensorView> result_ht = backend->create_tensor(element::f32, {10, 100});
+    shared_ptr<runtime::TensorView> result_ct =
+        backend->create_tensor(element::f32, Shape{20, 100});
+
+    copy_data(src_layer_t, vector<float>(1000, 1));
+    copy_data(src_iter_t, vector<float>(2000, 1));
+    copy_data(weights_layer_t, vector<float>(400 * 100, 1));
+    copy_data(weights_iter_t, vector<float>(400 * 100, 1));
+    copy_data(biases_t, vector<float>(400, 1));
+
+    backend->call(func,
+                  {result_ht, result_ct},
+                  {src_layer_t, src_iter_t, weights_layer_t, weights_iter_t, biases_t});
+    vector<float> expected_ht(10 * 100, 0.964028f);
+    vector<float> expected_ct;
+    for (size_t i = 0; i < 20 * 100; i++)
+    {
+        if (i < 1000)
+        {
+            expected_ct.push_back(0.964028f);
+        }
+        else
+        {
+            expected_ct.push_back(2.0f);
+        }
+    }
+
+    EXPECT_TRUE(test::all_close(expected_ht, read_vector<float>(result_ht)));
+    EXPECT_TRUE(test::all_close(expected_ct, read_vector<float>(result_ct)));
+}
+
+TEST(cpu_fusion, fuse_lstm_cells)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
+    const string json_path =
+        file_util::path_join(SERIALIZED_ZOO, "mxnet/2rnn_layer_3lstm_cell.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    auto lstm_ops = get_ops_of_type<op::Lstm>(func);
+    EXPECT_EQ(lstm_ops.size(), 6);
+}
+
+TEST(cpu_fusion, fuse_2_layer_rnn)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    const string json_path =
+        file_util::path_join(SERIALIZED_ZOO, "mxnet/2rnn_layer_3lstm_cell.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    size_t count = count_ops_of_type<op::Rnn>(func);
+    auto rnn_ops = get_ops_of_type<op::Rnn>(func);
+    EXPECT_EQ(rnn_ops.size(), count);
+    for (auto& node : rnn_ops)
+    {
+        EXPECT_EQ(node->get_num_timesteps(), node->get_src_sequence_length());
+        EXPECT_EQ(node->get_num_cell_states(), node->get_argument(1)->get_arguments().size());
+    }
+}
+
+TEST(cpu_fusion, fuse_1_layer_rnn)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    const string json_path =
+        file_util::path_join(SERIALIZED_ZOO, "mxnet/1rnn_layer_3lstm_cell.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    size_t count = count_ops_of_type<op::Rnn>(func);
+    auto rnn_ops = get_ops_of_type<op::Rnn>(func);
+    EXPECT_EQ(rnn_ops.size(), 1);
+    EXPECT_EQ(rnn_ops.size(), count);
+    for (auto& node : rnn_ops)
+    {
+        EXPECT_EQ(node->get_num_timesteps(), node->get_src_sequence_length());
+        EXPECT_EQ(node->get_num_cell_states(), node->get_argument(1)->get_arguments().size());
+    }
+}
+
+static std::shared_ptr<Function> make_function(const std::string& file_name)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, file_name);
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    return func;
+}
+
+TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
+{
+    const std::string file_name("mxnet/1_lstm_cell_forward.json");
+    auto cpu_f = make_function(file_name);
+    auto int_f = make_function(file_name);
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+}
+
+TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
+{
+    const std::string file_name("mxnet/1rnn_layer_3lstm_cell.json");
+    auto cpu_f = make_function(file_name);
+    auto int_f = make_function(file_name);
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+}
+
+TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
+{
+    const std::string file_name("mxnet/2rnn_layer_3lstm_cell.json");
+    auto cpu_f = make_function(file_name);
+    auto int_f = make_function(file_name);
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
 }
