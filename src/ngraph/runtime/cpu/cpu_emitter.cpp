@@ -3937,7 +3937,9 @@ namespace ngraph
                         func_block += "d_" + out_denom + " = 1;\n";
                     }
                     break;
-                default:
+                }
+                if (func_block.empty())
+                {
                     throw ngraph_error(
                         "generate_sigmoid_mul_func input function type not supported");
                 }
@@ -3946,7 +3948,6 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::SigmoidMultiply)
             {
-                using FunctionType = ngraph::op::SigmoidMultiply::FunctionType;
                 auto sigmoid_mul = static_cast<const ngraph::op::SigmoidMultiply*>(node);
                 std::string numer_0 = "numer_0";
                 std::string denom_0 = "denom_0";
@@ -4037,10 +4038,10 @@ namespace ngraph
                 writer.block_begin();
                 writer << input_1_func_string;
                 writer.block_end();
-                writer << out[0].get_name()
+                writer << input_0_delta.get_name()
                        << "[i] = " + delta.get_name() + "[i]*(" + numer_1 + "*" + d_numer_0 +
                               ")/(" + denom_1 + "*" + d_denom_0 + ");\n";
-                writer << out[1].get_name()
+                writer << input_1_delta.get_name()
                        << "[i] = " + delta.get_name() + "[i]*(" + numer_0 + "*" + d_numer_1 +
                               ")/(" + denom_0 + "*" + d_denom_1 + ");\n";
                 writer.block_end();
