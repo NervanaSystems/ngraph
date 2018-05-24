@@ -194,7 +194,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
         pad.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
             void* args_list[] = {&inputs[1], &inputs[0], &outputs[0]};
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          nthreads,
+                                          static_cast<uint32_t>(nthreads),
                                           1,
                                           1, // grid dim
                                           1,
@@ -212,7 +212,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
         pad.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
             void* args_list[] = {&inputs[0], &outputs[0]};
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          nthreads,
+                                          static_cast<uint32_t>(nthreads),
                                           1,
                                           1, // grid dim
                                           1,
@@ -254,7 +254,7 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
         return primitive_index;
     }
 
-    auto nthreads = shape_size(output_shape);
+    size_t nthreads = shape_size(output_shape);
 
     // if the kernel has not been compiled, build it
     auto compiled_kernel = ctx->compiled_kernel_pool->get(hash);
@@ -298,7 +298,7 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
     std::unique_ptr<gpu::primitive> pool(new gpu::primitive{[=](void** inputs, void** outputs) {
         void* args_list[] = {&inputs[0], &outputs[0]};
         CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                      nthreads,
+                                      static_cast<uint32_t>(nthreads),
                                       1,
                                       1, // grid dim
                                       1,
@@ -647,7 +647,7 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeConte
 
         compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
-    auto nthreads = shape_size(tensor_shape);
+    size_t nthreads = shape_size(tensor_shape);
 
     // create the launch primitive
     std::unique_ptr<gpu::primitive> ew(
@@ -660,7 +660,7 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeConte
             args_list.push_back(&outputs[0]);
             args_list.push_back(&nthreads);
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          nthreads,
+                                          static_cast<uint32_t>(nthreads),
                                           1,
                                           1, // grid dim
                                           1,

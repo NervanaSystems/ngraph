@@ -64,17 +64,19 @@ namespace ngraph
             static_cast<std::vector<uint32_t>*>(this)->operator=(v);
             return *this;
         }
+
         GPUShape& operator=(GPUShape&& v)
         {
             static_cast<std::vector<uint32_t>*>(this)->operator=(v);
             return *this;
         }
+
         GPUShape(const Shape& shape)
         {
             for (size_t const& size : shape)
             {
                 uint32_t low = static_cast<uint32_t>(size);
-                if (low != size)
+                if (size >> 32 != 0)
                 {
                     throw std::runtime_error(
                         "Request for Shape which exceeds the bitwidth available for GPUShapes "
@@ -83,12 +85,13 @@ namespace ngraph
                 this->push_back(low);
             }
         }
+
         GPUShape(const Strides& strides)
         {
             for (size_t const& size : strides)
             {
                 uint32_t low = static_cast<uint32_t>(size);
-                if (low != size)
+                if (size >> 32 != 0)
                 {
                     throw std::runtime_error(
                         "Request for Strides which exceed the bitwidth available for GPUShapes "
@@ -97,12 +100,13 @@ namespace ngraph
                 this->push_back(low);
             }
         }
+
         GPUShape(const Coordinate& coord)
         {
             for (size_t const& size : coord)
             {
                 uint32_t low = static_cast<uint32_t>(size);
-                if (low != size)
+                if (size >> 32 != 0)
                 {
                     throw std::runtime_error(
                         "Request for Coordinate which exceed the bitwidth available for GPUShapes "
