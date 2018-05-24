@@ -1046,8 +1046,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
 
         using FunctionType = op::SigmoidMultiply::FunctionType;
         const int max_inputs{2};
-        std::array<std::shared_ptr<ngraph::Node>, max_inputs> match_nodes{pattern_map[sigmoid_0],
-                                                                          pattern_map[sigmoid_1]};
+        std::array<std::shared_ptr<ngraph::Node>, max_inputs> match_nodes{
+            {pattern_map[sigmoid_0], pattern_map[sigmoid_1]}};
         std::array<std::shared_ptr<ngraph::Node>, max_inputs> input_nodes;
         std::array<FunctionType, max_inputs> input_type;
         for (int i = 0; i < max_inputs; ++i)
