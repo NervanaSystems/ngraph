@@ -49,6 +49,7 @@ namespace ngraph
                 void cache(const std::string& hash, const size_t& index);
                 GPUAllocator get_memory_allocator() { return m_memory_manager.build_allocator(); }
                 void allocate_primitive_memory() { m_memory_manager.allocate(); }
+                size_t sizeof_device_allocation() { return m_memory_manager.get_allocation_size(); }
             private:
                 std::unique_ptr<CUDAEmitter> m_cuda_emitter;
                 std::unique_ptr<CUDNNEmitter> m_cudnn_emitter;

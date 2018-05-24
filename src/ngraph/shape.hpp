@@ -68,8 +68,8 @@ namespace ngraph
     };
 
     /// Number of elements in spanned by a shape
-    template <typename ShapeType>
-    typename ShapeType::value_type shape_size(const ShapeType& shape)
+    template <typename SHAPE_TYPE>
+    size_t shape_size(const SHAPE_TYPE& shape)
     {
         size_t size = 1;
         for (auto d : shape)
@@ -80,11 +80,11 @@ namespace ngraph
     }
 
     /// Row-major strides for a shape
-    template <typename ShapeType>
-    std::vector<typename ShapeType::value_type> row_major_strides(const ShapeType& shape)
+    template <typename SHAPE_TYPE>
+    std::vector<typename SHAPE_TYPE::value_type> row_major_strides(const SHAPE_TYPE& shape)
     {
-        std::vector<typename ShapeType::value_type> strides(shape.size());
-        typename ShapeType::value_type s = 1;
+        std::vector<typename SHAPE_TYPE::value_type> strides(shape.size());
+        typename SHAPE_TYPE::value_type s = 1;
         auto st = strides.rbegin();
         for (auto d = shape.rbegin(); d != shape.rend(); d++, st++)
         {
@@ -94,13 +94,14 @@ namespace ngraph
         return strides;
     }
 
-    template <typename ShapeType>
-    inline bool is_scalar(const ShapeType& shape)
+    template <typename SHAPE_TYPE>
+    inline bool is_scalar(const SHAPE_TYPE& shape)
     {
         return 0 == shape.size();
     }
-    template <typename ShapeType>
-    inline bool is_vector(const ShapeType& shape)
+
+    template <typename SHAPE_TYPE>
+    inline bool is_vector(const SHAPE_TYPE& shape)
     {
         return 1 == shape.size();
     }
