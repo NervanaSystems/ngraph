@@ -21,55 +21,12 @@
 using namespace std;
 using namespace ngraph;
 
-// Returns |a - b| < 2 ^ (a.mantissa - mantissa_bits + 1 + tolerance_bits)
-bool test::close_f(float a, float b, int mantissa_bits, int tolerance_bits)
-{
-    static const float min_value = pow(2.f, -100.f);
-    if (!isfinite(a) || !isfinite(b))
-    {
-        return false;
-    }
-    a = abs(a) > min_value ? a : min_value;
-    b = abs(b) > min_value ? b : min_value;
-
-    int a_e;
-    frexp(a, &a_e);
-
-    return abs(a - b) < pow(2.f, static_cast<float>(a_e - mantissa_bits + 1 + tolerance_bits));
-}
-
-bool test::all_close_f(const vector<float>& a,
-                       const vector<float>& b,
-                       int mantissa_bits,
-                       int tolerance_bits)
-{
-    bool rc = true;
-    if (a.size() != b.size())
-    {
-        throw ngraph_error("a.size() != b.size() for all_close comparison.");
-    }
-    for (size_t i = 0; i < a.size(); ++i)
-    {
-        bool is_close_f = close_f(a[i], b[i], mantissa_bits, tolerance_bits);
-        if (!is_close_f)
-        {
-            NGRAPH_INFO << a[i] << " !≈ " << b[i];
-            rc = false;
-        }
-        else
-        {
-            NGRAPH_INFO << a[i] << " ≈ " << b[i];
-        }
-    }
-    return rc;
-}
-
 union FloatUnion {
     float f;
     uint32_t i;
 };
 
-bool test::close_g(float a, float b, int mantissa_bits, int tolerance_bits)
+bool test::close_f(float a, float b, int mantissa_bits, int tolerance_bits)
 {
     FloatUnion a_fu{a};
     FloatUnion b_fu{b};
@@ -93,7 +50,7 @@ bool test::close_g(float a, float b, int mantissa_bits, int tolerance_bits)
     return distance <= tolerance;
 }
 
-bool test::all_close_g(const vector<float>& a,
+bool test::all_close_f(const vector<float>& a,
                        const vector<float>& b,
                        int mantissa_bits,
                        int tolerance_bits)
@@ -105,7 +62,7 @@ bool test::all_close_g(const vector<float>& a,
     }
     for (size_t i = 0; i < a.size(); ++i)
     {
-        bool is_close_f = close_g(a[i], b[i], mantissa_bits, tolerance_bits);
+        bool is_close_f = close_f(a[i], b[i], mantissa_bits, tolerance_bits);
         if (!is_close_f)
         {
             NGRAPH_INFO << a[i] << " !≈ " << b[i];

@@ -60,56 +60,7 @@ TEST(all_close_f, bit_string_conversion)
     EXPECT_EQ(bit_string_to_float("11000001000000000000000000000000"), -8);
 }
 
-TEST(all_close_f, example_compare)
-{
-    // float lhs = 1.5;
-    float rhs = 1.75;
-    NGRAPH_INFO << float_to_bit_string(8);
-    NGRAPH_INFO << float_to_bit_string(rhs);
-
-    float param = 8.;
-    float mantissa;
-    int exponent;
-
-    mantissa = frexp(param, &exponent);
-    NGRAPH_INFO << "mantissa " << mantissa;
-    NGRAPH_INFO << "exponent " << exponent;
-}
-
-TEST(all_close_f, float_close_basic)
-{
-    NGRAPH_INFO << test::close_f(1.5f, 1.5f);
-    NGRAPH_INFO << test::close_f(1.5f, 1.52f);
-    NGRAPH_INFO << test::close_f(1.5f, 1.53f);
-    NGRAPH_INFO << test::close_f(1.5f, 1.54f);
-    NGRAPH_INFO << test::close_f(1.5f, 1.55f);
-    NGRAPH_INFO << test::close_f(1.5f, 1.56f);
-    NGRAPH_INFO << test::close_f(1.5f, 1.57f);
-}
-
-TEST(all_close_f, float_close_zero)
-{
-    NGRAPH_INFO << test::close_f(0.0f, 1e-8f);
-    NGRAPH_INFO << test::close_f(1e-8f, 0.0f);
-    NGRAPH_INFO << test::close_f(1e-7f, 0.0f);
-    NGRAPH_INFO << test::close_f(1e-6f, 0.0f);
-    NGRAPH_INFO << test::close_f(1e-5f, 0.0f);
-    NGRAPH_INFO << test::close_f(1e-4f, 0.0f);
-    NGRAPH_INFO << test::close_f(1e-3f, 0.0f);
-    NGRAPH_INFO << test::close_f(1e-2f, 0.0f);
-    NGRAPH_INFO << test::close_f(1e-1f, 0.0f);
-}
-
-TEST(all_close_f, float_close_zero_b)
-{
-    NGRAPH_INFO << float_to_bit_string(0.0f);
-    NGRAPH_INFO << float_to_bit_string(0.015625f);
-    NGRAPH_INFO << test::close_f(0.0f, 0.015625f);
-    NGRAPH_INFO << test::close_f(0.015625f, 0.0f);
-    NGRAPH_INFO << test::close_f(0.00006103515f, 0.0f);
-}
-
-TEST(all_close_f, gtest_float_equal)
+TEST(all_close_f, mantissa_24)
 {
     float val0 = bit_string_to_float("00000000000000000000000000000000");
     float val1 = bit_string_to_float("00000000000000000000000000000001");
@@ -139,80 +90,35 @@ TEST(all_close_f, gtest_float_equal)
     NGRAPH_INFO << val_4;
     NGRAPH_INFO << val_5;
 
-    EXPECT_FLOAT_EQ(0.f, val0);
-    EXPECT_FLOAT_EQ(0.f, val1);
-    EXPECT_FLOAT_EQ(0.f, val2);
-    EXPECT_FLOAT_EQ(0.f, val3);
-    EXPECT_FLOAT_EQ(0.f, val4);
-    EXPECT_FLOAT_EQ(0.f, val5);
+    NGRAPH_INFO << test::close_f(0.f, val0, 24);
+    NGRAPH_INFO << test::close_f(0.f, val1, 24);
+    NGRAPH_INFO << test::close_f(0.f, val2, 24);
+    NGRAPH_INFO << test::close_f(0.f, val3, 24);
+    NGRAPH_INFO << test::close_f(0.f, val4, 24);
+    NGRAPH_INFO << test::close_f(0.f, val5, 24);
 
-    EXPECT_FLOAT_EQ(0.f, val_0);
-    EXPECT_FLOAT_EQ(0.f, val_1);
-    EXPECT_FLOAT_EQ(0.f, val_2);
-    EXPECT_FLOAT_EQ(0.f, val_3);
-    EXPECT_FLOAT_EQ(0.f, val_4);
-    EXPECT_FLOAT_EQ(0.f, val_5);
+    NGRAPH_INFO << test::close_f(0.f, val_0, 24);
+    NGRAPH_INFO << test::close_f(0.f, val_1, 24);
+    NGRAPH_INFO << test::close_f(0.f, val_2, 24);
+    NGRAPH_INFO << test::close_f(0.f, val_3, 24);
+    NGRAPH_INFO << test::close_f(0.f, val_4, 24);
+    NGRAPH_INFO << test::close_f(0.f, val_5, 24);
 }
 
-TEST(close_g, mantissa_24)
-{
-    float val0 = bit_string_to_float("00000000000000000000000000000000");
-    float val1 = bit_string_to_float("00000000000000000000000000000001");
-    float val2 = bit_string_to_float("00000000000000000000000000000010");
-    float val3 = bit_string_to_float("00000000000000000000000000000011");
-    float val4 = bit_string_to_float("00000000000000000000000000000100");
-    float val5 = bit_string_to_float("00000000000000000000000000000101");
-
-    float val_0 = bit_string_to_float("10000000000000000000000000000000");
-    float val_1 = bit_string_to_float("10000000000000000000000000000001");
-    float val_2 = bit_string_to_float("10000000000000000000000000000010");
-    float val_3 = bit_string_to_float("10000000000000000000000000000011");
-    float val_4 = bit_string_to_float("10000000000000000000000000000100");
-    float val_5 = bit_string_to_float("10000000000000000000000000000101");
-
-    NGRAPH_INFO << val0;
-    NGRAPH_INFO << val1;
-    NGRAPH_INFO << val2;
-    NGRAPH_INFO << val3;
-    NGRAPH_INFO << val4;
-    NGRAPH_INFO << val5;
-
-    NGRAPH_INFO << val_0;
-    NGRAPH_INFO << val_1;
-    NGRAPH_INFO << val_2;
-    NGRAPH_INFO << val_3;
-    NGRAPH_INFO << val_4;
-    NGRAPH_INFO << val_5;
-
-    NGRAPH_INFO << test::close_g(0.f, val0, 24);
-    NGRAPH_INFO << test::close_g(0.f, val1, 24);
-    NGRAPH_INFO << test::close_g(0.f, val2, 24);
-    NGRAPH_INFO << test::close_g(0.f, val3, 24);
-    NGRAPH_INFO << test::close_g(0.f, val4, 24);
-    NGRAPH_INFO << test::close_g(0.f, val5, 24);
-
-    NGRAPH_INFO << test::close_g(0.f, val_0, 24);
-    NGRAPH_INFO << test::close_g(0.f, val_1, 24);
-    NGRAPH_INFO << test::close_g(0.f, val_2, 24);
-    NGRAPH_INFO << test::close_g(0.f, val_3, 24);
-    NGRAPH_INFO << test::close_g(0.f, val_4, 24);
-    NGRAPH_INFO << test::close_g(0.f, val_5, 24);
-}
-
-TEST(close_g, mantissa_8_close_zero)
+TEST(all_close_f, mantissa_8_close_zero)
 {
     float val0 = bit_string_to_float("00000000000000000000000000000000");
     float val1 = bit_string_to_float("00000000000001000000000000000000");
     float val2 = bit_string_to_float("00000000000001000000000000000001");
     float val3 = bit_string_to_float("00000000000010000000000000000000");
 
-    NGRAPH_INFO << test::close_g(val0, val0);
-    NGRAPH_INFO << test::close_g(val0, val1);
-    NGRAPH_INFO << test::close_g(val0, val2);
-    NGRAPH_INFO << test::close_g(val0, val3);
+    NGRAPH_INFO << test::close_f(val0, val0);
+    NGRAPH_INFO << test::close_f(val0, val1);
+    NGRAPH_INFO << test::close_f(val0, val2);
+    NGRAPH_INFO << test::close_f(val0, val3);
 }
 
-TEST(close_g, mantissa_8_close_one)
+TEST(all_close_f, mantissa_8_close_one)
 {
     // 1.f
     float val0 = bit_string_to_float("00111111100000000000000000000000");
@@ -224,11 +130,11 @@ TEST(close_g, mantissa_8_close_one)
     float val4 = bit_string_to_float("00111111011110111111111111111111"); // 0.9843749404, not close
 
     NGRAPH_INFO << "val " << setprecision(10) << val1;
-    NGRAPH_INFO << test::close_g(val0, val1);
+    NGRAPH_INFO << test::close_f(val0, val1);
     NGRAPH_INFO << "val " << setprecision(10) << val2;
-    NGRAPH_INFO << test::close_g(val0, val2);
+    NGRAPH_INFO << test::close_f(val0, val2);
     NGRAPH_INFO << "val " << setprecision(10) << val3;
-    NGRAPH_INFO << test::close_g(val0, val3);
+    NGRAPH_INFO << test::close_f(val0, val3);
     NGRAPH_INFO << "val " << setprecision(10) << val4;
-    NGRAPH_INFO << test::close_g(val0, val4);
+    NGRAPH_INFO << test::close_f(val0, val4);
 }

@@ -2493,7 +2493,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sin)
     copy_data(a, input);
     auto result = backend->create_tensor(element::f32, shape);
     backend->call(f, {result}, {a});
-    EXPECT_TRUE(test::all_close_g(vector<float>{0.00000000f,
+    EXPECT_TRUE(test::all_close_f(vector<float>{0.00000000f,
                                                 0.24740396f,
                                                 -0.24740396f,
                                                 0.47942554f,
@@ -2521,7 +2521,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cos)
     copy_data(a, input);
     auto result = backend->create_tensor(element::f32, shape);
     backend->call(f, {result}, {a});
-    EXPECT_TRUE(test::all_close_g(vector<float>{1.00000000f,
+    EXPECT_TRUE(test::all_close_f(vector<float>{1.00000000f,
                                                 0.96891242f,
                                                 0.96891242f,
                                                 0.87758256f,
@@ -2549,7 +2549,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tan)
     copy_data(a, input);
     auto result = backend->create_tensor(element::f32, shape);
     backend->call(f, {result}, {a});
-    EXPECT_TRUE(test::all_close_g(vector<float>{0.00000000f,
+    EXPECT_TRUE(test::all_close_f(vector<float>{0.00000000f,
                                                 0.25534192f,
                                                 -0.25534192f,
                                                 0.54630249f,
@@ -2577,7 +2577,7 @@ NGRAPH_TEST(${BACKEND_NAME}, asin)
     copy_data(a, input);
     auto result = backend->create_tensor(element::f32, shape);
     backend->call(f, {result}, {a});
-    EXPECT_TRUE(test::all_close_g(vector<float>{-1.57079633f,
+    EXPECT_TRUE(test::all_close_f(vector<float>{-1.57079633f,
                                                 -0.84806208f,
                                                 -0.52359878f,
                                                 -0.25268026f,
@@ -2605,7 +2605,7 @@ NGRAPH_TEST(${BACKEND_NAME}, acos)
     copy_data(a, input);
     auto result = backend->create_tensor(element::f32, shape);
     backend->call(f, {result}, {a});
-    EXPECT_TRUE(test::all_close_g(vector<float>{3.14159265f,
+    EXPECT_TRUE(test::all_close_f(vector<float>{3.14159265f,
                                                 2.41885841f,
                                                 2.09439510f,
                                                 1.82347658f,
@@ -2633,7 +2633,7 @@ NGRAPH_TEST(${BACKEND_NAME}, atan)
     copy_data(a, input);
     auto result = backend->create_tensor(element::f32, shape);
     backend->call(f, {result}, {a});
-    EXPECT_TRUE(test::all_close_g(vector<float>{-1.32581766f,
+    EXPECT_TRUE(test::all_close_f(vector<float>{-1.32581766f,
                                                 -1.10714872f,
                                                 -0.78539816f,
                                                 -0.46364761f,
