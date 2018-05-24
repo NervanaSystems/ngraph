@@ -1815,6 +1815,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
                 writer.block_end();
             }
+
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::AvgPoolBackprop)
             {
@@ -1854,6 +1855,32 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
                         writer << ");\n";
                     }
+                }
+                writer.block_end();
+            }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Softmax)
+            {
+                writer.block_begin("  // " + node->get_name());
+                {
+                    // auto softmax = static_cast<const ngraph::op::Softmax*>(node);
+                    auto tensor_shape = args[0].get_shape();
+
+                    auto& cudnn_emitter =
+                        external_function->get_primitive_emitter()->get_cudnn_emitter();
+
+                    size_t softmax_index =
+                        cudnn_emitter->build_softmax(external_function->ctx().get(),
+                                                     CUDNN_SOFTMAX_FAST,
+                                                     CUDNN_SOFTMAX_MODE_INSTANCE,
+                                                     CUDNNEmitter::Prop::Forward,
+                                                     tensor_shape);
+
+                    writer << "gpu::invoke_primitive(ctx, " << softmax_index << ", ";
+                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                    writer << ");\n";
                 }
                 writer.block_end();
             }

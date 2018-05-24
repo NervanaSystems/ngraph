@@ -22,9 +22,7 @@ backwards_select_nested
 backwards_sign
 backwards_slice
 backwards_softmax_3d
-backwards_softmax_all
 backwards_softmax_axis
-backwards_softmax_underflow
 backwards_subtract
 backwards_sum_m2s
 backwards_sum_m2v_0
@@ -121,7 +119,6 @@ scalar_constant_int64
 select_and_scatter_3d_without_overlap
 select_and_scatter_with_overlap
 select_and_scatter_without_overlap
-softmax_all
 softmax_axis
 softmax_underflow
 tensor_constant
