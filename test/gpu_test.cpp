@@ -14,33 +14,12 @@
 * limitations under the License.
 *******************************************************************************/
 
-// #include <algorithm>
-// #include <cstdio>
 #include <iostream>
 #include <vector>
-// #include <list>
-// #include <memory>
 
 #include "gtest/gtest.h"
-// #include "ngraph/autodiff/adjoints.hpp"
-// #include "ngraph/file_util.hpp"
-// #include "ngraph/graph_util.hpp"
-// #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/runtime/gpu/gpu_shape.hpp"
-// #include "ngraph/op/batch_norm.hpp"
-// #include "ngraph/op/get_output_element.hpp"
-// #include "ngraph/op/parameter.hpp"
-// #include "ngraph/pass/manager.hpp"
-// #include "ngraph/pass/visualize_tree.hpp"
-// #include "ngraph/serializer.hpp"
-// #include "ngraph/util.hpp"
-// #include "nlohmann/json.hpp"
-// #include "util/all_close.hpp"
-// #include "util/autodiff/backprop_function.hpp"
-// #include "util/autodiff/numeric_compare.hpp"
-// #include "util/random.hpp"
-// #include "util/test_tools.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 
