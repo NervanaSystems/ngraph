@@ -1864,8 +1864,14 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             {
                 writer.block_begin("  // " + node->get_name());
                 {
-                    // auto softmax = static_cast<const ngraph::op::Softmax*>(node);
+                    auto softmax = static_cast<const ngraph::op::Softmax*>(node);
                     auto tensor_shape = args[0].get_shape();
+                    auto axes = softmax->get_axes();
+                    if (axes.size() != tensor_shape.size())
+                    {
+                        throw std::runtime_error(
+                            "Softmax implementation currently only supports all axis activation.");
+                    }
 
                     auto& cudnn_emitter =
                         external_function->get_primitive_emitter()->get_cudnn_emitter();
