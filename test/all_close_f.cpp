@@ -217,16 +217,12 @@ TEST(close_g, mantissa_8_close_one)
     // 1.f
     float val0 = bit_string_to_float("00111111100000000000000000000000");
     // Numbers close to 1.f+
-    float val1 = bit_string_to_float("00111111100001000000000000000000"); // close
-    float val2 = bit_string_to_float("00111111100001000000000000000001"); // not close
-    float val3 = bit_string_to_float("00111111100010000000000000000000"); // not close
+    float val1 = bit_string_to_float("00111111100001000000000000000000"); // 1.03125, close
+    float val2 = bit_string_to_float("00111111100001000000000000000001"); // 1.031250119, not close
     // Numbers close to 1.f-
-    float val4 = bit_string_to_float("00111111011111000000000000000000"); // close
-    float val5 = bit_string_to_float("00111111011110111111111111111111"); // not close
-    float val6 = bit_string_to_float("00111111011110000000000000000000"); // not close
+    float val3 = bit_string_to_float("00111111011111000000000000000000"); // 0.984375, close
+    float val4 = bit_string_to_float("00111111011110111111111111111111"); // 0.9843749404, not close
 
-    NGRAPH_INFO << "val " << setprecision(10) << val0;
-    NGRAPH_INFO << test::close_g(val0, val0);
     NGRAPH_INFO << "val " << setprecision(10) << val1;
     NGRAPH_INFO << test::close_g(val0, val1);
     NGRAPH_INFO << "val " << setprecision(10) << val2;
@@ -235,8 +231,4 @@ TEST(close_g, mantissa_8_close_one)
     NGRAPH_INFO << test::close_g(val0, val3);
     NGRAPH_INFO << "val " << setprecision(10) << val4;
     NGRAPH_INFO << test::close_g(val0, val4);
-    NGRAPH_INFO << "val " << setprecision(10) << val5;
-    NGRAPH_INFO << test::close_g(val0, val5);
-    NGRAPH_INFO << "val " << setprecision(10) << val6;
-    NGRAPH_INFO << test::close_g(val0, val6);
 }
