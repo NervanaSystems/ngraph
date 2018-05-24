@@ -4,11 +4,12 @@
 Integrate Generic Frameworks   
 #############################
 
-This section, written for framework architects or engineers who want 
-to optimize a generic, brand new or less widely-supported framework, we
-provide some of our learnings from the work we've done in developing 
-"framework direct optimizations (DO)" and custom bridge code, such as 
-that for our `ngraph tensorflow bridge`_ code.
+In this section, written for framework architects or engineers who want 
+to optimize a brand new, generic, or less widely-supported framework, we provide 
+some of our learnings from our "framework Direct Optimization (framework DO)" 
+work and custom bridge code, such as that for our `ngraph tensorflow bridge`_.
+
+
 
 .. important:: This section contains articles for framework owners or developers
    who want to incorporate the nGraph library directly into their framework and 
@@ -19,6 +20,8 @@ that for our `ngraph tensorflow bridge`_ code.
    :maxdepth: 1 
 
    generic.rst
+   translate.rst
+
 
 
 When using a framework to run a model or deploy an algorithm on nGraph 
@@ -48,8 +51,10 @@ the pack by providing a means for the data scientist to obtain reproducible
 results. The other challenge is to provide sufficient documentation, or to 
 provide sufficient hints for how to do any "fine-tuning" for specific use cases. 
 
-How this has worked in creating the :doc:`the direct optimizations <../framework-integration-guides>` 
-we've shared with the developer community, our `engineering teams carefully tune the workload to extract best performance`_ 
+How this has worked in creating the 
+:doc:`the direct optimizations <../framework-integration-guides>` we've shared 
+with the developer community, our engineering teams carefully 
+`tune the workload to extract best performance`_ 
 from a specific :abbr:`DL (Deep Learning)` model embedded in a specific framework 
 that is training a specific dataset. Our forks of the frameworks adjust the code 
 and/or explain how to set the parameters that achieve reproducible results. 
@@ -82,10 +87,12 @@ updates.
 .. [#1] Benchmarking performance of DL systems is a young discipline; it is a
    good idea to be vigilant for results based on atypical distortions in the 
    configuration parameters. Every topology is different, and performance 
-   increases or slowdowns can be attributed to multiple means.    
+   increases or slowdowns can be attributed to multiple means.  Also watch out 
+   for the word "theoretical" in comparisons; actual performance should not be 
+   compared to theoretical performance.     
 
 
 .. _ngraph tensorflow bridge: http://ngraph.nervanasys.com/docs/latest/framework-integration-guides.html#tensorflow
-.. _engineering teams carefully tune the workload to extract best performance: https://ai.intel.com/accelerating-deep-learning-training-inference-system-level-optimizations
+.. _tune the workload to extract best performance: https://ai.intel.com/accelerating-deep-learning-training-inference-system-level-optimizations
 .. _a few small: https://software.intel.com/en-us/articles/boosting-deep-learning-training-inference-performance-on-xeon-and-xeon-phi
 .. _Movidius: https://www.movidius.com/

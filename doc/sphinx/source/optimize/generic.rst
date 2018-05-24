@@ -1,4 +1,4 @@
-.. generic-frameworks.rst
+.. generic.rst
 
 
 Activating nGraph on generic frameworks
@@ -62,12 +62,12 @@ use these configuration settings.
 * ``KMP_AFFINITY`` Enables the runtime library to bind threads to physical 
   processing units. 
 * ``KMP_SETTINGS`` Enables (``true``) or disables (``false``) the printing of 
-  OpenMP* runtime library environment variables during program execution.
+  OpenMP\* runtime library environment variables during program execution.
 * ``OMP_NUM_THREADS`` Specifies the number of threads to use.
 
 
-nGraph-enabled Intel® Xeon®
-===========================
+nGraph-enabled Intel® Xeon® 
+============================
 
 The list below includes recommendations on data layout, parameters, and 
 application configuration to achieve best performance running DNN workloads on 
@@ -89,7 +89,10 @@ Memory allocation
 -----------------
 
 Buffer pointers should be aligned at the 64-byte boundary. NUMA policy should be 
-configured for local memory allocation (``numactl --localloc``)
+configured for local memory allocation (``numactl --localloc``).  For detail on 
+using the 
+
+
 
 Convolution shapes
 ^^^^^^^^^^^^^^^^^^
@@ -129,7 +132,7 @@ Intra-op and inter-op parallelism
 * ``intra_op_parallelism_threads``
 * ``inter_op_parallelism_threads``
 
-Some frameworks, like Tensorflow, use these settings to improve performance; 
+Some frameworks, like TensorFlow\*, use these settings to improve performance; 
 however, they are often not sufficient to achieve optimal performance. 
 Framework-based adjustments cannot access the underlying  NUMA configuration in 
 multi-socket Intel Xeon processor-based platforms, which is a key requirement for
