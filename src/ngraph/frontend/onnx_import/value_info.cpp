@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+
 #include <exception>
 #include <ngraph/op/parameter.hpp>
 #include <ostream>

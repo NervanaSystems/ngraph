@@ -48,9 +48,11 @@ exec_program(${PROTOBUF_PROTOC_EXECUTABLE} ARGS --cpp_out ${CMAKE_CURRENT_BINARY
 
 add_library(onnx_import STATIC ${ONNX_IMPORT_SOURCE_FILES} ${ONNX_IMPORT_HEADER_FILES} ${ONNX_PROTO})
 target_include_directories(onnx_import PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${NGRAPH_INCLUDE_PATH})
+target_link_libraries(onnx_import PRIVATE ${PROTOBUF_LIBRARIES})
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(onnx_import PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
         -Wno-extended-offsetof -Wno-zero-as-null-pointer-constant -Wno-shorten-64-to-32 -Wno-unused-macros
         -Wno-missing-variable-declarations -Wno-unused-private-field)
 endif()
+

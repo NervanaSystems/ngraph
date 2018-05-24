@@ -47,5 +47,6 @@ namespace ngraph
         };
 
         std::ostream& operator<<(std::ostream& os, const ValueInfo& wrapper);
+
     } // namespace onnx_import
 } // namespace ngraph

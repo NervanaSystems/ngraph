@@ -40,5 +40,8 @@ namespace ngraph
             std::vector<T> get_vector() const;
         };
 
+
+        std::ostream& operator<<(std::ostream&, const Tensor&);
+
     } // namespace onnx_import
 } // namespace ngraph

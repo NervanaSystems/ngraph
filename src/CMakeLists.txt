@@ -26,6 +26,6 @@ else()
     message(STATUS "tools disabled")
 endif()
 
-if (NGRAPH_ONNX_IMPORT)
+if (NGRAPH_ONNX_IMPORT_ENABLE)
     set(NGRAPH_ONNX_INCLUDE_DIR ${NGRAPH_ONNX_INCLUDE_DIR} PARENT_SCOPE)
 endif()

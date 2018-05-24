@@ -142,9 +142,7 @@ set (SRC
     cpio.cpp
 )
 
-if (NGRAPH_ONNX_IMPORT)
-    add_subdirectory(onnx_import)
-endif()
+add_subdirectory(frontend)
 
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)
 file(GLOB_RECURSE OPS "${CMAKE_CURRENT_SOURCE_DIR}/ops" "${CMAKE_CURRENT_SOURCE_DIR}/ops/*.hpp")
@@ -318,9 +316,8 @@ endif()
 add_dependencies(ngraph ext_json)
 include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 
-if (NGRAPH_ONNX_IMPORT)
-  add_dependencies(ngraph onnx_import)
-  target_link_libraries(ngraph PRIVATE onnx_import ${PROTOBUF_LIBRARIES})
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    add_dependencies(ngraph onnx_import)
 endif()
 
 if (NOT APPLE)

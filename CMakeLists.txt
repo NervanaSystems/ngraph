@@ -38,7 +38,6 @@ endif()
 
 project (ngraph)
 
-option(NGRAPH_ONNX_IMPORT "Enable ONNX importer" ON)
 
 SET(GCC_MIN_VERSION 4.8)
 SET(CLANG_MIN_VERSION 3.8)
@@ -85,6 +84,7 @@ option(NGRAPH_CPU_ENABLE "Control the building of the CPU backend" TRUE)
 option(NGRAPH_GPU_ENABLE "Control the building of the GPU backend" FALSE)
 option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
+option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
@@ -230,7 +230,7 @@ endif()
 #     ...
 set(EXTERNAL_INSTALL_DIR ${CMAKE_BINARY_DIR}/external)
 
-if (NGRAPH_ONNX_IMPORT)
+if (NGRAPH_ONNX_IMPORT_ENABLE)
     find_package(Protobuf REQUIRED)
     include_directories(${PROTOBUF_INCLUDE_DIR})
     link_directories(${PROTOBUF_LIBRARY_DIR})
@@ -258,4 +258,3 @@ endif()
 
 add_subdirectory(doc)
 
-unset(NGRAPH_ONNX_IMPORT CACHE)

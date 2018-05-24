@@ -180,12 +180,6 @@ if(NGRAPH_ONNX_IMPORT)
     target_link_libraries(unit-test onnx_import ${PROTOBUF_LIBRARIES})
 endif()
 
-if(NGRAPH_NNP_ENABLE)
-    # A framework like TF shall not need to link `libnnp.so`, but shall call via libngraph.so.
-    # Since we're testing non-public APIs in libnnp.so, we link it directly here.
-    target_link_libraries(unit-test ${NNP_TRANSFORMER_LIB_DIR}/libnnp.so)
-endif()
-
 add_dependencies(unit-test ngraph libgtest ext_json)
 include_directories(SYSTEM ${JSON_INCLUDE_DIR})
 
