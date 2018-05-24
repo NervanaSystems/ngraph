@@ -14,27 +14,32 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
+#include <fstream>
 
-#include <string>
+#include "ngraph/file_util.hpp"
+#include "ngraph/pass/serialize.hpp"
+#include "ngraph/serializer.hpp"
+#include "ngraph/util.hpp"
+#include "nlohmann/json.hpp"
 
-#include "ngraph/pass/pass.hpp"
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+pass::Serialization::Serialization(const string& output_file)
+    : m_prefix_filename{output_file}
 {
-    namespace pass
-    {
-        class SerializerPass;
-    }
 }
 
-class ngraph::pass::SerializerPass : public ModulePass
+bool pass::Serialization::run_on_module(vector<shared_ptr<Function>>& functions)
 {
-public:
-    SerializerPass(const std::string& output_file);
-
-    virtual bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) override;
-
-private:
-    const std::string m_prefix_filename;
-};
+    for (shared_ptr<Function> f : functions)
+    {
+        string js = serialize(f, 4);
+        ofstream out(m_prefix_filename + f->get_name() + std::string(".json"));
+        if (out)
+        {
+            out << js;
+        }
+    }
+    return false;
+}
