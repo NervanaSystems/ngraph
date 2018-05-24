@@ -202,6 +202,14 @@ namespace ngraph
                                                 const mkldnn::memory::desc& dweights_desc,
                                                 const double eps);
 
+                size_t build_rnn_forward(const mkldnn::memory::desc& src_layer_desc,
+                                         const mkldnn::memory::desc& src_iter_desc,
+                                         const mkldnn::memory::desc& weights_layer_desc,
+                                         const mkldnn::memory::desc& weights_iter_desc,
+                                         const mkldnn::memory::desc& bias_desc,
+                                         const mkldnn::memory::desc& dst_layer_desc,
+                                         const mkldnn::memory::desc& dst_iter_desc);
+
                 size_t build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
                                     const mkldnn::memory::desc& result_desc,
                                     const size_t concat_dim);

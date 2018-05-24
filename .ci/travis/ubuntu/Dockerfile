@@ -31,6 +31,7 @@ COPY . /root/ngraph
 RUN mkdir /root/ngraph/build
 WORKDIR /root/ngraph/build
 RUN cmake ../ -DNGRAPH_USE_PREBUILT_LLVM=TRUE
+RUN make style-check
 RUN make -j 8
 RUN make install
 

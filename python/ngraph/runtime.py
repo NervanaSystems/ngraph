@@ -24,6 +24,7 @@ from ngraph.impl.runtime import Backend
 from ngraph.impl.op import Parameter
 
 from ngraph.utils.types import get_dtype, NumericData
+from ngraph.exceptions import UserInputError
 
 log = logging.getLogger(__file__)
 
@@ -107,6 +108,9 @@ class Computation:
     def _write_ndarray_to_tensor_view(value, tensor_view):
         # type: (np.ndarray, TensorViewType) -> None
         tensor_view_dtype = get_dtype(tensor_view.element_type)
+        if list(tensor_view.shape) != list(value.shape) and len(value.shape) > 0:
+            raise UserInputError('Provided tensor\'s shape: %s does not match the expected: %s.',
+                                 list(value.shape), list(tensor_view.shape))
         if value.dtype != tensor_view_dtype:
             log.warning(
                 'Attempting to write a %s value to a %s tensor. Will attempt type conversion.',
