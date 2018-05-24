@@ -35,6 +35,7 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/pattern/matcher.hpp"
+#include "ngraph/runtime/cpu/op/group_conv.hpp"
 
 using namespace ngraph;
 
@@ -328,12 +329,12 @@ static bool simplify_concat(std::shared_ptr<Node> n)
     std::shared_ptr<Node> weights;
 
     auto concat = std::dynamic_pointer_cast<op::Concat>(n);
+    std::shared_ptr<op::Convolution> sconv;
 
-    if (concat->get_concatenation_axis() > 2)
+    const size_t CHANNEL = 1;
+    if (concat->get_concatenation_axis() != CHANNEL)
     {
-        //TODO this could be relaxed when we figure out which checks
-        //we need to do on strides and window sizes
-        NGRAPH_DEBUG << "can't merge on non batch/channel axis";
+        NGRAPH_DEBUG << "concatenating on an axis different from channel";
         return false;
     }
 
@@ -345,6 +346,7 @@ static bool simplify_concat(std::shared_ptr<Node> n)
             return false;
         }
 
+        sconv = std::dynamic_pointer_cast<op::Convolution>(arg);
         if (!is_trivial_convolution(std::dynamic_pointer_cast<op::Convolution>(arg)))
         {
             NGRAPH_DEBUG << arg->get_name() << " isn't trivial convolution";
@@ -362,7 +364,14 @@ static bool simplify_concat(std::shared_ptr<Node> n)
         }
     }
 
-    auto new_conv = std::make_shared<op::Convolution>(data, weights);
+    auto new_conv = std::make_shared<op::GroupConvolution>(data,
+                                                           weights,
+                                                           sconv->get_window_movement_strides(),
+                                                           sconv->get_window_dilation_strides(),
+                                                           sconv->get_padding_below(),
+                                                           sconv->get_padding_above(),
+                                                           sconv->get_data_dilation_strides(),
+                                                           n->get_shape());
     ngraph::replace_node(n, new_conv);
     return true;
 }
