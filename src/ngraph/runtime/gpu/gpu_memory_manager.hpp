@@ -62,6 +62,8 @@ namespace ngraph
                 GPUAllocator build_allocator() { return GPUAllocator(this); }
             private:
                 GPUMemoryManager(GPUPrimitiveEmitter* emitter);
+                size_t queue_for_transfer(const void* data, size_t size);
+
                 size_t m_buffer_offset;
                 std::vector<uint8_t> m_buffered_mem;
                 pass::MemoryManager m_workspace_manager;

@@ -19,8 +19,8 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/runtime/gpu/gpu_shape.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
+#include "ngraph/runtime/gpu/gpu_shape.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 
 using namespace ngraph;

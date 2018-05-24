@@ -58,20 +58,27 @@ void runtime::gpu::GPUMemoryManager::allocate()
     }
 }
 
-size_t runtime::gpu::GPUAllocator::reserve_argspace(const void* data, size_t size)
+size_t runtime::gpu::GPUMemoryManager::queue_for_transfer(const void* data, size_t size)
 {
     // if the current allocation will overflow the host buffer
-    if (m_manager->m_buffer_offset + size > m_manager->m_buffered_mem.size())
+    if (m_buffer_offset + size > m_buffered_mem.size())
     {
         // add more space to the managed buffer
-        size_t new_size = m_manager->m_buffered_mem.size() / initial_buffer_size + 1;
-        m_manager->m_buffered_mem.resize(new_size);
+        size_t new_size = m_buffered_mem.size() / initial_buffer_size + 1;
+        m_buffered_mem.resize(new_size);
     }
 
-    size_t offset = m_manager->m_buffer_offset;
-    std::memcpy(m_manager->m_buffered_mem.data() + offset, data, size);
-    m_manager->m_buffer_offset += size;
+    size_t offset = m_buffer_offset;
+    std::memcpy(m_buffered_mem.data() + offset, data, size);
+    m_buffer_offset += size;
 
+    return offset;
+}
+
+size_t runtime::gpu::GPUAllocator::reserve_argspace(const void* data, size_t size)
+{
+    // add parameter data to host buffer that will be transfered to device
+    size_t offset = m_manager->queue_for_transfer(data, size);
     // required to capture m_manager pointer
     // directly rather than `this` pointer
     auto manager = m_manager;
