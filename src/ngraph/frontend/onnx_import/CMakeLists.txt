@@ -15,12 +15,20 @@
 # ******************************************************************************
 
 set(ONNX_SOURCE_URL "https://raw.githubusercontent.com/onnx/onnx/v1.1.2/onnx/onnx.proto")
-set(ONNX_PROTO ${CMAKE_CURRENT_BINARY_DIR}/onnx.proto)
-set(ONNX_PB_H ${CMAKE_CURRENT_BINARY_DIR}/onnx.pb.h)
-set(ONNX_PB_CC ${CMAKE_CURRENT_BINARY_DIR}/onnx.pb.cc)
 
-set(ONNX_IMPORT_SOURCE_FILES
-        ${ONNX_PB_CC}
+set_source_files_properties(onnx.pb.h onnx.pb.cc PROPERTIES GENERATED TRUE)
+
+add_custom_command(OUTPUT onnx.proto
+        COMMAND wget --timeout=60 ${ONNX_SOURCE_URL})
+
+add_custom_command(OUTPUT onnx.pb.cc onnx.pb.h
+        COMMAND protobuf::protoc --cpp_out ${CMAKE_CURRENT_BINARY_DIR} --proto_path ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/onnx.proto
+        DEPENDS onnx.proto)
+
+add_library(onnx_import STATIC
+        onnx.pb.cc
+        onnx.pb.h
+        onnx.proto
         graph.cpp
         mapping.cpp
         model.cpp
@@ -28,10 +36,7 @@ set(ONNX_IMPORT_SOURCE_FILES
         ops_bridge.cpp
         onnx_util.cpp
         tensor.cpp
-        value_info.cpp)
-
-set(ONNX_IMPORT_HEADER_FILES
-        ${ONNX_PB_H}
+        value_info.cpp
         graph.hpp
         mapping.hpp
         model.hpp
@@ -41,14 +46,11 @@ set(ONNX_IMPORT_HEADER_FILES
         tensor.hpp
         value_info.hpp)
 
-set_source_files_properties(${ONNX_PB_H} ${ONNX_PB_CC} PROPERTIES GENERATED TRUE)
-file(DOWNLOAD ${ONNX_SOURCE_URL} ${ONNX_PROTO})
+target_include_directories(onnx_import
+        PUBLIC ${CMAKE_CURRENT_BINARY_DIR}
+        PRIVATE ${NGRAPH_INCLUDE_PATH})
 
-exec_program(${PROTOBUF_PROTOC_EXECUTABLE} ARGS --cpp_out ${CMAKE_CURRENT_BINARY_DIR} --proto_path ${CMAKE_CURRENT_BINARY_DIR} ${ONNX_PROTO})
-
-add_library(onnx_import STATIC ${ONNX_IMPORT_SOURCE_FILES} ${ONNX_IMPORT_HEADER_FILES} ${ONNX_PROTO})
-target_include_directories(onnx_import PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${NGRAPH_INCLUDE_PATH})
-target_link_libraries(onnx_import PRIVATE ${PROTOBUF_LIBRARIES})
+target_link_libraries(onnx_import PRIVATE protobuf::libprotobuf)
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(onnx_import PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum

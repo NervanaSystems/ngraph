@@ -53,8 +53,7 @@ set (SRC
     zero_dim_tensor_elimination.cpp
 )
 
-if (NGRAPH_ONNX_IMPORT)
-    include_directories(${CMAKE_CURRENT_BINARY_DIR}/../src/ngraph/onnx_import)
+if (NGRAPH_ONNX_IMPORT_ENABLE)
     list(APPEND SRC onnx_import.cpp)
 endif()
 
@@ -175,9 +174,9 @@ endif()
 target_link_libraries(unit-test ngraph libgtest pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
-if(NGRAPH_ONNX_IMPORT)
+if(NGRAPH_ONNX_IMPORT_ENABLE)
     add_dependencies(unit-test onnx_import)
-    target_link_libraries(unit-test onnx_import ${PROTOBUF_LIBRARIES})
+    target_link_libraries(unit-test onnx_import)
 endif()
 
 add_dependencies(unit-test ngraph libgtest ext_json)

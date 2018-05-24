@@ -371,6 +371,10 @@ if(MPI_CXX_INCLUDE_PATH)
     target_link_libraries(ngraph PRIVATE ${MPI_CXX_LIBRARIES})
 endif()
 
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    target_link_libraries(ngraph PRIVATE onnx_import)
+endif()
+
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
 #-----------------------------------------------------------------------------------------------
