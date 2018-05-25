@@ -33,7 +33,7 @@ pass::Serialization::Serialization(const string& name)
 bool pass::Serialization::run_on_module(vector<shared_ptr<Function>>& functions)
 {
     //serializing the outermost functions
-    //also serialize any inner functions
+    //also implicitly serializes any inner functions
     serialize(m_name, functions.at(0), 4);
     return false;
 }
