@@ -63,6 +63,11 @@ namespace ngraph
                                            const std::string& name,
                                            const std::array<std::string, 2>& data_types);
 
+                static void get_replace_slice_op(codegen::CodeWriter& writer,
+                                                 const std::string& name,
+                                                 const std::array<std::string, 3>& data_types,
+                                                 int nthreads_per_block);
+
                 static void get_device_helper(codegen::CodeWriter& writer,
                                               const std::string& name,
                                               const std::string& math_kernel,
