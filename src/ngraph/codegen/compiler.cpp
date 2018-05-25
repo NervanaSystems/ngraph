@@ -260,18 +260,16 @@ bool codegen::StaticCompiler::is_version_number(const string& path)
     return rc;
 }
 
-void codegen::StaticCompiler::add_header_search_path(const string& path)
+void codegen::StaticCompiler::add_header_search_path(const string& p)
 {
-    vector<string> paths = split(path, ';');
-    NGRAPH_INFO << path;
-    for (const string& p : paths)
+    vector<string> paths = split(p, ';');
+    for (const string& path : paths)
     {
-        NGRAPH_INFO << p;
-        if (!contains(m_extra_search_path_list, p))
+        if (!contains(m_extra_search_path_list, path))
         {
-            m_extra_search_path_list.push_back(p);
+            m_extra_search_path_list.push_back(path);
             HeaderSearchOptions& hso = m_compiler->getInvocation().getHeaderSearchOpts();
-            hso.AddPath(p, clang::frontend::System, false, false);
+            hso.AddPath(path, clang::frontend::System, false, false);
         }
     }
 }

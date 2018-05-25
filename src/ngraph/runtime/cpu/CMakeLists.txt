@@ -38,13 +38,17 @@ set(SRC
     op/conv_bias.cpp
     op/conv_relu.cpp
     op/convert_layout.cpp
+    op/lstm.cpp
     op/matmul_bias.cpp
     op/max_pool_with_indices.cpp
+    op/rnn.cpp
     op/sigmoid.cpp
     pass/cpu_assignment.cpp
+    pass/cpu_concat_inputs.cpp
     pass/cpu_fusion.cpp
     pass/cpu_layout.cpp
     pass/cpu_post_layout_optimizations.cpp
+    pass/cpu_rnn_fusion.cpp
     pass/cpu_rnn_mat_fusion.cpp
     pass/cpu_shuffle_folding.cpp
     pass/cpu_workspace_insertion.cpp
