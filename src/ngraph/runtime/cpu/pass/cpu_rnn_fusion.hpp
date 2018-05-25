@@ -17,24 +17,47 @@
 #pragma once
 
 #include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace runtime
     {
-        class CoreFusion;
+        namespace cpu
+        {
+            namespace pass
+            {
+                class LSTMFusion;
+                class RNNFusion;
+            }
+        }
     }
 }
 
-class ngraph::pass::CoreFusion : public ngraph::pass::GraphRewrite
+class ngraph::runtime::cpu::pass::LSTMFusion : public ngraph::pass::GraphRewrite
 {
 public:
-    CoreFusion()
+    LSTMFusion()
         : GraphRewrite()
     {
-        construct_relu();
-        construct_folded_batch_norm();
+        construct_sigmoid();
+        construct_lstm_fprop();
     }
-    void construct_relu();
-    void construct_folded_batch_norm();
+
+private:
+    void construct_sigmoid();
+    void construct_lstm_fprop();
+};
+
+class ngraph::runtime::cpu::pass::RNNFusion : public ngraph::pass::RecurrentGraphRewrite
+{
+public:
+    RNNFusion()
+        : RecurrentGraphRewrite()
+    {
+        construct_rnn_lstm_fprop();
+    }
+
+private:
+    void construct_rnn_lstm_fprop();
 };

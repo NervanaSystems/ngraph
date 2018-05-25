@@ -508,7 +508,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                               "CUBLAS_POINTER_MODE_HOST));\n";
                     writer << "CUBLAS_SAFE_CALL(cublasSgemv("
                            << "*ctx->cublas_handle,"
-                           << "CUBLAS_OP_T," << arg0_shape[0] << "," << arg0_shape[1] << ","
+                           << "CUBLAS_OP_T," << arg0_shape[1] << "," << arg0_shape[0] << ","
                            << "&alpha," // Alpha
                            << args[0].get_name() << "," << arg0_shape[1] << ","
                            << args[1].get_name() << ","
@@ -1305,6 +1305,50 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             }
 
             template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Product)
+            {
+                const ngraph::op::Product* product = static_cast<const ngraph::op::Product*>(node);
+                writer.block_begin("  // " + node->get_name());
+                {
+                    if (out[0].get_size() != 0)
+                    {
+                        // one of args[] axes has zero size, fill output with 1
+                        if (args[0].get_size() == 0)
+                        {
+                            writer << "float init_value = 1;\n";
+                            writer << "std::vector<float> temp(" << out[0].get_size()
+                                   << ", init_value);\n";
+                            writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
+                                   << ", (void*)temp.data(), " << out[0].get_size() << " * "
+                                   << out[0].get_element_type().size() << ");\n";
+                        }
+                        else if (args[0].get_shape().size() == out[0].get_shape().size())
+                        {
+                            kernel::emit_memcpyDtD(writer, out[0], args[0]);
+                        }
+                        // descriptors for tensors  with <= 4 dimensions
+                        else
+                        {
+                            auto& cudnn_emitter =
+                                external_function->get_primitive_emitter()->get_cudnn_emitter();
+                            auto index =
+                                cudnn_emitter->build_reduce_forward(external_function->ctx().get(),
+                                                                    CUDNN_REDUCE_TENSOR_MUL,
+                                                                    args[0].get_shape(),
+                                                                    product->get_reduction_axes());
+
+                            writer << "gpu::invoke_primitive(ctx, " << index << ", ";
+                            writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                            writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                            writer << ");\n";
+                        }
+                    }
+                }
+                writer.block_end();
+                return;
+            }
+
+            template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Reduce)
             {
                 const ngraph::op::Reduce* reduce_op = static_cast<const ngraph::op::Reduce*>(node);
@@ -1895,6 +1939,38 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
                         writer << ");\n";
                     }
+                }
+                writer.block_end();
+            }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Softmax)
+            {
+                writer.block_begin("  // " + node->get_name());
+                {
+                    auto softmax = static_cast<const ngraph::op::Softmax*>(node);
+                    auto tensor_shape = args[0].get_shape();
+                    auto axes = softmax->get_axes();
+                    if (axes.size() != tensor_shape.size())
+                    {
+                        throw std::runtime_error(
+                            "Softmax implementation currently only supports all axis activation.");
+                    }
+
+                    auto& cudnn_emitter =
+                        external_function->get_primitive_emitter()->get_cudnn_emitter();
+
+                    size_t softmax_index =
+                        cudnn_emitter->build_softmax(external_function->ctx().get(),
+                                                     CUDNN_SOFTMAX_FAST,
+                                                     CUDNN_SOFTMAX_MODE_INSTANCE,
+                                                     CUDNNEmitter::Prop::Forward,
+                                                     tensor_shape);
+
+                    writer << "gpu::invoke_primitive(ctx, " << softmax_index << ", ";
+                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                    writer << ");\n";
                 }
                 writer.block_end();
             }
