@@ -4,9 +4,7 @@ backwards_reverse_sequence_n4d2c3h2w2
 backwards_reverse_sequence_n3_c2_h3
 backwards_slice
 backwards_softmax_3d
-backwards_softmax_all
 backwards_softmax_axis
-backwards_softmax_underflow
 batch_norm_one_output
 batch_norm_three_outputs
 broadcast_vector_rowwise_int64
@@ -68,7 +66,6 @@ scalar_constant_int64
 select_and_scatter_3d_without_overlap
 select_and_scatter_with_overlap
 select_and_scatter_without_overlap
-softmax_all
 softmax_axis
 softmax_underflow
 tensor_constant
