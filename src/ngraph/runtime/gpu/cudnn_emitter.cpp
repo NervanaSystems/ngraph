@@ -432,3 +432,69 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }
+
+size_t runtime::gpu::CUDNNEmitter::build_softmax(const runtime::gpu::GPURuntimeContext* ctx,
+                                                 const cudnnSoftmaxAlgorithm_t& algorithm,
+                                                 const cudnnSoftmaxMode_t& mode,
+                                                 const Prop& direction,
+                                                 const Shape& tensor_shape)
+{
+    // construct hash to determine if kernel needs to be emitted
+    // or if it already exists in the primitive list
+    std::stringstream ss;
+    ss << "softmax_op" << mode << "_alg" << algorithm << "_dir" << static_cast<int>(direction)
+       << "_s" << join(tensor_shape, "_");
+    std::string hash = ss.str();
+
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    auto& tensor_desc = tensor_descriptor_from_shape(tensor_shape);
+
+    float alpha = 1.0, beta = 0.0;
+    std::unique_ptr<runtime::gpu::primitive> softmax;
+    switch (direction)
+    {
+    case Prop::Forward:
+    case Prop::Inference:
+    {
+        softmax.reset(new gpu::primitive{[=, &tensor_desc](void** inputs, void** outputs) {
+            CUDNN_SAFE_CALL(cudnnSoftmaxForward(*ctx->cudnn_handle,
+                                                algorithm,
+                                                mode,
+                                                &alpha,
+                                                tensor_desc,
+                                                inputs[0],
+                                                &beta,
+                                                tensor_desc,
+                                                outputs[0]));
+        }});
+        break;
+    }
+    case Prop::Backward:
+    {
+        softmax.reset(new gpu::primitive{[=, &tensor_desc](void** inputs, void** outputs) {
+            CUDNN_SAFE_CALL(cudnnSoftmaxBackward(*ctx->cudnn_handle,
+                                                 algorithm,
+                                                 mode,
+                                                 &alpha,
+                                                 tensor_desc,
+                                                 inputs[0],
+                                                 tensor_desc,
+                                                 inputs[1],
+                                                 &beta,
+                                                 tensor_desc,
+                                                 outputs[0]));
+        }});
+        break;
+    }
+    }
+
+    primitive_index = this->m_primitive_emitter->insert(std::move(softmax));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
