@@ -1504,12 +1504,10 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_multi_use)
     auto f = make_shared<Function>(A, op::ParameterVector{});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    // Call f on r1, it returns 388 as expected.
     std::shared_ptr<runtime::TensorView> r1 = backend->create_tensor(element::i32, Shape{});
     backend->call(f, {r1}, std::vector<std::shared_ptr<runtime::TensorView>>{});
     EXPECT_EQ(read_vector<int>(r1), std::vector<int>{388});
 
-    // Call f again on r2, it does not write any value.
     std::shared_ptr<runtime::TensorView> r2 = backend->create_tensor(element::i32, Shape{});
     backend->call(f, {r2}, std::vector<std::shared_ptr<runtime::TensorView>>{});
     EXPECT_EQ(read_vector<int>(r2), std::vector<int>{388});
