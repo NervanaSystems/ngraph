@@ -1,12 +1,15 @@
+
 Core Contributor Guidelines
 ===========================
 
 Code formatting
 ---------------
 
-All C/C++ source code in the repository, including the test code, must
-adhere to the source-code formatting and style guidelines described
-here.
+For [code contributions], all C/C++ source code in the repository, 
+including the test code, must adhere to the source-code formatting 
+and style guidelines described here.
+
+For [doc contributions], we use restructured text, not markdown. 
 
 ### Adding ops to nGraph Core
 
@@ -76,9 +79,8 @@ should have simple $\mathcal{O}(1)$ implementations:
         -   Doing so leaks the alias into users of the header, including
             headers that follow.
 
-        - It is okay to use `using` with local scope, such as inside a class
-
-        :   definiton.
+        - It is okay to use `using` with local scope, such as inside 
+          a class definiton.
 
     -   Be careful of C++'s implicit namespace inclusions. For example,
         if a parameter's type is from another namespace, that namespace
@@ -187,13 +189,12 @@ merge conflicts.
     reference, `auto` will strip the reference unless you use `auto&`:
     -   Don't do things like
 
-        `auto s = Shape{2,3};`
+            auto s = Shape{2,3};
 
         Instead, use
 
-        ```
-        Shape s{2, 3};
-        ```
+            Shape s{2, 3};
+
 
     -   Indicate the type in the variable name.
 
@@ -206,12 +207,11 @@ merge conflicts.
 
         Instead, use:
 
-        <pre>
-        ```
-        int x;
-        int y;
-        int* z;
-        ```
-        </pre>
+            int x;
+            int y;
+            int* z;
+       
 
 
+[code contributions]:http://ngraph.nervanasys.com/docs/latest/project/code-contributor-README.html
+[doc contributions]:http://ngraph.nervanasys.com/docs/latest/project/doc-contributor-README.html
