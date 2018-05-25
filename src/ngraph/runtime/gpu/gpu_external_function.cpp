@@ -752,6 +752,10 @@ using namespace std;
         // End generated function
         writer += "}\n\n";
     }
+
+    // allocate device buffers for primitive arguments and workspace
+    m_primitive_emitter->allocate_primitive_memory();
+
     // TODO: Cleanup and make this a utility function
 
     string filename = file_util::path_join(s_output_dir, function_name + "_codegen.cpp");
