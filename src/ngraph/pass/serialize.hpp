@@ -31,10 +31,10 @@ namespace ngraph
 class ngraph::pass::Serialization : public ModulePass
 {
 public:
-    Serialization(const std::string& output_file);
+    Serialization(const std::string& name);
 
     virtual bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) override;
 
 private:
-    const std::string m_prefix_filename;
+    const std::string m_name;
 };

@@ -25,21 +25,15 @@
 using namespace std;
 using namespace ngraph;
 
-pass::Serialization::Serialization(const string& output_file)
-    : m_prefix_filename{output_file}
+pass::Serialization::Serialization(const string& name)
+    : m_name{name}
 {
 }
 
 bool pass::Serialization::run_on_module(vector<shared_ptr<Function>>& functions)
 {
-    for (shared_ptr<Function> f : functions)
-    {
-        string js = serialize(f, 4);
-        ofstream out(m_prefix_filename + f->get_name() + std::string(".json"));
-        if (out)
-        {
-            out << js;
-        }
-    }
+    //serializing the outermost functions
+    //also serialize any inner functions
+    serialize(m_name, functions.at(0), 4);
     return false;
 }
