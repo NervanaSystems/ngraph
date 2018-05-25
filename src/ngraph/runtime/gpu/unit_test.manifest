@@ -7,7 +7,6 @@ backwards_concat_axis_0
 backwards_concat_axis_1
 backwards_concat_vector
 backwards_divide
-backwards_dot_tensor_vector
 backwards_dot_tensor2_tensor2
 backwards_dot_tensor3_tensor3
 backwards_log
@@ -67,11 +66,7 @@ convolution_4d_4items_strided_dilated_padded_same
 divide_adjoint_stability
 divide_by_zero_float32
 divide_by_zero_int32
-dot_3d_multi_axis
-dot_3d_one_axis_arbitrary
-dot_4d_5d_multi_axis
 dot_4d_5d_multi_axis_big_fp64_VERY_SLOW
-dot_4d_5d_multi_axis_more
 dot_matrix_vector_int64
 function_call
 logical_and
