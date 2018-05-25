@@ -1317,6 +1317,50 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             }
 
             template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Product)
+            {
+                const ngraph::op::Product* product = static_cast<const ngraph::op::Product*>(node);
+                writer.block_begin("  // " + node->get_name());
+                {
+                    if (out[0].get_size() != 0)
+                    {
+                        // one of args[] axes has zero size, fill output with 1
+                        if (args[0].get_size() == 0)
+                        {
+                            writer << "float init_value = 1;\n";
+                            writer << "std::vector<float> temp(" << out[0].get_size()
+                                   << ", init_value);\n";
+                            writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
+                                   << ", (void*)temp.data(), " << out[0].get_size() << " * "
+                                   << out[0].get_element_type().size() << ");\n";
+                        }
+                        else if (args[0].get_shape().size() == out[0].get_shape().size())
+                        {
+                            kernel::emit_memcpyDtD(writer, out[0], args[0]);
+                        }
+                        // descriptors for tensors  with <= 4 dimensions
+                        else
+                        {
+                            auto& cudnn_emitter =
+                                external_function->get_primitive_emitter()->get_cudnn_emitter();
+                            auto index =
+                                cudnn_emitter->build_reduce_forward(external_function->ctx().get(),
+                                                                    CUDNN_REDUCE_TENSOR_MUL,
+                                                                    args[0].get_shape(),
+                                                                    product->get_reduction_axes());
+
+                            writer << "gpu::invoke_primitive(ctx, " << index << ", ";
+                            writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                            writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                            writer << ");\n";
+                        }
+                    }
+                }
+                writer.block_end();
+                return;
+            }
+
+            template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Reduce)
             {
                 const ngraph::op::Reduce* reduce_op = static_cast<const ngraph::op::Reduce*>(node);
