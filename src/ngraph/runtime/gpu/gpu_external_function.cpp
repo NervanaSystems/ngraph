@@ -259,7 +259,7 @@ runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     // Create context use driver API and make it current, the runtime call will pickup the context
     // http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html
     // #interoperability-between-runtime-and-driver-apis
-    ngraph::runtime::gpu::CudaContextManager::instance();
+    ngraph::runtime::gpu::CudaContextManager::Instance().SetContextCurrent();
     m_ctx->compiled_kernel_pool = new CudaFunctionPool;
 }
 
