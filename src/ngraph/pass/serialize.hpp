@@ -14,27 +14,27 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <memory>
+#pragma once
+
 #include <string>
 
-#include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
+#include "ngraph/pass/pass.hpp"
 
-using namespace ngraph;
-
-runtime::gpu::CudaContextManager& runtime::gpu::CudaContextManager::Instance()
+namespace ngraph
 {
-    static CudaContextManager manager;
-    return manager;
+    namespace pass
+    {
+        class Serialization;
+    }
 }
 
-runtime::gpu::CudaContextManager::CudaContextManager()
+class ngraph::pass::Serialization : public ModulePass
 {
-    CUDA_SAFE_CALL(cuInit(0));
-    CUDA_SAFE_CALL(cuDeviceGet(&m_device, 0));
-    CUDA_SAFE_CALL(cuDevicePrimaryCtxRetain(&m_context, m_device));
-}
+public:
+    Serialization(const std::string& name);
 
-runtime::gpu::CudaContextManager::~CudaContextManager()
-{
-    CUDA_SAFE_CALL(cuDevicePrimaryCtxRelease(m_device));
-}
+    virtual bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) override;
+
+private:
+    const std::string m_name;
+};
