@@ -61,6 +61,8 @@ add_custom_target(header_resource
 )
 
 add_library(codegen SHARED EXCLUDE_FROM_ALL ${SRC})
+set_target_properties(codegen PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
 add_dependencies(codegen header_resource)
 target_include_directories(codegen PUBLIC ${CMAKE_BINARY_DIR})
 target_link_libraries(codegen PUBLIC libllvm libmkldnn libeigen pthread dl)
+install(TARGETS codegen DESTINATION ${NGRAPH_INSTALL_LIB})
