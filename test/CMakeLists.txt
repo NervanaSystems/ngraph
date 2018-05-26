@@ -112,6 +112,10 @@ if (NGRAPH_CPU_ENABLE)
     target_link_libraries(unit-test cpu_backend interpreter_backend)
 endif()
 
+if (NGRAPH_TBB_ENABLE)
+    add_definitions(-DNGRAPH_TBB_ENABLE)
+endif()
+
 if (NGRAPH_INTERPRETER_ENABLE)
     add_definitions(-DNGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(unit-test interpreter_backend)

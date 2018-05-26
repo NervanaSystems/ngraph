@@ -176,6 +176,10 @@ endif()
 if (NOT DEFINED NGRAPH_TBB_ENABLE)
     set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
 endif()
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    # Currently tbb is not correctly linked in when using gcc
+    set(NGRAPH_TBB_ENABLE FALSE)
+endif()
 
 #-----------------------------------------------------------------------------------------------
 # enable or disable output from NGRAPH_DEBUG statements

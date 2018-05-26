@@ -4796,6 +4796,7 @@ NGRAPH_TEST(${BACKEND_NAME}, numeric_double_inf)
     EXPECT_EQ((vector<char>{false, false, true, false, false}), read_vector<char>(result));
 }
 
+#ifdef NGRAPH_TBB_ENABLE
 NGRAPH_TEST(${BACKEND_NAME}, abc_tbb)
 {
     // Force TBB flow graph generation in the CPU backend
@@ -4841,6 +4842,7 @@ NGRAPH_TEST(${BACKEND_NAME}, abc_tbb)
         unsetenv("NGRAPH_CPU_USE_TBB");
     }
 }
+#endif // NGRAPH_TBB_ENABLE
 
 //
 // The unit tests for ReduceWindow follow exactly what we test for MaxPool---but they use ReduceWindow to do it.
