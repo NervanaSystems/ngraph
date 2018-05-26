@@ -794,6 +794,32 @@ using namespace ngraph::runtime;
                         writer << " || t_en[" << tensor_index_map[input_name] << "]";
                     }
                 }
+
+                auto computes_output = [&]() {
+                    if (std::dynamic_pointer_cast<ngraph::op::Result>(node))
+                    {
+                        return true;
+                    }
+                    // Check if node feeds a result node that has been copy eliminated
+                    for (const descriptor::Output& output : node->get_outputs())
+                    {
+                        for (const descriptor::Input* input : output.get_inputs())
+                        {
+                            auto res =
+                                std::dynamic_pointer_cast<ngraph::op::Result>(input->get_node());
+                            if (res && !res->needs_copy())
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                };
+                // Always enable nodes computing output tensors
+                if (computes_output())
+                {
+                    writer << " || 1";
+                }
                 writer << ") {\n";
                 writer.indent++;
             }
