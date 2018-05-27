@@ -16,8 +16,8 @@
 
 #include <tbb/tbb_stddef.h>
 
-#include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
