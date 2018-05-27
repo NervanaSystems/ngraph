@@ -14,6 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <tbb/tbb_stddef.h>
+
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
@@ -26,6 +28,8 @@ using namespace std;
 
 extern "C" void create_backend()
 {
+    // Force TBB to link to the backend
+    tbb::TBB_runtime_interface_version();
     runtime::Backend::register_backend("CPU", make_shared<runtime::cpu::CPU_Backend>());
 };
 

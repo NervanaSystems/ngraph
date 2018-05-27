@@ -76,6 +76,11 @@ if (NGRAPH_TBB_ENABLE)
         DESTINATION ${NGRAPH_INSTALL_LIB}
         FILES_MATCHING REGEX "/libtbb_debug${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
     )
+    add_library(libtbb INTERFACE)
+    target_link_libraries(libtbb INTERFACE
+        ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}
+    )
+    target_include_directories(libtbb INTERFACE ${TBB_ROOT}/include)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
@@ -92,7 +97,7 @@ if (NGRAPH_CPU_ENABLE)
         target_link_libraries(cpu_backend PRIVATE ${MPI_CXX_LIBRARIES})
     endif()
 
-    target_link_libraries(cpu_backend PUBLIC ngraph codegen libmkldnn libeigen libjson ${TBB_IMPORTED_TARGETS})
+    target_link_libraries(cpu_backend PUBLIC ngraph codegen libmkldnn libeigen libjson libtbb)
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
 
     install(TARGETS cpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
