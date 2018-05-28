@@ -221,7 +221,7 @@ install(DIRECTORY
 )
 
 set(CPACK_GENERATOR "DEB")
-
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A most excellent graph library")
 set(CPACK_PACKAGE_NAME "nGraph")
 set(CPACK_PACKAGE_CONTACT "Robert Kimball")
