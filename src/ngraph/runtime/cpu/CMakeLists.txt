@@ -80,7 +80,7 @@ if (NGRAPH_TBB_ENABLE)
     target_link_libraries(libtbb INTERFACE
         ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}
     )
-    target_include_directories(libtbb INTERFACE ${TBB_ROOT}/include)
+    target_include_directories(libtbb SYSTEM INTERFACE ${TBB_ROOT}/include)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
