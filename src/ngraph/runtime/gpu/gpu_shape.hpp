@@ -71,6 +71,19 @@ namespace ngraph
             return *this;
         }
 
+        GPUShape(const std::vector<size_t>& vec)
+        {
+            for (size_t const& size : vec)
+            {
+                if (size >> 32 != 0)
+                {
+                    throw std::runtime_error(
+                        "Request exceeds the bitwidth available for GPUShapes (32)");
+                }
+                this->push_back(static_cast<uint32_t>(size));
+            }
+        }
+
         GPUShape(const Shape& shape)
         {
             for (size_t const& size : shape)

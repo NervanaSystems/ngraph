@@ -127,8 +127,8 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
             pad_interior = padding_interior;
         }
 
-        auto input_strides = row_major_strides(input_shape);
-        auto output_strides = row_major_strides(output_shape);
+        GPUShape input_strides = row_major_strides(input_shape);
+        GPUShape output_strides = row_major_strides(output_shape);
 
         int offset = 0;
         for (size_t i = 0; i < output_strides.size(); i++)
@@ -721,8 +721,8 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
     }
 
     // calculate strides
-    auto input_strides = row_major_strides(tensor_shape);
-    auto source_strides = row_major_strides(source_shape);
+    GPUShape input_strides = row_major_strides(tensor_shape);
+    GPUShape source_strides = row_major_strides(source_shape);
     // precacluate invariants for integer division via multiplication
     std::vector<int> dmagics;
     std::vector<int> dshifts;
