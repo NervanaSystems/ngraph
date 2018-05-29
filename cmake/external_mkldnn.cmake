@@ -31,11 +31,19 @@ if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
         )
     add_library(libmkldnn INTERFACE)
     target_include_directories(libmkldnn SYSTEM INTERFACE ${MKLDNN_INCLUDE_DIR})
-    target_link_libraries(libmkldnn INTERFACE
-        ${MKLDNN_LIB_DIR}/libmkldnn.so
-        ${MKLDNN_LIB_DIR}/libmklml_intel.so
-        ${MKLDNN_LIB_DIR}/libiomp5.so
-        )
+    if(APPLE)
+        target_link_libraries(libmkldnn INTERFACE
+            ${MKLDNN_LIB_DIR}/libmkldnn.dylib
+            ${MKLDNN_LIB_DIR}/libmklml_intel.dylib
+            ${MKLDNN_LIB_DIR}/libiomp5.dylib
+            )
+    else()
+        target_link_libraries(libmkldnn INTERFACE
+            ${MKLDNN_LIB_DIR}/libmkldnn.so
+            ${MKLDNN_LIB_DIR}/libmklml_intel.so
+            ${MKLDNN_LIB_DIR}/libiomp5.so
+            )
+    endif()
 
     install(DIRECTORY ${MKLDNN_LIB_DIR}/ DESTINATION ${NGRAPH_INSTALL_LIB})
     return()
@@ -102,10 +110,18 @@ ExternalProject_Add_Step(
 
 add_library(libmkldnn INTERFACE)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
-target_link_libraries(libmkldnn INTERFACE
-    ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn.so
-    ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmklml_intel.so
-    ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libiomp5.so
-    )
+if(APPLE)
+    target_link_libraries(libmkldnn INTERFACE
+        ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn.dylib
+        ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmklml_intel.dylib
+        ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libiomp5.dylib
+        )
+else()
+    target_link_libraries(libmkldnn INTERFACE
+        ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn.so
+        ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmklml_intel.so
+        ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libiomp5.so
+        )
+endif()
 
 install(DIRECTORY ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/ DESTINATION ${NGRAPH_INSTALL_LIB})
