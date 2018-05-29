@@ -14,27 +14,26 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <memory>
-#include <string>
+#include <fstream>
 
-#include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
+#include "ngraph/file_util.hpp"
+#include "ngraph/pass/serialize.hpp"
+#include "ngraph/serializer.hpp"
+#include "ngraph/util.hpp"
+#include "nlohmann/json.hpp"
 
+using namespace std;
 using namespace ngraph;
 
-runtime::gpu::CudaContextManager& runtime::gpu::CudaContextManager::Instance()
+pass::Serialization::Serialization(const string& name)
+    : m_name{name}
 {
-    static CudaContextManager manager;
-    return manager;
 }
 
-runtime::gpu::CudaContextManager::CudaContextManager()
+bool pass::Serialization::run_on_module(vector<shared_ptr<Function>>& functions)
 {
-    CUDA_SAFE_CALL(cuInit(0));
-    CUDA_SAFE_CALL(cuDeviceGet(&m_device, 0));
-    CUDA_SAFE_CALL(cuDevicePrimaryCtxRetain(&m_context, m_device));
-}
-
-runtime::gpu::CudaContextManager::~CudaContextManager()
-{
-    CUDA_SAFE_CALL(cuDevicePrimaryCtxRelease(m_device));
+    //serializing the outermost functions
+    //also implicitly serializes any inner functions
+    serialize(m_name, functions.at(0), 4);
+    return false;
 }

@@ -77,6 +77,12 @@ namespace ngraph
                                        const Shape& param_shape,
                                        double epsilon);
 
+                size_t build_softmax(const runtime::gpu::GPURuntimeContext* ctx,
+                                     const cudnnSoftmaxAlgorithm_t& algorithm,
+                                     const cudnnSoftmaxMode_t& mode,
+                                     const Prop& direction,
+                                     const Shape& tensor_shape);
+
                 cudnnTensorDescriptor_t& tensor_descriptor_from_shape(const Shape& shape);
 
             private:
