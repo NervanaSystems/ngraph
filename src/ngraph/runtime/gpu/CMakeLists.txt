@@ -19,24 +19,25 @@ include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS})
 # Add sources for the GPU backend
 # and all its dependencies
 set(SRC
-    gpu_call_frame.cpp
+    cuda_emitter.cpp
+    cudnn_emitter.cpp
     gpu_backend.cpp
-    gpu_emitter.cpp
-    gpu_external_function.cpp
-    gpu_kernel_emitters.cpp
-    gpu_tensor_view.cpp
-    gpu_tensor_view_wrapper.cpp
-    gpu_util.cpp
-    gpu_cuda_kernel_emitters.cpp
-    gpu_cuda_kernel_builder.cpp
+    gpu_call_frame.cpp
+    gpu_cuda_context_manager.cpp
     gpu_cuda_function_builder.cpp
     gpu_cuda_function_pool.cpp
-    gpu_cuda_context_manager.cpp
-    gpu_runtime_context.cpp
-    gpu_primitive_emitter.cpp
+    gpu_cuda_kernel_builder.cpp
+    gpu_cuda_kernel_emitters.cpp
+    gpu_emitter.cpp
+    gpu_external_function.cpp
     gpu_invoke.cpp
-    cudnn_emitter.cpp
-    cuda_emitter.cpp
+    gpu_kernel_emitters.cpp
+	gpu_memory_manager.cpp
+    gpu_primitive_emitter.cpp
+    gpu_runtime_context.cpp
+    gpu_tensor_view_wrapper.cpp
+    gpu_tensor_view.cpp
+    gpu_util.cpp
     type_info.cpp
     )
 
