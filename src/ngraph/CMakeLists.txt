@@ -125,6 +125,7 @@ set (SRC
     pass/validate_graph.cpp
     pass/visualize_tree.cpp
     pass/core_fusion.cpp
+    pass/serialize.cpp
     pass/zero_dim_tensor_elimination.cpp
     pattern/matcher.cpp
     runtime/aligned_buffer.cpp
@@ -133,7 +134,6 @@ set (SRC
     runtime/interpreter/int_backend.cpp
     runtime/tensor_view.cpp
     serializer.cpp
-    shape.cpp
     type/element_type.cpp
     type/type.cpp
     util.cpp
@@ -142,13 +142,16 @@ set (SRC
     cpio.cpp
     )
 
-message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)
-file(GLOB_RECURSE OPS "${CMAKE_CURRENT_SOURCE_DIR}/ops" "${CMAKE_CURRENT_SOURCE_DIR}/ops/*.hpp")
+message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/op)
+file(GLOB OPS "${CMAKE_CURRENT_SOURCE_DIR}/op" "${CMAKE_CURRENT_SOURCE_DIR}/op/*.hpp")
 foreach(OP ${OPS})
     file(STRINGS ${OP} OP_CLASS REGEX "class [A-Za-z0-9_]+ :")
     foreach(LINE ${OP_CLASS})
-        string(REGEX REPLACE ".*class ([A-Za-z0-9_]+) : public ([A-Za-z0-9_]+).*" "\\1:\\2" CLASS_FOUND ${LINE})
-        set(OP_CLASS_LIST ${OP_CLASS_LIST} ${CLASS_FOUND})
+        string(REGEX REPLACE ".*class ([A-Za-z0-9_]+) : public ([A-Za-z0-9_]+).*" "\\1" CLASS_FOUND ${LINE})
+        string(REGEX REPLACE ".*class ([A-Za-z0-9_]+) : public ([A-Za-z0-9_]+).*" "\\2" BASE_FOUND ${LINE})
+        if (NOT ${BASE_FOUND} STREQUAL "std" AND NOT ${CLASS_FOUND} STREQUAL "Op")
+            set(OP_CLASS_LIST ${OP_CLASS_LIST} ${CLASS_FOUND})
+        endif()
     endforeach(LINE ${OP_CLASS})
 endforeach()
 message(STATUS "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt")
@@ -216,11 +219,15 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
         runtime/cpu/op/conv_relu.cpp
         runtime/cpu/op/convert_layout.cpp
         runtime/cpu/op/sigmoid.cpp
+        runtime/cpu/op/rnn.cpp
+        runtime/cpu/op/lstm.cpp
         runtime/cpu/op/matmul_bias.cpp
         runtime/cpu/op/max_pool_with_indices.cpp
         runtime/cpu/op/batch_norm_relu.cpp
         runtime/cpu/pass/cpu_assignment.cpp
         runtime/cpu/pass/cpu_fusion.cpp
+        runtime/cpu/pass/cpu_rnn_fusion.cpp
+        runtime/cpu/pass/cpu_concat_inputs.cpp
         runtime/cpu/pass/cpu_workspace_insertion.cpp
         runtime/cpu/pass/cpu_layout.cpp
         runtime/cpu/pass/cpu_rnn_mat_fusion.cpp
@@ -287,6 +294,7 @@ endif()
             runtime/gpu/cudnn_emitter.cpp
             runtime/gpu/cuda_emitter.cpp
             runtime/gpu/type_info.cpp
+	    runtime/gpu/gpu_memory_manager.cpp
             )
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")

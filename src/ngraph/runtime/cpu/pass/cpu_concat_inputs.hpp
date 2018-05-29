@@ -16,34 +16,31 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-
-#include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/pass/graph_rewrite.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace cpu
         {
-            class CudaContextManager
+            namespace pass
             {
-            public:
-                static CudaContextManager& Instance();
-                CudaContextManager(CudaContextManager const&) = delete;
-                CudaContextManager(CudaContextManager&&) = delete;
-                CudaContextManager& operator=(CudaContextManager const&) = delete;
-                CudaContextManager& operator=(CudaContextManager&&) = delete;
-
-                CUcontext GetContext() { return m_context; }
-                void SetContextCurrent() { cuCtxSetCurrent(m_context); }
-            protected:
-                CudaContextManager();
-                ~CudaContextManager();
-                CUdevice m_device;
-                CUcontext m_context;
-            };
+                class ConcatInputs;
+            }
         }
     }
 }
+
+class ngraph::runtime::cpu::pass::ConcatInputs : public ngraph::pass::GraphRewrite
+{
+public:
+    ConcatInputs()
+        : GraphRewrite()
+    {
+        concat_lstm_inputs();
+    }
+
+private:
+    void concat_lstm_inputs();
+};

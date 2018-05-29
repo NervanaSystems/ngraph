@@ -16,34 +16,48 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-
-#include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace cpu
         {
-            class CudaContextManager
+            namespace pass
             {
-            public:
-                static CudaContextManager& Instance();
-                CudaContextManager(CudaContextManager const&) = delete;
-                CudaContextManager(CudaContextManager&&) = delete;
-                CudaContextManager& operator=(CudaContextManager const&) = delete;
-                CudaContextManager& operator=(CudaContextManager&&) = delete;
-
-                CUcontext GetContext() { return m_context; }
-                void SetContextCurrent() { cuCtxSetCurrent(m_context); }
-            protected:
-                CudaContextManager();
-                ~CudaContextManager();
-                CUdevice m_device;
-                CUcontext m_context;
-            };
+                class LSTMFusion;
+                class RNNFusion;
+            }
         }
     }
 }
+
+class ngraph::runtime::cpu::pass::LSTMFusion : public ngraph::pass::GraphRewrite
+{
+public:
+    LSTMFusion()
+        : GraphRewrite()
+    {
+        construct_sigmoid();
+        construct_lstm_fprop();
+    }
+
+private:
+    void construct_sigmoid();
+    void construct_lstm_fprop();
+};
+
+class ngraph::runtime::cpu::pass::RNNFusion : public ngraph::pass::RecurrentGraphRewrite
+{
+public:
+    RNNFusion()
+        : RecurrentGraphRewrite()
+    {
+        construct_rnn_lstm_fprop();
+    }
+
+private:
+    void construct_rnn_lstm_fprop();
+};

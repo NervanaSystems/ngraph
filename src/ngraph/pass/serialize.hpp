@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2018 Intel Corporation
+* Copyright 2017-2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,21 +16,25 @@
 
 #pragma once
 
-#include <cstddef>
+#include <string>
+
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace pass
     {
-        namespace gpu
-        {
-            struct GPURuntimeContext;
-            extern "C" void invoke_primitive(const GPURuntimeContext* ctx,
-                                             size_t primitive_index,
-                                             void** args,
-                                             void** result);
-            extern "C" void* invoke_memory_primitive(const GPURuntimeContext* ctx,
-                                                     size_t primitive_index);
-        }
+        class Serialization;
     }
 }
+
+class ngraph::pass::Serialization : public ModulePass
+{
+public:
+    Serialization(const std::string& name);
+
+    virtual bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) override;
+
+private:
+    const std::string m_name;
+};
