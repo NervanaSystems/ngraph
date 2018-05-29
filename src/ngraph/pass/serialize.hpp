@@ -16,27 +16,25 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
+#include <string>
+
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
     namespace pass
     {
-        class CoreFusion;
+        class Serialization;
     }
 }
 
-class ngraph::pass::CoreFusion : public ngraph::pass::GraphRewrite
+class ngraph::pass::Serialization : public ModulePass
 {
 public:
-    CoreFusion()
-        : GraphRewrite()
-    {
-        construct_relu();
-        construct_folded_batch_norm();
-        construct_optimized_strided_conv();
-    }
-    void construct_relu();
-    void construct_folded_batch_norm();
-    void construct_optimized_strided_conv();
+    Serialization(const std::string& name);
+
+    virtual bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) override;
+
+private:
+    const std::string m_name;
 };

@@ -14,29 +14,26 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
+#include <fstream>
 
-#include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/file_util.hpp"
+#include "ngraph/pass/serialize.hpp"
+#include "ngraph/serializer.hpp"
+#include "ngraph/util.hpp"
+#include "nlohmann/json.hpp"
 
-namespace ngraph
+using namespace std;
+using namespace ngraph;
+
+pass::Serialization::Serialization(const string& name)
+    : m_name{name}
 {
-    namespace pass
-    {
-        class CoreFusion;
-    }
 }
 
-class ngraph::pass::CoreFusion : public ngraph::pass::GraphRewrite
+bool pass::Serialization::run_on_module(vector<shared_ptr<Function>>& functions)
 {
-public:
-    CoreFusion()
-        : GraphRewrite()
-    {
-        construct_relu();
-        construct_folded_batch_norm();
-        construct_optimized_strided_conv();
-    }
-    void construct_relu();
-    void construct_folded_batch_norm();
-    void construct_optimized_strided_conv();
-};
+    //serializing the outermost functions
+    //also implicitly serializes any inner functions
+    serialize(m_name, functions.at(0), 4);
+    return false;
+}
