@@ -1336,13 +1336,15 @@ NGRAPH_TEST(${BACKEND_NAME}, log)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
-    copy_data(
-        a, vector<float>{expf(1), expf(2), expf(3), expf(4), expf(5), expf(6), expf(7), expf(8)});
-    vector<float> loga;
-    for (auto elt : read_vector<float>(a))
-    {
-        loga.push_back(logf(elt));
-    }
+    copy_data(a, vector<float>{0.125f, 0.25f, 0.5f, 1.f, 2.f, 4.f, 8.f, 16.f});
+    vector<float> loga{-2.07944154f,
+                       -1.38629436f,
+                       -0.69314718f,
+                       0.00000000f,
+                       0.69314718f,
+                       1.38629436f,
+                       2.07944154f,
+                       2.77258872f};
     auto result = backend->create_tensor(element::f32, shape);
 
     backend->call(f, {result}, {a});
