@@ -68,7 +68,7 @@ TEST(gpu_test, memory_manager_argspace_size)
     runtime::gpu::GPUPrimitiveEmitter emitter;
     auto allocator = emitter.get_memory_allocator();
     std::vector<float> fp32_args = {2112.0f, 2112.0f};
-    size_t idx = allocator.reserve_argspace(fp32_args.data(), fp32_args.size() * sizeof(float));
+    allocator.reserve_argspace(fp32_args.data(), fp32_args.size() * sizeof(float));
     emitter.allocate_primitive_memory();
     EXPECT_EQ(emitter.sizeof_device_allocation(), fp32_args.size() * sizeof(float));
 }
@@ -79,7 +79,7 @@ TEST(gpu_test, memory_manager_overlapping_workspace_allocsize)
     for (size_t i = 0; i < 8; i++)
     {
         auto allocator = emitter.get_memory_allocator();
-        size_t idx = allocator.reserve_workspace(std::pow(2, i));
+        allocator.reserve_workspace(std::pow(2, i));
     }
     emitter.allocate_primitive_memory();
     EXPECT_EQ(emitter.sizeof_device_allocation(), 128);
@@ -107,7 +107,7 @@ TEST(gpu_test, memory_manager_seperate_workspaces_allocsize)
         for (size_t i = 0; i < 8; i++)
         {
             size_t size = std::pow(2, i);
-            size_t idx = allocator.reserve_workspace(size);
+            allocator.reserve_workspace(size);
             total_size += pass::MemoryManager::align(size, 4);
         }
     }

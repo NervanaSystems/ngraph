@@ -39,6 +39,7 @@ namespace ngraph
                     : m_manager(mgr)
                 {
                 }
+                GPUAllocator(const GPUAllocator& g);
 
                 ~GPUAllocator();
                 size_t reserve_argspace(const void* data, size_t size);

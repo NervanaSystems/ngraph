@@ -75,6 +75,12 @@ size_t runtime::gpu::GPUMemoryManager::queue_for_transfer(const void* data, size
     return offset;
 }
 
+runtime::gpu::GPUAllocator::GPUAllocator(const GPUAllocator& g)
+{
+    m_manager = g.m_manager;
+    m_active = g.m_active;
+}
+
 size_t runtime::gpu::GPUAllocator::reserve_argspace(const void* data, size_t size)
 {
     // add parameter data to host buffer that will be transfered to device

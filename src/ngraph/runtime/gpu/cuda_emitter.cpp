@@ -763,8 +763,9 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
     size_t idx_source_strides =
         allocator.reserve_argspace(source_strides.data(), source_strides.size() * sizeof(int));
 
-    int rank = tensor_shape.size();
+    int rank = static_cast<int>(tensor_shape.size());
     size_t nthreads = shape_size(tensor_shape);
+    int nblocks = 1 + ((static_cast<int>(nthreads) - 1) / nthreads_per_block); // ceil_div(nthreads)
 
     // TODO: blending factors are not currently implemented
     float alpha = 1.0f;
@@ -802,8 +803,7 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
                                  &nthreads};
 
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          // ceil_div(nthreads)
-                                          1 + ((nthreads - 1) / nthreads_per_block),
+                                          nblocks,
                                           1,
                                           1,
                                           nthreads_per_block,

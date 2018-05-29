@@ -262,7 +262,7 @@ void runtime::gpu::CudaKernelBuilder::get_replace_slice_op(
            << "int* dim_source, "
            << "int* src_strides, "
            << "int rank,"
-           << "int nthreads"
+           << "size_t nthreads"
            << ")\n";
     writer.block_begin();
     {
