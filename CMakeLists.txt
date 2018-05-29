@@ -114,6 +114,8 @@ set(NGRAPH_INSTALL_LIB "${CMAKE_INSTALL_PREFIX}/lib")
 set(NGRAPH_INSTALL_INCLUDE "${CMAKE_INSTALL_PREFIX}/include")
 set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/doc")
 
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+
 #-----------------------------------------------------------------------------------------------
 # Compiler-specific logic...
 #-----------------------------------------------------------------------------------------------
