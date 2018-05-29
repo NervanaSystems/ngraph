@@ -41,7 +41,7 @@ namespace ngraph
             Input(Node* node, size_t index, Output& output);
 
             /// @return the node that this is an input of
-            std::shared_ptr<Node> get_node();
+            std::shared_ptr<Node> get_node() const;
 
             /// @return the position within all supplied tensors of this input
             size_t get_index() const { return m_index; }
