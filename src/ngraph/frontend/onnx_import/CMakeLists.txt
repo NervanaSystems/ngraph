@@ -22,7 +22,7 @@ add_custom_command(OUTPUT onnx.proto
         COMMAND wget --timeout=60 ${ONNX_SOURCE_URL})
 
 add_custom_command(OUTPUT onnx.pb.cc onnx.pb.h
-        COMMAND protobuf::protoc --cpp_out ${CMAKE_CURRENT_BINARY_DIR} --proto_path ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/onnx.proto
+    COMMAND ${PROTOBUF_PROTOC_EXECUTABLE} --cpp_out ${CMAKE_CURRENT_BINARY_DIR} --proto_path ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/onnx.proto
         DEPENDS onnx.proto)
 
 add_library(onnx_import STATIC
@@ -50,7 +50,7 @@ target_include_directories(onnx_import
         PUBLIC ${CMAKE_CURRENT_BINARY_DIR}
         PRIVATE ${NGRAPH_INCLUDE_PATH})
 
-target_link_libraries(onnx_import PRIVATE protobuf::libprotobuf)
+target_link_libraries(onnx_import PRIVATE ${PROTOBUF_LIBRARY})
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(onnx_import PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
