@@ -746,7 +746,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window(const GPURuntimeContext* c
     }
 
     size_t nthreads = shape_size(output_shape);
-    auto input_strides = row_major_strides(input_shape);
+    GPUShape input_strides = row_major_strides(input_shape);
 
     // get an allocator for transient per kernel gpu memory
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
