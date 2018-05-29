@@ -34,7 +34,7 @@ if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
     if(APPLE)
         target_link_libraries(libmkldnn INTERFACE
             ${MKLDNN_LIB_DIR}/libmkldnn.dylib
-            ${MKLDNN_LIB_DIR}/libmklml_intel.dylib
+            ${MKLDNN_LIB_DIR}/libmklml.dylib
             ${MKLDNN_LIB_DIR}/libiomp5.dylib
             )
     else()
@@ -113,7 +113,7 @@ target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/
 if(APPLE)
     target_link_libraries(libmkldnn INTERFACE
         ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn.dylib
-        ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmklml_intel.dylib
+        ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmklml.dylib
         ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libiomp5.dylib
         )
 else()
