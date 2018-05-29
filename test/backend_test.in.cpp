@@ -1498,6 +1498,21 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_with_op)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, constant_multi_use)
+{
+    auto A = make_shared<op::Constant>(element::i32, Shape{}, std::vector<std::string>{"388"});
+    auto f = make_shared<Function>(A, op::ParameterVector{});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    std::shared_ptr<runtime::TensorView> r1 = backend->create_tensor(element::i32, Shape{});
+    backend->call(f, {r1}, std::vector<std::shared_ptr<runtime::TensorView>>{});
+    EXPECT_EQ(read_vector<int>(r1), std::vector<int>{388});
+
+    std::shared_ptr<runtime::TensorView> r2 = backend->create_tensor(element::i32, Shape{});
+    backend->call(f, {r2}, std::vector<std::shared_ptr<runtime::TensorView>>{});
+    EXPECT_EQ(read_vector<int>(r2), std::vector<int>{388});
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
 {
     const string js =
