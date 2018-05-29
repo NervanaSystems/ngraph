@@ -249,12 +249,8 @@ void pass::CoreFusion::construct_optimized_strided_conv()
                 !are_img_dims_equal(sconv->get_argument(1)->get_shape(), shape_1) ||
                 sconv->get_window_movement_strides() != stride_2 || !is_trivial_convolution(sconv))
             {
-                NGRAPH_DEBUG << "sconv->get_shape() = " << vector_to_string(sconv->get_shape());
-                NGRAPH_DEBUG << "sconv->get_argument(1)->get_shape() = "
-                             << vector_to_string(sconv->get_argument(1)->get_shape());
-                NGRAPH_DEBUG << "get_window_movement_strides = "
-                             << vector_to_string(sconv->get_window_movement_strides());
-                NGRAPH_DEBUG << " sconv failed is_trivial = " << is_trivial_convolution(sconv);
+                NGRAPH_DEBUG << sconv->get_name() << " and its weights are of the wrong shape (not "
+                                                     "28x28 and 1x1) and strides (2x2)";
                 return false;
             }
             sconvs.push_back(sconv);
@@ -262,15 +258,16 @@ void pass::CoreFusion::construct_optimized_strided_conv()
 
         auto m_conv_stride1 =
             std::dynamic_pointer_cast<op::Convolution>(pattern_map[conv_stride1_label]);
-        auto other_arg = pattern_map
-            [eltwise_arg_label]; //ngraph::pattern::Matcher::other(m_eltwise, m_conv_stride1);
+        auto other_arg = pattern_map[eltwise_arg_label];
 
         if (!are_img_dims_equal(m_conv_stride1->get_shape(), shape_56) ||
             !are_img_dims_equal(m_conv_stride1->get_argument(1)->get_shape(), win_size_1) ||
             m_conv_stride1->get_window_movement_strides() != stride_1 ||
             !is_trivial_convolution(m_conv_stride1))
         {
-            NGRAPH_DEBUG << " m_conv_stride1 failed";
+            NGRAPH_DEBUG
+                << m_conv_stride1->get_name()
+                << " and its weights are of the wrong shape (not 56x56 and 1x1) and strides (1x1)";
             return false;
         }
 
@@ -282,7 +279,9 @@ void pass::CoreFusion::construct_optimized_strided_conv()
             m_conv_stride3->get_window_movement_strides() != stride_1 ||
             !is_trivial_convolution(m_conv_stride1))
         {
-            NGRAPH_DEBUG << " m_conv_stride1 failed";
+            NGRAPH_DEBUG
+                << m_conv_stride3->get_name()
+                << " and its weights are of the wrong shape (not 56x56 and 3x3) and strides (1x1)";
             return false;
         }
 
