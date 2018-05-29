@@ -250,22 +250,22 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_window_op(
     const size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
-           << data_types[1] << "* out, size_t* input_strides, size_t* output_shape, size_t* "
-                               "reduce_window_shape, size_t* reduce_window_strides, size_t n)\n";
+           << data_types[1] << "* out, int* input_strides, int* output_shape, int* "
+                               "reduce_window_shape, int* reduce_window_strides, size_t n)\n";
     writer.block_begin();
     {
-        writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
+        writer << "const int tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
         writer << "if (tid < n)\n";
         writer.block_begin();
         {
-            writer << "size_t idx_out = tid;\n";
-            writer << "size_t idx_init = 0;\n";
+            writer << "int idx_out = tid;\n";
+            writer << "int idx_init = 0;\n";
             for (int i = static_cast<int>(rank) - 1; i >= 0; i--)
             {
-                writer << "size_t idx_out_" << i << " = idx_out % output_shape[" << i << "];\n";
-                writer << "size_t idx_in_start_" << i << " = idx_out_" << i
+                writer << "int idx_out_" << i << " = idx_out % output_shape[" << i << "];\n";
+                writer << "int idx_in_start_" << i << " = idx_out_" << i
                        << " * reduce_window_strides[" << i << "];\n";
-                writer << "size_t idx_in_end_" << i << " = idx_in_start_" << i
+                writer << "int idx_in_end_" << i << " = idx_in_start_" << i
                        << " + reduce_window_shape[" << i << "];\n";
                 writer << "idx_init += idx_in_start_" << i << " * input_strides[" << i << "];\n";
                 writer << "idx_out /= output_shape[" << i << "];\n";
@@ -275,12 +275,12 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_window_op(
 
             for (int i = 0; i < rank; i++)
             {
-                writer << "for(size_t i_" << i << " = idx_in_start_" << i << "; i_" << i
+                writer << "for(int i_" << i << " = idx_in_start_" << i << "; i_" << i
                        << " < idx_in_end_" << i << "; i_" << i << "++)\n";
                 writer.block_begin();
             }
 
-            writer << "size_t idx_in = 0;\n";
+            writer << "int idx_in = 0;\n";
             for (int i = 0; i < rank; i++)
             {
                 writer << "idx_in += i_" << i << " * input_strides[" << i << "];\n";

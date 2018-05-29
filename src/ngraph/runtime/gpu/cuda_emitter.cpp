@@ -685,10 +685,10 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeConte
 size_t runtime::gpu::CUDAEmitter::build_reduce_window(const GPURuntimeContext* ctx,
                                                       const OpName op_name,
                                                       const std::vector<std::string>& dtypes,
-                                                      const Shape& input_shape,
-                                                      const Shape& output_shape,
-                                                      const Shape& reduce_window_shape,
-                                                      const Strides& reduce_window_strides)
+                                                      GPUShape input_shape,
+                                                      GPUShape output_shape,
+                                                      GPUShape reduce_window_shape,
+                                                      GPUShape reduce_window_strides)
 {
     const char* op = NULL;
     const char* kernel = NULL;
@@ -748,25 +748,35 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window(const GPURuntimeContext* c
     size_t nthreads = shape_size(output_shape);
     auto input_strides = row_major_strides(input_shape);
 
-    std::shared_ptr<void*> input_strides_ptr = std::make_shared<void*>(
-        runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank, input_strides.data()));
-    std::shared_ptr<void*> output_shape_ptr = std::make_shared<void*>(
-        runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank, output_shape.data()));
-    std::shared_ptr<void*> reduce_window_shape_ptr = std::make_shared<void*>(
-        runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank, reduce_window_shape.data()));
-    std::shared_ptr<void*> reduce_window_stride_ptr = std::make_shared<void*>(
-        runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank, reduce_window_strides.data()));
+    // get an allocator for transient per kernel gpu memory
+    GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+
+    // (lazy) allocation for kernel arguments
+    size_t idx_input_strides =
+        allocator.reserve_argspace(input_strides.data(), rank * sizeof(int));
+    size_t idx_output_shape =
+        allocator.reserve_argspace(output_shape.data(), rank * sizeof(int));
+    size_t idx_reduce_window_shape =
+        allocator.reserve_argspace(reduce_window_shape.data(), rank * sizeof(int));
+    size_t idx_ireduce_window_strides =
+        allocator.reserve_argspace(reduce_window_strides.data(), rank * sizeof(int));
 
     // create the launch primitive
     std::unique_ptr<gpu::primitive> f(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void* param_input_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_input_strides);
+            void* param_output_shape = runtime::gpu::invoke_memory_primitive(ctx, idx_output_shape);
+            void* param_reduce_window_shape = runtime::gpu::invoke_memory_primitive(ctx, idx_reduce_window_shape);
+            void* param_reduce_window_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_reduce_window_strides);
+
+
             std::vector<void*> args_list(7, NULL);
             args_list[0] = &inputs[0];
             args_list[1] = &outputs[0];
-            args_list[2] = input_strides_ptr.get();
-            args_list[3] = output_shape_ptr.get();
-            args_list[4] = reduce_window_shape_ptr.get();
-            args_list[5] = reduce_window_stride_ptr.get();
+            args_list[2] = &param_input_strides;
+            args_list[3] = &param_output_shape;
+            args_list[4] = &param_reduce_window_shape;
+            args_list[5] = &param_reduce_window_strides;
             args_list[6] = &nthreads;
 
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
