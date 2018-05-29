@@ -2913,7 +2913,7 @@ NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_int64)
 NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_float32)
 {
     Shape shape{2, 2};
-    auto r = op::Constant::create(element::f32, shape, {4.75, 4.7, -5.3, 0.0});
+    auto r = op::Constant::create(element::f32, shape, {4.75, 4.5, -5.25, 0.0});
     auto f = make_shared<Function>(r, op::ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -2922,7 +2922,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_float32)
     auto result = backend->create_tensor(element::f32, shape);
 
     backend->call(f, {result}, {});
-    EXPECT_EQ((vector<float>{4.75f, 4.7f, -5.3f, 0.0f}), read_vector<float>(result));
+    EXPECT_EQ((vector<float>{4.75f, 4.5f, -5.25f, 0.0f}), read_vector<float>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_int64)
