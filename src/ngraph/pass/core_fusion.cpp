@@ -168,8 +168,8 @@ static bool is_trivial_convolution(std::shared_ptr<op::Convolution> conv)
 {
     Strides stride_1{1, 1};
     CoordinateDiff pad_0{0, 0};
-    return conv->get_window_dilation_strides() == stride_1 ||
-           conv->get_data_dilation_strides() == stride_1 || conv->get_padding_above() == pad_0 ||
+    return conv->get_window_dilation_strides() == stride_1 &&
+           conv->get_data_dilation_strides() == stride_1 && conv->get_padding_above() == pad_0 &&
            conv->get_padding_below() == pad_0;
 }
 
@@ -189,7 +189,7 @@ static bool are_img_dims_equal(Shape conv_shape, Shape image_shape)
 //       |                                 |
 //elt------------56               elt------------pool(28s2)
 // |            |                  |               |
-//conv(28w1s1) conv(28w1s)        conv(28w1s2)  conv(28w1s2)
+//conv(28w1s2) conv(28w1s2)     conv(28w1s1)  conv(28w1s1)
 void pass::CoreFusion::construct_optimized_strided_conv()
 {
     Shape win_size_1{1, 1, 1, 1};
@@ -244,6 +244,11 @@ void pass::CoreFusion::construct_optimized_strided_conv()
         NodeVector sconvs;
         for (auto sc : strided_convs)
         {
+            if (sc->get_argument(0) != m_eltwise)
+            {
+                NGRAPH_DEBUG << "element-wise isn't data";
+                return false;
+            }
             auto sconv = std::dynamic_pointer_cast<op::Convolution>(sc);
             if (!are_img_dims_equal(sconv->get_shape(), shape_28) ||
                 !are_img_dims_equal(sconv->get_argument(1)->get_shape(), shape_1) ||
@@ -290,15 +295,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
         auto conv_28w1s1 = std::make_shared<op::Convolution>(
             conv_28w3s2, m_conv_stride1->get_argument(1), stride_1);
         auto maxpool = std::make_shared<op::MaxPool>(other_arg, Shape{1, 1}, stride_2);
-
-        NodeVector new_eltwise_args{conv_28w1s1, maxpool};
-
-        if (other_arg == m_eltwise->get_argument(0))
-        {
-            std::iter_swap(new_eltwise_args.begin(), new_eltwise_args.begin() + 1);
-        }
-
-        auto new_eltwise = m_eltwise->copy_with_new_args(new_eltwise_args);
+        auto new_eltwise = m_eltwise->copy_with_new_args({conv_28w1s1, maxpool});
 
         for (auto sconv : sconvs)
         {
