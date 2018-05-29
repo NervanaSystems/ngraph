@@ -18,10 +18,10 @@
 #include <sstream>
 
 #include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
 #include "ngraph/frontend/onnx_import/graph.hpp"
 #include "ngraph/frontend/onnx_import/model.hpp"
 #include "ngraph/frontend/onnx_import/onnx_util.hpp"
+#include "ngraph/ngraph.hpp"
 #include "onnx.pb.h"
 #include "util/test_tools.hpp"
 
