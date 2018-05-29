@@ -104,6 +104,14 @@ Glossary
       Tensors are maps from *coordinates* to scalar values, all of the
       same type, called the *element type* of the tensor.
 
+   
+   Tensorview 
+
+      The interface backends implement for tensor use. When there are no more 
+      references to the tensor view, it will be freed when convenient for the 
+      backend.
+
+
    model description
 
       A description of a program's fundamental operations that are 

@@ -206,24 +206,24 @@ Equivalent to ``"A(BC)+A"`` in regexes
 ::
   $ (((A + 0) + 0) + 0) = A$ 
 
-|image12| 
+|image12|
 
+|image13|
 
-### `Label` + 0 |image13| ---
 ::
   Shape shape{};
-    auto a = make_shared(element::i32, shape);
-    auto b = make_shared(element::i32, shape);
-    auto rpattern = std::make_shared(b);
-    auto iconst0 = ngraph::make_zero(element::i32, shape);
-    auto abs = make_shared(a);
-    auto add1 = iconst0 + b;
-    auto add2 = iconst0 + add1;
-    auto add3 = iconst0 + add2;
-    auto padd = iconst0 + rpattern;
-    std::set> empty_correlated_matches;
-    RecurrentMatcher rm(padd, rpattern, empty_correlated_matches, nullptr);
-    ASSERT_TRUE(rm.match(add3));
+  auto a = make_shared(element::i32, shape);
+  auto b = make_shared(element::i32, shape);
+  auto rpattern = std::make_shared(b);
+  auto iconst0 = ngraph::make_zero(element::i32, shape);
+  auto abs = make_shared(a);
+  auto add1 = iconst0 + b;
+  auto add2 = iconst0 + add1;
+  auto add3 = iconst0 + add2;
+  auto padd = iconst0 + rpattern;
+  std::set> empty_correlated_matches;
+  RecurrentMatcher rm(padd, rpattern, empty_correlated_matches, nullptr);
+  ASSERT_TRUE(rm.match(add3));
 
 
 

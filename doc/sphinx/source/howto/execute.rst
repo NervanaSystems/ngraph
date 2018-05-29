@@ -166,17 +166,16 @@ you switch between odd/even generations of variables on each update.
 
 Backends are responsible for managing storage. If the storage is off-CPU, caches 
 are used to minimize copying between device and CPU. We can allocate storage for 
-the three parameters and the return value as follows:
+the three parameters and the return value.
 
 .. literalinclude:: ../../../examples/abc.cpp
    :language: cpp
    :lines: 41-46
 
-
-Each tensor is a shared pointer to a :doc:`../programmable/index/#tensorview`, 
-the interface backends implement for tensor use. When there are no more references to the 
+Each tensor is a shared pointer to a :term:`Tensorview`, which is the interface 
+backends implement for tensor use. When there are no more references to the 
 tensor view, it will be freed when convenient for the backend. See the 
-:doc:`../programmable/index` documentation for details on ``TensorView ``.
+:doc:`../programmable/index` documentation for details on ``TensorView``.
 
 
 .. _initialize_inputs:
