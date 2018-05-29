@@ -66,10 +66,10 @@ namespace ngraph
                 size_t build_reduce_window(const GPURuntimeContext* ctx,
                                            const OpName op_name,
                                            const std::vector<std::string>& dtypes,
-                                           const Shape& input_shape,
-                                           const Shape& output_shape,
-                                           const Shape& reduce_window_shape,
-                                           const Strides& reduce_window_strides);
+                                           GPUShape input_shape,
+                                           GPUShape output_shape,
+                                           GPUShape reduce_window_shape,
+                                           GPUShape reduce_window_strides);
 
                 template <typename T>
                 size_t build_elementwise(const GPURuntimeContext* ctx,

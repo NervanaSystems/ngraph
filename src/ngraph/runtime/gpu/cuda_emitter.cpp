@@ -758,7 +758,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window(const GPURuntimeContext* c
         allocator.reserve_argspace(output_shape.data(), rank * sizeof(int));
     size_t idx_reduce_window_shape =
         allocator.reserve_argspace(reduce_window_shape.data(), rank * sizeof(int));
-    size_t idx_ireduce_window_strides =
+    size_t idx_reduce_window_strides =
         allocator.reserve_argspace(reduce_window_strides.data(), rank * sizeof(int));
 
     // create the launch primitive
@@ -768,7 +768,6 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window(const GPURuntimeContext* c
             void* param_output_shape = runtime::gpu::invoke_memory_primitive(ctx, idx_output_shape);
             void* param_reduce_window_shape = runtime::gpu::invoke_memory_primitive(ctx, idx_reduce_window_shape);
             void* param_reduce_window_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_reduce_window_strides);
-
 
             std::vector<void*> args_list(7, NULL);
             args_list[0] = &inputs[0];
