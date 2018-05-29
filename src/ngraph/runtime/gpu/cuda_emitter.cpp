@@ -752,46 +752,46 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window(const GPURuntimeContext* c
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
 
     // (lazy) allocation for kernel arguments
-    size_t idx_input_strides =
-        allocator.reserve_argspace(input_strides.data(), rank * sizeof(int));
-    size_t idx_output_shape =
-        allocator.reserve_argspace(output_shape.data(), rank * sizeof(int));
+    size_t idx_input_strides = allocator.reserve_argspace(input_strides.data(), rank * sizeof(int));
+    size_t idx_output_shape = allocator.reserve_argspace(output_shape.data(), rank * sizeof(int));
     size_t idx_reduce_window_shape =
         allocator.reserve_argspace(reduce_window_shape.data(), rank * sizeof(int));
     size_t idx_reduce_window_strides =
         allocator.reserve_argspace(reduce_window_strides.data(), rank * sizeof(int));
 
     // create the launch primitive
-    std::unique_ptr<gpu::primitive> f(
-        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-            void* param_input_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_input_strides);
-            void* param_output_shape = runtime::gpu::invoke_memory_primitive(ctx, idx_output_shape);
-            void* param_reduce_window_shape = runtime::gpu::invoke_memory_primitive(ctx, idx_reduce_window_shape);
-            void* param_reduce_window_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_reduce_window_strides);
+    std::unique_ptr<gpu::primitive> f(new gpu::primitive{[=](void** inputs,
+                                                             void** outputs) mutable {
+        void* param_input_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_input_strides);
+        void* param_output_shape = runtime::gpu::invoke_memory_primitive(ctx, idx_output_shape);
+        void* param_reduce_window_shape =
+            runtime::gpu::invoke_memory_primitive(ctx, idx_reduce_window_shape);
+        void* param_reduce_window_strides =
+            runtime::gpu::invoke_memory_primitive(ctx, idx_reduce_window_strides);
 
-            std::vector<void*> args_list(7, NULL);
-            args_list[0] = &inputs[0];
-            args_list[1] = &outputs[0];
-            args_list[2] = &param_input_strides;
-            args_list[3] = &param_output_shape;
-            args_list[4] = &param_reduce_window_shape;
-            args_list[5] = &param_reduce_window_strides;
-            args_list[6] = &nthreads;
+        std::vector<void*> args_list(7, NULL);
+        args_list[0] = &inputs[0];
+        args_list[1] = &outputs[0];
+        args_list[2] = &param_input_strides;
+        args_list[3] = &param_output_shape;
+        args_list[4] = &param_reduce_window_shape;
+        args_list[5] = &param_reduce_window_strides;
+        args_list[6] = &nthreads;
 
-            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          static_cast<unsigned int>(nthreads),
-                                          1,
-                                          1, // grid dim
-                                          1,
-                                          1,
-                                          1, // block dim
-                                          0,
-                                          NULL, // shared mem and stream
-                                          args_list.data(),
-                                          0)); // arguments
+        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                      static_cast<unsigned int>(nthreads),
+                                      1,
+                                      1, // grid dim
+                                      1,
+                                      1,
+                                      1, // block dim
+                                      0,
+                                      NULL, // shared mem and stream
+                                      args_list.data(),
+                                      0)); // arguments
 
-            CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
-        }});
+        CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+    }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(f));
     m_primitive_emitter->cache(hash, primitive_index);
