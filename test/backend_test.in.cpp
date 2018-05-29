@@ -3267,13 +3267,13 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_to_scalar_stable)
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
+    float epsilon = 9.5367431640625e-7f;
     auto a = backend->create_tensor(element::f32, shape);
-    copy_data(a, vector<float>{1e-6f, -1, 0, 1});
+    copy_data(a, vector<float>{epsilon, -1.f, 0.f, 1.f});
     auto result = backend->create_tensor(element::f32, Shape{});
 
     backend->call(f, {result}, {a});
-    EXPECT_TRUE(test::all_close(read_vector<float>(result), vector<float>{1e-6f}, 5e-2f));
-    // EXPECT_EQ(vector<float>{1e-6}, read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(vector<float>{epsilon}, read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_vector_stable)
@@ -3287,13 +3287,17 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_vector_stable)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(a, vector<float>{1, 1,  1,  1,  1,  1,  1e-4f, 1e-5f, 1e-6f, 1,  1,  1,  1, 1,
-                               1, -1, -1, -1, -1, -1, -1,    -1,    -1,    -1, -1, -1, -1});
+    float epsilon_a = 1.220703125e-4f;
+    float epsilon_b = 3.0517578125e-5f;
+    float epsilon_c = 7.62939453125e-6f;
+    copy_data(a, vector<float>{1,  1,  1,  1,  1,  1,  epsilon_a, epsilon_b, epsilon_c,
+                               1,  1,  1,  1,  1,  1,  -1,        -1,        -1,
+                               -1, -1, -1, -1, -1, -1, -1,        -1,        -1});
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     backend->call(f, {result}, {a});
-    EXPECT_TRUE(
-        test::all_close(read_vector<float>(result), vector<float>{1e-4f, 1e-5f, 1e-6f}, 5e-2f));
+    EXPECT_TRUE(test::all_close_f(vector<float>{epsilon_a, epsilon_b, epsilon_c},
+                                  read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, sum_5d_to_scalar)

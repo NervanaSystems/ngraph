@@ -3,7 +3,7 @@
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
+* You may obtain expected copy of the License at
 *
 *     http://www.apache.org/licenses/LICENSE-2.0
 *
@@ -25,10 +25,10 @@ namespace ngraph
 {
     namespace test
     {
-        bool close_f(float a, float b, int mantissa_bits = 8, int tolerance_bits = 2);
+        bool close_f(float expected, float actual, int mantissa_bits = 8, int tolerance_bits = 2);
 
-        bool all_close_f(const std::vector<float>& a,
-                         const std::vector<float>& b,
+        bool all_close_f(const std::vector<float>& expected,
+                         const std::vector<float>& actual,
                          int mantissa_bits = 8,
                          int tolerance_bits = 2);
     }
