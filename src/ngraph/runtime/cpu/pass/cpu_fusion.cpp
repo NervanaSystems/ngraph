@@ -50,7 +50,6 @@
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 
-
 static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
                            std::shared_ptr<ngraph::Node> arg,
                            bool& transpose_w,
@@ -759,40 +758,47 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
     Shape shape{2, 2, 1, 1};
     auto data_batch = std::make_shared<pattern::op::Label>(element::f32, shape);
     auto delta = std::make_shared<pattern::op::Label>(element::f32, shape);
-    auto conv_bprop_filter =  std::make_shared<op::ConvolutionBackpropFilters>(data_batch,
-                                                                               shape,
-                                                                               delta,
-                                                                               Strides{1, 1},
-                                                                               Strides{1, 1},
-                                                                               CoordinateDiff{0, 0},
-                                                                               CoordinateDiff{0, 0},
-                                                                               Strides{1, 1});
-  
+    auto conv_bprop_filter = std::make_shared<op::ConvolutionBackpropFilters>(data_batch,
+                                                                              shape,
+                                                                              delta,
+                                                                              Strides{1, 1},
+                                                                              Strides{1, 1},
+                                                                              CoordinateDiff{0, 0},
+                                                                              CoordinateDiff{0, 0},
+                                                                              Strides{1, 1});
+
     ngraph::pattern::graph_rewrite_callback callback = [data_batch, delta](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_conv_bias_bprop against node = "
                      << m.get_match_root()->get_name();
-   
+
         auto pattern_map = m.get_pattern_map();
-        auto conv_bprop = std::dynamic_pointer_cast<op::ConvolutionBackpropFilters>(m.get_match_root());
-       
-        for (auto delta_user: pattern_map[delta]->get_users())
+        auto conv_bprop =
+            std::dynamic_pointer_cast<op::ConvolutionBackpropFilters>(m.get_match_root());
+
+        for (auto delta_user : pattern_map[delta]->get_users())
         {
             if (std::dynamic_pointer_cast<op::Sum>(delta_user))
             {
-               auto bias_shape = delta_user->get_output_shape(0);
-               auto conv_bias_bprop = std::make_shared<op::ConvolutionBiasBackpropFiltersBias>(pattern_map[data_batch],
-                                                            conv_bprop->get_filters_shape(),
-                                                            bias_shape, pattern_map[delta],
-                                                            conv_bprop->get_window_movement_strides_forward(),
-                                                            conv_bprop->get_window_dilation_strides_forward(),
-                                                            conv_bprop->get_padding_below_forward(), 
-                                                            conv_bprop->get_padding_above_forward(),
-                                                            conv_bprop->get_data_dilation_strides_forward());
-               auto goe1 = std::make_shared<op::GetOutputElement>(conv_bias_bprop, 0);
-               auto goe2 = std::make_shared<op::GetOutputElement>(conv_bias_bprop, 1);
-               ngraph::replace_node(m.get_match_root(), goe1);
-               ngraph::replace_node(delta_user, goe2);
-               return true;
+                auto bias_shape = delta_user->get_output_shape(0);
+                auto conv_bias_bprop = std::make_shared<op::ConvolutionBiasBackpropFiltersBias>(
+                    pattern_map[data_batch],
+                    conv_bprop->get_filters_shape(),
+                    bias_shape,
+                    pattern_map[delta],
+                    conv_bprop->get_window_movement_strides_forward(),
+                    conv_bprop->get_window_dilation_strides_forward(),
+                    conv_bprop->get_padding_below_forward(),
+                    conv_bprop->get_padding_above_forward(),
+                    conv_bprop->get_data_dilation_strides_forward());
+                auto goe1 = std::make_shared<op::GetOutputElement>(conv_bias_bprop, 0);
+                auto goe2 = std::make_shared<op::GetOutputElement>(conv_bias_bprop, 1);
+                NGRAPH_DEBUG << "Replacing " << m.get_match_root()->get_name()
+                             << "with ConvolutionBiasBackpropFiltersBias";
+                ngraph::replace_node(m.get_match_root(), goe1);
+                NGRAPH_DEBUG << "Replacing bias and adding it as a second o/p of "
+                                "ConvolutionBiasBackpropFiltersBias";
+                ngraph::replace_node(delta_user, goe2);
+                return true;
             }
         }
         return false;
@@ -801,7 +807,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
     auto m = std::make_shared<ngraph::pattern::Matcher>(conv_bprop_filter, callback);
     this->add_matcher(m);
 }
- 
+
 void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
 {
     auto input_shape = Shape{1, 2, 2, 2};
@@ -985,6 +991,74 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
         }
 
         auto conv_relu = std::shared_ptr<Node>(new op::ConvolutionRelu(conv));
+        ngraph::replace_node(m.get_match_root(), conv_relu);
+        return true;
+    };
+
+    auto m = std::make_shared<pattern::Matcher>(prelu, callback);
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
+{
+    Shape shape{2, 2, 1, 1};
+    auto data_batch = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{1});
+
+    auto conv_bias = std::make_shared<op::ConvolutionBias>(data_batch,
+                                                           filters,
+                                                           bias,
+                                                           Strides{1, 1},
+                                                           Strides{1, 1},
+                                                           CoordinateDiff{0, 0},
+                                                           CoordinateDiff{0, 0},
+                                                           Strides{1, 1});
+
+    auto prelu = std::make_shared<op::Relu>(conv_bias);
+
+    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_conv_relu against "
+                     << m.get_match_root()->get_name();
+
+        auto conv =
+            std::dynamic_pointer_cast<op::ConvolutionBias>(m.get_match_root()->get_argument(0));
+
+        //These checks are to make sure a MKLDNN Convolution kernel can be used.
+        bool data_dilated = false;
+        for (size_t s : conv->get_data_dilation_strides())
+        {
+            data_dilated = data_dilated || (s != 1);
+        }
+
+        if (data_dilated)
+        {
+            NGRAPH_DEBUG << "Convolution has dilations greater than 1";
+            return false;
+        }
+
+        if (conv->get_element_type() != element::f32)
+        {
+            NGRAPH_DEBUG << "Convolution isn't of type float";
+            return false;
+        }
+
+        auto arg0_rank = conv->get_input_shape(0).size();
+        auto arg1_rank = conv->get_input_shape(1).size();
+
+        if (arg0_rank != 4 || arg1_rank != 4)
+        {
+            NGRAPH_DEBUG << "Convolution's arguments ranks aren't equal to 4";
+            return false;
+        }
+
+        if (conv->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "Convolution has more than one user";
+            return false;
+        }
+
+        auto conv_relu = std::shared_ptr<Node>(new op::ConvolutionBiasRelu(conv));
         ngraph::replace_node(m.get_match_root(), conv_relu);
         return true;
     };

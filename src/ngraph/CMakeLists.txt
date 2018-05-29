@@ -84,6 +84,7 @@ set (SRC
     op/reshape.cpp
     op/result.cpp
     op/reverse.cpp
+    op/reverse_sequence.cpp
     op/select_and_scatter.cpp
     op/select.cpp
     op/sign.cpp
@@ -106,6 +107,7 @@ set (SRC
     op/util/unary_elementwise.cpp
     pass/assign_placement.cpp
     pass/algebraic_simplification.cpp
+    pass/cse.cpp
     pass/dump_sorted.cpp
     pass/get_output_element_elimination.cpp
     pass/graph_rewrite.cpp
@@ -115,6 +117,7 @@ set (SRC
     pass/manager_state.cpp
     pass/memory_layout.cpp
     pass/memory_visualize.cpp
+    pass/nop_elimination.cpp
     pass/pass.cpp
     pass/reshape_elimination.cpp
     pass/result_copy_elimination.cpp
@@ -122,6 +125,7 @@ set (SRC
     pass/validate_graph.cpp
     pass/visualize_tree.cpp
     pass/core_fusion.cpp
+    pass/serialize.cpp
     pass/zero_dim_tensor_elimination.cpp
     pattern/matcher.cpp
     runtime/aligned_buffer.cpp
@@ -139,13 +143,16 @@ set (SRC
     cpio.cpp
     )
 
-message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)
-file(GLOB_RECURSE OPS "${CMAKE_CURRENT_SOURCE_DIR}/ops" "${CMAKE_CURRENT_SOURCE_DIR}/ops/*.hpp")
+message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/op)
+file(GLOB OPS "${CMAKE_CURRENT_SOURCE_DIR}/op" "${CMAKE_CURRENT_SOURCE_DIR}/op/*.hpp")
 foreach(OP ${OPS})
     file(STRINGS ${OP} OP_CLASS REGEX "class [A-Za-z0-9_]+ :")
     foreach(LINE ${OP_CLASS})
-        string(REGEX REPLACE ".*class ([A-Za-z0-9_]+) : public ([A-Za-z0-9_]+).*" "\\1:\\2" CLASS_FOUND ${LINE})
-        set(OP_CLASS_LIST ${OP_CLASS_LIST} ${CLASS_FOUND})
+        string(REGEX REPLACE ".*class ([A-Za-z0-9_]+) : public ([A-Za-z0-9_]+).*" "\\1" CLASS_FOUND ${LINE})
+        string(REGEX REPLACE ".*class ([A-Za-z0-9_]+) : public ([A-Za-z0-9_]+).*" "\\2" BASE_FOUND ${LINE})
+        if (NOT ${BASE_FOUND} STREQUAL "std" AND NOT ${CLASS_FOUND} STREQUAL "Op")
+            set(OP_CLASS_LIST ${OP_CLASS_LIST} ${CLASS_FOUND})
+        endif()
     endforeach(LINE ${OP_CLASS})
 endforeach()
 message(STATUS "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt")
@@ -166,8 +173,7 @@ endif()
 include_directories("${NGRAPH_INCLUDE_PATH}")
 include_directories(SYSTEM "${EIGEN_INCLUDE_DIR}")
 
-if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
-    MKLDNN_INCLUDE_DIR)
+if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
     find_package(ZLIB REQUIRED)
 
     if (NGRAPH_TBB_ENABLE)
@@ -214,12 +220,17 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/op/conv_relu.cpp
         runtime/cpu/op/convert_layout.cpp
         runtime/cpu/op/sigmoid.cpp
+        runtime/cpu/op/rnn.cpp
+        runtime/cpu/op/lstm.cpp
         runtime/cpu/op/matmul_bias.cpp
+        runtime/cpu/op/max_pool_with_indices.cpp
         runtime/cpu/op/batch_norm_relu.cpp
         runtime/cpu/pass/cpu_assignment.cpp
         runtime/cpu/pass/cpu_fusion.cpp
+        runtime/cpu/pass/cpu_rnn_fusion.cpp
+        runtime/cpu/pass/cpu_concat_inputs.cpp
+        runtime/cpu/pass/cpu_workspace_insertion.cpp
         runtime/cpu/pass/cpu_layout.cpp
-        runtime/cpu/pass/cpu_nop_elimination.cpp
         runtime/cpu/pass/cpu_rnn_mat_fusion.cpp
         runtime/cpu/pass/cpu_post_layout_optimizations.cpp
         runtime/cpu/pass/cpu_shuffle_folding.cpp
@@ -248,6 +259,8 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
 if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_CXX_INCLUDE_PATH)
+    find_package(MPI REQUIRED)
+    string(REPLACE ";" "\\;" MPI_C_INCLUDE_PATH "${MPI_C_INCLUDE_PATH}")
     include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
     link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
 
@@ -290,11 +303,6 @@ endif()
     endif()
 endif()
 
-if (NGRAPH_NNP_ENABLE)
-    link_directories(${NNP_TRANSFORMER_LIB_DIR})
-    include_directories(${NNP_TRANSFORMER_INCLUDE_DIR})
-endif()
-
 add_library(ngraph SHARED ${SRC})
 set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
 if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
@@ -329,10 +337,6 @@ if (NOT APPLE)
 endif()
 
 # Defines macro in C++ to load backend plugin
-if (NGRAPH_NNP_ENABLE)
-    target_compile_definitions(ngraph PRIVATE NGRAPH_NNP_ENABLE)
-endif()
-
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 target_link_libraries(ngraph PRIVATE dl)
 
@@ -365,14 +369,6 @@ if(MPI_CXX_INCLUDE_PATH)
     target_link_libraries(ngraph PRIVATE ${MPI_CXX_LIBRARIES})
 endif()
 
-# NNP
-if (NGRAPH_NNP_ENABLE)
-    target_link_libraries(ngraph PRIVATE ${NNP_TRANSFORMER_LIB_DIR}/libnnp.so)
-    target_link_libraries(ngraph PRIVATE ${ARGON_API_LIBS})
-    add_dependencies(ngraph ext_nnp_transformer)
-    add_dependencies(ext_nnp_transformer ext_llvm)
-endif()
-
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
 #-----------------------------------------------------------------------------------------------
@@ -401,20 +397,5 @@ if (NGRAPH_TBB_ENABLE)
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
         DESTINATION ${NGRAPH_INSTALL_LIB}
         FILES_MATCHING REGEX "/libtbb_debug${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
-    )
-endif()
-
-if (NGRAPH_NNP_ENABLE)
-    install(DIRECTORY ${NNP_TRANSFORMER_LIB_DIR}/
-        DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING PATTERN "*.so"
-    )
-    install(DIRECTORY ${NNP_TRANSFORMER_INCLUDE_DIR}/
-        DESTINATION ${NGRAPH_INSTALL_INCLUDE}
-        FILES_MATCHING PATTERN "*.hpp"
-    )
-    install(DIRECTORY ${NNP_TRANSFORMER_INCLUDE_DIR}/
-        DESTINATION ${NGRAPH_INSTALL_INCLUDE}
-        FILES_MATCHING PATTERN "*.h"
     )
 endif()

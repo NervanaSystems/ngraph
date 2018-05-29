@@ -20,10 +20,6 @@ include_directories(
     ${EIGEN_INCLUDE_DIR}
     )
 
-include_directories(
-    ${NGRAPH_INCLUDE_DIR}
-    )
-
 set (SRC
     backend_api.cpp
     algebraic_simplification.cpp
@@ -34,6 +30,7 @@ set (SRC
     copy.cpp
     core_fusion.cpp
     cpio.cpp
+    cse.cpp
     element_type.cpp
     file_util.cpp
     inliner.cpp
@@ -41,6 +38,7 @@ set (SRC
     main.cpp
     op.cpp
     graph_partition.cpp
+    nop_elimination.cpp
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
@@ -50,9 +48,6 @@ set (SRC
     reshape_elimination.cpp
     tensor.cpp
     type_prop.cpp
-    util/autodiff/backprop_function.cpp
-    util/test_tools.cpp
-    util/benchmark.cpp
     util.cpp
     uuid.cpp
     zero_dim_tensor_elimination.cpp
@@ -60,6 +55,7 @@ set (SRC
 
 add_subdirectory(models)
 add_subdirectory(files)
+add_subdirectory(util)
 
 #================================================================================================
 # To auto generate a suite of unit tests for a backend add a line like this
@@ -96,27 +92,22 @@ if(NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
     set(BACKEND_NAMES ${BACKEND_NAMES} "GPU")
 endif()
 
-if(NGRAPH_NNP_ENABLE)
-    include_directories(SYSTEM ${NNP_TRANSFORMER_INCLUDE_DIR})
-    set(BACKEND_NAMES ${BACKEND_NAMES} "NNP_TESTER")
-    set(BACKEND_NAMES ${BACKEND_NAMES} "NNPI")
-    set(BACKEND_NAMES ${BACKEND_NAMES} "NNPI_TESTER")
-    set(ADDITIONAL_NNP_TEST ${NNP_TRANSFORMER_SOURCE_DIR}/test/test_nnp_backend.cpp)
-    # Ensures ADDITIONAL_NNP_TEST are a dependency on nnp transformer
-    add_custom_command(OUTPUT ${ADDITIONAL_NNP_TEST} DEPENDS ext_nnp_transformer COMMAND "")
-    set(SRC ${SRC} ${ADDITIONAL_NNP_TEST})
-endif()
-
 if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_C_INCLUDE_PATH)
     include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
     link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
     foreach(BACKEND_NAME ${BACKEND_NAMES})
         configure_file(distributed.cpp distributed_${BACKEND_NAME}.cpp)
         set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/distributed_${BACKEND_NAME}.cpp)
-endforeach()
+    endforeach()
 endif()
 
-foreach(BACKEND_NAME ${BACKEND_NAMES})
+
+foreach(TEST_CONFIG ${UNIT_TEST_CONFIG_LIST})
+    string(FIND ${TEST_CONFIG} "@" OFFSET)
+    string(SUBSTRING ${TEST_CONFIG} 0 ${OFFSET} BACKEND_NAME)
+    math(EXPR OFFSET ${OFFSET}+1)
+    string(SUBSTRING ${TEST_CONFIG} ${OFFSET} -1 MANIFEST)
+
     configure_file(backend_test.in.cpp backend_test_${BACKEND_NAME}.cpp)
     configure_file(convolution_test.in.cpp convolution_test_${BACKEND_NAME}.cpp)
     set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/backend_test_${BACKEND_NAME}.cpp)
@@ -150,6 +141,8 @@ if(NGRAPH_ADDRESS_SANITIZER)
 endif()
 
 add_executable(unit-test ${SRC})
+target_link_libraries(unit-test ngraph_test_util)
+add_dependencies(unit-test ngraph_test_util)
 
 if(MPI_C_INCLUDE_PATH)
     target_link_libraries(unit-test ${MPI_CXX_LIBRARIES})
@@ -172,12 +165,6 @@ endif()
 
 target_link_libraries(unit-test ngraph libgtest pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
-
-if(NGRAPH_NNP_ENABLE)
-    # A framework like TF shall not need to link `libnnp.so`, but shall call via libngraph.so.
-    # Since we're testing non-public APIs in libnnp.so, we link it directly here.
-    target_link_libraries(unit-test ${NNP_TRANSFORMER_LIB_DIR}/libnnp.so)
-endif()
 
 add_dependencies(unit-test ngraph libgtest ext_json)
 include_directories(SYSTEM ${JSON_INCLUDE_DIR})

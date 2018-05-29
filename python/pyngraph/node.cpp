@@ -59,7 +59,7 @@ void regclass_pyngraph_Node(py::module m)
     node.def("__repr__", [](const ngraph::Node& self) {
         std::string class_name = py::cast(self).get_type().attr("__name__").cast<std::string>();
         std::string shape = py::cast(self.get_shape()).attr("__str__")().cast<std::string>();
-        return "<" + class_name + ": '" + self.get_name() + "' (" + shape + ")>";
+        return "<" + class_name + ": '" + self.get_friendly_name() + "' (" + shape + ")>";
     });
 
     node.def("get_output_size", &ngraph::Node::get_output_size);
@@ -68,7 +68,8 @@ void regclass_pyngraph_Node(py::module m)
     node.def("get_output_shape", &ngraph::Node::get_output_shape);
     node.def("get_shape", &ngraph::Node::get_shape);
     node.def("get_argument", &ngraph::Node::get_argument);
+    node.def("get_unique_name", &ngraph::Node::get_name);
 
-    node.def_property("name", &ngraph::Node::get_name, &ngraph::Node::set_name);
+    node.def_property("name", &ngraph::Node::get_friendly_name, &ngraph::Node::set_name);
     node.def_property_readonly("shape", &ngraph::Node::get_shape);
 }

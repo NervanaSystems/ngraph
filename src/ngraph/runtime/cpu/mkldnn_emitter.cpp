@@ -453,6 +453,86 @@ size_t MKLDNNEmitter::build_max_pooling_backward(mkldnn::algorithm pooling_algor
     return bwd_primitive_index;
 }
 
+size_t MKLDNNEmitter::build_max_pooling_with_indices_forward(mkldnn::algorithm pooling_algorithm,
+                                                             const mkldnn::memory::desc& src_desc,
+                                                             const mkldnn::memory::desc& dst_desc,
+                                                             const ngraph::Strides& window_strides,
+                                                             const ngraph::Shape& window_shape,
+                                                             const ngraph::Shape& padding_below,
+                                                             const ngraph::Shape& padding_above)
+{
+    size_t src_index = build_memory_primitive(src_desc);
+    size_t dst_index = build_memory_primitive(dst_desc);
+
+    mkldnn::pooling_forward::primitive_desc fwd_pd{
+        {mkldnn::prop_kind::forward_training,
+         pooling_algorithm,
+         src_desc,
+         dst_desc,
+         mkldnn::memory::dims(window_strides.begin(), window_strides.end()),
+         mkldnn::memory::dims(window_shape.begin(), window_shape.end()),
+         mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+         mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
+         mkldnn::padding_kind::zero},
+        mkldnn_utils::global_cpu_engine};
+
+    auto ws_index = build_memory_primitive(fwd_pd.workspace_primitive_desc().desc());
+
+    size_t fwd_primitive_index =
+        insert_primitive(new mkldnn::pooling_forward(fwd_pd,
+                                                     *m_mkldnn_primitives[src_index],
+                                                     *m_mkldnn_primitives[dst_index],
+                                                     *m_mkldnn_primitives[ws_index]));
+
+    m_primitive_deps[fwd_primitive_index] = {src_index, dst_index, ws_index};
+    return fwd_primitive_index;
+}
+
+size_t MKLDNNEmitter::build_max_pooling_with_indices_backward(
+    mkldnn::algorithm pooling_algorithm,
+    const mkldnn::memory::desc& diff_dst_desc,
+    const mkldnn::memory::desc& diff_src_desc,
+    const ngraph::Strides& window_strides,
+    const ngraph::Shape& window_shape,
+    const ngraph::Shape& padding_below,
+    const ngraph::Shape& padding_above)
+{
+    size_t diff_dst_index = build_memory_primitive(diff_dst_desc);
+    size_t diff_src_index = build_memory_primitive(diff_src_desc);
+
+    mkldnn::pooling_forward::primitive_desc fwd_pd{
+        {mkldnn::prop_kind::forward_training,
+         pooling_algorithm,
+         diff_src_desc,
+         diff_dst_desc,
+         mkldnn::memory::dims(window_strides.begin(), window_strides.end()),
+         mkldnn::memory::dims(window_shape.begin(), window_shape.end()),
+         mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+         mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
+         mkldnn::padding_kind::zero},
+        mkldnn_utils::global_cpu_engine};
+
+    auto fprop_ws_index = build_memory_primitive(fwd_pd.workspace_primitive_desc().desc());
+
+    size_t bwd_primitive_index = insert_primitive(new mkldnn::pooling_backward(
+        {{pooling_algorithm,
+          diff_src_desc,
+          diff_dst_desc,
+          mkldnn::memory::dims(window_strides.begin(), window_strides.end()),
+          mkldnn::memory::dims(window_shape.begin(), window_shape.end()),
+          mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+          mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
+          mkldnn::padding_kind::zero},
+         mkldnn_utils::global_cpu_engine,
+         fwd_pd},
+        *m_mkldnn_primitives[diff_dst_index],
+        *m_mkldnn_primitives[fprop_ws_index],
+        *m_mkldnn_primitives[diff_src_index]));
+
+    m_primitive_deps[bwd_primitive_index] = {diff_dst_index, fprop_ws_index, diff_src_index};
+    return bwd_primitive_index;
+}
+
 size_t MKLDNNEmitter::build_reorder(const mkldnn::memory::desc& input_desc,
                                     const mkldnn::memory::desc& result_desc)
 {
@@ -682,6 +762,59 @@ size_t MKLDNNEmitter::build_batchnorm_backward(const mkldnn::memory::desc& weigh
                                          dinput_index,
                                          dweights_index};
     return batchnorm_index;
+}
+
+size_t MKLDNNEmitter::build_rnn_forward(const mkldnn::memory::desc& src_layer_desc,
+                                        const mkldnn::memory::desc& src_iter_desc,
+                                        const mkldnn::memory::desc& weights_layer_desc,
+                                        const mkldnn::memory::desc& weights_iter_desc,
+                                        const mkldnn::memory::desc& bias_desc,
+                                        const mkldnn::memory::desc& dst_layer_desc,
+                                        const mkldnn::memory::desc& dst_iter_desc)
+{
+    size_t src_layer_index = build_memory_primitive(src_layer_desc);
+    size_t src_iter_index = build_memory_primitive(src_iter_desc);
+    size_t weights_layer_index = build_memory_primitive(weights_layer_desc);
+    size_t weights_iter_index = build_memory_primitive(weights_iter_desc);
+    size_t bias_index = build_memory_primitive(bias_desc);
+    size_t dst_layer_index = build_memory_primitive(dst_layer_desc);
+    size_t dst_iter_index = build_memory_primitive(dst_iter_desc);
+
+    //TODO: figure our the role of workspace
+    auto null_memory_ = mkldnn::null_memory(mkldnn_utils::global_cpu_engine);
+
+    mkldnn::rnn_cell::desc rnn_cell(mkldnn::algorithm::vanilla_lstm);
+    mkldnn::rnn_forward::desc rnn_layer_desc(mkldnn::prop_kind::forward_inference,
+                                             rnn_cell,
+                                             mkldnn::rnn_direction::unidirectional_left2right,
+                                             src_layer_desc,
+                                             src_iter_desc,
+                                             weights_layer_desc,
+                                             weights_iter_desc,
+                                             bias_desc,
+                                             dst_layer_desc,
+                                             dst_iter_desc);
+    auto rnn_layer_prim_desc =
+        mkldnn::rnn_forward::primitive_desc(rnn_layer_desc, mkldnn_utils::global_cpu_engine);
+    size_t rnn_index = insert_primitive(
+        new mkldnn::rnn_forward(rnn_layer_prim_desc,
+                                mkldnn::primitive::at(*m_mkldnn_primitives[src_layer_index]),
+                                mkldnn::primitive::at(*m_mkldnn_primitives[src_iter_index]),
+                                mkldnn::primitive::at(*m_mkldnn_primitives[weights_layer_index]),
+                                mkldnn::primitive::at(*m_mkldnn_primitives[weights_iter_index]),
+                                mkldnn::primitive::at(*m_mkldnn_primitives[bias_index]),
+                                static_cast<mkldnn::memory>(*m_mkldnn_primitives[dst_layer_index]),
+                                static_cast<mkldnn::memory>(*m_mkldnn_primitives[dst_iter_index]),
+                                static_cast<mkldnn::memory>(null_memory_)));
+    m_primitive_deps[rnn_index] = {src_layer_index,
+                                   src_iter_index,
+                                   weights_layer_index,
+                                   weights_iter_index,
+                                   bias_index,
+                                   dst_layer_index,
+                                   dst_iter_index};
+
+    return rnn_index;
 }
 
 size_t MKLDNNEmitter::build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
