@@ -535,6 +535,10 @@ using namespace ngraph::runtime;
             string match_function_name;
             for (size_t j = i + 1; j < op_list.size(); j++)
             {
+                if (op_list[j]->is_constant() || op_list[j]->is_parameter())
+                {
+                    continue;
+                }
                 Node* op1 = op_list[i].get();
                 Node* op2 = op_list[j].get();
                 if (is_functionally_identical(*op1, *op2, node_cache))
