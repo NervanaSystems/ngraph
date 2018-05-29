@@ -41,7 +41,7 @@ bool test::close_f(float a, float b, int mantissa_bits, int tolerance_bits)
 
     uint32_t distance = (a_uint >= b_uint) ? (a_uint - b_uint) : (b_uint - a_uint);
 
-    // e.g. for float with 24 bit mantissa and 2 bit accuracy
+    // e.g. for float with 24 bit mantissa, 2 bit accuracy, and hard-coded 8 bit exponent_bits
     // tolerance_bit_shift = 32 -           (1 +  8 + (24 -     1         ) - 2)
     //                       float_length    sign exp  mantissa implicit 1    tolerance_bits
     uint32_t tolerance_bit_shift = 32 - (1 + 8 + (mantissa_bits - 1) - tolerance_bits);

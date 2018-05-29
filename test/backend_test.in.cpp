@@ -7618,14 +7618,14 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_all)
     backend->call(f, {result}, {a});
     vector<float> expected{
         expf(-3) / d, expf(-2) / d, expf(-1) / d, expf(0) / d, expf(1) / d, expf(2) / d};
-    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 
     // empty AxisSet is the same as "full" AxisSet
     f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{}), op::ParameterVector{A});
     backend = runtime::Backend::create("${BACKEND_NAME}");
 
     backend->call(f, {result}, {a});
-    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, softmax_axis)
@@ -7650,7 +7650,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_axis)
                            expf(-40) / d1,
                            expf(-50) / d1,
                            expf(-60) / d1};
-    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, softmax_underflow)
