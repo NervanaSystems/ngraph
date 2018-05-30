@@ -43,6 +43,7 @@
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 
@@ -328,6 +329,26 @@ namespace ngraph
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
                         ConvolutionLayout<ngraph::op::Convolution, false>(
+                            node, prim_input_formats, prim_output_formats);
+
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::GroupConvolution)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+                        ConvolutionLayout<ngraph::op::GroupConvolution, false>(
                             node, prim_input_formats, prim_output_formats);
 
                         node =
@@ -1363,6 +1384,8 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::AvgPoolBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPoolBackprop>},
     {TI(ngraph::op::Convolution), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Convolution>},
+    {TI(ngraph::op::GroupConvolution),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::GroupConvolution>},
     {TI(ngraph::op::ConvolutionBackpropData),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBackpropData>},
     {TI(ngraph::op::ConvolutionBackpropFilters),
