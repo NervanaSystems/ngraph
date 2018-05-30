@@ -145,7 +145,9 @@ Contents
    project/index.rst
    framework-integration-guides.rst
    optimize/index.rst
+   programmable/index.rst
    python_api/index.rst
+
 
 
 Indices and tables

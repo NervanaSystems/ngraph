@@ -30,6 +30,7 @@ namespace ngraph
         namespace gpu
         {
             typedef std::function<void(void**, void**)> primitive;
+            typedef std::function<void*(void)> memory_primitive;
 
             extern "C" {
             struct GPURuntimeContext
@@ -37,6 +38,7 @@ namespace ngraph
                 cudnnHandle_t* cudnn_handle;
                 cublasHandle_t* cublas_handle;
                 gpu::primitive* const* gpu_primitives;
+                const gpu::memory_primitive* gpu_memory_primitives;
                 CudaFunctionPool* compiled_kernel_pool;
                 // Note that in it's current state, calling methods of CudaFunctionPool
                 // or other native compiled C++ functions in ngraph from the JIT code is
