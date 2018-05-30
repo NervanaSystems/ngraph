@@ -92,6 +92,7 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
@@ -101,39 +102,7 @@
 
 using namespace std;
 
-// reduction function supported by GPU
-// CUDNN_REDUCE_TENSOR_ADD
-// CUDNN_REDUCE_TENSOR_MUL
-// CUDNN_REDUCE_TENSOR_MIN
-// CUDNN_REDUCE_TENSOR_MAX
-// CUDNN_REDUCE_TENSOR_AMAX
-// CUDNN_REDUCE_TENSOR_AVG
-// CUDNN_REDUCE_TENSOR_NORM1
-// CUDNN_REDUCE_TENSOR_NORM2
-// CUDNN_REDUCE_TENSOR_MUL_NO_ZEROS
 #define TI(x) type_index(typeid(x))
-
-static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_map{
-    {TI(ngraph::op::Add), CUDNN_REDUCE_TENSOR_ADD},
-    {TI(ngraph::op::Multiply), CUDNN_REDUCE_TENSOR_MUL},
-    {TI(ngraph::op::Maximum), CUDNN_REDUCE_TENSOR_MAX},
-    {TI(ngraph::op::Minimum), CUDNN_REDUCE_TENSOR_MIN},
-};
-
-// cudnn support elementwised op
-// CUDNN_OP_TENSOR_ADD
-// CUDNN_OP_TENSOR_MUL
-// CUDNN_OP_TENSOR_MIN
-// CUDNN_OP_TENSOR_MAX
-// CUDNN_OP_TENSOR_SQRT
-// CUDNN_OP_TENSOR_NOT
-
-static const std::unordered_map<std::type_index, cudnnOpTensorOp_t> element_op_map{
-    {TI(ngraph::op::Add), CUDNN_OP_TENSOR_ADD},
-    {TI(ngraph::op::Multiply), CUDNN_OP_TENSOR_MUL},
-    {TI(ngraph::op::Maximum), CUDNN_OP_TENSOR_MAX},
-    {TI(ngraph::op::Minimum), CUDNN_OP_TENSOR_MIN},
-    {TI(ngraph::op::Sqrt), CUDNN_OP_TENSOR_SQRT}};
 
 namespace ngraph
 {
@@ -1384,6 +1353,22 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Reduce)
             {
+                // reduction function supported by GPU
+                // CUDNN_REDUCE_TENSOR_ADD
+                // CUDNN_REDUCE_TENSOR_MUL
+                // CUDNN_REDUCE_TENSOR_MIN
+                // CUDNN_REDUCE_TENSOR_MAX
+                // CUDNN_REDUCE_TENSOR_AMAX
+                // CUDNN_REDUCE_TENSOR_AVG
+                // CUDNN_REDUCE_TENSOR_NORM1
+                // CUDNN_REDUCE_TENSOR_NORM2
+                // CUDNN_REDUCE_TENSOR_MUL_NO_ZEROS
+
+                static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_map{
+                    {TI(ngraph::op::Add), CUDNN_REDUCE_TENSOR_ADD},
+                    {TI(ngraph::op::Multiply), CUDNN_REDUCE_TENSOR_MUL},
+                    {TI(ngraph::op::Maximum), CUDNN_REDUCE_TENSOR_MAX},
+                    {TI(ngraph::op::Minimum), CUDNN_REDUCE_TENSOR_MIN}};
                 const ngraph::op::Reduce* reduce_op = static_cast<const ngraph::op::Reduce*>(node);
                 writer.block_begin("  // " + node->get_name());
                 {
@@ -1402,7 +1387,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                    << ", (void*)temp.data(), " << out[0].get_size() << " * "
                                    << out[0].get_element_type().size() << ");\n";
                         }
-                        else if (args[0].get_shape().size() == out[0].get_shape().size())
+                        else if (args[0].get_size() == out[0].get_size())
                         {
                             kernel::emit_memcpyDtD(writer, out[0], args[0]);
                         }
@@ -1412,8 +1397,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             // 1. reduction function should only have one op
                             // 2. the op should be in the op_map
                             // otherwise, throw an error message
-                            auto reduction_function_ops = reduce_op->get_functions()[0]->get_ops();
                             cudnnReduceTensorOp_t reduce_tensor_op;
+                            auto reduction_function_ops = reduce_op->get_functions()[0]->get_ops();
                             int op_count = 0;
                             for (auto op : reduction_function_ops)
                             {
@@ -1450,6 +1435,113 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                 reduce_tensor_op,
                                 args[0].get_shape(),
                                 reduce_op->get_reduction_axes());
+
+                            writer << "gpu::invoke_primitive(ctx, " << reduce_index << ", ";
+                            writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                            writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                            writer << ");\n";
+                        }
+                    }
+                }
+                writer.block_end();
+                return;
+            }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::ReduceWindow)
+            {
+                static const std::unordered_map<std::type_index, ngraph::runtime::gpu::OpName>
+                    reduce_window_map{
+                        {TI(ngraph::op::Add), ngraph::runtime::gpu::OpName::add},
+                        {TI(ngraph::op::Multiply), ngraph::runtime::gpu::OpName::multiply},
+                        {TI(ngraph::op::Maximum), ngraph::runtime::gpu::OpName::maximum},
+                        {TI(ngraph::op::Minimum), ngraph::runtime::gpu::OpName::minimum}};
+
+                const ngraph::op::ReduceWindow* reduce_window_op =
+                    static_cast<const ngraph::op::ReduceWindow*>(node);
+                writer.block_begin("  // " + node->get_name());
+                {
+                    if (out[0].get_size() != 0)
+                    {
+                        // one of args0 axes has zero size, zero output, use args1 value
+                        if (args[0].get_size() == 0)
+                        {
+                            writer << "float init_value;\n";
+                            writer << "runtime::gpu::cuda_memcpyDtH(&init_value, "
+                                   << args[1].get_name() << " ,"
+                                   << args[1].get_element_type().size() << ");\n";
+                            writer << "std::vector<float> temp(" << out[0].get_size()
+                                   << ", init_value);\n";
+                            writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
+                                   << ", (void*)temp.data(), " << out[0].get_size() << " * "
+                                   << out[0].get_element_type().size() << ");\n";
+                        }
+                        else if (args[0].get_size() == out[0].get_size())
+                        {
+                            kernel::emit_memcpyDtD(writer, out[0], args[0]);
+                        }
+                        else
+                        {
+                            // in current implementation:
+                            // 1. reduction function should only have one op
+                            // 2. the op should be in the op_map
+                            // otherwise, throw an error message
+                            auto reduction_function_ops =
+                                reduce_window_op->get_functions()[0]->get_ops();
+                            std::unordered_map<std::type_index,
+                                               ngraph::runtime::gpu::OpName>::const_iterator it =
+                                reduce_window_map.end();
+                            int op_count = 0;
+                            for (auto op : reduction_function_ops)
+                            {
+                                if (op->is_constant() || op->is_parameter() || op->is_output())
+                                {
+                                    continue;
+                                }
+                                op_count++;
+                                // Work around a compiler warning (*node inside typeid may have effects
+                                // with shared pointers, which is fine here but clang doesn't like it.)
+                                auto& fn = *op;
+                                auto f_ptr = reduce_window_map.find(type_index(typeid(fn)));
+                                if (op_count != 1)
+                                {
+                                    throw std::runtime_error(
+                                        "reduce with more than one op is not implement yet.");
+                                }
+                                else if (f_ptr == reduce_window_map.end())
+                                {
+                                    throw std::runtime_error("reduce with function " +
+                                                             fn.get_name() +
+                                                             " is not implement yet.");
+                                }
+                                else
+                                {
+                                    it = f_ptr;
+                                }
+                            }
+
+                            if (it == reduce_window_map.end())
+                            {
+                                throw std::runtime_error(
+                                    "no valid op found in reduction function.");
+                            }
+
+                            auto& cuda_emitter =
+                                external_function->get_primitive_emitter()->get_cuda_emitter();
+                            size_t reduce_index;
+
+                            // this dtypes is two build the binary op, expect both input has same type with args[0]
+                            std::vector<std::string> dtypes{
+                                args[0].get_type(), args[0].get_type(), out[0].get_type()};
+
+                            reduce_index = cuda_emitter->build_reduce_window(
+                                external_function->ctx().get(),
+                                it->second,
+                                dtypes,
+                                args[0].get_shape(),
+                                out[0].get_shape(),
+                                reduce_window_op->get_window_shape(),
+                                reduce_window_op->get_window_movement_strides());
 
                             writer << "gpu::invoke_primitive(ctx, " << reduce_index << ", ";
                             writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
