@@ -177,6 +177,116 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
     return primitive_index;
 }
 
+cudnnFilterDescriptor_t& runtime::gpu::CUDNNEmitter::get_cudnn_filter_descriptor(const Shape& shape,
+                                                      const cudnnDataType_t data_type,
+                                                      const cudnnTensorFormat_t tensor_format)
+{
+    std::vector<int> dimensions(fmax(4, shape.size()), 1);
+    int idx = 0;
+    for (size_t i = dimensions.size() - shape.size(); i < dimensions.size(); i++)
+    {
+        dimensions[i] = std::statci_cast<int>(shape[idx++]);
+    }
+
+    auto& filter_descriptor = descriptors.build<cudnnFilterDescriptor_t>();
+
+    if (dimensions.size() <= 4)
+    {
+        CUDNN_SAFE_CALL(cudnnSetFilter4dDescriptor(filter_descriptor,
+                         /*dataType=*/data_type,
+                         /*format=*/format,
+                         /*dimension_size*/dimensions[0],
+                         /*dimension_size*/dimensions[1],
+                         /*dimension_size*/dimensions[2],
+                         /*dimension_size*/dimensions[3]));
+    }
+    else
+    {
+        CUDNN_SAFE_CALL(cudnnSetFilterNdDescriptor(filter_descriptor,
+                         /*dataType=*/data_type,
+                         /*format=*/format,
+                         /*num_dimensions=*/dimensions.size(),
+                         /*dimensions*/dimensions));
+    }
+    return filter_descriptor;
+}
+
+cudnnConvolutionDescriptor_t& runtime::gpu::kernel::get_cudnn_convolution_descriptor(const Shape& padding,
+                                                     const Strides& window_movement_strides,
+                                                 const Strides& window_dilation_strides,
+                                                 cudnnConvolutionMode_t mode,
+                                                 cudnnDataType_t data_type)
+{
+    auto& conv_descriptor = m_descriptors.build<cudnnConvolutionDescriptor_t>();
+    std::vector<int> window_movement_strides_int(window_movement_strides.size());
+    std::vector<int> window_dilation_strides_int(window_dilation_strides.size());
+    std::vector<int> padding_int(padding.size());
+    for (int i = 0; i < padding.size(); i++)
+    {
+        window_movement_strides_int[i] = static_cast<int>(window_movement_strides[i]);
+        window_dilation_strides_int[i] = static_cast<int>(window_dilation_strides[i]);
+        padding_int[i] = static_cast<int>(padding[i]);
+    }
+
+
+    if (padding.size() == 2)
+    {
+        CUDNN_SAFE_CALL(cudnnSetConvolution2dDescriptor(conv_descriptor,padding_int[0], padding_int[1], window_movement_strides_int[0], window_movement_strides_int[1] ,window_dilation_strides_int[0], window_dilation_strides_int[1], mode, data_type));
+    }
+    else
+    {
+        CUDNN_SAFE_CALL(cudnnSetConvolutionNdDescriptor(conv_descriptor, padding_int.size(), padding_int.data(), window_movement_strides_int.data(), window_dilation_strides_int.data(), mode, data_type ));
+    }
+    return conv_descriptor;
+}
+
+
+
+size_t runtime::gpu::CUDNNEmitter::build_Convolution(const runtime::gpu::GPURuntimeContext* ctx,
+                                                 const cudnnDataType_t data_type,
+                                                 const Prop& direction,
+                                                 const Shape& input_shape0,
+                                                 const Shape& input_shape1,
+                                                 const Shape& output_shape,
+                                                 const Strides& window_movement_strides,
+                                                 const Strides& window_dilation_strides,
+                                                 const Shape& padding_below,
+                                                 const Shape& padding_above)
+{
+                const cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
+                const cudnnConvolutionMode_t mode = CUDNN_CROSS_CORRELATION;
+                
+                auto& input_desc0 = tensor_descriptor_from_shape(input_shape0);
+                auto& input_desc1 = tensor_descriptor_from_shape(input_shape1);
+                auto& output_desc = tensor_descriptor_from_shape(output_shape);
+                auto& conv_desc = get_cudnn_convolution_descriptor(padding, window_movement_strides, window_dilation_strides, mode, data_type);
+                const cudnnConvolutionFwdAlgo_t conv_algo = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM;
+
+                size_t workSpaceSizeInBytes = 0;
+               CUDNN_SAFE_CALL(cudnnGetConvolutionForwardWorkspaceSize(*ctx->cudnn_handle, input_desc0, input_desc1, conv_desc, output_desc, conv_algo, &workSpaceSizeInBytes));
+               void* workspace = runtime::gpu::create_gpu_buffer(workSpaceSizeInBytes);
+
+                std::unique_ptr<gpu::primitive> conv;
+                conv.reset(new gpu::primitive{
+                    [=, &conv_desc, &conv_algo, &input_desc0, &input_desc1, &output_desc](void** inputs, void** outputs) {
+                        float alpha = 1.0, beta = 0.0;
+                        CUDNN_SAFE_CALL(cudnnConvolutionForward(*ctx->cudnn_handle,
+                                                            &alpha,
+                                                            input_desc0,
+                                                            inputs[0],
+                                                            input_desc1,
+                                                            inputs[1],
+                                                            conv_desc,
+                                                            conv_algo,
+                                                            &beta,
+                                                            output_desc,
+                                                            outputs[0]));
+                    }});
+    primitive_index = this->m_primitive_emitter->insert(std::move(conv));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
+
 size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeContext* ctx,
                                                  const cudnnPoolingMode_t& pool_op,
                                                  const Prop& direction,

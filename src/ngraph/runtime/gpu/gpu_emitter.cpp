@@ -187,14 +187,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     return;
                 }
 
-                const std::string args0 = "x_descriptor";
-                const std::string args1 = "w_descriptor";
-                const std::string out0 = "y_descriptor";
-                const std::string conv_descriptor = "conv_descriptor";
-                const std::string data_type = "CUDNN_DATA_FLOAT";
-                const std::string tensor_format = "CUDNN_TENSOR_NCHW";
-                const std::string mode = "CUDNN_CROSS_CORRELATION";
-                const std::string conv_algo = "CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM";
                 auto convolution = static_cast<const ngraph::op::Convolution*>(node);
                 Strides window_dilation_strides = convolution->get_window_dilation_strides();
                 Strides window_movement_strides = convolution->get_window_movement_strides();
@@ -223,41 +215,39 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                  "with asymmetric padding is not implemented.");
                     }
                 }
+                bool pad_required = false;
 
+                auto& cudnn_emitter =
+                    external_function->get_primitive_emitter()->get_cudnn_emitter();
+
+                cudnnDataType_t data_type =  CUDNN_DATA_FLOAT;                                 
+                size_t index = cudnn_emitter->build_convolution(
+                                external_function->ctx().get(),
+                                data_type,
+                                CUDNNEmitter::Prop::Forward,
+                                args[0].get_shape(),
+                                args[1].get_shape(),
+                                out[0].get_shape(),
+                                window_movement_strides,
+                                window_dilation_strides,
+                                padding_below,
+                                padding_above);
+
+                
                 writer.block_begin("  // " + node->get_name());
-                writer << "float alpha = 1.0;\n";
-                writer << "float beta = 0.0;\n";
 
-                // construct input and output tensor descriptor
-                kernel::emit_cudnnTensorDescriptor(
-                    writer, args0, tensor_format, data_type, args[0].get_shape());
-                kernel::emit_cudnnFilterDescriptor(
-                    writer, args1, tensor_format, data_type, args[1].get_shape());
-                kernel::emit_cudnnTensorDescriptor(
-                    writer, out0, tensor_format, data_type, out[0].get_shape());
-                kernel::emit_cudnnConvolutionDescriptor(writer,
-                                                        conv_descriptor,
-                                                        padding,
-                                                        window_movement_strides,
-                                                        window_dilation_strides,
-                                                        mode,
-                                                        data_type);
-
-                writer << "size_t workSpaceSizeInBytes = 0;\n";
-                writer << "CUDNN_SAFE_CALL(cudnnGetConvolutionForwardWorkspaceSize(*ctx->cudnn_"
-                          "handle, "
-                       << args0 << ", " << args1 << ", " << conv_descriptor << ", " << out0 << ", "
-                       << conv_algo << ", "
-                       << "&workSpaceSizeInBytes));\n";
-
-                writer << "void* workspace = "
-                          "runtime::gpu::create_gpu_buffer(workSpaceSizeInBytes);\n";
-                writer << "CUDNN_SAFE_CALL(cudnnConvolutionForward(*ctx->cudnn_handle, "
-                       << "&alpha, " << args0 << ", " << args[0].get_name() << ", " << args1 << ", "
-                       << args[1].get_name() << ", " << conv_descriptor << ", " << conv_algo << ", "
-                       << "workspace, workSpaceSizeInBytes, "
-                       << "&beta, " << out0 << ", " << out[0].get_name() << "));\n";
-                writer << "runtime::gpu::free_gpu_buffer(workspace);\n";
+                        writer << "gpu::invoke_primitive(ctx, " << max_pool_index << ", ";
+                        if (pad_required)
+                        {
+                             throw std::runtime_error(node->get_name() +
+                                                 "with asymmetric padding is not implemented.");
+                        }
+                        else
+                        {
+                            writer << "std::vector<void*>{" << args[0].get_name() << "," << args[1].get_name() << "}.data(), ";
+                        }
+                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                        writer << ");\n";
                 writer.block_end();
             }
 
