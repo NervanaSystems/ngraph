@@ -211,63 +211,88 @@ std::string ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t ind
     return ::serialize(func, indent, false);
 }
 
+static shared_ptr<ngraph::Function> deserialize_json(const string& s)
+{
+    shared_ptr<Function> rc;
+    json js = json::parse(s);
+    unordered_map<string, shared_ptr<Function>> function_map;
+    for (json func : js)
+    {
+        shared_ptr<Function> f = read_function(func, function_map, nullptr);
+        rc = f;
+    }
+    return rc;
+}
+
+static shared_ptr<ngraph::Function> deserialize_cpio(cpio::Reader& reader)
+{
+    // This is a cpio file
+    // The first file is the model
+    shared_ptr<Function> rc;
+    vector<cpio::FileInfo> file_info = reader.get_file_info();
+    uint32_t size = static_cast<uint32_t>(file_info[0].get_size());
+    char* data = new char[size];
+    reader.read(file_info[0].get_name(), data, size);
+    string jstr(data, size);
+    delete[] data;
+    json js = json::parse(jstr);
+    unordered_map<string, shared_ptr<Function>> function_map;
+    for (json func : js)
+    {
+        shared_ptr<Function> f = read_function(
+            func,
+            function_map,
+            [&](const string& const_name, const element::Type& et, const Shape& shape) {
+                shared_ptr<Node> const_node;
+                for (const cpio::FileInfo& info : file_info)
+                {
+                    if (info.get_name() == const_name)
+                    {
+                        void* const_data = malloc(info.get_size());
+                        reader.read(const_name, const_data, info.get_size());
+                        const_node = make_shared<op::Constant>(et, shape, const_data);
+                        free(const_data);
+                        break;
+                    }
+                }
+                return const_node;
+            });
+        rc = f;
+    }
+    return rc;
+}
+
 shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
 {
-    std::stringstream ss;
-    ss << in.rdbuf();
-    return deserialize(ss.str());
+    shared_ptr<Function> rc;
+    cpio::Reader reader(in);
+    vector<cpio::FileInfo> file_info = reader.get_file_info();
+    if (file_info.size() > 0)
+    {
+        rc = deserialize_cpio(reader);
+    }
+    else
+    {
+        std::stringstream ss;
+        ss << in.rdbuf();
+        rc = deserialize_json(ss.str());
+    }
+    return rc;
 }
 
 shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
 {
+    NGRAPH_INFO;
+    // NGRAPH_INFO << s;
     shared_ptr<Function> rc;
     if (file_util::exists(s))
     {
         cpio::Reader reader(s);
-        vector<cpio::FileInfo> file_info = reader.get_file_info();
-        if (file_info.size() > 0)
-        {
-            // The first file is the model
-            uint32_t size = static_cast<uint32_t>(file_info[0].get_size());
-            char* data = new char[size];
-            reader.read(file_info[0].get_name(), data, size);
-            string jstr(data, size);
-            delete[] data;
-            json js = json::parse(jstr);
-            unordered_map<string, shared_ptr<Function>> function_map;
-            for (json func : js)
-            {
-                shared_ptr<Function> f = read_function(
-                    func,
-                    function_map,
-                    [&](const string& const_name, const element::Type& et, const Shape& shape) {
-                        shared_ptr<Node> const_node;
-                        for (const cpio::FileInfo& info : file_info)
-                        {
-                            if (info.get_name() == const_name)
-                            {
-                                void* const_data = malloc(info.get_size());
-                                reader.read(const_name, const_data, info.get_size());
-                                const_node = make_shared<op::Constant>(et, shape, const_data);
-                                free(const_data);
-                                break;
-                            }
-                        }
-                        return const_node;
-                    });
-                rc = f;
-            }
-        }
+        rc = deserialize_cpio(reader);
     }
     else
     {
-        json js = json::parse(s);
-        unordered_map<string, shared_ptr<Function>> function_map;
-        for (json func : js)
-        {
-            shared_ptr<Function> f = read_function(func, function_map, nullptr);
-            rc = f;
-        }
+        rc = deserialize_json(s);
     }
 
     return rc;
@@ -847,8 +872,11 @@ static shared_ptr<ngraph::Function>
             }
             else if (node_op == "Softmax")
             {
+                NGRAPH_INFO;
                 auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+                NGRAPH_INFO;
                 node = make_shared<op::Softmax>(args[0], reduction_axes);
+                NGRAPH_INFO;
             }
             else if (node_op == "Sqrt")
             {
