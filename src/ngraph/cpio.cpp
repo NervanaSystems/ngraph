@@ -212,11 +212,14 @@ cpio::Reader::~Reader()
 
 void cpio::Reader::open(istream& in)
 {
+    NGRAPH_INFO;
     m_stream = &in;
+    m_stream->seekg(0, ios_base::beg);
 }
 
 void cpio::Reader::open(const string& filename)
 {
+    NGRAPH_INFO;
     m_stream = &m_my_stream;
     m_my_stream.open(filename, ios_base::binary | ios_base::in);
 }
@@ -241,6 +244,7 @@ const vector<cpio::FileInfo>& cpio::Reader::get_file_info()
             m_stream->read(buffer, header.namesize);
             // namesize includes the null string terminator so -1
             string file_name = string(buffer, header.namesize - 1);
+            NGRAPH_INFO << file_name;
             delete[] buffer;
             // skip any pad characters
             if (header.namesize % 2)
@@ -278,6 +282,43 @@ void cpio::Reader::read(const string& file_name, void* data, size_t size_in_byte
             break;
         }
     }
+}
+
+bool cpio::is_cpio(const string& path)
+{
+    ifstream in(path, ios_base::binary | ios_base::in);
+    return is_cpio(in);
+}
+
+bool cpio::is_cpio(istream& in)
+{
+    NGRAPH_INFO;
+    size_t offset = in.tellg();
+    in.seekg(0, ios_base::beg);
+    bool rc = false;
+    uint8_t ch;
+    in.read(reinterpret_cast<char*>(&ch), 1);
+    switch (ch)
+    {
+    case 0x71: // Big Endian
+        in.read(reinterpret_cast<char*>(&ch), 1);
+        if (ch == 0xC7)
+        {
+            rc = true;
+        }
+        break;
+    case 0xC7: // Little Endian
+        in.read(reinterpret_cast<char*>(&ch), 1);
+        if (ch == 0x71)
+        {
+            rc = true;
+        }
+        break;
+    default: break;
+    }
+    in.seekg(offset, ios_base::beg);
+    NGRAPH_INFO;
+    return rc;
 }
 
 const string& cpio::FileInfo::get_name() const
