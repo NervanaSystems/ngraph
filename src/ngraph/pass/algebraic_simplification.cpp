@@ -347,6 +347,11 @@ static bool simplify_concat(std::shared_ptr<Node> n)
         }
 
         sconv = std::dynamic_pointer_cast<op::Convolution>(arg);
+
+        if (arg->get_input_shape(0).size() != 4)
+        {
+            NGRAPH_DEBUG << "convolution data's rank isn't equal to 4";
+        }
         if (!is_trivial_convolution(std::dynamic_pointer_cast<op::Convolution>(arg)))
         {
             NGRAPH_DEBUG << arg->get_name() << " isn't trivial convolution";
