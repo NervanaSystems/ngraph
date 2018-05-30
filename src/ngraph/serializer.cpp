@@ -793,10 +793,6 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::ReduceWindow>(
                     args[0], args[1], f_ptr, window_shape, window_movement_strides);
             }
-            else if (node_op == "Remainder")
-            {
-                node = make_shared<op::Remainder>(args[0], args[1]);
-            }
             else if (node_op == "Relu")
             {
                 node = make_shared<op::Relu>(args[0]);
@@ -804,6 +800,10 @@ static shared_ptr<ngraph::Function>
             else if (node_op == "ReluBackprop")
             {
                 node = make_shared<op::ReluBackprop>(args[0], args[1]);
+            }
+            else if (node_op == "Remainder")
+            {
+                node = make_shared<op::Remainder>(args[0], args[1]);
             }
             else if (node_op == "ReplaceSlice")
             {
@@ -1008,6 +1008,9 @@ static json write(const Node& n, bool binary_constant_data)
     else if (node_op == "AllReduce")
     {
     }
+    else if (node_op == "And")
+    {
+    }
     else if (node_op == "Asin")
     {
     }
@@ -1199,6 +1202,9 @@ static json write(const Node& n, bool binary_constant_data)
         node["shape"] = tmp->get_shape();
         node["one_hot_axis"] = tmp->get_one_hot_axis();
     }
+    else if (node_op == "Or")
+    {
+    }
     else if (node_op == "Pad")
     {
         auto tmp = dynamic_cast<const op::Pad*>(&n);
@@ -1212,13 +1218,13 @@ static json write(const Node& n, bool binary_constant_data)
         node["shape"] = tmp->get_shape();
         node["element_type"] = write_element_type(tmp->get_element_type());
     }
+    else if (node_op == "Power")
+    {
+    }
     else if (node_op == "Product")
     {
         auto tmp = dynamic_cast<const op::Product*>(&n);
         node["reduction_axes"] = tmp->get_reduction_axes();
-    }
-    else if (node_op == "Power")
-    {
     }
     else if (node_op == "Reduce")
     {
@@ -1289,6 +1295,11 @@ static json write(const Node& n, bool binary_constant_data)
         node["lower_bounds"] = tmp->get_lower_bounds();
         node["upper_bounds"] = tmp->get_upper_bounds();
         node["strides"] = tmp->get_strides();
+    }
+    else if (node_op == "Softmax")
+    {
+        auto tmp = dynamic_cast<const op::Softmax*>(&n);
+        node["reduction_axes"] = tmp->get_axes();
     }
     else if (node_op == "Sqrt")
     {
