@@ -267,7 +267,8 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_window_op(
                        << " * reduce_window_strides[" << i << "];\n";
                 writer << "int input_idx_end_for_axes_" << i << " = input_idx_start_for_axes_" << i
                        << " + reduce_window_shape[" << i << "];\n";
-                writer << "idx_init += input_idx_start_for_axes_" << i << " * input_strides[" << i << "];\n";
+                writer << "idx_init += input_idx_start_for_axes_" << i << " * input_strides[" << i
+                       << "];\n";
                 writer << "output_idx /= output_shape[" << i << "];\n";
             }
 

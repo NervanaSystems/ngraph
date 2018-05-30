@@ -1417,11 +1417,12 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::ReduceWindow)
             {
-                static const std::unordered_map<std::type_index, ngraph::runtime::gpu::OpName> reduce_window_map{
-                    {TI(ngraph::op::Add), ngraph::runtime::gpu::OpName::add},
-                    {TI(ngraph::op::Multiply), ngraph::runtime::gpu::OpName::multiply},
-                    {TI(ngraph::op::Maximum), ngraph::runtime::gpu::OpName::maximum},
-                    {TI(ngraph::op::Minimum), ngraph::runtime::gpu::OpName::minimum}};
+                static const std::unordered_map<std::type_index, ngraph::runtime::gpu::OpName>
+                    reduce_window_map{
+                        {TI(ngraph::op::Add), ngraph::runtime::gpu::OpName::add},
+                        {TI(ngraph::op::Multiply), ngraph::runtime::gpu::OpName::multiply},
+                        {TI(ngraph::op::Maximum), ngraph::runtime::gpu::OpName::maximum},
+                        {TI(ngraph::op::Minimum), ngraph::runtime::gpu::OpName::minimum}};
 
                 const ngraph::op::ReduceWindow* reduce_window_op =
                     static_cast<const ngraph::op::ReduceWindow*>(node);
