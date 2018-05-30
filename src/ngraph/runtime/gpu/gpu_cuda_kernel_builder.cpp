@@ -263,11 +263,11 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_window_op(
             for (int i = static_cast<int>(rank) - 1; i >= 0; i--)
             {
                 writer << "int output_idx_" << i << " = output_idx % output_shape[" << i << "];\n";
-                writer << "int input_idx_start_for_axes_" << i << " = output_idx_" << i
+                writer << "int input_idx_start_for_axis_" << i << " = output_idx_" << i
                        << " * reduce_window_strides[" << i << "];\n";
-                writer << "int input_idx_end_for_axes_" << i << " = input_idx_start_for_axes_" << i
+                writer << "int input_idx_end_for_axis_" << i << " = input_idx_start_for_axis_" << i
                        << " + reduce_window_shape[" << i << "];\n";
-                writer << "idx_init += input_idx_start_for_axes_" << i << " * input_strides[" << i
+                writer << "idx_init += input_idx_start_for_axis_" << i << " * input_strides[" << i
                        << "];\n";
                 writer << "output_idx /= output_shape[" << i << "];\n";
             }
@@ -276,8 +276,8 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_window_op(
 
             for (int i = 0; i < rank; i++)
             {
-                writer << "for(int i_" << i << " = input_idx_start_for_axes_" << i << "; i_" << i
-                       << " < input_idx_end_for_axes_" << i << "; i_" << i << "++)\n";
+                writer << "for(int i_" << i << " = input_idx_start_for_axis_" << i << "; i_" << i
+                       << " < input_idx_end_for_axis_" << i << "; i_" << i << "++)\n";
                 writer.block_begin();
             }
 
