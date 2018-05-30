@@ -192,7 +192,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 auto input_shape = args[0].get_shape();
                 auto input_shape_padded = input_shape;
 
-
                 if (pad_required)
                 {
                     input_shape_padded = get_padded_shape(input_shape, padding_below, padding_above, {});
@@ -204,7 +203,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     size_t idx_workspace = allocator.reserve_workspace(temp_size);
                     writer << "void* pad_buffer = runtime::gpu::invoke_memory_primitive(ctx, "
                         << idx_workspace << ");\n";
-/*
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
                     auto pad_index =
@@ -221,7 +219,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
                     writer << "std::vector<void*>{pad_buffer}.data()";
                     writer << ");\n";
-*/
                     // asymetric padding has been applied, zero out padding vectors to
                     // ensure cudnn does not assume padding during pooling
                     std::fill(padding_below.begin(), padding_below.end(), 0);
@@ -248,10 +245,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "gpu::invoke_primitive(ctx, " << index << ", ";
                 if (pad_required)
                 {
-                    throw std::runtime_error(node->get_name() +
-                                             "with asymmetric padding is not implemented.");
-//                     writer << "std::vector<void*>{pad_buffer, "
-  //                         << args[1].get_name() << "}.data(), ";
+                     writer << "std::vector<void*>{pad_buffer, "
+                           << args[1].get_name() << "}.data(), ";
                 }
                 else
                 {

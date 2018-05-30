@@ -24,6 +24,7 @@
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/log.hpp"
 
 using namespace ngraph;
 
@@ -271,7 +272,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURunt
        << join(output_shape, "_") << "_ws" << join(window_movement_strides, "_") << "_wd"
        << join(window_dilation_strides, "_") << "_p" << join(padding_below, "_");
     std::string hash = ss.str();
-
+    NGRAPH_INFO << hash;
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash);
     if (primitive_index != std::numeric_limits<size_t>::max())
@@ -284,9 +285,9 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURunt
     auto& input_desc0 = tensor_descriptor_from_shape(input_shape0);
     auto& input_desc1 = get_cudnn_filter_descriptor(input_shape1, data_type, tensor_format);
     auto& output_desc = tensor_descriptor_from_shape(output_shape);
-    auto& conv_desc = get_cudnn_convolution_descriptor(
-        padding_below, window_movement_strides, window_dilation_strides, mode, data_type);
     const cudnnConvolutionFwdAlgo_t conv_algo = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM;
+    auto& conv_desc = get_cudnn_convolution_descriptor(
+            padding_below, window_movement_strides, window_dilation_strides, mode, data_type);
 
     size_t workspace_size_in_bytes = 0;
     CUDNN_SAFE_CALL(cudnnGetConvolutionForwardWorkspaceSize(*ctx->cudnn_handle,
@@ -304,9 +305,12 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURunt
 
     std::unique_ptr<gpu::primitive> conv;
     conv.reset(
-        new gpu::primitive{[=, &conv_desc, &conv_algo, &input_desc0, &input_desc1, &output_desc](
+        new gpu::primitive{[=, &conv_desc, &input_desc0, &input_desc1, &output_desc](
             void** inputs, void** outputs) {
-            float alpha = 1.0, beta = 0.0;
+            float alpha = 1.0;
+            float beta = 0.0;
+            NGRAPH_INFO << ctx;
+            NGRAPH_INFO << conv_algo;
             void* workspace_ptr = runtime::gpu::invoke_memory_primitive(ctx, workspace_idx);
             CUDNN_SAFE_CALL(cudnnConvolutionForward(*ctx->cudnn_handle,
                                                     &alpha,
