@@ -259,7 +259,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_window_op(
         writer.block_begin();
         {
             writer << "int output_idx = tid;\n";
-            writer << "int idx_init = 0; \\\\result will be initial to in[idx_init]\n";
+            writer << "int idx_init = 0; //result will be initial to in[idx_init]\n";
             for (int i = static_cast<int>(rank) - 1; i >= 0; i--)
             {
                 writer << "int output_idx_" << i << " = output_idx % output_shape[" << i << "];\n";
@@ -286,7 +286,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_window_op(
                 writer << "input_idx += i_" << i << " * input_strides[" << i << "];\n";
             }
             writer << "result = (input_idx == idx_init) ? result : " << op
-                   << "(result, in[input_idx]); \\\\skip in[idx_init] in loop\n";
+                   << "(result, in[input_idx]); //skip in[idx_init] in loop\n";
             for (int i = 0; i < rank; i++)
             {
                 writer.block_end();
