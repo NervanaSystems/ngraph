@@ -191,10 +191,18 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 Strides window_dilation_strides = convolution->get_window_dilation_strides();
                 Strides window_movement_strides = convolution->get_window_movement_strides();
                 Strides data_dilation_strides = convolution->get_data_dilation_strides();
-                CoordinateDiff padding = convolution->get_padding_below();
-                CoordinateDiff padding_above = convolution->get_padding_above();
+                CoordinateDiff padding_below_diff = convolution->get_padding_below();
+                CoordinateDiff padding_above_diff = convolution->get_padding_above();
+                Shape padding_below(padding_below_diff.size(), 0);
+                Shape padding_above(padding_above_diff.size(), 0);
+                for (int i = 0; i < padding_below_diff.size(); i++)
+                {
+                    padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
+                    padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
+                }
 
-                if (padding.size() > 3)
+                bool pad_required = false;
+                if (padding_below.size() > 3)
                 {
                     throw std::runtime_error(node->get_name() +
                                              "with more than 3D is not implemented.");
@@ -207,15 +215,10 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                  "with data dilation is not implemented.");
                     }
                 }
-                for (int i = 0; i < padding.size(); i++)
+                if (padding_below != padding_above)
                 {
-                    if (padding[i] != padding_above[i])
-                    {
-                        throw std::runtime_error(node->get_name() +
-                                                 "with asymmetric padding is not implemented.");
-                    }
+                    pad_required = true;
                 }
-                bool pad_required = false;
 
                 auto& cudnn_emitter =
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
@@ -229,12 +232,11 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                                 out[0].get_shape(),
                                                                 window_movement_strides,
                                                                 window_dilation_strides,
-                                                                padding_below,
-                                                                padding_above);
+                                                                padding_below);
 
                 writer.block_begin("  // " + node->get_name());
 
-                writer << "gpu::invoke_primitive(ctx, " << max_pool_index << ", ";
+                writer << "gpu::invoke_primitive(ctx, " << index << ", ";
                 if (pad_required)
                 {
                     throw std::runtime_error(node->get_name() +

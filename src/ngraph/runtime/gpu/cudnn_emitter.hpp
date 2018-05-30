@@ -55,7 +55,7 @@ namespace ngraph
                     Backward
                 };
 
-                size_t build_Convolution(const runtime::gpu::GPURuntimeContext* ctx,
+                size_t build_convolution(const runtime::gpu::GPURuntimeContext* ctx,
                                          const cudnnDataType_t data_type,
                                          const Prop& direction,
                                          const Shape& input_shape0,
@@ -63,8 +63,7 @@ namespace ngraph
                                          const Shape& output_shape,
                                          const Strides& window_movement_strides,
                                          const Strides& window_dilation_strides,
-                                         const Shape& padding_below,
-                                         const Shape& padding_above);
+                                         const Shape& padding_below);
 
                 size_t build_reduce_forward(const GPURuntimeContext* ctx,
                                             const cudnnReduceTensorOp_t& reduce_op,

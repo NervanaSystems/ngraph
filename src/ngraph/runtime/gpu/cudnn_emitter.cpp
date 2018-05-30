@@ -184,16 +184,16 @@ cudnnFilterDescriptor_t& runtime::gpu::CUDNNEmitter::get_cudnn_filter_descriptor
     int idx = 0;
     for (size_t i = dimensions.size() - shape.size(); i < dimensions.size(); i++)
     {
-        dimensions[i] = std::statci_cast<int>(shape[idx++]);
+        dimensions[i] = static_cast<int>(shape[idx++]);
     }
 
-    auto& filter_descriptor = descriptors.build<cudnnFilterDescriptor_t>();
+    auto& filter_descriptor = m_descriptors.build<cudnnFilterDescriptor_t>();
 
     if (dimensions.size() <= 4)
     {
         CUDNN_SAFE_CALL(cudnnSetFilter4dDescriptor(filter_descriptor,
                                                    /*dataType=*/data_type,
-                                                   /*format=*/format,
+                                                   /*format=*/tensor_format,
                                                    /*dimension_size*/ dimensions[0],
                                                    /*dimension_size*/ dimensions[1],
                                                    /*dimension_size*/ dimensions[2],
@@ -203,19 +203,19 @@ cudnnFilterDescriptor_t& runtime::gpu::CUDNNEmitter::get_cudnn_filter_descriptor
     {
         CUDNN_SAFE_CALL(cudnnSetFilterNdDescriptor(filter_descriptor,
                                                    /*dataType=*/data_type,
-                                                   /*format=*/format,
+                                                   /*format=*/tensor_format,
                                                    /*num_dimensions=*/dimensions.size(),
-                                                   /*dimensions*/ dimensions));
+                                                   /*dimensions*/ dimensions.data()));
     }
     return filter_descriptor;
 }
 
-cudnnConvolutionDescriptor_t&
-    runtime::gpu::kernel::get_cudnn_convolution_descriptor(const Shape& padding,
-                                                           const Strides& window_movement_strides,
-                                                           const Strides& window_dilation_strides,
-                                                           cudnnConvolutionMode_t mode,
-                                                           cudnnDataType_t data_type)
+cudnnConvolutionDescriptor_t& runtime::gpu::CUDNNEmitter::get_cudnn_convolution_descriptor(
+    const Shape& padding,
+    const Strides& window_movement_strides,
+    const Strides& window_dilation_strides,
+    cudnnConvolutionMode_t mode,
+    cudnnDataType_t data_type)
 {
     auto& conv_descriptor = m_descriptors.build<cudnnConvolutionDescriptor_t>();
     std::vector<int> window_movement_strides_int(window_movement_strides.size());
@@ -253,7 +253,7 @@ cudnnConvolutionDescriptor_t&
     return conv_descriptor;
 }
 
-size_t runtime::gpu::CUDNNEmitter::build_Convolution(const runtime::gpu::GPURuntimeContext* ctx,
+size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURuntimeContext* ctx,
                                                      const cudnnDataType_t data_type,
                                                      const Prop& direction,
                                                      const Shape& input_shape0,
@@ -261,34 +261,53 @@ size_t runtime::gpu::CUDNNEmitter::build_Convolution(const runtime::gpu::GPURunt
                                                      const Shape& output_shape,
                                                      const Strides& window_movement_strides,
                                                      const Strides& window_dilation_strides,
-                                                     const Shape& padding_below,
-                                                     const Shape& padding_above)
+                                                     const Shape& padding_below)
 {
+    // construct hash to determine if kernel needs to be emitted
+    // or if it already exists in the primitive list
+    std::stringstream ss;
+    ss << "convolution_op" << data_type << "_dir" << static_cast<int>(direction) << "_i"
+       << join(input_shape0, "_") << "_w" << join(input_shape1, "_") << "_o"
+       << join(output_shape, "_") << "_ws" << join(window_movement_strides, "_") << "_wd"
+       << join(window_dilation_strides, "_") << "_p" << join(padding_below, "_");
+    std::string hash = ss.str();
+
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
     const cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
     const cudnnConvolutionMode_t mode = CUDNN_CROSS_CORRELATION;
 
     auto& input_desc0 = tensor_descriptor_from_shape(input_shape0);
-    auto& input_desc1 = tensor_descriptor_from_shape(input_shape1);
+    auto& input_desc1 = get_cudnn_filter_descriptor(input_shape1, data_type, tensor_format);
     auto& output_desc = tensor_descriptor_from_shape(output_shape);
     auto& conv_desc = get_cudnn_convolution_descriptor(
-        padding, window_movement_strides, window_dilation_strides, mode, data_type);
+        padding_below, window_movement_strides, window_dilation_strides, mode, data_type);
     const cudnnConvolutionFwdAlgo_t conv_algo = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM;
 
-    size_t workSpaceSizeInBytes = 0;
+    size_t workspace_size_in_bytes = 0;
     CUDNN_SAFE_CALL(cudnnGetConvolutionForwardWorkspaceSize(*ctx->cudnn_handle,
                                                             input_desc0,
                                                             input_desc1,
                                                             conv_desc,
                                                             output_desc,
                                                             conv_algo,
-                                                            &workSpaceSizeInBytes));
-    void* workspace = runtime::gpu::create_gpu_buffer(workSpaceSizeInBytes);
+                                                            &workspace_size_in_bytes));
+    // get an allocator for transient per kernel gpu memory
+    GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+
+    // (lazy) allocation for kernel arguments
+    size_t workspace_idx = allocator.reserve_workspace(workspace_size_in_bytes);
 
     std::unique_ptr<gpu::primitive> conv;
     conv.reset(
         new gpu::primitive{[=, &conv_desc, &conv_algo, &input_desc0, &input_desc1, &output_desc](
             void** inputs, void** outputs) {
             float alpha = 1.0, beta = 0.0;
+            void* workspace_ptr = runtime::gpu::invoke_memory_primitive(ctx, workspace_idx);
             CUDNN_SAFE_CALL(cudnnConvolutionForward(*ctx->cudnn_handle,
                                                     &alpha,
                                                     input_desc0,
@@ -297,6 +316,8 @@ size_t runtime::gpu::CUDNNEmitter::build_Convolution(const runtime::gpu::GPURunt
                                                     inputs[1],
                                                     conv_desc,
                                                     conv_algo,
+                                                    workspace_ptr,
+                                                    workspace_size_in_bytes,
                                                     &beta,
                                                     output_desc,
                                                     outputs[0]));
