@@ -282,7 +282,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
                 }
 
-                if (padding.size() > 3)
+                if (padding_below.size() > 3)
                 {
                     throw std::runtime_error(node->get_name() +
                                              "with more than 3D is not implemented.");
@@ -376,25 +376,25 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     return;
                 }
 
-                const std::string args0 = "x_descriptor";
-                const std::string args1 = "dy_descriptor";
-                const std::string out0 = "dw_descriptor";
-                const std::string conv_descriptor = "conv_descriptor";
-                const std::string data_type = "CUDNN_DATA_FLOAT";
-                const std::string tensor_format = "CUDNN_TENSOR_NCHW";
-                const std::string mode = "CUDNN_CROSS_CORRELATION";
-                const std::string conv_algo = "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0";
-
                 auto convolution = static_cast<const ngraph::op::ConvolutionBackpropFilters*>(node);
+
                 Strides window_dilation_strides =
                     convolution->get_window_dilation_strides_forward();
                 Strides window_movement_strides =
                     convolution->get_window_movement_strides_forward();
                 Strides data_dilation_strides = convolution->get_data_dilation_strides_forward();
-                CoordinateDiff padding = convolution->get_padding_below_forward();
-                CoordinateDiff padding_above = convolution->get_padding_above_forward();
+                CoordinateDiff padding_below_diff = convolution->get_padding_below_forward();
+                CoordinateDiff padding_above_diff = convolution->get_padding_above_forward();
+                Shape padding_below(padding_below_diff.size(), 0);
+                Shape padding_above(padding_above_diff.size(), 0);
 
-                if (padding.size() > 3)
+                for (int i = 0; i < padding_below_diff.size(); i++)
+                {
+                    padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
+                    padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
+                }
+
+                if (padding_below.size() > 3)
                 {
                     throw std::runtime_error(node->get_name() +
                                              "with more than 3D is not implemented.");
