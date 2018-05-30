@@ -125,6 +125,7 @@ set (SRC
     pass/validate_graph.cpp
     pass/visualize_tree.cpp
     pass/core_fusion.cpp
+    pass/serialize.cpp
     pass/zero_dim_tensor_elimination.cpp
     pattern/matcher.cpp
     runtime/aligned_buffer.cpp
@@ -133,7 +134,6 @@ set (SRC
     runtime/interpreter/int_backend.cpp
     runtime/tensor_view.cpp
     serializer.cpp
-    shape.cpp
     type/element_type.cpp
     type/type.cpp
     util.cpp
@@ -294,6 +294,7 @@ endif()
             runtime/gpu/cudnn_emitter.cpp
             runtime/gpu/cuda_emitter.cpp
             runtime/gpu/type_info.cpp
+	    runtime/gpu/gpu_memory_manager.cpp
             )
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")

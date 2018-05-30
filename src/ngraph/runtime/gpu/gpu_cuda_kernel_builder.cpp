@@ -242,6 +242,79 @@ void runtime::gpu::CudaKernelBuilder::get_reverse_op(codegen::CodeWriter& writer
     writer.block_end();
 }
 
+void runtime::gpu::CudaKernelBuilder::get_replace_slice_op(
+    codegen::CodeWriter& writer,
+    const std::string& name,
+    const std::array<std::string, 3>& data_types,
+    int nthreads_per_block)
+{
+    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
+           << data_types[1] << "* source, " << data_types[2] << "* out, "
+           << "float alpha, float beta, "
+           << "int* dim_strides, "
+           << "int* dim_magic, "
+           << "int* dim_shift, "
+           << "int* lower_bounds, "
+           << "int* upper_bounds, "
+           << "int* slice_str, "
+           << "int* slice_magic, "
+           << "int* slice_shift, "
+           << "int* dim_source, "
+           << "int* src_strides, "
+           << "int rank,"
+           << "size_t nthreads"
+           << ")\n";
+    writer.block_begin();
+    {
+        writer << "extern __shared__ int dimensions[];\n";
+        writer << "const int tid = blockDim.x*blockIdx.x + threadIdx.x;\n";
+        writer << "if (tid < nthreads)\n";
+        writer.block_begin();
+        {
+            writer << "int dim_product = tid;\n";
+            writer << "int data_idx = 0;\n";
+            writer << "for (int i = threadIdx.x; i < (rank - 1) * " << nthreads_per_block
+                   << "; i += " << nthreads_per_block << ")\n";
+            writer.block_begin();
+            {
+                writer << "dimensions[i] = division_by_invariant_multiplication(dim_product, "
+                          "dim_magic[data_idx], "
+                          "dim_shift[data_idx]);\n";
+                writer << "dim_product -= (dimensions[i] * dim_strides[data_idx]);\n";
+                writer << "data_idx++;\n";
+            }
+            writer.block_end();
+            writer << "dimensions[threadIdx.x + (rank-1) * " << nthreads_per_block
+                   << "] = dim_product;\n";
+            writer << "data_idx = 0;\n";
+            writer << "bool in_bounds = true;\n";
+            writer << "int source_idx = 0;\n";
+            writer << "for (int i = threadIdx.x; i < rank * " << nthreads_per_block
+                   << "; i += " << nthreads_per_block << ")\n";
+            writer.block_begin();
+            {
+                writer << "int source_di = division_by_invariant_multiplication(dimensions[i], "
+                          "slice_magic[data_idx], "
+                          "slice_shift[data_idx]);\n";
+                writer << "bool on_stride = (mod16(dimensions[i], source_di, "
+                          "slice_str[data_idx]) == 0);\n";
+                // within slice of input tensor and a multiple of the slice stride
+                writer << "bool in_slice_di = (dimensions[i] >= lower_bounds[data_idx]) && "
+                          "(dimensions[i] < upper_bounds[data_idx]) && on_stride;\n";
+                writer << "in_bounds = in_bounds && in_slice_di;\n";
+                // subtract off lower bound to convert to source index
+                writer << "source_di -= lower_bounds[data_idx];\n";
+                writer << "source_idx += source_di * src_strides[data_idx];\n";
+                writer << "data_idx++;\n";
+            }
+            writer.block_end();
+            writer << "out[tid] = in_bounds ? source[source_idx] : in[tid];\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+}
+
 void runtime::gpu::CudaKernelBuilder::get_device_helper(codegen::CodeWriter& writer,
                                                         const std::string& name,
                                                         const std::string& math_kernel,
