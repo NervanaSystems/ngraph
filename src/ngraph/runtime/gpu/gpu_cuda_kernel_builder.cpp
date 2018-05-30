@@ -118,17 +118,17 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op(codegen::CodeWriter& writer
         writer << "if (tid < n)\n";
         writer.block_begin();
         {
-            writer << "size_t idx_in = tid;\n";
-            writer << "size_t idx_out = 0;\n";
+            writer << "size_t input_idx = tid;\n";
+            writer << "size_t output_idx = 0;\n";
 
             writer << "for(size_t i = 0; i < rank; i++)\n";
             writer.block_begin();
             {
-                writer << "idx_out += (idx_in / input_strides[i]) * trans_strides[i];\n";
-                writer << "idx_in %= input_strides[i];\n";
+                writer << "output_idx += (input_idx / input_strides[i]) * trans_strides[i];\n";
+                writer << "input_idx %= input_strides[i];\n";
             }
             writer.block_end();
-            writer << "out[idx_out] = in[tid];\n";
+            writer << "out[output_idx] = in[tid];\n";
         }
         writer.block_end();
     }
@@ -154,7 +154,7 @@ void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
         writer.block_begin();
         {
             writer << "out[tid] = 1;\n";
-            writer << "size_t idx_out = tid;\n";
+            writer << "size_t output_idx = tid;\n";
             writer << "size_t block_id = tid / block_size;\n";
             writer << "size_t block_idx = tid % block_size;\n";
             writer << "bool processed = false;\n";
@@ -163,7 +163,7 @@ void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
                 writer << "if(!processed && (block_idx < block_strides[" << i << "]))\n";
                 writer.block_begin();
                 {
-                    writer << "out[idx_out] = in" << i << "[block_id * block_strides[" << i
+                    writer << "out[output_idx] = in" << i << "[block_id * block_strides[" << i
                            << "] + block_idx];";
                     writer << "processed = true;\n";
                 }
@@ -189,18 +189,18 @@ void runtime::gpu::CudaKernelBuilder::get_slice_op(codegen::CodeWriter& writer,
         writer << "if (tid < n)\n";
         writer.block_begin();
         {
-            writer << "size_t idx_in = 0;\n";
-            writer << "size_t idx_out = tid;\n";
+            writer << "size_t input_idx = 0;\n";
+            writer << "size_t output_idx = tid;\n";
 
             writer << "for(size_t i = 0; i < rank; i++)\n";
             writer.block_begin();
             {
-                writer << "idx_in += (((idx_out / output_strides[i]) * slice_strides[i]) + "
+                writer << "input_idx += (((output_idx / output_strides[i]) * slice_strides[i]) + "
                           "lower_bounds[i]) * input_strides[i];\n";
-                writer << "idx_out %= output_strides[i];\n";
+                writer << "output_idx %= output_strides[i];\n";
             }
             writer.block_end();
-            writer << "out[tid] = in[idx_in];\n";
+            writer << "out[tid] = in[input_idx];\n";
         }
         writer.block_end();
     }
@@ -220,22 +220,79 @@ void runtime::gpu::CudaKernelBuilder::get_reverse_op(codegen::CodeWriter& writer
         writer << "if (tid < n)\n";
         writer.block_begin();
         {
-            writer << "size_t idx_in = tid;\n";
-            writer << "size_t idx_out = 0;\n";
+            writer << "size_t input_idx = tid;\n";
+            writer << "size_t output_idx = 0;\n";
             writer << "size_t stride = 1;\n";
             writer << "for(size_t i = rank; i > 0; i--)\n";
             writer.block_begin();
             {
                 writer << "size_t idx = i - 1;\n";
-                writer << "size_t axes_i_in = idx_in % input_shape[idx];\n";
-                writer << "idx_in /= input_shape[idx];\n";
+                writer << "size_t axes_i_in = input_idx % input_shape[idx];\n";
+                writer << "input_idx /= input_shape[idx];\n";
                 writer << "size_t axes_i_out = reverse_axes[idx] ? input_shape[idx] - axes_i_in - "
                           "1 : axes_i_in;\n";
-                writer << "idx_out += axes_i_out * stride;\n";
+                writer << "output_idx += axes_i_out * stride;\n";
                 writer << "stride *= input_shape[idx];\n";
             }
             writer.block_end();
-            writer << "out[idx_out] = in[tid];\n";
+            writer << "out[output_idx] = in[tid];\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+}
+
+void runtime::gpu::CudaKernelBuilder::get_reduce_window_op(
+    codegen::CodeWriter& writer,
+    const std::string& name,
+    const std::string& op,
+    const std::vector<std::string>& data_types,
+    const size_t rank)
+{
+    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
+           << data_types[1] << "* out, int* input_strides, int* output_shape, int* "
+                               "reduce_window_shape, int* reduce_window_strides, size_t n)\n";
+    writer.block_begin();
+    {
+        writer << "const int tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
+        writer << "if (tid < n)\n";
+        writer.block_begin();
+        {
+            writer << "int output_idx = tid;\n";
+            writer << "int idx_init = 0; //result will be initial to in[idx_init]\n";
+            for (int i = static_cast<int>(rank) - 1; i >= 0; i--)
+            {
+                writer << "int output_idx_" << i << " = output_idx % output_shape[" << i << "];\n";
+                writer << "int input_idx_start_for_axis_" << i << " = output_idx_" << i
+                       << " * reduce_window_strides[" << i << "];\n";
+                writer << "int input_idx_end_for_axis_" << i << " = input_idx_start_for_axis_" << i
+                       << " + reduce_window_shape[" << i << "];\n";
+                writer << "idx_init += input_idx_start_for_axis_" << i << " * input_strides[" << i
+                       << "];\n";
+                writer << "output_idx /= output_shape[" << i << "];\n";
+            }
+
+            writer << data_types[1] << " result = in[idx_init];\n";
+
+            for (int i = 0; i < rank; i++)
+            {
+                writer << "for(int i_" << i << " = input_idx_start_for_axis_" << i << "; i_" << i
+                       << " < input_idx_end_for_axis_" << i << "; i_" << i << "++)\n";
+                writer.block_begin();
+            }
+
+            writer << "int input_idx = 0;\n";
+            for (int i = 0; i < rank; i++)
+            {
+                writer << "input_idx += i_" << i << " * input_strides[" << i << "];\n";
+            }
+            writer << "result = (input_idx == idx_init) ? result : " << op
+                   << "(result, in[input_idx]); //skip in[idx_init] in loop\n";
+            for (int i = 0; i < rank; i++)
+            {
+                writer.block_end();
+            }
+            writer << "out[tid] = result;\n";
         }
         writer.block_end();
     }
