@@ -260,11 +260,30 @@ runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     // http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html
     // #interoperability-between-runtime-and-driver-apis
     ngraph::runtime::gpu::CudaContextManager::Instance().SetContextCurrent();
+
+    cublasStatus_t cublasStatus = cublasCreate(&m_cublas_handle);
+    if (cublasStatus != CUBLAS_STATUS_SUCCESS)
+    {
+        throw runtime_error("cuBLAS create handle failed");
+    }
+    cudnnStatus_t cudnnStatus = cudnnCreate(&m_cudnn_handle);
+    if (cudnnStatus != CUDNN_STATUS_SUCCESS)
+    {
+        throw runtime_error("cuDNN create handle failed");
+    }
+    // Pass scalars as reference on the Device
+    cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_DEVICE);
+
+    // register with c-api runtime context
+    m_ctx->cublas_handle = &m_cublas_handle;
+    m_ctx->cudnn_handle = &m_cudnn_handle;
     m_ctx->compiled_kernel_pool = new CudaFunctionPool;
 }
 
 runtime::gpu::GPU_ExternalFunction::~GPU_ExternalFunction()
 {
+    cublasDestroy(m_cublas_handle);
+    cudnnDestroy(m_cudnn_handle);
     delete m_ctx->compiled_kernel_pool;
 }
 
@@ -753,6 +772,9 @@ using namespace std;
         writer += "}\n\n";
     }
     // TODO: Cleanup and make this a utility function
+
+    // allocate device buffers for primitive arguments and workspace
+    m_primitive_emitter->allocate_primitive_memory();
 
     string filename = file_util::path_join(s_output_dir, function_name + "_codegen.cpp");
     ofstream out(filename);
