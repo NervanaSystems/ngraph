@@ -52,14 +52,15 @@ namespace ngraph
                 {
                     Inference,
                     Forward,
-                    Backward
+                    Backward,
+                    BackwardFilter
                 };
 
                 size_t build_convolution(const runtime::gpu::GPURuntimeContext* ctx,
                                          const cudnnDataType_t data_type,
                                          const Prop& direction,
-                                         const Shape& input_shape0,
-                                         const Shape& input_shape1,
+                                         const Shape& input_shape,
+                                         const Shape& filter_shape,
                                          const Shape& output_shape,
                                          const Strides& window_movement_strides,
                                          const Strides& window_dilation_strides,
