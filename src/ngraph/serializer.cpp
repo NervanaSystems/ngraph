@@ -282,8 +282,6 @@ shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
 
 shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
 {
-    NGRAPH_INFO;
-    // NGRAPH_INFO << s;
     shared_ptr<Function> rc;
     if (file_util::exists(s))
     {
@@ -872,11 +870,8 @@ static shared_ptr<ngraph::Function>
             }
             else if (node_op == "Softmax")
             {
-                NGRAPH_INFO;
                 auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
-                NGRAPH_INFO;
                 node = make_shared<op::Softmax>(args[0], reduction_axes);
-                NGRAPH_INFO;
             }
             else if (node_op == "Sqrt")
             {
