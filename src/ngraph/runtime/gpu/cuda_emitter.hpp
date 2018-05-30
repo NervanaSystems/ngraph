@@ -20,6 +20,7 @@
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
 #include "ngraph/runtime/gpu/gpu_shape.hpp"
+#include "ngraph/strides.hpp"
 
 namespace ngraph
 {
@@ -61,6 +62,14 @@ namespace ngraph
                                       GPUShape window_stride,
                                       GPUShape padding_below,
                                       bool include_pad = false);
+
+                size_t build_reduce_window(const GPURuntimeContext* ctx,
+                                           const OpName op_name,
+                                           const std::vector<std::string>& dtypes,
+                                           GPUShape input_shape,
+                                           GPUShape output_shape,
+                                           GPUShape reduce_window_shape,
+                                           GPUShape reduce_window_strides);
 
                 template <typename T>
                 size_t build_elementwise(const GPURuntimeContext* ctx,
