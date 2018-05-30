@@ -39,6 +39,15 @@ if(NGRAPH_TBB_ENABLE)
     list(APPEND HEADER_SEARCH_DEFINES "NGRAPH_TBB_ENABLE")
 endif()
 
+if (NGRAPH_GPU_ENABLE)
+    find_package(CUDA 8 REQUIRED)
+    find_package(CUDNN 7 REQUIRED)
+    set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
+    "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
+    set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
+    "CUDNN_HEADER_PATHS=\"${CUDNN_INCLUDE_DIRS}\";")
+endif()
+
 add_executable(resource_generator EXCLUDE_FROM_ALL ${SRC})
 add_dependencies(resource_generator ext_llvm ext_eigen ext_mkldnn)
 

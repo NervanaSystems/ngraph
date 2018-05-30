@@ -173,6 +173,10 @@ if (NGRAPH_CPU_ENABLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")
 endif()
 
+if (NGRAPH_GPU_ENABLE)
+    unit_test_control(BACKEND GPU MANIFEST src/ngraph/runtime/gpu/unit_test.manifest)
+endif()
+
 if (NOT DEFINED NGRAPH_TBB_ENABLE)
     set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
 endif()
@@ -188,21 +192,6 @@ endif()
 # External projects install directory
 #-----------------------------------------------------------------------------------------------
 
-# Root for external installs, when using `make`, e.g.
-# ${EXTERNAL_PROJECTS_ROOT}
-# ├── eigen
-# │   ├── include
-# │   │   └── eigen3      <-- ${EIGEN_INCLUDE_DIR}
-# │   │       ├── Eigen
-# │   ...
-# │
-# └── mkldnn
-#     ├── include         <-- ${MKLDNN_INCLUDE_DIR}
-#     │   ├── mkldnn.h
-#     │   ...
-#     ├── lib             <-- ${MKLDNN_LIB_DIR}
-#     │   ├── libiomp5.so
-#     ...
 set(EXTERNAL_INSTALL_DIR ${CMAKE_BINARY_DIR}/external)
 
 if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
@@ -219,11 +208,6 @@ else()
 endif()
 include(cmake/external_tbb.cmake)
 
-# The following 'add_subdirectory' call:
-# - defines the 'ngraph' library target.
-# - defines the 'NGRAPH_INCLUDE_DIR' cmake variable.
-# - defines the 'NGRAPH_VERSION' cmake variable.
-# - install-related targets.
 add_subdirectory(src)
 
 if (NGRAPH_UNIT_TEST_ENABLE)
