@@ -220,34 +220,33 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 auto& cudnn_emitter =
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
 
-                cudnnDataType_t data_type =  CUDNN_DATA_FLOAT;                                 
-                size_t index = cudnn_emitter->build_convolution(
-                                external_function->ctx().get(),
-                                data_type,
-                                CUDNNEmitter::Prop::Forward,
-                                args[0].get_shape(),
-                                args[1].get_shape(),
-                                out[0].get_shape(),
-                                window_movement_strides,
-                                window_dilation_strides,
-                                padding_below,
-                                padding_above);
+                cudnnDataType_t data_type = CUDNN_DATA_FLOAT;
+                size_t index = cudnn_emitter->build_convolution(external_function->ctx().get(),
+                                                                data_type,
+                                                                CUDNNEmitter::Prop::Forward,
+                                                                args[0].get_shape(),
+                                                                args[1].get_shape(),
+                                                                out[0].get_shape(),
+                                                                window_movement_strides,
+                                                                window_dilation_strides,
+                                                                padding_below,
+                                                                padding_above);
 
-                
                 writer.block_begin("  // " + node->get_name());
 
-                        writer << "gpu::invoke_primitive(ctx, " << max_pool_index << ", ";
-                        if (pad_required)
-                        {
-                             throw std::runtime_error(node->get_name() +
-                                                 "with asymmetric padding is not implemented.");
-                        }
-                        else
-                        {
-                            writer << "std::vector<void*>{" << args[0].get_name() << "," << args[1].get_name() << "}.data(), ";
-                        }
-                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                        writer << ");\n";
+                writer << "gpu::invoke_primitive(ctx, " << max_pool_index << ", ";
+                if (pad_required)
+                {
+                    throw std::runtime_error(node->get_name() +
+                                             "with asymmetric padding is not implemented.");
+                }
+                else
+                {
+                    writer << "std::vector<void*>{" << args[0].get_name() << ","
+                           << args[1].get_name() << "}.data(), ";
+                }
+                writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                writer << ");\n";
                 writer.block_end();
             }
 

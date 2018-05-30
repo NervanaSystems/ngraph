@@ -56,15 +56,15 @@ namespace ngraph
                 };
 
                 size_t build_Convolution(const runtime::gpu::GPURuntimeContext* ctx,
-                                                 const cudnnDataType_t data_type,
-                                                 const Prop& direction,
-                                                 const Shape& input_shape0,
-                                                 const Shape& input_shape1,
-                                                 const Shape& output_shape,
-                                                 const Strides& window_movement_strides,
-                                                 const Strides& window_dilation_strides,
-                                                 const Shape& padding_below,
-                                                 const Shape& padding_above);
+                                         const cudnnDataType_t data_type,
+                                         const Prop& direction,
+                                         const Shape& input_shape0,
+                                         const Shape& input_shape1,
+                                         const Shape& output_shape,
+                                         const Strides& window_movement_strides,
+                                         const Strides& window_dilation_strides,
+                                         const Shape& padding_below,
+                                         const Shape& padding_above);
 
                 size_t build_reduce_forward(const GPURuntimeContext* ctx,
                                             const cudnnReduceTensorOp_t& reduce_op,
@@ -95,14 +95,16 @@ namespace ngraph
                                      const Shape& tensor_shape);
 
                 cudnnTensorDescriptor_t& tensor_descriptor_from_shape(const Shape& shape);
-cudnnFilterDescriptor_t& get_cudnn_filter_descriptor(const Shape& shape,
-                                                      const cudnnDataType_t data_type,
-                                                      const cudnnTensorFormat_t tensor_format);
- cudnnConvolutionDescriptor_t& get_cudnn_convolution_descriptor(const Shape& padding,
+                cudnnFilterDescriptor_t&
+                    get_cudnn_filter_descriptor(const Shape& shape,
+                                                const cudnnDataType_t data_type,
+                                                const cudnnTensorFormat_t tensor_format);
+                cudnnConvolutionDescriptor_t&
+                    get_cudnn_convolution_descriptor(const Shape& padding,
                                                      const Strides& window_movement_strides,
-                                                 const Strides& window_dilation_strides,
-                                                 cudnnConvolutionMode_t mode,
-                                                 cudnnDataType_t data_type);
+                                                     const Strides& window_dilation_strides,
+                                                     cudnnConvolutionMode_t mode,
+                                                     cudnnDataType_t data_type);
 
             private:
                 CUDNNEmitter(GPUPrimitiveEmitter* emitter);
