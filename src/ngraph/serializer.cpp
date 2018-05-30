@@ -228,7 +228,6 @@ shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
             delete[] data;
             json js = json::parse(jstr);
             unordered_map<string, shared_ptr<Function>> function_map;
-            NGRAPH_INFO;
             for (json func : js)
             {
                 shared_ptr<Function> f = read_function(

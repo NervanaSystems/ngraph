@@ -212,14 +212,12 @@ cpio::Reader::~Reader()
 
 void cpio::Reader::open(istream& in)
 {
-    NGRAPH_INFO;
     m_stream = &in;
     m_stream->seekg(0, ios_base::beg);
 }
 
 void cpio::Reader::open(const string& filename)
 {
-    NGRAPH_INFO;
     m_stream = &m_my_stream;
     m_my_stream.open(filename, ios_base::binary | ios_base::in);
 }
@@ -244,7 +242,6 @@ const vector<cpio::FileInfo>& cpio::Reader::get_file_info()
             m_stream->read(buffer, header.namesize);
             // namesize includes the null string terminator so -1
             string file_name = string(buffer, header.namesize - 1);
-            NGRAPH_INFO << file_name;
             delete[] buffer;
             // skip any pad characters
             if (header.namesize % 2)
@@ -292,7 +289,6 @@ bool cpio::is_cpio(const string& path)
 
 bool cpio::is_cpio(istream& in)
 {
-    NGRAPH_INFO;
     size_t offset = in.tellg();
     in.seekg(0, ios_base::beg);
     bool rc = false;
@@ -317,7 +313,6 @@ bool cpio::is_cpio(istream& in)
     default: break;
     }
     in.seekg(offset, ios_base::beg);
-    NGRAPH_INFO;
     return rc;
 }
 
