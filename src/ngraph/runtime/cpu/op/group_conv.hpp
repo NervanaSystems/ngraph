@@ -34,6 +34,7 @@ namespace ngraph
                              const CoordinateDiff& padding_below,
                              const CoordinateDiff& padding_above,
                              const Strides& data_dilation_strides,
+                             size_t groups,
                              const Shape& output_shape);
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
@@ -43,6 +44,7 @@ namespace ngraph
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
             std::shared_ptr<Node> get_filters() { return get_argument(1); }
             std::shared_ptr<Node> get_data_batch() { return get_argument(0); }
+            size_t get_groups() const { return m_groups; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -54,6 +56,7 @@ namespace ngraph
             CoordinateDiff m_padding_below;
             CoordinateDiff m_padding_above;
             Strides m_data_dilation_strides;
+            size_t m_groups = 1;
         };
     }
 }

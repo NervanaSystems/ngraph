@@ -371,6 +371,7 @@ static bool simplify_concat(std::shared_ptr<Node> n)
                                                            sconv->get_padding_below(),
                                                            sconv->get_padding_above(),
                                                            sconv->get_data_dilation_strides(),
+                                                           n->get_arguments().size(),
                                                            n->get_shape());
     ngraph::replace_node(n, new_conv);
     return true;

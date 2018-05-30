@@ -32,6 +32,7 @@ op::GroupConvolution::GroupConvolution(const shared_ptr<Node>& data_batch,
                                        const CoordinateDiff& padding_below,
                                        const CoordinateDiff& padding_above,
                                        const Strides& data_dilation_strides,
+                                       size_t groups,
                                        const Shape& output_shape)
     : RequiresTensorViewArgs("GroupConvolution", {data_batch, filters})
     , m_window_movement_strides(window_movement_strides)
@@ -39,6 +40,7 @@ op::GroupConvolution::GroupConvolution(const shared_ptr<Node>& data_batch,
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
     , m_data_dilation_strides(data_dilation_strides)
+    , m_groups(groups)
 {
     auto& data_batch_et = data_batch->get_element_type();
     auto& filters_et = filters->get_element_type();
@@ -68,6 +70,7 @@ shared_ptr<Node> op::GroupConvolution::copy_with_new_args(const NodeVector& new_
                                              get_padding_below(),
                                              get_padding_above(),
                                              get_data_dilation_strides(),
+                                             get_groups(),
                                              this->get_shape());
 }
 
