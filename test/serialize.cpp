@@ -142,6 +142,7 @@ TEST(serialize, constant)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), A->get_vector<float>());
     serialize(tmp_file, f);
     auto g = deserialize(tmp_file);
+    ASSERT_NE(g, nullptr);
     file_util::remove_file(tmp_file);
     bool found = false;
     for (shared_ptr<Node> node : g->get_ops())
