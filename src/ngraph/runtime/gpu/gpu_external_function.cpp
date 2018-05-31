@@ -718,7 +718,6 @@ using namespace std;
                 writer << ")\n";
             }
 
-
             // Emit operation prologue
             if (!node->is_parameter() && !node->is_constant())
             {
