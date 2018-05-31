@@ -1511,7 +1511,7 @@ TEST(cpu_fusion, fuse_batch_dot)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::VisualizeTree>("fuse_batch_dot_before.pdf");
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchDotFusion>();
     pass_manager.register_pass<pass::VisualizeTree>("fuse_batch_dot_after.pdf");
     const string json_path =
         file_util::path_join(SERIALIZED_ZOO, "mxnet/batch_dot_3.json");

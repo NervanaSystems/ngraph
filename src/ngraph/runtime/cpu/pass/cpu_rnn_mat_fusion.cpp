@@ -25,6 +25,7 @@
 #include "cpu_rnn_mat_fusion.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
@@ -196,6 +197,84 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             function->replace_node(op, slice_node);
         }
         modified = true;
+    }
+    return modified;
+}
+
+#define TI(x) std::type_index(typeid(x))
+
+void identify_batch_dot(std::shared_ptr<Node> n)
+{
+    auto reshape_pred = [](std::shared_ptr<Node> n) {
+        return std::dynamic_pointer_cast<op::Reshape>(n) != nullptr;
+    };
+
+    auto param_0 = std::make_shared<pattern::op::Label>(element::f32, Shape{3,2,2});
+    auto slice_0 = std::make_shared<op::Slice>(param_0, Coordinate{0,0,0}, Coordinate{1,2,2});
+    auto skip_0 = std::make_shared<pattern::op::Skip>(slice_0, reshape_pred);
+    auto reshape_0 = std::make_shared<op::Reshape>(skip_0, AxisVector{0, 1, 2}, Shape{2, 2});
+    // auto skip_0 = std::make_shared<op::Reshape>(reshape_0, AxisVector{0, 1}, Shape{2, 2});
+
+    auto param_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{3,2,2});
+    auto slice_1 = std::make_shared<op::Slice>(param_1, Coordinate{0,0,0}, Coordinate{1,2,2});
+    auto skip_1 = std::make_shared<pattern::op::Skip>(slice_1, reshape_pred);
+    auto reshape_1 = std::make_shared<op::Reshape>(skip_1, AxisVector{0, 1, 2}, Shape{2, 2});
+
+    // auto dot = std::make_shared<op::Dot>(skip_0, skip_1);
+    auto dot = std::make_shared<op::Dot>(reshape_0, reshape_1);
+    auto label_0 = std::make_shared<pattern::op::Label>(element::f32, Shape{2,2});
+    // auto dot = std::make_shared<op::Dot>(label_0, skip_0);
+    // auto dot = std::make_shared<op::Dot>(label_0, reshape_0);
+    // auto dot = std::make_shared<op::Dot>(reshape_1, label_0);
+    auto reshape = std::make_shared<op::Reshape>(dot, AxisVector{0, 1}, Shape{1,2,2});
+    // auto reshape = std::make_shared<op::Reshape>(param_0, AxisVector{0, 1, 2}, Shape{3,3,2});
+
+    auto matcher = std::make_shared<pattern::Matcher>(reshape);
+    std::vector<std::pair<bool, bool>> transpose;
+    for (auto arg : n->get_arguments()) {
+        std::cout << "arg " << arg->get_friendly_name() << std::endl;
+        if (matcher->match(arg)) {
+            auto pattern_map = matcher->get_pattern_map();
+            std::cout << "found match" << std::endl;
+            std::cout << "param_0: " << pattern_map[param_0]->get_friendly_name() << std::endl;
+            std::cout << "param_1: " << pattern_map[param_1]->get_friendly_name() << std::endl;
+            auto iter = matcher->get_match_root();
+            int reshape_count_0 = 0;
+            do {
+                std::cout << "iter " << iter->get_friendly_name() << std::endl;
+                if (std::dynamic_pointer_cast<op::Reshape>(iter) != nullptr) {
+                    ++reshape_count_0;
+                }
+                iter = iter->get_argument(0);
+            } while (std::dynamic_pointer_cast<op::Parameter>(iter) == nullptr);
+            int reshape_count_1 = 0;
+            iter = matcher->get_match_root();
+            do {
+                std::cout << "iter " << iter->get_friendly_name() << std::endl;
+                if (std::dynamic_pointer_cast<op::Reshape>(iter) != nullptr) {
+                    ++reshape_count_1;
+                }
+                iter = iter->get_input_size() > 1 ? iter->get_argument(1) : iter->get_argument(0);
+            } while (std::dynamic_pointer_cast<op::Parameter>(iter) == nullptr);
+            std::cout << "skip_0: " << reshape_count_0 << std::endl;
+            std::cout << "skip_1: " << reshape_count_1 << std::endl;
+        }
+    } 
+}
+
+
+bool runtime::cpu::pass::CPUBatchDotFusion::run_on_function(std::shared_ptr<Function> func)
+{
+    bool modified = false;
+
+    for (auto n : func->get_ordered_ops())
+    {
+        const Node& node = *n;
+        std::cout << "node " << n->get_friendly_name() << std::endl;
+        if (TI(node) == TI(op::Concat)) {
+            std::cout << "found concat" << std::endl; 
+            identify_batch_dot(n);
+        }
     }
     return modified;
 }
