@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include <memory>
+#include <numeric>
 #include <set>
 
 #include "algebraic_simplification.hpp"
