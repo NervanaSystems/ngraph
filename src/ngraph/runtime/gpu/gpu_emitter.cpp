@@ -300,15 +300,15 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     pad_required = true;
                 }
-                auto input_shape = args[0].get_shape();
-                auto input_shape_padded = input_shape;
+                auto output_shape = out[0].get_shape();
+                auto output_shape_padded = output_shape;
 
                 if (pad_required)
                 {
-                    input_shape_padded = get_padded_shape(input_shape, padding_below, padding_above, {});
+                    output_shape_padded = get_padded_shape(output_shape, padding_below, padding_above, {});
   
                     auto temp_size =
-                        shape_size(input_shape_padded) * args[0].get_element_type().size();
+                        shape_size(output_shape_padded) * args[0].get_element_type().size();
                     GPUAllocator allocator =
                         external_function->get_primitive_emitter()->get_memory_allocator();
                     size_t idx_workspace = allocator.reserve_workspace(temp_size);
@@ -319,15 +319,15 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     auto pad_index =
                         cuda_emitter->build_pad(external_function->ctx().get(),
                                                 {{args[0].get_type(), out[0].get_type()}},
-                                                input_shape,
-                                                input_shape_padded,
+                                                output_shape,
+                                                output_shape_padded,
                                                 padding_below,
                                                 padding_above,
                                                 Shape{},
                                                 std::string("0"));
 
                     writer << "gpu::invoke_primitive(ctx, " << pad_index << ", ";
-                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data(), ";
                     writer << "std::vector<void*>{pad_buffer}.data()";
                     writer << ");\n";
                     // asymetric padding has been applied, zero out padding vectors to
@@ -345,8 +345,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                                 data_type,
                                                                 CUDNNEmitter::Prop::Backward,
                                                                 args[1].get_shape(),
-                                                                input_shape_padded,
-                                                                out[0].get_shape(),
+                                                                args[0].get_shape(),
+                                                                output_shape_padded,
                                                                 window_movement_strides,
                                                                 window_dilation_strides,
                                                                 padding_below);
@@ -354,17 +354,17 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer.block_begin("  // " + node->get_name());
 
                 writer << "gpu::invoke_primitive(ctx, " << index << ", ";
+                writer << "std::vector<void*>{" << args[0].get_name() << ","
+                        << args[1].get_name() << "}.data(), ";
+
                 if (pad_required)
                 {
-                     writer << "std::vector<void*>{pad_buffer, "
-                           << args[1].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{pad_buffer}.data()";
                 }
                 else
                 {
-                    writer << "std::vector<void*>{" << args[0].get_name() << ","
-                           << args[1].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data(), ";
                 }
-                writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
                 writer << ");\n";
                 writer.block_end();
             }

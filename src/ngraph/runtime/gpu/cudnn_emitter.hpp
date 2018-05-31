@@ -50,7 +50,7 @@ namespace ngraph
             public:
                 enum class Prop
                 {
-                    Inference,
+                    Inference = 0,
                     Forward,
                     Backward,
                     BackwardFilter
