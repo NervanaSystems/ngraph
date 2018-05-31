@@ -135,7 +135,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_ADD,
                             CUDNN_DATA_FLOAT,
                             CUDNN_NOT_PROPAGATE_NAN));
-    )";
+)";
 
                 writer << "CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
@@ -593,7 +593,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_MAX,
                             CUDNN_DATA_FLOAT,
                             CUDNN_NOT_PROPAGATE_NAN));
-    )";
+)";
 
                 writer << "CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
@@ -631,7 +631,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_MIN,
                             CUDNN_DATA_FLOAT,
                             CUDNN_NOT_PROPAGATE_NAN));
-    )";
+)";
 
                 writer << "CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
@@ -669,7 +669,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_ADD,
                             CUDNN_DATA_FLOAT,
                             CUDNN_NOT_PROPAGATE_NAN));
-    )";
+)";
 
                 writer << "CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
@@ -1047,7 +1047,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_MUL,
                             CUDNN_DATA_FLOAT,
                             CUDNN_NOT_PROPAGATE_NAN));
-    )";
+)";
 
                 writer << "CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
@@ -1116,7 +1116,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_SQRT,
                             CUDNN_DATA_FLOAT,
                             CUDNN_NOT_PROPAGATE_NAN));
-    )";
+)";
 
                 writer << "CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
