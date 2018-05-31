@@ -92,6 +92,10 @@
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
+#include "ngraph/runtime/cpu/kernel/abs.hpp"
+#include "ngraph/runtime/cpu/kernel/add.hpp"
+#include "ngraph/runtime/cpu/kernel/multiply.hpp"
+#include "ngraph/runtime/cpu/kernel/result.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
@@ -129,6 +133,53 @@ static string eigen_matrix_format(const ngraph::Shape& shape, const ngraph::Stri
     ss << "fmt::M{{" << join(shape) << "}, {" << join(strides) << "}}";
     return ss.str();
 }
+
+// Per-type kernel macro
+#define SELECT_KERNEL(KV, ET, K)                                                                   \
+    if (ET == element::boolean)                                                                    \
+    {                                                                                              \
+        KV = K<char>;                                                                              \
+    }                                                                                              \
+    else if (ET == element::f32)                                                                   \
+    {                                                                                              \
+        KV = K<float>;                                                                             \
+    }                                                                                              \
+    else if (ET == element::f64)                                                                   \
+    {                                                                                              \
+        KV = K<double>;                                                                            \
+    }                                                                                              \
+    else if (ET == element::i8)                                                                    \
+    {                                                                                              \
+        KV = K<int8_t>;                                                                            \
+    }                                                                                              \
+    else if (ET == element::i16)                                                                   \
+    {                                                                                              \
+        KV = K<int16_t>;                                                                           \
+    }                                                                                              \
+    else if (ET == element::i32)                                                                   \
+    {                                                                                              \
+        KV = K<int32_t>;                                                                           \
+    }                                                                                              \
+    else if (ET == element::i64)                                                                   \
+    {                                                                                              \
+        KV = K<int64_t>;                                                                           \
+    }                                                                                              \
+    else if (ET == element::u8)                                                                    \
+    {                                                                                              \
+        KV = K<uint8_t>;                                                                           \
+    }                                                                                              \
+    else if (ET == element::u16)                                                                   \
+    {                                                                                              \
+        KV = K<uint16_t>;                                                                          \
+    }                                                                                              \
+    else if (ET == element::u32)                                                                   \
+    {                                                                                              \
+        KV = K<uint32_t>;                                                                          \
+    }                                                                                              \
+    else if (ET == element::u64)                                                                   \
+    {                                                                                              \
+        KV = K<uint64_t>;                                                                          \
+    }
 
 namespace ngraph
 {
@@ -203,6 +254,22 @@ namespace ngraph
                 }
 #endif
                 writer.block_end();
+
+                auto& functors = external_function->get_functors();
+                auto& tensor_data = external_function->get_tensor_data();
+                std::function<void(void*, void*, void*, size_t)> kernel;
+
+                SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::add);
+
+                auto element_count = out[0].get_size();
+                auto& arg0_tensor = tensor_data[args[0].get_name()];
+                auto& arg1_tensor = tensor_data[args[1].get_name()];
+                auto& out0_tensor = tensor_data[out[0].get_name()];
+
+                auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {
+                    kernel(arg0_tensor, arg1_tensor, out0_tensor, element_count);
+                };
+                functors.emplace_back(functor);
             }
 
 #ifdef NGRAPH_DISTRIBUTED
@@ -923,6 +990,22 @@ namespace ngraph
                 writer.block_end();
 #endif
                 writer.block_end();
+
+                auto& functors = external_function->get_functors();
+                auto& tensor_data = external_function->get_tensor_data();
+                std::function<void(void*, void*, void*, size_t)> kernel;
+
+                SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::multiply);
+
+                auto element_count = out[0].get_size();
+                auto& arg0_tensor = tensor_data[args[0].get_name()];
+                auto& arg1_tensor = tensor_data[args[1].get_name()];
+                auto& out0_tensor = tensor_data[out[0].get_name()];
+
+                auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {
+                    kernel(arg0_tensor, arg1_tensor, out0_tensor, element_count);
+                };
+                functors.emplace_back(functor);
             }
 
             template <>
@@ -958,6 +1041,21 @@ namespace ngraph
                 writer.block_end();
 #endif
                 writer.block_end();
+
+                auto& functors = external_function->get_functors();
+                auto& tensor_data = external_function->get_tensor_data();
+                std::function<void(void*, void*, size_t)> kernel;
+
+                SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::abs);
+
+                auto element_count = out[0].get_size();
+                auto& arg0_tensor = tensor_data[args[0].get_name()];
+                auto& out0_tensor = tensor_data[out[0].get_name()];
+
+                auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {
+                    kernel(arg0_tensor, out0_tensor, element_count);
+                };
+                functors.emplace_back(functor);
             }
 
             template <>
@@ -1493,6 +1591,27 @@ namespace ngraph
                     }
                     output_index++;
                 }
+
+                auto& functors = external_function->get_functors();
+                auto& tensor_data = external_function->get_tensor_data();
+
+                vector<void**> dest;
+                for (auto& result : external_function->get_function()->get_results())
+                {
+                    if (result.get() == node)
+                    {
+                        dest.push_back(&tensor_data[result->get_output_tensor(0).get_name()]);
+                    }
+                }
+                auto& src = tensor_data[node->get_output_tensor(0).get_name()];
+                auto size = node->get_output_tensor(0).size();
+                auto functor = [&, dest, src, size](CPURuntimeContext* ctx) {
+                    for (auto p : dest)
+                    {
+                        memcpy(*p, src, size);
+                    }
+                };
+                functors.emplace_back(functor);
             }
 
             template <>
@@ -4094,6 +4213,21 @@ namespace ngraph
                        << ",\n";
                 writer << "               " << out[0].get_name() << ",\n";
                 writer << "               " << shape_size(node->get_shape()) << ");\n";
+
+                auto& functors = external_function->get_functors();
+                auto& tensor_data = external_function->get_tensor_data();
+                std::function<void(void*, void*, size_t)> kernel;
+
+                SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::result);
+
+                auto& arg0_tensor = tensor_data[args[0].get_name()];
+                auto& out0_tensor = tensor_data[out[0].get_name()];
+                auto size = shape_size(node->get_shape());
+
+                auto functor = [&, kernel, size](CPURuntimeContext* ctx) {
+                    kernel(arg0_tensor, out0_tensor, size);
+                };
+                functors.emplace_back(functor);
             }
 
             template <>

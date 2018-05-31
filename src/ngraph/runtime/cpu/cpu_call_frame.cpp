@@ -63,7 +63,14 @@ void runtime::cpu::CPU_CallFrame::call(
     }
 
     // Invoke compiled computation
-    m_compiled_function(inputs.data(), outputs.data(), ctx);
+    if (!m_external_function->m_direct_execution)
+    {
+        m_compiled_function(inputs.data(), outputs.data(), ctx);
+    }
+    else
+    {
+        m_external_function->get_executor()(ctx, inputs, outputs);
+    }
 
     if (runtime::cpu::IsTracingEnabled())
     {
