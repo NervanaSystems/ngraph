@@ -191,6 +191,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
                 auto input_shape = args[0].get_shape();
                 auto input_shape_padded = input_shape;
+                NGRAPH_INFO << join(padding_below);
+                NGRAPH_INFO << join(padding_above);
 
                 if (pad_required)
                 {
@@ -224,6 +226,9 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     std::fill(padding_below.begin(), padding_below.end(), 0);
                     std::fill(padding_above.begin(), padding_above.end(), 0);
                 }
+                NGRAPH_INFO << "forward";
+                NGRAPH_INFO << join(input_shape);
+                NGRAPH_INFO << join(input_shape_padded);
 
 
                 auto& cudnn_emitter =
@@ -302,7 +307,10 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
                 auto output_shape = out[0].get_shape();
                 auto output_shape_padded = output_shape;
+                NGRAPH_INFO << join(padding_below);
+                NGRAPH_INFO << join(padding_above);
 
+                writer.block_begin("  // " + node->get_name());
                 if (pad_required)
                 {
                     output_shape_padded = get_padded_shape(output_shape, padding_below, padding_above, {});
@@ -335,7 +343,9 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     std::fill(padding_below.begin(), padding_below.end(), 0);
                     std::fill(padding_above.begin(), padding_above.end(), 0);
                 }
-
+                NGRAPH_INFO << "backward";
+                NGRAPH_INFO << join(output_shape);
+                NGRAPH_INFO << join(output_shape_padded);
 
                 auto& cudnn_emitter =
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
@@ -351,7 +361,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                                 window_dilation_strides,
                                                                 padding_below);
 
-                writer.block_begin("  // " + node->get_name());
 
                 writer << "gpu::invoke_primitive(ctx, " << index << ", ";
                 writer << "std::vector<void*>{" << args[0].get_name() << ","
@@ -415,7 +424,10 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
                 auto input_shape = args[0].get_shape();
                 auto input_shape_padded = input_shape;
+                NGRAPH_INFO << join(padding_below);
+                NGRAPH_INFO << join(padding_above);
 
+                writer.block_begin("  // " + node->get_name());
                 if (pad_required)
                 {
                     input_shape_padded = get_padded_shape(input_shape, padding_below, padding_above, {});
@@ -448,6 +460,9 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     std::fill(padding_below.begin(), padding_below.end(), 0);
                     std::fill(padding_above.begin(), padding_above.end(), 0);
                 }
+                NGRAPH_INFO << "backwardfilter";
+                NGRAPH_INFO << join(input_shape);
+                NGRAPH_INFO << join(input_shape_padded);
 
 
                 auto& cudnn_emitter =
@@ -464,7 +479,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                                 window_dilation_strides,
                                                                 padding_below);
 
-                writer.block_begin("  // " + node->get_name());
 
                 writer << "gpu::invoke_primitive(ctx, " << index << ", ";
                 if (pad_required)
