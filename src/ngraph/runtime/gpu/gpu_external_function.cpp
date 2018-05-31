@@ -750,6 +750,7 @@ using namespace std;
                 {
                     names.push_back(tv.get_name());
                 }
+                names.push_back("ctx");
                 writer << func_name << "(" << join(names) << ");\n";
             }
 
@@ -920,7 +921,7 @@ string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
         writer << tvw.get_type() << "* " << tvw.get_name();
         out.push_back(tvw);
     }
-    // writer << ",\ncpu::CPURuntimeContext* ctx";
+    writer << ",\ngpu::GPURuntimeContext* ctx";
     writer.indent--;
     writer << "\n)\n";
     codegen::CodeWriter tmp_writer;
