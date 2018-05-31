@@ -196,7 +196,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     input_shape_padded =
                         get_padded_shape(input_shape, padding_below, padding_above, {});
-
                     auto temp_size =
                         shape_size(input_shape_padded) * args[0].get_element_type().size();
                     GPUAllocator allocator =
@@ -221,7 +220,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer << "std::vector<void*>{pad_buffer}.data()";
                     writer << ");\n";
                     // asymetric padding has been applied, zero out padding vectors to
-                    // ensure cudnn does not assume padding during pooling
+                    // ensure cudnn does not assume padding
                     std::fill(padding_below.begin(), padding_below.end(), 0);
                     std::fill(padding_above.begin(), padding_above.end(), 0);
                 }
@@ -314,7 +313,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     output_shape_padded =
                         get_padded_shape(output_shape, padding_below, padding_above, {});
-
                     auto temp_size =
                         shape_size(output_shape_padded) * args[0].get_element_type().size();
                     GPUAllocator allocator =
@@ -339,7 +337,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer << "std::vector<void*>{pad_buffer}.data()";
                     writer << ");\n";
                     // asymetric padding has been applied, zero out padding vectors to
-                    // ensure cudnn does not assume padding during pooling
+                    // ensure cudnn does not assume padding
                     std::fill(padding_below.begin(), padding_below.end(), 0);
                     std::fill(padding_above.begin(), padding_above.end(), 0);
                 }
@@ -470,7 +468,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     input_shape_padded =
                         get_padded_shape(input_shape, padding_below, padding_above, {});
-
                     auto temp_size =
                         shape_size(input_shape_padded) * args[0].get_element_type().size();
                     GPUAllocator allocator =
@@ -495,7 +492,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer << "std::vector<void*>{pad_buffer}.data()";
                     writer << ");\n";
                     // asymetric padding has been applied, zero out padding vectors to
-                    // ensure cudnn does not assume padding during pooling
+                    // ensure cudnn does not assume padding
                     std::fill(padding_below.begin(), padding_below.end(), 0);
                     std::fill(padding_above.begin(), padding_above.end(), 0);
                 }
