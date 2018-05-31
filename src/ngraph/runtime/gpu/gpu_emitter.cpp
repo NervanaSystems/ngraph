@@ -286,7 +286,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
                     padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
                 }
-
                 if (padding_below.size() > 3)
                 {
                     throw std::runtime_error(node->get_name() +
@@ -307,6 +306,13 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
                 auto output_shape = out[0].get_shape();
                 auto output_shape_padded = output_shape;
+                Shape padding_below_back(output_shape.size(), 0);
+                int i = padding_below_back.size() - padding_below.size();
+                int j = 0; 
+                for(; i < padding_below_back.size(); i++)
+                {
+                    padding_below_back[i] = padding_below[j++];
+                }
                 NGRAPH_INFO << join(padding_below);
                 NGRAPH_INFO << join(padding_above);
 
@@ -375,10 +381,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer << "std::vector<void*>{" << out[0].get_name() << "}.data(), ";
                 }
                 writer << ");\n";
-
                 if (pad_required)
                 {
-                    const auto arg_shape = args[0].get_shape();
                     const auto arg_rank = output_shape.size();
                     const Strides slice_strides(output_shape.size(),1);
                     const auto input_strides = row_major_strides(output_shape_padded);
@@ -390,10 +394,16 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     size_t idx_output_strides = allocator.reserve_argspace(
                         output_strides.data(), output_strides.size() * sizeof(size_t));
                     size_t idx_lower_bounds = allocator.reserve_argspace(
-                        padding_below.data(), padding_below.size() * sizeof(size_t));
+                        padding_below_back.data(), padding_below_back.size() * sizeof(size_t));
                     size_t idx_slice_strides = allocator.reserve_argspace(
                         slice_strides.data(), slice_strides.size() * sizeof(size_t));
-
+                    
+                    NGRAPH_INFO << "slice";
+                    NGRAPH_INFO << join(input_strides);
+                    NGRAPH_INFO << join(output_strides);
+                    NGRAPH_INFO << join(padding_below_back);
+                    NGRAPH_INFO << join(slice_strides);
+                
                     writer << "size_t rank = " << arg_rank << ";\n";
                     writer << "void* input_strides_d = "
                            << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_input_strides
