@@ -44,8 +44,7 @@ namespace ngraph
             {
                 if (std::abs(a[i] - b[i]) > atol + rtol * std::abs(b[i]))
                 {
-                    std::cout << i << ",     " <<  a[i] << ",    " << b[i] << std::endl;
-                    //return false;
+                    return false;
                 }
             }
             return true;

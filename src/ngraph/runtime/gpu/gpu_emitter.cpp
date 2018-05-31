@@ -191,20 +191,19 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
                 auto input_shape = args[0].get_shape();
                 auto input_shape_padded = input_shape;
-                NGRAPH_INFO << join(padding_below);
-                NGRAPH_INFO << join(padding_above);
 
                 if (pad_required)
                 {
-                    input_shape_padded = get_padded_shape(input_shape, padding_below, padding_above, {});
-  
-                  auto temp_size =
+                    input_shape_padded =
+                        get_padded_shape(input_shape, padding_below, padding_above, {});
+
+                    auto temp_size =
                         shape_size(input_shape_padded) * args[0].get_element_type().size();
                     GPUAllocator allocator =
                         external_function->get_primitive_emitter()->get_memory_allocator();
                     size_t idx_workspace = allocator.reserve_workspace(temp_size);
                     writer << "void* pad_buffer = runtime::gpu::invoke_memory_primitive(ctx, "
-                        << idx_workspace << ");\n";
+                           << idx_workspace << ");\n";
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
                     auto pad_index =
@@ -226,10 +225,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     std::fill(padding_below.begin(), padding_below.end(), 0);
                     std::fill(padding_above.begin(), padding_above.end(), 0);
                 }
-                NGRAPH_INFO << "forward";
-                NGRAPH_INFO << join(input_shape);
-                NGRAPH_INFO << join(input_shape_padded);
-
 
                 auto& cudnn_emitter =
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
@@ -250,8 +245,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << "gpu::invoke_primitive(ctx, " << index << ", ";
                 if (pad_required)
                 {
-                     writer << "std::vector<void*>{pad_buffer, "
-                           << args[1].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{pad_buffer, " << args[1].get_name()
+                           << "}.data(), ";
                 }
                 else
                 {
@@ -308,26 +303,25 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 auto output_shape_padded = output_shape;
                 Shape padding_below_back(output_shape.size(), 0);
                 int i = padding_below_back.size() - padding_below.size();
-                int j = 0; 
-                for(; i < padding_below_back.size(); i++)
+                int j = 0;
+                for (; i < padding_below_back.size(); i++)
                 {
                     padding_below_back[i] = padding_below[j++];
                 }
-                NGRAPH_INFO << join(padding_below);
-                NGRAPH_INFO << join(padding_above);
 
                 writer.block_begin("  // " + node->get_name());
                 if (pad_required)
                 {
-                    output_shape_padded = get_padded_shape(output_shape, padding_below, padding_above, {});
-  
+                    output_shape_padded =
+                        get_padded_shape(output_shape, padding_below, padding_above, {});
+
                     auto temp_size =
                         shape_size(output_shape_padded) * args[0].get_element_type().size();
                     GPUAllocator allocator =
                         external_function->get_primitive_emitter()->get_memory_allocator();
                     size_t idx_workspace = allocator.reserve_workspace(temp_size);
                     writer << "void* pad_buffer = runtime::gpu::invoke_memory_primitive(ctx, "
-                        << idx_workspace << ");\n";
+                           << idx_workspace << ");\n";
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
                     auto pad_index =
@@ -349,9 +343,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     std::fill(padding_below.begin(), padding_below.end(), 0);
                     std::fill(padding_above.begin(), padding_above.end(), 0);
                 }
-                NGRAPH_INFO << "backward";
-                NGRAPH_INFO << join(output_shape);
-                NGRAPH_INFO << join(output_shape_padded);
 
                 auto& cudnn_emitter =
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
@@ -367,10 +358,9 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                                 window_dilation_strides,
                                                                 padding_below);
 
-
                 writer << "gpu::invoke_primitive(ctx, " << index << ", ";
-                writer << "std::vector<void*>{" << args[0].get_name() << ","
-                        << args[1].get_name() << "}.data(), ";
+                writer << "std::vector<void*>{" << args[0].get_name() << "," << args[1].get_name()
+                       << "}.data(), ";
 
                 if (pad_required)
                 {
@@ -381,10 +371,12 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     writer << "std::vector<void*>{" << out[0].get_name() << "}.data(), ";
                 }
                 writer << ");\n";
+
+                // since we paadded output with another buffer, we neec to copy back to ouput
                 if (pad_required)
                 {
                     const auto arg_rank = output_shape.size();
-                    const Strides slice_strides(output_shape.size(),1);
+                    const Strides slice_strides(output_shape.size(), 1);
                     const auto input_strides = row_major_strides(output_shape_padded);
                     const auto output_strides = row_major_strides(output_shape);
                     GPUAllocator allocator =
@@ -397,13 +389,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         padding_below_back.data(), padding_below_back.size() * sizeof(size_t));
                     size_t idx_slice_strides = allocator.reserve_argspace(
                         slice_strides.data(), slice_strides.size() * sizeof(size_t));
-                    
-                    NGRAPH_INFO << "slice";
-                    NGRAPH_INFO << join(input_strides);
-                    NGRAPH_INFO << join(output_strides);
-                    NGRAPH_INFO << join(padding_below_back);
-                    NGRAPH_INFO << join(slice_strides);
-                
+
                     writer << "size_t rank = " << arg_rank << ";\n";
                     writer << "void* input_strides_d = "
                            << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_input_strides
@@ -419,8 +405,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                            << ");\n";
 
                     writer << "runtime::gpu::emit_slice(\"" << node->description()
-                           << "\", CUdeviceptr(pad_buffer), CUdeviceptr("
-                           << out[0].get_name() << ")"
+                           << "\", CUdeviceptr(pad_buffer), CUdeviceptr(" << out[0].get_name()
+                           << ")"
                            << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type()
                            << "\"}"
                            << ", "
@@ -478,21 +464,20 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
                 auto input_shape = args[0].get_shape();
                 auto input_shape_padded = input_shape;
-                NGRAPH_INFO << join(padding_below);
-                NGRAPH_INFO << join(padding_above);
 
                 writer.block_begin("  // " + node->get_name());
                 if (pad_required)
                 {
-                    input_shape_padded = get_padded_shape(input_shape, padding_below, padding_above, {});
-  
+                    input_shape_padded =
+                        get_padded_shape(input_shape, padding_below, padding_above, {});
+
                     auto temp_size =
                         shape_size(input_shape_padded) * args[0].get_element_type().size();
                     GPUAllocator allocator =
                         external_function->get_primitive_emitter()->get_memory_allocator();
                     size_t idx_workspace = allocator.reserve_workspace(temp_size);
                     writer << "void* pad_buffer = runtime::gpu::invoke_memory_primitive(ctx, "
-                        << idx_workspace << ");\n";
+                           << idx_workspace << ");\n";
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
                     auto pad_index =
@@ -514,10 +499,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     std::fill(padding_below.begin(), padding_below.end(), 0);
                     std::fill(padding_above.begin(), padding_above.end(), 0);
                 }
-                NGRAPH_INFO << "backwardfilter";
-                NGRAPH_INFO << join(input_shape);
-                NGRAPH_INFO << join(input_shape_padded);
-
 
                 auto& cudnn_emitter =
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
@@ -533,12 +514,11 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                                 window_dilation_strides,
                                                                 padding_below);
 
-
                 writer << "gpu::invoke_primitive(ctx, " << index << ", ";
                 if (pad_required)
                 {
-                     writer << "std::vector<void*>{pad_buffer, "
-                           << args[1].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{pad_buffer, " << args[1].get_name()
+                           << "}.data(), ";
                 }
                 else
                 {

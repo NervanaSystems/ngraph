@@ -18,13 +18,13 @@
 #include <sstream>
 #include <vector>
 
+#include "ngraph/log.hpp"
 #include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_invoke.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/log.hpp"
 
 using namespace ngraph;
 
@@ -272,7 +272,6 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURunt
        << join(tensor_shape_1, "_") << "_ws" << join(window_movement_strides, "_") << "_wd"
        << join(window_dilation_strides, "_") << "_p" << join(padding_below, "_");
     std::string hash = ss.str();
-    NGRAPH_INFO << hash;
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash);
     if (primitive_index != std::numeric_limits<size_t>::max())
@@ -286,133 +285,128 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURunt
     auto& tensor_desc_1 = tensor_descriptor_from_shape(tensor_shape_1);
     auto& filter_desc = get_cudnn_filter_descriptor(filter_shape, data_type, tensor_format);
     auto& conv_desc = get_cudnn_convolution_descriptor(
-            padding_below, window_movement_strides, window_dilation_strides, mode, data_type);
+        padding_below, window_movement_strides, window_dilation_strides, mode, data_type);
 
     const cudnnConvolutionFwdAlgo_t conv_fwd_algo = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM;
     const cudnnConvolutionBwdDataAlgo_t conv_bwd_data_algo = CUDNN_CONVOLUTION_BWD_DATA_ALGO_0;
-    const cudnnConvolutionBwdFilterAlgo_t conv_bwd_filter_algo = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0;
-    
+    const cudnnConvolutionBwdFilterAlgo_t conv_bwd_filter_algo =
+        CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0;
+
     size_t workspace_size_in_bytes = 0;
     switch (direction)
     {
-        case (Prop::Inference):
-        case (Prop::Forward):
-        {
-                CUDNN_SAFE_CALL(cudnnGetConvolutionForwardWorkspaceSize(*ctx->cudnn_handle,
+    case (Prop::Inference):
+    case (Prop::Forward):
+    {
+        CUDNN_SAFE_CALL(cudnnGetConvolutionForwardWorkspaceSize(*ctx->cudnn_handle,
                                                                 tensor_desc_0,
                                                                 filter_desc,
                                                                 conv_desc,
                                                                 tensor_desc_1,
                                                                 conv_fwd_algo,
                                                                 &workspace_size_in_bytes));
-                break;
-        }
-        case (Prop::Backward):
-        {
-            CUDNN_SAFE_CALL(cudnnGetConvolutionBackwardDataWorkspaceSize(*ctx->cudnn_handle,
-                                                                    filter_desc,
-                                                                    tensor_desc_0,
-                                                                    conv_desc,
-                                                                    tensor_desc_1,
-                                                                    conv_bwd_data_algo,
-                                                                    &workspace_size_in_bytes));
-            break;
-        }
-        case (Prop::BackwardFilter):
-        {
-            CUDNN_SAFE_CALL(cudnnGetConvolutionBackwardFilterWorkspaceSize(*ctx->cudnn_handle,
-                                                                    tensor_desc_0,
-                                                                    tensor_desc_1,
-                                                                    conv_desc,
-                                                                    filter_desc,
-                                                                    conv_bwd_filter_algo,
-                                                                    &workspace_size_in_bytes));
-        }
+        break;
+    }
+    case (Prop::Backward):
+    {
+        CUDNN_SAFE_CALL(cudnnGetConvolutionBackwardDataWorkspaceSize(*ctx->cudnn_handle,
+                                                                     filter_desc,
+                                                                     tensor_desc_0,
+                                                                     conv_desc,
+                                                                     tensor_desc_1,
+                                                                     conv_bwd_data_algo,
+                                                                     &workspace_size_in_bytes));
+        break;
+    }
+    case (Prop::BackwardFilter):
+    {
+        CUDNN_SAFE_CALL(cudnnGetConvolutionBackwardFilterWorkspaceSize(*ctx->cudnn_handle,
+                                                                       tensor_desc_0,
+                                                                       tensor_desc_1,
+                                                                       conv_desc,
+                                                                       filter_desc,
+                                                                       conv_bwd_filter_algo,
+                                                                       &workspace_size_in_bytes));
+    }
     }
 
     // get an allocator for transient per kernel gpu memory
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
     // (lazy) allocation for kernel arguments
     size_t workspace_idx = allocator.reserve_workspace(workspace_size_in_bytes);
-    NGRAPH_INFO << workspace_size_in_bytes;
-    NGRAPH_INFO << workspace_idx;
 
     std::unique_ptr<gpu::primitive> conv;
-
     switch (direction)
     {
-        case (Prop::Inference):
-        case (Prop::Forward):
-        {
-            conv.reset(
-                new gpu::primitive{[=, &conv_desc, &tensor_desc_0, &filter_desc, &tensor_desc_1](
-                    void** inputs, void** outputs) {
-                    float alpha = 1.0;
-                    float beta = 0.0;
-                    void* workspace_ptr = runtime::gpu::invoke_memory_primitive(ctx, workspace_idx);
-                    CUDNN_SAFE_CALL(cudnnConvolutionForward(*ctx->cudnn_handle,
-                                                            &alpha,
-                                                            tensor_desc_0,
-                                                            inputs[0],
-                                                            filter_desc,
-                                                            inputs[1],
-                                                            conv_desc,
-                                                            conv_fwd_algo,
-                                                            workspace_ptr,
-                                                            workspace_size_in_bytes,
-                                                            &beta,
-                                                            tensor_desc_1,
-                                                            outputs[0]));
-                }});
-                break;
-        }
-        case (Prop::Backward):
-        {
-            conv.reset(
-                new gpu::primitive{[=, &conv_desc, &tensor_desc_0, &filter_desc, &tensor_desc_1](
-                    void** inputs, void** outputs) {
-                    float alpha = 1.0;
-                    float beta = 0.0;
-                    void* workspace_ptr = runtime::gpu::invoke_memory_primitive(ctx, workspace_idx);
-                    CUDNN_SAFE_CALL(cudnnConvolutionBackwardData(*ctx->cudnn_handle,
-                                                            &alpha,
-                                                            filter_desc,
-                                                            inputs[0],
-                                                            tensor_desc_0,
-                                                            inputs[1],
-                                                            conv_desc,
-                                                            conv_bwd_data_algo,
-                                                            workspace_ptr,
-                                                            workspace_size_in_bytes,
-                                                            &beta,
-                                                            tensor_desc_1,
-                                                            outputs[0]));
-                }});
-            break;
-        }
-        case (Prop::BackwardFilter):
-        {
-            conv.reset(
-                new gpu::primitive{[=, &conv_desc, &tensor_desc_0, &filter_desc, &tensor_desc_1](
-                    void** inputs, void** outputs) {
-                    float alpha = 1.0;
-                    float beta = 0.0;
-                    void* workspace_ptr = runtime::gpu::invoke_memory_primitive(ctx, workspace_idx);
-                    CUDNN_SAFE_CALL(cudnnConvolutionBackwardFilter(*ctx->cudnn_handle,
-                                                            &alpha,
-                                                            tensor_desc_0,
-                                                            inputs[0],
-                                                            tensor_desc_1,
-                                                            inputs[1],
-                                                            conv_desc,
-                                                            conv_bwd_filter_algo,
-                                                            workspace_ptr,
-                                                            workspace_size_in_bytes,
-                                                            &beta,
-                                                            filter_desc,
-                                                            outputs[0]));
-                }});
-        }
+    case (Prop::Inference):
+    case (Prop::Forward):
+    {
+        conv.reset(new gpu::primitive{[=, &conv_desc, &tensor_desc_0, &filter_desc, &tensor_desc_1](
+            void** inputs, void** outputs) {
+            float alpha = 1.0;
+            float beta = 0.0;
+            void* workspace_ptr = runtime::gpu::invoke_memory_primitive(ctx, workspace_idx);
+            CUDNN_SAFE_CALL(cudnnConvolutionForward(*ctx->cudnn_handle,
+                                                    &alpha,
+                                                    tensor_desc_0,
+                                                    inputs[0],
+                                                    filter_desc,
+                                                    inputs[1],
+                                                    conv_desc,
+                                                    conv_fwd_algo,
+                                                    workspace_ptr,
+                                                    workspace_size_in_bytes,
+                                                    &beta,
+                                                    tensor_desc_1,
+                                                    outputs[0]));
+        }});
+        break;
+    }
+    case (Prop::Backward):
+    {
+        conv.reset(new gpu::primitive{[=, &conv_desc, &tensor_desc_0, &filter_desc, &tensor_desc_1](
+            void** inputs, void** outputs) {
+            float alpha = 1.0;
+            float beta = 0.0;
+            void* workspace_ptr = runtime::gpu::invoke_memory_primitive(ctx, workspace_idx);
+            CUDNN_SAFE_CALL(cudnnConvolutionBackwardData(*ctx->cudnn_handle,
+                                                         &alpha,
+                                                         filter_desc,
+                                                         inputs[0],
+                                                         tensor_desc_0,
+                                                         inputs[1],
+                                                         conv_desc,
+                                                         conv_bwd_data_algo,
+                                                         workspace_ptr,
+                                                         workspace_size_in_bytes,
+                                                         &beta,
+                                                         tensor_desc_1,
+                                                         outputs[0]));
+        }});
+        break;
+    }
+    case (Prop::BackwardFilter):
+    {
+        conv.reset(new gpu::primitive{[=, &conv_desc, &tensor_desc_0, &filter_desc, &tensor_desc_1](
+            void** inputs, void** outputs) {
+            float alpha = 1.0;
+            float beta = 0.0;
+            void* workspace_ptr = runtime::gpu::invoke_memory_primitive(ctx, workspace_idx);
+            CUDNN_SAFE_CALL(cudnnConvolutionBackwardFilter(*ctx->cudnn_handle,
+                                                           &alpha,
+                                                           tensor_desc_0,
+                                                           inputs[0],
+                                                           tensor_desc_1,
+                                                           inputs[1],
+                                                           conv_desc,
+                                                           conv_bwd_filter_algo,
+                                                           workspace_ptr,
+                                                           workspace_size_in_bytes,
+                                                           &beta,
+                                                           filter_desc,
+                                                           outputs[0]));
+        }});
+    }
     }
 
     primitive_index = this->m_primitive_emitter->insert(std::move(conv));
