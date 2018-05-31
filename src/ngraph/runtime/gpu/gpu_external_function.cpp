@@ -457,25 +457,39 @@ using namespace std;
         writer << "extern \"C\" void " << f->get_name() << "(void** inputs, void** outputs, "
                << "gpu::GPURuntimeContext* ctx);\n";
     }
-
     writer << "\n";
 
+    // This for loop creates a collection of functions that are called more than once
+    // and emitting them as globally callable functions.
+    // ops implement the is_functionally_identical method
     unordered_map<Node*, string> match_functions;
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
-        set<string> output_names;
-        for (shared_ptr<Node> op : current_function->get_results())
-        {
-            shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
-            output_names.insert(tv->get_tensor().get_name());
-        }
-        const list<shared_ptr<Node>>& tmp = current_function->get_ordered_ops();
+        list<shared_ptr<Node>> tmp = current_function->get_ordered_ops();
         if (tmp.size() < 2)
         {
             // Since we are comparing ops there must be at least two ops to proceed.
             continue;
         }
         vector<shared_ptr<Node>> op_list{tmp.begin(), tmp.end()};
+        unordered_map<const Node*, string> node_cache;
+        for (size_t i = 0; i < op_list.size(); i++)
+        {
+            if (op_list[i]->is_constant() || op_list[i]->is_parameter())
+            {
+                continue;
+            }
+
+            Node& node = *op_list[i];
+            auto handler = dispatcher.find(type_index(typeid(node)));
+            if (handler == dispatcher.end())
+            {
+                throw ngraph_error("Unhandled op during code generation : " + node.description());
+            }
+
+            string s = emit_op_as_function(node, "f");
+            node_cache.insert({&node, s});
+        }
         for (size_t i = 0; i < op_list.size() - 1; i++)
         {
             if (op_list[i]->is_constant() || op_list[i]->is_parameter())
@@ -487,54 +501,24 @@ using namespace std;
                 continue;
             }
             string match_function_name;
+            for (size_t j = i + 1; j < op_list.size(); j++)
+            {
+                Node* op1 = op_list[i].get();
+                Node* op2 = op_list[j].get();
+                if (is_functionally_identical(*op1, *op2, node_cache))
+                {
+                    if (match_function_name.empty())
+                    {
+                        match_function_name = "func_" + op1->get_name();
+                        match_functions.insert({op1, match_function_name});
+                    }
+                    match_functions.insert({op2, match_function_name});
+                }
+            }
             if (!match_function_name.empty())
             {
-                writer << "static void " << match_function_name << "(";
-                writer.indent++;
-                // Work around a compiler warning (*node inside typeid may have effects
-                // with shared pointers, which is fine here but clang doesn't like it.)
-                auto& n = *op_list[i];
-                auto handler = dispatcher.find(type_index(typeid(n)));
-                vector<GPU_TensorViewWrapper> in;
-                size_t arg_index = 0;
-                set<string> arg_names;
-                for (const descriptor::Input& input : n.get_inputs())
-                {
-                    const descriptor::Output& output = input.get_output();
-                    shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-                    GPU_TensorViewWrapper tvw{tv, "_arg" + to_string(arg_index)};
-                    if (!contains(arg_names, tvw.get_name()))
-                    {
-                        arg_names.insert(tvw.get_name());
-                        if (arg_index++ > 0)
-                        {
-                            writer << ",";
-                        }
-                        writer << "\n";
-                        writer << tvw.get_type() << "* " << tvw.get_name();
-                    }
-                    in.push_back(tvw);
-                }
-                vector<GPU_TensorViewWrapper> out;
-                for (const descriptor::Output& output : n.get_outputs())
-                {
-                    shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-                    GPU_TensorViewWrapper tvw{tv, "_out" + to_string(arg_index)};
-                    if (arg_index++ > 0)
-                    {
-                        writer << ",";
-                    }
-                    writer << "\n";
-                    writer << tvw.get_type() << "* " << tvw.get_name();
-                    out.push_back(tvw);
-                }
-                writer.indent--;
-                writer << "\n)\n";
-                writer << "{\n";
-                writer.indent++;
-                handler->second(this, writer, &n, in, out);
-                writer.indent--;
-                writer << "}\n";
+                writer << emit_op_as_function(*op_list[i], match_function_name);
+                writer << "\n";
             }
         }
     }
@@ -886,4 +870,118 @@ void runtime::gpu::GPU_ExternalFunction::emit_debug_function_exit(
 std::unique_ptr<runtime::gpu::GPURuntimeContext>& runtime::gpu::GPU_ExternalFunction::ctx()
 {
     return m_ctx;
+}
+
+bool runtime::gpu::GPU_ExternalFunction::is_functionally_identical(
+    const Node& n1, const Node& n2, const unordered_map<const Node*, string>& node_cache)
+{
+    return node_cache.at(&n1) == node_cache.at(&n2);
+}
+
+string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
+                                                               const string& function_name)
+{
+    codegen::CodeWriter writer;
+    writer << "static void " << function_name << "(";
+    writer.indent++;
+    // Work around a compiler warning (*node inside typeid may have effects
+    // with shared pointers, which is fine here but clang doesn't like it.)
+    auto handler = dispatcher.find(type_index(typeid(node)));
+    vector<GPU_TensorViewWrapper> in;
+    size_t arg_index = 0;
+    set<string> arg_names;
+    for (const descriptor::Input& input : node.get_inputs())
+    {
+        const descriptor::Output& output = input.get_output();
+        shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+        GPU_TensorViewWrapper tvw{tv, "_arg" + to_string(arg_index)};
+        if (!contains(arg_names, tvw.get_name()))
+        {
+            arg_names.insert(tvw.get_name());
+            if (arg_index++ > 0)
+            {
+                writer << ",";
+            }
+            writer << "\n";
+            writer << tvw.get_type() << "* " << tvw.get_name();
+        }
+        in.push_back(tvw);
+    }
+    vector<GPU_TensorViewWrapper> out;
+    for (const descriptor::Output& output : node.get_outputs())
+    {
+        shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+        GPU_TensorViewWrapper tvw{tv, "_out" + to_string(arg_index)};
+        if (arg_index++ > 0)
+        {
+            writer << ",";
+        }
+        writer << "\n";
+        writer << tvw.get_type() << "* " << tvw.get_name();
+        out.push_back(tvw);
+    }
+    // writer << ",\ncpu::CPURuntimeContext* ctx";
+    writer.indent--;
+    writer << "\n)\n";
+    codegen::CodeWriter tmp_writer;
+    handler->second(this, tmp_writer, &node, in, out);
+    string body = tmp_writer.get_code();
+    if (body.size() > 0 && body[0] == '{')
+    {
+        // Body already surrounded by curly braces so don't add more
+        writer << body;
+    }
+    else
+    {
+        writer.block_begin();
+        writer << body;
+        writer.block_end();
+    }
+
+    string rc = writer.get_code();
+    if (function_name == "f")
+    {
+        rc = strip_comments(rc);
+    }
+    return rc;
+}
+
+string runtime::gpu::GPU_ExternalFunction::strip_comments(const string& s)
+{
+    stringstream out;
+    for (size_t i = 0; i < s.size(); i++)
+    {
+        if (i < s.size() - 2)
+        {
+            if (s[i] == '/' && s[i + 1] == '/')
+            {
+                // line comment
+                i += 2;
+                while (s[i] != '\n')
+                {
+                    i++;
+                }
+                out << '\n';
+            }
+            else if (s[i] == '/' && s[i + 1] == '*')
+            {
+                // multi-line comment
+                i += 2;
+                while (!(s[i] == '*' && s[i + 1] == '/'))
+                {
+                    i++;
+                }
+                i++;
+            }
+            else
+            {
+                out << s[i];
+            }
+        }
+        else
+        {
+            out << s[i];
+        }
+    }
+    return out.str();
 }
