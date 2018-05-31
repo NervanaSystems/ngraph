@@ -71,25 +71,45 @@ namespace ngraph
             return is_match;
         }
 
-        bool Matcher::match_skip(const std::shared_ptr<op::Skip>& any,
+        bool Matcher::match_skip(const std::shared_ptr<op::Skip>& skip,
                                  const std::shared_ptr<Node>& graph_node,
                                  PatternMap& pattern_map)
         {
-            auto predicate = any->get_predicate();
+            auto predicate = skip->get_predicate();
 
-            if (!predicate || any->get_predicate()(graph_node))
+            if (!predicate || predicate(graph_node))
             {
-                return match_arguments(any, graph_node, pattern_map);
+                return match_arguments(skip, graph_node, pattern_map);
             }
             else
             {
-                auto args = any->get_arguments();
+                auto args = skip->get_arguments();
                 if (args.size() != 1)
                 {
                     throw ngraph_error("Skip can only take one argument");
                 }
 
                 return match_node(args.at(0), graph_node, pattern_map);
+            }
+        }
+
+        bool Matcher::match_any(const std::shared_ptr<op::Any>& any,
+                                const std::shared_ptr<Node>& graph_node,
+                                PatternMap& pattern_map)
+        {
+            auto predicate = any->get_predicate();
+            if (!predicate)
+            {
+                throw ngraph_error("predicate is required");
+            }
+
+            if (predicate(graph_node))
+            {
+                return match_arguments(any, graph_node, pattern_map);
+            }
+            else
+            {
+                return false;
             }
         }
 
@@ -111,10 +131,15 @@ namespace ngraph
                 return match_pattern(label_node, graph_node, pattern_map);
             }
 
-            if (auto any_node = std::dynamic_pointer_cast<op::Skip>(
+            if (auto skip_node = std::dynamic_pointer_cast<op::Skip>(
                     pattern_node)) //matches PatternSkipOp semantics
             {
-                return match_skip(any_node, graph_node, pattern_map);
+                return match_skip(skip_node, graph_node, pattern_map);
+            }
+
+            if (auto any_node = std::dynamic_pointer_cast<op::Any>(pattern_node))
+            {
+                return match_any(any_node, graph_node, pattern_map);
             }
 
             auto p_pattern_node = pattern_node.get();

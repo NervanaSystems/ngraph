@@ -213,17 +213,10 @@ std::string ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t ind
 
 shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
 {
-    std::stringstream ss;
-    ss << in.rdbuf();
-    return deserialize(ss.str());
-}
-
-shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
-{
     shared_ptr<Function> rc;
-    if (file_util::exists(s))
+    if (cpio::is_cpio(in))
     {
-        cpio::Reader reader(s);
+        cpio::Reader reader(in);
         vector<cpio::FileInfo> file_info = reader.get_file_info();
         if (file_info.size() > 0)
         {
@@ -258,6 +251,25 @@ shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
                 rc = f;
             }
         }
+    }
+    else
+    {
+        // json file?
+        std::stringstream ss;
+        ss << in.rdbuf();
+        rc = deserialize(ss.str());
+    }
+    return rc;
+}
+
+shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
+{
+    shared_ptr<Function> rc;
+    if (file_util::exists(s))
+    {
+        // s is a file and not a json string
+        ifstream in(s, ios_base::binary | ios_base::in);
+        rc = deserialize(in);
     }
     else
     {

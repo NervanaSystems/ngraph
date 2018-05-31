@@ -59,7 +59,7 @@ public:
             construct_zero_padded_conv_backprop_filters();
             construct_sigmoid();
             construct_sigmoid_bprop();
-
+            construct_conv_bias_bprop();
             construct_batch_norm_relu();
             construct_batch_norm_relu_global_stats();
             construct_conv_relu();
@@ -77,6 +77,7 @@ private:
     void construct_matmul();
     void construct_matmulbias();
     void construct_conv_bias();
+    void construct_conv_bias_bprop();
     void construct_fprop_bn();
     void construct_sigmoid();
     void construct_sigmoid_bprop();

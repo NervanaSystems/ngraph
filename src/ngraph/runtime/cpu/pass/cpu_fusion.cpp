@@ -755,6 +755,61 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
     this->add_matcher(m);
 }
 
+void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
+{
+    Shape shape{2, 2, 1, 1};
+    auto data_batch = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto delta = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto conv_bprop_filter = std::make_shared<op::ConvolutionBackpropFilters>(data_batch,
+                                                                              shape,
+                                                                              delta,
+                                                                              Strides{1, 1},
+                                                                              Strides{1, 1},
+                                                                              CoordinateDiff{0, 0},
+                                                                              CoordinateDiff{0, 0},
+                                                                              Strides{1, 1});
+
+    ngraph::pattern::graph_rewrite_callback callback = [data_batch, delta](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for construct_conv_bias_bprop against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+        auto conv_bprop =
+            std::dynamic_pointer_cast<op::ConvolutionBackpropFilters>(m.get_match_root());
+
+        for (auto delta_user : pattern_map[delta]->get_users())
+        {
+            if (std::dynamic_pointer_cast<op::Sum>(delta_user))
+            {
+                auto bias_shape = delta_user->get_output_shape(0);
+                auto conv_bias_bprop = std::make_shared<op::ConvolutionBiasBackpropFiltersBias>(
+                    pattern_map[data_batch],
+                    conv_bprop->get_filters_shape(),
+                    bias_shape,
+                    pattern_map[delta],
+                    conv_bprop->get_window_movement_strides_forward(),
+                    conv_bprop->get_window_dilation_strides_forward(),
+                    conv_bprop->get_padding_below_forward(),
+                    conv_bprop->get_padding_above_forward(),
+                    conv_bprop->get_data_dilation_strides_forward());
+                auto goe1 = std::make_shared<op::GetOutputElement>(conv_bias_bprop, 0);
+                auto goe2 = std::make_shared<op::GetOutputElement>(conv_bias_bprop, 1);
+                NGRAPH_DEBUG << "Replacing " << m.get_match_root()->get_name()
+                             << "with ConvolutionBiasBackpropFiltersBias";
+                ngraph::replace_node(m.get_match_root(), goe1);
+                NGRAPH_DEBUG << "Replacing bias and adding it as a second o/p of "
+                                "ConvolutionBiasBackpropFiltersBias";
+                ngraph::replace_node(delta_user, goe2);
+                return true;
+            }
+        }
+        return false;
+    };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(conv_bprop_filter, callback);
+    this->add_matcher(m);
+}
+
 void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
 {
     auto input_shape = Shape{1, 2, 2, 2};

@@ -29,6 +29,7 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/negative.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/sum.hpp"
@@ -652,7 +653,6 @@ TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
     auto df = make_shared<Function>(
         NodeVector{d_data, d_weights, d_bias},
         op::ParameterVector{conv_test.data, conv_test.weights, conv_test.bias, conv_test.delta});
-
     backend->call(
         df,
         {conv_test.d_data_val, conv_test.d_weights_val, conv_test.d_bias_val},
@@ -664,6 +664,36 @@ TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
                                 read_vector<float>(conv_test.d_weights_val)));
     EXPECT_TRUE(
         test::all_close(conv_test.expected_d_bias_val, read_vector<float>(conv_test.d_bias_val)));
+}
+
+TEST(cpu_fusion, conv_bias_bprop)
+{
+    Shape shape{2, 2, 1, 1};
+    auto data_batch = std::make_shared<op::Parameter>(element::f32, shape);
+    auto filters = std::make_shared<op::Parameter>(element::f32, shape);
+    auto delta = std::make_shared<op::Parameter>(element::f32, shape);
+    auto bias = make_shared<op::Parameter>(element::f32, Shape{});
+    auto pbroadcast = std::make_shared<op::Broadcast>(bias, shape, AxisSet{0, 1, 2, 3});
+    auto conv = std::make_shared<op::Convolution>(data_batch, filters);
+    auto conv_bias = std::make_shared<op::Add>(conv, pbroadcast);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<pass::VisualizeTree>("conv_bias_bprop_fusion");
+    auto f = make_shared<Function>(conv_bias, op::ParameterVector{data_batch, filters, bias});
+
+    ngraph::autodiff::Adjoints adjoints(NodeVector{conv_bias}, NodeVector{delta});
+
+    auto d_data = adjoints.backprop_node(data_batch);
+    auto d_weights = adjoints.backprop_node(filters);
+    auto d_bias = adjoints.backprop_node(bias);
+
+    auto df = make_shared<Function>(NodeVector{d_data, d_weights, d_bias},
+                                    op::ParameterVector{data_batch, filters, bias, delta});
+
+    pass_manager.run_passes(df);
+    size_t ccg = count_ops_of_type<op::ConvolutionBiasBackpropFiltersBias>(df);
+    ASSERT_EQ(ccg, 1);
 }
 
 TEST(cpu_fusion, sigmoid_fprop_fusion)
@@ -1167,9 +1197,10 @@ TEST(cpu_fusion, max_pool_with_indices)
     }
 
     {
+        NodeVector nv_cwi;
         pass::Manager pass_manager;
         pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before.pdf");
-        pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>();
+        pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
         pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after.pdf");
         pass_manager.run_passes(df);
     }
@@ -1229,15 +1260,128 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
     auto df = autodiff::backprop_function(f);
 
     {
+        NodeVector nv_cwi;
         pass::Manager pass_manager;
         pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before2.pdf");
-        pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>();
+        pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
         pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after2.pdf");
         pass_manager.run_passes(df);
     }
 
     backend->call(df, {output}, {input, ep});
     ASSERT_TRUE(read_vector<float>(output) == expected);
+}
+
+static std::shared_ptr<ngraph::Function> make_forward_function()
+{
+    Shape shape_a{10, 3, 28, 28};
+    auto input = std::make_shared<op::Parameter>(element::f32, shape_a);
+    Shape window_shape{2, 2};
+    auto max_pool = std::make_shared<op::MaxPool>(input, window_shape);
+    auto neg = std::make_shared<op::Negative>(max_pool);
+    auto absn = std::make_shared<op::Abs>(max_pool);
+    return std::make_shared<Function>(NodeVector{max_pool, neg, absn}, op::ParameterVector{input});
+}
+
+static std::pair<std::shared_ptr<ngraph::Function>, std::vector<std::shared_ptr<ngraph::Node>>>
+    make_backward_function(std::shared_ptr<ngraph::Function> f)
+{
+    // get parameters
+    std::vector<std::shared_ptr<ngraph::op::Parameter>> back_parameters = f->get_parameters();
+
+    ngraph::NodeVector adjoints;
+    ngraph::NodeVector outputs;
+    for (auto Y : f->get_results())
+    {
+        // Get the output
+        // Create the Adjoint
+        auto C = std::make_shared<ngraph::op::Parameter>(Y->get_element_type(), Y->get_shape());
+        outputs.push_back(Y);
+        adjoints.push_back(C);
+    }
+
+    ngraph::autodiff::Adjoints adjoint{outputs, adjoints};
+
+    // Perform autodiff
+    std::vector<std::shared_ptr<Node>> dYdXs(back_parameters.size());
+    transform(back_parameters.begin(),
+              back_parameters.end(),
+              dYdXs.begin(),
+              [&adjoint](const std::shared_ptr<Node>& X) { return adjoint.backprop_node(X); });
+
+    // create the backward function
+    std::vector<std::shared_ptr<ngraph::op::Parameter>> param_adjoints;
+    for (auto n : adjoints)
+        param_adjoints.push_back(std::dynamic_pointer_cast<ngraph::op::Parameter>(n));
+    back_parameters.insert(back_parameters.begin(), param_adjoints.begin(), param_adjoints.end());
+
+    return {std::make_shared<ngraph::Function>(dYdXs, back_parameters), adjoints};
+}
+
+void optimize_graph(std::shared_ptr<ngraph::Function>& f, std::shared_ptr<ngraph::Function> bf)
+{
+    // start by removing excess reshapes
+    NodeVector nv_cwi;
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
+    pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
+    pass_manager.register_pass<pass::VisualizeTree>("before.fprop_cache.pdf");
+
+    pass_manager.run_passes(f);
+    pass_manager.run_passes(bf);
+    if (nv_cwi.size() > 0)
+    {
+        NodeVector new_outputs;
+        for (auto r : f->get_results())
+        {
+            new_outputs.push_back(r->get_argument(0));
+        }
+
+        new_outputs.insert(new_outputs.end(), nv_cwi.begin(), nv_cwi.end());
+        f = std::make_shared<ngraph::Function>(new_outputs, f->get_parameters());
+    }
+
+    ngraph::NodeVector dYdXs;
+    for (size_t i = 0; i < bf->get_output_size(); ++i)
+    {
+        dYdXs.push_back(bf->get_output_op(i)->get_argument(0));
+    }
+
+    ngraph::NodeVector combined_outputs;
+    for (auto r : f->get_results())
+    {
+        combined_outputs.push_back(r->get_argument(0));
+    }
+
+    combined_outputs.insert(combined_outputs.end(), dYdXs.begin(), dYdXs.end());
+
+    std::vector<std::shared_ptr<ngraph::op::Parameter>> combined_parameters = f->get_parameters();
+    std::vector<std::shared_ptr<ngraph::op::Parameter>> back_parameters = bf->get_parameters();
+
+    combined_parameters.insert(
+        combined_parameters.end(), back_parameters.begin(), back_parameters.end());
+    auto combinedf = std::make_shared<ngraph::Function>(combined_outputs, combined_parameters);
+    // rerun Reshape elimination to help simplify the graph again, run CPUFusion
+    // this replaces nodes in both f and bf due to shared-ptr - ness
+    ngraph::pass::Manager pass_manager_comb;
+    pass_manager_comb.register_pass<ngraph::pass::ReshapeElimination>();
+    pass_manager_comb.register_pass<ngraph::runtime::cpu::pass::CPUFusion>();
+    pass_manager_comb.run_passes(combinedf);
+}
+
+TEST(cpu_fusion, maxpool_with_indices_in_mxnet)
+{
+    auto f = make_forward_function();
+    auto bfa = make_backward_function(f);
+    auto maybe_bf = bfa.first;
+    auto adjoints = bfa.second;
+    optimize_graph(f, maybe_bf);
+    auto fprop_cache = ngraph::cache_fprop(f, maybe_bf, adjoints);
+
+    auto mpwi_bprop = fprop_cache.bprop->get_results().at(0)->get_argument(0);
+    ASSERT_TRUE(std::dynamic_pointer_cast<op::Parameter>(mpwi_bprop->get_argument(0)));
+    ASSERT_TRUE(std::dynamic_pointer_cast<op::Parameter>(mpwi_bprop->get_argument(2)));
 }
 
 TEST(cpu_fusion, batch_norm_folding)
