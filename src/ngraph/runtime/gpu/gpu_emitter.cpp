@@ -170,7 +170,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
                 }
 
-                bool pad_required = false;
                 if (padding_below.size() > 3)
                 {
                     throw std::runtime_error(node->get_name() +
@@ -185,6 +184,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     }
                 }
 
+                bool pad_required = false;
                 if (padding_below != padding_above)
                 {
                     pad_required = true;
@@ -295,6 +295,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                  "with data dilation is not implemented.");
                     }
                 }
+                bool pad_required = false;
                 if (padding_below != padding_above)
                 {
                     pad_required = true;
@@ -407,6 +408,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                  "with data dilation is not implemented.");
                     }
                 }
+                bool pad_required = false;
                 if (padding_below != padding_above)
                 {
                     pad_required = true;
@@ -456,8 +458,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                                 data_type,
                                                                 CUDNNEmitter::Prop::BackwardFilter,
                                                                 input_shape_padded,
-                                                                args[1].get_shape(),
                                                                 out[0].get_shape(),
+                                                                args[1].get_shape(),
                                                                 window_movement_strides,
                                                                 window_dilation_strides,
                                                                 padding_below);

@@ -254,45 +254,6 @@ cudnnConvolutionDescriptor_t& runtime::gpu::CUDNNEmitter::get_cudnn_convolution_
     return conv_descriptor;
 }
 
-
-                writer.block_begin("  // " + node->get_name());
-                writer << "float alpha = 1.0;\n";
-                writer << "float beta = 0.0;\n";
-
-                // construct input and output tensor descriptor
-                kernel::emit_cudnnFilterDescriptor(
-                    writer, args0, tensor_format, data_type, args[0].get_shape());
-                kernel::emit_cudnnTensorDescriptor(
-                    writer, args1, tensor_format, data_type, args[1].get_shape());
-                kernel::emit_cudnnTensorDescriptor(
-                    writer, out0, tensor_format, data_type, out[0].get_shape());
-                kernel::emit_cudnnConvolutionDescriptor(writer,
-                                                        conv_descriptor,
-                                                        padding,
-                                                        window_movement_strides,
-                                                        window_dilation_strides,
-                                                        mode,
-                                                        data_type);
-
-                writer << "size_t workSpaceSizeInBytes = 0;\n";
-                writer << "CUDNN_SAFE_CALL(cudnnGetConvolutionBackwardDataWorkspaceSize(*ctx->"
-                          "cudnn_handle, "
-                       << args0 << ", " << args1 << ", " << conv_descriptor << ", " << out0 << ", "
-                       << conv_algo << ", "
-                       << "&workSpaceSizeInBytes));\n";
-
-                writer << "void* workspace = "
-                          "runtime::gpu::create_gpu_buffer(workSpaceSizeInBytes);\n";
-
-                writer << "CUDNN_SAFE_CALL(cudnnConvolutionBackwardData(*ctx->cudnn_handle, "
-                       << "&alpha, " << args0 << ", " << args[0].get_name() << ", " << args1 << ", "
-                       << args[1].get_name() << ", " << conv_descriptor << ", " << conv_algo << ", "
-                       << "workspace, workSpaceSizeInBytes, "
-                       << "&beta, " << out0 << ", " << out[0].get_name() << "));\n";
-
-                writer << "runtime::gpu::free_gpu_buffer(workspace);\n";
-                writer.block_end();
-
 size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURuntimeContext* ctx,
                                                      const cudnnDataType_t data_type,
                                                      const Prop& direction,
@@ -344,6 +305,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURunt
                                                                 output_desc,
                                                                 conv_fwd_algo,
                                                                 &workspace_size_in_bytes));
+                break;
         }
         case (Prop::Backward):
         {
@@ -360,9 +322,9 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURunt
         {
             CUDNN_SAFE_CALL(cudnnGetConvolutionBackwardFilterWorkspaceSize(*ctx->cudnn_handle,
                                                                     input_desc,
-                                                                    filter_desc,
-                                                                    conv_desc,
                                                                     output_desc,
+                                                                    conv_desc,
+                                                                    filter_desc,
                                                                     conv_bwd_filter_algo,
                                                                     &workspace_size_in_bytes));
         }
@@ -385,8 +347,6 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURunt
                     void** inputs, void** outputs) {
                     float alpha = 1.0;
                     float beta = 0.0;
-                    NGRAPH_INFO << ctx;
-                    NGRAPH_INFO << conv_algo;
                     void* workspace_ptr = runtime::gpu::invoke_memory_primitive(ctx, workspace_idx);
                     CUDNN_SAFE_CALL(cudnnConvolutionForward(*ctx->cudnn_handle,
                                                             &alpha,
@@ -395,13 +355,14 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURunt
                                                             filter_desc,
                                                             inputs[1],
                                                             conv_desc,
-                                                            conv_algo,
+                                                            conv_fwd_algo,
                                                             workspace_ptr,
                                                             workspace_size_in_bytes,
                                                             &beta,
                                                             output_desc,
                                                             outputs[0]));
                 }});
+                break;
         }
         case (Prop::Backward):
         {
@@ -418,7 +379,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURunt
                                                             input_desc,
                                                             inputs[1],
                                                             conv_desc,
-                                                            conv_algo,
+                                                            conv_bwd_data_algo,
                                                             workspace_ptr,
                                                             workspace_size_in_bytes,
                                                             &beta,
@@ -439,14 +400,14 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURunt
                                                             &alpha,
                                                             input_desc,
                                                             inputs[0],
-                                                            filter_desc,
+                                                            output_desc,
                                                             inputs[1],
                                                             conv_desc,
-                                                            conv_algo,
+                                                            conv_bwd_filter_algo,
                                                             workspace_ptr,
                                                             workspace_size_in_bytes,
                                                             &beta,
-                                                            output_desc,
+                                                            filter_desc,
                                                             outputs[0]));
                 }});
         }
