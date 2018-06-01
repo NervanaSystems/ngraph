@@ -3258,7 +3258,8 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
     EXPECT_EQ((vector<float>{0, 0, 0, 0, 0, 0}), read_vector<float>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, sum_to_scalar_stable)
+// TODO: Kahan sum only works in limited cases with CPU / Interpreter backend
+NGRAPH_TEST(${BACKEND_NAME}, kahan_sum_to_scalar)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -3276,7 +3277,8 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_to_scalar_stable)
     EXPECT_TRUE(test::all_close_f(vector<float>{epsilon}, read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_vector_stable)
+// TODO: Kahan sum only works in limited cases with CPU / Interpreter backend
+NGRAPH_TEST(${BACKEND_NAME}, kahan_sum_3d_to_vector)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
