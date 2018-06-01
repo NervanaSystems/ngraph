@@ -348,7 +348,7 @@ TEST(all_close_f, mantissa_8_near_0_1_10_100_1000)
 //                                                           |
 //                                                           v
 // s e e e e e e e e m m m m m m m m m m m m m m m m m m m m m m m
-//               =>|      8                                      |
+//               =>|                     24                      |
 //                                                           | 2 |<=
 TEST(all_close_f, mantissa_24_near_0_1_10_100_1000)
 {
