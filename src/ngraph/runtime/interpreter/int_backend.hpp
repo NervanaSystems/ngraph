@@ -906,6 +906,13 @@ private:
             reference::sqrt<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
         }
+        else if (node_op == "StopGradient")
+        {
+            op::StopGradient* res = dynamic_cast<op::StopGradient*>(&node);
+            reference::result(args[0]->get_data_ptr<T>(),
+                              out[0]->get_data_ptr<T>(),
+                              shape_size(res->get_shape()));
+        }
         else if (node_op == "Subtract")
         {
             reference::subtract<T>(args[0]->get_data_ptr<T>(),

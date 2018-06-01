@@ -34,16 +34,3 @@ shared_ptr<Node> op::StopGradient::copy_with_new_args(const NodeVector& new_args
     }
     return make_shared<StopGradient>(new_args.at(0));
 }
-
-void op::StopGradient::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
-{
-    auto x = get_inputs().at(0).get_output().get_node();
-
-    auto zero = make_shared<op::Constant>(x->get_element_type(), Shape{}, vector<string>{"0"});
-    AxisSet axes;
-    for (size_t i = 0; i < x->get_shape().size(); i++)
-        axes.insert(i);
-    auto zeros = make_shared<op::Broadcast>(zero, x->get_shape(), axes);
-
-    adjoints.add_delta(x, zeros);
-}
