@@ -301,8 +301,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 auto output_shape = out[0].get_shape();
                 auto output_shape_padded = output_shape;
                 Shape padding_below_back(output_shape.size(), 0);
-                int i = padding_below_back.size() - padding_below.size();
-                int j = 0;
+                size_t i = padding_below_back.size() - padding_below.size();
+                size_t j = 0;
                 for (; i < padding_below_back.size(); i++)
                 {
                     padding_below_back[i] = padding_below[j++];
