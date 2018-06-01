@@ -41,6 +41,7 @@
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/tanh.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
@@ -49,6 +50,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
+#include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 
 static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
                            std::shared_ptr<ngraph::Node> arg,
@@ -775,30 +777,35 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
         auto conv_bprop =
             std::dynamic_pointer_cast<op::ConvolutionBackpropFilters>(m.get_match_root());
 
-        for (auto delta_user : pattern_map[delta]->get_users())
+        if (conv_bprop->get_input_shape(0).size() == 4 &&
+            conv_bprop->get_input_shape(1).size() == 4 &&
+            conv_bprop->get_input_element_type(0) == element::f32)
         {
-            if (std::dynamic_pointer_cast<op::Sum>(delta_user))
+            for (auto delta_user : pattern_map[delta]->get_users())
             {
-                auto bias_shape = delta_user->get_output_shape(0);
-                auto conv_bias_bprop = std::make_shared<op::ConvolutionBiasBackpropFiltersBias>(
-                    pattern_map[data_batch],
-                    conv_bprop->get_filters_shape(),
-                    bias_shape,
-                    pattern_map[delta],
-                    conv_bprop->get_window_movement_strides_forward(),
-                    conv_bprop->get_window_dilation_strides_forward(),
-                    conv_bprop->get_padding_below_forward(),
-                    conv_bprop->get_padding_above_forward(),
-                    conv_bprop->get_data_dilation_strides_forward());
-                auto goe1 = std::make_shared<op::GetOutputElement>(conv_bias_bprop, 0);
-                auto goe2 = std::make_shared<op::GetOutputElement>(conv_bias_bprop, 1);
-                NGRAPH_DEBUG << "Replacing " << m.get_match_root()->get_name()
-                             << "with ConvolutionBiasBackpropFiltersBias";
-                ngraph::replace_node(m.get_match_root(), goe1);
-                NGRAPH_DEBUG << "Replacing bias and adding it as a second o/p of "
-                                "ConvolutionBiasBackpropFiltersBias";
-                ngraph::replace_node(delta_user, goe2);
-                return true;
+                if (std::dynamic_pointer_cast<op::Sum>(delta_user))
+                {
+                    auto bias_shape = delta_user->get_output_shape(0);
+                    auto conv_bias_bprop = std::make_shared<op::ConvolutionBiasBackpropFiltersBias>(
+                        pattern_map[data_batch],
+                        conv_bprop->get_filters_shape(),
+                        bias_shape,
+                        pattern_map[delta],
+                        conv_bprop->get_window_movement_strides_forward(),
+                        conv_bprop->get_window_dilation_strides_forward(),
+                        conv_bprop->get_padding_below_forward(),
+                        conv_bprop->get_padding_above_forward(),
+                        conv_bprop->get_data_dilation_strides_forward());
+                    auto goe1 = std::make_shared<op::GetOutputElement>(conv_bias_bprop, 0);
+                    auto goe2 = std::make_shared<op::GetOutputElement>(conv_bias_bprop, 1);
+                    NGRAPH_DEBUG << "Replacing " << m.get_match_root()->get_name()
+                                 << "with ConvolutionBiasBackpropFiltersBias";
+                    ngraph::replace_node(m.get_match_root(), goe1);
+                    NGRAPH_DEBUG << "Replacing bias and adding it as a second o/p of "
+                                    "ConvolutionBiasBackpropFiltersBias";
+                    ngraph::replace_node(delta_user, goe2);
+                    return true;
+                }
             }
         }
         return false;
@@ -1064,5 +1071,68 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
     };
 
     auto m = std::make_shared<pattern::Matcher>(prelu, callback);
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
+{
+    // Construct predicate to match sigmoid and tanh
+    auto sigmoid_pred = [](std::shared_ptr<Node> n) {
+        return (std::dynamic_pointer_cast<op::Sigmoid>(n) != nullptr) ||
+               (std::dynamic_pointer_cast<op::Tanh>(n) != nullptr);
+    };
+    // Construct predicate to match other valid nodes
+    auto other_pred = [](std::shared_ptr<Node> n) {
+        return (std::dynamic_pointer_cast<op::Sigmoid>(n) != nullptr) ||
+               (std::dynamic_pointer_cast<op::Tanh>(n) != nullptr) ||
+               (std::dynamic_pointer_cast<op::Add>(n) != nullptr) ||
+               (std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr);
+    };
+    auto sigmoid_0 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, sigmoid_pred);
+    auto sigmoid_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, other_pred);
+    auto elem_mul = std::make_shared<op::Multiply>(sigmoid_0, sigmoid_1);
+
+    ngraph::pattern::graph_rewrite_callback callback = [sigmoid_0, sigmoid_1](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_sigmoid_multiply pattern against "
+                     << m.get_match_root()->get_name();
+        auto pattern_map = m.get_pattern_map();
+
+        if (m.get_match_root()->get_element_type() != element::f32)
+        {
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+                         << " type is not float!";
+            return false;
+        }
+
+        using FunctionType = op::SigmoidMultiply::FunctionType;
+        const int max_inputs{2};
+        std::array<std::shared_ptr<ngraph::Node>, max_inputs> match_nodes{
+            {pattern_map[sigmoid_0], pattern_map[sigmoid_1]}};
+        std::array<std::shared_ptr<ngraph::Node>, max_inputs> input_nodes;
+        std::array<FunctionType, max_inputs> input_type;
+        for (int i = 0; i < max_inputs; ++i)
+        {
+            input_type[i] = op::SigmoidMultiply::identify_node_type(match_nodes[i]);
+            if (input_type[i] != FunctionType::Identity)
+            {
+                if (match_nodes[i]->get_users().size() > 1)
+                {
+                    NGRAPH_DEBUG << "input node has multiple users, skipping fusion.";
+                    return false;
+                }
+                input_nodes[i] = match_nodes[i]->get_argument(0);
+            }
+            else
+            {
+                input_nodes[i] = match_nodes[i];
+            }
+        }
+        auto sigmoid_mul_node = std::make_shared<op::SigmoidMultiply>(
+            input_nodes[0], input_nodes[1], input_type[0], input_type[1]);
+        ngraph::replace_node(m.get_match_root(), sigmoid_mul_node);
+        return true;
+    };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(elem_mul, callback);
     this->add_matcher(m);
 }
