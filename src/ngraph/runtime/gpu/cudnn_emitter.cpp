@@ -202,11 +202,12 @@ cudnnFilterDescriptor_t& runtime::gpu::CUDNNEmitter::get_cudnn_filter_descriptor
     }
     else
     {
-        CUDNN_SAFE_CALL(cudnnSetFilterNdDescriptor(filter_descriptor,
-                                                   /*dataType=*/data_type,
-                                                   /*format=*/tensor_format,
-                                                   /*num_dimensions=*/dimensions.size(),
-                                                   /*dimensions*/ dimensions.data()));
+        CUDNN_SAFE_CALL(
+            cudnnSetFilterNdDescriptor(filter_descriptor,
+                                       /*dataType=*/data_type,
+                                       /*format=*/tensor_format,
+                                       /*num_dimensions=*/static_cast<int>(dimensions.size()),
+                                       /*dimensions*/ dimensions.data()));
     }
     return filter_descriptor;
 }
@@ -244,7 +245,7 @@ cudnnConvolutionDescriptor_t& runtime::gpu::CUDNNEmitter::get_cudnn_convolution_
     else
     {
         CUDNN_SAFE_CALL(cudnnSetConvolutionNdDescriptor(conv_descriptor,
-                                                        padding_int.size(),
+                                                        static_cast<int>(padding_int.size()),
                                                         padding_int.data(),
                                                         window_movement_strides_int.data(),
                                                         window_dilation_strides_int.data(),
