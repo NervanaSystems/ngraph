@@ -69,9 +69,9 @@ public:
     RecurrentRNNFusion()
         : RecurrentGraphRewrite()
     {
-        construct_rnn_layer_fusion_fprop();
+        construct_multi_layer_rnn_fusion_fprop();
     }
 
 private:
-    void construct_rnn_layer_fusion_fprop();
+    void construct_multi_layer_rnn_fusion_fprop();
 };

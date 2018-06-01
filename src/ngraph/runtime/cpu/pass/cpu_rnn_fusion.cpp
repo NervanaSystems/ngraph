@@ -242,10 +242,12 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         auto ht_output = std::make_shared<op::GetOutputElement>(lstm, 0);
         auto ct_output = std::make_shared<op::GetOutputElement>(lstm, 1);
 
+        if(lstm->get_outputs().at(0).get_inputs().size() != 2)
+        {
+            throw ngraph_error("Lstm node doesnt have two outputs");
+        }
         // Now identify the nodes which consumes the output of LSTM nodes
         // and replace them accordingly
-        std::vector<std::shared_ptr<Node>> new_args;
-
         // find the user's for {ht|ct} and replace them with lstm_goe_1
         for (auto node : pattern_map[ct_label]->get_users())
         {
@@ -589,15 +591,15 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 }
 
 static std::shared_ptr<Node>
-    computer_layerd_rnn_inputs(std::vector<std::shared_ptr<pattern::op::Label>>& rnn_labels,
+    compute_multi_layer_rnn_inputs(const std::shared_ptr<pattern::op::Label>& rnn_label,
                                pattern::RecurrentMatcher& m)
 {
-    auto node_labels = m.get_bound_nodes_for_pattern(rnn_labels[0]);
+    auto node_labels = m.get_bound_nodes_for_pattern(rnn_label);
     std::reverse(node_labels.begin(), node_labels.end());
     return std::make_shared<op::Concat>(node_labels, 0);
 }
 
-void ngraph::runtime::cpu::pass::RecurrentRNNFusion::construct_rnn_layer_fusion_fprop()
+void ngraph::runtime::cpu::pass::RecurrentRNNFusion::construct_multi_layer_rnn_fusion_fprop()
 {
     auto src_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{30, 100});
     auto src_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{20, 100});
@@ -660,26 +662,21 @@ void ngraph::runtime::cpu::pass::RecurrentRNNFusion::construct_rnn_layer_fusion_
         {
             if (src_nodes[i]->get_shape()[1] != rnn_ht_out_nodes[i]->get_shape()[1])
             {
-                NGRAPH_DEBUG << "Not fusing since the feature sizes for xt and ht_1 dont match"
-                             << std::endl;
+                NGRAPH_DEBUG << "Not fusing since the feature sizes for xt and ht_1 dont match";
                 return false;
             }
         }
 
+        // we just need to capture the input symbols {x0 | x1.....| xt} of the first lstm layer
+        // the intermediate inputs for the next layer will be computed by the MKLDNN
         auto src_layer_nodes = m.get_bound_nodes_for_pattern(src_layer_label);
         auto src_layer = src_layer_nodes[src_layer_nodes.size() - 1];
 
-        std::vector<std::shared_ptr<pattern::op::Label>> src_iter_labels{src_iter_label};
-        auto src_iter = computer_layerd_rnn_inputs(src_iter_labels, m);
+        auto src_iter = compute_multi_layer_rnn_inputs(src_iter_label, m);
+        auto weights_layer = compute_multi_layer_rnn_inputs(weights_layer_label, m);
+        auto weights_iter = compute_multi_layer_rnn_inputs(weights_iter_label, m);
+        auto bias = compute_multi_layer_rnn_inputs(bias_label, m);
 
-        std::vector<std::shared_ptr<pattern::op::Label>> weights_layer_labels{weights_layer_label};
-        auto weights_layer = computer_layerd_rnn_inputs(weights_layer_labels, m);
-
-        std::vector<std::shared_ptr<pattern::op::Label>> weights_iter_labels{weights_iter_label};
-        auto weights_iter = computer_layerd_rnn_inputs(weights_iter_labels, m);
-
-        std::vector<std::shared_ptr<pattern::op::Label>> bias_labels{bias_label};
-        auto bias = computer_layerd_rnn_inputs(bias_labels, m);
         std::shared_ptr<op::Rnn> rnn_node = nullptr;
 
         for (auto& rnn_goe_input : m.get_bound_nodes_for_pattern(rnn_ht_label)[0]->get_arguments())
