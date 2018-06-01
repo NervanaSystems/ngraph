@@ -85,7 +85,7 @@ vector<float> read_float_vector(shared_ptr<runtime::TensorView> tv)
     }
     else
     {
-        throw ngraph_error("Unsupported ngraph element type.");
+        throw ngraph_error("Unsupported nGraph element type.");
     }
 
     return float_vec;
