@@ -531,7 +531,7 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeC
     }
     case (Prop::BackwardFilter):
     {
-        std::throw("Should not have BackwardFilter");
+        throw std::runtime_error("Should not have BackwardFilter");
     }
     }
 
@@ -676,7 +676,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
     }
     case (Prop::BackwardFilter):
     {
-        std::throw("Should not have BackwardFilter");
+        throw std::runtime_error("Should not have BackwardFilter");
     }
     }
 
@@ -746,7 +746,7 @@ size_t runtime::gpu::CUDNNEmitter::build_softmax(const runtime::gpu::GPURuntimeC
     }
     case (Prop::BackwardFilter):
     {
-        std::throw("Should not have BackwardFilter");
+        throw std::runtime_error("Should not have BackwardFilter");
     }
     }
 
