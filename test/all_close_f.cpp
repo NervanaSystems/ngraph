@@ -413,3 +413,22 @@ TEST(all_close_f, mantissa_24_near_0_1_10_100_1000)
     EXPECT_TRUE(test::close_f(expected, lower_bound, 24, 2));
     EXPECT_FALSE(test::close_f(expected, smaller_than_lower_bound, 24, 2));
 }
+
+TEST(all_close_f, inf_nan)
+{
+    float zero = 0.f;
+    float infinity = numeric_limits<float>::infinity();
+    float neg_infinity = -numeric_limits<float>::infinity();
+    float quiet_nan = numeric_limits<float>::quiet_NaN();
+    float signaling_nan = numeric_limits<float>::signaling_NaN();
+
+    EXPECT_FALSE(test::close_f(zero, infinity));
+    EXPECT_FALSE(test::close_f(zero, neg_infinity));
+    EXPECT_FALSE(test::close_f(zero, quiet_nan));
+    EXPECT_FALSE(test::close_f(zero, signaling_nan));
+
+    EXPECT_FALSE(test::close_f(infinity, infinity));
+    EXPECT_FALSE(test::close_f(neg_infinity, neg_infinity));
+    EXPECT_FALSE(test::close_f(quiet_nan, quiet_nan));
+    EXPECT_FALSE(test::close_f(signaling_nan, signaling_nan));
+}
