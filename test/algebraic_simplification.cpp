@@ -43,6 +43,7 @@
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
