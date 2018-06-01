@@ -1536,12 +1536,24 @@ TEST(cpu_fusion, fuse_batch_dot_forward)
     test::Uniform<float> rng(0.0f, 1.0f);
     vector<vector<float>> args;
 
-    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    // for (shared_ptr<op::Parameter> param : int_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
-        rng.initialize(tensor_val);
+        vector<float> tensor_val(shape_size(int_f->get_parameters()[0]->get_shape()));
+        // rng.initialize(tensor_val);
+        for (int i = 0; i < tensor_val.size(); ++i) {
+            tensor_val[i] = i;
+        }
         args.push_back(tensor_val);
     }
+    {
+        vector<float> tensor_val(shape_size(int_f->get_parameters()[1]->get_shape()));
+        // rng.initialize(tensor_val);
+        for (int i = 0; i < tensor_val.size(); ++i) {
+            tensor_val[i] = i;
+        }
+        args.push_back(tensor_val);
+    }
+
     auto int_results = execute(int_f, args, "INTERPRETER");
     auto cpu_results = execute(cpu_f, args, "CPU");
     for (size_t i = 0; i < int_results.size(); i++)

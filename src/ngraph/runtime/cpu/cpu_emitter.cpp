@@ -386,36 +386,44 @@ namespace ngraph
                 size_t m = shape_a[1];
                 size_t k = shape_a[2];
                 size_t n = shape_b[2];
-
+                size_t lda = std::max(1UL, k);
+                size_t ldb = std::max(1UL, n);
                 const char* tranpose_a = cnotranspose;
                 const char* tranpose_b = cnotranspose;
-                size_t lda = shape_a[1];
-                size_t ldb = shape_b[1];
-
                 if (batch_dot->get_is_a_transposed())
                 {
                     tranpose_a = ctranspose;
                     m = shape_a[2];
                     k = shape_a[1];
+                    size_t lda = std::max(1UL, m);
                 }
-
                 if (batch_dot->get_is_b_transposed())
                 {
                     tranpose_b = ctranspose;
                     n = shape_b[1];
+                    size_t ldb = std::max(1UL, k);
                 }
+                size_t ldc = max(1UL, n);
+                size_t offset_a = m*k;
+                size_t offset_b = k*n;
+                size_t offset_c = m*n;
 
                 writer.block_begin();
 
                 const char* cbeta = "0.0f";
 
+                // writer << "for (int i = 0; i < " << shape_size(shape_a) << "; ++i)"; 
+                writer << "for (int i = 0; i < " << shape_a[0] << "; ++i)"; 
+                writer.block_begin();
+                // writer << out[0].get_name() << "[i] = " <<  mat_b.get_name() + "[i];";
                 writer << "cblas::cblas_sgemm("
                        << "cblas::Layout::RowMajor, " << tranpose_a << tranpose_b << m << ", " << n
                        << ", " << k << ",\n"
-                       << "        1.0f, " << mat_a.get_name() << ", " << max(1UL, lda) << ", "
-                       << mat_b.get_name() << ", " << max(1UL, ldb) << ", " << cbeta << ",\n"
-                       << "        " << out[0].get_name() << ", " << max(1UL, m)
+                       << "        1.0f, " << mat_a.get_name() << "+i*" << offset_a << ", " << lda << ", "
+                       << mat_b.get_name() << "+i*" << offset_b << ", " << ldb << ", " << cbeta << ",\n"
+                       << "        " << out[0].get_name() << "+i*" << offset_c << ", " << ldc 
                        << ");\n";
+                writer.block_end();
                 writer.block_end();
             }
 
