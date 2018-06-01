@@ -109,7 +109,7 @@ float bits_to_float(const string& s)
 //                           | 2 |<=
 //
 // [Upper bound]
-//                           Add 1 at this bit to get upper bound
+//                           Add 1 at this bit
 //                           |
 //                           v
 // 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
@@ -135,6 +135,63 @@ TEST(all_close_f, mantissa_8_near_0)
 {
     // 0.f, the ground-truth value
     float expected_val = bits_to_float("00000000000000000000000000000000");
+    float computed_val;
+
+    // ~3.67342E-40, the exact upper bound
+    computed_val = bits_to_float("00000000000001000000000000000000");
+    EXPECT_TRUE(test::close_f(expected_val, computed_val, 8, 2));
+
+    // ~3.67343E-40, the next representable number bigger than upper bound
+    computed_val = bits_to_float("00000000000001000000000000000001");
+    EXPECT_TRUE(!test::close_f(expected_val, computed_val, 8, 2));
+
+    // ~-3.67342E-40, the exact lower bound
+    computed_val = bits_to_float("10000000000001000000000000000000");
+    EXPECT_TRUE(test::close_f(expected_val, computed_val, 8, 2));
+
+    // ~-3.67343E-40, the next representable number smaller than lower bound
+    computed_val = bits_to_float("10000000000001000000000000000001");
+    EXPECT_TRUE(!test::close_f(expected_val, computed_val, 8, 2));
+}
+
+// Test the exact bounds near -0.f
+//
+// With mantissa_bits = 8, tolerance_bits = 2
+//
+//                           Targeted bit
+//                           |
+//                           v
+// s e e e e e e e e m m m m m m m m m m m m m m m m m m m m m m m
+//               =>|      8      |
+//                           | 2 |<=
+//
+// [Upper bound]
+//                           Minus 1 at this bit
+//                           |
+//                           v
+// 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// +                         1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// ---------------------------------------------------------------
+// 0 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+//
+// Convert to 2's compliment
+// 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+//
+// Mask off sign bit
+// 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+//
+// [Lower bound]
+//                           Add 1 at this bit
+//                           |
+//                           v
+// 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// -                         1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// ---------------------------------------------------------------
+// 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+TEST(all_close_f, mantissa_8_near_n0)
+{
+    // 0.f, the ground-truth value
+    float expected_val = bits_to_float("10000000000000000000000000000000");
     float computed_val;
 
     // ~3.67342E-40, the exact upper bound
