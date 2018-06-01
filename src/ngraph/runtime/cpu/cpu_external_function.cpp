@@ -95,6 +95,7 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
@@ -229,6 +230,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Subtract), &runtime::cpu::CPU_Emitter::emit<op::Subtract>},
     {TI(ngraph::op::Broadcast), &runtime::cpu::CPU_Emitter::emit<op::Broadcast>},
     {TI(ngraph::op::Convert), &runtime::cpu::CPU_Emitter::emit<op::Convert>},
+    {TI(ngraph::op::StopGradient), &runtime::cpu::CPU_Emitter::emit<op::StopGradient>},
     {TI(ngraph::op::Constant), &runtime::cpu::CPU_Emitter::emit<op::Constant>},
     {TI(ngraph::op::Reshape), &runtime::cpu::CPU_Emitter::emit<op::Reshape>},
     {TI(ngraph::op::FunctionCall), &runtime::cpu::CPU_Emitter::emit<op::FunctionCall>},

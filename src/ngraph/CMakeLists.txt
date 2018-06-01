@@ -33,6 +33,7 @@ set (SRC
     node.cpp
     op/abs.cpp
     op/acos.cpp
+    op/stop_gradient.cpp
     op/add.cpp
     op/allreduce.cpp
     op/and.cpp

@@ -85,6 +85,7 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
@@ -1494,6 +1495,14 @@ namespace ngraph
                     }
                     output_index++;
                 }
+            }
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::StopGradient)
+            {
+                writer.block_begin();
+                writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
+                       << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+                writer.block_end();
             }
 
             template <>
