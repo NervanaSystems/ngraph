@@ -175,6 +175,7 @@ target_link_libraries(unit-test ngraph libgtest pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
 if(NGRAPH_ONNX_IMPORT_ENABLE)
+    target_sources(unit-test PRIVATE $<TARGET_OBJECTS:onnx_import_interface>)
     add_dependencies(unit-test onnx_import)
     target_link_libraries(unit-test onnx_import)
 endif()

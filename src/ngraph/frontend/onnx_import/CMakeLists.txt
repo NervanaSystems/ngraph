@@ -19,38 +19,43 @@ set(ONNX_SOURCE_URL "https://raw.githubusercontent.com/onnx/onnx/v1.1.2/onnx/onn
 set_source_files_properties(onnx.pb.h onnx.pb.cc PROPERTIES GENERATED TRUE)
 
 add_custom_command(OUTPUT onnx.proto
-        COMMAND wget --timeout=60 ${ONNX_SOURCE_URL})
+    COMMAND wget --timeout=60 ${ONNX_SOURCE_URL})
 
 add_custom_command(OUTPUT onnx.pb.cc onnx.pb.h
     COMMAND ${PROTOBUF_PROTOC_EXECUTABLE} --cpp_out ${CMAKE_CURRENT_BINARY_DIR} --proto_path ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/onnx.proto
-        DEPENDS onnx.proto)
+    DEPENDS onnx.proto)
+
+add_library(onnx_import_interface OBJECT
+    onnx_util.cpp
+    onnx_util.hpp
+    onnx.pb.h
+    onnx.proto)
 
 add_library(onnx_import STATIC
-        onnx.pb.cc
-        onnx.pb.h
-        onnx.proto
-        graph.cpp
-        mapping.cpp
-        model.cpp
-        node.cpp
-        ops_bridge.cpp
-        onnx_util.cpp
-        tensor.cpp
-        value_info.cpp
-        graph.hpp
-        mapping.hpp
-        model.hpp
-        node.hpp
-        ops_bridge.hpp
-        onnx_util.hpp
-        tensor.hpp
-        value_info.hpp)
+    onnx.pb.cc
+    graph.cpp
+    mapping.cpp
+    model.cpp
+    node.cpp
+    ops_bridge.cpp
+    tensor.cpp
+    value_info.cpp
+    graph.hpp
+    mapping.hpp
+    model.hpp
+    node.hpp
+    ops_bridge.hpp
+    tensor.hpp
+    value_info.hpp)
 
-target_include_directories(onnx_import
-        PUBLIC ${CMAKE_CURRENT_BINARY_DIR}
-        PRIVATE ${NGRAPH_INCLUDE_PATH})
+add_dependencies(onnx_import onnx_import_interface)
 
-target_link_libraries(onnx_import PRIVATE ${PROTOBUF_LIBRARY})
+set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_include_directories(onnx_import PUBLIC ${CMAKE_CURRENT_BINARY_DIR} PRIVATE ${NGRAPH_INCLUDE_PATH})
+target_link_libraries(onnx_import PRIVATE ${PROTOBUF_LIBRARIES})
+
+set_property(TARGET onnx_import_interface PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_include_directories(onnx_import_interface PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${NGRAPH_INCLUDE_PATH})
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(onnx_import PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
