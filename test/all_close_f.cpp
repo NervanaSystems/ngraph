@@ -270,6 +270,13 @@ TEST(all_close_f, mantissa_8_near_n1)
 
 // For intuitive understanding of tightness of bounds in decimal
 // Test bounds near 0, 1, 10, 100, 1000 with mantissa_bits = 8, tolerance_bits = 2
+//
+//                           Targeted bit
+//                           |
+//                           v
+// s e e e e e e e e m m m m m m m m m m m m m m m m m m m m m m m
+//               =>|      8      |
+//                           | 2 |<=
 TEST(all_close_f, mantissa_8_near_0_1_10_100_1000)
 {
     float expected;
