@@ -75,3 +75,41 @@ bool test::all_close_f(const vector<float>& a,
     }
     return rc;
 }
+
+bool test::all_close_f(const std::shared_ptr<runtime::TensorView>& a,
+                       const std::shared_ptr<runtime::TensorView>& b,
+                       int mantissa_bits,
+                       int tolerance_bits)
+{
+    // Check that the layouts are compatible
+    if (*a->get_tensor_view_layout() != *b->get_tensor_view_layout())
+    {
+        throw ngraph_error("Cannot compare tensors with different layouts");
+    }
+    if (a->get_shape() != b->get_shape())
+    {
+        return false;
+    }
+
+    return test::all_close_f(
+        read_float_vector(a), read_float_vector(b), mantissa_bits, tolerance_bits);
+}
+
+bool test::all_close_f(const std::vector<std::shared_ptr<runtime::TensorView>>& as,
+                       const std::vector<std::shared_ptr<runtime::TensorView>>& bs,
+                       int mantissa_bits,
+                       int tolerance_bits)
+{
+    if (as.size() != bs.size())
+    {
+        return false;
+    }
+    for (size_t i = 0; i < as.size(); ++i)
+    {
+        if (!test::all_close_f(as[i], bs[i], mantissa_bits, tolerance_bits))
+        {
+            return false;
+        }
+    }
+    return true;
+}

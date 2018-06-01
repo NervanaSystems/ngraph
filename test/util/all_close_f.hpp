@@ -53,5 +53,27 @@ namespace ngraph
                          const std::vector<float>& b,
                          int mantissa_bits = 8,
                          int tolerance_bits = 2);
+
+        /// @brief Check if the two TensorViews are all close in float
+        /// @param a First TensorView to compare
+        /// @param b Second TensorView to compare
+        /// @param mantissa_bits The mantissa width of the underlying number before casting to float
+        /// @param tolerance_bits Bit tolerance error
+        /// Returns true iff the two TensorViews are all close in float
+        bool all_close_f(const std::shared_ptr<runtime::TensorView>& a,
+                         const std::shared_ptr<runtime::TensorView>& b,
+                         int mantissa_bits = 8,
+                         int tolerance_bits = 2);
+
+        /// @brief Check if the two vectors of TensorViews are all close in float
+        /// @param as First vector of TensorView to compare
+        /// @param bs Second vector of TensorView to compare
+        /// @param mantissa_bits The mantissa width of the underlying number before casting to float
+        /// @param tolerance_bits Bit tolerance error
+        /// Returns true iff the two TensorViews are all close in float
+        bool all_close_f(const std::vector<std::shared_ptr<runtime::TensorView>>& as,
+                         const std::vector<std::shared_ptr<runtime::TensorView>>& bs,
+                         int mantissa_bits = 8,
+                         int tolerance_bits = 2);
     }
 }
