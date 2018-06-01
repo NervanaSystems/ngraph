@@ -32,6 +32,11 @@ namespace ngraph
         /// @param tolerance_bits Bit tolerance error
         /// @returns True iff the distance between a and b is within 2 ^ tolerance_bits ULP
         ///
+        /// References:
+        /// - https://en.wikipedia.org/wiki/Unit_in_the_last_place
+        /// - https://randomascii.wordpress.com/2012/01/23/stupid-float-tricks-2
+        /// - https://github.com/google/googletest/blob/master/googletest/docs/AdvancedGuide.md#floating-point-comparison
+        ///
         /// s e e e e e e e e m m m m m m m m m m m m m m m m m m m m m m m
         /// |------------bfloat-----------|
         /// |----------------------------float----------------------------|
