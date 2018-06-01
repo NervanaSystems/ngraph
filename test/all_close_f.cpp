@@ -160,9 +160,9 @@ TEST(all_close_f, mantissa_8_near_0)
     computed_val = bits_to_float("00000000000001000000000000000001");
     EXPECT_TRUE(!test::close_f(expected_val, computed_val, 8, 2));
 
-    // // 0.984375f, lower bound
-    // computed_val = bits_to_float("00111111011111000000000000000000");
-    // EXPECT_TRUE(test::close_f(expected_val, computed_val, 8, 2));
+    // 0.984375f, lower bound
+    computed_val = bits_to_float("10000000000001000000000000000000");
+    EXPECT_TRUE(test::close_f(expected_val, computed_val, 8, 2));
 
     // // 0.9843749404f, smaller than lower bound
     // computed_val = bits_to_float("00111111011110111111111111111111");
