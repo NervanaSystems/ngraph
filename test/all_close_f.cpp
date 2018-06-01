@@ -52,51 +52,6 @@ float bits_to_float(const string& s)
     return fu.f;
 }
 
-// TEST(all_close_f, mantissa_24)
-// {
-//     float val0 = bits_to_float("00000000000000000000000000000000");
-//     float val_0 = bits_to_float("00000000000000000000000000000001");
-//     float val_1 = bits_to_float("00000000000000000000000000000010");
-//     float val_2 = bits_to_float("00000000000000000000000000000011");
-//     float val_3 = bits_to_float("00000000000000000000000000000100");
-//     float val_5 = bits_to_float("00000000000000000000000000000101");
-
-//     float val_0 = bits_to_float("10000000000000000000000000000000");
-//     float val_0 = bits_to_float("10000000000000000000000000000001");
-//     float val_1 = bits_to_float("10000000000000000000000000000010");
-//     float val_2 = bits_to_float("10000000000000000000000000000011");
-//     float val_3 = bits_to_float("10000000000000000000000000000100");
-//     float val_5 = bits_to_float("10000000000000000000000000000101");
-
-//     NGRAPH_INFO << val0;
-//     NGRAPH_INFO << val_0;
-//     NGRAPH_INFO << val_1;
-//     NGRAPH_INFO << val_2;
-//     NGRAPH_INFO << val_3;
-//     NGRAPH_INFO << val_5;
-
-//     NGRAPH_INFO << val_0;
-//     NGRAPH_INFO << val_0;
-//     NGRAPH_INFO << val_1;
-//     NGRAPH_INFO << val_2;
-//     NGRAPH_INFO << val_3;
-//     NGRAPH_INFO << val_5;
-
-//     NGRAPH_INFO << test::close_f(0.f, val0, 24);
-//     NGRAPH_INFO << test::close_f(0.f, val_0, 24);
-//     NGRAPH_INFO << test::close_f(0.f, val_1, 24);
-//     NGRAPH_INFO << test::close_f(0.f, val_2, 24);
-//     NGRAPH_INFO << test::close_f(0.f, val_3, 24);
-//     NGRAPH_INFO << test::close_f(0.f, val_5, 24);
-
-//     NGRAPH_INFO << test::close_f(0.f, val_0, 24);
-//     NGRAPH_INFO << test::close_f(0.f, val_0, 24);
-//     NGRAPH_INFO << test::close_f(0.f, val_1, 24);
-//     NGRAPH_INFO << test::close_f(0.f, val_2, 24);
-//     NGRAPH_INFO << test::close_f(0.f, val_3, 24);
-//     NGRAPH_INFO << test::close_f(0.f, val_5, 24);
-// }
-
 // Test the exact bounds near +0.f
 //
 // With mantissa_bits = 8, tolerance_bits = 2
@@ -134,24 +89,24 @@ float bits_to_float(const string& s)
 TEST(all_close_f, mantissa_8_near_0)
 {
     // 0.f, the ground-truth value
-    float expected_val = bits_to_float("00000000000000000000000000000000");
-    float computed_val;
+    float expected = bits_to_float("00000000000000000000000000000000");
+    float computed;
 
     // ~3.67342E-40, the exact upper bound
-    computed_val = bits_to_float("00000000000001000000000000000000");
-    EXPECT_TRUE(test::close_f(expected_val, computed_val, 8, 2));
+    computed = bits_to_float("00000000000001000000000000000000");
+    EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
 
     // ~3.67343E-40, the next representable number bigger than upper bound
-    computed_val = bits_to_float("00000000000001000000000000000001");
-    EXPECT_TRUE(!test::close_f(expected_val, computed_val, 8, 2));
+    computed = bits_to_float("00000000000001000000000000000001");
+    EXPECT_TRUE(!test::close_f(expected, computed, 8, 2));
 
     // ~-3.67342E-40, the exact lower bound
-    computed_val = bits_to_float("10000000000001000000000000000000");
-    EXPECT_TRUE(test::close_f(expected_val, computed_val, 8, 2));
+    computed = bits_to_float("10000000000001000000000000000000");
+    EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
 
     // ~-3.67343E-40, the next representable number smaller than lower bound
-    computed_val = bits_to_float("10000000000001000000000000000001");
-    EXPECT_TRUE(!test::close_f(expected_val, computed_val, 8, 2));
+    computed = bits_to_float("10000000000001000000000000000001");
+    EXPECT_TRUE(!test::close_f(expected, computed, 8, 2));
 }
 
 // Test the exact bounds near -0.f
@@ -191,24 +146,24 @@ TEST(all_close_f, mantissa_8_near_0)
 TEST(all_close_f, mantissa_8_near_n0)
 {
     // 0.f, the ground-truth value
-    float expected_val = bits_to_float("10000000000000000000000000000000");
-    float computed_val;
+    float expected = bits_to_float("10000000000000000000000000000000");
+    float computed;
 
     // ~3.67342E-40, the exact upper bound
-    computed_val = bits_to_float("00000000000001000000000000000000");
-    EXPECT_TRUE(test::close_f(expected_val, computed_val, 8, 2));
+    computed = bits_to_float("00000000000001000000000000000000");
+    EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
 
     // ~3.67343E-40, the next representable number bigger than upper bound
-    computed_val = bits_to_float("00000000000001000000000000000001");
-    EXPECT_TRUE(!test::close_f(expected_val, computed_val, 8, 2));
+    computed = bits_to_float("00000000000001000000000000000001");
+    EXPECT_TRUE(!test::close_f(expected, computed, 8, 2));
 
     // ~-3.67342E-40, the exact lower bound
-    computed_val = bits_to_float("10000000000001000000000000000000");
-    EXPECT_TRUE(test::close_f(expected_val, computed_val, 8, 2));
+    computed = bits_to_float("10000000000001000000000000000000");
+    EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
 
     // ~-3.67343E-40, the next representable number smaller than lower bound
-    computed_val = bits_to_float("10000000000001000000000000000001");
-    EXPECT_TRUE(!test::close_f(expected_val, computed_val, 8, 2));
+    computed = bits_to_float("10000000000001000000000000000001");
+    EXPECT_TRUE(!test::close_f(expected, computed, 8, 2));
 }
 
 // Test the exact bounds near 1.f
@@ -242,24 +197,24 @@ TEST(all_close_f, mantissa_8_near_n0)
 TEST(all_close_f, mantissa_8_near_1)
 {
     // 1.f, the ground-truth value
-    float expected_val = bits_to_float("00111111100000000000000000000000");
-    float computed_val;
+    float expected = bits_to_float("00111111100000000000000000000000");
+    float computed;
 
     // 1.03125f, the exact upper bound
-    computed_val = bits_to_float("00111111100001000000000000000000");
-    EXPECT_TRUE(test::close_f(expected_val, computed_val, 8, 2));
+    computed = bits_to_float("00111111100001000000000000000000");
+    EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
 
     // 1.031250119f, the next representable number bigger than upper bound
-    computed_val = bits_to_float("00111111100001000000000000000001");
-    EXPECT_TRUE(!test::close_f(expected_val, computed_val, 8, 2));
+    computed = bits_to_float("00111111100001000000000000000001");
+    EXPECT_TRUE(!test::close_f(expected, computed, 8, 2));
 
     // 0.984375f, the exact lower bound
-    computed_val = bits_to_float("00111111011111000000000000000000");
-    EXPECT_TRUE(test::close_f(expected_val, computed_val, 8, 2));
+    computed = bits_to_float("00111111011111000000000000000000");
+    EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
 
     // 0.9843749404f, the next representable number smaller than lower bound
-    computed_val = bits_to_float("00111111011110111111111111111111");
-    EXPECT_TRUE(!test::close_f(expected_val, computed_val, 8, 2));
+    computed = bits_to_float("00111111011110111111111111111111");
+    EXPECT_TRUE(!test::close_f(expected, computed, 8, 2));
 }
 
 // Test the exact bounds near -1.f
@@ -293,22 +248,43 @@ TEST(all_close_f, mantissa_8_near_1)
 TEST(all_close_f, mantissa_8_near_n1)
 {
     // -1.f, the ground-truth value
-    float expected_val = bits_to_float("10111111100000000000000000000000");
-    float computed_val;
+    float expected = bits_to_float("10111111100000000000000000000000");
+    float computed;
 
     // -0.984375f, the exact upper bound
-    computed_val = bits_to_float("10111111011111000000000000000000");
-    EXPECT_TRUE(test::close_f(expected_val, computed_val, 8, 2));
+    computed = bits_to_float("10111111011111000000000000000000");
+    EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
 
     // -0.984374940395355224609375f, the next representable number bigger than upper bound
-    computed_val = bits_to_float("10111111011110111111111111111111");
-    EXPECT_TRUE(!test::close_f(expected_val, computed_val, 8, 2));
+    computed = bits_to_float("10111111011110111111111111111111");
+    EXPECT_TRUE(!test::close_f(expected, computed, 8, 2));
 
     // -1.03125f, the exact lower bound
-    computed_val = bits_to_float("10111111100001000000000000000000");
-    EXPECT_TRUE(test::close_f(expected_val, computed_val, 8, 2));
+    computed = bits_to_float("10111111100001000000000000000000");
+    EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
 
     // -1.03125011920928955078125f, the next representable number smaller than lower bound
-    computed_val = bits_to_float("10111111100001000000000000000001");
-    EXPECT_TRUE(!test::close_f(expected_val, computed_val, 8, 2));
+    computed = bits_to_float("10111111100001000000000000000001");
+    EXPECT_TRUE(!test::close_f(expected, computed, 8, 2));
+}
+
+// For intuitive understanding of tightness of bounds in decimal
+// Test bounds near 0, 1, 10, 100, 1000 with mantissa_bits = 8, tolerance_bits = 2
+TEST(all_close_f, mantissa_8_near_0_1_10_100_1000)
+{
+    float expected;
+    float upper_bound;
+    float bigger_than_upper_bound;
+    float lower_bound;
+    float smaller_than_lower_bound;
+
+    expected = 0.f; // 00000000000000000000000000000000
+    upper_bound = 3.67342e-40f; // 00000000000001000000000000000000, approximated
+    bigger_than_upper_bound = 3.67343e-40f; // 00000000000001000000000000000001, approximated
+    lower_bound = -3.67342e-40f; // 10000000000001000000000000000000, approximated
+    smaller_than_lower_bound = 3.67343e-40f; // 10000000000001000000000000000001, approximated
+    EXPECT_TRUE(test::close_f(expected, upper_bound, 8, 2));
+    EXPECT_TRUE(!test::close_f(expected, bigger_than_upper_bound, 8, 2));
+    EXPECT_TRUE(test::close_f(expected, lower_bound, 8, 2));
+    EXPECT_TRUE(!test::close_f(expected, smaller_than_lower_bound, 8, 2));
 }
