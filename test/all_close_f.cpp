@@ -328,3 +328,76 @@ TEST(all_close_f, mantissa_8_near_0_1_10_100_1000)
     EXPECT_TRUE(test::close_f(expected, lower_bound, 8, 2));
     EXPECT_TRUE(!test::close_f(expected, smaller_than_lower_bound, 8, 2));
 }
+
+// For intuitive understanding of tightness of bounds in decimal
+// Test bounds near 0, 1, 10, 100, 1000 with mantissa_bits = 24, tolerance_bits = 2
+//
+//                                                           Targeted bit
+//                                                           |
+//                                                           v
+// s e e e e e e e e m m m m m m m m m m m m m m m m m m m m m m m
+//               =>|      8                                      |
+//                                                           | 2 |<=
+TEST(all_close_f, mantissa_24_near_0_1_10_100_1000)
+{
+    float expected;
+    float upper_bound;
+    float bigger_than_upper_bound;
+    float lower_bound;
+    float smaller_than_lower_bound;
+
+    // Bounds around 0: 0 ± 5.6e-45
+    expected = 0.f;
+    upper_bound = bits_to_float("00000000000000000000000000000100");
+    bigger_than_upper_bound = bits_to_float("00000000000000000000000000000101");
+    lower_bound = bits_to_float("10000000000000000000000000000100");
+    smaller_than_lower_bound = bits_to_float("10000000000000000000000000000101");
+    EXPECT_TRUE(test::close_f(expected, upper_bound, 24, 2));
+    EXPECT_TRUE(!test::close_f(expected, bigger_than_upper_bound, 24, 2));
+    EXPECT_TRUE(test::close_f(expected, lower_bound, 24, 2));
+    EXPECT_TRUE(!test::close_f(expected, smaller_than_lower_bound, 24, 2));
+
+    // Bounds around 1: 1 ± 4.77e-7
+    expected = 1.f;
+    upper_bound = bits_to_float("00111111100000000000000000000100");
+    bigger_than_upper_bound = bits_to_float("00111111100000000000000000000101");
+    lower_bound = bits_to_float("00111111011111111111111111111100");
+    smaller_than_lower_bound = bits_to_float("00111111011111111111111111111011");
+    EXPECT_TRUE(test::close_f(expected, upper_bound, 24, 2));
+    EXPECT_TRUE(!test::close_f(expected, bigger_than_upper_bound, 24, 2));
+    EXPECT_TRUE(test::close_f(expected, lower_bound, 24, 2));
+    EXPECT_TRUE(!test::close_f(expected, smaller_than_lower_bound, 24, 2));
+
+    // Bounds around 10: 10 ± 3.81e-6
+    expected = 10.f;
+    upper_bound = bits_to_float("01000001001000000000000000000100");
+    bigger_than_upper_bound = bits_to_float("01000001001000000000000000000101");
+    lower_bound = bits_to_float("01000001000111111111111111111100");
+    smaller_than_lower_bound = bits_to_float("01000001000111111111111111111011");
+    EXPECT_TRUE(test::close_f(expected, upper_bound, 24, 2));
+    EXPECT_TRUE(!test::close_f(expected, bigger_than_upper_bound, 24, 2));
+    EXPECT_TRUE(test::close_f(expected, lower_bound, 24, 2));
+    EXPECT_TRUE(!test::close_f(expected, smaller_than_lower_bound, 24, 2));
+
+    // Bounds around 100: 100 ± 3.05e-5
+    expected = 100.f;
+    upper_bound = bits_to_float("01000010110010000000000000000100");
+    bigger_than_upper_bound = bits_to_float("01000010110010000000000000000101");
+    lower_bound = bits_to_float("01000010110001111111111111111100");
+    smaller_than_lower_bound = bits_to_float("01000010110001111111111111111011");
+    EXPECT_TRUE(test::close_f(expected, upper_bound, 24, 2));
+    EXPECT_TRUE(!test::close_f(expected, bigger_than_upper_bound, 24, 2));
+    EXPECT_TRUE(test::close_f(expected, lower_bound, 24, 2));
+    EXPECT_TRUE(!test::close_f(expected, smaller_than_lower_bound, 24, 2));
+
+    // Bounds around 1000: 1000 ± 2.44e-4
+    expected = 1000.f;
+    upper_bound = bits_to_float("01000100011110100000000000000100");
+    bigger_than_upper_bound = bits_to_float("01000100011110100000000000000101");
+    lower_bound = bits_to_float("01000100011110011111111111111100");
+    smaller_than_lower_bound = bits_to_float("01000100011110011111111111111011");
+    EXPECT_TRUE(test::close_f(expected, upper_bound, 24, 2));
+    EXPECT_TRUE(!test::close_f(expected, bigger_than_upper_bound, 24, 2));
+    EXPECT_TRUE(test::close_f(expected, lower_bound, 24, 2));
+    EXPECT_TRUE(!test::close_f(expected, smaller_than_lower_bound, 24, 2));
+}
