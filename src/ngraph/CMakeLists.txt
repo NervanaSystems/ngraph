@@ -219,6 +219,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
         runtime/cpu/op/conv_relu.cpp
         runtime/cpu/op/convert_layout.cpp
         runtime/cpu/op/sigmoid.cpp
+	runtime/cpu/op/sigmoid_mul.cpp
         runtime/cpu/op/rnn.cpp
         runtime/cpu/op/lstm.cpp
         runtime/cpu/op/matmul_bias.cpp
