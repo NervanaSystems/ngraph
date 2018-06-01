@@ -93,6 +93,7 @@
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
@@ -367,6 +368,54 @@ namespace ngraph
                     }
                 }
 
+                writer.block_end();
+            }
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchDot)
+            {
+                const ngraph::op::BatchDot* batch_dot = static_cast<const ngraph::op::BatchDot*>(node);
+
+                auto mat_a = args[0];
+                auto mat_b = args[1];
+                const Shape& shape_a = mat_a.get_shape();
+                const Shape& shape_b = mat_b.get_shape(); 
+
+                static const char* ctranspose = "cblas::Transpose::Transpose, ";
+                static const char* cnotranspose = "cblas::Transpose::None, ";
+
+                size_t m = shape_a[1];
+                size_t k = shape_a[2];
+                size_t n = shape_b[2];
+
+                const char* tranpose_a = cnotranspose;
+                const char* tranpose_b = cnotranspose;
+                size_t lda = shape_a[1];
+                size_t ldb = shape_b[1];
+
+                if (batch_dot->get_is_a_transposed())
+                {
+                    tranpose_a = ctranspose;
+                    m = shape_a[2];
+                    k = shape_a[1];
+                }
+
+                if (batch_dot->get_is_b_transposed())
+                {
+                    tranpose_b = ctranspose;
+                    n = shape_b[1];
+                }
+
+                writer.block_begin();
+
+                const char* cbeta = "0.0f";
+
+                writer << "cblas::cblas_sgemm("
+                       << "cblas::Layout::RowMajor, " << tranpose_a << tranpose_b << m << ", " << n
+                       << ", " << k << ",\n"
+                       << "        1.0f, " << mat_a.get_name() << ", " << max(1UL, lda) << ", "
+                       << mat_b.get_name() << ", " << max(1UL, ldb) << ", " << cbeta << ",\n"
+                       << "        " << out[0].get_name() << ", " << max(1UL, m)
+                       << ");\n";
                 writer.block_end();
             }
 
