@@ -278,6 +278,7 @@ TEST(all_close_f, mantissa_8_near_0_1_10_100_1000)
     float lower_bound;
     float smaller_than_lower_bound;
 
+    // Bounds around 0: 0 ± 3.67e-40
     expected = 0.f;                          // 00000000000000000000000000000000
     upper_bound = 3.67342e-40f;              // 00000000000001000000000000000000, approximated
     bigger_than_upper_bound = 3.67343e-40f;  // 00000000000001000000000000000001, approximated
@@ -288,6 +289,7 @@ TEST(all_close_f, mantissa_8_near_0_1_10_100_1000)
     EXPECT_TRUE(test::close_f(expected, lower_bound, 8, 2));
     EXPECT_TRUE(!test::close_f(expected, smaller_than_lower_bound, 8, 2));
 
+    // Bounds around 1: 1 ± 0.03
     expected = 1.f;                           // 00111111100000000000000000000000
     upper_bound = 1.03125f;                   // 00111111100001000000000000000000
     bigger_than_upper_bound = 1.031250119f;   // 00111111100001000000000000000001
@@ -298,6 +300,7 @@ TEST(all_close_f, mantissa_8_near_0_1_10_100_1000)
     EXPECT_TRUE(test::close_f(expected, lower_bound, 8, 2));
     EXPECT_TRUE(!test::close_f(expected, smaller_than_lower_bound, 8, 2));
 
+    // Bounds around 10: 10 ± 0.25
     expected = 10.f;                                    // 01000001001000000000000000000000
     upper_bound = 10.25f;                               // 01000001001001000000000000000000
     bigger_than_upper_bound = 10.25000095367431640625f; // 01000001001001000000000000000001
@@ -308,6 +311,7 @@ TEST(all_close_f, mantissa_8_near_0_1_10_100_1000)
     EXPECT_TRUE(test::close_f(expected, lower_bound, 8, 2));
     EXPECT_TRUE(!test::close_f(expected, smaller_than_lower_bound, 8, 2));
 
+    // Bounds around 100: 100 ± 2
     expected = 100.f;                                 // 01000010110010000000000000000000
     upper_bound = 102.f;                              // 01000010110011000000000000000000
     bigger_than_upper_bound = 102.00000762939453125f; // 01000010110011000000000000000001
@@ -318,6 +322,7 @@ TEST(all_close_f, mantissa_8_near_0_1_10_100_1000)
     EXPECT_TRUE(test::close_f(expected, lower_bound, 8, 2));
     EXPECT_TRUE(!test::close_f(expected, smaller_than_lower_bound, 8, 2));
 
+    // Bounds around 1000: 1000 ± 16
     expected = 1000.f;                              // 01000100011110100000000000000000
     upper_bound = 1016.f;                           // 01000100011111100000000000000000
     bigger_than_upper_bound = 1016.00006103515625f; // 01000100011111100000000000000001
