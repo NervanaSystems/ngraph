@@ -50,14 +50,14 @@ skip ahead to the next section, :ref:`install_ngonnx`.
    .. code-block:: console
 
       $ apt update
-      $ apt install python3 python3-pip python3-dev
+      $ apt install python3 python3-pip python3-dev python3-venv
       $ apt install build-essential cmake curl clang-3.9 git zlib1g zlib1g-dev libtinfo-dev
       $ git clone https://github.com/NervanaSystems/ngraph.git
       $ cd ngraph && mkdir build
       $ cd build && cmake ../ -DNGRAPH_USE_PREBUILT_LLVM=TRUE
       $ make install
 
-#. Build the Python package (binary wheel) for ngraph:
+#. Build the Python package (binary wheel) for ngraph and set up an env for ONNX:
 
    .. code-block:: console
 
@@ -66,24 +66,23 @@ skip ahead to the next section, :ref:`install_ngonnx`.
       $ export PYBIND_HEADERS_PATH=$PWD/pybind11
       $ export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist
       $ python3 setup.py bdist_wheel
+      $ cd .. python3 -m venv onnx
+      $ cd onnx/
+      $ . bin/activate
 
-#. Check for the binary wheel file under ``/ngraph/python/dist/`` and activate a 
-   Python3 virtual environment to work with ONNX.
+#. Check for the binary wheel file under ``/ngraph/python/dist/`` and install it 
+   with pip.
 
    .. code-block:: console
 
-      $ cd dist/
-      $ python3 -m venv onnx
-      $ cd onnx/
-      $ . bin/activate
-      (onnx)$ pip install -U ngraph-0.2.0-cp35-cp35m-linux_x86_64.whl    
+      (onnx)$ pip install -U python/dist/ngraph-0.2.0-cp35-cp35m-linux_x86_64.whl    
 
 
 #. Confirm ngraph is properly installed through a Python interpreter:
 
    .. code-block:: console
 
-      (onnx) $ python3
+      (onnx)$ python3
 
    .. code-block:: python
       
@@ -98,6 +97,13 @@ skip ahead to the next section, :ref:`install_ngonnx`.
 
 Installing ngraph-onnx
 -----------------------
+
+Add the dependencies for ONNX:  
+
+.. code-block:: console
+
+   $ apt install protobuf-compiler libprotobuf-dev
+
 
 Install the ``ngraph-onnx`` companion tool using pip:
 

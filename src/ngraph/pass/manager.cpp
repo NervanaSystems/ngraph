@@ -25,6 +25,7 @@
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/pass.hpp"
+#include "ngraph/pass/serialize.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 
 using namespace std;
@@ -37,10 +38,11 @@ ngraph::pass::Manager::Manager()
     {
         m_visualize = true;
     }
-}
-
-ngraph::pass::Manager::Manager(bool to_set_is_output)
-{
+    static const auto nest = std::getenv("NGRAPH_ENABLE_SERIALIZE_TRACING");
+    if (nest)
+    {
+        m_serialize = true;
+    }
 }
 
 ngraph::pass::Manager::~Manager()
@@ -97,17 +99,27 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func)
             }
         }
 
-        if (m_visualize)
+        if (m_visualize || m_serialize)
         {
-            //visualizations will be named after the outermost function
+            //visualizations and serializations will be named after the outermost function
             const size_t num_digits_in_pass_index = 3;
             std::string index_str = std::to_string(index);
             index_str = std::string(num_digits_in_pass_index - index_str.length(), '0') + index_str;
-            auto fname = fs.at(0)->get_name() + std::string("_") + index_str + std::string("_") +
-                         m_pass_names.at(index) + std::string(".") +
-                         pass::VisualizeTree::get_file_ext();
-            pass::VisualizeTree vt(fname);
-            vt.run_on_module(fs);
+            auto base_filename = fs.at(0)->get_name() + std::string("_") + index_str +
+                                 std::string("_") + m_pass_names.at(index) + std::string(".");
+
+            if (m_visualize)
+            {
+                pass::VisualizeTree vt(base_filename + pass::VisualizeTree::get_file_ext());
+                vt.run_on_module(fs);
+            }
+
+            if (m_serialize)
+            {
+                //no "." in the extension
+                pass::Serialization st(base_filename + "json");
+                st.run_on_module(fs);
+            }
         }
         index++;
     }

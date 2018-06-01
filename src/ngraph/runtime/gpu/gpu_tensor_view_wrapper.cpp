@@ -33,12 +33,12 @@ size_t runtime::gpu::GPU_TensorViewWrapper::get_size() const
     return m_tensor_view->get_tensor_view_layout()->get_size();
 }
 
-const vector<size_t>& runtime::gpu::GPU_TensorViewWrapper::get_shape() const
+const Shape& runtime::gpu::GPU_TensorViewWrapper::get_shape() const
 {
     return m_tensor_view->get_tensor_view_layout()->get_shape();
 }
 
-const vector<size_t>& runtime::gpu::GPU_TensorViewWrapper::get_strides() const
+const Strides& runtime::gpu::GPU_TensorViewWrapper::get_strides() const
 {
     return m_tensor_view->get_tensor_view_layout()->get_strides();
 }
@@ -63,9 +63,4 @@ const std::string& runtime::gpu::GPU_TensorViewWrapper::get_name() const
 const std::string& runtime::gpu::GPU_TensorViewWrapper::get_type() const
 {
     return get_element_type().c_type_string();
-}
-
-bool runtime::gpu::GPU_TensorViewWrapper::is_output() const
-{
-    return m_tensor_view->get_tensor().is_output();
 }

@@ -122,7 +122,7 @@ endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 ngraph_var(NGRAPH_WARNINGS_AS_ERRORS DEFAULT "OFF")
-if (NOT ${NGRAPH_WARNINGS_AS_ERRORS})
+if (${NGRAPH_WARNINGS_AS_ERRORS})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
     message(STATUS "Warnings as errors")
 endif()
@@ -155,8 +155,13 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     endif()
 endif()
 
+include(unit_test_control)
+set(UNIT_TEST_CONFIG_LIST "" CACHE INTERNAL "")
+unit_test_control(BACKEND INTERPRETER MANIFEST src/ngraph/runtime/interpreter/unit_test.manifest)
+
 # Set true if CPU backend is built by default
 if (NGRAPH_CPU_ENABLE)
+    unit_test_control(BACKEND CPU MANIFEST src/ngraph/runtime/cpu/unit_test.manifest)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")
 endif()
 
@@ -182,6 +187,7 @@ if(NGRAPH_GPU_ENABLE)
         "Please select a correct compiler version\n"
         )
     endif()
+    unit_test_control(BACKEND GPU MANIFEST src/ngraph/runtime/gpu/unit_test.manifest)
 elseif(NGRAPH_GPU_ENABLE)
     message(FATAL_ERROR "GPU was required but CUDA library was not found")
 endif()
@@ -238,8 +244,8 @@ if (NGRAPH_UNIT_TEST_ENABLE)
     add_subdirectory(test)
     message(STATUS "unit tests enabled")
 else()
+    add_subdirectory(test/util)
     message(STATUS "unit tests disabled")
 endif()
 
 add_subdirectory(doc)
-

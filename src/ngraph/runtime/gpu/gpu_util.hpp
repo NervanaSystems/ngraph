@@ -16,10 +16,13 @@
 
 #pragma once
 
+#include <iostream>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
+#include <stdint.h>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include <cublas_v2.h>
@@ -27,6 +30,7 @@
 #include <cuda_runtime.h>
 #include <cudnn.h>
 #include <nvrtc.h>
+#include "ngraph/util.hpp"
 
 //why use "do...while.."
 //https://stackoverflow.com/questions/154136/why-use-apparently-meaningless-do-while-and-if-else-statements-in-macros
@@ -89,14 +93,25 @@ namespace ngraph
     {
         namespace gpu
         {
-            void print_gpu_f32_tensor(void* p, size_t element_count, size_t element_size);
+            void print_gpu_f32_tensor(const void* p, size_t element_count, size_t element_size);
+
+            template <typename T>
+            void print_gpu_tensor(const void* p, size_t element_count)
+            {
+                std::vector<T> local(element_count);
+                size_t size_in_bytes = sizeof(T) * element_count;
+                cudaMemcpy(local.data(), p, size_in_bytes, cudaMemcpyDeviceToHost);
+                std::cout << "{" << ngraph::join(local) << "}" << std::endl;
+            }
             void check_cuda_errors(CUresult err);
-            void* create_gpu_buffer(size_t buffer_size);
+            void* create_gpu_buffer(size_t buffer_size, const void* data = NULL);
             void free_gpu_buffer(void* buffer);
-            void cuda_memcpyDtD(void* dst, void* src, size_t buffer_size);
-            void cuda_memcpyHtD(void* dst, void* src, size_t buffer_size);
-            void cuda_memcpyDtH(void* dst, void* src, size_t buffer_size);
+            void cuda_memcpyDtD(void* dst, const void* src, size_t buffer_size);
+            void cuda_memcpyHtD(void* dst, const void* src, size_t buffer_size);
+            void cuda_memcpyDtH(void* dst, const void* src, size_t buffer_size);
             void cuda_memset(void* dst, int value, size_t buffer_size);
+            std::pair<uint64_t, uint64_t> idiv_magic_u32(uint64_t max_numerator, uint64_t divisor);
+            std::pair<uint64_t, uint64_t> idiv_magic_u64(uint64_t divisor);
         }
     }
 }

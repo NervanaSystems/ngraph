@@ -32,7 +32,9 @@ public:
     CoreFusion()
         : GraphRewrite()
     {
-        construct_relu_pattern();
+        construct_relu();
+        construct_folded_batch_norm();
     }
-    void construct_relu_pattern();
+    void construct_relu();
+    void construct_folded_batch_norm();
 };

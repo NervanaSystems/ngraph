@@ -22,6 +22,7 @@ namespace ngraph
     {
         class Abs;
         class Acos;
+        class Add;
         class Asin;
         class Atan;
         class Ceiling;
@@ -38,6 +39,9 @@ namespace ngraph
         class Subtract;
         class Divide;
         class Sign;
+        class Maximum;
+        class Minimum;
+        class Multiply;
         class Convert;
         class Equal;
         class NotEqual;
@@ -54,11 +58,24 @@ namespace ngraph
         class Not;
         class Sqrt;
         class Select;
+        class And;
+        class Or;
     }
     namespace runtime
     {
         namespace gpu
         {
+            enum class OpName
+            {
+                add,
+                multiply,
+                minimum,
+                maximum
+            };
+
+            template <typename T>
+            struct CudaOpMap;
+
             template <>
             struct CudaOpMap<ngraph::op::Abs>
             {
@@ -265,7 +282,7 @@ namespace ngraph
             template <>
             struct CudaOpMap<ngraph::op::Not>
             {
-                static constexpr const char* op = "not";
+                static constexpr const char* op = "logical_not";
                 static constexpr const char* math_kernel = "!x0";
             };
 
@@ -281,6 +298,48 @@ namespace ngraph
             {
                 static constexpr const char* op = "relu_backprop";
                 static constexpr const char* math_kernel = "x1 * int(x0 > 0)";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::And>
+            {
+                static constexpr const char* op = "logical_and";
+                static constexpr const char* math_kernel = "x0 & x1";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Or>
+            {
+                static constexpr const char* op = "logical_or";
+                static constexpr const char* math_kernel = "x0 | x1";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Add>
+            {
+                static constexpr const char* op = "add";
+                static constexpr const char* math_kernel = "x0 + x1";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Multiply>
+            {
+                static constexpr const char* op = "mul";
+                static constexpr const char* math_kernel = "x0 * x1";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Minimum>
+            {
+                static constexpr const char* op = "min";
+                static constexpr const char* math_kernel = "x0 > x1 ? x1 : x0";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Maximum>
+            {
+                static constexpr const char* op = "max";
+                static constexpr const char* math_kernel = "x0 > x1 ? x0 : x1";
             };
         }
     }

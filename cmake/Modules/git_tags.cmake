@@ -19,7 +19,9 @@ function(NGRAPH_GET_CURRENT_HASH)
     execute_process(
         COMMAND ${GIT_EXECUTABLE} rev-parse --verify HEAD
         RESULT_VARIABLE result
-        OUTPUT_VARIABLE HASH)
+        OUTPUT_VARIABLE HASH
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
     string(STRIP ${HASH} HASH)
     set(NGRAPH_CURRENT_HASH ${HASH} PARENT_SCOPE)
 endfunction()
@@ -29,7 +31,9 @@ function(NGRAPH_GET_TAG_OF_CURRENT_HASH)
     execute_process(
         COMMAND ${GIT_EXECUTABLE} ls-remote --tags
         RESULT_VARIABLE RESULT
-        OUTPUT_VARIABLE TAG_LIST)
+        OUTPUT_VARIABLE TAG_LIST
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
     NGRAPH_GET_CURRENT_HASH()
 
     string(REGEX MATCH "${NGRAPH_CURRENT_HASH}\t[^\r\n]*" TAG ${TAG_LIST})
@@ -45,7 +49,9 @@ function(NGRAPH_GET_MOST_RECENT_TAG)
     execute_process(
         COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
         RESULT_VARIABLE RESULT
-        OUTPUT_VARIABLE TAG)
+        OUTPUT_VARIABLE TAG
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
     string(STRIP ${TAG} TAG)
     set(NGRAPH_MOST_RECENT_RELEASE_TAG ${TAG} PARENT_SCOPE)
 endfunction()
