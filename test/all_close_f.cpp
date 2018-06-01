@@ -44,7 +44,7 @@ float bits_to_float(const string& s)
 {
     if (s.size() != 32)
     {
-        throw ngraph_error("Input s length must be 32");
+        throw ngraph_error("Input length must be 32");
     }
     bitset<32> bs(s);
     FloatUnion fu;
