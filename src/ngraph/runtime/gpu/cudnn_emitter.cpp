@@ -529,6 +529,10 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeC
             }});
         break;
     }
+    case (Prop::BackwardFilter):
+    {
+        std::throw("Should not have BackwardFilter");
+    }
     }
 
     primitive_index = this->m_primitive_emitter->insert(std::move(pool));
@@ -670,6 +674,10 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
             }});
         break;
     }
+    case (Prop::BackwardFilter):
+    {
+        std::throw("Should not have BackwardFilter");
+    }
     }
 
     primitive_index = this->m_primitive_emitter->insert(std::move(batchnorm));
@@ -735,6 +743,10 @@ size_t runtime::gpu::CUDNNEmitter::build_softmax(const runtime::gpu::GPURuntimeC
                                                  outputs[0]));
         }});
         break;
+    }
+    case (Prop::BackwardFilter):
+    {
+        std::throw("Should not have BackwardFilter");
     }
     }
 
