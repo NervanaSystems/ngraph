@@ -97,41 +97,104 @@ float bits_to_float(const string& s)
 //     NGRAPH_INFO << test::close_f(0.f, val_5, 24);
 // }
 
-TEST(all_close_f, mantissa_8_near_n1)
-{
-    float val0 = bits_to_float("00000000000000000000000000000000");
-    float val_0 = bits_to_float("00000000000001000000000000000000");
-    float val_1 = bits_to_float("00000000000001000000000000000001");
-    float val_2 = bits_to_float("00000000000010000000000000000000");
+// TEST(all_close_f, mantissa_8_near_n1)
+// {
+//     float val0 = bits_to_float("00000000000000000000000000000000");
+//     float val_0 = bits_to_float("00000000000001000000000000000000");
+//     float val_1 = bits_to_float("00000000000001000000000000000001");
+//     float val_2 = bits_to_float("00000000000010000000000000000000");
 
-    NGRAPH_INFO << test::close_f(val0, val0);
-    NGRAPH_INFO << test::close_f(val0, val_0);
-    NGRAPH_INFO << test::close_f(val0, val_1);
-    NGRAPH_INFO << test::close_f(val0, val_2);
-}
+//     NGRAPH_INFO << test::close_f(val0, val0);
+//     NGRAPH_INFO << test::close_f(val0, val_0);
+//     NGRAPH_INFO << test::close_f(val0, val_1);
+//     NGRAPH_INFO << test::close_f(val0, val_2);
+// }
 
-TEST(all_close_f, mantissa_8_near_1)
+TEST(all_close_f, mantissa_8_near_0)
 {
-    // This test gives an exact bound when a number is considered to be near 1.f
+    // Tests the exact bounds near +0.f
     //
     // With mantissa_bits = 8, tolerance_bits = 2
     //
-    //                           Add 1 at this bit to get upper bound
-    //                           Minus 1 at this bit to get lower bound
+    //                           Targeted bit
     //                           |
     //                           v
-    // 0 0 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+    // 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
     // s e e e e e e e e m m m m m m m m m m m m m m m m m m m m m m m
     //               =>|      8      |
     //                           | 2 |<=
     //
     // [Upper bound]
+    //                           Add 1 at this bit to get upper bound
+    //                           |
+    //                           v
+    // 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+    // +                         1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+    // ---------------------------------------------------------------
+    // 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+    //
+    // [Lower bound]
+    //                           Minus 1 at this bit
+    //                           |
+    //                           v
+    // 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+    // -                         1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+    // ---------------------------------------------------------------
+    // 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+    //
+    // Convert to 2's compliment
+    // 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+    //
+    // Mask the sign bit
+    // 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+
+    // 0.f, the ground-truth value
+    float expected_val = bits_to_float("00000000000000000000000000000000");
+    float computed_val;
+
+    // ~3.67342E-40, upper bound
+    computed_val = bits_to_float("00000000000001000000000000000000");
+    EXPECT_TRUE(test::close_f(expected_val, computed_val, 8, 2));
+
+    // ~3.67343E-40, bigger than upper bound
+    computed_val = bits_to_float("00000000000001000000000000000001");
+    EXPECT_TRUE(!test::close_f(expected_val, computed_val, 8, 2));
+
+    // // 0.984375f, lower bound
+    // computed_val = bits_to_float("00111111011111000000000000000000");
+    // EXPECT_TRUE(test::close_f(expected_val, computed_val, 8, 2));
+
+    // // 0.9843749404f, smaller than lower bound
+    // computed_val = bits_to_float("00111111011110111111111111111111");
+    // EXPECT_TRUE(!test::close_f(expected_val, computed_val, 8, 2));
+}
+
+TEST(all_close_f, mantissa_8_near_1)
+{
+    // Tests the exact bounds near 1.f
+    //
+    // With mantissa_bits = 8, tolerance_bits = 2
+    //
+    //                           Targeted bit
+    //                           |
+    //                           v
+    // s e e e e e e e e m m m m m m m m m m m m m m m m m m m m m m m
+    //               =>|      8      |
+    //                           | 2 |<=
+    //
+    // [Upper bound]
+    //                           Add 1 at this bit to get upper bound
+    //                           |
+    //                           v
     // 0 0 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
     // +                         1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
     // ---------------------------------------------------------------
     // 0 0 1 1 1 1 1 1 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
     //
     // [Lower bound]
+    //                           Minus 1 at this bit to get lower bound
+    //                           |
+    //                           v
     // 0 0 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
     // -                         1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
     // ---------------------------------------------------------------
