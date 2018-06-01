@@ -104,7 +104,6 @@ float bits_to_float(const string& s)
 //                           Targeted bit
 //                           |
 //                           v
-// 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 // s e e e e e e e e m m m m m m m m m m m m m m m m m m m m m m m
 //               =>|      8      |
 //                           | 2 |<=
