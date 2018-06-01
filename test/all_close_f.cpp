@@ -307,4 +307,24 @@ TEST(all_close_f, mantissa_8_near_0_1_10_100_1000)
     EXPECT_TRUE(!test::close_f(expected, bigger_than_upper_bound, 8, 2));
     EXPECT_TRUE(test::close_f(expected, lower_bound, 8, 2));
     EXPECT_TRUE(!test::close_f(expected, smaller_than_lower_bound, 8, 2));
+
+    expected = 100.f; // 01000010110010000000000000000000
+    upper_bound = 102.f; // 01000010110011000000000000000000
+    bigger_than_upper_bound = 102.00000762939453125f; // 01000010110011000000000000000001
+    lower_bound = 98.0f; // 01000010110001000000000000000000
+    smaller_than_lower_bound = 97.99999237060546875f; // 01000010110000111111111111111111
+    EXPECT_TRUE(test::close_f(expected, upper_bound, 8, 2));
+    EXPECT_TRUE(!test::close_f(expected, bigger_than_upper_bound, 8, 2));
+    EXPECT_TRUE(test::close_f(expected, lower_bound, 8, 2));
+    EXPECT_TRUE(!test::close_f(expected, smaller_than_lower_bound, 8, 2));
+
+    expected = 1000.f; // 01000100011110100000000000000000
+    upper_bound = 1016.f; // 01000100011111100000000000000000
+    bigger_than_upper_bound = 1016.00006103515625f; // 01000100011111100000000000000001
+    lower_bound = 984.0f; // 01000100011101100000000000000000
+    smaller_than_lower_bound = 983.99993896484375f; // 01000100011101011111111111111111
+    EXPECT_TRUE(test::close_f(expected, upper_bound, 8, 2));
+    EXPECT_TRUE(!test::close_f(expected, bigger_than_upper_bound, 8, 2));
+    EXPECT_TRUE(test::close_f(expected, lower_bound, 8, 2));
+    EXPECT_TRUE(!test::close_f(expected, smaller_than_lower_bound, 8, 2));
 }
