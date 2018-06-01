@@ -227,13 +227,13 @@ TEST(all_close_f, mantissa_8_near_1)
 // 1 0 1 1 1 1 1 1 0 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 //
 // [Lower bound]
-//                           Minus 1 at this bit to get lower bound
+//                           Add 1 at this bit
 //                           |
 //                           v
-// 0 0 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// 1 0 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 // -                         1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 // ---------------------------------------------------------------
-// 0 0 1 1 1 1 1 1 0 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// 1 0 1 1 1 1 1 1 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 TEST(all_close_f, mantissa_8_near_n1)
 {
     // -1.f, the ground-truth value
@@ -244,15 +244,15 @@ TEST(all_close_f, mantissa_8_near_n1)
     computed_val = bits_to_float("10111111011111000000000000000000");
     EXPECT_TRUE(test::close_f(expected_val, computed_val, 8, 2));
 
-    // // f, the next representable number bigger than upper bound
-    // computed_val = bits_to_float("00111111100001000000000000000001");
-    // EXPECT_TRUE(!test::close_f(expected_val, computed_val, 8, 2));
+    // -0.984374940395355224609375f, the next representable number bigger than upper bound
+    computed_val = bits_to_float("10111111011110111111111111111111");
+    EXPECT_TRUE(!test::close_f(expected_val, computed_val, 8, 2));
 
-    // // f, the exact lower bound
-    // computed_val = bits_to_float("00111111011111000000000000000000");
-    // EXPECT_TRUE(test::close_f(expected_val, computed_val, 8, 2));
+    // -1.03125f, the exact lower bound
+    computed_val = bits_to_float("10111111100001000000000000000000");
+    EXPECT_TRUE(test::close_f(expected_val, computed_val, 8, 2));
 
-    // // f, the next representable number smaller than lower bound
-    // computed_val = bits_to_float("00111111011110111111111111111111");
-    // EXPECT_TRUE(!test::close_f(expected_val, computed_val, 8, 2));
+    // -1.03125011920928955078125f, the next representable number smaller than lower bound
+    computed_val = bits_to_float("10111111100001000000000000000001");
+    EXPECT_TRUE(!test::close_f(expected_val, computed_val, 8, 2));
 }
