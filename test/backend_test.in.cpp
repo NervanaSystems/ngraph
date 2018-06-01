@@ -7544,6 +7544,45 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_all)
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, softmax_axis_3d)
+{
+    Shape shape{2, 2, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{-10, -20, -30, -40, -50, -60, -1, -2, -3, -4, -5, -6});
+    auto result = backend->create_tensor(element::f32, shape);
+
+    auto d0 = expf(-10) + expf(-1);
+    auto d1 = expf(-20) + expf(-2);
+    auto d2 = expf(-30) + expf(-3);
+    auto d3 = expf(-40) + expf(-4);
+    auto d4 = expf(-50) + expf(-5);
+    auto d5 = expf(-60) + expf(-6);
+
+
+    backend->call(f, {result}, {a});
+    vector<float> expected{
+        expf(-10) / d0,
+            expf(-20) / d1,
+            expf(-30) / d2,
+            expf(-40) / d3,
+            expf(-50) / d4,
+            expf(-60) / d5,
+            expf(-1) / d0,
+            expf(-2) / d1,
+            expf(-3) / d2,
+            expf(-4) / d3,
+            expf(-5) / d4,
+            expf(-6) / d5
+            };
+
+    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, softmax_axis)
 {
     Shape shape{2, 3};
@@ -7561,11 +7600,54 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_axis)
 
     backend->call(f, {result}, {a});
     vector<float> expected{expf(-10) / d0,
-                           expf(-20) / d0,
-                           expf(-30) / d0,
-                           expf(-40) / d1,
-                           expf(-50) / d1,
-                           expf(-60) / d1};
+            expf(-20) / d0,
+            expf(-30) / d0,
+            expf(-40) / d1,
+            expf(-50) / d1,
+            expf(-60) / d1};
+    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, softmax_axis_2)
+{
+    Shape shape{2, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{-10, -20, -30, -40, -50, -60});
+    auto result = backend->create_tensor(element::f32, shape);
+
+    auto d0 = expf(-10) + expf(-40);
+    auto d1 = expf(-20) + expf(-50);
+    auto d2 = expf(-30) + expf(-60);
+
+    backend->call(f, {result}, {a});
+    vector<float> expected{expf(-10) / d0,
+            expf(-20) / d1,
+            expf(-30) / d2,
+            expf(-40) / d0,
+            expf(-50) / d1,
+            expf(-60) / d2};
+    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, softmax_axis_3d_trivial)
+{
+    Shape shape{1, 2, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{-10, -20, -30, -40, -50, -60});
+    auto result = backend->create_tensor(element::f32, shape);
+
+    backend->call(f, {result}, {a});
+    vector<float> expected{1, 1, 1, 1, 1, 1};
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }
 

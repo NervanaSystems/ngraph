@@ -36,42 +36,47 @@ namespace ngraph
                 static void get_elementwise_op(codegen::CodeWriter& writer,
                                                const std::string& name,
                                                const std::string& op,
-                                               const std::vector<std::string>& data_types);
+                                               const std::vector<std::string>& dtypes);
 
                 static void get_broadcast_op(codegen::CodeWriter& writer,
                                              const std::string& name,
-                                             const std::array<std::string, 2>& data_types);
+                                             const std::array<std::string, 2>& dtypes);
 
                 static void get_concat_op(codegen::CodeWriter& writer,
                                           const std::string& name,
-                                          const std::vector<std::string>& data_types,
+                                          const std::vector<std::string>& dtypes,
                                           size_t num_inputs);
 
                 static void get_onehot_op(codegen::CodeWriter& writer,
                                           const std::string& name,
-                                          const std::array<std::string, 2>& data_types);
+                                          const std::array<std::string, 2>& dtypes);
 
                 static void get_reshape_op(codegen::CodeWriter& writer,
                                            const std::string& name,
-                                           const std::array<std::string, 2>& data_types);
+                                           const std::array<std::string, 2>& dtypes);
 
                 static void get_slice_op(codegen::CodeWriter& writer,
                                          const std::string& name,
-                                         const std::array<std::string, 2>& data_types);
+                                         const std::array<std::string, 2>& dtypes);
 
                 static void get_reverse_op(codegen::CodeWriter& writer,
                                            const std::string& name,
-                                           const std::array<std::string, 2>& data_types);
+                                           const std::array<std::string, 2>& dtypes);
 
                 static void get_replace_slice_op(codegen::CodeWriter& writer,
                                                  const std::string& name,
-                                                 const std::array<std::string, 3>& data_types,
+                                                 const std::array<std::string, 3>& dtypes,
                                                  int nthreads_per_block);
+
+                static void get_softmax_op(codegen::CodeWriter& writer,
+                                           const std::string& name,
+                                           const std::array<std::string, 2>& dtypes,
+                                           const int rank);
 
                 static void get_device_helper(codegen::CodeWriter& writer,
                                               const std::string& name,
                                               const std::string& math_kernel,
-                                              const std::vector<std::string>& data_types);
+                                              const std::vector<std::string>& dtypes);
 
                 static void add_pod_typedefs(codegen::CodeWriter& writer);
             };

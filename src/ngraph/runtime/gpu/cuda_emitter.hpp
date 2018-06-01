@@ -79,6 +79,11 @@ namespace ngraph
                                            GPUShape upper_bounds,
                                            GPUShape slice_stride);
 
+                size_t build_softmax(const GPURuntimeContext* ctx,
+                                     const std::array<std::string, 2>& dtypes,
+                                     GPUShape tensor_shape,
+                                     const AxisSet& reduce_axes);
+
             private:
                 CUDAEmitter(GPUPrimitiveEmitter* emitter);
                 void print_tensor_from_gpu(codegen::CodeWriter& writer,

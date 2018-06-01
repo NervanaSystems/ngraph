@@ -821,6 +821,116 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
     return primitive_index;
 }
 
+size_t runtime::gpu::CUDAEmitter::build_softmax(const GPURuntimeContext* ctx,
+                                                const std::array<std::string, 2>& dtypes,
+                                                GPUShape tensor_shape,
+                                                const AxisSet& reduce_axes)
+{
+    // assumes NC{d1,...,dn} format
+    std::string kernel_name = "softmax_" + join(dtypes, "_");
+    std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
+
+    // TODO before PR - come back and check if shape is necessary, could be just rank is needed
+    std::stringstream ss;
+    ss << kernel_name << "_s" << join(tensor_shape, "_") << "_r" << join(reduce_axes, "_");
+    auto hash = ss.str();
+
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    // if the kernel has not been compiled, build it
+    auto compiled_kernel = ctx->compiled_kernel_pool->get(kernel_name);
+    if (compiled_kernel == nullptr)
+    {
+        codegen::CodeWriter writer;
+        writer << include_helpers();
+        runtime::gpu::CudaKernelBuilder::get_softmax_op(
+            writer, kernel_name, dtypes, tensor_shape.size());
+        compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
+    }
+
+    // calculate strides
+    GPUShape strides = row_major_strides(tensor_shape);
+    // precacluate invariants for integer division via multiplication
+    std::vector<int> stride_magic;
+    std::vector<int> stride_shift;
+    for (int i = 0; i < strides.size(); i++)
+    {
+        int magic;
+        int shift;
+        std::tie(magic, shift) = idiv_magic_u64(strides[i]);
+        stride_magic.push_back(magic);
+        stride_shift.push_back(shift);
+    }
+    // calculate reduced tensor strides with 0s inserted for reduced axes
+    GPUShape reduced_shape = tensor_shape;
+    for (auto const& axis : reduce_axes)
+    {
+        reduced_shape[axis] = 1;
+    }
+    GPUShape reduced_strides = row_major_strides(reduced_shape);
+    for (auto const& axis : reduce_axes)
+    {
+        reduced_strides[axis] = 0;
+    }
+
+    GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+    size_t idx_strides =
+        allocator.reserve_argspace(strides.data(), strides.size() * sizeof(int));
+    size_t idx_stride_magic =
+        allocator.reserve_argspace(stride_magic.data(), stride_magic.size() * sizeof(int));
+    size_t idx_stride_shift =
+        allocator.reserve_argspace(stride_shift.data(), stride_shift.size() * sizeof(int));
+    size_t idx_reduced_strides =
+        allocator.reserve_argspace(reduced_strides.data(), reduced_strides.size() * sizeof(int));
+
+
+    // TODO: blending factors are not currently implemented
+    float alpha = 1.0f;
+    float beta = 0.0f;
+
+    size_t nthreads = shape_size(tensor_shape);
+
+    std::unique_ptr<gpu::primitive> softmax(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+                void* strides_d = runtime::gpu::invoke_memory_primitive(ctx, idx_strides);
+                void* stride_magic_d = runtime::gpu::invoke_memory_primitive(ctx, idx_stride_magic);
+                void* stride_shift_d = runtime::gpu::invoke_memory_primitive(ctx, idx_stride_shift);
+                void* reduced_strides_d = runtime::gpu::invoke_memory_primitive(ctx, idx_reduced_strides);
+
+                void* args_list[] = {&inputs[0],
+                                     &outputs[0],
+                                     &strides_d,
+                                     &stride_magic_d,
+                                     &stride_shift_d,
+                                     &reduced_strides_d,
+                                     &alpha,
+                                     &beta,
+                                     &nthreads};
+
+                CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                              nthreads,
+                                              1,
+                                              1,
+                                              1,
+                                              1,
+                                              1,
+                                              0,
+                                              NULL,
+                                              args_list,
+                                              0));
+                CUDA_SAFE_CALL(cuCtxSynchronize());
+            }});
+
+
+    primitive_index = this->m_primitive_emitter->insert(std::move(softmax));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
 void runtime::gpu::CUDAEmitter::print_tensor_from_gpu(codegen::CodeWriter& writer,
                                                       const std::string& tensor_name,
                                                       GPUShape shape)
@@ -861,6 +971,7 @@ std::string runtime::gpu::CUDAEmitter::include_helpers()
     std::stringstream ss;
 #if defined(CUDA_VERSION) && CUDA_VERSION < 9000
     ss << R"(
+#define WARP_SIZE 32
 #define __ballot_sync(mask, predicate) __ballot(predicate)
 #define __shfl_down_sync(mask, val, delta, width) __shfl_down(val, delta, width)
 #define __shfl_xor_sync(mask, val, laneMask, width) __shfl_xor(val, laneMask, width)
