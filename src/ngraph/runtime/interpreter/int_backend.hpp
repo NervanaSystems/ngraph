@@ -48,6 +48,7 @@
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
+#include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/sum.hpp"
 
 #include "ngraph/op/select_and_scatter.hpp"
