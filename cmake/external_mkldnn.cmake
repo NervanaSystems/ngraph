@@ -21,6 +21,18 @@ include(ExternalProject)
 #----------------------------------------------------------------------------------------------------------
 
 if(NGRAPH_CPU_ENABLE)
+    # User provided mkl-dnn
+    if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
+        ExternalProject_Add(
+            ext_mkldnn
+            DOWNLOAD_COMMAND ""
+            UPDATE_COMMAND ""
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND ""
+            INSTALL_COMMAND ""
+            )
+        return()
+    endif()
 
     set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
     set(MKLDNN_GIT_TAG "0e7ca73")
@@ -82,9 +94,5 @@ if(NGRAPH_CPU_ENABLE)
 
     set(MKLDNN_INCLUDE_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/include" PARENT_SCOPE)
     set(MKLDNN_LIB_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib" PARENT_SCOPE)
-
-    # Other .cmake files in current scope (e.g. NNP Transformer) needs this path as well
-    set(MKLDNN_INCLUDE_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/include")
-    set(MKLDNN_LIB_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib")
 
 endif()

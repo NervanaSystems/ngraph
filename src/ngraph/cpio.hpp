@@ -29,6 +29,9 @@ namespace ngraph
         class FileInfo;
         class Writer;
         class Reader;
+
+        bool is_cpio(const std::string&);
+        bool is_cpio(std::istream&);
     }
 }
 

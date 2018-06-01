@@ -1156,6 +1156,28 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_scalar)
     EXPECT_EQ((vector<float>{48}), read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_vector_4_3)
+{
+    Shape shape_a{4, 3};
+    Shape shape_b{3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    Shape shape_r{4};
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12});
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, vector<float>{17, 18, 19});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call(f, {result}, {a, b});
+    EXPECT_EQ((vector<float>{110, 272, 434, 596}), read_vector<float>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_vector)
 {
     Shape shape_a{4, 4};
@@ -1474,6 +1496,21 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_with_op)
 
     backend->call(f, {result}, {});
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, constant_multi_use)
+{
+    auto A = make_shared<op::Constant>(element::i32, Shape{}, std::vector<std::string>{"388"});
+    auto f = make_shared<Function>(A, op::ParameterVector{});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    std::shared_ptr<runtime::TensorView> r1 = backend->create_tensor(element::i32, Shape{});
+    backend->call(f, {r1}, std::vector<std::shared_ptr<runtime::TensorView>>{});
+    EXPECT_EQ(read_vector<int>(r1), std::vector<int>{388});
+
+    std::shared_ptr<runtime::TensorView> r2 = backend->create_tensor(element::i32, Shape{});
+    backend->call(f, {r2}, std::vector<std::shared_ptr<runtime::TensorView>>{});
+    EXPECT_EQ(read_vector<int>(r2), std::vector<int>{388});
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
@@ -6783,10 +6820,11 @@ NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_scalar)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((vector<float>{1.0f * 10.0f * 9.0f * 4.0f * 13.0f * 6.0f * 7.0f * 12.0f * 3.0f *
-                             2.0f * 11.0f * 8.0f * 5.0f * 14.0f * 5.0f * 8.0f * 11.0f * 2.0f *
-                             3.0f * 12.0f * 7.0f * 6.0f * 13.0f * 4.0f * 9.0f * 10.0f * 1.0f}),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(vector<float>{1.0f * 10.0f * 9.0f * 4.0f * 13.0f * 6.0f * 7.0f *
+                                              12.0f * 3.0f * 2.0f * 11.0f * 8.0f * 5.0f * 14.0f *
+                                              5.0f * 8.0f * 11.0f * 2.0f * 3.0f * 12.0f * 7.0f *
+                                              6.0f * 13.0f * 4.0f * 9.0f * 10.0f * 1.0f},
+                                read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, product_3d_eliminate_zero_dim)
@@ -8112,4 +8150,128 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_globalstats_b2c2w2h1)
 
     ASSERT_TRUE(
         ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, reverse_sequence_n2c3h4w2)
+{
+    Shape shape{2, 3, 4, 2};
+    Shape seq_len_shape{4};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto B = make_shared<op::Parameter>(element::i32, seq_len_shape);
+
+    size_t batch_axis = 2;
+    size_t sequence_axis = 1;
+    auto rs = std::make_shared<op::ReverseSequence>(A, B, batch_axis, sequence_axis);
+
+    auto f = make_shared<Function>(rs, op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::i32, seq_len_shape);
+
+    shared_ptr<runtime::TensorView> result = backend->create_tensor(element::i32, shape);
+
+    std::vector<int> input{
+        0,  0, 3,  0, 6,  0, 9,  0, 1,  0, 4,  0, 7,  0, 10, 0, 2,  0, 5,  0, 8,  0, 11, 0,
+        12, 0, 15, 0, 18, 0, 21, 0, 13, 0, 16, 0, 19, 0, 22, 0, 14, 0, 17, 0, 20, 0, 23, 0,
+    };
+
+    std::vector<int> seq_lenghts{1, 2, 1, 2};
+    copy_data(b, seq_lenghts);
+
+    std::vector<int> expected{
+        0,  0, 4,  0, 6,  0, 10, 0, 1,  0, 3,  0, 7,  0, 9,  0, 2,  0, 5,  0, 8,  0, 11, 0,
+
+        12, 0, 16, 0, 18, 0, 22, 0, 13, 0, 15, 0, 19, 0, 21, 0, 14, 0, 17, 0, 20, 0, 23, 0};
+
+    copy_data(a, input);
+
+    backend->call(f, {result}, {a, b});
+    EXPECT_EQ(read_vector<int>(result), expected);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, reverse_sequence_n4c3h2w2)
+{
+    Shape shape{4, 3, 2, 2};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    Shape seq_len_shape{4};
+    auto B = make_shared<op::Parameter>(element::i32, seq_len_shape);
+
+    size_t batch_axis = 0;
+    size_t sequence_axis = 1;
+
+    auto rs = std::make_shared<op::ReverseSequence>(A, B, batch_axis, sequence_axis);
+
+    auto f = make_shared<Function>(rs, op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::i32, seq_len_shape);
+
+    shared_ptr<runtime::TensorView> result = backend->create_tensor(element::i32, shape);
+
+    std::vector<int> seq_lenghts{1, 2, 3, 3};
+    copy_data(b, seq_lenghts);
+
+    std::vector<int> input{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+                           16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+                           32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47};
+
+    std::vector<int> expected{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 16, 17, 18, 19,
+                              12, 13, 14, 15, 20, 21, 22, 23, 32, 33, 34, 35, 28, 29, 30, 31,
+                              24, 25, 26, 27, 44, 45, 46, 47, 40, 41, 42, 43, 36, 37, 38, 39};
+
+    copy_data(a, input);
+
+    backend->call(f, {result}, {a, b});
+    EXPECT_EQ(read_vector<int>(result), expected);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, reverse_sequence_n4d2c3h2w2)
+{
+    Shape shape{4, 2, 3, 2, 2};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    Shape seq_len_shape{4};
+    auto B = make_shared<op::Parameter>(element::i32, seq_len_shape);
+
+    size_t batch_axis = 0;
+    size_t sequence_axis = 2;
+
+    auto rs = std::make_shared<op::ReverseSequence>(A, B, batch_axis, sequence_axis);
+
+    auto f = make_shared<Function>(rs, op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::i32, seq_len_shape);
+
+    shared_ptr<runtime::TensorView> result = backend->create_tensor(element::i32, shape);
+
+    std::vector<int> input{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+                           16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+                           32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+                           48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+                           64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+                           80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95};
+
+    std::vector<int> expected{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+                              16, 17, 18, 19, 20, 21, 22, 23, 28, 29, 30, 31, 24, 25, 26, 27,
+                              32, 33, 34, 35, 40, 41, 42, 43, 36, 37, 38, 39, 44, 45, 46, 47,
+                              48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+                              64, 65, 66, 67, 68, 69, 70, 71, 76, 77, 78, 79, 72, 73, 74, 75,
+                              80, 81, 82, 83, 88, 89, 90, 91, 84, 85, 86, 87, 92, 93, 94, 95};
+
+    copy_data(a, input);
+
+    std::vector<int> seq_lenghts{1, 2, 1, 2};
+    copy_data(b, seq_lenghts);
+
+    backend->call(f, {result}, {a, b});
+    EXPECT_EQ(read_vector<int>(result), expected);
 }
