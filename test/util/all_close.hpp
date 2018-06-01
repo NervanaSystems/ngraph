@@ -45,7 +45,7 @@ namespace ngraph
             {
                 if (std::abs(a[i] - b[i]) > atol + rtol * std::abs(b[i]))
                 {
-                    NGRAPH_INFO << a[i] << " !≈ " << b[i];
+                    NGRAPH_INFO << a[i] << " is not close to " << b[i];
                     rc = false;
                 }
             }

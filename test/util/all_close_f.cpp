@@ -66,7 +66,7 @@ bool test::all_close_f(const vector<float>& a,
         bool is_close_f = close_f(a[i], b[i], mantissa_bits, tolerance_bits);
         if (!is_close_f)
         {
-            NGRAPH_INFO << a[i] << " !≈ " << b[i];
+            NGRAPH_INFO << a[i] << " is not close to " << b[i];
             rc = false;
         }
     }
