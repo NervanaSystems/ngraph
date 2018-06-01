@@ -111,7 +111,8 @@ namespace ngraph
                        __PRETTY_FUNCTION__)                                                        \
         .stream()
 
-#ifdef NGRAPH_DEBUG_ENABLE
+//#ifdef NGRAPH_DEBUG_ENABLE
+#if 1
 #define NGRAPH_DEBUG                                                                               \
     ngraph::log_helper(ngraph::LOG_TYPE::_LOG_TYPE_DEBUG,                                          \
                        ngraph::get_file_name(__FILE__),                                            \

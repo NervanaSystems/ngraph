@@ -64,7 +64,7 @@ op::BatchDot::BatchDot(shared_ptr<Node> a,
         throw ngraph_error("product dimensions are not equal while creating BatchDot");
     }
 
-    Shape dot_shape{shape_a.at(3 - dot_dimension_a), shape_b.at(3 - dot_dimension_b)};
+    Shape dot_shape{shape_a.at(0), shape_a.at(3 - dot_dimension_a), shape_b.at(3 - dot_dimension_b)};
     NGRAPH_DEBUG << "dot_shape shape = " << vector_to_string(dot_shape);
 
     add_output(a->get_element_type(), dot_shape);

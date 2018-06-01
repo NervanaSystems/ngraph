@@ -1520,3 +1520,34 @@ TEST(cpu_fusion, fuse_batch_dot)
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
 }
+
+TEST(cpu_fusion, fuse_batch_dot_forward)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("fuse_batch_dot_before.pdf");
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchDotFusion>();
+    pass_manager.register_pass<pass::VisualizeTree>("fuse_batch_dot_after.pdf");
+
+
+    const std::string file_name("mxnet/batch_dot_3.json");
+    auto cpu_f = make_function(file_name);
+    auto int_f = make_function(file_name);
+    pass_manager.run_passes(cpu_f);
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < int_results.size(); i++)
+    {
+        // EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+        std::cout << i << ": " << vector_to_string(cpu_results.at(i)) << std::endl;
+        std::cout << i << ": " << vector_to_string(int_results.at(i)) << std::endl;
+    }
+}

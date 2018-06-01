@@ -29,6 +29,7 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/runtime/cpu/op/batch_dot.hpp"
 
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
@@ -203,7 +204,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
 #define TI(x) std::type_index(typeid(x))
 
-void identify_batch_dot(std::shared_ptr<Node> n)
+std::shared_ptr<Node> identify_batch_dot(const std::shared_ptr<Node>& n)
 {
     auto reshape_pred = [](std::shared_ptr<Node> n) {
         return std::dynamic_pointer_cast<op::Reshape>(n) != nullptr;
@@ -230,7 +231,8 @@ void identify_batch_dot(std::shared_ptr<Node> n)
     // auto reshape = std::make_shared<op::Reshape>(param_0, AxisVector{0, 1, 2}, Shape{3,3,2});
 
     auto matcher = std::make_shared<pattern::Matcher>(reshape);
-    std::vector<std::pair<bool, bool>> transpose;
+    std::shared_ptr<Node> input_nodes[2];
+    bool transpose[] = {false, false};
     for (auto arg : n->get_arguments()) {
         std::cout << "arg " << arg->get_friendly_name() << std::endl;
         if (matcher->match(arg)) {
@@ -258,8 +260,24 @@ void identify_batch_dot(std::shared_ptr<Node> n)
             } while (std::dynamic_pointer_cast<op::Parameter>(iter) == nullptr);
             std::cout << "skip_0: " << reshape_count_0 << std::endl;
             std::cout << "skip_1: " << reshape_count_1 << std::endl;
+            if (reshape_count_0 == 3) {
+                transpose[0] = true;
+            }  
+            if (reshape_count_1 == 3) {
+                transpose[1] = true;
+            }  
+            if (input_nodes[0] == nullptr) {
+                input_nodes[0] = pattern_map[param_0];
+            }
+            if (input_nodes[1] == nullptr) {
+                input_nodes[1] = pattern_map[param_1];
+            }
         }
     } 
+    if (input_nodes[0] && input_nodes[1]) {
+        return std::make_shared<op::BatchDot>(input_nodes[0], input_nodes[1], transpose[0], transpose[1]);
+    }
+    return {nullptr};
 }
 
 
@@ -273,7 +291,10 @@ bool runtime::cpu::pass::CPUBatchDotFusion::run_on_function(std::shared_ptr<Func
         std::cout << "node " << n->get_friendly_name() << std::endl;
         if (TI(node) == TI(op::Concat)) {
             std::cout << "found concat" << std::endl; 
-            identify_batch_dot(n);
+            auto fused_node = identify_batch_dot(n);
+            if (fused_node) {
+                func->replace_node(n, fused_node);
+            }
         }
     }
     return modified;
