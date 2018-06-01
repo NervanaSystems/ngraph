@@ -27,6 +27,8 @@ namespace ngraph
         {
             namespace op
             {
+                /// \brief LoopKernel represents graphs consisting
+                /// of arithmetic operations that can be executed in the same loop
                 class LoopKernel : public ngraph::op::util::RequiresTensorViewArgs
                 {
                 public:
