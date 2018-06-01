@@ -32,7 +32,7 @@ union FloatUnion {
     uint32_t i;
 };
 
-string float_to_bit_string(float f)
+string float_to_bits(float f)
 {
     FloatUnion fu{f};
     stringstream ss;
@@ -40,7 +40,7 @@ string float_to_bit_string(float f)
     return ss.str();
 }
 
-float bit_string_to_float(const string& s)
+float bits_to_float(const string& s)
 {
     if (s.size() != 32)
     {
@@ -52,89 +52,108 @@ float bit_string_to_float(const string& s)
     return fu.f;
 }
 
-TEST(all_close_f, bit_string_conversion)
+// TEST(all_close_f, mantissa_24)
+// {
+//     float val0 = bits_to_float("00000000000000000000000000000000");
+//     float val_0 = bits_to_float("00000000000000000000000000000001");
+//     float val_1 = bits_to_float("00000000000000000000000000000010");
+//     float val_2 = bits_to_float("00000000000000000000000000000011");
+//     float val_3 = bits_to_float("00000000000000000000000000000100");
+//     float val_5 = bits_to_float("00000000000000000000000000000101");
+
+//     float val_0 = bits_to_float("10000000000000000000000000000000");
+//     float val_0 = bits_to_float("10000000000000000000000000000001");
+//     float val_1 = bits_to_float("10000000000000000000000000000010");
+//     float val_2 = bits_to_float("10000000000000000000000000000011");
+//     float val_3 = bits_to_float("10000000000000000000000000000100");
+//     float val_5 = bits_to_float("10000000000000000000000000000101");
+
+//     NGRAPH_INFO << val0;
+//     NGRAPH_INFO << val_0;
+//     NGRAPH_INFO << val_1;
+//     NGRAPH_INFO << val_2;
+//     NGRAPH_INFO << val_3;
+//     NGRAPH_INFO << val_5;
+
+//     NGRAPH_INFO << val_0;
+//     NGRAPH_INFO << val_0;
+//     NGRAPH_INFO << val_1;
+//     NGRAPH_INFO << val_2;
+//     NGRAPH_INFO << val_3;
+//     NGRAPH_INFO << val_5;
+
+//     NGRAPH_INFO << test::close_f(0.f, val0, 24);
+//     NGRAPH_INFO << test::close_f(0.f, val_0, 24);
+//     NGRAPH_INFO << test::close_f(0.f, val_1, 24);
+//     NGRAPH_INFO << test::close_f(0.f, val_2, 24);
+//     NGRAPH_INFO << test::close_f(0.f, val_3, 24);
+//     NGRAPH_INFO << test::close_f(0.f, val_5, 24);
+
+//     NGRAPH_INFO << test::close_f(0.f, val_0, 24);
+//     NGRAPH_INFO << test::close_f(0.f, val_0, 24);
+//     NGRAPH_INFO << test::close_f(0.f, val_1, 24);
+//     NGRAPH_INFO << test::close_f(0.f, val_2, 24);
+//     NGRAPH_INFO << test::close_f(0.f, val_3, 24);
+//     NGRAPH_INFO << test::close_f(0.f, val_5, 24);
+// }
+
+TEST(all_close_f, mantissa_8_near_n1)
 {
-    EXPECT_EQ(float_to_bit_string(8), "01000001000000000000000000000000");
-    EXPECT_EQ(bit_string_to_float("01000001000000000000000000000000"), 8);
-    EXPECT_EQ(float_to_bit_string(-8), "11000001000000000000000000000000");
-    EXPECT_EQ(bit_string_to_float("11000001000000000000000000000000"), -8);
-}
-
-TEST(all_close_f, mantissa_24)
-{
-    float val0 = bit_string_to_float("00000000000000000000000000000000");
-    float val1 = bit_string_to_float("00000000000000000000000000000001");
-    float val2 = bit_string_to_float("00000000000000000000000000000010");
-    float val3 = bit_string_to_float("00000000000000000000000000000011");
-    float val4 = bit_string_to_float("00000000000000000000000000000100");
-    float val5 = bit_string_to_float("00000000000000000000000000000101");
-
-    float val_0 = bit_string_to_float("10000000000000000000000000000000");
-    float val_1 = bit_string_to_float("10000000000000000000000000000001");
-    float val_2 = bit_string_to_float("10000000000000000000000000000010");
-    float val_3 = bit_string_to_float("10000000000000000000000000000011");
-    float val_4 = bit_string_to_float("10000000000000000000000000000100");
-    float val_5 = bit_string_to_float("10000000000000000000000000000101");
-
-    NGRAPH_INFO << val0;
-    NGRAPH_INFO << val1;
-    NGRAPH_INFO << val2;
-    NGRAPH_INFO << val3;
-    NGRAPH_INFO << val4;
-    NGRAPH_INFO << val5;
-
-    NGRAPH_INFO << val_0;
-    NGRAPH_INFO << val_1;
-    NGRAPH_INFO << val_2;
-    NGRAPH_INFO << val_3;
-    NGRAPH_INFO << val_4;
-    NGRAPH_INFO << val_5;
-
-    NGRAPH_INFO << test::close_f(0.f, val0, 24);
-    NGRAPH_INFO << test::close_f(0.f, val1, 24);
-    NGRAPH_INFO << test::close_f(0.f, val2, 24);
-    NGRAPH_INFO << test::close_f(0.f, val3, 24);
-    NGRAPH_INFO << test::close_f(0.f, val4, 24);
-    NGRAPH_INFO << test::close_f(0.f, val5, 24);
-
-    NGRAPH_INFO << test::close_f(0.f, val_0, 24);
-    NGRAPH_INFO << test::close_f(0.f, val_1, 24);
-    NGRAPH_INFO << test::close_f(0.f, val_2, 24);
-    NGRAPH_INFO << test::close_f(0.f, val_3, 24);
-    NGRAPH_INFO << test::close_f(0.f, val_4, 24);
-    NGRAPH_INFO << test::close_f(0.f, val_5, 24);
-}
-
-TEST(all_close_f, mantissa_8_close_zero)
-{
-    float val0 = bit_string_to_float("00000000000000000000000000000000");
-    float val1 = bit_string_to_float("00000000000001000000000000000000");
-    float val2 = bit_string_to_float("00000000000001000000000000000001");
-    float val3 = bit_string_to_float("00000000000010000000000000000000");
+    float val0 = bits_to_float("00000000000000000000000000000000");
+    float val_0 = bits_to_float("00000000000001000000000000000000");
+    float val_1 = bits_to_float("00000000000001000000000000000001");
+    float val_2 = bits_to_float("00000000000010000000000000000000");
 
     NGRAPH_INFO << test::close_f(val0, val0);
-    NGRAPH_INFO << test::close_f(val0, val1);
-    NGRAPH_INFO << test::close_f(val0, val2);
-    NGRAPH_INFO << test::close_f(val0, val3);
+    NGRAPH_INFO << test::close_f(val0, val_0);
+    NGRAPH_INFO << test::close_f(val0, val_1);
+    NGRAPH_INFO << test::close_f(val0, val_2);
 }
 
-TEST(all_close_f, mantissa_8_close_one)
+TEST(all_close_f, mantissa_8_near_1)
 {
-    // 1.f
-    float val0 = bit_string_to_float("00111111100000000000000000000000");
-    // Numbers close to 1.f+
-    float val1 = bit_string_to_float("00111111100001000000000000000000"); // 1.03125, close
-    float val2 = bit_string_to_float("00111111100001000000000000000001"); // 1.031250119, not close
-    // Numbers close to 1.f-
-    float val3 = bit_string_to_float("00111111011111000000000000000000"); // 0.984375, close
-    float val4 = bit_string_to_float("00111111011110111111111111111111"); // 0.9843749404, not close
+    // This test gives an exact bound when a number is considered to be near 1.f
+    //
+    // With mantissa_bits = 8, tolerance_bits = 2
+    //
+    //                           Add 1 at this bit to get upper bound
+    //                           Minus 1 at this bit to get lower bound
+    //                           |
+    //                           v
+    // 0 0 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+    // s e e e e e e e e m m m m m m m m m m m m m m m m m m m m m m m
+    //               =>|      8      |
+    //                           | 2 |<=
+    //
+    // [Upper bound]
+    // 0 0 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+    // +                         1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+    // ---------------------------------------------------------------
+    // 0 0 1 1 1 1 1 1 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+    //
+    // [Lower bound]
+    // 0 0 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+    // -                         1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+    // ---------------------------------------------------------------
+    // 0 0 1 1 1 1 1 1 0 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 
-    NGRAPH_INFO << "val " << setprecision(10) << val1;
-    NGRAPH_INFO << test::close_f(val0, val1);
-    NGRAPH_INFO << "val " << setprecision(10) << val2;
-    NGRAPH_INFO << test::close_f(val0, val2);
-    NGRAPH_INFO << "val " << setprecision(10) << val3;
-    NGRAPH_INFO << test::close_f(val0, val3);
-    NGRAPH_INFO << "val " << setprecision(10) << val4;
-    NGRAPH_INFO << test::close_f(val0, val4);
+    // 1.f, the ground-truth value
+    float expected_val = bits_to_float("00111111100000000000000000000000");
+    float computed_val;
+
+    // 1.03125f, upper bound
+    computed_val = bits_to_float("00111111100001000000000000000000");
+    EXPECT_TRUE(test::close_f(expected_val, computed_val, 8, 2));
+
+    // 1.031250119f, bigger than upper bound
+    computed_val = bits_to_float("00111111100001000000000000000001");
+    EXPECT_TRUE(!test::close_f(expected_val, computed_val, 8, 2));
+
+    // 0.984375f, lower bound
+    computed_val = bits_to_float("00111111011111000000000000000000");
+    EXPECT_TRUE(test::close_f(expected_val, computed_val, 8, 2));
+
+    // 0.9843749404f, smaller than lower bound
+    computed_val = bits_to_float("00111111011110111111111111111111");
+    EXPECT_TRUE(!test::close_f(expected_val, computed_val, 8, 2));
 }
