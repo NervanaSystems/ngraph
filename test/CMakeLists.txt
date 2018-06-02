@@ -33,6 +33,7 @@ set (SRC
     cse.cpp
     element_type.cpp
     file_util.cpp
+    all_close_f.cpp
     inliner.cpp
     input_output_assign.cpp
     main.cpp
