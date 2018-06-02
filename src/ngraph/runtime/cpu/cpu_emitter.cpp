@@ -378,38 +378,37 @@ namespace ngraph
 
                 auto mat_a = args[0];
                 auto mat_b = args[1];
+                auto mat_c = out[0];
                 const Shape& shape_a = mat_a.get_shape();
                 const Shape& shape_b = mat_b.get_shape(); 
 
-                // static const char* ctranspose = "cblas::Transpose::Transpose, ";
-                // static const char* cnotranspose = "cblas::Transpose::None, ";
-                static const char* ctranspose = "cblas::Transpose::Transpose";
-                static const char* cnotranspose = "cblas::Transpose::None";
+                static const char* cblas_transpose = "cblas::Transpose::Transpose";
+                static const char* cblas_no_transpose = "cblas::Transpose::None";
 
                 size_t m = shape_a[1];
                 size_t k = shape_a[2];
                 size_t n = shape_b[2];
                 size_t lda = std::max(1UL, k);
                 size_t ldb = std::max(1UL, n);
-                const char* transpose_a = cnotranspose;
-                const char* transpose_b = cnotranspose;
+                const char* transpose_a = cblas_no_transpose;
+                const char* transpose_b = cblas_no_transpose;
                 if (batch_dot->get_is_a_transposed())
                 {
-                    transpose_a = ctranspose;
+                    transpose_a = cblas_transpose;
                     m = shape_a[2];
                     k = shape_a[1];
                     lda = std::max(1UL, m);
                 }
                 if (batch_dot->get_is_b_transposed())
                 {
-                    transpose_b = ctranspose;
+                    transpose_b = cblas_transpose;
                     n = shape_b[1];
                     ldb = std::max(1UL, k);
                 }
                 size_t ldc = max(1UL, n);
-                size_t offset_a = m*k;
-                size_t offset_b = k*n;
-                size_t offset_c = m*n;
+                const size_t offset_a = m*k;
+                const size_t offset_b = k*n;
+                const size_t offset_c = m*n;
 
                 writer.block_begin();
 
@@ -422,7 +421,7 @@ namespace ngraph
                 //        << ", " << k << ",\n"
                 //        << "        1.0f, " << mat_a.get_name() << "+i*" << offset_a << ", " << lda << ", "
                 //        << mat_b.get_name() << "+i*" << offset_b << ", " << ldb << ", " << cbeta << ",\n"
-                //        << "        " << out[0].get_name() << "+i*" << offset_c << ", " << ldc 
+                //        << "        " << mat_c.get_name() << "+i*" << offset_c << ", " << ldc 
                 //        << ");\n";
                 // writer.block_end();
                 auto populate_array = [&writer](const std::string& var, size_t size, size_t offset) {
@@ -453,7 +452,7 @@ namespace ngraph
                 writer << "int64_t ldb_array[] = {" << ldb << "};\n";
                 writer << "float beta_array[] = {0.0f};\n";
                 writer << "std::vector<float*> c{";
-                populate_array(out[0].get_name(), group_size, offset_c);
+                populate_array(mat_c.get_name(), group_size, offset_c);
                 writer << "};\n";
                 writer << "float** c_array = &c[0];\n";
                 writer << "int64_t ldc_array[] = {" << ldc << "};\n";
