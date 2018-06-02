@@ -126,6 +126,7 @@
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
+#include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_concat_inputs.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
@@ -291,11 +292,17 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::ReluBackprop), &runtime::cpu::CPU_Emitter::emit<op::ReluBackprop>},
     {TI(ngraph::op::Rnn), &runtime::cpu::CPU_Emitter::emit<op::Rnn>},
     {TI(ngraph::op::Sigmoid), &runtime::cpu::CPU_Emitter::emit<op::Sigmoid>},
+    {TI(ngraph::op::SigmoidMultiply), &runtime::cpu::CPU_Emitter::emit<op::SigmoidMultiply>},
+    {TI(ngraph::op::SigmoidMultiplyBackprop),
+     &runtime::cpu::CPU_Emitter::emit<op::SigmoidMultiplyBackprop>},
     {TI(ngraph::op::Softmax), &runtime::cpu::CPU_Emitter::emit<op::Softmax>},
     {TI(ngraph::op::SigmoidBackprop), &runtime::cpu::CPU_Emitter::emit<op::SigmoidBackprop>},
     {TI(ngraph::op::And), &runtime::cpu::CPU_Emitter::emit<op::And>},
     {TI(ngraph::op::Or), &runtime::cpu::CPU_Emitter::emit<op::Or>},
 };
+
+const size_t runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction::s_memory_pool_alignment =
+    4096;
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
@@ -324,6 +331,9 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
     ngraph::pass::Manager pass_manager;
 
+    //nv_cwi is required only by some frontends
+    //in which case they should run this pass(CPUWorkspaceInsertion) explicitly
+    NodeVector nv_cwi;
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
@@ -332,7 +342,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
@@ -795,6 +805,32 @@ using namespace ngraph::runtime;
                     {
                         writer << " || t_en[" << tensor_index_map[input_name] << "]";
                     }
+                }
+
+                auto computes_output = [&]() {
+                    if (std::dynamic_pointer_cast<ngraph::op::Result>(node))
+                    {
+                        return true;
+                    }
+                    // Check if node feeds a result node that has been copy eliminated
+                    for (const descriptor::Output& output : node->get_outputs())
+                    {
+                        for (const descriptor::Input* input : output.get_inputs())
+                        {
+                            auto res =
+                                std::dynamic_pointer_cast<ngraph::op::Result>(input->get_node());
+                            if (res && !res->needs_copy())
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                };
+                // Always enable nodes computing output tensors
+                if (computes_output())
+                {
+                    writer << " || 1";
                 }
                 writer << ") {\n";
                 writer.indent++;

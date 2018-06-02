@@ -14,33 +14,26 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <algorithm>
-#include <vector>
+#include <fstream>
 
-#include "ngraph/shape.hpp"
+#include "ngraph/file_util.hpp"
+#include "ngraph/pass/serialize.hpp"
+#include "ngraph/serializer.hpp"
+#include "ngraph/util.hpp"
+#include "nlohmann/json.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-size_t ngraph::shape_size(const Shape& shape)
+pass::Serialization::Serialization(const string& name)
+    : m_name{name}
 {
-    size_t size = 1;
-    for (auto d : shape)
-    {
-        size *= d;
-    }
-    return size;
 }
 
-Strides ngraph::row_major_strides(const Shape& shape)
+bool pass::Serialization::run_on_module(vector<shared_ptr<Function>>& functions)
 {
-    Strides strides;
-    size_t s = 1;
-    for (auto d = shape.rbegin(); d != shape.rend(); d++)
-    {
-        strides.push_back(s);
-        s *= *d;
-    }
-    reverse(strides.begin(), strides.end());
-    return strides;
+    //serializing the outermost functions
+    //also implicitly serializes any inner functions
+    serialize(m_name, functions.at(0), 4);
+    return false;
 }

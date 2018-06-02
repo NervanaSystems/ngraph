@@ -30,7 +30,7 @@
 using namespace ngraph;
 using namespace std;
 
-void runtime::gpu::print_gpu_f32_tensor(void* p, size_t element_count, size_t element_size)
+void runtime::gpu::print_gpu_f32_tensor(const void* p, size_t element_count, size_t element_size)
 {
     std::vector<float> local(element_count);
     size_t size_in_bytes = element_size * element_count;
@@ -43,10 +43,14 @@ void runtime::gpu::check_cuda_errors(CUresult err)
     assert(err == CUDA_SUCCESS);
 }
 
-void* runtime::gpu::create_gpu_buffer(size_t buffer_size)
+void* runtime::gpu::create_gpu_buffer(size_t buffer_size, const void* data)
 {
     void* allocated_buffer_pool;
     cudaMalloc(static_cast<void**>(&allocated_buffer_pool), buffer_size);
+    if (data)
+    {
+        runtime::gpu::cuda_memcpyHtD(allocated_buffer_pool, data, buffer_size);
+    }
     return allocated_buffer_pool;
 }
 
@@ -58,17 +62,17 @@ void runtime::gpu::free_gpu_buffer(void* buffer)
     }
 }
 
-void runtime::gpu::cuda_memcpyDtD(void* dst, void* src, size_t buffer_size)
+void runtime::gpu::cuda_memcpyDtD(void* dst, const void* src, size_t buffer_size)
 {
     cudaMemcpy(dst, src, buffer_size, cudaMemcpyDeviceToDevice);
 }
 
-void runtime::gpu::cuda_memcpyHtD(void* dst, void* src, size_t buffer_size)
+void runtime::gpu::cuda_memcpyHtD(void* dst, const void* src, size_t buffer_size)
 {
     cudaMemcpy(dst, src, buffer_size, cudaMemcpyHostToDevice);
 }
 
-void runtime::gpu::cuda_memcpyDtH(void* dst, void* src, size_t buffer_size)
+void runtime::gpu::cuda_memcpyDtH(void* dst, const void* src, size_t buffer_size)
 {
     cudaMemcpy(dst, src, buffer_size, cudaMemcpyDeviceToHost);
 }

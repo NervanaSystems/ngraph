@@ -103,6 +103,7 @@
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
+#include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -380,28 +381,30 @@ namespace ngraph
                 const Shape& shape_a = mat_a.get_shape();
                 const Shape& shape_b = mat_b.get_shape(); 
 
-                static const char* ctranspose = "cblas::Transpose::Transpose, ";
-                static const char* cnotranspose = "cblas::Transpose::None, ";
+                // static const char* ctranspose = "cblas::Transpose::Transpose, ";
+                // static const char* cnotranspose = "cblas::Transpose::None, ";
+                static const char* ctranspose = "cblas::Transpose::Transpose";
+                static const char* cnotranspose = "cblas::Transpose::None";
 
                 size_t m = shape_a[1];
                 size_t k = shape_a[2];
                 size_t n = shape_b[2];
                 size_t lda = std::max(1UL, k);
                 size_t ldb = std::max(1UL, n);
-                const char* tranpose_a = cnotranspose;
-                const char* tranpose_b = cnotranspose;
+                const char* transpose_a = cnotranspose;
+                const char* transpose_b = cnotranspose;
                 if (batch_dot->get_is_a_transposed())
                 {
-                    tranpose_a = ctranspose;
+                    transpose_a = ctranspose;
                     m = shape_a[2];
                     k = shape_a[1];
-                    size_t lda = std::max(1UL, m);
+                    lda = std::max(1UL, m);
                 }
                 if (batch_dot->get_is_b_transposed())
                 {
-                    tranpose_b = ctranspose;
+                    transpose_b = ctranspose;
                     n = shape_b[1];
-                    size_t ldb = std::max(1UL, k);
+                    ldb = std::max(1UL, k);
                 }
                 size_t ldc = max(1UL, n);
                 size_t offset_a = m*k;
@@ -410,20 +413,56 @@ namespace ngraph
 
                 writer.block_begin();
 
-                const char* cbeta = "0.0f";
+                const size_t group_count = 1;
+                const size_t group_size = shape_a[0];
+                // writer << "for (int i = 0; i < " << shape_a[0] << "; ++i)"; 
+                // writer.block_begin();
+                // writer << "cblas::cblas_sgemm("
+                //        << "cblas::Layout::RowMajor, " << tranpose_a << tranpose_b << m << ", " << n
+                //        << ", " << k << ",\n"
+                //        << "        1.0f, " << mat_a.get_name() << "+i*" << offset_a << ", " << lda << ", "
+                //        << mat_b.get_name() << "+i*" << offset_b << ", " << ldb << ", " << cbeta << ",\n"
+                //        << "        " << out[0].get_name() << "+i*" << offset_c << ", " << ldc 
+                //        << ");\n";
+                // writer.block_end();
+                auto populate_array = [&writer](const std::string& var, size_t size, size_t offset) {
+                    for (size_t i = 0; i < size; ++i) {
+                        if (i < size-1) {
+                            writer << var << "+" << i * offset << ", ";
+                        }
+                        else {
+                            writer << var << "+" << i * offset;
+                        }
+                    }
+                };
+                writer << "cblas::Transpose transa_array[] = {" << transpose_a << "};\n";
+                writer << "cblas::Transpose transb_array[] = {" << transpose_b << "};\n";
+                writer << "int64_t m_array[] = {" << m << "};\n";
+                writer << "int64_t n_array[] = {" << n << "};\n";
+                writer << "int64_t k_array[] = {" << k << "};\n";
+                writer << "float alpha_array[] = {1.0f};\n";
+                writer << "std::vector<const float*> a{";
+                populate_array(mat_a.get_name(), group_size, offset_a);
+                writer << "};\n";
+                writer << "const float** a_array = &a[0];\n";
+                writer << "int64_t lda_array[] = {" << lda << "};\n";
+                writer << "std::vector<const float*> b{";
+                populate_array(mat_b.get_name(), group_size, offset_b);
+                writer << "};\n";
+                writer << "const float** b_array = &b[0];\n";
+                writer << "int64_t ldb_array[] = {" << ldb << "};\n";
+                writer << "float beta_array[] = {0.0f};\n";
+                writer << "std::vector<float*> c{";
+                populate_array(out[0].get_name(), group_size, offset_c);
+                writer << "};\n";
+                writer << "float** c_array = &c[0];\n";
+                writer << "int64_t ldc_array[] = {" << ldc << "};\n";
+                writer << "int64_t group_size[] = {" << group_size << "};\n";
 
-                // writer << "for (int i = 0; i < " << shape_size(shape_a) << "; ++i)"; 
-                writer << "for (int i = 0; i < " << shape_a[0] << "; ++i)"; 
-                writer.block_begin();
-                // writer << out[0].get_name() << "[i] = " <<  mat_b.get_name() + "[i];";
-                writer << "cblas::cblas_sgemm("
-                       << "cblas::Layout::RowMajor, " << tranpose_a << tranpose_b << m << ", " << n
-                       << ", " << k << ",\n"
-                       << "        1.0f, " << mat_a.get_name() << "+i*" << offset_a << ", " << lda << ", "
-                       << mat_b.get_name() << "+i*" << offset_b << ", " << ldb << ", " << cbeta << ",\n"
-                       << "        " << out[0].get_name() << "+i*" << offset_c << ", " << ldc 
-                       << ");\n";
-                writer.block_end();
+                writer << "cblas_sgemm_batch(cblas::Layout::RowMajor, ";
+                writer << "transa_array, transb_array, m_array, n_array, k_array, \n";
+                writer << "alpha_array, a_array, lda_array, b_array, ldb_array, beta_array, \n";
+                writer << "c_array, ldc_array, " << group_count << ", group_size);\n";
                 writer.block_end();
             }
 
@@ -3950,6 +3989,158 @@ namespace ngraph
 
                 writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                        << to_string(sigmoid_index) << ");\n";
+            }
+
+            std::string
+                generate_sigmoid_mul_func(const ngraph::op::SigmoidMultiply::FunctionType type,
+                                          const std::string& input,
+                                          const std::string& out_numer,
+                                          const std::string& out_denom,
+                                          bool derivative)
+            {
+                std::string func_block;
+                switch (type)
+                {
+                case ngraph::op::SigmoidMultiply::FunctionType::Logistic:
+                    func_block = "auto e_x = exp(" + input + ");\n";
+                    func_block += out_numer + " = e_x;\n";
+                    func_block += out_denom + " = e_x+1;\n";
+                    if (derivative)
+                    {
+                        func_block += "d_" + out_numer + " = " + out_numer + ";\n";
+                        func_block +=
+                            "d_" + out_denom + " = " + out_denom + " * " + out_denom + ";\n";
+                    }
+                    break;
+                case ngraph::op::SigmoidMultiply::FunctionType::Tanh:
+                    func_block = "auto e_2x = exp(2.0*" + input + ");\n";
+                    func_block += out_numer + " = e_2x-1;\n";
+                    func_block += out_denom + " = e_2x+1;\n";
+                    if (derivative)
+                    {
+                        func_block += "d_" + out_numer + " = 4.0*e_2x;\n";
+                        func_block +=
+                            "d_" + out_denom + " = " + out_denom + " * " + out_denom + ";\n";
+                    }
+                    break;
+                case ngraph::op::SigmoidMultiply::FunctionType::Identity:
+                    func_block = out_numer + " = " + input + ";\n";
+                    func_block += out_denom + " = 1;\n";
+                    if (derivative)
+                    {
+                        func_block += "d_" + out_numer + " = 1;\n";
+                        func_block += "d_" + out_denom + " = 1;\n";
+                    }
+                    break;
+                }
+                if (func_block.empty())
+                {
+                    throw ngraph_error(
+                        "generate_sigmoid_mul_func input function type not supported");
+                }
+                return func_block;
+            }
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::SigmoidMultiply)
+            {
+                auto sigmoid_mul = static_cast<const ngraph::op::SigmoidMultiply*>(node);
+                std::string numer_0 = "numer_0";
+                std::string denom_0 = "denom_0";
+                std::string numer_1 = "numer_1";
+                std::string denom_1 = "denom_1";
+                std::string input_0_func_string =
+                    generate_sigmoid_mul_func(sigmoid_mul->get_input_func_type(0),
+                                              args[0].get_name() + "[i]",
+                                              numer_0,
+                                              denom_0,
+                                              false);
+                std::string input_1_func_string =
+                    generate_sigmoid_mul_func(sigmoid_mul->get_input_func_type(1),
+                                              args[1].get_name() + "[i]",
+                                              numer_1,
+                                              denom_1,
+                                              false);
+
+                writer.block_begin();
+                writer << "#pragma omp parallel for simd\n";
+                writer << "for (size_t i=0; i<" << out[0].get_size() << "; i++)\n";
+                writer.block_begin();
+                writer << "float " << numer_0 << ";\n";
+                writer << "float " << denom_0 << ";\n";
+                writer.block_begin();
+                writer << input_0_func_string;
+                writer.block_end();
+                writer << "float " << numer_1 << ";\n";
+                writer << "float " << denom_1 << ";\n";
+                writer.block_begin();
+                writer << input_1_func_string;
+                writer.block_end();
+                writer << out[0].get_name()
+                       << "[i] = (" + numer_0 + " * " + numer_1 + ") / (" + denom_0 + " * " +
+                              denom_1 + ");\n";
+                writer.block_end();
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::SigmoidMultiplyBackprop)
+            {
+                // math: we have sigmoid functions f(x) and g(y) multiplied, z = f(x) * g(y)
+                // dz/dx = dz/df * df/dx = g(y) * f'(x)
+                // dz/dy = dz/dg * dg/dy = f(x) * g'(y)
+                auto sigmoid_mul_backprop =
+                    static_cast<const ngraph::op::SigmoidMultiplyBackprop*>(node);
+                const TensorViewWrapper& data_0 = args[0];
+                const TensorViewWrapper& data_1 = args[1];
+                const TensorViewWrapper& delta = args[2];
+                const TensorViewWrapper& input_0_delta = out[0];
+                const TensorViewWrapper& input_1_delta = out[1];
+                std::string numer_0 = "numer_0";
+                std::string denom_0 = "denom_0";
+                std::string numer_1 = "numer_1";
+                std::string denom_1 = "denom_1";
+                std::string d_numer_0 = "d_numer_0";
+                std::string d_denom_0 = "d_denom_0";
+                std::string d_numer_1 = "d_numer_1";
+                std::string d_denom_1 = "d_denom_1";
+                std::string input_0_func_string =
+                    generate_sigmoid_mul_func(sigmoid_mul_backprop->get_input_func_type(0),
+                                              data_0.get_name() + "[i]",
+                                              numer_0,
+                                              denom_0,
+                                              true);
+                std::string input_1_func_string =
+                    generate_sigmoid_mul_func(sigmoid_mul_backprop->get_input_func_type(1),
+                                              data_1.get_name() + "[i]",
+                                              numer_1,
+                                              denom_1,
+                                              true);
+                writer.block_begin();
+                writer << "#pragma omp parallel for simd\n";
+                writer << "for (size_t i=0; i<" << input_0_delta.get_size() << "; i++)\n";
+                writer.block_begin();
+                writer << "float " << numer_0 << ";\n";
+                writer << "float " << denom_0 << ";\n";
+                writer << "float " << d_numer_0 << ";\n";
+                writer << "float " << d_denom_0 << ";\n";
+                writer.block_begin();
+                writer << input_0_func_string;
+                writer.block_end();
+                writer << "float " << numer_1 << ";\n";
+                writer << "float " << denom_1 << ";\n";
+                writer << "float " << d_numer_1 << ";\n";
+                writer << "float " << d_denom_1 << ";\n";
+                writer.block_begin();
+                writer << input_1_func_string;
+                writer.block_end();
+                writer << input_0_delta.get_name()
+                       << "[i] = " + delta.get_name() + "[i]*(" + numer_1 + "*" + d_numer_0 +
+                              ")/(" + denom_1 + "*" + d_denom_0 + ");\n";
+                writer << input_1_delta.get_name()
+                       << "[i] = " + delta.get_name() + "[i]*(" + numer_0 + "*" + d_numer_1 +
+                              ")/(" + denom_0 + "*" + d_denom_1 + ");\n";
+                writer.block_end();
+                writer.block_end();
             }
 
             template <>

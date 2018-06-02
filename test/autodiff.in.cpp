@@ -1364,7 +1364,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_tan)
     auto pi = 3.14159f;
 
     // Stay away from the asymptotes at 6 and 12 o'clock.
-    auto slop = 0.1f;
+    auto slop = 0.2f;
     test::Uniform<float> rng_r(-pi / 2 + slop, pi / 2 - slop);
     test::Uniform<float> rng_l(pi / 2 + slop, (3 * pi) / 2 - slop);
 
