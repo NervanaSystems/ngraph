@@ -22,7 +22,7 @@
 #include <typeindex>
 #include <unordered_map>
 
-#include "cpu_rnn_mat_fusion.hpp"
+#include "cpu_mat_fusion.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
@@ -204,78 +204,67 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
 #define TI(x) std::type_index(typeid(x))
 
-std::shared_ptr<Node> identify_batch_dot(const std::shared_ptr<Node>& n)
+std::shared_ptr<Node> fuse_batch_dot(const std::shared_ptr<Node>& n)
 {
-    auto reshape_pred = [](std::shared_ptr<Node> n) {
-        return std::dynamic_pointer_cast<op::Reshape>(n) != nullptr;
+    auto reshape_pred = [](const std::shared_ptr<Node>& r) {
+        return std::dynamic_pointer_cast<op::Reshape>(r) != nullptr;
     };
 
-    auto param_0 = std::make_shared<pattern::op::Label>(element::f32, Shape{3,2,2});
-    auto slice_0 = std::make_shared<op::Slice>(param_0, Coordinate{0,0,0}, Coordinate{1,2,2});
-    auto skip_0 = std::make_shared<pattern::op::Skip>(slice_0, reshape_pred);
-    auto reshape_0 = std::make_shared<op::Reshape>(skip_0, AxisVector{0, 1, 2}, Shape{2, 2});
-    // auto skip_0 = std::make_shared<op::Reshape>(reshape_0, AxisVector{0, 1}, Shape{2, 2});
+    const int num_op_branches = 2;
+    std::shared_ptr<pattern::op::Label> input[num_op_branches];
+    std::shared_ptr<op::Reshape> reshape[num_op_branches];
+    for (int i = 0; i < num_op_branches; ++i) {
+        input[i] = std::make_shared<pattern::op::Label>(element::f32, Shape{3,2,2});
+        auto slice = std::make_shared<op::Slice>(input[i], Coordinate{0,0,0}, Coordinate{1,2,2});
+        auto skip = std::make_shared<pattern::op::Skip>(slice, reshape_pred);
+        reshape[i] = std::make_shared<op::Reshape>(skip, AxisVector{0, 1, 2}, Shape{2, 2});
+    }
+    auto dot = std::make_shared<op::Dot>(reshape[0], reshape[1]);
+    auto final_reshape = std::make_shared<op::Reshape>(dot, AxisVector{0, 1}, Shape{1,2,2});
 
-    auto param_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{3,2,2});
-    auto slice_1 = std::make_shared<op::Slice>(param_1, Coordinate{0,0,0}, Coordinate{1,2,2});
-    auto skip_1 = std::make_shared<pattern::op::Skip>(slice_1, reshape_pred);
-    auto reshape_1 = std::make_shared<op::Reshape>(skip_1, AxisVector{0, 1, 2}, Shape{2, 2});
+    auto matcher = std::make_shared<pattern::Matcher>(final_reshape);
+    std::shared_ptr<Node> fuse_input[num_op_branches];
+    bool transpose[num_op_branches] = {false, false};
+    const int num_expected_reshape_with_trans = 3;
 
-    // auto dot = std::make_shared<op::Dot>(skip_0, skip_1);
-    auto dot = std::make_shared<op::Dot>(reshape_0, reshape_1);
-    auto label_0 = std::make_shared<pattern::op::Label>(element::f32, Shape{2,2});
-    // auto dot = std::make_shared<op::Dot>(label_0, skip_0);
-    // auto dot = std::make_shared<op::Dot>(label_0, reshape_0);
-    // auto dot = std::make_shared<op::Dot>(reshape_1, label_0);
-    auto reshape = std::make_shared<op::Reshape>(dot, AxisVector{0, 1}, Shape{1,2,2});
-    // auto reshape = std::make_shared<op::Reshape>(param_0, AxisVector{0, 1, 2}, Shape{3,3,2});
-
-    auto matcher = std::make_shared<pattern::Matcher>(reshape);
-    std::shared_ptr<Node> input_nodes[2];
-    bool transpose[] = {false, false};
+    // check each input arg matches the pattern
     for (auto arg : n->get_arguments()) {
-        std::cout << "arg " << arg->get_friendly_name() << std::endl;
         if (matcher->match(arg)) {
             auto pattern_map = matcher->get_pattern_map();
-            std::cout << "found match" << std::endl;
-            std::cout << "param_0: " << pattern_map[param_0]->get_friendly_name() << std::endl;
-            std::cout << "param_1: " << pattern_map[param_1]->get_friendly_name() << std::endl;
-            auto iter = matcher->get_match_root();
-            int reshape_count_0 = 0;
-            do {
-                std::cout << "iter " << iter->get_friendly_name() << std::endl;
-                if (std::dynamic_pointer_cast<op::Reshape>(iter) != nullptr) {
-                    ++reshape_count_0;
-                }
-                iter = iter->get_argument(0);
-            } while (std::dynamic_pointer_cast<op::Parameter>(iter) == nullptr);
-            int reshape_count_1 = 0;
-            iter = matcher->get_match_root();
-            do {
-                std::cout << "iter " << iter->get_friendly_name() << std::endl;
-                if (std::dynamic_pointer_cast<op::Reshape>(iter) != nullptr) {
-                    ++reshape_count_1;
-                }
-                iter = iter->get_input_size() > 1 ? iter->get_argument(1) : iter->get_argument(0);
-            } while (std::dynamic_pointer_cast<op::Parameter>(iter) == nullptr);
-            std::cout << "skip_0: " << reshape_count_0 << std::endl;
-            std::cout << "skip_1: " << reshape_count_1 << std::endl;
-            if (reshape_count_0 == 3) {
-                transpose[0] = true;
-            }  
-            if (reshape_count_1 == 3) {
-                transpose[1] = true;
-            }  
-            if (input_nodes[0] == nullptr) {
-                input_nodes[0] = pattern_map[param_0];
+            int reshape_count[num_op_branches] = {0, 0};
+            // we found a match, determine whether we have to transpose for each input by
+            // counting the number of reshapes in each branch, if transpose is applied, there 
+            // should be 3 reshapes.
+            for (int i = 0; i < num_op_branches; ++i) {
+                auto iter = matcher->get_match_root();
+                auto& input_node = pattern_map[input[i]];
+                do {
+                    if (std::dynamic_pointer_cast<op::Reshape>(iter) != nullptr) {
+                        ++reshape_count[i];
+                        if (reshape_count[i] == num_expected_reshape_with_trans) {
+                            transpose[i] = true;
+                            break;
+                        }
+                    }
+                    // branch to either input 0 or 1 depending on which one we are traversing
+                    iter = iter->get_input_size() > 1 ? iter->get_argument(i) : iter->get_argument(0);
+                } while (iter != input_node);
             }
-            if (input_nodes[1] == nullptr) {
-                input_nodes[1] = pattern_map[param_1];
+            // keep track of the input data, make sure they all match
+            for (int i = 0; i < num_op_branches; ++i) {
+                auto& input_node = pattern_map[input[i]];
+                if (fuse_input[i] == nullptr) {
+                    fuse_input[i] = input_node;
+                }
+                // found multiple param nodes
+                else if (fuse_input[i] != input_node) {
+                    return {nullptr};
+                }
             }
         }
     } 
-    if (input_nodes[0] && input_nodes[1]) {
-        return std::make_shared<op::BatchDot>(input_nodes[0], input_nodes[1], transpose[0], transpose[1]);
+    if (fuse_input[0] && fuse_input[1]) {
+        return std::make_shared<op::BatchDot>(fuse_input[0], fuse_input[1], transpose[0], transpose[1]);
     }
     return {nullptr};
 }
@@ -288,12 +277,11 @@ bool runtime::cpu::pass::CPUBatchDotFusion::run_on_function(std::shared_ptr<Func
     for (auto n : func->get_ordered_ops())
     {
         const Node& node = *n;
-        std::cout << "node " << n->get_friendly_name() << std::endl;
         if (TI(node) == TI(op::Concat)) {
-            std::cout << "found concat" << std::endl; 
-            auto fused_node = identify_batch_dot(n);
+            auto fused_node = fuse_batch_dot(n);
             if (fused_node) {
                 func->replace_node(n, fused_node);
+                modified = true;
             }
         }
     }
