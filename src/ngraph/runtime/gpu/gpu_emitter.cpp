@@ -734,50 +734,18 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     return;
                 }
 
-                // broadcast axes size is 1, or can be group to 1 (consecutive axes, like 01 or 12 or 123 etc)
-                vector<int> axes_v;
-                std::copy(axes.begin(), axes.end(), std::back_inserter(axes_v));
-                std::sort(axes_v.begin(), axes_v.end());
-                bool is_one_axes = true;
-                if (axes.size() != 1)
-                {
-                    for (int i = 1; i < axes_v.size(); i++)
-                    {
-                        if (axes_v[i] != axes_v[i - 1] + 1)
-                        {
-                            is_one_axes = false;
-                            break;
-                        }
-                    }
-                }
-                if (is_one_axes)
-                {
-                    int repeat_times = 1;
-                    for (int i = 0; i < axes_v.size(); i++)
-                    {
-                        repeat_times *= result_shape[axes_v[i]];
-                    }
+                auto& cuda_emitter =
+                    external_function->get_primitive_emitter()->get_cuda_emitter();
 
-                    int repeat_size = 1;
-                    for (int i = *axes_v.rbegin() + 1; i < result_shape.size(); i++)
-                    {
-                        repeat_size *= result_shape[i];
-                    }
-
-                    writer.block_begin("  // " + node->get_name());
-                    writer << "runtime::gpu::emit_broadcast(\"" << node->description() << "\", {\""
-                           << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
-                           << ", ctx"
-                           << ", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
-                           << out[0].get_name() << ")"
-                           << ", " << repeat_size << ", " << repeat_times << ", "
-                           << out[0].get_size() << ");\n";
-                    writer.block_end();
-                }
-                else
-                {
-                    throw std::runtime_error(node->get_name() + " is not implemented.");
-                }
+                auto bcast_index =
+                    cuda_emitter->build_broadcast(external_function->ctx().get(),
+                                                  {{args[0].get_type(), out[0].get_type()}},
+                                                  result_shape,
+                                                  axes);
+                writer << "gpu::invoke_primitive(ctx, " << bcast_index << ", ";
+                writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                writer << ");\n";
             }
 
             template <>

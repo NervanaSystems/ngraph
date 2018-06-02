@@ -40,7 +40,8 @@ namespace ngraph
 
                 static void get_broadcast_op(codegen::CodeWriter& writer,
                                              const std::string& name,
-                                             const std::array<std::string, 2>& dtypes);
+                                             const std::array<std::string, 2>& dtypes,
+                                             const int rank);
 
                 static void get_concat_op(codegen::CodeWriter& writer,
                                           const std::string& name,
@@ -79,6 +80,15 @@ namespace ngraph
                                               const std::vector<std::string>& dtypes);
 
                 static void add_pod_typedefs(codegen::CodeWriter& writer);
+
+                static std::string reduce_coordinate_transform_helper(codegen::CodeWriter& writer,
+                                                                      std::string i_thread_index,
+                                                                      std::string i_strides,
+                                                                      std::string i_stride_magic,
+                                                                      std::string i_stride_shift,
+                                                                      std::string i_reduced_strides,
+                                                                      std::string o_coordinates,
+                                                                      int rank);
             };
         }
     }

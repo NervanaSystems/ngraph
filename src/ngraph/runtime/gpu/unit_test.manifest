@@ -1,8 +1,6 @@
 abc_int64
 abc_tbb
 aliased_output
-backwards_broadcast0
-backwards_broadcast1
 backwards_concat_axis_0
 backwards_concat_axis_1
 backwards_concat_vector
@@ -29,11 +27,8 @@ backwards_tan
 backwards_tanh
 batch_norm_one_output
 batch_norm_three_outputs
-broadcast_vector_rowwise_int64
-broadcast_vector_rowwise_reversed
 computation_reuse
 concat_matrix_int64
-constant_broadcast
 constant_equality_bool
 convolution_2d_1item_1o1i_data_dilated
 convolution_2d_1item_2o1i_data_dilated
