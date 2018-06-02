@@ -89,7 +89,6 @@ namespace ngraph
                                        GPUShape result_shape,
                                        const AxisSet& bcast_axes);
 
-
             private:
                 CUDAEmitter(GPUPrimitiveEmitter* emitter);
                 void print_tensor_from_gpu(codegen::CodeWriter& writer,

@@ -734,8 +734,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     return;
                 }
 
-                auto& cuda_emitter =
-                    external_function->get_primitive_emitter()->get_cuda_emitter();
+                auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
 
                 auto bcast_index =
                     cuda_emitter->build_broadcast(external_function->ctx().get(),
@@ -1894,12 +1893,11 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         auto& cudnn_emitter =
                             external_function->get_primitive_emitter()->get_cudnn_emitter();
 
-                        softmax_index =
-                            cudnn_emitter->build_softmax(external_function->ctx().get(),
-                                                         CUDNN_SOFTMAX_FAST,
-                                                         CUDNN_SOFTMAX_MODE_INSTANCE,
-                                                         CUDNNEmitter::Prop::Forward,
-                                                         tensor_shape);
+                        softmax_index = cudnn_emitter->build_softmax(external_function->ctx().get(),
+                                                                     CUDNN_SOFTMAX_FAST,
+                                                                     CUDNN_SOFTMAX_MODE_INSTANCE,
+                                                                     CUDNNEmitter::Prop::Forward,
+                                                                     tensor_shape);
                     }
 
                     writer << "gpu::invoke_primitive(ctx, " << softmax_index << ", ";

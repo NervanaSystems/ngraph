@@ -7563,22 +7563,19 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_axis_3d)
     auto d4 = expf(-50) + expf(-5);
     auto d5 = expf(-60) + expf(-6);
 
-
     backend->call(f, {result}, {a});
-    vector<float> expected{
-        expf(-10) / d0,
-            expf(-20) / d1,
-            expf(-30) / d2,
-            expf(-40) / d3,
-            expf(-50) / d4,
-            expf(-60) / d5,
-            expf(-1) / d0,
-            expf(-2) / d1,
-            expf(-3) / d2,
-            expf(-4) / d3,
-            expf(-5) / d4,
-            expf(-6) / d5
-            };
+    vector<float> expected{expf(-10) / d0,
+                           expf(-20) / d1,
+                           expf(-30) / d2,
+                           expf(-40) / d3,
+                           expf(-50) / d4,
+                           expf(-60) / d5,
+                           expf(-1) / d0,
+                           expf(-2) / d1,
+                           expf(-3) / d2,
+                           expf(-4) / d3,
+                           expf(-5) / d4,
+                           expf(-6) / d5};
 
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }
@@ -7600,11 +7597,11 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_axis)
 
     backend->call(f, {result}, {a});
     vector<float> expected{expf(-10) / d0,
-            expf(-20) / d0,
-            expf(-30) / d0,
-            expf(-40) / d1,
-            expf(-50) / d1,
-            expf(-60) / d1};
+                           expf(-20) / d0,
+                           expf(-30) / d0,
+                           expf(-40) / d1,
+                           expf(-50) / d1,
+                           expf(-60) / d1};
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }
 
@@ -7626,11 +7623,11 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_axis_2)
 
     backend->call(f, {result}, {a});
     vector<float> expected{expf(-10) / d0,
-            expf(-20) / d1,
-            expf(-30) / d2,
-            expf(-40) / d0,
-            expf(-50) / d1,
-            expf(-60) / d2};
+                           expf(-20) / d1,
+                           expf(-30) / d2,
+                           expf(-40) / d0,
+                           expf(-50) / d1,
+                           expf(-60) / d2};
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }
 
