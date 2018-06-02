@@ -213,14 +213,16 @@ std::shared_ptr<Node> fuse_batch_dot(const std::shared_ptr<Node>& n)
     const int num_op_branches = 2;
     std::shared_ptr<pattern::op::Label> input[num_op_branches];
     std::shared_ptr<op::Reshape> reshape[num_op_branches];
-    for (int i = 0; i < num_op_branches; ++i) {
-        input[i] = std::make_shared<pattern::op::Label>(element::f32, Shape{3,2,2});
-        auto slice = std::make_shared<op::Slice>(input[i], Coordinate{0,0,0}, Coordinate{1,2,2});
+    for (int i = 0; i < num_op_branches; ++i)
+    {
+        input[i] = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 2, 2});
+        auto slice =
+            std::make_shared<op::Slice>(input[i], Coordinate{0, 0, 0}, Coordinate{1, 2, 2});
         auto skip = std::make_shared<pattern::op::Skip>(slice, reshape_pred);
         reshape[i] = std::make_shared<op::Reshape>(skip, AxisVector{0, 1, 2}, Shape{2, 2});
     }
     auto dot = std::make_shared<op::Dot>(reshape[0], reshape[1]);
-    auto final_reshape = std::make_shared<op::Reshape>(dot, AxisVector{0, 1}, Shape{1,2,2});
+    auto final_reshape = std::make_shared<op::Reshape>(dot, AxisVector{0, 1}, Shape{1, 2, 2});
 
     auto matcher = std::make_shared<pattern::Matcher>(final_reshape);
     std::shared_ptr<Node> fuse_input[num_op_branches];
@@ -228,47 +230,58 @@ std::shared_ptr<Node> fuse_batch_dot(const std::shared_ptr<Node>& n)
     const int num_expected_reshape_with_trans = 3;
 
     // check each input arg matches the pattern
-    for (auto arg : n->get_arguments()) {
-        if (matcher->match(arg)) {
+    for (auto arg : n->get_arguments())
+    {
+        if (matcher->match(arg))
+        {
             auto pattern_map = matcher->get_pattern_map();
             int reshape_count[num_op_branches] = {0, 0};
             // we found a match, determine whether we have to transpose for each input by
-            // counting the number of reshapes in each branch, if transpose is applied, there 
+            // counting the number of reshapes in each branch, if transpose is applied, there
             // should be 3 reshapes.
-            for (int i = 0; i < num_op_branches; ++i) {
+            for (int i = 0; i < num_op_branches; ++i)
+            {
                 auto iter = matcher->get_match_root();
                 auto& input_node = pattern_map[input[i]];
-                do {
-                    if (std::dynamic_pointer_cast<op::Reshape>(iter) != nullptr) {
+                do
+                {
+                    if (std::dynamic_pointer_cast<op::Reshape>(iter) != nullptr)
+                    {
                         ++reshape_count[i];
-                        if (reshape_count[i] == num_expected_reshape_with_trans) {
+                        if (reshape_count[i] == num_expected_reshape_with_trans)
+                        {
                             transpose[i] = true;
                             break;
                         }
                     }
                     // branch to either input 0 or 1 depending on which one we are traversing
-                    iter = iter->get_input_size() > 1 ? iter->get_argument(i) : iter->get_argument(0);
+                    iter =
+                        iter->get_input_size() > 1 ? iter->get_argument(i) : iter->get_argument(0);
                 } while (iter != input_node);
             }
             // keep track of the input data, make sure they all match
-            for (int i = 0; i < num_op_branches; ++i) {
+            for (int i = 0; i < num_op_branches; ++i)
+            {
                 auto& input_node = pattern_map[input[i]];
-                if (fuse_input[i] == nullptr) {
+                if (fuse_input[i] == nullptr)
+                {
                     fuse_input[i] = input_node;
                 }
                 // found multiple param nodes
-                else if (fuse_input[i] != input_node) {
+                else if (fuse_input[i] != input_node)
+                {
                     return {nullptr};
                 }
             }
         }
-    } 
-    if (fuse_input[0] && fuse_input[1]) {
-        return std::make_shared<op::BatchDot>(fuse_input[0], fuse_input[1], transpose[0], transpose[1]);
+    }
+    if (fuse_input[0] && fuse_input[1])
+    {
+        return std::make_shared<op::BatchDot>(
+            fuse_input[0], fuse_input[1], transpose[0], transpose[1]);
     }
     return {nullptr};
 }
-
 
 bool runtime::cpu::pass::CPUBatchDotFusion::run_on_function(std::shared_ptr<Function> func)
 {
@@ -277,9 +290,11 @@ bool runtime::cpu::pass::CPUBatchDotFusion::run_on_function(std::shared_ptr<Func
     for (auto n : func->get_ordered_ops())
     {
         const Node& node = *n;
-        if (TI(node) == TI(op::Concat)) {
+        if (TI(node) == TI(op::Concat))
+        {
             auto fused_node = fuse_batch_dot(n);
-            if (fused_node) {
+            if (fused_node)
+            {
                 func->replace_node(n, fused_node);
                 modified = true;
             }

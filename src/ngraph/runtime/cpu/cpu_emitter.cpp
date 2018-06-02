@@ -374,12 +374,13 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchDot)
             {
-                const ngraph::op::BatchDot* batch_dot = static_cast<const ngraph::op::BatchDot*>(node);
+                const ngraph::op::BatchDot* batch_dot =
+                    static_cast<const ngraph::op::BatchDot*>(node);
 
                 auto mat_a = args[0];
                 auto mat_b = args[1];
                 const Shape& shape_a = mat_a.get_shape();
-                const Shape& shape_b = mat_b.get_shape(); 
+                const Shape& shape_b = mat_b.get_shape();
 
                 // static const char* ctranspose = "cblas::Transpose::Transpose, ";
                 // static const char* cnotranspose = "cblas::Transpose::None, ";
@@ -407,34 +408,38 @@ namespace ngraph
                     ldb = std::max(1UL, k);
                 }
                 size_t ldc = max(1UL, n);
-                size_t offset_a = m*k;
-                size_t offset_b = k*n;
-                size_t offset_c = m*n;
+                size_t offset_a = m * k;
+                size_t offset_b = k * n;
+                size_t offset_c = m * n;
 
                 writer.block_begin();
 
                 const size_t group_count = 1;
                 const size_t group_size = shape_a[0];
-                // writer << "for (int i = 0; i < " << shape_a[0] << "; ++i)"; 
+                // writer << "for (int i = 0; i < " << shape_a[0] << "; ++i)";
                 // writer.block_begin();
                 // writer << "cblas::cblas_sgemm("
                 //        << "cblas::Layout::RowMajor, " << tranpose_a << tranpose_b << m << ", " << n
                 //        << ", " << k << ",\n"
                 //        << "        1.0f, " << mat_a.get_name() << "+i*" << offset_a << ", " << lda << ", "
                 //        << mat_b.get_name() << "+i*" << offset_b << ", " << ldb << ", " << cbeta << ",\n"
-                //        << "        " << out[0].get_name() << "+i*" << offset_c << ", " << ldc 
+                //        << "        " << out[0].get_name() << "+i*" << offset_c << ", " << ldc
                 //        << ");\n";
                 // writer.block_end();
-                auto populate_array = [&writer](const std::string& var, size_t size, size_t offset) {
-                    for (size_t i = 0; i < size; ++i) {
-                        if (i < size-1) {
-                            writer << var << "+" << i * offset << ", ";
+                auto populate_array =
+                    [&writer](const std::string& var, size_t size, size_t offset) {
+                        for (size_t i = 0; i < size; ++i)
+                        {
+                            if (i < size - 1)
+                            {
+                                writer << var << "+" << i * offset << ", ";
+                            }
+                            else
+                            {
+                                writer << var << "+" << i * offset;
+                            }
                         }
-                        else {
-                            writer << var << "+" << i * offset;
-                        }
-                    }
-                };
+                    };
                 writer << "cblas::Transpose transa_array[] = {" << transpose_a << "};\n";
                 writer << "cblas::Transpose transb_array[] = {" << transpose_b << "};\n";
                 writer << "int64_t m_array[] = {" << m << "};\n";

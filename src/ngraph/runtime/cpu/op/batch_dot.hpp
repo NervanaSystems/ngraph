@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace op
     {
-        class BatchDot: public util::RequiresTensorViewArgs
+        class BatchDot : public util::RequiresTensorViewArgs
         {
         public:
             BatchDot(std::shared_ptr<Node> a,
