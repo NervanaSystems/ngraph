@@ -267,7 +267,7 @@ std::shared_ptr<Node> fuse_batch_dot(const std::shared_ptr<Node>& n)
                 {
                     fuse_input[i] = input_node;
                 }
-                // found multiple param nodes
+                // found different input nodes between different args, can't fuse.
                 else if (fuse_input[i] != input_node)
                 {
                     return {nullptr};

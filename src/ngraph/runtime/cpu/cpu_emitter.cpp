@@ -415,16 +415,7 @@ namespace ngraph
 
                 const size_t group_count = 1;
                 const size_t group_size = shape_a[0];
-                // writer << "for (int i = 0; i < " << shape_a[0] << "; ++i)"; 
-                // writer.block_begin();
-                // writer << "cblas::cblas_sgemm("
-                //        << "cblas::Layout::RowMajor, " << tranpose_a << tranpose_b << m << ", " << n
-                //        << ", " << k << ",\n"
-                //        << "        1.0f, " << mat_a.get_name() << "+i*" << offset_a << ", " << lda << ", "
-                //        << mat_b.get_name() << "+i*" << offset_b << ", " << ldb << ", " << cbeta << ",\n"
-                //        << "        " << mat_c.get_name() << "+i*" << offset_c << ", " << ldc 
-                //        << ");\n";
-                // writer.block_end();
+
                 auto populate_array = [&writer](const std::string& var, size_t size, size_t offset) {
                     for (size_t i = 0; i < size; ++i) {
                         if (i < size-1) {
