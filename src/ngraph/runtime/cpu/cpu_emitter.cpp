@@ -374,7 +374,8 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchDot)
             {
-                const ngraph::op::BatchDot* batch_dot = static_cast<const ngraph::op::BatchDot*>(node);
+                const ngraph::op::BatchDot* batch_dot =
+                    static_cast<const ngraph::op::BatchDot*>(node);
 
                 auto mat_a = args[0];
                 auto mat_b = args[1];

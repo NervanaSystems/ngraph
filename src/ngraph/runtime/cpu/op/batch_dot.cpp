@@ -28,16 +28,10 @@ shared_ptr<Node> op::BatchDot::copy_with_new_args(const NodeVector& new_args) co
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    return make_shared<BatchDot>(new_args.at(0),
-                                 new_args.at(1),
-                                 m_transpose_a,
-                                 m_transpose_b);
+    return make_shared<BatchDot>(new_args.at(0), new_args.at(1), m_transpose_a, m_transpose_b);
 }
 
-op::BatchDot::BatchDot(shared_ptr<Node> a,
-                       shared_ptr<Node> b,
-                       bool transpose_a,
-                       bool transpose_b)
+op::BatchDot::BatchDot(shared_ptr<Node> a, shared_ptr<Node> b, bool transpose_a, bool transpose_b)
     : RequiresTensorViewArgs("BatchDot", vector<shared_ptr<Node>>{a, b})
     , m_transpose_a(transpose_a)
     , m_transpose_b(transpose_b)
@@ -64,7 +58,8 @@ op::BatchDot::BatchDot(shared_ptr<Node> a,
         throw ngraph_error("product dimensions are not equal while creating BatchDot");
     }
 
-    Shape dot_shape{shape_a.at(0), shape_a.at(3 - dot_dimension_a), shape_b.at(3 - dot_dimension_b)};
+    Shape dot_shape{
+        shape_a.at(0), shape_a.at(3 - dot_dimension_a), shape_b.at(3 - dot_dimension_b)};
     NGRAPH_DEBUG << "dot_shape shape = " << vector_to_string(dot_shape);
 
     add_output(a->get_element_type(), dot_shape);
