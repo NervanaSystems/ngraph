@@ -74,6 +74,12 @@ namespace ngraph
                                            const std::array<std::string, 2>& dtypes,
                                            const int rank);
 
+                static void get_reduce_window_op(codegen::CodeWriter& writer,
+                                                 const std::string& name,
+                                                 const std::string& op,
+                                                 const std::vector<std::string>& dtypes,
+                                                 const size_t rank);
+
                 static void get_device_helper(codegen::CodeWriter& writer,
                                               const std::string& name,
                                               const std::string& math_kernel,

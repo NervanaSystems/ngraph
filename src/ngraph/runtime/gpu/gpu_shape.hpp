@@ -47,7 +47,7 @@ namespace ngraph
         {
         }
 
-        explicit GPUShape(uint32_t n, uint32_t initial_value = 0)
+        explicit GPUShape(size_t n, uint32_t initial_value = 0)
             : std::vector<uint32_t>(n, initial_value)
         {
         }
@@ -71,18 +71,30 @@ namespace ngraph
             return *this;
         }
 
+        GPUShape(const std::vector<size_t>& vec)
+        {
+            for (size_t const& size : vec)
+            {
+                if (size >> 32 != 0)
+                {
+                    throw std::runtime_error(
+                        "Request exceeds the bitwidth available for GPUShapes (32)");
+                }
+                this->push_back(static_cast<uint32_t>(size));
+            }
+        }
+
         GPUShape(const Shape& shape)
         {
             for (size_t const& size : shape)
             {
-                uint32_t low = static_cast<uint32_t>(size);
                 if (size >> 32 != 0)
                 {
                     throw std::runtime_error(
                         "Request for Shape which exceeds the bitwidth available for GPUShapes "
                         "(32)");
                 }
-                this->push_back(low);
+                this->push_back(static_cast<uint32_t>(size));
             }
         }
 
@@ -90,14 +102,13 @@ namespace ngraph
         {
             for (size_t const& size : strides)
             {
-                uint32_t low = static_cast<uint32_t>(size);
                 if (size >> 32 != 0)
                 {
                     throw std::runtime_error(
                         "Request for Strides which exceed the bitwidth available for GPUShapes "
                         "(32)");
                 }
-                this->push_back(low);
+                this->push_back(static_cast<uint32_t>(size));
             }
         }
 
@@ -105,14 +116,13 @@ namespace ngraph
         {
             for (size_t const& size : coord)
             {
-                uint32_t low = static_cast<uint32_t>(size);
                 if (size >> 32 != 0)
                 {
                     throw std::runtime_error(
                         "Request for Coordinate which exceed the bitwidth available for GPUShapes "
                         "(32)");
                 }
-                this->push_back(low);
+                this->push_back(static_cast<uint32_t>(size));
             }
         }
     };

@@ -1156,6 +1156,28 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_scalar)
     EXPECT_EQ((vector<float>{48}), read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_vector_4_3)
+{
+    Shape shape_a{4, 3};
+    Shape shape_b{3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    Shape shape_r{4};
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12});
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, vector<float>{17, 18, 19});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call(f, {result}, {a, b});
+    EXPECT_EQ((vector<float>{110, 272, 434, 596}), read_vector<float>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_vector)
 {
     Shape shape_a{4, 4};
@@ -1474,6 +1496,21 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_with_op)
 
     backend->call(f, {result}, {});
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, constant_multi_use)
+{
+    auto A = make_shared<op::Constant>(element::i32, Shape{}, std::vector<std::string>{"388"});
+    auto f = make_shared<Function>(A, op::ParameterVector{});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    std::shared_ptr<runtime::TensorView> r1 = backend->create_tensor(element::i32, Shape{});
+    backend->call(f, {r1}, std::vector<std::shared_ptr<runtime::TensorView>>{});
+    EXPECT_EQ(read_vector<int>(r1), std::vector<int>{388});
+
+    std::shared_ptr<runtime::TensorView> r2 = backend->create_tensor(element::i32, Shape{});
+    backend->call(f, {r2}, std::vector<std::shared_ptr<runtime::TensorView>>{});
+    EXPECT_EQ(read_vector<int>(r2), std::vector<int>{388});
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
@@ -6783,10 +6820,11 @@ NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_scalar)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((vector<float>{1.0f * 10.0f * 9.0f * 4.0f * 13.0f * 6.0f * 7.0f * 12.0f * 3.0f *
-                             2.0f * 11.0f * 8.0f * 5.0f * 14.0f * 5.0f * 8.0f * 11.0f * 2.0f *
-                             3.0f * 12.0f * 7.0f * 6.0f * 13.0f * 4.0f * 9.0f * 10.0f * 1.0f}),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(vector<float>{1.0f * 10.0f * 9.0f * 4.0f * 13.0f * 6.0f * 7.0f *
+                                              12.0f * 3.0f * 2.0f * 11.0f * 8.0f * 5.0f * 14.0f *
+                                              5.0f * 8.0f * 11.0f * 2.0f * 3.0f * 12.0f * 7.0f *
+                                              6.0f * 13.0f * 4.0f * 9.0f * 10.0f * 1.0f},
+                                read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, product_3d_eliminate_zero_dim)
