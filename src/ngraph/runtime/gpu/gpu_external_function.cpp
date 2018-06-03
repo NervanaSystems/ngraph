@@ -462,7 +462,8 @@ using namespace std;
     // This for loop creates a collection of functions that are called more than once
     // and emitting them as globally callable functions.
     // ops implement the is_functionally_identical method
-    unordered_map<Node*, string> match_functions;
+    unordered_map<string, string> match_function_map;
+    unordered_map<const Node*, string> node_function_map;
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
         list<shared_ptr<Node>> tmp = current_function->get_ordered_ops();
@@ -472,7 +473,6 @@ using namespace std;
             continue;
         }
         vector<shared_ptr<Node>> op_list{tmp.begin(), tmp.end()};
-        unordered_map<const Node*, string> node_cache;
         for (size_t i = 0; i < op_list.size(); i++)
         {
             if (op_list[i]->is_constant() || op_list[i]->is_parameter())
@@ -487,39 +487,22 @@ using namespace std;
                 throw ngraph_error("Unhandled op during code generation : " + node.description());
             }
 
-            string s = emit_op_as_function(node, "f");
-            node_cache.insert({&node, s});
-        }
-        for (size_t i = 0; i < op_list.size() - 1; i++)
-        {
-            if (op_list[i]->is_constant() || op_list[i]->is_parameter())
-            {
-                continue;
-            }
-            if (contains_key(match_functions, op_list[i].get()))
-            {
-                continue;
-            }
+            string match_function = emit_op_as_function(node, "__f__");
             string match_function_name;
-            for (size_t j = i + 1; j < op_list.size(); j++)
+            if (contains_key(match_function_map, match_function))
             {
-                Node* op1 = op_list[i].get();
-                Node* op2 = op_list[j].get();
-                if (is_functionally_identical(*op1, *op2, node_cache))
-                {
-                    if (match_function_name.empty())
-                    {
-                        match_function_name = "func_" + op1->get_name();
-                        match_functions.insert({op1, match_function_name});
-                    }
-                    match_functions.insert({op2, match_function_name});
-                }
+                match_function_name = match_function_map[match_function];
             }
-            if (!match_function_name.empty())
+            else
             {
-                writer << emit_op_as_function(*op_list[i], match_function_name);
-                writer << "\n";
+                auto offset = match_function.find("__f__");
+                string emitted_function = match_function;
+                match_function_name = "func_" + node.get_name();
+                emitted_function.replace(offset, 5, match_function_name);
+                match_function_map.insert({match_function, match_function_name});
+                writer << emitted_function;
             }
+            node_function_map.insert({&node, match_function_name});
         }
     }
 
@@ -729,13 +712,10 @@ using namespace std;
 
             // Emit operation body
             string func_name;
-            auto it = match_functions.find(node.get());
-            if (it != match_functions.end())
-            {
-                func_name = it->second;
-            }
+            func_name = node_function_map[node.get()];
             if (func_name.empty())
             {
+                //throw runtime_error("No matching function found for '" + node->get_name() + "'");
                 handler->second(this, writer, node.get(), in, out);
             }
             else
