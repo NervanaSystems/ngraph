@@ -21,7 +21,11 @@ NGRAPH_GET_VERSION_LABEL()
 
 string(REGEX MATCH "([0-9]+)\.([0-9]+)\.([0-9]+)" NGRAPH_VERSION_SHORT "${NGRAPH_VERSION_LABEL}")
 string(REGEX MATCH "([0-9]+)\.([0-9]+)" NGRAPH_API_VERSION "${NGRAPH_VERSION_LABEL}")
-set(NGRAPH_VERSION "${NGRAPH_VERSION_LABEL}")
+string(REGEX MATCH "[^v](.*)" NGRAPH_VERSION "${NGRAPH_VERSION_LABEL}")
+string(REPLACE "." ";" NGRAPH_VERSION_PARTS "${NGRAPH_VERSION_SHORT}")
+list(GET NGRAPH_VERSION_PARTS 0 NGRAPH_VERSION_MAJOR)
+list(GET NGRAPH_VERSION_PARTS 1 NGRAPH_VERSION_MINOR)
+list(GET NGRAPH_VERSION_PARTS 2 NGRAPH_VERSION_PATCH)
 configure_file(VERSION.in VERSION)
 
 message(STATUS "NGRAPH_VERSION ${NGRAPH_VERSION}")
@@ -81,6 +85,7 @@ option(NGRAPH_UNIT_TEST_ENABLE "Control the building of unit tests" TRUE)
 option(NGRAPH_TOOLS_ENABLE "Control the building of tool" TRUE)
 option(NGRAPH_CPU_ENABLE "Control the building of the CPU backend" TRUE)
 option(NGRAPH_GPU_ENABLE "Control the building of the GPU backend" FALSE)
+option(NGRAPH_INTERPRETER_ENABLE "Control the building of the INTERPRETER backend" TRUE)
 option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 
@@ -108,6 +113,7 @@ message (STATUS "To Override use: cmake -DNGRAPH_INSTALL_PREFIX=/foo")
 set(NGRAPH_INSTALL_LIB "${CMAKE_INSTALL_PREFIX}/lib")
 set(NGRAPH_INSTALL_INCLUDE "${CMAKE_INSTALL_PREFIX}/include")
 set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/doc")
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
 #-----------------------------------------------------------------------------------------------
 # Compiler-specific logic...
@@ -157,7 +163,10 @@ endif()
 
 include(unit_test_control)
 set(UNIT_TEST_CONFIG_LIST "" CACHE INTERNAL "")
-unit_test_control(BACKEND INTERPRETER MANIFEST src/ngraph/runtime/interpreter/unit_test.manifest)
+
+if (NGRAPH_INTERPRETER_ENABLE)
+    unit_test_control(BACKEND INTERPRETER MANIFEST src/ngraph/runtime/interpreter/unit_test.manifest)
+endif()
 
 # Set true if CPU backend is built by default
 if (NGRAPH_CPU_ENABLE)
@@ -165,31 +174,12 @@ if (NGRAPH_CPU_ENABLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")
 endif()
 
-if (NOT DEFINED NGRAPH_TBB_ENABLE)
-    set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
+if (NGRAPH_GPU_ENABLE)
+    unit_test_control(BACKEND GPU MANIFEST src/ngraph/runtime/gpu/unit_test.manifest)
 endif()
 
-#-----------------------------------------------------------------------------------------------
-# GPU support
-#-----------------------------------------------------------------------------------------------
-# Setup CUDA and cuDNN if NGRAPH_GPU_ENABLE=TRUE
-if(NGRAPH_GPU_ENABLE)
-    find_package(CUDA 8 REQUIRED)
-    message(STATUS "GPU Backend Enabled")
-    set(NGRAPH_GPU_ENABLE TRUE)
-    find_package(CUDNN 7 REQUIRED)
-    include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR} ${LLVM_INCLUDE_DIR})
-    if (CMAKE_C_COMPILER_ID STREQUAL "GNU" AND
-        NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 6.0 AND
-        CUDA_HOST_COMPILER STREQUAL CMAKE_C_COMPILER)
-        message(FATAL_ERROR
-        "CUDA 8.0 is not compatible with GCC version >= 6.\n"
-        "Please select a correct compiler version\n"
-        )
-    endif()
-    unit_test_control(BACKEND GPU MANIFEST src/ngraph/runtime/gpu/unit_test.manifest)
-elseif(NGRAPH_GPU_ENABLE)
-    message(FATAL_ERROR "GPU was required but CUDA library was not found")
+if (NOT DEFINED NGRAPH_TBB_ENABLE)
+    set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
 endif()
 
 #-----------------------------------------------------------------------------------------------
@@ -200,44 +190,25 @@ if(NGRAPH_DEBUG_ENABLE)
 endif()
 
 #-----------------------------------------------------------------------------------------------
-# distributed support
-#-----------------------------------------------------------------------------------------------
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    find_package(MPI REQUIRED)
-    add_definitions(-DNGRAPH_DISTRIBUTED)
-endif()
-
-#-----------------------------------------------------------------------------------------------
 # External projects install directory
 #-----------------------------------------------------------------------------------------------
 
-# Root for external installs, when using `make`, e.g.
-# ${EXTERNAL_PROJECTS_ROOT}
-# ├── eigen
-# │   ├── include
-# │   │   └── eigen3      <-- ${EIGEN_INCLUDE_DIR}
-# │   │       ├── Eigen
-# │   ...
-# │
-# └── mkldnn
-#     ├── include         <-- ${MKLDNN_INCLUDE_DIR}
-#     │   ├── mkldnn.h
-#     │   ...
-#     ├── lib             <-- ${MKLDNN_LIB_DIR}
-#     │   ├── libiomp5.so
-#     ...
 set(EXTERNAL_INSTALL_DIR ${CMAKE_BINARY_DIR}/external)
 
-# The following 'add_subdirectory' call:
-# - defines the 'libgtest' target.
-# - defines the 'GTEST_INCLUDE_DIR' cmake variable.
-add_subdirectory(third-party)
+if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
+    set(EXTERNAL_PROJECTS_ROOT ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+include(cmake/external_gtest.cmake)
+include(cmake/external_json.cmake)
+include(cmake/external_eigen.cmake)
+include(cmake/external_mkldnn.cmake)
+if (NGRAPH_USE_PREBUILT_LLVM OR DEFINED LLVM_TARBALL_URL)
+    include(cmake/external_llvm_prebuilt.cmake)
+else()
+    include(cmake/external_llvm.cmake)
+endif()
+include(cmake/external_tbb.cmake)
 
-# The following 'add_subdirectory' call:
-# - defines the 'ngraph' library target.
-# - defines the 'NGRAPH_INCLUDE_DIR' cmake variable.
-# - defines the 'NGRAPH_VERSION' cmake variable.
-# - install-related targets.
 add_subdirectory(src)
 
 if (NGRAPH_UNIT_TEST_ENABLE)
