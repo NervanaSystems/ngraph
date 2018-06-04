@@ -42,8 +42,11 @@ runtime::Backend::~Backend()
 
 void* runtime::Backend::open_shared_library(const string& type)
 {
+    string ext = SHARED_LIB_EXT;
+    string ver = LIBRARY_VERSION;
+
     void* handle = nullptr;
-    string name = "lib" + to_lower(type) + "_backend.so";
+    string name = "lib" + to_lower(type) + "_backend" + ext;
     handle = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
     if (handle)
     {
@@ -60,7 +63,7 @@ void* runtime::Backend::open_shared_library(const string& type)
     else
     {
         string err = dlerror();
-        throw runtime_error("Failed to find Backend library '" + name + "'\n" + err);
+        throw runtime_error("Library open for Backend '" + name + "' failed with error:\n" + err);
     }
     return handle;
 }
