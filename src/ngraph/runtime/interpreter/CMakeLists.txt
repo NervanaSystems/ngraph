@@ -14,26 +14,18 @@
 # limitations under the License.
 # ******************************************************************************
 
-if(MKLDNN_INCLUDE_DIR)
-    link_directories(${MKLDNN_LIB_DIR})
+if(NGRAPH_DISTRIBUTED_ENABLE)
+    find_package(MPI REQUIRED)
+    add_definitions(-DNGRAPH_DISTRIBUTED)
+    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    link_libraries(${MPI_CXX_LIBRARIES})
 endif()
 
-if (NGRAPH_CPU_ENABLE)
-    set (SRC
-        nbench.cpp
-        ${PROJECT_SOURCE_DIR}/test/util/benchmark.cpp
-    )
+if (NGRAPH_INTERPRETER_ENABLE)
+    add_library(interpreter_backend SHARED int_backend.cpp)
+    set_target_properties(interpreter_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
+    target_link_libraries(interpreter_backend PUBLIC ngraph)
 
-    add_executable(nbench ${SRC})
-    add_dependencies(nbench ngraph cpu_backend)
-
-    set(HEADER_SEARCH_DEFINES
-        "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
-    )
-
-    target_link_libraries(nbench ngraph)
-    include_directories("${PROJECT_SOURCE_DIR}/test")
-
-    set_source_files_properties(nbench.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
-
+    install(TARGETS interpreter_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

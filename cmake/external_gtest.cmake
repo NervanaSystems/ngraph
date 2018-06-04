@@ -17,9 +17,9 @@
 # Enable ExternalProject CMake module
 include(ExternalProject)
 
-#----------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Download and install GoogleTest ...
-#----------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 SET(GTEST_GIT_REPO_URL https://github.com/google/googletest.git)
 SET(GTEST_GIT_LABEL release-1.8.0)
@@ -28,28 +28,35 @@ SET(GTEST_GIT_LABEL release-1.8.0)
 if (${CMAKE_VERSION} VERSION_LESS 3.2)
     ExternalProject_Add(
         ext_gtest
+        PREFIX gtest
         GIT_REPOSITORY ${GTEST_GIT_REPO_URL}
         GIT_TAG ${GTEST_GIT_LABEL}
         # Disable install step
         INSTALL_COMMAND ""
         UPDATE_COMMAND ""
-        CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_FLAGS="-fPIC"
+        CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                   -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                   -DCMAKE_CXX_FLAGS="-fPIC"
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/download"
         SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/src"
         BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/build"
         INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest"
+        EXCLUDE_FROM_ALL TRUE
         )
 else()
     ExternalProject_Add(
         ext_gtest
+        PREFIX gtest
         GIT_REPOSITORY ${GTEST_GIT_REPO_URL}
         GIT_TAG ${GTEST_GIT_LABEL}
         # Disable install step
         INSTALL_COMMAND ""
         UPDATE_COMMAND ""
-        CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_FLAGS="-fPIC"
+        CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                   -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                   -DCMAKE_CXX_FLAGS="-fPIC"
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/download"
@@ -57,23 +64,15 @@ else()
         BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/build"
         INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest"
         BUILD_BYPRODUCTS "${EXTERNAL_PROJECTS_ROOT}/gtest/build/googlemock/gtest/libgtest.a"
+        EXCLUDE_FROM_ALL TRUE
         )
 endif()
 
-#----------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
-get_filename_component(
-    GTEST_INCLUDE_DIR
-    "${EXTERNAL_PROJECTS_ROOT}/gtest/src/googletest/include"
-    ABSOLUTE)
-set(GTEST_INCLUDE_DIR "${GTEST_INCLUDE_DIR}" PARENT_SCOPE)
+ExternalProject_Get_Property(ext_gtest SOURCE_DIR BINARY_DIR)
 
-# Create a libgtest target to be used as a dependency by test programs
-add_library(libgtest IMPORTED STATIC GLOBAL)
+add_library(libgtest INTERFACE)
 add_dependencies(libgtest ext_gtest)
-
-# Set libgtest properties
-set_target_properties(libgtest PROPERTIES
-    "IMPORTED_LOCATION" "${EXTERNAL_PROJECTS_ROOT}/gtest/build/googlemock/gtest/libgtest.a"
-    "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
-)
+target_include_directories(libgtest SYSTEM INTERFACE ${SOURCE_DIR}/googletest/include)
+target_link_libraries(libgtest INTERFACE ${BINARY_DIR}/googlemock/gtest/libgtest.a)
