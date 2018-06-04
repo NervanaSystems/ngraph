@@ -40,17 +40,25 @@ runtime::Backend::~Backend()
 {
 }
 
-void* runtime::Backend::open_shared_library(const string& type)
+void* runtime::Backend::open_shared_library(string type)
 {
     void* handle = nullptr;
+
+    // strip off attributes, IE:CPU becomes IE
+    auto colon = type.find(":");
+    if (colon != type.npos)
+    {
+        type = type.substr(0, colon);
+    }
     string name = "lib" + to_lower(type) + "_backend.so";
     handle = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
     if (handle)
     {
-        function<void()> create = reinterpret_cast<void (*)()>(dlsym(handle, "create_backend"));
+        function<void()> create_backend =
+            reinterpret_cast<void (*)()>(dlsym(handle, "create_backend"));
         if (create)
         {
-            create();
+            create_backend();
         }
     }
     return handle;
