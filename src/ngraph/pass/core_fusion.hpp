@@ -33,7 +33,7 @@ public:
         : GraphRewrite()
     {
         construct_relu();
-        construct_folded_batch_norm();
+       // construct_folded_batch_norm();
     }
     void construct_relu();
     void construct_folded_batch_norm();
