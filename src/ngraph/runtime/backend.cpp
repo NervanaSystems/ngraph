@@ -59,7 +59,7 @@ void* runtime::Backend::open_shared_library(string type)
     {
         function<void()> create_backend =
             reinterpret_cast<void (*)()>(dlsym(handle, "create_backend"));
-        if (create)
+        if (create_backend)
         {
             create_backend();
         }
