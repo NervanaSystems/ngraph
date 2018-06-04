@@ -14,28 +14,42 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NGRAPH_CPU_ENABLE)
-    set (SRC
-        main.cpp
-        util.cpp
-        uncomment.cpp
-        header_rewrite.cpp
-    )
+set (SRC
+    main.cpp
+    util.cpp
+    uncomment.cpp
+    header_rewrite.cpp
+)
 
-    add_executable(resource_generator ${SRC})
-    add_dependencies(resource_generator ext_llvm ext_eigen ext_mkldnn)
+get_target_property(MKLDNN_INCLUDE_DIR libmkldnn INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(EIGEN_INCLUDE_DIR libeigen INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(LLVM_INCLUDE_DIR libllvm INTERFACE_INCLUDE_DIRECTORIES)
+set(CLANG_INCLUDE_DIR ${LLVM_INCLUDE_DIR}/../lib/clang/5.0.1/include)
+get_filename_component(CLANG_INCLUDE_DIR ${CLANG_INCLUDE_DIR} ABSOLUTE)
 
-    set(HEADER_SEARCH_DEFINES
-        "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\""
-        "MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\""
-        "CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.1/include\""
-        "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
-    )
+set(HEADER_SEARCH_DEFINES
+    "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\""
+    "MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\""
+    "CLANG_BUILTIN_HEADERS_PATH=\"${CLANG_INCLUDE_DIR}\""
+    "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
+)
 
-    if(NGRAPH_TBB_ENABLE)
-        list(APPEND HEADER_SEARCH_DEFINES "TBB_HEADERS_PATH=\"${TBB_ROOT}/include\"")
-        set(HEADER_SEARCH_DEFINES ${HEADER_SEARCH_DEFINES} "NGRAPH_TBB_ENABLE")
-    endif()
-
-    set_source_files_properties(main.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
+if(NGRAPH_TBB_ENABLE)
+    list(APPEND HEADER_SEARCH_DEFINES "TBB_HEADERS_PATH=\"${TBB_ROOT}/include\"")
+    list(APPEND HEADER_SEARCH_DEFINES "NGRAPH_TBB_ENABLE")
 endif()
+
+if (NGRAPH_GPU_ENABLE)
+    find_package(CUDA 8 REQUIRED)
+    find_package(CUDNN 7 REQUIRED)
+    set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
+    "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
+    set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
+    "CUDNN_HEADER_PATHS=\"${CUDNN_INCLUDE_DIRS}\";")
+endif()
+
+add_executable(resource_generator EXCLUDE_FROM_ALL ${SRC})
+add_dependencies(resource_generator ext_llvm ext_eigen ext_mkldnn)
+
+set_source_files_properties(main.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
+
