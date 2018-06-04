@@ -52,7 +52,7 @@ namespace ngraph
                 {
                     Inference = 0,
                     Forward,
-                    Backward,
+                    Backward
                 };
 
                 size_t build_convolution(const runtime::gpu::GPURuntimeContext* ctx,
