@@ -142,11 +142,13 @@ Contents
    graph-basics.rst
    howto/index.rst
    ops/index.rst
-   project/index.rst
    framework-integration-guides.rst
    optimize/index.rst
    programmable/index.rst
+   distr/index.rst
    python_api/index.rst
+   project/index.rst
+
 
 
 
