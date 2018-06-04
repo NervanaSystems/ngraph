@@ -14,17 +14,6 @@
 # limitations under the License.
 # ******************************************************************************
 
-if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
-    set(EXTERNAL_PROJECTS_ROOT ${CMAKE_CURRENT_BINARY_DIR})
-endif()
-
-include( ../cmake/external_gtest.cmake )
-include( ../cmake/external_json.cmake )
-include( ../cmake/external_eigen.cmake )
-include( ../cmake/external_mkldnn.cmake )
-if (NGRAPH_USE_PREBUILT_LLVM OR DEFINED LLVM_TARBALL_URL)
-    include( ../cmake/external_llvm_prebuilt.cmake )
-else()
-    include( ../cmake/external_llvm.cmake )
-endif()
-include( ../cmake/external_tbb.cmake )
+add_executable(mnist_mlp mnist_loader.cpp mnist_mlp.cpp)
+add_dependencies(mnist_mlp ngraph cpu_backend)
+target_link_libraries(mnist_mlp ngraph cpu_backend)

@@ -25,7 +25,7 @@ if (NGRAPH_CPU_ENABLE)
     )
 
     add_executable(nbench ${SRC})
-    add_dependencies(nbench ngraph)
+    add_dependencies(nbench ngraph cpu_backend)
 
     set(HEADER_SEARCH_DEFINES
         "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""

@@ -143,6 +143,7 @@ TEST(util, contains)
     EXPECT_FALSE(contains(v1, 8));
 }
 
+#if defined(NGRAPH_INTERPRETER_ENABLE)
 TEST(util, all_close)
 {
     auto backend = runtime::Backend::create("INTERPRETER");
@@ -165,6 +166,7 @@ TEST(util, all_close)
     EXPECT_FALSE(ngraph::test::all_close<float>(c, a, .05f, 0));
     EXPECT_TRUE(ngraph::test::all_close<float>(c, a, .11f, 0));
 }
+#endif
 
 TEST(util, traverse_functions)
 {
