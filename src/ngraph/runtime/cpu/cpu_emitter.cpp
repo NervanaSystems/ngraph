@@ -381,7 +381,7 @@ namespace ngraph
                 auto mat_b = args[1];
                 auto mat_c = out[0];
                 const Shape& shape_a = mat_a.get_shape();
-                const Shape& shape_b = mat_b.get_shape(); 
+                const Shape& shape_b = mat_b.get_shape();
 
                 static const char* cblas_transpose = "cblas::Transpose::Transpose";
                 static const char* cblas_no_transpose = "cblas::Transpose::None";
@@ -407,25 +407,29 @@ namespace ngraph
                     ldb = std::max(1UL, k);
                 }
                 size_t ldc = max(1UL, n);
-                const size_t offset_a = m*k;
-                const size_t offset_b = k*n;
-                const size_t offset_c = m*n;
+                const size_t offset_a = m * k;
+                const size_t offset_b = k * n;
+                const size_t offset_c = m * n;
 
                 writer.block_begin();
 
                 const size_t group_count = 1;
                 const size_t group_size = shape_a[0];
 
-                auto populate_array = [&writer](const std::string& var, size_t size, size_t offset) {
-                    for (size_t i = 0; i < size; ++i) {
-                        if (i < size-1) {
-                            writer << var << "+" << i * offset << ", ";
+                auto populate_array =
+                    [&writer](const std::string& var, size_t size, size_t offset) {
+                        for (size_t i = 0; i < size; ++i)
+                        {
+                            if (i < size - 1)
+                            {
+                                writer << var << "+" << i * offset << ", ";
+                            }
+                            else
+                            {
+                                writer << var << "+" << i * offset;
+                            }
                         }
-                        else {
-                            writer << var << "+" << i * offset;
-                        }
-                    }
-                };
+                    };
                 writer << "cblas::Transpose transa_array[] = {" << transpose_a << "};\n";
                 writer << "cblas::Transpose transb_array[] = {" << transpose_b << "};\n";
                 writer << "int64_t m_array[] = {" << m << "};\n";
