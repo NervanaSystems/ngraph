@@ -370,7 +370,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
                 writer << ");\n";
 
-                // since we paadded output with another buffer, we neec to copy back to ouput
+                // since we padded output with temp buffer, we need to copy back to ouput
                 if (pad_required)
                 {
                     const auto arg_rank = output_shape.size();
