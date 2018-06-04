@@ -500,7 +500,6 @@ TEST(graph_partition, hybrid_multi_middle_nodes)
     EXPECT_EQ(read_vector<float>(r),
               (test::NDArray<float, 2>({{210, 288}, {378, 480}})).get_vector());
 }
-#endif
 
 TEST(graph_partition, hybrid_no_split)
 {
@@ -526,3 +525,5 @@ TEST(graph_partition, hybrid_no_split)
     backend->call(f, {c}, {a, b});
     EXPECT_EQ(read_vector<float>(c), (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
 }
+
+#endif
