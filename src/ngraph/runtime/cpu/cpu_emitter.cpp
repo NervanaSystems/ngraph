@@ -89,6 +89,7 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/op/trace.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
@@ -1924,6 +1925,25 @@ namespace ngraph
                                    slice->get_strides());
 #endif
                 writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Trace)
+            {
+                const ngraph::op::Trace* trace = static_cast<const ngraph::op::Trace*>(node);
+                {
+                    writer << "reference::trace<" << out[0].get_type() << ">(" << args[0].get_name()
+                           << ",\n";
+                    writer << "                         " << out[0].get_name() << ",\n";
+                    writer << "                         \"" << trace->get_trace_str() << "\",\n";
+                    writer << "                         {" << join(args[0].get_shape()) << "},\n";
+                    writer << "                         {" << join(trace->get_lower_bounds())
+                           << "},\n";
+                    writer << "                         {" << join(trace->get_upper_bounds())
+                           << "},\n";
+                    writer << "                         {" << join(trace->get_strides()) << "},\n";
+                    writer << "                         {" << join(out[0].get_shape()) << "});\n";
+                }
             }
 
             template <>

@@ -49,6 +49,8 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/trace.hpp"
+#include "ngraph/op/trace.hpp"
 
 #include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
@@ -112,6 +114,7 @@
 #include "ngraph/runtime/reference/sum.hpp"
 #include "ngraph/runtime/reference/tan.hpp"
 #include "ngraph/runtime/reference/tanh.hpp"
+#include "ngraph/runtime/reference/trace.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/runtime/reference/allreduce.hpp"
@@ -931,6 +934,18 @@ private:
         {
             reference::tanh<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+        }
+        else if (node_op == "Trace")
+        {
+            const op::Trace* trace = static_cast<const op::Trace*>(&node);
+            reference::trace<T>(args[0]->get_data_ptr<T>(),
+                                out[0]->get_data_ptr<T>(),
+                                trace->get_trace_str().c_str(),
+                                args[0]->get_shape(),
+                                trace->get_lower_bounds(),
+                                trace->get_upper_bounds(),
+                                trace->get_strides(),
+                                out[0]->get_shape());
         }
         else
         {
