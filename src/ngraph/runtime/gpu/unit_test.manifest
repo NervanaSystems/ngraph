@@ -45,6 +45,11 @@ mkldnn_layouts
 numeric_double_nan
 numeric_float_inf
 numeric_float_nan
+one_hot_scalar_fp_nonint_in_3
+one_hot_scalar_oob_in_3
+one_hot_vector_1_barely_oob
+one_hot_vector_1_far_oob
+one_hot_vector_1_fp_nonint
 parameter_as_output
 reverse_sequence_n4d2c3h2w2
 reverse_sequence_n4c3h2w2
