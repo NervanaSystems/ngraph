@@ -148,10 +148,7 @@ static bool simplify_concat(std::shared_ptr<Node> n)
     auto replacement = goe;
     if (goe->get_shape().size() != n->get_shape().size())
     {
-        Shape default_shape(goe->get_shape().size());
-        std::iota(begin(default_shape), end(default_shape), 0);
-        auto reshape = std::make_shared<op::Reshape>(goe, default_shape, n->get_shape());
-        replacement = reshape;
+        return false;
     }
 
     ngraph::replace_node(n, replacement);
