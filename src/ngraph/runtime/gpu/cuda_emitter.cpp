@@ -946,7 +946,6 @@ size_t runtime::gpu::CUDAEmitter::build_softmax(const GPURuntimeContext* ctx,
     std::string kernel_name = "softmax_" + join(dtypes, "_");
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
 
-    // TODO before PR - come back and check if shape is necessary, could be just rank is needed
     std::stringstream ss;
     ss << kernel_name << "_s" << join(tensor_shape, "_") << "_r" << join(reduce_axes, "_");
     auto hash = ss.str();
