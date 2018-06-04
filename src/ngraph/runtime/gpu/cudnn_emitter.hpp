@@ -53,18 +53,36 @@ namespace ngraph
                     Inference = 0,
                     Forward,
                     Backward,
-                    BackwardFilter
                 };
 
-                size_t build_convolution(const runtime::gpu::GPURuntimeContext* ctx,
-                                         const cudnnDataType_t data_type,
-                                         const Prop& direction,
-                                         const Shape& input_shape,
-                                         const Shape& filter_shape,
-                                         const Shape& output_shape,
-                                         const Strides& window_movement_strides,
-                                         const Strides& window_dilation_strides,
-                                         const Shape& padding_below);
+size_t build_convolution(const runtime::gpu::GPURuntimeContext* ctx,
+                                                     const cudnnDataType_t data_type,
+                                                     const Shape& input_tensor_shape,
+                                                     const Shape& input_filter_shape,
+                                                     const Shape& output_tensor_shape,
+                                                     const Strides& window_movement_strides,
+                                                     const Strides& window_dilation_strides,
+                                                     const Shape& padding_below);
+
+size_t build_convolution_backward_data(const runtime::gpu::GPURuntimeContext* ctx,
+                                                     const cudnnDataType_t data_type,
+                                                     const Prop& direction,
+                                                     const Shape& input_filter_shape,
+                                                     const Shape& input_tensor_shape,
+                                                     const Shape& output_tensor_shape,
+                                                     const Strides& window_movement_strides,
+                                                     const Strides& window_dilation_strides,
+                                                     const Shape& padding_below);
+
+size_t build_convolution_backward_filter(const runtime::gpu::GPURuntimeContext* ctx,
+                                                     const cudnnDataType_t data_type,
+                                                     const Prop& direction,
+                                                     const Shape& input_tensor_shape_0,
+                                                     const Shape& input_tensor_shape_1,
+                                                     const Shape& output_filter_shape,
+                                                     const Strides& window_movement_strides,
+                                                     const Strides& window_dilation_strides,
+                                                     const Shape& padding_below);
 
                 size_t build_reduce_forward(const GPURuntimeContext* ctx,
                                             const cudnnReduceTensorOp_t& reduce_op,

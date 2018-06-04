@@ -231,7 +231,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 cudnnDataType_t data_type = CUDNN_DATA_FLOAT;
                 size_t index = cudnn_emitter->build_convolution(external_function->ctx().get(),
                                                                 data_type,
-                                                                CUDNNEmitter::Prop::Forward,
                                                                 input_shape_padded,
                                                                 args[1].get_shape(),
                                                                 out[0].get_shape(),
@@ -346,11 +345,10 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
 
                 cudnnDataType_t data_type = CUDNN_DATA_FLOAT;
-                size_t index = cudnn_emitter->build_convolution(external_function->ctx().get(),
+                size_t index = cudnn_emitter->build_convolution_backward_data(external_function->ctx().get(),
                                                                 data_type,
-                                                                CUDNNEmitter::Prop::Backward,
-                                                                args[1].get_shape(),
                                                                 args[0].get_shape(),
+                                                                args[1].get_shape(),
                                                                 output_shape_padded,
                                                                 window_movement_strides,
                                                                 window_dilation_strides,
@@ -501,12 +499,11 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
 
                 cudnnDataType_t data_type = CUDNN_DATA_FLOAT;
-                size_t index = cudnn_emitter->build_convolution(external_function->ctx().get(),
+                size_t index = cudnn_emitter->build_convolution_backward_filter(external_function->ctx().get(),
                                                                 data_type,
-                                                                CUDNNEmitter::Prop::BackwardFilter,
                                                                 input_shape_padded,
-                                                                out[0].get_shape(),
                                                                 args[1].get_shape(),
+                                                                out[0].get_shape(),
                                                                 window_movement_strides,
                                                                 window_dilation_strides,
                                                                 padding_below);
