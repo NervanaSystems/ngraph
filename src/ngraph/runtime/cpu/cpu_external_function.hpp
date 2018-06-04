@@ -105,9 +105,9 @@ namespace ngraph
                 {
                     return executor;
                 }
-                bool m_direct_execution;
-
+                bool is_direct_execution() const { return m_direct_execution; }
             protected:
+                void build();
                 void compile();
 
             private:
@@ -163,6 +163,8 @@ namespace ngraph
                 std::unordered_map<std::string, void*> tensor_data;
                 std::unordered_map<std::string, size_t> intermediates_offsets;
                 std::unordered_map<std::string, size_t> function_input_index, function_output_index;
+                bool m_is_built;
+                bool m_direct_execution;
             };
         }
     }

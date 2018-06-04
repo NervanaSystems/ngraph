@@ -198,6 +198,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
         codegen/execution_engine.cpp
         runtime/cpu/cpu_call_frame.cpp
         runtime/cpu/cpu_backend.cpp
+        runtime/cpu/cpu_builder.cpp
         runtime/cpu/cpu_kernels.cpp
         runtime/cpu/cpu_kernel_emitters.cpp
         runtime/cpu/cpu_kernel_utils.cpp

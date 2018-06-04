@@ -63,7 +63,7 @@ void runtime::cpu::CPU_CallFrame::call(
     }
 
     // Invoke compiled computation
-    if (!m_external_function->m_direct_execution)
+    if (!m_external_function->is_direct_execution())
     {
         m_compiled_function(inputs.data(), outputs.data(), ctx);
     }
