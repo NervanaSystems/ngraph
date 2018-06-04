@@ -1006,7 +1006,7 @@ size_t runtime::gpu::CUDAEmitter::build_softmax(const GPURuntimeContext* ctx,
     float alpha = 1.0f;
     float beta = 0.0f;
 
-    size_t nthreads = shape_size(tensor_shape);
+    int nthreads = static_cast<int>(shape_size(tensor_shape));
 
     std::unique_ptr<gpu::primitive> softmax(new gpu::primitive{[=](void** inputs,
                                                                    void** outputs) mutable {
@@ -1104,7 +1104,7 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const GPURuntimeContext* ctx,
     float alpha = 1.0f;
     float beta = 0.0f;
 
-    size_t nthreads = shape_size(result_shape);
+    int nthreads = static_cast<int>(shape_size(result_shape));
 
     std::unique_ptr<gpu::primitive> softmax(new gpu::primitive{[=](void** inputs,
                                                                    void** outputs) mutable {
