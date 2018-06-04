@@ -348,79 +348,10 @@ using namespace ngraph::runtime;
 using namespace std;
 )";
 
-    if (m_emit_timing)
-    {
-        writer << "// Declare debug timers\n";
-        vector<string> names;
-        for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
-        {
-            for (shared_ptr<Node> node : current_function->get_ordered_ops())
-            {
-                if (!node->is_parameter() && !node->is_constant())
-                {
-                    names.push_back(node->get_name());
-                }
-            }
-        }
-        for (const string& s : names)
-        {
-            writer << "ngraph::stopwatch timer_" << s << ";\n";
-        }
-        writer << "extern \"C\" size_t get_debug_timer_count() { return " << names.size()
-               << "; }\n";
-        writer << "extern \"C\" const char* get_debug_timer_name(size_t index)\n";
-        writer << "{\n";
-        writer.indent++;
-        writer << "const char* rc;\n";
-        writer << "switch(index)\n";
-        writer << "{\n";
-        for (size_t i = 0; i < names.size(); i++)
-        {
-            writer << "case " << i << ": rc = \"" << names[i] << "\"; break;\n";
-        }
-        writer << "default: rc = \"\";\n";
-        writer << "}\n";
-        writer << "return rc;\n";
-        writer.indent--;
-        writer << "}\n";
-        writer << "extern \"C\" const size_t get_debug_timer_microseconds(size_t index)\n";
-        writer << "{\n";
-        writer.indent++;
-        writer << "size_t rc;\n";
-        writer << "switch(index)\n";
-        writer << "{\n";
-        for (size_t i = 0; i < names.size(); i++)
-        {
-            writer << "case " << i << ": rc = timer_" << names[i]
-                   << ".get_total_microseconds(); break;\n";
-        }
-        writer << "default: rc = 0;\n";
-        writer << "}\n";
-        writer << "return rc;\n";
-        writer.indent--;
-        writer << "}\n";
-        writer << "extern \"C\" const size_t get_debug_timer_call_count(size_t index)\n";
-        writer << "{\n";
-        writer.indent++;
-        writer << "size_t rc;\n";
-        writer << "switch(index)\n";
-        writer << "{\n";
-        for (size_t i = 0; i < names.size(); i++)
-        {
-            writer << "case " << i << ": rc = timer_" << names[i] << ".get_call_count(); break;\n";
-        }
-        writer << "default: rc = 0;\n";
-        writer << "}\n";
-        writer << "return rc;\n";
-        writer.indent--;
-        writer << "}\n";
-        writer << "\n";
-    }
-    //     // The "dso_handle" symbol is required by __cxa_atexit()
-    //     // which is enabled because the JIT uses it as the default mechanism
-    //     // to register cleanup handlers. We use it, and not atexit(), because
-    //     // atexit() happens too late, when the JIT is no longer alive
-
+    // The "dso_handle" symbol is required by __cxa_atexit()
+    // which is enabled because the JIT uses it as the default mechanism
+    // to register cleanup handlers. We use it, and not atexit(), because
+    // atexit() happens too late, when the JIT is no longer alive
     writer << "void *__dso_handle = 0;\n\n";
     writer << "// Declare all constants\n";
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
@@ -432,6 +363,8 @@ using namespace std;
             {
                 shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
                 auto c_value_strings = c->get_value_strings();
+                writer << "static " << tv->get_tensor().get_element_type().c_type_string() << " *"
+                       << tv->get_tensor().get_name() << ";\n";
                 writer << "static " << tv->get_tensor().get_element_type().c_type_string() << " "
                        << tv->get_tensor().get_name() << "_cpu[" << c_value_strings.size()
                        << "] =\n";
@@ -440,8 +373,6 @@ using namespace std;
                 writer << emit_string_array(c_value_strings, 100 - writer.indent * 4);
                 writer.indent--;
                 writer << "\n};\n\n";
-                writer << "static " << tv->get_tensor().get_element_type().c_type_string() << " *"
-                       << tv->get_tensor().get_name() << ";\n";
                 m_variable_name_map[tv->get_tensor().get_name()] = tv->get_tensor().get_name();
             }
         }
@@ -449,7 +380,7 @@ using namespace std;
     // Add cudnn descriptor factory for descriptor management.
     // After the cuDNN code emitted in gpu_emitter.cc is refactored
     // into the CUDNNEmitter class, this can be removed.
-    writer << "static runtime::gpu::CUDNNDescriptors descriptors;\n";
+    writer << "static runtime::gpu::CUDNNDescriptors descriptors;\n\n";
 
     writer << "// Declare all functions\n";
     for (shared_ptr<Function> f : pass_manager.get_state().get_functions())
@@ -500,7 +431,7 @@ using namespace std;
                 match_function_name = "func_" + node.get_name();
                 emitted_function.replace(offset, 5, match_function_name);
                 match_function_map.insert({match_function, match_function_name});
-                writer << emitted_function;
+                writer << emitted_function << "\n";
             }
             node_function_map.insert({&node, match_function_name});
         }
