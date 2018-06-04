@@ -2965,7 +2965,8 @@ namespace ngraph
                 // TODO(jmenon): Optimize for 1D
 
                 // TODO(jmenon): Remove element type restriction
-                if (arg_rank == 4 && max_pool->get_window_shape().size() == 2 &&
+                if (((arg_rank == 4 && max_pool->get_window_shape().size() == 2) ||
+                     (arg_rank == 5 && max_pool->get_window_shape().size() == 3)) &&
                     args[0].get_element_type() == element::f32)
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();

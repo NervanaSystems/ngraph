@@ -60,14 +60,14 @@
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
+#include "util.hpp"
 #include "util/all_close.hpp"
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/matcher.hpp"
 #include "util/random.hpp"
-#include "util/test_tools.hpp"
-
 #include "util/random.hpp"
+#include "util/test_tools.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -879,46 +879,6 @@ TEST(cpu_fusion, fuse_conv_relu)
     pass_manager.run_passes(func);
     size_t cb = count_ops_of_type<op::ConvolutionRelu>(func);
     ASSERT_GT(cb, 0);
-}
-
-template <typename T>
-static std::vector<std::vector<T>>
-    execute(std::shared_ptr<Function> f, std::vector<std::vector<T>> args, std::string cbackend)
-{
-    auto backend = runtime::Backend::create(cbackend);
-
-    auto parms = f->get_parameters();
-
-    if (parms.size() != args.size())
-    {
-        throw ngraph_error("number of parameters and arguments don't match");
-    }
-
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> arg_tensors(args.size());
-    for (size_t i = 0; i < args.size(); i++)
-    {
-        auto t = backend->create_tensor(parms.at(i)->get_element_type(), parms.at(i)->get_shape());
-        copy_data(t, args.at(i));
-        arg_tensors.at(i) = t;
-    }
-
-    auto results = f->get_results();
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> result_tensors(results.size());
-
-    for (size_t i = 0; i < results.size(); i++)
-    {
-        result_tensors.at(i) =
-            backend->create_tensor(results.at(i)->get_element_type(), results.at(i)->get_shape());
-    }
-
-    backend->call(f, result_tensors, arg_tensors);
-
-    std::vector<std::vector<T>> result_vectors;
-    for (auto rt : result_tensors)
-    {
-        result_vectors.push_back(read_vector<T>(rt));
-    }
-    return result_vectors;
 }
 
 TEST(cpu_fusion, conv_relu_n2c1h2w2_2)
