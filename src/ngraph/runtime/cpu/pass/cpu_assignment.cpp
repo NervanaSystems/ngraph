@@ -37,7 +37,9 @@
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
+#include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 
 using namespace std;
@@ -497,6 +499,48 @@ namespace ngraph
                         batchnorm->set_op_annotations(op_annotations);
                     }
                 }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::Lstm)
+                {
+                    auto src_layer_rank = node->get_input_shape(0).size();
+                    auto src_iter_rank = node->get_input_shape(1).size();
+                    auto weights_layer_rank = node->get_input_shape(2).size();
+                    auto weights_iter_rank = node->get_input_shape(3).size();
+                    auto bias_rank = node->get_input_shape(4).size();
+                    if ((src_layer_rank == 2 && src_iter_rank == 2 && weights_layer_rank == 2 &&
+                         weights_iter_rank == 2 && bias_rank == 1 &&
+                         node->get_input_element_type(0) == element::f32 &&
+                         node->get_input_element_type(1) == element::f32))
+                    {
+                        auto lstm_node = static_cast<op::Lstm*>(node);
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        lstm_node->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::Rnn)
+                {
+                    auto src_layer_rank = node->get_input_shape(0).size();
+                    auto src_iter_rank = node->get_input_shape(1).size();
+                    auto weights_layer_rank = node->get_input_shape(2).size();
+                    auto weights_iter_rank = node->get_input_shape(3).size();
+                    auto bias_rank = node->get_input_shape(4).size();
+                    if ((src_layer_rank == 2 && src_iter_rank == 2 && weights_layer_rank == 2 &&
+                         weights_iter_rank == 2 && bias_rank == 1 &&
+                         node->get_input_element_type(0) == element::f32 &&
+                         node->get_input_element_type(1) == element::f32))
+                    {
+                        auto rnn_node = static_cast<op::Rnn*>(node);
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        rnn_node->set_op_annotations(op_annotations);
+                    }
+                }
             }
         }
     }
@@ -542,6 +586,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Sigmoid), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Sigmoid>},
     {TI(ngraph::op::SigmoidBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::SigmoidBackprop>},
+    {TI(ngraph::op::Lstm), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Lstm>},
+    {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Rnn>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(

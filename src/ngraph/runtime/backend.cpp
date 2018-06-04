@@ -42,6 +42,9 @@ runtime::Backend::~Backend()
 
 void* runtime::Backend::open_shared_library(string type)
 {
+    string ext = SHARED_LIB_EXT;
+    string ver = LIBRARY_VERSION;
+
     void* handle = nullptr;
 
     // strip off attributes, IE:CPU becomes IE
@@ -50,7 +53,7 @@ void* runtime::Backend::open_shared_library(string type)
     {
         type = type.substr(0, colon);
     }
-    string name = "lib" + to_lower(type) + "_backend.so";
+    string name = "lib" + to_lower(type) + "_backend" + ext;
     handle = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
     if (handle)
     {
@@ -60,6 +63,15 @@ void* runtime::Backend::open_shared_library(string type)
         {
             create_backend();
         }
+        else
+        {
+            throw runtime_error("Failed to find create_backend function in library '" + name + "'");
+        }
+    }
+    else
+    {
+        string err = dlerror();
+        throw runtime_error("Library open for Backend '" + name + "' failed with error:\n" + err);
     }
     return handle;
 }

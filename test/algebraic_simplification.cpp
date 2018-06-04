@@ -43,7 +43,6 @@
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
@@ -63,9 +62,7 @@ TEST(algebraic_simplification, add_types_shapes)
         for (auto shape : shapes)
         {
             pass::Manager pass_manager;
-            pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
             pass_manager.register_pass<pass::AlgebraicSimplification>();
-            pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
 
             auto a = make_shared<op::Parameter>(type, shape);
             auto b = make_shared<op::Parameter>(type, shape);
@@ -95,9 +92,7 @@ TEST(algebraic_simplification, add_broadcast)
 {
     Shape shape{2, 2};
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<pass::AlgebraicSimplification>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
 
     auto a = make_shared<op::Parameter>(element::i32, shape);
     auto b = make_shared<op::Parameter>(element::i32, shape);
@@ -126,9 +121,7 @@ TEST(algebraic_simplification, multiply_broadcast)
 {
     Shape shape{2, 2};
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<pass::AlgebraicSimplification>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
 
     auto a = make_shared<op::Parameter>(element::i32, shape);
     auto b = make_shared<op::Parameter>(element::i32, shape);
@@ -158,9 +151,7 @@ TEST(algebraic_simplification, zero_plus_zero_commutativity)
     Shape shape{};
     auto type = element::f32;
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<pass::AlgebraicSimplification>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
 
     auto a = make_shared<op::Parameter>(type, shape);
     auto b = make_shared<op::Parameter>(type, shape);
@@ -184,9 +175,7 @@ TEST(algebraic_simplification, zero_multiply_zero_one)
     Shape shape{};
     auto type = element::f32;
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<pass::AlgebraicSimplification>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
 
     auto a = make_shared<op::Parameter>(type, shape);
     auto b = make_shared<op::Parameter>(type, shape);
@@ -209,9 +198,7 @@ TEST(algebraic_simplification, add_negative_tests)
     Shape shape{};
     auto type = element::f32;
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<pass::AlgebraicSimplification>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
 
     auto a = make_shared<op::Parameter>(type, shape);
     auto b = make_shared<op::Parameter>(type, shape);
@@ -240,9 +227,7 @@ TEST(algebraic_simplification, multiply_negative_tests)
     Shape shape{};
     auto type = element::f32;
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<pass::AlgebraicSimplification>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
 
     auto a = make_shared<op::Parameter>(type, shape);
     auto b = make_shared<op::Parameter>(type, shape);
@@ -293,9 +278,7 @@ TEST(algebraic_simplification, multiply_prod_scalar_one)
     auto prod_fconst1 = std::make_shared<op::Product>(broadcast, AxisSet{0, 1});
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<pass::AlgebraicSimplification>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{prod_fconst1}, op::ParameterVector{});
     pass_manager.run_passes(f);
@@ -329,9 +312,7 @@ TEST(algebraic_simplification, multiply_sum_scalar_one)
     auto sum_fconst1 = std::make_shared<op::Sum>(broadcast, AxisSet{0, 1});
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<pass::AlgebraicSimplification>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{sum_fconst1}, op::ParameterVector{});
     pass_manager.run_passes(f);
