@@ -56,6 +56,8 @@ std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::TensorView> tv)
     return rc;
 }
 
+std::vector<float> read_float_vector(std::shared_ptr<ngraph::runtime::TensorView> tv);
+
 template <typename T>
 void write_vector(std::shared_ptr<ngraph::runtime::TensorView> tv, const std::vector<T>& values)
 {
