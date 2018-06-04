@@ -238,7 +238,7 @@ namespace ngraph
         {
             namespace pass
             {
-                template <typename T, bool use_bias>
+                template <typename T, bool use_bias, bool default_weights_format>
                 void ConvolutionLayout(std::shared_ptr<ngraph::Node> node,
                                        vector<memory::format>& prim_input_formats,
                                        vector<memory::format>& prim_output_formats)
@@ -310,8 +310,17 @@ namespace ngraph
                     convolution_forward::primitive_desc prim_desc(*fwd_desc, cpu_engine);
                     prim_input_formats.push_back(static_cast<memory::format>(
                         prim_desc.src_primitive_desc().desc().data.format));
-                    prim_input_formats.push_back(static_cast<memory::format>(
-                        prim_desc.weights_primitive_desc().desc().data.format));
+
+                    if (default_weights_format)
+                    {
+                        prim_input_formats.push_back(prim_input_formats.back());
+                    }
+                    else
+                    {
+                        prim_input_formats.push_back(static_cast<memory::format>(
+                            prim_desc.weights_primitive_desc().desc().data.format));
+                    }
+
                     if (use_bias)
                     {
                         prim_input_formats.push_back(static_cast<memory::format>(
@@ -328,7 +337,7 @@ namespace ngraph
                     {
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
-                        ConvolutionLayout<ngraph::op::Convolution, false>(
+                        ConvolutionLayout<ngraph::op::Convolution, false, false>(
                             node, prim_input_formats, prim_output_formats);
 
                         node =
@@ -348,7 +357,7 @@ namespace ngraph
                     {
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
-                        ConvolutionLayout<ngraph::op::GroupConvolution, false>(
+                        ConvolutionLayout<ngraph::op::GroupConvolution, false, true>(
                             node, prim_input_formats, prim_output_formats);
 
                         node =
@@ -368,7 +377,7 @@ namespace ngraph
                     {
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
-                        ConvolutionLayout<ngraph::op::ConvolutionBias, true>(
+                        ConvolutionLayout<ngraph::op::ConvolutionBias, true, false>(
                             node, prim_input_formats, prim_output_formats);
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
@@ -387,7 +396,7 @@ namespace ngraph
                     {
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
-                        ConvolutionLayout<ngraph::op::ConvolutionRelu, false>(
+                        ConvolutionLayout<ngraph::op::ConvolutionRelu, false, false>(
                             node, prim_input_formats, prim_output_formats);
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
@@ -406,7 +415,7 @@ namespace ngraph
                     {
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
-                        ConvolutionLayout<ngraph::op::ConvolutionBiasRelu, true>(
+                        ConvolutionLayout<ngraph::op::ConvolutionBiasRelu, true, false>(
                             node, prim_input_formats, prim_output_formats);
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
