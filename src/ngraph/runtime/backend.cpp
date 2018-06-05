@@ -47,10 +47,16 @@ shared_ptr<runtime::Backend> runtime::Backend::create_dynamic_backend(const stri
     string ver = LIBRARY_VERSION;
 
     void* handle = nullptr;
+
+    // strip off attributes, IE:CPU becomes IE
+    auto colon = type.find(":");
+    if (colon != type.npos)
+    {
+        type = type.substr(0, colon);
+    }
     string name = "lib" + to_lower(type) + "_backend" + ext;
     handle = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
     if (!handle) {
-
         string err = dlerror();
         throw runtime_error("Library open for Backend '"+name+"' failed with error:\n"+err);
     }
