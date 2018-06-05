@@ -48,7 +48,6 @@
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
-#include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/sum.hpp"
 
 #include "ngraph/op/select_and_scatter.hpp"
@@ -906,13 +905,6 @@ private:
         {
             reference::sqrt<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
-        }
-        else if (node_op == "StopGradient")
-        {
-            op::StopGradient* res = dynamic_cast<op::StopGradient*>(&node);
-            reference::result(args[0]->get_data_ptr<T>(),
-                              out[0]->get_data_ptr<T>(),
-                              shape_size(res->get_shape()));
         }
         else if (node_op == "Subtract")
         {
