@@ -57,6 +57,63 @@ void runtime::gpu::CudaKernelBuilder::get_elementwise_op(codegen::CodeWriter& wr
     return;
 }
 
+void runtime::gpu::CudaKernelBuilder::get_ew_bcast_fused_op(codegen::CodeWriter& writer,
+                                                            const std::string& name,
+                                                            const std::string& op,
+                                                            const std::vector<std::string>& data_types,
+                                                            std::set<size_t> inputs_to_broadcast,
+                                                            size_t rank)
+{
+    auto num_inputs = data_types.size() - 1;
+    writer << "extern \"C\" __global__ void cuda_" << name << "(";
+    for (size_t i = 0; i < num_inputs; i++)
+    {
+        writer << data_types[i] << "* in" << i << ", ";
+    }
+    writer << data_types[num_inputs] << "* out, "
+           << "int* strides, "
+           << "int* stride_magic, "
+           << "int* stride_shift, "
+           << "int* reduced_strides, "
+           << "size_t n)\n";
+    writer.block_begin();
+    {
+        writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x; \n";
+        writer << "if (tid < n)\n";
+        writer.block_begin();
+        {
+            std::string reduced_idx = reduce_coordinate_transform_helper(writer,
+                                                                         "tid",
+                                                                         "strides",
+                                                                         "stride_magic",
+                                                                         "stride_shift",
+                                                                         "reduced_strides",
+                                                                         "coordinate",
+                                                                         rank);
+            writer << "out[tid] = " << op << "(";
+            for (size_t i = 0; i < num_inputs - 1; i++)
+            {
+                if (inputs_to_broadcast.count(i) > 0)
+                {
+                    writer << "in" << i << "[" << reduced_idx << "], ";
+                }
+                else
+                {
+                    writer << "in" << i << "[tid], ";
+                }
+            }
+            writer << "in" << num_inputs - 1 << "[tid]);\n";
+
+
+
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+
+    return;
+}
+
 void runtime::gpu::CudaKernelBuilder::get_broadcast_op(codegen::CodeWriter& writer,
                                                        const std::string& name,
                                                        const std::array<std::string, 2>& data_types,

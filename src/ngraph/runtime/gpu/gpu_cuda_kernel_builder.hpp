@@ -85,6 +85,14 @@ namespace ngraph
                                               const std::string& math_kernel,
                                               const std::vector<std::string>& data_types);
 
+                static void get_ew_bcast_fused_op(codegen::CodeWriter& writer,
+                                                  const std::string& name,
+                                                  const std::string& op,
+                                                  const std::vector<std::string>& data_types,
+                                                  std::set<size_t> inputs_to_broadcast,
+                                                  size_t rank);
+
+
                 static void add_pod_typedefs(codegen::CodeWriter& writer);
 
                 /// \brief Given kernel input variables i_* produce register variables o_coordinates{i}

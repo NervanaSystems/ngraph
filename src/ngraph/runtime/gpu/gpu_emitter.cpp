@@ -2012,22 +2012,68 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     auto axes = softmax->get_axes();
 
                     size_t softmax_index;
+
+                    auto& cudnn_emitter =
+                        external_function->get_primitive_emitter()->get_cudnn_emitter();
+
                     if (axes.size() != tensor_shape.size())
                     {
                         auto& cuda_emitter =
                             external_function->get_primitive_emitter()->get_cuda_emitter();
 
-                        softmax_index =
-                            cuda_emitter->build_softmax(external_function->ctx().get(),
-                                                        {{args[0].get_type(), out[0].get_type()}},
-                                                        tensor_shape,
-                                                        axes);
+                        // exponentiate the input tensor and store it to the output tensor
+                        auto ew_index = cuda_emitter->build_elementwise<ngraph::op::Exp>(
+                            external_function->ctx().get(),
+                            {{args[0].get_type(), out[0].get_type()}},
+                            out[0].get_shape());
+
+                        writer << "gpu::invoke_primitive(ctx, " << ew_index << ", ";
+                        writer << "std::vector<void*>{" << args[0].get_name();
+                        writer << "}.data(), ";
+                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                        writer << ");\n";
+
+                        // reserve a temporary buffer for the intermediate reduction
+                        GPUAllocator allocator =
+                            external_function->get_primitive_emitter()->get_memory_allocator();
+                        auto reduced_shape = tensor_shape;
+                        for (auto const& axis : axes)
+                        {
+                            reduced_shape[axis] = 1;
+                        }
+                        size_t reduced_size = shape_size(reduced_shape);
+                        size_t workspace_idx = allocator.reserve_workspace(reduced_size * out[0].get_element_type().size());
+
+                        // sum reduction along each specified axis to calculate the denominator
+                        auto sum_index =
+                            cudnn_emitter->build_reduce_forward(external_function->ctx().get(),
+                                                                CUDNN_REDUCE_TENSOR_ADD,
+                                                                args[0].get_shape(),
+                                                                axes);
+
+                        writer << "void* workspace = gpu::invoke_primitive(ctx, " << workspace_idx << ");\n";
+                        writer << "gpu::invoke_primitive(ctx, " << sum_index << ", ";
+                        writer << "std::vector<void*>{" << out[0].get_name();
+                        writer << "}.data(), ";
+                        writer << "std::vector<void*>{ workspace }.data()";
+                        writer << ");\n";
+
+                        // inplace division with fused broadcast
+                        size_t divide =
+                            cuda_emitter->build_elementwise<ngraph::op::Divide>(
+                                external_function->ctx().get(),
+                                {{out[0].get_type(), out[0].get_type()}},
+                                out[0].get_shape(), axes);
+
+                        writer << "gpu::invoke_primitive(ctx, " << divide << ", ";
+                        writer << "std::vector<void*>{" << out[0].get_name();
+                        writer << ", workspace}.data(), ";
+                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                        writer << ");\n";
+
                     }
                     else
                     {
-                        auto& cudnn_emitter =
-                            external_function->get_primitive_emitter()->get_cudnn_emitter();
-
                         softmax_index = cudnn_emitter->build_softmax(external_function->ctx().get(),
                                                                      CUDNN_SOFTMAX_FAST,
                                                                      CUDNN_SOFTMAX_MODE_INSTANCE,

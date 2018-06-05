@@ -614,7 +614,9 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeConte
                                                            const std::vector<std::string>& dtypes,
                                                            GPUShape tensor_shape,
                                                            const char* op,
-                                                           const char* kernel)
+                                                           const char* kernel,
+                                                           const std::set<size_t> inputs_to_broadcast,
+                                                           const AxisSet& axes)
 {
     // kernel_name is used to check if the cuda kernel has been previously compiled
     std::stringstream kernel_name;
@@ -647,11 +649,22 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeConte
             CudaKernelBuilder::get_device_helper(writer, op, kernel, dtypes);
         }
 
-        CudaKernelBuilder::get_elementwise_op(writer, kernel_name.str(), op, dtypes);
+        if (inputs_to_broadcast.size())
+        {
+            CudaKernelBuilder::get_ew_bcast_fused_op(writer, kernel_name.str(), op, dtypes, inputs_to_broadcast, axes.size());
+        }
+        else
+        {
+            CudaKernelBuilder::get_elementwise_op(writer, kernel_name.str(), op, dtypes);
+        }
 
         compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
     size_t nthreads = shape_size(tensor_shape);
+
+
+
+
 
     // create the launch primitive
     std::unique_ptr<gpu::primitive> ew(
