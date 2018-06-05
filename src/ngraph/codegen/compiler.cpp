@@ -273,7 +273,6 @@ void codegen::StaticCompiler::add_header_search_path(const string& p)
         }
     }
 }
-
 std::unique_ptr<codegen::Module>
     codegen::StaticCompiler::compile(std::unique_ptr<clang::CodeGenAction>& m_compiler_action,
                                      const string& source)
