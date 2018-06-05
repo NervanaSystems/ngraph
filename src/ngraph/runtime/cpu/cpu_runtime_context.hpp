@@ -28,6 +28,14 @@ namespace ngraph
 {
     namespace runtime
     {
+        class AlignedBuffer;
+    }
+}
+
+namespace ngraph
+{
+    namespace runtime
+    {
         namespace cpu
         {
             typedef std::chrono::high_resolution_clock Clock;
@@ -40,6 +48,7 @@ namespace ngraph
                 int64_t* op_durations;
                 bool* p_en;
                 mkldnn::primitive* const* mkldnn_primitives;
+                std::vector<AlignedBuffer*> memory_buffers;
                 char* const* mkldnn_workspaces;
             };
             }

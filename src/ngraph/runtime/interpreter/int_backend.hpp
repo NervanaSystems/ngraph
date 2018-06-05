@@ -45,6 +45,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
@@ -98,6 +99,7 @@
 #include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/runtime/reference/result.hpp"
 #include "ngraph/runtime/reference/reverse.hpp"
+#include "ngraph/runtime/reference/reverse_sequence.hpp"
 #include "ngraph/runtime/reference/select.hpp"
 #include "ngraph/runtime/reference/select_and_scatter.hpp"
 #include "ngraph/runtime/reference/sign.hpp"
@@ -156,7 +158,6 @@ private:
         std::unordered_map<const Node*, stopwatch> m_timer_map;
     };
     std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
-    static bool init;
 
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensorView>>&,
                                   const Node* op = nullptr);
@@ -791,6 +792,24 @@ private:
                                args[0]->get_shape(),
                                out[0]->get_shape(),
                                reverse->get_reversed_axes());
+        }
+        else if (node_op == "ReverseSequence")
+        {
+            op::ReverseSequence* reverse = dynamic_cast<op::ReverseSequence*>(&node);
+
+            if (args[1]->get_element_type() == element::i32)
+            {
+                reference::reverse_sequence<T, int>(args[0]->get_data_ptr<T>(),
+                                                    out[0]->get_data_ptr<T>(),
+                                                    args[0]->get_shape(),
+                                                    reverse->get_batch_axis(),
+                                                    reverse->get_sequence_axis(),
+                                                    args[1]->get_data_ptr<int>());
+            }
+            else
+            {
+                throw ngraph_error("only int32 indices are supported");
+            }
         }
         else if (node_op == "Select")
         {

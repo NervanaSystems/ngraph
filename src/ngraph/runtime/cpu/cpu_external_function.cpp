@@ -120,13 +120,18 @@
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
+#include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_concat_inputs.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_shuffle_folding.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
 
@@ -138,9 +143,6 @@ using namespace std;
 using namespace ngraph;
 
 static const string s_output_dir = "cpu_codegen";
-
-// Temporary Memory Pool alignment
-static const size_t s_memory_pool_alignment = 4096;
 
 static void
     generate_isnan_isinf_check(codegen::CodeWriter& writer,
@@ -277,6 +279,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::BatchNorm), &runtime::cpu::CPU_Emitter::emit<op::BatchNorm>},
     {TI(ngraph::op::BatchNormRelu), &runtime::cpu::CPU_Emitter::emit<op::BatchNormRelu>},
     {TI(ngraph::op::BatchNormBackprop), &runtime::cpu::CPU_Emitter::emit<op::BatchNormBackprop>},
+    {TI(ngraph::op::Lstm), &runtime::cpu::CPU_Emitter::emit<op::Lstm>},
     {TI(ngraph::op::MaxPoolBackprop), &runtime::cpu::CPU_Emitter::emit<op::MaxPoolBackprop>},
     {TI(ngraph::op::MaxPoolWithIndicesBackprop),
      &runtime::cpu::CPU_Emitter::emit<op::MaxPoolWithIndicesBackprop>},
@@ -285,12 +288,19 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Min), &runtime::cpu::CPU_Emitter::emit<op::Min>},
     {TI(ngraph::op::Relu), &runtime::cpu::CPU_Emitter::emit<op::Relu>},
     {TI(ngraph::op::ReluBackprop), &runtime::cpu::CPU_Emitter::emit<op::ReluBackprop>},
+    {TI(ngraph::op::Rnn), &runtime::cpu::CPU_Emitter::emit<op::Rnn>},
     {TI(ngraph::op::Sigmoid), &runtime::cpu::CPU_Emitter::emit<op::Sigmoid>},
+    {TI(ngraph::op::SigmoidMultiply), &runtime::cpu::CPU_Emitter::emit<op::SigmoidMultiply>},
+    {TI(ngraph::op::SigmoidMultiplyBackprop),
+     &runtime::cpu::CPU_Emitter::emit<op::SigmoidMultiplyBackprop>},
     {TI(ngraph::op::Softmax), &runtime::cpu::CPU_Emitter::emit<op::Softmax>},
     {TI(ngraph::op::SigmoidBackprop), &runtime::cpu::CPU_Emitter::emit<op::SigmoidBackprop>},
     {TI(ngraph::op::And), &runtime::cpu::CPU_Emitter::emit<op::And>},
     {TI(ngraph::op::Or), &runtime::cpu::CPU_Emitter::emit<op::Or>},
 };
+
+const size_t runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction::s_memory_pool_alignment =
+    4096;
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
@@ -319,12 +329,18 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
     ngraph::pass::Manager pass_manager;
 
+    //nv_cwi is required only by some frontends
+    //in which case they should run this pass(CPUWorkspaceInsertion) explicitly
+    NodeVector nv_cwi;
     pass_manager.register_pass<ngraph::pass::NopElimination>();
+    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
@@ -354,6 +370,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/reference/and.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
+#include "ngraph/runtime/reference/batch_norm.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/runtime/reference/concat.hpp"
 #include "ngraph/runtime/reference/convolution.hpp"
@@ -581,13 +598,7 @@ using namespace ngraph::runtime;
         }
         if (temporaries_used)
         {
-            size_t temp_pool_size = current_function->get_temporary_pool_size();
-            writer << "// Allocate the memory pool\n";
-            writer << "// Memory pool size is " << temp_pool_size << " bytes\n";
-            writer << "// Worst case size is " << worst_case_tmp_size << " bytes\n";
-            writer << "ngraph::runtime::AlignedBuffer " << current_function->get_name()
-                   << "_memory_handler(" << temp_pool_size << ", " << s_memory_pool_alignment
-                   << ");\n";
+            m_memory_buffer_sizes.push_back(current_function->get_temporary_pool_size());
         }
 
         // Indexing for Control Flags
@@ -630,8 +641,8 @@ using namespace ngraph::runtime;
 
         if (temporaries_used)
         {
-            writer << "size_t pool_base_ptr = (size_t)" << current_function->get_name()
-                   << "_memory_handler.get_ptr();\n";
+            writer << "size_t pool_base_ptr = (size_t) ctx->memory_buffers["
+                   << m_memory_buffer_sizes.size() - 1 << "]->get_ptr();\n";
             writer << "\n";
 
             // Add temporaries to the variable name map
@@ -792,6 +803,32 @@ using namespace ngraph::runtime;
                     {
                         writer << " || t_en[" << tensor_index_map[input_name] << "]";
                     }
+                }
+
+                auto computes_output = [&]() {
+                    if (std::dynamic_pointer_cast<ngraph::op::Result>(node))
+                    {
+                        return true;
+                    }
+                    // Check if node feeds a result node that has been copy eliminated
+                    for (const descriptor::Output& output : node->get_outputs())
+                    {
+                        for (const descriptor::Input* input : output.get_inputs())
+                        {
+                            auto res =
+                                std::dynamic_pointer_cast<ngraph::op::Result>(input->get_node());
+                            if (res && !res->needs_copy())
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                };
+                // Always enable nodes computing output tensors
+                if (computes_output())
+                {
+                    writer << " || 1";
                 }
                 writer << ") {\n";
                 writer.indent++;

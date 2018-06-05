@@ -25,10 +25,12 @@ namespace ngraph
         namespace gpu
         {
             struct GPURuntimeContext;
-            extern "C" void invoke_primitive(GPURuntimeContext* ctx,
+            extern "C" void invoke_primitive(const GPURuntimeContext* ctx,
                                              size_t primitive_index,
                                              void** args,
                                              void** result);
+            extern "C" void* invoke_memory_primitive(const GPURuntimeContext* ctx,
+                                                     size_t primitive_index);
         }
     }
 }

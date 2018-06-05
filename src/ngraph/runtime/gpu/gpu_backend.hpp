@@ -63,7 +63,6 @@ namespace ngraph
                 };
 
                 std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
-                static bool init;
             };
         }
     }

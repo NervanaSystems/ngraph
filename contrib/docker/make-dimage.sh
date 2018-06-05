@@ -58,8 +58,6 @@ echo ' '
 # build the docker base image
 docker build  --rm=true \
        -f="${DFILE}" \
-       --build-arg http_proxy=http://proxy-us.intel.com:911 \
-       --build-arg https_proxy=https://proxy-us.intel.com:911 \
        -t="${DIMAGE_ID}" \
        ${CONTEXT}
 
