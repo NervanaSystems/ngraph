@@ -40,7 +40,7 @@ runtime::Backend::~Backend()
 {
 }
 
-shared_ptr<runtime::Backend> runtime::Backend::create_dynamic_backend(const string& type,
+shared_ptr<runtime::Backend> runtime::Backend::create_dynamic_backend(string type,
                                                                       const OptionsMap& options)
 {
     string ext = SHARED_LIB_EXT;

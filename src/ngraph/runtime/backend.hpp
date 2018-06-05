@@ -89,7 +89,7 @@ namespace ngraph
                                const std::vector<std::shared_ptr<runtime::TensorView>>& inputs);
 
         private:
-            static std::shared_ptr<Backend> create_dynamic_backend(const std::string& name,
+            static std::shared_ptr<Backend> create_dynamic_backend(std::string name,
                                                                    const OptionsMap& options);
             static std::unordered_map<std::string, std::shared_ptr<Backend>>& get_backend_map();
         };
