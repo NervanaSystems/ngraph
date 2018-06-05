@@ -49,12 +49,20 @@ DIMAGE_VERSION=`date -Iseconds | sed -e 's/:/-/g'`
 
 DIMAGE_ID="${DIMAGE_NAME}:${DIMAGE_VERSION}"
 
-# Auto-detect proxy settings when running from within Intel's network
-hostname | grep '\.intel\.com$'
-if [ $? = 0 ] ; then  # Within .intel.com
-    DOCKER_PROXIES='--build-arg http_proxy=http://proxy-fm.intel.com:911 --build-arg https_proxy=http://proxy-fm.intel.com:912'
+# If proxy settings are detected in the environment, make sure they are
+# included on the docker-build command-line.  This mirrors a similar system
+# in the Makefile.
+
+if [ ! -z "${http_proxy}" ] ; then
+    DOCKER_HTTP_PROXY="--build-arg http_proxy=${http_proxy}"
 else
-    DOCKER_PROXIES=' '
+    DOCKER_HTTP_PROXY=' '
+fi
+
+if [ ! -z "${https_proxy}" ] ; then
+    DOCKER_HTTPS_PROXY="--build-arg https_proxy=${https_proxy}"
+else
+    DOCKER_HTTPS_PROXY=' '
 fi
 
 echo ' '
@@ -63,7 +71,7 @@ echo ' '
 
 # build the docker base image
 docker build  --rm=true \
-       ${DOCKER_PROXIES} \
+       ${DOCKER_HTTP_PROXY} ${DOCKER_HTTPS_PROXY} \
        -f="${DFILE}" \
        -t="${DIMAGE_ID}" \
        ${CONTEXT}
