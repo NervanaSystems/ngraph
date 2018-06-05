@@ -1,4 +1,8 @@
-# nGraph library [![Build Status][build-status-badge]][build-status]
+<p align="center"><img width="40%" src="doc/sphinx/source/graphics/ngraph-logo.png" /></p>
+
+---
+
+# nGraph [![Build Status][build-status-badge]][build-status]
 
 Welcome to Intel® nGraph™, an open source C++ library, compiler and
 runtime. This project enables modern compute platforms to run and
