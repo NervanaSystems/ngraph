@@ -111,5 +111,5 @@ TEST(nop_elimination, eliminate_stop_gradient)
     pass_manager.register_pass<pass::NopElimination>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Broadcast>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::StopGradient>(f), 0);
 }
