@@ -40,7 +40,8 @@ runtime::Backend::~Backend()
 {
 }
 
-void* runtime::Backend::open_shared_library(const string& type)
+shared_ptr<runtime::Backend> runtime::Backend::create_dynamic_backend(const string& type,
+       const OptionsMap& options)
 {
     string ext = SHARED_LIB_EXT;
     string ver = LIBRARY_VERSION;
@@ -48,38 +49,33 @@ void* runtime::Backend::open_shared_library(const string& type)
     void* handle = nullptr;
     string name = "lib" + to_lower(type) + "_backend" + ext;
     handle = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
-    if (handle)
-    {
-        function<void()> create = reinterpret_cast<void (*)()>(dlsym(handle, "create_backend"));
-        if (create)
-        {
-            create();
-        }
-        else
-        {
-            throw runtime_error("Failed to find create_backend function in library '" + name + "'");
-        }
-    }
-    else
-    {
+    if (!handle) {
+
         string err = dlerror();
-        throw runtime_error("Library open for Backend '" + name + "' failed with error:\n" + err);
+        throw runtime_error("Library open for Backend '"+name+"' failed with error:\n"+err);
     }
-    return handle;
+
+    auto create = reinterpret_cast<runtime::Backend* (*)(const OptionsMap&)>(dlsym(handle, "create_backend"));
+    auto destroy = reinterpret_cast<void (*)(runtime::Backend*)>(dlsym(handle, "destroy_backend"));
+    if (!create) {
+        throw runtime_error("Failed to find create_backend function in library '"+name+"'");
+    }
+
+    Backend* pBackend = create(options);
+    if (destroy)
+        return shared_ptr<Backend>(pBackend, [destroy](Backend* be) { destroy(be); });
+    else  // not providing destroy will cause user to delete it (dangerous!)
+        return shared_ptr<Backend>(pBackend);
 }
 
-shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
+shared_ptr<runtime::Backend> runtime::Backend::create(const string& type, const OptionsMap &options)
 {
     auto it = get_backend_map().find(type);
     if (it == get_backend_map().end())
     {
-        open_shared_library(type);
-        it = get_backend_map().find(type);
-        if (it == get_backend_map().end())
-        {
-            throw runtime_error("Backend '" + type + "' not found in registered backends.");
-        }
+        return create_dynamic_backend(type, options);
     }
+    it->second->setConfiguration(options);
     return it->second;
 }
 

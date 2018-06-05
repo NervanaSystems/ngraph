@@ -17,6 +17,8 @@
 #pragma once
 
 #include <memory>
+#include <map>
+#include <string>
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
@@ -36,17 +38,21 @@ namespace ngraph
         class Backend
         {
         public:
+            typedef std::map<std::string,std::string> OptionsMap;
+
             virtual ~Backend();
             /// @brief Create a new Backend object
             /// @param type The name of a registered backend, such as "CPU" or "GPU".
             ///   To select a subdevice use "GPU:N" where s`N` is the subdevice number.
             /// @returns shared_ptr to a new Backend or nullptr if the named backend
             ///   does not exist.
-            static std::shared_ptr<Backend> create(const std::string& type);
+            static std::shared_ptr<Backend> create(const std::string& type, const OptionsMap &options={});
 
             /// @brief Query the list of registered devices
             /// @returns A vector of all registered devices.
             static std::vector<std::string> get_registered_devices();
+
+            virtual void setConfiguration(const OptionsMap &options) {}
 
             virtual std::shared_ptr<ngraph::runtime::TensorView>
                 create_tensor(const ngraph::element::Type& element_type, const Shape& shape) = 0;
@@ -83,7 +89,7 @@ namespace ngraph
                                const std::vector<std::shared_ptr<runtime::TensorView>>& inputs);
 
         private:
-            static void* open_shared_library(const std::string& name);
+            static std::shared_ptr<Backend> create_dynamic_backend(const std::string& name, const OptionsMap& options);
             static std::unordered_map<std::string, std::shared_ptr<Backend>>& get_backend_map();
         };
     }
