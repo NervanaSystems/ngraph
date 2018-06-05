@@ -102,6 +102,7 @@
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
+#include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -3893,6 +3894,158 @@ namespace ngraph
 
                 writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                        << to_string(sigmoid_index) << ");\n";
+            }
+
+            std::string
+                generate_sigmoid_mul_func(const ngraph::op::SigmoidMultiply::FunctionType type,
+                                          const std::string& input,
+                                          const std::string& out_numer,
+                                          const std::string& out_denom,
+                                          bool derivative)
+            {
+                std::string func_block;
+                switch (type)
+                {
+                case ngraph::op::SigmoidMultiply::FunctionType::Logistic:
+                    func_block = "auto e_x = exp(" + input + ");\n";
+                    func_block += out_numer + " = e_x;\n";
+                    func_block += out_denom + " = e_x+1;\n";
+                    if (derivative)
+                    {
+                        func_block += "d_" + out_numer + " = " + out_numer + ";\n";
+                        func_block +=
+                            "d_" + out_denom + " = " + out_denom + " * " + out_denom + ";\n";
+                    }
+                    break;
+                case ngraph::op::SigmoidMultiply::FunctionType::Tanh:
+                    func_block = "auto e_2x = exp(2.0*" + input + ");\n";
+                    func_block += out_numer + " = e_2x-1;\n";
+                    func_block += out_denom + " = e_2x+1;\n";
+                    if (derivative)
+                    {
+                        func_block += "d_" + out_numer + " = 4.0*e_2x;\n";
+                        func_block +=
+                            "d_" + out_denom + " = " + out_denom + " * " + out_denom + ";\n";
+                    }
+                    break;
+                case ngraph::op::SigmoidMultiply::FunctionType::Identity:
+                    func_block = out_numer + " = " + input + ";\n";
+                    func_block += out_denom + " = 1;\n";
+                    if (derivative)
+                    {
+                        func_block += "d_" + out_numer + " = 1;\n";
+                        func_block += "d_" + out_denom + " = 1;\n";
+                    }
+                    break;
+                }
+                if (func_block.empty())
+                {
+                    throw ngraph_error(
+                        "generate_sigmoid_mul_func input function type not supported");
+                }
+                return func_block;
+            }
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::SigmoidMultiply)
+            {
+                auto sigmoid_mul = static_cast<const ngraph::op::SigmoidMultiply*>(node);
+                std::string numer_0 = "numer_0";
+                std::string denom_0 = "denom_0";
+                std::string numer_1 = "numer_1";
+                std::string denom_1 = "denom_1";
+                std::string input_0_func_string =
+                    generate_sigmoid_mul_func(sigmoid_mul->get_input_func_type(0),
+                                              args[0].get_name() + "[i]",
+                                              numer_0,
+                                              denom_0,
+                                              false);
+                std::string input_1_func_string =
+                    generate_sigmoid_mul_func(sigmoid_mul->get_input_func_type(1),
+                                              args[1].get_name() + "[i]",
+                                              numer_1,
+                                              denom_1,
+                                              false);
+
+                writer.block_begin();
+                writer << "#pragma omp parallel for simd\n";
+                writer << "for (size_t i=0; i<" << out[0].get_size() << "; i++)\n";
+                writer.block_begin();
+                writer << "float " << numer_0 << ";\n";
+                writer << "float " << denom_0 << ";\n";
+                writer.block_begin();
+                writer << input_0_func_string;
+                writer.block_end();
+                writer << "float " << numer_1 << ";\n";
+                writer << "float " << denom_1 << ";\n";
+                writer.block_begin();
+                writer << input_1_func_string;
+                writer.block_end();
+                writer << out[0].get_name()
+                       << "[i] = (" + numer_0 + " * " + numer_1 + ") / (" + denom_0 + " * " +
+                              denom_1 + ");\n";
+                writer.block_end();
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::SigmoidMultiplyBackprop)
+            {
+                // math: we have sigmoid functions f(x) and g(y) multiplied, z = f(x) * g(y)
+                // dz/dx = dz/df * df/dx = g(y) * f'(x)
+                // dz/dy = dz/dg * dg/dy = f(x) * g'(y)
+                auto sigmoid_mul_backprop =
+                    static_cast<const ngraph::op::SigmoidMultiplyBackprop*>(node);
+                const TensorViewWrapper& data_0 = args[0];
+                const TensorViewWrapper& data_1 = args[1];
+                const TensorViewWrapper& delta = args[2];
+                const TensorViewWrapper& input_0_delta = out[0];
+                const TensorViewWrapper& input_1_delta = out[1];
+                std::string numer_0 = "numer_0";
+                std::string denom_0 = "denom_0";
+                std::string numer_1 = "numer_1";
+                std::string denom_1 = "denom_1";
+                std::string d_numer_0 = "d_numer_0";
+                std::string d_denom_0 = "d_denom_0";
+                std::string d_numer_1 = "d_numer_1";
+                std::string d_denom_1 = "d_denom_1";
+                std::string input_0_func_string =
+                    generate_sigmoid_mul_func(sigmoid_mul_backprop->get_input_func_type(0),
+                                              data_0.get_name() + "[i]",
+                                              numer_0,
+                                              denom_0,
+                                              true);
+                std::string input_1_func_string =
+                    generate_sigmoid_mul_func(sigmoid_mul_backprop->get_input_func_type(1),
+                                              data_1.get_name() + "[i]",
+                                              numer_1,
+                                              denom_1,
+                                              true);
+                writer.block_begin();
+                writer << "#pragma omp parallel for simd\n";
+                writer << "for (size_t i=0; i<" << input_0_delta.get_size() << "; i++)\n";
+                writer.block_begin();
+                writer << "float " << numer_0 << ";\n";
+                writer << "float " << denom_0 << ";\n";
+                writer << "float " << d_numer_0 << ";\n";
+                writer << "float " << d_denom_0 << ";\n";
+                writer.block_begin();
+                writer << input_0_func_string;
+                writer.block_end();
+                writer << "float " << numer_1 << ";\n";
+                writer << "float " << denom_1 << ";\n";
+                writer << "float " << d_numer_1 << ";\n";
+                writer << "float " << d_denom_1 << ";\n";
+                writer.block_begin();
+                writer << input_1_func_string;
+                writer.block_end();
+                writer << input_0_delta.get_name()
+                       << "[i] = " + delta.get_name() + "[i]*(" + numer_1 + "*" + d_numer_0 +
+                              ")/(" + denom_1 + "*" + d_denom_0 + ");\n";
+                writer << input_1_delta.get_name()
+                       << "[i] = " + delta.get_name() + "[i]*(" + numer_0 + "*" + d_numer_1 +
+                              ")/(" + denom_0 + "*" + d_denom_1 + ");\n";
+                writer.block_end();
+                writer.block_end();
             }
 
             template <>

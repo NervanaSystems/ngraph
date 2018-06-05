@@ -213,6 +213,7 @@ cpio::Reader::~Reader()
 void cpio::Reader::open(istream& in)
 {
     m_stream = &in;
+    m_stream->seekg(0, ios_base::beg);
 }
 
 void cpio::Reader::open(const string& filename)
@@ -278,6 +279,41 @@ void cpio::Reader::read(const string& file_name, void* data, size_t size_in_byte
             break;
         }
     }
+}
+
+bool cpio::is_cpio(const string& path)
+{
+    ifstream in(path, ios_base::binary | ios_base::in);
+    return is_cpio(in);
+}
+
+bool cpio::is_cpio(istream& in)
+{
+    size_t offset = in.tellg();
+    in.seekg(0, ios_base::beg);
+    bool rc = false;
+    uint8_t ch;
+    in.read(reinterpret_cast<char*>(&ch), 1);
+    switch (ch)
+    {
+    case 0x71: // Big Endian
+        in.read(reinterpret_cast<char*>(&ch), 1);
+        if (ch == 0xC7)
+        {
+            rc = true;
+        }
+        break;
+    case 0xC7: // Little Endian
+        in.read(reinterpret_cast<char*>(&ch), 1);
+        if (ch == 0x71)
+        {
+            rc = true;
+        }
+        break;
+    default: break;
+    }
+    in.seekg(offset, ios_base::beg);
+    return rc;
 }
 
 const string& cpio::FileInfo::get_name() const

@@ -45,6 +45,7 @@ T get_or_default(nlohmann::json& j, const std::string& key, const T& default_val
     return rc;
 }
 
+#if defined(NGRAPH_INTERPRETER_ENABLE)
 TEST(serialize, main)
 {
     // First create "f(A,B,C) = (A+B)*C".
@@ -102,6 +103,7 @@ TEST(serialize, main)
     backend->call(sfunc, {result}, {x, z, y});
     EXPECT_EQ((vector<float>{200, 288, 392, 512}), read_vector<float>(result));
 }
+#endif
 
 TEST(serialize, existing_models)
 {
@@ -140,6 +142,7 @@ TEST(serialize, constant)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), A->get_vector<float>());
     serialize(tmp_file, f);
     auto g = deserialize(tmp_file);
+    ASSERT_NE(g, nullptr);
     file_util::remove_file(tmp_file);
     bool found = false;
     for (shared_ptr<Node> node : g->get_ops())
