@@ -49,7 +49,13 @@ DIMAGE_VERSION=`date -Iseconds | sed -e 's/:/-/g'`
 
 DIMAGE_ID="${DIMAGE_NAME}:${DIMAGE_VERSION}"
 
-cd ${CONTEXTDIR}
+# Auto-detect proxy settings when running from within Intel's network
+hostname | grep '\.intel\.com$'
+if [ $? = 0 ] ; then  # Within .intel.com
+    DOCKER_PROXIES='--build-arg http_proxy=http://proxy-fm.intel.com:911 --build-arg https_proxy=http://proxy-fm.intel.com:912'
+else
+    DOCKER_PROXIES=' '
+fi
 
 echo ' '
 echo "Building docker image ${DIMAGE_ID} from Dockerfile ${DFILE}, context ${CONTEXT}"
@@ -57,6 +63,7 @@ echo ' '
 
 # build the docker base image
 docker build  --rm=true \
+       ${DOCKER_PROXIES} \
        -f="${DFILE}" \
        -t="${DIMAGE_ID}" \
        ${CONTEXT}
