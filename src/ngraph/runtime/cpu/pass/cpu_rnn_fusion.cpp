@@ -242,7 +242,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         auto ht_output = std::make_shared<op::GetOutputElement>(lstm, 0);
         auto ct_output = std::make_shared<op::GetOutputElement>(lstm, 1);
 
-        if(lstm->get_outputs().at(0).get_inputs().size() != 2)
+        if (lstm->get_outputs().at(0).get_inputs().size() != 2)
         {
             throw ngraph_error("Lstm node doesnt have two outputs");
         }
@@ -282,8 +282,15 @@ static std::shared_ptr<ngraph::Node>
     if (concat_all)
     {
         auto node_labels = m.get_bound_nodes_for_pattern(rnn_labels[0]);
-        std::reverse(node_labels.begin(), node_labels.end());
-        return std::make_shared<op::Concat>(node_labels, 0);
+        if (node_labels.size() > 1)
+        {
+            std::reverse(node_labels.begin(), node_labels.end());
+            return std::make_shared<op::Concat>(node_labels, 0);
+        }
+        else
+        {
+            return node_labels[0];
+        }
     }
 
     // src_iter -> concatenate ht_1|ct_1 of the first LSTM cells belonging to same RNN layer
@@ -439,7 +446,15 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         NGRAPH_DEBUG << "batch_size: " << batch_size;
         NGRAPH_DEBUG << "feature_size: " << feature_size;
 
-        if ((src_layer->get_arguments().size()) != sequence_len)
+        if ((src_layer->get_arguments().size()) != sequence_len &&
+            !std::dynamic_pointer_cast<op::Parameter>(src_layer))
+        {
+            throw ngraph_error(
+                "number of lstm inputs captured in the RNN fusion is not equal to "
+                "src_sequence_length");
+        }
+
+        if (std::dynamic_pointer_cast<op::Parameter>(src_layer) && sequence_len != 1)
         {
             throw ngraph_error(
                 "number of lstm inputs captured in the RNN fusion is not equal to "
@@ -493,7 +508,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         std::vector<std::shared_ptr<op::Slice>> ht_slice_per_timestep(num_of_lstm_matched, nullptr);
         auto rnn_ht_out = std::make_shared<op::GetOutputElement>(rnn, 0);
-        auto rnn_ct_out = std::make_shared<op::GetOutputElement>(rnn, 1);
+        auto rnn_ht_ct_out = std::make_shared<op::GetOutputElement>(rnn, 1);
 
         //slice the rnn ht's
         size_t start_index = 0;
@@ -562,10 +577,30 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                         }
                     }
                 }
+                // we need to only check the last LSTM cell Ct user and replace if needed.
+                if ((index == 0) && (goe_node->get_n() == 1))
+                {
+                    // dst_iter of lstm mkldnn output holds the results of both recurrent state
+                    // tensor outputs. we need to slice the ct.
+                    auto ht_slice = std::make_shared<op::Slice>(
+                        rnn_ht_ct_out,
+                        Coordinate{0, 0},
+                        Coordinate{static_cast<unsigned long>(batch_size),
+                                   static_cast<unsigned long>(feature_size)});
+                    auto ct_slice = std::make_shared<op::Slice>(
+                        rnn_ht_ct_out,
+                        Coordinate{static_cast<unsigned long>(batch_size), 0},
+                        Coordinate{static_cast<unsigned long>(2 * batch_size),
+                                   static_cast<unsigned long>(feature_size)});
+
+                    // check if the last LSTM cell has any consumers
+                    auto n_time_step_lstm_ct_goe = goes->get_node();
+                    ngraph::replace_node(n_time_step_lstm_ct_goe, ct_slice);
+                }
             }
         }
 
-        //now go through the lstm consumers and replace them with the slice
+        //now go through the lstm goe_0 consumers and replace them with the slice
         for (auto& node : lstm_goe0_user)
         {
             for (size_t i = 0; i < node->get_input_size(); i++)
@@ -578,6 +613,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                 }
             }
         }
+
         NGRAPH_DEBUG << "End of recurrent fusion call back "
                      << "matched_node: " << m.get_match_root()->get_name();
         return true;
@@ -592,7 +628,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
 static std::shared_ptr<Node>
     compute_multi_layer_rnn_inputs(const std::shared_ptr<pattern::op::Label>& rnn_label,
-                               pattern::RecurrentMatcher& m)
+                                   pattern::RecurrentMatcher& m)
 {
     auto node_labels = m.get_bound_nodes_for_pattern(rnn_label);
     std::reverse(node_labels.begin(), node_labels.end());
@@ -602,6 +638,11 @@ static std::shared_ptr<Node>
 void ngraph::runtime::cpu::pass::RecurrentRNNFusion::construct_multi_layer_rnn_fusion_fprop()
 {
     auto src_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{30, 100});
+    auto slice_pred = [](std::shared_ptr<Node> n) {
+        return static_cast<bool>(std::dynamic_pointer_cast<op::Slice>(n));
+    };
+    auto src_slice = std::make_shared<pattern::op::Skip>(src_layer_label, slice_pred);
+
     auto src_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{20, 100});
     auto weights_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
     auto weights_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
@@ -616,7 +657,7 @@ void ngraph::runtime::cpu::pass::RecurrentRNNFusion::construct_multi_layer_rnn_f
     size_t ref_rnn_direction = 1;
     size_t ref_num_of_rnn_fused_layer = 1;
 
-    auto ref_rnn_node = std::make_shared<op::Rnn>(src_layer_label,
+    auto ref_rnn_node = std::make_shared<op::Rnn>(src_slice,
                                                   src_iter_label,
                                                   weights_layer_label,
                                                   weights_iter_label,
@@ -652,7 +693,7 @@ void ngraph::runtime::cpu::pass::RecurrentRNNFusion::construct_multi_layer_rnn_f
         auto src_nodes = m.get_bound_nodes_for_pattern(src_layer_label);
         auto rnn_ht_out_nodes = m.get_bound_nodes_for_pattern(rnn_ht_label);
         auto number_of_rnn_cell_matched = m.get_number_of_recurrent_matches();
-        NGRAPH_DEBUG << " In Recurrent multi layer RNN super fusion callback ";
+        NGRAPH_DEBUG << " In Recurrent multi layer RNN fusion callback ";
         NGRAPH_DEBUG << "Number of RNN's Matched: " << number_of_rnn_cell_matched;
         NGRAPH_DEBUG << "matched_root: " << m.get_match_root()->get_name();
         NGRAPH_DEBUG << "src_layer_node: " << src_nodes[0]->get_name();
@@ -710,7 +751,16 @@ void ngraph::runtime::cpu::pass::RecurrentRNNFusion::construct_multi_layer_rnn_f
         NGRAPH_DEBUG << "batch_size: " << batch_size;
         NGRAPH_DEBUG << "feature_size: " << feature_size;
 
-        if ((src_layer->get_arguments().size()) != rnn_node->get_num_timesteps())
+        if ((src_layer->get_arguments().size()) != rnn_node->get_num_timesteps() &&
+            !std::dynamic_pointer_cast<op::Parameter>(src_layer))
+        {
+            throw ngraph_error(
+                " input symbols for the layer fused RNN op, should be captured only for the first "
+                "layer");
+        }
+
+        if (std::dynamic_pointer_cast<op::Parameter>(src_layer) &&
+            rnn_node->get_num_timesteps() != 1)
         {
             throw ngraph_error(
                 " input symbols for the layer fused RNN op, should be captured only for the first "

@@ -34,6 +34,7 @@
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
@@ -2087,17 +2088,34 @@ TEST(cpu_fusion, fuse_rnn_across_layer)
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
     pass_manager.register_pass<runtime::cpu::pass::RecurrentRNNFusion>();
     const string json_path =
-        file_util::path_join(SERIALIZED_ZOO, "mxnet/2layer_60timestep_rnn_fprop.json");
+        file_util::path_join(SERIALIZED_ZOO, "mxnet/2rnn_layer_1timestep.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
-    size_t count_rnn = 1;
-    auto rnn_ops = get_ops_of_type<op::Rnn>(func);
-    EXPECT_EQ(rnn_ops.size(), count_rnn);
-    for (auto& node : rnn_ops)
+    size_t ref_rnn_count = 1;
+    auto rnn_count = count_ops_of_type<op::Rnn>(func);
+    EXPECT_EQ(ref_rnn_count, rnn_count);
+}
+
+TEST(cpu_fusion, fuse_rnn_across_2layer_1timestep)
+{
+    const std::string file_name("mxnet/2rnn_layer_1timestep.json");
+    auto cpu_f = make_function(file_name);
+    auto int_f = make_function(file_name);
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
     {
-        EXPECT_EQ(node->get_num_timesteps(), node->get_src_sequence_length());
-        EXPECT_EQ(node->get_num_cell_states(), node->get_argument(1)->get_arguments().size());
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }
