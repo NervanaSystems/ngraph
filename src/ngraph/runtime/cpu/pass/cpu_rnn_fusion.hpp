@@ -29,6 +29,7 @@ namespace ngraph
             {
                 class LSTMFusion;
                 class RNNFusion;
+                class RecurrentRNNFusion;
             }
         }
     }
@@ -60,4 +61,17 @@ public:
 
 private:
     void construct_rnn_lstm_fprop();
+};
+
+class ngraph::runtime::cpu::pass::RecurrentRNNFusion : public ngraph::pass::RecurrentGraphRewrite
+{
+public:
+    RecurrentRNNFusion()
+        : RecurrentGraphRewrite()
+    {
+        construct_multi_layer_rnn_fusion_fprop();
+    }
+
+private:
+    void construct_multi_layer_rnn_fusion_fprop();
 };
