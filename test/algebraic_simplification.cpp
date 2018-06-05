@@ -384,9 +384,7 @@ TEST(algebraic_simplification, concat_reshape_slice)
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, op::ParameterVector{a});
     pass_manager.run_passes(f);
-    auto reshape = std::dynamic_pointer_cast<op::Reshape>(f->get_results().at(0)->get_argument(0));
-    ASSERT_TRUE(reshape);
-    ASSERT_EQ(reshape->get_shape(), concat->get_shape());
+    ASSERT_EQ(f->get_results().at(0)->get_argument(0), concat);
 }
 
 TEST(algebraic_simplification, concat_slice)
