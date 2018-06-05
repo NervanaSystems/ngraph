@@ -517,6 +517,7 @@ using namespace ngraph::runtime;
         unordered_map<const Node*, string> node_cache;
         for (size_t i = 0; i < op_list.size(); i++)
         {
+            // constants and parameters cannot be outlined
             if (op_list[i]->is_constant() || op_list[i]->is_parameter())
             {
                 continue;
