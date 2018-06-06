@@ -110,7 +110,8 @@ namespace ngraph
                         data_dilated = data_dilated || (s != 1);
                     }
 
-                    if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
+                    if (!data_dilated && ((arg0_rank == 4 && arg1_rank == 4) ||
+                                          (arg0_rank == 5 && arg1_rank == 5)) &&
                         node->get_input_element_type(0) == element::f32)
                     {
                         auto op_annotations =
@@ -198,7 +199,8 @@ namespace ngraph
                         data_dilated = data_dilated || (s != 1);
                     }
 
-                    if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
+                    if (!data_dilated && ((arg0_rank == 4 && arg1_rank == 4) ||
+                                          (arg0_rank == 5 && arg1_rank == 5)) &&
                         node->get_input_element_type(0) == element::f32)
                     {
                         auto op_annotations =
@@ -225,7 +227,8 @@ namespace ngraph
                         data_dilated = data_dilated || (s != 1);
                     }
 
-                    if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
+                    if (!data_dilated && ((arg0_rank == 4 && arg1_rank == 4) ||
+                                          (arg0_rank == 5 && arg1_rank == 5)) &&
                         node->get_input_element_type(0) == element::f32)
                     {
                         auto op_annotations =
@@ -297,7 +300,8 @@ namespace ngraph
                     auto arg0_rank = arg0_shape.size();
                     auto result_shape = node->get_output_shape(0);
 
-                    if (arg0_rank == 4 && avg_pool->get_window_shape().size() == 2 &&
+                    if (((arg0_rank == 4 && avg_pool->get_window_shape().size() == 2) ||
+                         (arg0_rank == 5 && avg_pool->get_window_shape().size() == 3)) &&
                         node->get_input_element_type(0) == element::f32)
                     {
                         auto op_annotations =
@@ -316,7 +320,8 @@ namespace ngraph
                     auto arg0_rank = arg0_shape.size();
                     auto result_shape = node->get_output_shape(0);
 
-                    if (arg0_rank == 4 && avg_pool->get_window_shape().size() == 2 &&
+                    if (((arg0_rank == 4 && avg_pool->get_window_shape().size() == 2) ||
+                         (arg0_rank == 5 && avg_pool->get_window_shape().size() == 3)) &&
                         node->get_input_element_type(0) == element::f32)
                     {
                         auto op_annotations =
@@ -335,7 +340,8 @@ namespace ngraph
                     auto arg0_rank = arg0_shape.size();
                     auto result_shape = node->get_output_shape(0);
 
-                    if (arg0_rank == 4 && max_pool->get_window_shape().size() == 2 &&
+                    if (((arg0_rank == 4 && max_pool->get_window_shape().size() == 2) ||
+                         (arg0_rank == 5 && max_pool->get_window_shape().size() == 3)) &&
                         node->get_input_element_type(0) == element::f32)
                     {
                         auto op_annotations =
@@ -373,7 +379,8 @@ namespace ngraph
                     auto arg1_rank = arg1_shape.size();
                     auto result_shape = node->get_output_shape(0);
 
-                    if (arg1_rank == 4 && max_pool->get_window_shape().size() == 2 &&
+                    if (((arg1_rank == 4 && max_pool->get_window_shape().size() == 2) ||
+                         (arg1_rank == 5 && max_pool->get_window_shape().size() == 3)) &&
                         node->get_input_element_type(1) == element::f32)
                     {
                         auto op_annotations =

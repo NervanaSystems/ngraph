@@ -84,6 +84,7 @@ runtime::gpu::GPUAllocator::GPUAllocator(const GPUAllocator& g)
 size_t runtime::gpu::GPUAllocator::reserve_argspace(const void* data, size_t size)
 {
     // add parameter data to host buffer that will be transfered to device
+    size = pass::MemoryManager::align(size, runtime::gpu::GPUMemoryManager::alignment);
     size_t offset = m_manager->queue_for_transfer(data, size);
     // required to capture m_manager pointer
     // directly rather than `this` pointer
