@@ -65,6 +65,8 @@ else
     DOCKER_HTTPS_PROXY=' '
 fi
 
+cd ${CONTEXTDIR}
+
 echo ' '
 echo "Building docker image ${DIMAGE_ID} from Dockerfile ${DFILE}, context ${CONTEXT}"
 echo ' '
