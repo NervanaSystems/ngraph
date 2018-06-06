@@ -93,6 +93,7 @@ set (SRC
     op/slice.cpp
     op/softmax.cpp
     op/sqrt.cpp
+    op/stop_gradient.cpp
     op/subtract.cpp
     op/sum.cpp
     op/tan.cpp
