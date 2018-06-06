@@ -72,7 +72,7 @@ echo "Building docker image ${DIMAGE_ID} from Dockerfile ${DFILE}, context ${CON
 echo ' '
 
 # build the docker base image
-docker build  --no-cache --rm=true \
+docker build  --rm=true \
        ${DOCKER_HTTP_PROXY} ${DOCKER_HTTPS_PROXY} \
        -f="${DFILE}" \
        -t="${DIMAGE_ID}" \
