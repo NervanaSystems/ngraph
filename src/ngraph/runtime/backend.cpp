@@ -40,17 +40,28 @@ runtime::Backend::~Backend()
 {
 }
 
-void* runtime::Backend::open_shared_library(const string& type)
+void* runtime::Backend::open_shared_library(string type)
 {
+    string ext = SHARED_LIB_EXT;
+    string ver = LIBRARY_VERSION;
+
     void* handle = nullptr;
-    string name = "lib" + to_lower(type) + "_backend.so";
+
+    // strip off attributes, IE:CPU becomes IE
+    auto colon = type.find(":");
+    if (colon != type.npos)
+    {
+        type = type.substr(0, colon);
+    }
+    string name = "lib" + to_lower(type) + "_backend" + ext;
     handle = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
     if (handle)
     {
-        function<void()> create = reinterpret_cast<void (*)()>(dlsym(handle, "create_backend"));
-        if (create)
+        function<void()> create_backend =
+            reinterpret_cast<void (*)()>(dlsym(handle, "create_backend"));
+        if (create_backend)
         {
-            create();
+            create_backend();
         }
         else
         {
@@ -60,7 +71,7 @@ void* runtime::Backend::open_shared_library(const string& type)
     else
     {
         string err = dlerror();
-        throw runtime_error("Failed to find Backend library '" + name + "'\n" + err);
+        throw runtime_error("Library open for Backend '" + name + "' failed with error:\n" + err);
     }
     return handle;
 }

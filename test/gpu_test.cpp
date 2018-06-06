@@ -108,7 +108,7 @@ TEST(gpu_test, memory_manager_seperate_workspaces_allocsize)
         {
             size_t size = std::pow(2, i);
             allocator.reserve_workspace(size);
-            total_size += pass::MemoryManager::align(size, 4);
+            total_size += pass::MemoryManager::align(size, 8);
         }
     }
     emitter.allocate_primitive_memory();
