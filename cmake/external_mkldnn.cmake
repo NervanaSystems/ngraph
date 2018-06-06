@@ -108,8 +108,6 @@ add_library(libmkldnn INTERFACE)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
 target_link_libraries(libmkldnn INTERFACE
     ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn${CMAKE_SHARED_LIBRARY_SUFFIX}
-    ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmklml_intel${CMAKE_SHARED_LIBRARY_SUFFIX}
-    ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libiomp5${CMAKE_SHARED_LIBRARY_SUFFIX}
     )
 
 install(DIRECTORY ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/ DESTINATION ${NGRAPH_INSTALL_LIB})
