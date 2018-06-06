@@ -148,6 +148,7 @@ void codegen::StaticCompiler::initialize()
     // This is for both Eigen strong and weak inlines
     args.push_back("-mllvm");
     args.push_back("-inline-threshold=1000000");
+    args.push_back("-mstack-alignment=64");
     if (m_enable_pass_report)
     {
         args.push_back("-Rpass-analysis=loop-vectorize");
