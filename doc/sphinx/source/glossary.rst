@@ -98,6 +98,11 @@ Glossary
       Tensors are maps from *coordinates* to scalar values, all of the
       same type, called the *element type* of the tensor.
 
+   top five 
+
+      Term used to describe the training accuracy of a model that can produce 
+      results indicative of probabilities 
+
    model description
 
       A description of a program's fundamental operations that are 
