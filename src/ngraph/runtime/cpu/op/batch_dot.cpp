@@ -44,7 +44,10 @@ op::BatchDot::BatchDot(shared_ptr<Node> a, shared_ptr<Node> b, bool transpose_a,
         NGRAPH_DEBUG << "shape_b = " << vector_to_string(shape_b);
         throw ngraph_error("shape rank != 3 while creating BatchDot");
     }
-
+    if (a->get_element_type() != b->get_element_type())
+    {
+        throw ngraph_error("input element types did not match while creating BatchDot");
+    }
     size_t dot_dimension_a = (transpose_a) ? 1 : 2;
     size_t dot_dimension_b = (transpose_b) ? 2 : 1;
 
