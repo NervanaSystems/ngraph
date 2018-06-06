@@ -58,5 +58,7 @@ Model parallelism with more communication op support To support more general
 parallelism such as model parallel, we plan to add more communication collective 
 ops such as allgather, scatter, gather, etc. in future. 
 
+
+
 .. _one could train Resnet-50 with Imagenet-1k data: https://blog.surf.nl/en/imagenet-1k-training-on-intel-xeon-phi-in-less-than-40-minutes/
 .. _arxiv.org/pdf/1709.05011.pdf: https://arxiv.org/pdf/1709.05011.pdf
