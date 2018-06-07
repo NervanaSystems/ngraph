@@ -74,10 +74,22 @@ namespace ngraph
                 template <typename T>
                 size_t build_elementwise(const GPURuntimeContext* ctx,
                                          const std::vector<std::string>& dtypes,
-                                         GPUShape tensor_shape)
+                                         GPUShape tensor_shape,
+                                         const std::set<size_t>& is_reduced = {},
+                                         const AxisSet& axes = {},
+                                         bool save_elementwise = false,
+                                         const char* reduce_op = "")
                 {
-                    return build_elementwise_n_to_1(
-                        ctx, dtypes, tensor_shape, CudaOpMap<T>::op, CudaOpMap<T>::math_kernel);
+                    if (axes.size() == 0)
+                    {
+                        return build_elementwise_n_to_1(
+                            ctx, dtypes, tensor_shape, CudaOpMap<T>::op, CudaOpMap<T>::math_kernel);
+                    }
+                    else
+                    {
+                        return build_fused_ew_to_collective(
+                            ctx, dtypes, tensor_shape, is_reduced, axes, CudaOpMap<T>::op, CudaOpMap<T>::math_kernel, reduce_op, save_elementwise);
+                    }
                 }
 
                 size_t build_replace_slice(const GPURuntimeContext* ctx,
@@ -109,6 +121,15 @@ namespace ngraph
                                                 GPUShape tensor_shape,
                                                 const char* op,
                                                 const char* kernel);
+                size_t build_fused_ew_to_collective(const GPURuntimeContext* ctx,
+                                                    const std::vector<std::string>& dtypes,
+                                                    GPUShape tensor_shape,
+                                                    const std::set<size_t>& is_reduced,
+                                                    const AxisSet& axes,
+                                                    const char* op,
+                                                    const char* kernel,
+                                                    const char* reduce_op,
+                                                    bool save_elementwise);
 
                 GPUPrimitiveEmitter* m_primitive_emitter;
             };

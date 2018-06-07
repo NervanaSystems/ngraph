@@ -19,6 +19,7 @@
 #include <array>
 #include <string>
 #include <vector>
+#include <set>
 
 namespace ngraph
 {
@@ -33,6 +34,7 @@ namespace ngraph
             class CudaKernelBuilder
             {
             public:
+
                 static void get_elementwise_op(codegen::CodeWriter& writer,
                                                const std::string& name,
                                                const std::string& op,
@@ -84,6 +86,16 @@ namespace ngraph
                                               const std::string& name,
                                               const std::string& math_kernel,
                                               const std::vector<std::string>& data_types);
+
+                static void get_ew_collective_op(codegen::CodeWriter& writer,
+                                                 const std::string& name,
+                                                 const std::string& op,
+                                                 const std::string& reduce_op,
+                                                 const std::vector<std::string>& data_types,
+                                                 const std::set<size_t>& is_reduced,
+                                                 bool save_elementwise,
+                                                 size_t rank);
+
 
                 static void add_pod_typedefs(codegen::CodeWriter& writer);
 

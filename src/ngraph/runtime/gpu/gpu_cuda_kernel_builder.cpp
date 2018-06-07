@@ -57,6 +57,93 @@ void runtime::gpu::CudaKernelBuilder::get_elementwise_op(codegen::CodeWriter& wr
     return;
 }
 
+void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(codegen::CodeWriter& writer,
+                                                           const std::string& name,
+                                                           const std::string& op,
+                                                           const std::string& reduce_op,
+                                                           const std::vector<std::string>& data_types,
+                                                           const std::set<size_t>& is_reduced,
+                                                           bool save_elementwise,
+                                                           size_t rank)
+{
+    auto num_inputs = data_types.size() - 1;
+    writer << "extern \"C\" __global__ void cuda_" << name << "(";
+    for (size_t i = 0; i < num_inputs; i++)
+    {
+        writer << data_types[i] << "* in" << i << ", ";
+    }
+    writer << data_types[num_inputs] << "* out0, ";
+
+    // multi-output to save intermediate elementwise op if requested
+    if (save_elementwise)
+    {
+        writer << data_types[num_inputs] << "* out1, ";
+    }
+    writer << "int* strides, "
+           << "int* stride_magic, "
+           << "int* stride_shift, "
+           << "int* reduced_strides, "
+           << "size_t n)\n";
+    writer.block_begin();
+    {
+        writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x; \n";
+        writer << "if (tid < n)\n";
+        writer.block_begin();
+        {
+            std::string reduced_idx = reduce_coordinate_transform_helper(writer,
+                                                                         "tid",
+                                                                         "strides",
+                                                                         "stride_magic",
+                                                                         "stride_shift",
+                                                                         "reduced_strides",
+                                                                         "coordinate",
+                                                                         rank);
+            // element-wise operation
+            writer << data_types[num_inputs] << " output = " << op << "(";
+            for (size_t i = 0; i < num_inputs; i++)
+            {
+                if (i > 0)
+                {
+                    writer << ", ";
+                }
+                writer << "in" << i << "[";
+                if (is_reduced.count(i) > 0)
+                {
+                    writer << reduced_idx;
+                }
+                else
+                {
+                    writer << "tid";
+                }
+                writer << "]";
+            }
+            writer << ");\n";
+
+            // global collective reduce or broadcast
+            if (reduce_op != "")
+            {
+                writer << reduce_op << "(&out0[" << reduced_idx << "], output);\n";
+                if (save_elementwise)
+                {
+                    writer << "out1[" << "tid" << "] = output;\n";
+                }
+            }
+            else
+            {
+                writer << "out0[tid] = output;\n";
+                if (save_elementwise)
+                {
+                    writer << "out1[" << reduced_idx << "] = output;\n";
+                }
+            }
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+
+    return;
+}
+
 void runtime::gpu::CudaKernelBuilder::get_broadcast_op(codegen::CodeWriter& writer,
                                                        const std::string& name,
                                                        const std::array<std::string, 2>& data_types,
