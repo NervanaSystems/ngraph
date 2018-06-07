@@ -62,19 +62,23 @@ shared_ptr<runtime::Backend> runtime::Backend::create_dynamic_backend(string typ
         throw runtime_error("Library open for Backend '" + name + "' failed with error:\n" + err);
     }
 
-    auto create =
-        reinterpret_cast<runtime::Backend* (*)(const OptionsMap&)>(dlsym(handle, "create_backend"));
+    auto create = reinterpret_cast<runtime::Backend* (*)(const std::string&, const OptionsMap&)>(
+        dlsym(handle, "create_backend"));
     auto destroy = reinterpret_cast<void (*)(runtime::Backend*)>(dlsym(handle, "destroy_backend"));
     if (!create)
     {
         throw runtime_error("Failed to find create_backend function in library '" + name + "'");
     }
 
-    Backend* pBackend = create(options);
+    Backend* pBackend = create(type, options);
     if (destroy)
+    {
         return shared_ptr<Backend>(pBackend, [destroy](Backend* be) { destroy(be); });
+    }
     else // not providing destroy will cause user to delete it (dangerous!)
+    {
         return shared_ptr<Backend>(pBackend);
+    }
 }
 
 shared_ptr<runtime::Backend> runtime::Backend::create(const string& type, const OptionsMap& options)
