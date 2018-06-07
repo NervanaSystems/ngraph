@@ -116,6 +116,7 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
@@ -130,6 +131,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_concat_inputs.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_shuffle_folding.hpp"
@@ -211,6 +213,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Multiply), &runtime::cpu::CPU_Emitter::emit<op::Multiply>},
     {TI(ngraph::op::Parameter), &runtime::cpu::CPU_Emitter::nop},
     {TI(ngraph::op::Abs), &runtime::cpu::CPU_Emitter::emit<op::Abs>},
+    {TI(ngraph::op::BatchDot), &runtime::cpu::CPU_Emitter::emit<op::BatchDot>},
     {TI(ngraph::op::Concat), &runtime::cpu::CPU_Emitter::emit<op::Concat>},
     {TI(ngraph::op::Divide), &runtime::cpu::CPU_Emitter::emit<op::Divide>},
     {TI(ngraph::op::Equal), &runtime::cpu::CPU_Emitter::emit<op::Equal>},
@@ -335,6 +338,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchDotFusion>();
     pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();

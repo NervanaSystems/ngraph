@@ -34,6 +34,7 @@ set(SRC
     mkldnn_emitter.cpp
     mkldnn_invoke.cpp
     mkldnn_utils.cpp
+    op/batch_dot.cpp
     op/batch_norm_relu.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
@@ -50,7 +51,7 @@ set(SRC
     pass/cpu_layout.cpp
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
-    pass/cpu_rnn_mat_fusion.cpp
+    pass/cpu_mat_fusion.cpp
     pass/cpu_shuffle_folding.cpp
     pass/cpu_workspace_insertion.cpp
 )
