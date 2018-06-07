@@ -22,6 +22,7 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/coordinate.hpp"
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 

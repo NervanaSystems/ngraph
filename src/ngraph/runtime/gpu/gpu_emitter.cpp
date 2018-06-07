@@ -164,7 +164,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 CoordinateDiff padding_above_diff = convolution->get_padding_above();
                 GPUShape padding_below(padding_below_diff);
                 GPUShape padding_above(padding_above_diff);
-                GPUShape data_dilation_strides_gpu(data_dilation_strides);
 
                 if (padding_below.size() > 3)
                 {
@@ -180,12 +179,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         break;
                     }
                 }
-                if(is_deconvolution)
-                {
-                    auto& cuda_emitter =
-                        external_function->get_primitive_emitter()->get_cuda_emitter();
-
-                }
 
                 bool pad_required = false;
                 if (padding_below != padding_above)
@@ -193,9 +186,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     pad_required = true;
                 }
                 auto input_shape = args[0].get_shape();
-                GPUShape input_padded_shape(input_shape.size());
-
-                auto input_padded_shape = input_shape;
+                GPUShape input_padded_shape(input_shape);
 
                 if (pad_required || is_deconvolution)
                 {
@@ -211,9 +202,9 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         padding_below_int[j--] = static_cast<int>(padding_below[i]);
                     }
                     j = input_shape.size() - 1;
-                    for (int64_t i = dilation_strides.size() - 1; i >= 0; i--)
+                    for (int64_t i = data_dilation_strides.size() - 1; i >= 0; i--)
                     {
-                        dilation_strides_int[j--] = static_cast<int>(dilation_strides[i]);
+                        dilation_strides_int[j--] = static_cast<int>(data_dilation_strides[i]);
                     }
 
                     for(int64_t i = 0; i < input_shape.size(); i++)
