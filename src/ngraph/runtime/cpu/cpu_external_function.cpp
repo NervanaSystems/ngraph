@@ -1130,7 +1130,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
     }
 
     // Intermediates
-    assert(tensor_data.empty());
     if (m_function->get_temporary_pool_size())
     {
         m_memory_buffer_sizes.push_back(m_function->get_temporary_pool_size());
