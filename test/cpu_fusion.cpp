@@ -43,6 +43,7 @@
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
+#include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
@@ -59,8 +60,9 @@
 #include "util/matcher.hpp"
 #include "util/random.hpp"
 #include "util/test_tools.hpp"
-
 #include "util/random.hpp"
+
+#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -1292,4 +1294,76 @@ TEST(cpu_fusion, batch_norm_folding)
     auto int_results = execute(int_f, args, "INTERPRETER");
     auto cpu_results = execute(cpu_f, args, "CPU");
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+}
+
+
+TEST(cpu_fusion, group_convolution)
+{
+    auto backend = runtime::Backend::create("CPU");
+    test::Uniform<float> rng(2.0f, 10.0f);
+
+    const size_t GROUPS = 2;
+    Shape shape_a{1, 32, 2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{2, 16, 1, 1};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{1, 2, 2, 2};
+    auto group_conv = make_shared<op::GroupConvolution>(A,
+                                              B,
+                                              Strides{1, 1},
+                                              Strides{1, 1},
+                                              CoordinateDiff{0, 0},
+                                              CoordinateDiff{0, 0},
+                                              Strides{1, 1},
+                                              GROUPS,
+                                              shape_r
+                                              );
+
+
+    Shape shape_c{1, 16, 2, 2};
+    auto C = make_shared<op::Parameter>(element::f32, shape_c);
+    Shape shape_d{1, 16, 1, 1};
+    auto D = make_shared<op::Parameter>(element::f32, shape_d);
+    auto conv_lower = make_shared<op::Convolution>(C,
+                                              D,
+                                              Strides{1, 1},
+                                              Strides{1, 1},
+                                              CoordinateDiff{0, 0},
+                                              CoordinateDiff{0, 0},
+                                              Strides{1, 1});
+
+    auto E = make_shared<op::Parameter>(element::f32, shape_c);
+    auto F = make_shared<op::Parameter>(element::f32, shape_d);
+    auto conv_upper = make_shared<op::Convolution>(E,
+                                              F,
+                                              Strides{1, 1},
+                                              Strides{1, 1},
+                                              CoordinateDiff{0, 0},
+                                              CoordinateDiff{0, 0},
+                                              Strides{1, 1});
+
+    auto f = make_shared<Function>(NodeVector{group_conv, conv_lower, conv_upper}, op::ParameterVector{A, B, C, D, E, F});
+
+
+    auto a_ = rng.initialize(backend->create_tensor(element::f32, shape_a));
+    auto b_ = rng.initialize(backend->create_tensor(element::f32, shape_b));
+    
+    vector<float> rv(shape_size(shape_r), 0);
+    auto group_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(backend->create_tensor(element::f32, shape_r, rv.data()));
+
+    auto av = read_vector<float>(a_);
+    auto bv = read_vector<float>(b_);
+    auto c_ = backend->create_tensor(element::f32, shape_c, av.data()); //lower data
+    auto d_ = backend->create_tensor(element::f32, shape_d, bv.data()); //upper data
+
+    auto e_ = backend->create_tensor(element::f32, shape_c, av.data() + av.size()/2); //lower weights
+    auto f_ = backend->create_tensor(element::f32, shape_d, bv.data() + bv.size()/2); //upper weights
+
+    Shape shape_ur {1, 1, 2, 2};
+    //allocate a contigious storage for both lower and upper halves.
+    vector<float> erv(shape_size(shape_r), 0);
+    auto lower_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(backend->create_tensor(element::f32, shape_ur, erv.data()));
+    auto upper_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(backend->create_tensor(element::f32, shape_ur, erv.data() + erv.size()/2));
+    backend->call(f, {group_result, lower_result, upper_result}, {a_, b_, c_, d_, e_, f_});
+    ASSERT_EQ(rv, erv);
 }

@@ -2330,7 +2330,7 @@ namespace ngraph
                     //adjust output and channel given a number of groups
 
                     weights_shape_groups.at(OC) /= convolution->get_groups();
-                    weights_shape_groups.at(IC) /= convolution->get_groups();
+                    weights_shape_groups.at(IC) = args[0].get_shape().at(IC) / convolution->get_groups();
                     //push_front the number of groups
                     weights_shape_groups.insert(weights_shape_groups.begin(),
                                                 convolution->get_groups());
@@ -2408,7 +2408,7 @@ namespace ngraph
 
                         writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
                                << ", "
-                               << ", ctx->mkldnn_workspaces[" << ws_buf_index << "]);\n";
+                               << "ctx->mkldnn_workspaces[" << ws_buf_index << "]);\n";
 
                         writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                                << to_string(reorder_index) << ");\n";
@@ -2434,7 +2434,7 @@ namespace ngraph
                            << ", " << args[0].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
                            << ", "
-                           << ", ctx->mkldnn_workspaces[" << ws_buf_index << "]);\n";
+                           << "ctx->mkldnn_workspaces[" << ws_buf_index << "]);\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
                            << ", " << out[0].get_name() << ");\n";
 
