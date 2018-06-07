@@ -199,18 +199,18 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     int64_t j = input_shape.size() - 1;
                     for (int64_t i = padding_below.size() - 1; i >= 0; i--)
                     {
-                        padding_below_int[j--] = static_cast<int>(padding_below[i]);
+                        padding_below_int[j--] = padding_below[i];
                     }
                     j = input_shape.size() - 1;
                     for (int64_t i = data_dilation_strides.size() - 1; i >= 0; i--)
                     {
-                        dilation_strides_int[j--] = static_cast<int>(data_dilation_strides[i]);
+                        dilation_strides_int[j--] = data_dilation_strides[i];
                     }
 
                     for(int64_t i = 0; i < input_shape.size(); i++)
                     {
                         input_padded_shape[i] = (input_padded_shape[i] + padding_below_int[i] 
-                            + static_cast<int>(padding_above[i]) - 1) * dilation_strides_int[i] + 1;
+                            + padding_above[i] - 1) * dilation_strides_int[i] + 1;
                     }
                     Shape input_padded_strides = row_major_strides(input_padded_shape);
 
