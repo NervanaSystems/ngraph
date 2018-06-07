@@ -4,20 +4,17 @@ FROM nvidia/cuda:8.0-cudnn7-devel-ubuntu16.04
 
 # try to get around issue with badsig
 #https://github.com/NVIDIA/nvidia-docker/issues/619 (with devel image) (based on this issue added this)
-RUN mv /etc/apt/sources.list.d/cuda.list /tmp/cuda.list
+RUN rm /etc/apt/sources.list.d/cuda.list
 
 # removing nvidia-ml.list file to avoid apt-get update error
 # "The method driver /usr/lib/apt/methods/https could not be found."
-RUN mv /etc/apt/sources.list.d/nvidia-ml.list /tmp/nvidia-ml.list
+RUN rm /etc/apt/sources.list.d/nvidia-ml.list
 
 RUN apt-get update && \
     apt-get install -y sudo curl apt-transport-https && \
     apt-get clean autoclean && \
     apt-get autoremove -y
 RUN curl http://developer.download.nvidia.com/compute/cuda/repos/GPGKEY | sudo apt-key add -
-
-RUN mv /tmp/cuda.list /etc/apt/sources.list.d/cuda.list
-RUN mv /tmp/nvidia-ml.list /etc/apt/sources.list.d/nvidia-ml.list
 
 # install standard python 2 and 3 environment stuff
 RUN apt-get update && \
