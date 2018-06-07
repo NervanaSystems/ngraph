@@ -140,6 +140,5 @@ namespace ngraph
                 this->push_back(static_cast<uint32_t>(size));
             }
         }
-        
     };
 }
