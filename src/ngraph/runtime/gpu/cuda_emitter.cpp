@@ -233,10 +233,10 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
 
 size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURuntimeContext* ctx,
                                                      const std::array<std::string, 2>& dtypes,
-                                                     Const Shape& input_shape,
-                                                     Const Shape& output_shape,
-                                                     Const Shape& padding_below,
-                                                     Const Shape& dilation_strides)
+                                                     const Shape& input_shape,
+                                                     const Shape& output_shape,
+                                                     const Shape& padding_below,
+                                                     const Shape& dilation_strides)
 {
     std::stringstream kernel_name;
     kernel_name << "pad_dilation_" << join(dtypes, "_");
@@ -277,27 +277,12 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
 
     size_t rank = input_shape.size();
     size_t nthreads = shape_size(input_shape);
-    // normalize pad dimensions to shape dimensions
-    Shape padding_below_g(input_shape.size(), 0);
-    Shape dilation_strides_g(input_shape.size(), 0);
-
-    // if padding_interior is not zero length, it
-    // is from op::Pad for which padding_below will
-    // always be equal in size to padding_above
-    int64_t j = input_shape.size() - 1;
-    for (int64_t i = padding_below.size() - 1; i >= 0; i--)
-    {
-        padding_below_g[j--] = padding_below[i];
-    }
-    j = input_shape.size() - 1;
-    for (int64_t i = dilation_strides.size() - 1; i >= 0; i--)
-    {
-        dilation_strides_g[j--] = dilation_strides[i];
-    }
 
     Shape input_strides = row_major_strides(input_shape);
     Shape output_strides = row_major_strides(output_shape);
 
+    NGRAPH_INFO << join(input_strides);
+    NGRAPH_INFO << join(output_strides);
     // get an allocator for transient per kernel gpu memory
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
 
@@ -318,13 +303,16 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
         void* param_padding_below = runtime::gpu::invoke_memory_primitive(ctx, idx_padding_below);
         void* param_dilation_strides =
             runtime::gpu::invoke_memory_primitive(ctx, idx_dilation_strides);
-
+        runtime::gpu::print_gpu_tensor<size_t>(param_input_strides, 4);
+        runtime::gpu::print_gpu_tensor<size_t>(param_output_strides, 4);
+        runtime::gpu::print_gpu_tensor<size_t>(param_padding_below, 4);
+        runtime::gpu::print_gpu_tensor<size_t>(param_dilation_strides, 4);
         std::vector<void*> args_list{&inputs[0],
                                      &outputs[0],
-                                     param_input_strides,
-                                     param_output_strides,
-                                     param_padding_below,
-                                     param_dilation_strides,
+                                     &param_input_strides,
+                                     &param_output_strides,
+                                     &param_padding_below,
+                                     &param_dilation_strides,
                                      &rank,
                                      &nthreads};
 

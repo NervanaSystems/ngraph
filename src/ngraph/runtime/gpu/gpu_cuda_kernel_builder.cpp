@@ -198,9 +198,8 @@ void runtime::gpu::CudaKernelBuilder::get_pad_dilation_op(
             writer << "for(size_t i = 0; i < rank; i++)\n";
             writer.block_begin();
             {
-                writer << "output_idx += (((input_idx / input_strides[i] + padding_below[i]) * "
-                          "dilation_strides[i])"
-                          "* output_strides[i];\n";
+                writer << "output_idx += ((input_idx / input_strides[i] + padding_below[i]) * "
+                          "dilation_strides[i]) * output_strides[i];\n";
                 writer << "input_idx %= input_strides[i];\n";
             }
             writer.block_end();

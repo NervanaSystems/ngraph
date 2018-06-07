@@ -94,15 +94,6 @@ namespace ngraph
         namespace gpu
         {
             void print_gpu_f32_tensor(const void* p, size_t element_count, size_t element_size);
-
-            template <typename T>
-            void print_gpu_tensor(const void* p, size_t element_count)
-            {
-                std::vector<T> local(element_count);
-                size_t size_in_bytes = sizeof(T) * element_count;
-                cudaMemcpy(local.data(), p, size_in_bytes, cudaMemcpyDeviceToHost);
-                std::cout << "{" << ngraph::join(local) << "}" << std::endl;
-            }
             void check_cuda_errors(CUresult err);
             void* create_gpu_buffer(size_t buffer_size, const void* data = NULL);
             void free_gpu_buffer(void* buffer);
@@ -112,6 +103,15 @@ namespace ngraph
             void cuda_memset(void* dst, int value, size_t buffer_size);
             std::pair<uint64_t, uint64_t> idiv_magic_u32(uint64_t max_numerator, uint64_t divisor);
             std::pair<uint64_t, uint64_t> idiv_magic_u64(uint64_t divisor);
+            
+            template <typename T>
+            void print_gpu_tensor(const void* p, size_t element_count)
+            {
+                std::vector<T> local(element_count);
+                size_t size_in_bytes = sizeof(T) * element_count;
+                cuda_memcpyDtH(local.data(), p, size_in_bytes);
+                std::cout << "{" << ngraph::join(local) << "}" << std::endl;
+            }
         }
     }
 }
