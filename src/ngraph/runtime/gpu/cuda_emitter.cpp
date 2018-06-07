@@ -231,21 +231,21 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
     return primitive_index;
 }
 
-
 size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURuntimeContext* ctx,
-                                            const std::array<std::string, 2>& dtypes,
-                                            GPUShape input_shape,
-                                            GPUShape output_shape,
-                                            GPUShape padding_below,
-                                            GPUShape dilation_strides)
+                                                     const std::array<std::string, 2>& dtypes,
+                                                     GPUShape input_shape,
+                                                     GPUShape output_shape,
+                                                     GPUShape padding_below,
+                                                     GPUShape dilation_strides)
 {
     std::stringstream kernel_name;
-    kernel_name << "pad_dilation_"<< join(dtypes, "_");
+    kernel_name << "pad_dilation_" << join(dtypes, "_");
 
     // Need to check: are there models in which some tensors will have different types? if so, this
     // hash needs to include the tensor types.
-    std::string hash = kernel_name.str() + "pad_i" + join(input_shape, "_") + "pad_o" + join(output_shape) + 
-                        "_pb" + join(padding_below, "_") + "_pi" + join(dilation_strides, "_");
+    std::string hash = kernel_name.str() + "pad_i" + join(input_shape, "_") + "pad_o" +
+                       join(output_shape) + "_pb" + join(padding_below, "_") + "_pi" +
+                       join(dilation_strides, "_");
     // For backwards compatability we currently use two unordered maps
     // 1. one looks up the compiled cuda kernel (CudaFunctionPool)
     // 2. the other looks to see if this kernel is already in the primitive list
@@ -301,47 +301,46 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
     // get an allocator for transient per kernel gpu memory
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
 
-    size_t idx_input_strides = allocator.reserve_argspace(
-        input_strides.data(), input_strides.size() * sizeof(size_t));
-    size_t idx_output_strides = allocator.reserve_argspace(
-        output_strides.data(), output_strides.size() * sizeof(size_t));
-    size_t idx_padding_below = allocator.reserve_argspace(
-        padding_below.data(), padding_below.size() * sizeof(size_t));
+    size_t idx_input_strides =
+        allocator.reserve_argspace(input_strides.data(), input_strides.size() * sizeof(size_t));
+    size_t idx_output_strides =
+        allocator.reserve_argspace(output_strides.data(), output_strides.size() * sizeof(size_t));
+    size_t idx_padding_below =
+        allocator.reserve_argspace(padding_below.data(), padding_below.size() * sizeof(size_t));
     size_t idx_dilation_strides = allocator.reserve_argspace(
         dilation_strides.data(), dilation_strides.size() * sizeof(size_t));
 
     // create the launch primitive
-    std::unique_ptr<gpu::primitive> pad_dilation(
-        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+    std::unique_ptr<gpu::primitive> pad_dilation(new gpu::primitive{[=](void** inputs,
+                                                                        void** outputs) mutable {
         void* param_input_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_input_strides);
         void* param_output_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_output_strides);
-        void* param_padding_below =
-            runtime::gpu::invoke_memory_primitive(ctx, idx_padding_below);
+        void* param_padding_below = runtime::gpu::invoke_memory_primitive(ctx, idx_padding_below);
         void* param_dilation_strides =
             runtime::gpu::invoke_memory_primitive(ctx, idx_dilation_strides);
 
         std::vector<void*> args_list{&inputs[0],
-                        &outputs[0],
-                        param_input_strides,
-                        param_output_strides,
-                        param_padding_below,
-                        param_dilation_strides,
-                        &rank,
-                        &nthreads};
+                                     &outputs[0],
+                                     param_input_strides,
+                                     param_output_strides,
+                                     param_padding_below,
+                                     param_dilation_strides,
+                                     &rank,
+                                     &nthreads};
 
         CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                        static_cast<uint32_t>(nthreads),
-                                        1,
-                                        1, // grid dim
-                                        1,
-                                        1,
-                                        1, // block dim
-                                        0,
-                                        NULL, // shared mem and stream
-                                        args_list.data(),
-                                        0));  // arguments
+                                      static_cast<uint32_t>(nthreads),
+                                      1,
+                                      1, // grid dim
+                                      1,
+                                      1,
+                                      1, // block dim
+                                      0,
+                                      NULL, // shared mem and stream
+                                      args_list.data(),
+                                      0));  // arguments
         CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
-        }});
+    }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(pad_dilation));
     m_primitive_emitter->cache(hash, primitive_index);

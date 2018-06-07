@@ -176,14 +176,16 @@ void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
     writer.block_end();
 }
 
-
-void runtime::gpu::CudaKernelBuilder::get_pad_dilation_op(codegen::CodeWriter& writer,
-                                                   const std::string& name,
-                                                   const std::array<std::string, 2>& data_types)
+void runtime::gpu::CudaKernelBuilder::get_pad_dilation_op(
+    codegen::CodeWriter& writer,
+    const std::string& name,
+    const std::array<std::string, 2>& data_types)
 {
-    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
-           << data_types[1] << "* out, size_t* input_strides, size_t* output_strides, size_t* padding_below, size_t* "
-                               "dilation_strides, size_t rank, size_t n)\n";
+    writer
+        << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
+        << data_types[1]
+        << "* out, size_t* input_strides, size_t* output_strides, size_t* padding_below, size_t* "
+           "dilation_strides, size_t rank, size_t n)\n";
     writer.block_begin();
     {
         writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
@@ -196,7 +198,8 @@ void runtime::gpu::CudaKernelBuilder::get_pad_dilation_op(codegen::CodeWriter& w
             writer << "for(size_t i = 0; i < rank; i++)\n";
             writer.block_begin();
             {
-                writer << "output_idx += (((input_idx / input_strides[i] + padding_below[i]) * dilation_strides[i])"
+                writer << "output_idx += (((input_idx / input_strides[i] + padding_below[i]) * "
+                          "dilation_strides[i])"
                           "* output_strides[i];\n";
                 writer << "input_idx %= input_strides[i];\n";
             }
