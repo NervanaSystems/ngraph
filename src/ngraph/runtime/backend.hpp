@@ -38,7 +38,7 @@ namespace ngraph
         class Backend
         {
         public:
-            typedef std::map<std::string, std::string> OptionsMap;
+            using OptionsMap = std::map<std::string, std::string>;
 
             virtual ~Backend();
             /// @brief Create a new Backend object
