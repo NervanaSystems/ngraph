@@ -93,5 +93,9 @@ namespace ngraph
                                                                    const OptionsMap& options);
             static std::unordered_map<std::string, std::shared_ptr<Backend>>& get_backend_map();
         };
+
+        // backends must implement these function signature
+        extern "C" runtime::Backend* create_backend(const std::string&, const Backend::OptionsMap&);
+        extern "C" void destroy_backend(runtime::Backend*);
     }
 }

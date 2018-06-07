@@ -69,16 +69,13 @@ shared_ptr<runtime::Backend> runtime::Backend::create_dynamic_backend(string typ
     {
         throw runtime_error("Failed to find create_backend function in library '" + name + "'");
     }
+    if (!destroy)
+    {
+        throw runtime_error("Failed to find destroy_backend function in library '" + name + "'");
+    }
 
     Backend* pBackend = create(type, options);
-    if (destroy)
-    {
-        return shared_ptr<Backend>(pBackend, [destroy](Backend* be) { destroy(be); });
-    }
-    else // not providing destroy will cause user to delete it (dangerous!)
-    {
-        return shared_ptr<Backend>(pBackend);
-    }
+    return shared_ptr<Backend>(pBackend, [destroy](Backend* be) { destroy(be); });
 }
 
 shared_ptr<runtime::Backend> runtime::Backend::create(const string& type, const OptionsMap& options)
