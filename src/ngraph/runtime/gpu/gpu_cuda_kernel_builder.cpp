@@ -177,7 +177,7 @@ void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
 }
 
 
-void runtime::gpu::CudaKernelBuilder::get_pad_dilate_op(codegen::CodeWriter& writer,
+void runtime::gpu::CudaKernelBuilder::get_pad_dilation_op(codegen::CodeWriter& writer,
                                                    const std::string& name,
                                                    const std::array<std::string, 2>& data_types)
 {

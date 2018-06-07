@@ -81,7 +81,7 @@ namespace ngraph
 
                 static void get_pad_dilation_op(codegen::CodeWriter& writer,
                                                    const std::string& name,
-                                                   const std::array<std::string, 2>& data_types)
+                                                   const std::array<std::string, 2>& data_types);
 
                 static void add_pod_typedefs(codegen::CodeWriter& writer);
             };

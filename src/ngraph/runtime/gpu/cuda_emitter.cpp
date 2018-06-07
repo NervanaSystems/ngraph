@@ -298,8 +298,9 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
     GPUShape input_strides = row_major_strides(input_shape);
     GPUShape output_strides = row_major_strides(output_shape);
 
-     GPUAllocator allocator =
-            external_function->get_primitive_emitter()->get_memory_allocator();
+    // get an allocator for transient per kernel gpu memory
+    GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+
     size_t idx_input_strides = allocator.reserve_argspace(
         input_strides.data(), input_strides.size() * sizeof(size_t));
     size_t idx_output_strides = allocator.reserve_argspace(
@@ -315,18 +316,18 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
         void* param_input_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_input_strides);
         void* param_output_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_output_strides);
         void* param_padding_below =
-            runtime::gpu::invoke_memory_primitive(ctx, idx_reduce_window_shape);
+            runtime::gpu::invoke_memory_primitive(ctx, idx_padding_below);
         void* param_dilation_strides =
-            runtime::gpu::invoke_memory_primitive(ctx, idx_reduce_window_strides);
+            runtime::gpu::invoke_memory_primitive(ctx, idx_dilation_strides);
 
         std::vector<void*> args_list{&inputs[0],
-                        &outputs[0]),
+                        &outputs[0],
                         param_input_strides,
                         param_output_strides,
-                        param_padding_blow,
+                        param_padding_below,
                         param_dilation_strides,
                         &rank,
-                        &nthread};
+                        &nthreads};
 
         CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                         static_cast<uint32_t>(nthreads),
