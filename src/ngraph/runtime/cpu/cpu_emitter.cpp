@@ -2957,15 +2957,14 @@ namespace ngraph
                 auto max_pool = static_cast<const ngraph::op::MaxPool*>(node);
 
                 auto arg_shape = args[0].get_shape();
-                auto arg_rank = arg_shape.size();
 
                 auto result_shape = out[0].get_shape();
 
                 // TODO(jmenon): Optimize for 1D
 
                 // TODO(jmenon): Remove element type restriction
-                if (arg_rank == 4 && max_pool->get_window_shape().size() == 2 &&
-                    args[0].get_element_type() == element::f32)
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_desc = mkldnn_emitter->build_memory_descriptor(

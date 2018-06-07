@@ -49,6 +49,22 @@ DIMAGE_VERSION=`date -Iseconds | sed -e 's/:/-/g'`
 
 DIMAGE_ID="${DIMAGE_NAME}:${DIMAGE_VERSION}"
 
+# If proxy settings are detected in the environment, make sure they are
+# included on the docker-build command-line.  This mirrors a similar system
+# in the Makefile.
+
+if [ ! -z "${http_proxy}" ] ; then
+    DOCKER_HTTP_PROXY="--build-arg http_proxy=${http_proxy}"
+else
+    DOCKER_HTTP_PROXY=' '
+fi
+
+if [ ! -z "${https_proxy}" ] ; then
+    DOCKER_HTTPS_PROXY="--build-arg https_proxy=${https_proxy}"
+else
+    DOCKER_HTTPS_PROXY=' '
+fi
+
 cd ${CONTEXTDIR}
 
 echo ' '
@@ -57,6 +73,7 @@ echo ' '
 
 # build the docker base image
 docker build  --rm=true \
+       ${DOCKER_HTTP_PROXY} ${DOCKER_HTTPS_PROXY} \
        -f="${DFILE}" \
        -t="${DIMAGE_ID}" \
        ${CONTEXT}
