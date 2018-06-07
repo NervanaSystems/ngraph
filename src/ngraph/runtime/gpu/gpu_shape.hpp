@@ -125,5 +125,20 @@ namespace ngraph
                 this->push_back(static_cast<uint32_t>(size));
             }
         }
+
+        GPUShape(const CoordinateDiff& coord)
+        {
+            for (auto const& size : coord)
+            {
+                if (size >> 32 != 0)
+                {
+                    throw std::runtime_error(
+                        "Request for Coordinate which exceed the bitwidth available for GPUShapes "
+                        "(32)");
+                }
+                this->push_back(static_cast<uint32_t>(size));
+            }
+        }
+        
     };
 }
