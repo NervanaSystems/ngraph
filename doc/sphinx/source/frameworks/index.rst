@@ -5,7 +5,7 @@ Integrate Generic Frameworks
 #############################
 
 In this section, written for framework architects or engineers who want 
-to optimize a brand new, generic, or less widely-supported framework, we provide 
+to optimize brand new, generic, or less widely-supported frameworks, we provide 
 some of our learnings from our "framework Direct Optimization (framework DO)" 
 work and custom bridge code, such as that for our `ngraph tensorflow bridge`_.
 
@@ -86,8 +86,7 @@ updates.
 .. [#1] Benchmarking performance of DL systems is a young discipline; it is a
    good idea to be vigilant for results based on atypical distortions in the 
    configuration parameters. Every topology is different, and performance 
-   increases or slowdowns can be attributed to multiple means.  Also watch out 
-   for the word "theoretical" in comparisons; actual performance should not be 
+   changes can be attributed to multiple causes. Also watch out for the word "theoretical" in comparisons; actual performance should not be 
    compared to theoretical performance.     
 
 

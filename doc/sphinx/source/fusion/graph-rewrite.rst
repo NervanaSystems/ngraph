@@ -9,7 +9,7 @@ Exact pattern matching
 
 For the example of ``$-(-A) = A$``, various graphs of varying complexity can be 
 created and overwritten with recipes for pattern-matching + graph-rewrite. To 
-get started, a simple example for a trivial graph, followed more more complex 
+get started, a simple example for a trivial graph, followed by more complex 
 examples: 
 
 

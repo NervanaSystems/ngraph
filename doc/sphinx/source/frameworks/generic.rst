@@ -88,9 +88,8 @@ and activated as follows:
 Memory allocation 
 -----------------
 
-Buffer pointers should be aligned at the 64-byte boundary. NUMA policy should be 
-configured for local memory allocation (``numactl --localloc``).  For detail on 
-using the 
+Buffer pointers should be aligned on 64-byte boundaries. NUMA policy should be 
+configured for local memory allocation (``numactl --localloc``). 
 
 
 
@@ -133,12 +132,10 @@ Intra-op and inter-op parallelism
 * ``inter_op_parallelism_threads``
 
 Some frameworks, like TensorFlow\*, use these settings to improve performance; 
-however, they are often not sufficient to achieve optimal performance. 
-Framework-based adjustments cannot access the underlying  NUMA configuration in 
-multi-socket Intel Xeon processor-based platforms, which is a key requirement for
-many kinds of inference-engine computations.  See the next section on 
-NUMA performance to learn more about this performance feature available to systems
-utilizing nGraph. 
+however, they are often not sufficient for optimal performance. Framework-based adjustments cannot access the underlying  NUMA configuration in multi-socket 
+Intel Xeon processor-based platforms, which is a key requirement for many kinds 
+of inference-engine computations.  See the next section on NUMA performance to 
+learn more about this performance feature available to systems utilizing nGraph. 
 
 
 NUMA performance 

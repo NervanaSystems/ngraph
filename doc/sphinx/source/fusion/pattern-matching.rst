@@ -4,39 +4,29 @@ Applying pattern matcher to fuse ops
 -------------------------------------
 
 Before delving into the details of pattern matching, note that the sole purpose 
-of the pattern-matching step is to **find** patterns in the framework's graph of 
-outputs.  A subgraph, then, could contain any operation nGraph's IR defines 
-(addition, subtraction, etc) along with some special wildcard nodes. 
+of the pattern-matching step is to **find** patterns in the nGraph IR. A 
+subgraph, then, could contain any operation nGraph's IR defines (addition, 
+subtraction, etc) along with some special wildcard nodes. 
 
 An analogy that is probably familiar to many programmers is that of the ``Regex``, 
 AKA "Regular expression". Just as one can write a regex (pattern) and run it 
 through some text to find and/or replace the occurences of that pattern in 
 the given text, so too can one write optimization-passes to construct patterns 
-which are just regular nGraph graphs and run those patterns through given graphs.
+which are just regular nGraph graph expressions, and run those patterns through 
+given graphs.
 
 In the ``Regex`` analogy, 
 
 
-* Letters (for example: `A`, `B`, `m`, `n`), 
+.. csv-table::
+   :header: "Regex", "nGraph equivalent"
+   :widths: 35, 55 
+   :escape: ~
 
-* Strings (for example: `ABBA`, `Hello world`), and
+   Individual Letters (for example ``A`` or ``y``), ``ngraph::Node``
+   Strings (for example ``ABBA`` or ``Hello world``), Graphs consisting of ``ngraph::Nodes``
+   Collective Symbols (for some regex programs they are ``*`` or ``.``), ``op::*`` (for some graph programs they are ``pattern::op::Label`` or ``pattern::op::Skip``)
 
-* Collective Symbols (for some regex programs they are `*`, `.`)
-
-
-respectfully correspond to: 
-
-.. Letter -> Node
-
-* ``ngraph::Node`` (``op::Add``, ``op::BatchNormBackprop``), 
-
-.. Strings
-
-* Graphs consisting of ``ngraph::Nodes``, and
-
-.. Collective Symbols 
-
-* ``op::*`` (for some graph programs they are ``pattern::op::Label``, ``pattern::op::Skip``)
 
 where Operators need arguments, and Leaves cannot take arguments.  
 
