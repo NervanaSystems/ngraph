@@ -251,7 +251,9 @@ namespace ngraph
                     if (default_weights_format)
                     {
                         const size_t IC = 1;
-                        arg0_shape.at(IC) /= std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node)->get_groups();
+                        arg0_shape.at(IC) /=
+                            std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node)
+                                ->get_groups();
                     }
                     auto result_shape = node->get_output_shape(0);
                     auto filter_strides = convolution->get_window_movement_strides();
@@ -287,44 +289,49 @@ namespace ngraph
                         auto arg2_shape = node->get_input_shape(2);
                         memory::dims mkldnn_arg2_shape(arg2_shape.begin(), arg2_shape.end());
                         const memory::desc bias_desc(mkldnn_arg2_shape, et, memory::format::any);
-                        try 
+                        try
                         {
-                            fwd_desc.reset(new convolution_forward::desc(prop_kind::forward,
-                                                                     algorithm::convolution_direct,
-                                                                     input_data_desc,
-                                                                     weights_desc,
-                                                                     bias_desc, // with bias
-                                                                     result_desc,
-                                                                     mkldnn_filter_strides,
-                                                                     mkldnn_dilated_strides,
-                                                                     mkldnn_padding_below,
-                                                                     mkldnn_padding_above,
-                                                                     padding_kind::zero));
+                            fwd_desc.reset(
+                                new convolution_forward::desc(prop_kind::forward,
+                                                              algorithm::convolution_direct,
+                                                              input_data_desc,
+                                                              weights_desc,
+                                                              bias_desc, // with bias
+                                                              result_desc,
+                                                              mkldnn_filter_strides,
+                                                              mkldnn_dilated_strides,
+                                                              mkldnn_padding_below,
+                                                              mkldnn_padding_above,
+                                                              padding_kind::zero));
                         }
                         catch (const mkldnn::error& e)
                         {
-                            throw ngraph_error("setting layouts on Convolution failed with MKLDNN error: " + e.message);
+                            throw ngraph_error(
+                                "setting layouts on Convolution failed with MKLDNN error: " +
+                                e.message);
                         }
-
                     }
                     else
                     {
-                        try 
+                        try
                         {
-                            fwd_desc.reset(new convolution_forward::desc(prop_kind::forward,
-                                                                        algorithm::convolution_direct,
-                                                                        input_data_desc,
-                                                                        weights_desc,
-                                                                        result_desc,
-                                                                        mkldnn_filter_strides,
-                                                                        mkldnn_dilated_strides,
-                                                                        mkldnn_padding_below,
-                                                                        mkldnn_padding_above,
-                                                                        padding_kind::zero));
+                            fwd_desc.reset(
+                                new convolution_forward::desc(prop_kind::forward,
+                                                              algorithm::convolution_direct,
+                                                              input_data_desc,
+                                                              weights_desc,
+                                                              result_desc,
+                                                              mkldnn_filter_strides,
+                                                              mkldnn_dilated_strides,
+                                                              mkldnn_padding_below,
+                                                              mkldnn_padding_above,
+                                                              padding_kind::zero));
                         }
                         catch (const mkldnn::error& e)
                         {
-                            throw ngraph_error("setting layouts on Convolution failed with MKLDNN error: " + e.message);
+                            throw ngraph_error(
+                                "setting layouts on Convolution failed with MKLDNN error: " +
+                                e.message);
                         }
                     }
                     convolution_forward::primitive_desc prim_desc(*fwd_desc, cpu_engine);

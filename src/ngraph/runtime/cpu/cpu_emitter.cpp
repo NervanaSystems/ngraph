@@ -2330,7 +2330,8 @@ namespace ngraph
                     //adjust output and channel given a number of groups
 
                     weights_shape_groups.at(OC) /= convolution->get_groups();
-                    weights_shape_groups.at(IC) = args[0].get_shape().at(IC) / convolution->get_groups();
+                    weights_shape_groups.at(IC) =
+                        args[0].get_shape().at(IC) / convolution->get_groups();
                     //push_front the number of groups
                     weights_shape_groups.insert(weights_shape_groups.begin(),
                                                 convolution->get_groups());
@@ -2341,8 +2342,6 @@ namespace ngraph
                         mkldnn_utils::get_mkldnn_data_type(args[1].get_element_type()),
                         mkldnn::memory::format::any);
 
-                    auto weights_optimized_format = mkldnn::memory::format::format_undef;
-
                     auto padding_below = convolution->get_padding_below();
                     auto padding_above = convolution->get_padding_above();
                     auto filter_strides = convolution->get_window_movement_strides();
@@ -2350,59 +2349,51 @@ namespace ngraph
                     auto result_desc =
                         mkldnn_emitter->build_memory_descriptor(out[0], output_format);
 
-                    //query desired weights format
-                    {
-                        mkldnn::memory::dims mkldnn_filter_strides(filter_strides.begin(),
-                                                                   filter_strides.end());
-                        mkldnn::memory::dims mkldnn_dilated_strides(
-                            window_dilation_strides_adjusted.begin(),
-                            window_dilation_strides_adjusted.end());
-                        mkldnn::memory::dims mkldnn_padding_below(padding_below.begin(),
-                                                                  padding_below.end());
-                        mkldnn::memory::dims mkldnn_padding_above(padding_above.begin(),
-                                                                  padding_above.end());
-
-                        mkldnn::engine cpu_engine(mkldnn::engine::cpu, 0);
-                        mkldnn::convolution_forward::desc conv_desc_layout(
-                            mkldnn::prop_kind::forward,
-                            mkldnn::algorithm::convolution_direct,
+                    auto weights_optimized_format =
+                        mkldnn_emitter->query_convolution_forward_weight_format(
                             input_data_desc,
-                            weights_desc_any, //this needs to be in default format
+                            weights_desc_any,
                             result_desc,
-                            mkldnn_filter_strides,
-                            mkldnn_dilated_strides,
-                            mkldnn_padding_below,
-                            mkldnn_padding_above,
-                            mkldnn::padding_kind::zero);
-
-                        mkldnn::convolution_forward::primitive_desc prim_desc(conv_desc_layout,
-                                                                              cpu_engine);
-                        weights_optimized_format = static_cast<mkldnn::memory::format>(
-                            prim_desc.weights_primitive_desc().desc().data.format);
-                    }
+                            filter_strides,
+                            window_dilation_strides_adjusted,
+                            padding_below,
+                            padding_above);
 
                     //create workspace for holding the result of converting weights layouts
                     auto ws = std::unique_ptr<MKLDNNWorkspace>(new MKLDNNWorkspace(
                         shape_size(args[1].get_shape()) * args[1].get_element_type().size()));
                     auto ws_buf_index = mkldnn_emitter->insert_workspace(ws);
 
-                    //generate and invoke reorder
+                    //descriptors for reorder operation
+                    auto input_reorder_desc =
+                        mkldnn_emitter->build_memory_descriptor(weights_shape_groups,
+                                                                args[1].get_element_type(),
+                                                                mkldnn::memory::format::goihw);
+
+                    auto result_reorder_desc = mkldnn_emitter->build_memory_descriptor(
+                        weights_shape_groups, args[1].get_element_type(), weights_optimized_format);
+
+                    auto weights_desc = mkldnn::memory::desc(
+                        mkldnn::memory::dims(weights_shape_groups.begin(),
+                                             weights_shape_groups.end()),
+                        mkldnn_utils::get_mkldnn_data_type(args[1].get_element_type()),
+                        weights_optimized_format);
+
+                    auto prim_indices = mkldnn_emitter->build_group_convolution_forward(
+                        input_reorder_desc, //weights
+                        input_data_desc,
+                        weights_desc,
+                        result_reorder_desc,
+                        result_desc,
+                        convolution->get_window_movement_strides(),
+                        window_dilation_strides_adjusted,
+                        padding_below,
+                        padding_above);
+
+                    //invoke reorder primitive
                     {
-                        auto input_desc =
-                            mkldnn_emitter->build_memory_descriptor(weights_shape_groups,
-                                                                    args[1].get_element_type(),
-                                                                    mkldnn::memory::format::goihw);
-
-                        auto result_reorder_desc =
-                            mkldnn_emitter->build_memory_descriptor(weights_shape_groups,
-                                                                    args[1].get_element_type(),
-                                                                    weights_optimized_format);
-
-                        size_t reorder_index =
-                            mkldnn_emitter->build_reorder(input_desc, result_reorder_desc);
-
+                        size_t reorder_index = prim_indices.first;
                         auto& deps = mkldnn_emitter->get_primitive_deps(reorder_index);
-
                         writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                                << ", " << args[1].get_name() << ");\n";
 
@@ -2414,32 +2405,21 @@ namespace ngraph
                                << to_string(reorder_index) << ");\n";
                     }
 
-                    auto weights_desc = mkldnn::memory::desc(
-                        mkldnn::memory::dims(weights_shape_groups.begin(),
-                                             weights_shape_groups.end()),
-                        mkldnn_utils::get_mkldnn_data_type(args[1].get_element_type()),
-                        weights_optimized_format);
+                    //invoke group convolution
+                    {
+                        size_t conv_index = prim_indices.second;
+                        auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                               << ", " << args[0].get_name() << ");\n";
+                        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                               << ", "
+                               << "ctx->mkldnn_workspaces[" << ws_buf_index << "]);\n";
+                        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                               << ", " << out[0].get_name() << ");\n";
 
-                    size_t conv_index = mkldnn_emitter->build_convolution_forward(
-                        input_data_desc,
-                        weights_desc,
-                        result_desc,
-                        convolution->get_window_movement_strides(),
-                        window_dilation_strides_adjusted,
-                        padding_below,
-                        padding_above);
-
-                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", "
-                           << "ctx->mkldnn_workspaces[" << ws_buf_index << "]);\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
-                           << ", " << out[0].get_name() << ");\n";
-
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(conv_index) << ");\n";
+                        writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                               << to_string(conv_index) << ");\n";
+                    }
                 }
                 else
                 {
