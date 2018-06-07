@@ -233,10 +233,10 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
 
 size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURuntimeContext* ctx,
                                                      const std::array<std::string, 2>& dtypes,
-                                                     GPUShape input_shape,
-                                                     GPUShape output_shape,
-                                                     GPUShape padding_below,
-                                                     GPUShape dilation_strides)
+                                                     Const Shape& input_shape,
+                                                     Const Shape& output_shape,
+                                                     Const Shape& padding_below,
+                                                     Const Shape& dilation_strides)
 {
     std::stringstream kernel_name;
     kernel_name << "pad_dilation_" << join(dtypes, "_");
@@ -278,8 +278,8 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
     size_t rank = input_shape.size();
     size_t nthreads = shape_size(input_shape);
     // normalize pad dimensions to shape dimensions
-    GPUShape padding_below_g(input_shape.size(), 0);
-    GPUShape dilation_strides_g(input_shape.size(), 0);
+    Shape padding_below_g(input_shape.size(), 0);
+    Shape dilation_strides_g(input_shape.size(), 0);
 
     // if padding_interior is not zero length, it
     // is from op::Pad for which padding_below will
@@ -295,8 +295,8 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
         dilation_strides_g[j--] = dilation_strides[i];
     }
 
-    GPUShape input_strides = row_major_strides(input_shape);
-    GPUShape output_strides = row_major_strides(output_shape);
+    Shape input_strides = row_major_strides(input_shape);
+    Shape output_strides = row_major_strides(output_shape);
 
     // get an allocator for transient per kernel gpu memory
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();

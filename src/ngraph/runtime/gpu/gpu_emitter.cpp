@@ -162,8 +162,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 Strides data_dilation_strides = convolution->get_data_dilation_strides();
                 CoordinateDiff padding_below_diff = convolution->get_padding_below();
                 CoordinateDiff padding_above_diff = convolution->get_padding_above();
-                GPUShape padding_below(padding_below_diff);
-                GPUShape padding_above(padding_above_diff);
+                Shape padding_below(padding_below_diff);
+                Shape padding_above(padding_above_diff);
 
                 if (padding_below.size() > 3)
                 {
@@ -186,12 +186,12 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     pad_required = true;
                 }
                 auto input_shape = args[0].get_shape();
-                GPUShape input_padded_shape(input_shape);
+                Shape input_padded_shape(input_shape);
 
                 if (pad_required || is_deconvolution)
                 {
-                    GPUShape padding_below_int(input_shape.size(), 0);
-                    GPUShape dilation_strides_int(input_shape.size(), 0);
+                    Shape padding_below_int(input_shape.size(), 0);
+                    Shape dilation_strides_int(input_shape.size(), 0);
 
                     // if padding_interior is not zero length, it
                     // is from op::Pad for which padding_below will
@@ -212,7 +212,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         input_padded_shape[i] = (input_padded_shape[i] + padding_below_int[i] 
                             + static_cast<int>(padding_above[i]) - 1) * dilation_strides_int[i] + 1;
                     }
-                    GPUShape input_padded_strides = row_major_strides(input_padded_shape);
+                    Shape input_padded_strides = row_major_strides(input_padded_shape);
 
                     auto temp_size =
                         shape_size(input_padded_shape) * args[0].get_element_type().size();
