@@ -685,25 +685,6 @@ using namespace ngraph::runtime;
             }
         }
 
-        // create output alias map
-        /*
-          size_t output_index = 0;
-          unordered_map<descriptor::TensorView*, vector<size_t>> output_alias_map;
-          vector<size_t> aliases;
-          for (size_t i = 0; i < current_function->get_output_size(); ++i)
-          {
-          shared_ptr<Node> op = current_function->get_output_op(i);
-          shared_ptr<descriptor::TensorView> otv = op->get_output_tensor_view();
-          vector<size_t>& al = output_alias_map[otv.get()];
-          al.push_back(output_index);
-          if (al.size() > 1)
-          {
-          aliases.push_back(output_index);
-          }
-          output_index++;
-          }
-        */
-
         // Add outputs to the variable name map
         for (size_t i = 0; i < current_function->get_output_size(); ++i)
         {
