@@ -14,9 +14,6 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NGRAPH_CPU_ENABLE)
-    add_subdirectory(abc)
-    add_subdirectory(abc_operator)
-    add_subdirectory(mnist_mlp)
-    add_subdirectory(update)
-endif()
+add_executable(abc_op abc_operator.cpp)
+add_dependencies(abc_op ngraph cpu_backend)
+target_link_libraries(abc_op ngraph cpu_backend)

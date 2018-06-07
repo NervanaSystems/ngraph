@@ -96,16 +96,7 @@ using const_data_callback_t = shared_ptr<Node>(const string&, const element::Typ
 template <typename T>
 T get_or_default(nlohmann::json& j, const std::string& key, const T& default_value)
 {
-    T rc;
-    try
-    {
-        rc = j.at(key).get<T>();
-    }
-    catch (...)
-    {
-        rc = default_value;
-    }
-    return rc;
+    return j.count(key) != 0 ? j.at(key).get<T>() : default_value;
 }
 
 static std::shared_ptr<ngraph::Function>

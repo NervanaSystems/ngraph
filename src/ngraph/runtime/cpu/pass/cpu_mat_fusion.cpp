@@ -206,10 +206,6 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
 std::shared_ptr<Node> fuse_batch_dot(const std::shared_ptr<Node>& n)
 {
-    auto reshape_pred = [](const std::shared_ptr<Node>& r) {
-        return std::dynamic_pointer_cast<op::Reshape>(r) != nullptr;
-    };
-
     const int num_op_branches = 2;
     std::shared_ptr<pattern::op::Label> input[num_op_branches];
     std::shared_ptr<op::Reshape> reshape[num_op_branches];
@@ -218,7 +214,7 @@ std::shared_ptr<Node> fuse_batch_dot(const std::shared_ptr<Node>& n)
         input[i] = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 2, 2});
         auto slice =
             std::make_shared<op::Slice>(input[i], Coordinate{0, 0, 0}, Coordinate{1, 2, 2});
-        auto skip = std::make_shared<pattern::op::Skip>(slice, reshape_pred);
+        auto skip = std::make_shared<pattern::op::Skip>(slice, pattern::has_class<op::Reshape>());
         reshape[i] = std::make_shared<op::Reshape>(skip, AxisVector{0, 1, 2}, Shape{2, 2});
     }
     auto dot = std::make_shared<op::Dot>(reshape[0], reshape[1]);

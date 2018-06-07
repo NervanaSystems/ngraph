@@ -30,6 +30,7 @@
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
+#include "util/random.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
 
@@ -4462,6 +4463,39 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_strided)
               read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, max_pool_3d)
+{
+    Shape shape_a{64, 3, 7, 8, 10};
+    Shape window_shape{2, 3, 2};
+    auto move_strides = Strides{2, 3, 4};
+    Shape padding_below{5, 6, 4};
+    Shape padding_above{6, 4, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto B = make_shared<op::Parameter>(element::f32, shape_a);
+
+    auto cpu_f = make_shared<Function>(
+        make_shared<op::MaxPool>(A, window_shape, move_strides, padding_below, padding_above),
+        op::ParameterVector{A});
+    auto int_f = make_shared<Function>(
+        make_shared<op::MaxPool>(B, window_shape, move_strides, padding_below, padding_above),
+        op::ParameterVector{B});
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, not)
 {
     Shape shape{2, 2};
@@ -4859,6 +4893,7 @@ NGRAPH_TEST(${BACKEND_NAME}, numeric_double_inf)
     EXPECT_EQ((vector<char>{false, false, true, false, false}), read_vector<char>(result));
 }
 
+#ifdef NGRAPH_TBB_ENABLE
 NGRAPH_TEST(${BACKEND_NAME}, abc_tbb)
 {
     // Force TBB flow graph generation in the CPU backend
@@ -4904,6 +4939,7 @@ NGRAPH_TEST(${BACKEND_NAME}, abc_tbb)
         unsetenv("NGRAPH_CPU_USE_TBB");
     }
 }
+#endif // NGRAPH_TBB_ENABLE
 
 //
 // The unit tests for ReduceWindow follow exactly what we test for MaxPool---but they use ReduceWindow to do it.
@@ -6250,6 +6286,39 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided_unev
               {{3.0f / 1, 7.0f / 2}, {8.0f / 3, 27.0f / 6}, {3.0f / 1, 11.0f / 2}}}})
             .get_vector(),
         read_vector<float>(result)));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, avg_pool_3d)
+{
+    Shape shape_a{64, 3, 7, 8, 10};
+    Shape window_shape{2, 3, 2};
+    auto move_strides = Strides{2, 3, 4};
+    Shape padding_below{5, 6, 4};
+    Shape padding_above{6, 4, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto B = make_shared<op::Parameter>(element::f32, shape_a);
+
+    auto cpu_f = make_shared<Function>(
+        make_shared<op::AvgPool>(A, window_shape, move_strides, padding_below, padding_above, true),
+        op::ParameterVector{A});
+    auto int_f = make_shared<Function>(
+        make_shared<op::AvgPool>(B, window_shape, move_strides, padding_below, padding_above, true),
+        op::ParameterVector{B});
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, pad_interior_1d)

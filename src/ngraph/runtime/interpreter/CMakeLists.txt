@@ -14,9 +14,18 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NGRAPH_CPU_ENABLE)
-    add_subdirectory(abc)
-    add_subdirectory(abc_operator)
-    add_subdirectory(mnist_mlp)
-    add_subdirectory(update)
+if(NGRAPH_DISTRIBUTED_ENABLE)
+    find_package(MPI REQUIRED)
+    add_definitions(-DNGRAPH_DISTRIBUTED)
+    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    link_libraries(${MPI_CXX_LIBRARIES})
+endif()
+
+if (NGRAPH_INTERPRETER_ENABLE)
+    add_library(interpreter_backend SHARED int_backend.cpp)
+    set_target_properties(interpreter_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
+    target_link_libraries(interpreter_backend PUBLIC ngraph)
+
+    install(TARGETS interpreter_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

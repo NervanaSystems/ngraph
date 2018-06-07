@@ -14,10 +14,6 @@
 # limitations under the License.
 # ******************************************************************************
 
-if(MKLDNN_INCLUDE_DIR)
-    link_directories(${MKLDNN_LIB_DIR})
-endif()
-
 if (NGRAPH_CPU_ENABLE)
     set (SRC
         nbench.cpp
@@ -25,15 +21,22 @@ if (NGRAPH_CPU_ENABLE)
     )
 
     add_executable(nbench ${SRC})
-    add_dependencies(nbench ngraph)
+    add_dependencies(nbench ngraph cpu_backend)
 
     set(HEADER_SEARCH_DEFINES
         "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
     )
 
-    target_link_libraries(nbench ngraph)
+    target_link_libraries(nbench ngraph cpu_backend)
+    if (NGRAPH_GPU_ENABLE)
+        target_link_libraries(nbench gpu_backend)
+    endif()
+    if (NGRAPH_INTERPRETER_ENABLE)
+        target_link_libraries(nbench interpreter_backend)
+    endif()
+
     include_directories("${PROJECT_SOURCE_DIR}/test")
 
     set_source_files_properties(nbench.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
-
+    install(TARGETS nbench RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN})
 endif()
