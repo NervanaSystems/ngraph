@@ -109,8 +109,12 @@ float test_accuracy(MNistDataLoader& loader,
 
 int main(int argc, const char* argv[])
 {
+    MPI::Init();
+    int comm_size;
+    MPI::MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+
     size_t epochs = 5;
-    size_t batch_size = 128;
+    size_t batch_size = 128 / comm_size;
     size_t output_size = 10;
 
     size_t l0_size = 600;
@@ -188,10 +192,10 @@ int main(int argc, const char* argv[])
     grad_W1 = std:::make_shared<op::Allreduce>(grad_W1);
     grad_b1 = std:::make_shared<op::Allreduce>(grad_b1);
 
-    auto W0_next = W0 + allreduce_grad_W0;
-    auto b0_next = b0 + allreduce_grad_b0:
-    auto W1_next = W1 + allreduce_grad_W1;
-    auto b1_next = b1 + allreduce_grad_b1;
+    auto W0_next = W0 + grad_W0;
+    auto b0_next = b0 + grad_b0:
+    auto W1_next = W1 + grad_W1;
+    auto b1_next = b1 + grad_b1;
 
     // Get the backend
     auto backend = runtime::Backend::create("CPU");
@@ -288,6 +292,8 @@ int main(int argc, const char* argv[])
                       << std::endl;
         }
     }
+    
+    MPI::MPI_Finalize();
 
     return 0;
 }
