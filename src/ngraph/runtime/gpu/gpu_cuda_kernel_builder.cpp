@@ -150,7 +150,7 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
 void runtime::gpu::CudaKernelBuilder::get_broadcast_op(codegen::CodeWriter& writer,
                                                        const std::string& name,
                                                        const std::array<std::string, 2>& data_types,
-                                                       const int rank)
+                                                       const size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
            << data_types[1] << "* out, "
@@ -482,7 +482,7 @@ std::string runtime::gpu::CudaKernelBuilder::reduce_coordinate_transform_helper(
     std::string i_stride_shift,
     std::string i_reduced_strides,
     std::string o_coordinates,
-    int rank)
+    size_t rank)
 {
     // Translation from flat index to dense tensor coordinates:
     // Given tensor shape [d0 d1 ... dN] with strides [d1*...*dN, d2*...*dN, ... 1],
@@ -494,7 +494,7 @@ std::string runtime::gpu::CudaKernelBuilder::reduce_coordinate_transform_helper(
     //  d1 = product/stride[1]
     //  ...
     writer << "int coordinate_product = " << i_thread_index << ";\n";
-    for (int i = 0; i < rank; i++)
+    for (size_t i = 0; i < rank; i++)
     {
         writer << "int " << o_coordinates << i << " = division_by_invariant_multiplication("
                << "coordinate_product, " << i_stride_magic << "[" << i << "], " << i_stride_shift
@@ -506,7 +506,7 @@ std::string runtime::gpu::CudaKernelBuilder::reduce_coordinate_transform_helper(
     // index into reduced tensor from coordinates of non-reduced tensor
     std::string reduced_idx = "reduced_idx";
     writer << "int " << reduced_idx << " = 0;\n";
-    for (int i = 0; i < rank; i++)
+    for (size_t i = 0; i < rank; i++)
     {
         writer << "reduced_idx += " << o_coordinates << i << " * " << i_reduced_strides << "[" << i
                << "];\n";
@@ -518,7 +518,7 @@ std::string runtime::gpu::CudaKernelBuilder::reduce_coordinate_transform_helper(
 void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer,
                                                      const std::string& name,
                                                      const std::array<std::string, 2>& data_types,
-                                                     const int rank)
+                                                     const size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
            << data_types[1] << "* out, "

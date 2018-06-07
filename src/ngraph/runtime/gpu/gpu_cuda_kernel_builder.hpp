@@ -42,7 +42,7 @@ namespace ngraph
                 static void get_broadcast_op(codegen::CodeWriter& writer,
                                              const std::string& name,
                                              const std::array<std::string, 2>& data_types,
-                                             const int rank);
+                                             const size_t rank);
 
                 static void get_concat_op(codegen::CodeWriter& writer,
                                           const std::string& name,
@@ -73,7 +73,7 @@ namespace ngraph
                 static void get_softmax_op(codegen::CodeWriter& writer,
                                            const std::string& name,
                                            const std::array<std::string, 2>& data_types,
-                                           const int rank);
+                                           const size_t rank);
 
                 static void get_reduce_window_op(codegen::CodeWriter& writer,
                                                  const std::string& name,
@@ -106,7 +106,7 @@ namespace ngraph
                                                                       std::string i_stride_shift,
                                                                       std::string i_reduced_strides,
                                                                       std::string o_coordinates,
-                                                                      int rank);
+                                                                      size_t rank);
             };
         }
     }
