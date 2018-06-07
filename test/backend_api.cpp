@@ -22,7 +22,9 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(backend_api, registered_devices)
+/// what would this test ever succeed? no one registered a device anyhow
+/// If you run this test alone, it will fail.
+TEST(backend_api, DISABLED_registered_devices)
 {
     vector<string> devices = runtime::Backend::get_registered_devices();
     EXPECT_GE(devices.size(), 1);
