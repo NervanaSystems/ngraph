@@ -48,11 +48,11 @@ namespace ngraph
                                  const std::string& pad_value = "");
 
                 size_t build_pad_dilation(const runtime::gpu::GPURuntimeContext* ctx,
-                                          const std::array<std::string, 2>& dtypes,
-                                          GPUShape input_shape,
-                                          GPUShape output_shape,
-                                          GPUShape padding_below,
-                                          GPUShape dilation_strides);
+                                                     const std::array<std::string, 2>& dtypes,
+                                                     Const Shape& input_shape,
+                                                     Const Shape& output_shape,
+                                                     Const Shape& padding_below,
+                                                     Const Shape& dilation_strides)
 
                 size_t build_1d_max_pool(const GPURuntimeContext* ctx,
                                          const std::array<std::string, 2>& dtypes,
