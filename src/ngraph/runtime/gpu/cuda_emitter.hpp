@@ -47,6 +47,14 @@ namespace ngraph
                                  GPUShape pad_interior,
                                  const std::string& pad_value = "");
 
+                size_t build_pad_dilation(const GPURuntimeContext* ctx,
+                                 const std::array<std::string, 2>& dtypes,
+                                 GPUShape input_shape,
+                                 GPUShape output_shape,
+                                 GPUShape pad_below,
+                                 GPUShape dilation,
+                                 const std::string& pad_value = "");
+
                 size_t build_1d_max_pool(const GPURuntimeContext* ctx,
                                          const std::array<std::string, 2>& dtypes,
                                          GPUShape input_shape,
