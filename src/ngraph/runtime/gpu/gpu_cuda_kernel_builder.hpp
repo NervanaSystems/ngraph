@@ -17,9 +17,9 @@
 #pragma once
 
 #include <array>
+#include <set>
 #include <string>
 #include <vector>
-#include <set>
 
 namespace ngraph
 {
@@ -34,7 +34,6 @@ namespace ngraph
             class CudaKernelBuilder
             {
             public:
-
                 static void get_elementwise_op(codegen::CodeWriter& writer,
                                                const std::string& name,
                                                const std::string& op,
@@ -95,7 +94,6 @@ namespace ngraph
                                                  const std::set<size_t>& is_reduced,
                                                  bool save_elementwise,
                                                  size_t rank);
-
 
                 static void add_pod_typedefs(codegen::CodeWriter& writer);
 

@@ -22,11 +22,11 @@
 #include <cudnn.h>
 #include <iostream>
 #include <nvrtc.h>
+#include <set>
 #include <string>
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
-#include <set>
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
@@ -2020,7 +2020,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         auto& cuda_emitter =
                             external_function->get_primitive_emitter()->get_cuda_emitter();
 
-
                         // reserve a temporary buffer for the intermediate reduction
                         GPUAllocator allocator =
                             external_function->get_primitive_emitter()->get_memory_allocator();
@@ -2030,24 +2029,21 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             reduced_shape[axis] = 1;
                         }
                         size_t reduced_size = shape_size(reduced_shape);
-                        size_t workspace_idx = allocator.reserve_workspace(reduced_size * out[0].get_element_type().size());
-
-
-
-
+                        size_t workspace_idx = allocator.reserve_workspace(
+                            reduced_size * out[0].get_element_type().size());
 
                         // exponentiate with fused sum reduction to calculate softmax denominator
-                        size_t exp_sum_reduce =
-                            cuda_emitter->build_elementwise<ngraph::op::Exp>(
-                                external_function->ctx().get(),
-                                {{args[0].get_type(), out[0].get_type()}},
-                                args[0].get_shape(),
-                                {},
-                                axes,
-                                true, // multi-output
-                                CudaOpMap<ngraph::op::Add>::atomic);
+                        size_t exp_sum_reduce = cuda_emitter->build_elementwise<ngraph::op::Exp>(
+                            external_function->ctx().get(),
+                            {{args[0].get_type(), out[0].get_type()}},
+                            args[0].get_shape(),
+                            {},
+                            axes,
+                            true, // multi-output
+                            CudaOpMap<ngraph::op::Add>::atomic);
 
-                        writer << "void* workspace = gpu::invoke_memory_primitive(ctx, " << workspace_idx << ");\n";
+                        writer << "void* workspace = gpu::invoke_memory_primitive(ctx, "
+                               << workspace_idx << ");\n";
                         writer << "gpu::invoke_primitive(ctx, " << exp_sum_reduce << ", ";
                         writer << "std::vector<void*>{" << args[0].get_name();
                         writer << "}.data(), ";
@@ -2057,34 +2053,32 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         writer << ");\n";
 
                         // inplace binary division with fused broadcast to calculate softmax
-                        size_t div_broadcast =
-                            cuda_emitter->build_elementwise<ngraph::op::Divide>(
-                                external_function->ctx().get(),
-                                {{out[0].get_type(), out[0].get_type(), out[0].get_type()}},
-                                out[0].get_shape(),
-                                {1},
-                                axes);
+                        size_t div_broadcast = cuda_emitter->build_elementwise<ngraph::op::Divide>(
+                            external_function->ctx().get(),
+                            {{out[0].get_type(), out[0].get_type(), out[0].get_type()}},
+                            out[0].get_shape(),
+                            {1},
+                            axes);
 
                         writer << "gpu::invoke_primitive(ctx, " << div_broadcast << ", ";
                         writer << "std::vector<void*>{" << out[0].get_name();
                         writer << ", workspace}.data(), ";
                         writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
                         writer << ");\n";
-
                     }
                     else
                     {
-                        size_t softmax_index = cudnn_emitter->build_softmax(external_function->ctx().get(),
-                                                                     CUDNN_SOFTMAX_FAST,
-                                                                     CUDNN_SOFTMAX_MODE_INSTANCE,
-                                                                     CUDNNEmitter::Prop::Forward,
-                                                                     tensor_shape);
+                        size_t softmax_index =
+                            cudnn_emitter->build_softmax(external_function->ctx().get(),
+                                                         CUDNN_SOFTMAX_FAST,
+                                                         CUDNN_SOFTMAX_MODE_INSTANCE,
+                                                         CUDNNEmitter::Prop::Forward,
+                                                         tensor_shape);
                         writer << "gpu::invoke_primitive(ctx, " << softmax_index << ", ";
                         writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
                         writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
                         writer << ");\n";
                     }
-
                 }
                 writer.block_end();
             }

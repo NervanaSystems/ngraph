@@ -57,14 +57,15 @@ void runtime::gpu::CudaKernelBuilder::get_elementwise_op(codegen::CodeWriter& wr
     return;
 }
 
-void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(codegen::CodeWriter& writer,
-                                                           const std::string& name,
-                                                           const std::string& op,
-                                                           const std::string& reduce_op,
-                                                           const std::vector<std::string>& data_types,
-                                                           const std::set<size_t>& is_reduced,
-                                                           bool save_elementwise,
-                                                           size_t rank)
+void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
+    codegen::CodeWriter& writer,
+    const std::string& name,
+    const std::string& op,
+    const std::string& reduce_op,
+    const std::vector<std::string>& data_types,
+    const std::set<size_t>& is_reduced,
+    bool save_elementwise,
+    size_t rank)
 {
     auto num_inputs = data_types.size() - 1;
     writer << "extern \"C\" __global__ void cuda_" << name << "(";
@@ -125,7 +126,9 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(codegen::CodeWriter& 
                 writer << reduce_op << "(&out0[" << reduced_idx << "], output);\n";
                 if (save_elementwise)
                 {
-                    writer << "out1[" << "tid" << "] = output;\n";
+                    writer << "out1["
+                           << "tid"
+                           << "] = output;\n";
                 }
             }
             else

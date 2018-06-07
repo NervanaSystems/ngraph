@@ -87,8 +87,15 @@ namespace ngraph
                     }
                     else
                     {
-                        return build_fused_ew_to_collective(
-                            ctx, dtypes, tensor_shape, is_reduced, axes, CudaOpMap<T>::op, CudaOpMap<T>::math_kernel, reduce_op, save_elementwise);
+                        return build_fused_ew_to_collective(ctx,
+                                                            dtypes,
+                                                            tensor_shape,
+                                                            is_reduced,
+                                                            axes,
+                                                            CudaOpMap<T>::op,
+                                                            CudaOpMap<T>::math_kernel,
+                                                            reduce_op,
+                                                            save_elementwise);
                     }
                 }
 

@@ -683,15 +683,16 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeConte
 }
 
 // TODO: refactor arg list into struct for collective
-size_t runtime::gpu::CUDAEmitter::build_fused_ew_to_collective(const GPURuntimeContext* ctx,
-                                                               const std::vector<std::string>& dtypes,
-                                                               GPUShape tensor_shape,
-                                                               const std::set<size_t>& is_reduced,
-                                                               const AxisSet& axes,
-                                                               const char* op,
-                                                               const char* kernel,
-                                                               const char* reduce_op,
-                                                               bool save_elementwise)
+size_t
+    runtime::gpu::CUDAEmitter::build_fused_ew_to_collective(const GPURuntimeContext* ctx,
+                                                            const std::vector<std::string>& dtypes,
+                                                            GPUShape tensor_shape,
+                                                            const std::set<size_t>& is_reduced,
+                                                            const AxisSet& axes,
+                                                            const char* op,
+                                                            const char* kernel,
+                                                            const char* reduce_op,
+                                                            bool save_elementwise)
 {
     // kernel_name is used to check if the cuda kernel has been previously compiled
     std::stringstream kernel_name;
@@ -726,7 +727,14 @@ size_t runtime::gpu::CUDAEmitter::build_fused_ew_to_collective(const GPURuntimeC
         {
             CudaKernelBuilder::get_device_helper(writer, op, kernel, dtypes);
         }
-        CudaKernelBuilder::get_ew_collective_op(writer, kernel_name.str(), op, reduce_op, dtypes, is_reduced, save_elementwise, tensor_shape.size());
+        CudaKernelBuilder::get_ew_collective_op(writer,
+                                                kernel_name.str(),
+                                                op,
+                                                reduce_op,
+                                                dtypes,
+                                                is_reduced,
+                                                save_elementwise,
+                                                tensor_shape.size());
         compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
 
@@ -770,7 +778,7 @@ size_t runtime::gpu::CUDAEmitter::build_fused_ew_to_collective(const GPURuntimeC
 
     // TODO: check if mutable is necessary
     std::unique_ptr<gpu::primitive> ew_collective(new gpu::primitive{[=](void** inputs,
-                                                                   void** outputs) mutable {
+                                                                         void** outputs) mutable {
         void* strides_d = runtime::gpu::invoke_memory_primitive(ctx, idx_strides);
         void* stride_magic_d = runtime::gpu::invoke_memory_primitive(ctx, idx_stride_magic);
         void* stride_shift_d = runtime::gpu::invoke_memory_primitive(ctx, idx_stride_shift);
@@ -792,20 +800,24 @@ size_t runtime::gpu::CUDAEmitter::build_fused_ew_to_collective(const GPURuntimeC
         args_list.push_back(&reduced_strides_d);
         args_list.push_back(&nthreads);
 
-
-        CUDA_SAFE_CALL(
-            cuLaunchKernel(*compiled_kernel.get(), nblocks, 1, 1, nthreads_per_block, 1, 1, 0, NULL, args_list.data(), 0));
+        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                      nblocks,
+                                      1,
+                                      1,
+                                      nthreads_per_block,
+                                      1,
+                                      1,
+                                      0,
+                                      NULL,
+                                      args_list.data(),
+                                      0));
         CUDA_SAFE_CALL(cuCtxSynchronize());
     }});
-
-
-
 
     primitive_index = this->m_primitive_emitter->insert(std::move(ew_collective));
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }
-
 
 size_t runtime::gpu::CUDAEmitter::build_reduce_window(const GPURuntimeContext* ctx,
                                                       const OpName op_name,
