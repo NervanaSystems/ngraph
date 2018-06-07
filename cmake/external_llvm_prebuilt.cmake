@@ -39,6 +39,7 @@ if(${CMAKE_VERSION} VERSION_LESS 3.2)
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
         UPDATE_COMMAND ""
+        DOWNLOAD_NO_PROGRESS TRUE
         EXCLUDE_FROM_ALL TRUE
         )
 else()
@@ -50,6 +51,7 @@ else()
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
         UPDATE_COMMAND ""
+        DOWNLOAD_NO_PROGRESS TRUE
         BUILD_BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/ext_llvm-prefix/src/ext_llvm/lib/libLLVMCore.a"
         EXCLUDE_FROM_ALL TRUE
         )
