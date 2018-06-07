@@ -55,14 +55,14 @@ source file:
 
 ::
 
-  .. literalinclude:: ../../../../src/ngraph/descriptor/primary_tensor_view.cpp
+  .. literalinclude:: ../../../examples/abc/abc.cpp
      :language: cpp
      :lines: 20-31
 
 And the raw code will render as follows
 
 
-.. literalinclude:: ../../../../src/ngraph/descriptor/primary_tensor_view.cpp 
+.. literalinclude:: ../../../examples/abc/abc.cpp 
    :language: cpp
    :lines: 20-31
 
