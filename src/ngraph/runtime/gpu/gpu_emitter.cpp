@@ -190,6 +190,11 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
                     padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
                 }
+                NGRAPH_INFO << "forward window move" << join(window_movement_strides);
+                NGRAPH_INFO << "forward window dila" << join(window_dilation_strides);
+                NGRAPH_INFO << "forward data dila" << join(data_dilation_strides);
+                NGRAPH_INFO << "forward pad belwo" << join(padding_below_diff);
+                NGRAPH_INFO << "forward pad abovel" << join(padding_above_diff);
 
                 auto input_shape = args[0].get_shape();
                 Shape input_padded_shape = input_shape;
@@ -200,8 +205,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     input_padded_shape = get_padded_shape(input_shape, padding_below, padding_above, data_dilation_strides);
 
                     Shape input_padded_strides = row_major_strides(input_padded_shape);
-                    // NGRAPH_INFO << "input_padded_shape" << join(input_padded_shape);
-                    // NGRAPH_INFO << "input_shape" << join(input_shape);
+                     NGRAPH_INFO << "input_padded_shape" << join(input_padded_shape);
+                     NGRAPH_INFO << "input_shape" << join(input_shape);
                     // // NGRAPH_INFO << "padding_below_int" << join(padding_below_int);
                     // // NGRAPH_INFO << "padding_above_int" << join(padding_above_int);
                     // NGRAPH_INFO << "dilation_strides_int" << join(dilation_strides_int);
@@ -301,7 +306,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     }
                 }
                 bool pad_required = false;
-                if (padding_below != padding_above)
+                if (padding_below_diff != padding_above_diff)
                 {
                     pad_required = true;
                 }
@@ -474,7 +479,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     }
                 }
                 bool pad_required = false;
-                if (padding_below != padding_above)
+                if (padding_below_diff != padding_above_diff)
                 {
                     pad_required = true;
                 }
