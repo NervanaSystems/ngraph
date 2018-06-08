@@ -227,7 +227,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                          input_shape,
                                                          input_padded_shape,
                                                          padding_below,
-                                                         dilation_strides_int);
+                                                         data_dilation_strides);
 
                     writer << "gpu::invoke_primitive(ctx, " << pad_dilation_index << ", ";
                     writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
@@ -236,7 +236,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     // asymetric padding has been applied, zero out padding vectors to
                     // ensure cudnn does not assume padding
                     std::fill(padding_below.begin(), padding_below.end(), 0);
-                    std::fill(dilation_strides_int.begin(), dilation_strides_int.end(), 1);
+                    std::fill(data_dilation_strides.begin(), data_dilation_strides.end(), 1);
  //                   writer << "runtime::gpu::print_gpu_tensor<float>(pad_buffer, "
 //                       << shape_size(input_padded_shape) << ");\n";
                 }
@@ -285,22 +285,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 Strides data_dilation_strides = convolution->get_data_dilation_strides_forward();
                 CoordinateDiff padding_below_diff = convolution->get_padding_below_forward();
                 CoordinateDiff padding_above_diff = convolution->get_padding_above_forward();
-                Shape padding_below(padding_below_diff.size(), 0);
-                Shape padding_above(padding_above_diff.size(), 0);
-                Shape padding_interior(data_dilation_strides.size(), 0);
-                NGRAPH_INFO << "backward window move" << join(window_movement_strides);
-                NGRAPH_INFO << "backward window dila" << join(window_dilation_strides);
-                NGRAPH_INFO << "backward data dila" << join(data_dilation_strides);
-                NGRAPH_INFO << "backward pad belwo" << join(padding_below_diff);
-                NGRAPH_INFO << "backward pad abovel" << join(padding_above_diff);
-
-                for (int i = 0; i < padding_below_diff.size(); i++)
-                {
-                    padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
-                    padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
-                    padding_interior[i] = data_dilation_strides[i];
-                }
-                if (padding_below.size() > 3)
+ 
+                if (padding_below_diff.size() > 3)
                 {
                     throw std::runtime_error(node->get_name() +
                                              "with more than 3D is not implemented.");
@@ -319,6 +305,20 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     pad_required = true;
                 }
+
+                Shape padding_below(padding_below_diff.size(), 0);
+                Shape padding_above(padding_above_diff.size(), 0);
+                NGRAPH_INFO << "backward window move" << join(window_movement_strides);
+                NGRAPH_INFO << "backward window dila" << join(window_dilation_strides);
+                NGRAPH_INFO << "backward data dila" << join(data_dilation_strides);
+                NGRAPH_INFO << "backward pad belwo" << join(padding_below_diff);
+                NGRAPH_INFO << "backward pad abovel" << join(padding_above_diff);
+
+                for (int i = 0; i < padding_below_diff.size(); i++)
+                {
+                    padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
+                    padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
+                }
                 auto output_shape = out[0].get_shape();
                 auto output_shape_padded = output_shape;
                 Shape padding_below_back(output_shape.size(), 0);
@@ -333,7 +333,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 if (pad_required || is_deconvolution)
                 {
                     output_shape_padded =
-                        get_padded_shape(output_shape, padding_below, padding_above, padding_interior);
+                        get_padded_shape(output_shape, padding_below, padding_above, data_dilation_strides);
                     auto temp_size =
                         shape_size(output_shape_padded) * args[0].get_element_type().size();
                     GPUAllocator allocator =
@@ -353,7 +353,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                          output_shape,
                                                          output_shape_padded,
                                                          padding_below,
-                                                         padding_interior);
+                                                         data_dilation_strides);
 
                     writer << "gpu::invoke_primitive(ctx, " << pad_dilation_index << ", ";
                     writer << "std::vector<void*>{" << out[0].get_name() << "}.data(), ";
@@ -457,21 +457,9 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 Strides data_dilation_strides = convolution->get_data_dilation_strides_forward();
                 CoordinateDiff padding_below_diff = convolution->get_padding_below_forward();
                 CoordinateDiff padding_above_diff = convolution->get_padding_above_forward();
-                Shape padding_below(padding_below_diff.size(), 0);
-                Shape padding_above(padding_above_diff.size(), 0);
-                NGRAPH_INFO << "backward filter window move" << join(window_movement_strides);
-                NGRAPH_INFO << "backward filter window dila" << join(window_dilation_strides);
-                NGRAPH_INFO << "backward data dila" << join(data_dilation_strides);
-                NGRAPH_INFO << "backward filter pad belwo" << join(padding_below_diff);
-                NGRAPH_INFO << "backward filter pad abovel" << join(padding_above_diff);
 
-                for (int i = 0; i < padding_below_diff.size(); i++)
-                {
-                    padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
-                    padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
-                }
 
-                if (padding_below.size() > 3)
+                if (padding_below_diff.size() > 3)
                 {
                     throw std::runtime_error(node->get_name() +
                                              "with more than 3D is not implemented.");
@@ -489,6 +477,20 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 if (padding_below != padding_above)
                 {
                     pad_required = true;
+                }
+
+                Shape padding_below(padding_below_diff.size(), 0);
+                Shape padding_above(padding_above_diff.size(), 0);
+                NGRAPH_INFO << "backward filter window move" << join(window_movement_strides);
+                NGRAPH_INFO << "backward filter window dila" << join(window_dilation_strides);
+                NGRAPH_INFO << "backward data dila" << join(data_dilation_strides);
+                NGRAPH_INFO << "backward filter pad belwo" << join(padding_below_diff);
+                NGRAPH_INFO << "backward filter pad abovel" << join(padding_above_diff);
+
+                for (int i = 0; i < padding_below_diff.size(); i++)
+                {
+                    padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
+                    padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
                 }
                 auto input_shape = args[0].get_shape();
                 auto input_padded_shape = input_shape;
