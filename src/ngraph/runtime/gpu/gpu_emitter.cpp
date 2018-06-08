@@ -161,15 +161,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 Strides data_dilation_strides = convolution->get_data_dilation_strides();
                 CoordinateDiff padding_below_diff = convolution->get_padding_below();
                 CoordinateDiff padding_above_diff = convolution->get_padding_above();
-                Shape padding_below(padding_below_diff.size(), 0);
-                Shape padding_above(padding_above_diff.size(), 0);
-                for (int i = 0; i < padding_below.size(); i++)
-                {
-                    padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
-                    padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
-                }
 
-                if (padding_below.size() > 3)
+                if (padding_below_diff.size() > 3)
                 {
                     throw std::runtime_error(node->get_name() +
                                              "with more than 3D is not implemented.");
@@ -185,48 +178,33 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
 
                 bool pad_required = false;
-                if (padding_below != padding_above)
+                if (padding_below_diff != padding_above_diff)
                 {
                     pad_required = true;
                 }
+
+                Shape padding_below(padding_below_diff.size(), 0);
+                Shape padding_above(padding_above_diff.size(), 0);
+                for (int i = 0; i < padding_below.size(); i++)
+                {
+                    padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
+                    padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
+                }
+
                 auto input_shape = args[0].get_shape();
                 Shape input_padded_shape = input_shape;
 
                 writer.block_begin("  // " + node->get_name());
                 if (pad_required || is_deconvolution)
                 {
-                    Shape padding_below_int(input_shape.size(), 0);
-                    Shape padding_above_int(input_shape.size(), 0);
-                    Shape dilation_strides_int(input_shape.size(), 1);
+                    input_padded_shape = get_padded_shape(input_shape, padding_below, padding_above, data_dilation_strides);
 
-                    // if padding_interior is not zero length, it
-                    // is from op::Pad for which padding_below will
-                    // always be equal in size to padding_above
-                    int64_t j = input_shape.size() - 1;
-                    for (int64_t i = padding_below.size() - 1; i >= 0; i--)
-                    {
-                        padding_below_int[j] = padding_below[i];
-                        padding_above_int[j] = padding_above[i];
-                        j--;
-                    }
-                    j = input_shape.size() - 1;
-                    for (int64_t i = data_dilation_strides.size() - 1; i >= 0; i--)
-                    {
-                        dilation_strides_int[j--] = data_dilation_strides[i];
-                    }
-
-                    for (int64_t i = 0; i < input_shape.size(); i++)
-                    {
-                        input_padded_shape[i] = (input_padded_shape[i] - 1) * 
-                                                    dilation_strides_int[i] + 1 +  padding_below_int[i] +
-                                                 padding_above_int[i];
-                    }
                     Shape input_padded_strides = row_major_strides(input_padded_shape);
-                    NGRAPH_INFO << "input_padded_shape" << join(input_padded_shape);
-                    NGRAPH_INFO << "input_shape" << join(input_shape);
-                    NGRAPH_INFO << "padding_below_int" << join(padding_below_int);
-                    NGRAPH_INFO << "padding_above_int" << join(padding_above_int);
-                    NGRAPH_INFO << "dilation_strides_int" << join(dilation_strides_int);
+                    // NGRAPH_INFO << "input_padded_shape" << join(input_padded_shape);
+                    // NGRAPH_INFO << "input_shape" << join(input_shape);
+                    // // NGRAPH_INFO << "padding_below_int" << join(padding_below_int);
+                    // // NGRAPH_INFO << "padding_above_int" << join(padding_above_int);
+                    // NGRAPH_INFO << "dilation_strides_int" << join(dilation_strides_int);
 
                     auto temp_size =
                         shape_size(input_padded_shape) * args[0].get_element_type().size();
@@ -248,7 +226,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                          {{args[0].get_type(), out[0].get_type()}},
                                                          input_shape,
                                                          input_padded_shape,
-                                                         padding_below_int,
+                                                         padding_below,
                                                          dilation_strides_int);
 
                     writer << "gpu::invoke_primitive(ctx, " << pad_dilation_index << ", ";
