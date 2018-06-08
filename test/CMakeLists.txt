@@ -140,7 +140,7 @@ add_custom_target(style-check
 
 add_custom_target(unit-test-check
 	COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
-	DEPENDS unit-test
+    DEPENDS unit-test
 )
 
 add_custom_target(check
