@@ -2155,14 +2155,14 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             reduced_size * out[0].get_element_type().size());
 
                         // exponentiate with fused sum reduction to calculate softmax denominator
-                        size_t exp_sum_reduce = cuda_emitter->build_elementwise<ngraph::op::Exp>(
-                            external_function->ctx().get(),
-                            {{args[0].get_type(), out[0].get_type()}},
-                            args[0].get_shape(),
-                            {},
-                            axes,
-                            true, // multi-output
-                            CudaOpMap<ngraph::op::Add>::atomic);
+                        size_t exp_sum_reduce =
+                            cuda_emitter->build_elementwise<ngraph::op::Exp, ngraph::op::Add>(
+                                external_function->ctx().get(),
+                                {{args[0].get_type(), out[0].get_type()}},
+                                args[0].get_shape(),
+                                {},
+                                axes,
+                                true /* multi-output */);
 
                         writer << "void* workspace = gpu::invoke_memory_primitive(ctx, "
                                << workspace_idx << ");\n";

@@ -71,31 +71,35 @@ namespace ngraph
                                            GPUShape reduce_window_shape,
                                            GPUShape reduce_window_strides);
 
-                template <typename T>
+                template <typename ELEMENTWISE_OP_TYPE, typename REDUCE_OP_TYPE = ngraph::op::Nop>
                 size_t build_elementwise(const GPURuntimeContext* ctx,
                                          const std::vector<std::string>& dtypes,
                                          GPUShape tensor_shape,
                                          const std::set<size_t>& is_reduced = {},
                                          const AxisSet& axes = {},
-                                         bool save_elementwise = false,
-                                         const char* reduce_op = "")
+                                         bool save_elementwise = false)
                 {
                     if (axes.size() == 0)
                     {
                         return build_elementwise_n_to_1(
-                            ctx, dtypes, tensor_shape, CudaOpMap<T>::op, CudaOpMap<T>::math_kernel);
+                            ctx,
+                            dtypes,
+                            tensor_shape,
+                            CudaOpMap<ELEMENTWISE_OP_TYPE>::op,
+                            CudaOpMap<ELEMENTWISE_OP_TYPE>::math_kernel);
                     }
                     else
                     {
-                        return build_fused_ew_to_collective(ctx,
-                                                            dtypes,
-                                                            tensor_shape,
-                                                            is_reduced,
-                                                            axes,
-                                                            CudaOpMap<T>::op,
-                                                            CudaOpMap<T>::math_kernel,
-                                                            reduce_op,
-                                                            save_elementwise);
+                        return build_fused_ew_to_collective(
+                            ctx,
+                            dtypes,
+                            tensor_shape,
+                            is_reduced,
+                            axes,
+                            CudaOpMap<ELEMENTWISE_OP_TYPE>::op,
+                            CudaOpMap<ELEMENTWISE_OP_TYPE>::math_kernel,
+                            CudaOpMap<REDUCE_OP_TYPE>::atomic,
+                            save_elementwise);
                     }
                 }
 
