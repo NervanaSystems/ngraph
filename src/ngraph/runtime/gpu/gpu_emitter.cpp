@@ -222,11 +222,11 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                  padding_above_int[i];
                     }
                     Shape input_padded_strides = row_major_strides(input_padded_shape);
-                    NGRAPH_INFO << join(input_padded_shape);
-                    NGRAPH_INFO << join(input_shape);
-                    NGRAPH_INFO << join(padding_below_int);
-                    NGRAPH_INFO << join(padding_above_int);
-                    NGRAPH_INFO << join(dilation_strides_int);
+                    NGRAPH_INFO << "input_padded_shape" << join(input_padded_shape);
+                    NGRAPH_INFO << "input_shape" << join(input_shape);
+                    NGRAPH_INFO << "padding_below_int" << join(padding_below_int);
+                    NGRAPH_INFO << "padding_above_int" << join(padding_above_int);
+                    NGRAPH_INFO << "dilation_strides_int" << join(dilation_strides_int);
 
                     auto temp_size =
                         shape_size(input_padded_shape) * args[0].get_element_type().size();
@@ -309,6 +309,12 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 CoordinateDiff padding_above_diff = convolution->get_padding_above_forward();
                 Shape padding_below(padding_below_diff.size(), 0);
                 Shape padding_above(padding_above_diff.size(), 0);
+                NGRAPH_INFO << "backward window move" << join(window_movement_strides);
+                NGRAPH_INFO << "backward window dila" << join(window_dilation_strides);
+                NGRAPH_INFO << "backward data dila" << join(data_dilation_strides);
+                NGRAPH_INFO << "backward pad belwo" << join(padding_below_diff);
+                NGRAPH_INFO << "backward pad abovel" << join(padding_above_diff);
+
                 for (int i = 0; i < padding_below_diff.size(); i++)
                 {
                     padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
@@ -474,6 +480,11 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 CoordinateDiff padding_above_diff = convolution->get_padding_above_forward();
                 Shape padding_below(padding_below_diff.size(), 0);
                 Shape padding_above(padding_above_diff.size(), 0);
+                NGRAPH_INFO << "backward filter window move" << join(window_movement_strides);
+                NGRAPH_INFO << "backward filter window dila" << join(window_dilation_strides);
+                NGRAPH_INFO << "backward data dila" << join(data_dilation_strides);
+                NGRAPH_INFO << "backward filter pad belwo" << join(padding_below_diff);
+                NGRAPH_INFO << "backward filter pad abovel" << join(padding_above_diff);
 
                 for (int i = 0; i < padding_below_diff.size(); i++)
                 {
@@ -514,6 +525,10 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     size_t idx_workspace = allocator.reserve_workspace(temp_size);
                     writer << "void* pad_buffer = runtime::gpu::invoke_memory_primitive(ctx, "
                            << idx_workspace << ");\n";
+                    writer << "std::vector<" << args[0].get_type() << "> pad_buffer_host("
+                           << shape_size(input_padded_shape) << ", 0);\n";
+                    writer << "runtime::gpu::cuda_memcpyHtD(pad_buffer, pad_buffer_host.data(), "
+                           << temp_size << ");\n";
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
                     auto pad_index =
