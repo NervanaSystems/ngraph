@@ -301,9 +301,9 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
     size_t idx_output_strides =
         allocator.reserve_argspace(output_strides.data(), output_strides.size() * sizeof(size_t));
     size_t idx_padding_below =
-        allocator.reserve_argspace(padding_below_gpu.data(), padding_below.size() * sizeof(size_t));
+        allocator.reserve_argspace(padding_below_gpu.data(), padding_below_gpu.size() * sizeof(size_t));
     size_t idx_dilation_strides = allocator.reserve_argspace(
-        dilation_strides.data(), dilation_strides_gpu.size() * sizeof(size_t));
+        dilation_strides_gpu.data(), dilation_strides_gpu.size() * sizeof(size_t));
 
     // create the launch primitive
     std::unique_ptr<gpu::primitive> pad_dilation(new gpu::primitive{[=](void** inputs,
@@ -313,10 +313,10 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
         void* param_padding_below = runtime::gpu::invoke_memory_primitive(ctx, idx_padding_below);
         void* param_dilation_strides =
             runtime::gpu::invoke_memory_primitive(ctx, idx_dilation_strides);
-        runtime::gpu::print_gpu_tensor<size_t>(param_input_strides, 4);
-        runtime::gpu::print_gpu_tensor<size_t>(param_output_strides, 4);
-        runtime::gpu::print_gpu_tensor<size_t>(param_padding_below, 4);
-        runtime::gpu::print_gpu_tensor<size_t>(param_dilation_strides, 4);
+        // runtime::gpu::print_gpu_tensor<size_t>(param_input_strides, 4);
+        // runtime::gpu::print_gpu_tensor<size_t>(param_output_strides, 4);
+        // runtime::gpu::print_gpu_tensor<size_t>(param_padding_below, 4);
+        // runtime::gpu::print_gpu_tensor<size_t>(param_dilation_strides, 4);
         std::vector<void*> args_list{&inputs[0],
                                      &outputs[0],
                                      &param_input_strides,
