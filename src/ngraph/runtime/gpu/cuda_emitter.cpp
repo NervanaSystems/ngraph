@@ -231,6 +231,120 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
     return primitive_index;
 }
 
+size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURuntimeContext* ctx,
+                                                     const std::array<std::string, 2>& dtypes,
+                                                     const Shape& input_shape,
+                                                     const Shape& output_shape,
+                                                     const Shape& padding_below,
+                                                     const Shape& dilation_strides)
+{
+    std::stringstream kernel_name;
+    kernel_name << "pad_dilation_" << join(dtypes, "_");
+
+    // Need to check: are there models in which some tensors will have different types? if so, this
+    // hash needs to include the tensor types.
+    std::string hash = kernel_name.str() + "pad_i" + join(input_shape, "_") + "pad_o" +
+                       join(output_shape) + "_pb" + join(padding_below, "_") + "_pi" +
+                       join(dilation_strides, "_");
+    // For backwards compatability we currently use two unordered maps
+    // 1. one looks up the compiled cuda kernel (CudaFunctionPool)
+    // 2. the other looks to see if this kernel is already in the primitive list
+    // Once all previously implemented cuda kernels are refactored to use the
+    // CUDAEmitter/GPUPrimittiveEmitter interface, only one map (from hash to primitive index)
+    // will be required.
+
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    // check if the kernel has already been compiled. if so, create
+    // a launch primitive for it based on the input tensor shape
+    // but do not recompile the kernel. otherwise, do it all:
+    // recompile the kernel and then create the primitive
+    auto compiled_kernel = ctx->compiled_kernel_pool->get(kernel_name.str());
+    if (compiled_kernel == nullptr)
+    {
+        codegen::CodeWriter writer;
+        CudaKernelBuilder::add_pod_typedefs(writer);
+
+        CudaKernelBuilder::get_pad_dilation_op(writer, kernel_name.str(), dtypes);
+
+        compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
+    }
+
+    size_t rank = input_shape.size();
+    size_t nthreads = shape_size(input_shape);
+
+    Shape padding_below_gpu = Shape(input_shape.size(), 0);
+    Shape dilation_strides_gpu = Shape(input_shape.size(), 1);
+    int64_t i = input_shape.size() - 1; 
+    int64_t j = padding_below.size() -1;
+    for(; j>0; j--,i--)
+    {
+        padding_below_gpu[i] = padding_below[j];
+        dilation_strides_gpu[i] = dilation_strides[j];
+    }
+
+    Shape input_strides = row_major_strides(input_shape);
+    Shape output_strides = row_major_strides(output_shape);
+
+    NGRAPH_INFO << join(input_strides);
+    NGRAPH_INFO << join(output_strides);
+    // get an allocator for transient per kernel gpu memory
+    GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+
+    size_t idx_input_strides =
+        allocator.reserve_argspace(input_strides.data(), input_strides.size() * sizeof(size_t));
+    size_t idx_output_strides =
+        allocator.reserve_argspace(output_strides.data(), output_strides.size() * sizeof(size_t));
+    size_t idx_padding_below =
+        allocator.reserve_argspace(padding_below_gpu.data(), padding_below_gpu.size() * sizeof(size_t));
+    size_t idx_dilation_strides = allocator.reserve_argspace(
+        dilation_strides_gpu.data(), dilation_strides_gpu.size() * sizeof(size_t));
+
+    // create the launch primitive
+    std::unique_ptr<gpu::primitive> pad_dilation(new gpu::primitive{[=](void** inputs,
+                                                                        void** outputs) mutable {
+        void* param_input_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_input_strides);
+        void* param_output_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_output_strides);
+        void* param_padding_below = runtime::gpu::invoke_memory_primitive(ctx, idx_padding_below);
+        void* param_dilation_strides =
+            runtime::gpu::invoke_memory_primitive(ctx, idx_dilation_strides);
+        // runtime::gpu::print_gpu_tensor<size_t>(param_input_strides, 4);
+        // runtime::gpu::print_gpu_tensor<size_t>(param_output_strides, 4);
+        // runtime::gpu::print_gpu_tensor<size_t>(param_padding_below, 4);
+        // runtime::gpu::print_gpu_tensor<size_t>(param_dilation_strides, 4);
+        std::vector<void*> args_list{&inputs[0],
+                                     &outputs[0],
+                                     &param_input_strides,
+                                     &param_output_strides,
+                                     &param_padding_below,
+                                     &param_dilation_strides,
+                                     &rank,
+                                     &nthreads};
+
+        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                      static_cast<uint32_t>(nthreads),
+                                      1,
+                                      1, // grid dim
+                                      1,
+                                      1,
+                                      1, // block dim
+                                      0,
+                                      NULL, // shared mem and stream
+                                      args_list.data(),
+                                      0));  // arguments
+        CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+    }});
+
+    primitive_index = this->m_primitive_emitter->insert(std::move(pad_dilation));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
+
 size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx,
                                                     const std::array<std::string, 2>& dtypes,
                                                     GPUShape input_shape,
