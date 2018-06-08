@@ -280,8 +280,8 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
 
     Shape padding_below_gpu = Shape(input_shape.size(), 0);
     Shape dilation_strides_gpu = Shape(input_shape.size(), 1);
-    int i = input_shape.size() - 1; 
-    int j = padding_below.size() -1;
+    int64_t i = input_shape.size() - 1; 
+    int64_t j = padding_below.size() -1;
     for(; j>0; j--,i--)
     {
         padding_below_gpu[i] = padding_below[j];
