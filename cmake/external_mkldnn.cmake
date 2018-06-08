@@ -59,7 +59,7 @@ set(MKLURL ${MKLURLROOT}${MKLPACKAGE})
 
 ExternalProject_Add(
     ext_mkl
-    PREFIX mkldnn/src/external
+    PREFIX mkl
     URL ${MKLURL}
     URL_HASH SHA1=${MKL_SHA1_HASH}
     CONFIGURE_COMMAND ""
@@ -68,14 +68,12 @@ ExternalProject_Add(
     UPDATE_COMMAND ""
     DOWNLOAD_NO_PROGRESS TRUE
     EXCLUDE_FROM_ALL TRUE
-    SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/external/src"
-    DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/external"
-    # BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/external/build"
 )
 ExternalProject_Get_Property(ext_mkl source_dir binary_dir)
-set(MKL_ROOT ${source_dir})
-# add_library(libmkl INTERFACE)
-# target_include_directories(libmkl SYSTEM INTERFACE ${source_dir}/include)
+set(MKL_ROOT ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/external/mkl)
+set(MKL_SOURCE_DIR ${source_dir})
+message(STATUS "************************* MKL SRC ${source_dir}")
+message(STATUS "************************* MKL_ROOT ${MKL_ROOT}")
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
 set(MKLDNN_GIT_TAG "0e7ca73")
@@ -88,6 +86,7 @@ if(${CMAKE_VERSION} VERSION_LESS 3.2)
         GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
         GIT_TAG ${MKLDNN_GIT_TAG}
         UPDATE_COMMAND ""
+        CONFIGURE_COMMAND
         # Uncomment below with any in-flight MKL-DNN patches
         # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
         CMAKE_ARGS
@@ -133,6 +132,15 @@ else()
         EXCLUDE_FROM_ALL TRUE
         )
 endif()
+
+ExternalProject_Add_Step(
+    ext_mkldnn
+    PrepareMKL
+    COMMAND echo ZZZZ ${MKL_SOURCE_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${MKL_SOURCE_DIR} ${MKL_ROOT}
+    DEPENDEES download
+    DEPENDERS configure
+    )
 
 ExternalProject_Get_Property(ext_mkldnn source_dir binary_dir)
 
