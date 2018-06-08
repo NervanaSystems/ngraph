@@ -43,7 +43,7 @@ namespace ngraph
 
                 ~GPUAllocator();
                 size_t reserve_argspace(const void* data, size_t size);
-                size_t reserve_workspace(size_t size);
+                size_t reserve_workspace(size_t size, bool zero_initialize = false);
 
             private:
                 GPUMemoryManager* m_manager;
