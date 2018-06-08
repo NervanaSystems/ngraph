@@ -687,7 +687,7 @@ size_t
     runtime::gpu::CUDAEmitter::build_fused_ew_to_collective(const GPURuntimeContext* ctx,
                                                             const std::vector<std::string>& dtypes,
                                                             GPUShape tensor_shape,
-                                                            const std::set<size_t>& is_reduced,
+                                                            const std::set<size_t>& reduced_tensors,
                                                             const AxisSet& axes,
                                                             const char* op,
                                                             const char* kernel,
@@ -732,7 +732,7 @@ size_t
                                                 op,
                                                 reduce_op,
                                                 dtypes,
-                                                is_reduced,
+                                                reduced_tensors,
                                                 save_elementwise,
                                                 tensor_shape.size());
         compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());

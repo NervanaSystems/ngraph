@@ -63,7 +63,7 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
     const std::string& op,
     const std::string& reduce_op,
     const std::vector<std::string>& data_types,
-    const std::set<size_t>& is_reduced,
+    const std::set<size_t>& reduced_tensors,
     bool save_elementwise,
     size_t rank)
 {
@@ -91,14 +91,14 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
         writer << "if (tid < n)\n";
         writer.block_begin();
         {
-            std::string reduced_idx = reduce_coordinate_transform_helper(writer,
-                                                                         "tid",
-                                                                         "strides",
-                                                                         "stride_magic",
-                                                                         "stride_shift",
-                                                                         "reduced_strides",
-                                                                         "coordinate",
-                                                                         rank);
+            std::string reduced_idx = collective_coordinate_transform_helper(writer,
+                                                                             "tid",
+                                                                             "strides",
+                                                                             "stride_magic",
+                                                                             "stride_shift",
+                                                                             "reduced_strides",
+                                                                             "coordinate",
+                                                                             rank);
             // element-wise operation
             writer << data_types[num_inputs] << " output = " << op << "(";
             for (size_t i = 0; i < num_inputs; i++)
@@ -108,7 +108,7 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
                     writer << ", ";
                 }
                 writer << "in" << i << "[";
-                if (is_reduced.count(i) > 0)
+                if (reduced_tensors.count(i) > 0)
                 {
                     writer << reduced_idx;
                 }
@@ -168,14 +168,14 @@ void runtime::gpu::CudaKernelBuilder::get_broadcast_op(codegen::CodeWriter& writ
         writer.block_begin();
         {
             // calculate tensor coordinates (inverse tensor reduction)
-            std::string reduced_idx = reduce_coordinate_transform_helper(writer,
-                                                                         "tid",
-                                                                         "strides",
-                                                                         "stride_magic",
-                                                                         "stride_shift",
-                                                                         "reduced_strides",
-                                                                         "coordinate",
-                                                                         rank);
+            std::string reduced_idx = collective_coordinate_transform_helper(writer,
+                                                                             "tid",
+                                                                             "strides",
+                                                                             "stride_magic",
+                                                                             "stride_shift",
+                                                                             "reduced_strides",
+                                                                             "coordinate",
+                                                                             rank);
             writer << "out[tid] = load(in, " << reduced_idx << ");\n";
         }
         writer.block_end();
@@ -474,7 +474,7 @@ void runtime::gpu::CudaKernelBuilder::get_replace_slice_op(
     writer.block_end();
 }
 
-std::string runtime::gpu::CudaKernelBuilder::reduce_coordinate_transform_helper(
+std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_helper(
     codegen::CodeWriter& writer,
     std::string i_thread_index,
     std::string i_strides,
@@ -536,14 +536,14 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer
         writer.block_begin();
         {
             // calculate tensor coordinates
-            std::string reduced_idx = reduce_coordinate_transform_helper(writer,
-                                                                         "tid",
-                                                                         "strides",
-                                                                         "stride_magic",
-                                                                         "stride_shift",
-                                                                         "reduced_strides",
-                                                                         "coordinate",
-                                                                         rank);
+            std::string reduced_idx = collective_coordinate_transform_helper(writer,
+                                                                             "tid",
+                                                                             "strides",
+                                                                             "stride_magic",
+                                                                             "stride_shift",
+                                                                             "reduced_strides",
+                                                                             "coordinate",
+                                                                             rank);
 
             // TODO: mediate atomic memory access contention
             writer << data_types[0] << " val = expf(load(in, tid));\n";

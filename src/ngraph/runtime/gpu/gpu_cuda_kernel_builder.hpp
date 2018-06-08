@@ -91,22 +91,23 @@ namespace ngraph
                                                  const std::string& op,
                                                  const std::string& reduce_op,
                                                  const std::vector<std::string>& data_types,
-                                                 const std::set<size_t>& is_reduced,
+                                                 const std::set<size_t>& reduced_tensors,
                                                  bool save_elementwise,
                                                  size_t rank);
 
                 static void add_pod_typedefs(codegen::CodeWriter& writer);
 
                 /// \brief Given kernel input variables i_* produce register variables o_coordinates{i}
-                ///        and return string name of integer index into reduced array
-                static std::string reduce_coordinate_transform_helper(codegen::CodeWriter& writer,
-                                                                      std::string i_thread_index,
-                                                                      std::string i_strides,
-                                                                      std::string i_stride_magic,
-                                                                      std::string i_stride_shift,
-                                                                      std::string i_reduced_strides,
-                                                                      std::string o_coordinates,
-                                                                      size_t rank);
+                ///        of the non-reduced tensor and return the string name of integer index into reduced tensor
+                static std::string
+                    collective_coordinate_transform_helper(codegen::CodeWriter& writer,
+                                                           std::string i_thread_index,
+                                                           std::string i_strides,
+                                                           std::string i_stride_magic,
+                                                           std::string i_stride_shift,
+                                                           std::string i_reduced_strides,
+                                                           std::string o_coordinates,
+                                                           size_t rank);
             };
         }
     }

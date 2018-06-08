@@ -75,7 +75,7 @@ namespace ngraph
                 size_t build_elementwise(const GPURuntimeContext* ctx,
                                          const std::vector<std::string>& dtypes,
                                          GPUShape tensor_shape,
-                                         const std::set<size_t>& is_reduced = {},
+                                         const std::set<size_t>& reduced_tensors = {},
                                          const AxisSet& axes = {},
                                          bool save_elementwise = false)
                 {
@@ -94,7 +94,7 @@ namespace ngraph
                             ctx,
                             dtypes,
                             tensor_shape,
-                            is_reduced,
+                            reduced_tensors,
                             axes,
                             CudaOpMap<ELEMENTWISE_OP_TYPE>::op,
                             CudaOpMap<ELEMENTWISE_OP_TYPE>::math_kernel,
@@ -135,7 +135,7 @@ namespace ngraph
                 size_t build_fused_ew_to_collective(const GPURuntimeContext* ctx,
                                                     const std::vector<std::string>& dtypes,
                                                     GPUShape tensor_shape,
-                                                    const std::set<size_t>& is_reduced,
+                                                    const std::set<size_t>& reduced_tensors,
                                                     const AxisSet& axes,
                                                     const char* op,
                                                     const char* kernel,
