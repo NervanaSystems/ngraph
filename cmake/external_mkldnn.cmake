@@ -69,11 +69,9 @@ ExternalProject_Add(
     DOWNLOAD_NO_PROGRESS TRUE
     EXCLUDE_FROM_ALL TRUE
 )
-ExternalProject_Get_Property(ext_mkl source_dir binary_dir)
+ExternalProject_Get_Property(ext_mkl source_dir)
 set(MKL_ROOT ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/external/mkl)
 set(MKL_SOURCE_DIR ${source_dir})
-message(STATUS "************************* MKL SRC ${source_dir}")
-message(STATUS "************************* MKL_ROOT ${MKL_ROOT}")
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
 set(MKLDNN_GIT_TAG "0e7ca73")
@@ -136,13 +134,10 @@ endif()
 ExternalProject_Add_Step(
     ext_mkldnn
     PrepareMKL
-    COMMAND echo ZZZZ ${MKL_SOURCE_DIR}
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${MKL_SOURCE_DIR} ${MKL_ROOT}
     DEPENDEES download
     DEPENDERS configure
     )
-
-ExternalProject_Get_Property(ext_mkldnn source_dir binary_dir)
 
 add_library(libmkldnn INTERFACE)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
