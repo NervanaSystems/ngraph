@@ -196,9 +196,9 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 if (pad_required || is_deconvolution)
                 {
                     input_padded_shape = get_padded_shape(input_shape, padding_below, padding_above, padding_interior);
-
                     Shape input_padded_strides = row_major_strides(input_padded_shape);
                     NGRAPH_INFO << join(input_padded_shape);
+                    NGRAPH_INFO << join(padding_interior);
                     NGRAPH_INFO << join(input_shape);
 
                     auto temp_size =
@@ -308,7 +308,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 auto output_shape = out[0].get_shape();
                 auto output_shape_padded = output_shape;
                 Shape padding_below_back(output_shape.size(), 0);
-                Shape padding_interior_back(out_shape.size(), 1);
+                Shape padding_interior_back(output_shape.size(), 1);
                 size_t i = padding_below_back.size() - padding_below.size();
                 size_t j = 0;
                 for (; i < padding_below_back.size(); i++)
@@ -341,7 +341,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         cuda_emitter->build_pad_dilation(external_function->ctx().get(),
                                                          {{args[0].get_type(), out[0].get_type()}},
                                                          output_shape,
-                                                         output_padded_shape,
+                                                         output_shape_padded,
                                                          padding_below,
                                                          padding_interior);
 
@@ -1965,31 +1965,26 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     Asymmetric
                 };
                 auto type = padtype::None;
-                for (int i = 0; i < padding_below.size(); i++)
-                {
-                    if (padding_below[i] != 0 || padding_above[i] != 0)
-                    {
-                        type = padtype::Symmetric;
-                    }
-                    if (padding_below[i] != padding_above[i])
-                    {
-                        type = padtype::Asymmetric;
-                        break;
-                    }
+                if(padding_below == padding_above)
+                {       
+                    type = padtype::Symmetric;
                 }
-                if (type == padtype::None)
+                else
                 {
-                    return input_shape;
+                        type = padtype::Asymmetric;
                 }
 
                 Shape padded_shape = input_shape;
                 int64_t i = input_shape.size() - 1;
                 int64_t j = padding_below.size() - 1; 
+                    NGRAPH_INFO << join(padded_shape);
+                    NGRAPH_INFO << join(padding_interior);
                 for (; j >= 0 ; j--, i--)
                 {
                     padded_shape[i] = (padded_shape[i] - 1) * padding_interior[j] + 1 
                             + padding_below[j] + padding_above[j];
                 }
+                    NGRAPH_INFO << join(padded_shape);
 
                 return padded_shape;
             }
