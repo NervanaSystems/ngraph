@@ -487,6 +487,10 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     size_t idx_workspace = allocator.reserve_workspace(temp_size);
                     writer << "void* pad_buffer = runtime::gpu::invoke_memory_primitive(ctx, "
                            << idx_workspace << ");\n";
+                    writer << "std::vector<" << args[0].get_type() << "> pad_buffer_host("
+                           << shape_size(input_padded_shape) << ", 0);\n";
+                    writer << "runtime::gpu::cuda_memcpyHtD(pad_buffer, pad_buffer_host.data(), "
+                           << temp_size << ");\n";
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
                     auto pad_dilation_index =
