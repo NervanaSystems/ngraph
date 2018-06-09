@@ -191,11 +191,12 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
                 auto input_shape = args[0].get_shape();
                 Shape input_padded_shape = input_shape;
-
+                 Shape padding_interior(data_dilation_strides);
                 writer.block_begin("  // " + node->get_name());
                 if (pad_required || is_deconvolution)
                 {
-                    Shape padding_below_int(input_shape.size(), 0);
+                    input_padded_shape = get_padded_shape(input_shape, padding_below, padding_above, padding_interior);
+                    /*Shape padding_below_int(input_shape.size(), 0);
                     Shape padding_above_int(input_shape.size(), 0);
                     Shape dilation_strides_int(input_shape.size(), 1);
 
@@ -220,13 +221,11 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         input_padded_shape[i] = (input_padded_shape[i] - 1) * 
                                                     dilation_strides_int[i] + 1 +  padding_below_int[i] +
                                                  padding_above_int[i];
-                    }
+                    }*/
+
                     Shape input_padded_strides = row_major_strides(input_padded_shape);
                     NGRAPH_INFO << join(input_padded_shape);
                     NGRAPH_INFO << join(input_shape);
-                    NGRAPH_INFO << join(padding_below_int);
-                    NGRAPH_INFO << join(padding_above_int);
-                    NGRAPH_INFO << join(dilation_strides_int);
 
                     auto temp_size =
                         shape_size(input_padded_shape) * args[0].get_element_type().size();
@@ -248,8 +247,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                          {{args[0].get_type(), out[0].get_type()}},
                                                          input_shape,
                                                          input_padded_shape,
-                                                         padding_below_int,
-                                                         dilation_strides_int);
+                                                         padding_below,
+                                                         padding_interior);
 
                     writer << "gpu::invoke_primitive(ctx, " << pad_dilation_index << ", ";
                     writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
@@ -258,7 +257,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     // asymetric padding has been applied, zero out padding vectors to
                     // ensure cudnn does not assume padding
                     std::fill(padding_below.begin(), padding_below.end(), 0);
-                    std::fill(dilation_strides_int.begin(), dilation_strides_int.end(), 1);
  //                   writer << "runtime::gpu::print_gpu_tensor<float>(pad_buffer, "
 //                       << shape_size(input_padded_shape) << ");\n";
                 }
@@ -1986,12 +1984,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                    const Shape& padding_above,
                                    const Shape& padding_interior)
             {
-                if (padding_interior.size())
-                {
-                    throw std::runtime_error(
-                        "Interior padding support is not yet available on GPU.");
-                }
-
                 enum class padtype
                 {
                     None,
@@ -2017,11 +2009,12 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
 
                 Shape padded_shape = input_shape;
-                for (int i = 0; i < padding_below.size(); i++)
+                int64_t i = input_shape.size() - 1;
+                int64_t j = padding_below.size() - 1; 
+                for (; j >= 0 ; j--, i--)
                 {
-                    padded_shape[padded_shape.size() - 1 - i] +=
-                        (padding_below[padding_below.size() - 1 - i] +
-                         padding_above[padding_above.size() - 1 - i]);
+                    padded_shape[i] = (padded_shape[i] - 1) * padding_interior[j] + 1 
+                            + padding_below[j] + padding_above[j];
                 }
 
                 return padded_shape;
