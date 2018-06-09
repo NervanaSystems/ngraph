@@ -316,10 +316,6 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
         void* param_padding_below = runtime::gpu::invoke_memory_primitive(ctx, idx_padding_below);
         void* param_dilation_strides =
             runtime::gpu::invoke_memory_primitive(ctx, idx_dilation_strides);
-        runtime::gpu::print_gpu_tensor<size_t>(param_input_strides, 4);
-        runtime::gpu::print_gpu_tensor<size_t>(param_output_strides, 4);
-        runtime::gpu::print_gpu_tensor<size_t>(param_padding_below, 4);
-        runtime::gpu::print_gpu_tensor<size_t>(param_dilation_strides, 4);
         std::vector<void*> args_list{&inputs[0],
                                      &outputs[0],
                                      &param_input_strides,

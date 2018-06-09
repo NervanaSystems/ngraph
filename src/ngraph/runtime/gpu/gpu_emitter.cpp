@@ -367,11 +367,9 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                                    window_dilation_strides,
                                                                    padding_below);
 
-                NGRAPH_INFO << "window_movement_strides" << join(window_movement_strides);
                 writer << "gpu::invoke_primitive(ctx, " << index << ", ";
                 writer << "std::vector<void*>{" << args[0].get_name() << "," << args[1].get_name()
                        << "}.data(), ";
-
                 if (pad_required || is_deconvolution)
                 {
                     writer << "std::vector<void*>{pad_buffer}.data()";
@@ -1977,15 +1975,11 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 Shape padded_shape = input_shape;
                 int64_t i = input_shape.size() - 1;
                 int64_t j = padding_below.size() - 1; 
-                    NGRAPH_INFO << join(padded_shape);
-                    NGRAPH_INFO << join(padding_interior);
                 for (; j >= 0 ; j--, i--)
                 {
                     padded_shape[i] = (padded_shape[i] - 1) * padding_interior[j] + 1 
                             + padding_below[j] + padding_above[j];
                 }
-                    NGRAPH_INFO << join(padded_shape);
-
                 return padded_shape;
             }
 
