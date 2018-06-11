@@ -76,7 +76,7 @@ namespace ngraph
                                          const std::vector<std::string>& dtypes,
                                          GPUShape tensor_shape,
                                          const std::set<size_t>& reduced_tensors = {},
-                                         const AxisSet& axes = {},
+                                         const std::set<size_t>& axes = {},
                                          bool save_elementwise = false)
                 {
                     if (axes.size() == 0)
@@ -114,7 +114,7 @@ namespace ngraph
                 size_t build_broadcast(const GPURuntimeContext* ctx,
                                        const std::array<std::string, 2>& dtypes,
                                        GPUShape result_shape,
-                                       const AxisSet& bcast_axes);
+                                       const std::set<size_t>& bcast_axes);
 
             private:
                 CUDAEmitter(GPUPrimitiveEmitter* emitter);
@@ -131,7 +131,7 @@ namespace ngraph
                                                     const std::vector<std::string>& dtypes,
                                                     GPUShape tensor_shape,
                                                     const std::set<size_t>& reduced_tensors,
-                                                    const AxisSet& axes,
+                                                    const std::set<size_t>& axes,
                                                     const char* op,
                                                     const char* kernel,
                                                     const char* reduce_op,
