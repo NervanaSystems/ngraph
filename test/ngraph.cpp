@@ -29,7 +29,8 @@ using namespace std;
 TEST(NGraph, loadTest)
 {
     // load the triangle library
-    void* ngraphImplLib = dlopen("../src/libngraph.so", RTLD_LAZY);
+    void* ngraphImplLib = dlopen("../src/libngraph.so", RTLD_LAZY) ||
+                          dlopen("../src/libngraph.dylib", RTLD_LAZY);
     if (!ngraphImplLib)
     {
         std::cerr << "Cannot load library: " << dlerror() << '\n';

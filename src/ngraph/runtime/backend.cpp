@@ -43,7 +43,12 @@ runtime::Backend::~Backend()
 void* runtime::Backend::open_shared_library(const string& type)
 {
     void* handle = nullptr;
-    string name = "lib" + to_lower(type) + "_backend.so";
+    const string name = "lib" + to_lower(type) +
+#ifdef __APPLE__
+                        "_backend.dylib";
+#else
+                        "_backend.so";
+#endif
     handle = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
     if (handle)
     {
