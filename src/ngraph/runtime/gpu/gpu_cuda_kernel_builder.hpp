@@ -70,11 +70,6 @@ namespace ngraph
                                                  const std::array<std::string, 3>& data_types,
                                                  int nthreads_per_block);
 
-                static void get_softmax_op(codegen::CodeWriter& writer,
-                                           const std::string& name,
-                                           const std::array<std::string, 2>& data_types,
-                                           const size_t rank);
-
                 static void get_reduce_window_op(codegen::CodeWriter& writer,
                                                  const std::string& name,
                                                  const std::string& op,

@@ -123,6 +123,7 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
             // global collective reduce or broadcast
             if (reduce_op != "")
             {
+                // TODO: mediate atomic memory access contention
                 writer << reduce_op << "(&out0[" << reduced_idx << "], output);\n";
                 if (save_elementwise)
                 {
@@ -513,48 +514,6 @@ std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_hel
     }
 
     return reduced_idx;
-}
-
-void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer,
-                                                     const std::string& name,
-                                                     const std::array<std::string, 2>& data_types,
-                                                     const size_t rank)
-{
-    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
-           << data_types[1] << "* out, "
-           << "int* strides, "
-           << "int* stride_magic, "
-           << "int* stride_shift, "
-           << "int* reduced_strides, "
-           << "float alpha, float beta, "
-           << "size_t nthreads"
-           << ")\n";
-    writer.block_begin();
-    {
-        writer << "const int tid = blockDim.x*blockIdx.x + threadIdx.x;\n";
-        writer << "if (tid < nthreads)\n";
-        writer.block_begin();
-        {
-            // calculate tensor coordinates
-            std::string reduced_idx = collective_coordinate_transform_helper(writer,
-                                                                             "tid",
-                                                                             "strides",
-                                                                             "stride_magic",
-                                                                             "stride_shift",
-                                                                             "reduced_strides",
-                                                                             "coordinate",
-                                                                             rank);
-
-            // TODO: mediate atomic memory access contention
-            writer << data_types[0] << " val = expf(load(in, tid));\n";
-            writer << "atomicAdd(&out[" << reduced_idx << "], val);\n";
-            writer << "__threadfence();\n";
-            writer << data_types[1] << " sum = out[" << reduced_idx << "];\n";
-            writer << "out[tid] = val/sum;\n";
-        }
-        writer.block_end();
-    }
-    writer.block_end();
 }
 
 void runtime::gpu::CudaKernelBuilder::get_device_helper(codegen::CodeWriter& writer,
