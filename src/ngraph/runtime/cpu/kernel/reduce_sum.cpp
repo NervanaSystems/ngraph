@@ -57,6 +57,15 @@ namespace ngraph
                 {
                     reduce_sum_all<float, 4>(input, output, input_shape, output_shape);
                 }
+                void reduce_sum_4d_2rd_float32(float* input,
+                                               float* output,
+                                               const Shape& input_shape,
+                                               const Shape& output_shape,
+                                               const AxisSet& reduction_axes)
+                {
+                    reduce_sum<float, 4, 2>(
+                        input, output, input_shape, output_shape, reduction_axes);
+                }
             }
         }
     }
