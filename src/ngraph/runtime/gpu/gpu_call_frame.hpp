@@ -61,8 +61,6 @@ namespace ngraph
             protected:
                 std::shared_ptr<GPU_ExternalFunction> m_external_function;
                 EntryPoint m_compiled_function;
-                cublasHandle_t m_cublas_handle;
-                cudnnHandle_t m_cudnn_handle;
                 static bool init;
             };
         }

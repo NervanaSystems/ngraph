@@ -21,6 +21,9 @@
 #include "util/autodiff/numeric_derivative.hpp"
 #include "util/test_tools.hpp"
 
+// TODO: Consider removing template since only <float> is being used in tests and numerical
+//       derivative does not work with int types
+// TODO: Always compute the numerical derivatives in double
 template <typename T>
 bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Backend>& backend,
                               std::function<std::shared_ptr<ngraph::Function>()> make_graph,
@@ -28,7 +31,7 @@ bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Backend>& b
                               T rtol,
                               T atol)
 {
-    T delta = static_cast<T>(0.001);
+    T delta = static_cast<T>(0.0009765625f); // Binary-representable number near 0.001
 
     // Use INTERPRETER to compute numerical derivatives
     auto interpreter_backend = ngraph::runtime::Backend::create("INTERPRETER");

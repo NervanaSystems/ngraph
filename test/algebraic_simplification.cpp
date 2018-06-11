@@ -27,22 +27,23 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/op/subtract.hpp"
-#include "ngraph/op/sum.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
@@ -357,6 +358,101 @@ TEST(algebraic_simplification, multiply_sum_negative)
     pass_manager.run_passes(f);
     auto f_sum = f->get_results().at(0)->get_argument(0);
     ASSERT_EQ(f_sum, sum_fconst1);
+}
+
+TEST(algebraic_simplification, concat_reshape_slice)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{96, 100});
+    auto goe = make_shared<op::GetOutputElement>(a, 0);
+    auto slice1 = make_shared<op::Slice>(goe, Coordinate{0, 0}, Coordinate{32, 100}, Strides{1, 1});
+    auto slice2 =
+        make_shared<op::Slice>(goe, Coordinate{32, 0}, Coordinate{64, 100}, Strides{1, 1});
+    auto slice3 =
+        make_shared<op::Slice>(goe, Coordinate{64, 0}, Coordinate{96, 100}, Strides{1, 1});
+
+    auto reshape1 = make_shared<op::Reshape>(slice1, AxisVector{0, 1}, Shape{32, 1, 100});
+    auto reshape2 = make_shared<op::Reshape>(slice2, AxisVector{0, 1}, Shape{32, 1, 100});
+    auto reshape3 = make_shared<op::Reshape>(slice3, AxisVector{0, 1}, Shape{32, 1, 100});
+
+    size_t concat_axis = 1;
+    auto concat = make_shared<op::Concat>(NodeVector{reshape1, reshape2, reshape3}, concat_axis);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+
+    auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, op::ParameterVector{a});
+    pass_manager.run_passes(f);
+    ASSERT_EQ(f->get_results().at(0)->get_argument(0), concat);
+}
+
+TEST(algebraic_simplification, concat_slice)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{96, 100});
+    auto goe = make_shared<op::GetOutputElement>(a, 0);
+    auto slice1 = make_shared<op::Slice>(goe, Coordinate{0, 0}, Coordinate{32, 100}, Strides{1, 1});
+    auto slice2 =
+        make_shared<op::Slice>(goe, Coordinate{32, 0}, Coordinate{64, 100}, Strides{1, 1});
+    auto slice3 =
+        make_shared<op::Slice>(goe, Coordinate{64, 0}, Coordinate{96, 100}, Strides{1, 1});
+
+    size_t concat_axis = 0;
+    auto concat = make_shared<op::Concat>(NodeVector{slice1, slice2, slice3}, concat_axis);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+
+    auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, op::ParameterVector{a});
+    pass_manager.run_passes(f);
+    ASSERT_EQ(f->get_results().at(0)->get_argument(0), goe);
+}
+
+TEST(algebraic_simplification, concat_parameter_slice)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{96, 100});
+    auto slice1 = make_shared<op::Slice>(a, Coordinate{0, 0}, Coordinate{32, 100}, Strides{1, 1});
+    auto slice2 = make_shared<op::Slice>(a, Coordinate{32, 0}, Coordinate{64, 100}, Strides{1, 1});
+    auto slice3 = make_shared<op::Slice>(a, Coordinate{64, 0}, Coordinate{96, 100}, Strides{1, 1});
+
+    size_t concat_axis = 0;
+    auto concat = make_shared<op::Concat>(NodeVector{slice1, slice2, slice3}, concat_axis);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+
+    auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, op::ParameterVector{a});
+    pass_manager.run_passes(f);
+    ASSERT_EQ(f->get_results().at(0)->get_argument(0), concat);
+}
+
+TEST(algebraic_simplification, concat_different_goes)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{96, 100});
+    auto goe1 = make_shared<op::GetOutputElement>(a, 0);
+    auto goe2 = make_shared<op::GetOutputElement>(a, 0);
+    auto slice1 =
+        make_shared<op::Slice>(goe1, Coordinate{0, 0}, Coordinate{32, 100}, Strides{1, 1});
+    auto slice2 =
+        make_shared<op::Slice>(goe2, Coordinate{32, 0}, Coordinate{64, 100}, Strides{1, 1});
+    auto slice3 =
+        make_shared<op::Slice>(goe1, Coordinate{64, 0}, Coordinate{96, 100}, Strides{1, 1});
+
+    size_t concat_axis = 0;
+    auto concat = make_shared<op::Concat>(NodeVector{slice1, slice2, slice3}, concat_axis);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+
+    auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, op::ParameterVector{a});
+    pass_manager.run_passes(f);
+    ASSERT_EQ(f->get_results().at(0)->get_argument(0), concat);
 }
 
 TEST(algebraic_simplification, log_neg_neg)
