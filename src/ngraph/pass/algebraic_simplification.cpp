@@ -25,17 +25,17 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/pattern/matcher.hpp"
-#include "ngraph/runtime/cpu/op/group_conv.hpp"
 
 using namespace ngraph;
 
@@ -61,6 +61,98 @@ static std::shared_ptr<pattern::op::Label>
     get_broadcast_label(std::shared_ptr<pattern::Matcher> matcher)
 {
     return std::dynamic_pointer_cast<pattern::op::Label>(matcher->get_pattern()->get_argument(1));
+}
+
+//`simplify_concat` identifies slices-concat sequences
+// that cancel each other. Namely it replaces subgraphs
+//similar to the one below with `arg`
+//
+//                 +----------+
+//            +----+slice(n/2..n)---+
+// +-------+  |    +----------+    |  +-----------+
+// |  arg  +--+                    +--+  concat   |
+// +-------+  |    +----------+    |  +-----------+
+//            +----+slice(0..n/2)---+
+//                 +----------+
+static bool simplify_concat(std::shared_ptr<Node> n)
+{
+    NGRAPH_DEBUG << "In simplify_concat for " << n->get_name();
+
+    std::shared_ptr<Node> goe;
+
+    auto lgoe = std::make_shared<pattern::op::Label>(element::i32, Shape{2, 1});
+
+    auto slice =
+        std::make_shared<op::Slice>(lgoe, Coordinate{0, 0}, Coordinate{2, 1}, Strides{1, 1});
+
+    auto reshape_pred = [](std::shared_ptr<Node> r) {
+        return std::dynamic_pointer_cast<op::Reshape>(r) != nullptr;
+    };
+
+    auto skip_reshape = std::make_shared<pattern::op::Skip>(slice, reshape_pred);
+
+    auto matcher = std::make_shared<pattern::Matcher>(skip_reshape, nullptr);
+
+    for (auto carg : n->get_arguments())
+    {
+        if (!matcher->match(carg))
+        {
+            NGRAPH_DEBUG << carg->get_name() << " doesn't match";
+            return false;
+        }
+
+        if (goe)
+        {
+            if (goe != matcher->get_pattern_map()[lgoe])
+            {
+                NGRAPH_DEBUG << goe->get_name() << " doesn't match "
+                             << matcher->get_pattern_map()[lgoe]->get_name();
+                return false;
+            }
+        }
+        else
+        {
+            goe = matcher->get_pattern_map()[lgoe];
+            NGRAPH_DEBUG << "setting goe to " << goe->get_name();
+        }
+
+        auto it = carg;
+        while (it != goe)
+        {
+            if (auto rcarg = std::dynamic_pointer_cast<op::Reshape>(carg))
+            {
+                Shape default_shape(rcarg->get_argument(0)->get_shape().size());
+                std::iota(begin(default_shape), end(default_shape), 0);
+                if (default_shape != rcarg->get_input_order())
+                {
+                    NGRAPH_DEBUG << carg->get_name() << " reshape also does transposes";
+                    return false;
+                }
+            }
+            if (carg->get_users().size() > 1)
+            {
+                NGRAPH_DEBUG << carg->get_name() << " has more than one user";
+                return false;
+            }
+
+            it = it->get_argument(0);
+        }
+    }
+
+    if (!std::dynamic_pointer_cast<op::GetOutputElement>(goe))
+    {
+        NGRAPH_DEBUG << goe->get_name() << " isn't GOE ";
+        return false;
+    }
+
+    auto replacement = goe;
+    if (goe->get_shape().size() != n->get_shape().size())
+    {
+        return false;
+    }
+
+    ngraph::replace_node(n, replacement);
+    return true;
 }
 
 //`simplify_multiply` optimizes the following 4 *base* cases
@@ -281,104 +373,6 @@ static bool simplify_reduction(std::shared_ptr<Node> n)
     }
 
     ngraph::replace_node(n, reduction_cnst);
-    return true;
-}
-
-std::shared_ptr<Node> set_or_check_if_same(std::shared_ptr<Node> oldn, std::shared_ptr<Node> newn)
-{
-    if (!oldn)
-    {
-        return newn;
-    }
-    else
-    {
-        if (oldn != newn)
-        {
-            NGRAPH_DEBUG << " different data nodes";
-            return nullptr;
-        }
-        return oldn;
-    }
-}
-
-static bool is_trivial_convolution(std::shared_ptr<op::Convolution> conv)
-{
-    Strides stride_1{1, 1};
-    CoordinateDiff pad_0{0, 0};
-    return conv->get_window_dilation_strides() == stride_1 ||
-           conv->get_data_dilation_strides() == stride_1 || conv->get_padding_above() == pad_0 ||
-           conv->get_padding_below() == pad_0;
-}
-
-static bool simplify_concat(std::shared_ptr<Node> n)
-{
-    Shape win_size_1{1, 1, 1, 1};
-    auto data_label = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 4, 9});
-    auto weights_label = std::make_shared<pattern::op::Label>(element::f32, Shape{4, 2, 3});
-
-    auto slice_data = std::make_shared<op::Slice>(
-        data_label, Coordinate{0, 0, 0}, Coordinate{1, 2, 9}, Strides{1, 1, 1});
-    auto slice_weights = std::make_shared<op::Slice>(
-        weights_label, Coordinate{0, 0, 0}, Coordinate{2, 2, 3}, Strides{1, 1, 1});
-    auto conv = std::make_shared<op::Convolution>(slice_data, slice_weights);
-    auto matcher = std::make_shared<pattern::Matcher>(conv, nullptr);
-
-    NGRAPH_DEBUG << "In simplify_concat (group convolution) for " << n->get_name();
-
-    std::shared_ptr<Node> data;
-    std::shared_ptr<Node> weights;
-
-    auto concat = std::dynamic_pointer_cast<op::Concat>(n);
-    std::shared_ptr<op::Convolution> sconv;
-
-    const size_t CHANNEL = 1;
-    if (concat->get_concatenation_axis() != CHANNEL)
-    {
-        NGRAPH_DEBUG << "concatenating on an axis different from channel";
-        return false;
-    }
-
-    for (auto arg : n->get_arguments())
-    {
-        if (!matcher->match(arg))
-        {
-            NGRAPH_DEBUG << arg->get_name() << " doesn't match";
-            return false;
-        }
-
-        sconv = std::dynamic_pointer_cast<op::Convolution>(arg);
-
-        if (arg->get_input_shape(0).size() != 4)
-        {
-            NGRAPH_DEBUG << "convolution data's rank isn't equal to 4";
-        }
-        if (!is_trivial_convolution(std::dynamic_pointer_cast<op::Convolution>(arg)))
-        {
-            NGRAPH_DEBUG << arg->get_name() << " isn't trivial convolution";
-            return false;
-        }
-
-        auto pattern_map = matcher->get_pattern_map();
-        data = set_or_check_if_same(data, pattern_map[data_label]);
-        weights = set_or_check_if_same(weights, pattern_map[weights_label]);
-
-        if (!data || !weights)
-        {
-            NGRAPH_DEBUG << "data or weights nodes are different among slices";
-            return false;
-        }
-    }
-
-    auto new_conv = std::make_shared<op::GroupConvolution>(data,
-                                                           weights,
-                                                           sconv->get_window_movement_strides(),
-                                                           sconv->get_window_dilation_strides(),
-                                                           sconv->get_padding_below(),
-                                                           sconv->get_padding_above(),
-                                                           sconv->get_data_dilation_strides(),
-                                                           n->get_arguments().size(),
-                                                           n->get_shape());
-    ngraph::replace_node(n, new_conv);
     return true;
 }
 

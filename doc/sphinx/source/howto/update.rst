@@ -15,7 +15,7 @@ An example from C++
 Let's start with a simple C++ example, a function ``count`` that
 returns how many times it has already been called:
 
-.. literalinclude:: ../../../examples/update.cpp
+.. literalinclude:: ../../../examples/update/update.cpp
    :language: cpp
    :lines: 20-24
    :caption: update.cpp
@@ -27,13 +27,13 @@ convert this to use a stateless function, define a function that
 takes the current value of ``counter`` as an argument and returns the
 updated value.
 
-.. literalinclude:: ../../../examples/update.cpp
+.. literalinclude:: ../../../examples/update/update.cpp
    :language: cpp
    :lines: 26-29
 
 To use this version of counting,
 
-.. literalinclude:: ../../../examples/update.cpp
+.. literalinclude:: ../../../examples/update/update.cpp
    :language: cpp
    :lines: 36-48
 

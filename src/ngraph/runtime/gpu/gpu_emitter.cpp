@@ -92,6 +92,7 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
@@ -101,39 +102,7 @@
 
 using namespace std;
 
-// reduction function supported by GPU
-// CUDNN_REDUCE_TENSOR_ADD
-// CUDNN_REDUCE_TENSOR_MUL
-// CUDNN_REDUCE_TENSOR_MIN
-// CUDNN_REDUCE_TENSOR_MAX
-// CUDNN_REDUCE_TENSOR_AMAX
-// CUDNN_REDUCE_TENSOR_AVG
-// CUDNN_REDUCE_TENSOR_NORM1
-// CUDNN_REDUCE_TENSOR_NORM2
-// CUDNN_REDUCE_TENSOR_MUL_NO_ZEROS
 #define TI(x) type_index(typeid(x))
-
-static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_map{
-    {TI(ngraph::op::Add), CUDNN_REDUCE_TENSOR_ADD},
-    {TI(ngraph::op::Multiply), CUDNN_REDUCE_TENSOR_MUL},
-    {TI(ngraph::op::Maximum), CUDNN_REDUCE_TENSOR_MAX},
-    {TI(ngraph::op::Minimum), CUDNN_REDUCE_TENSOR_MIN},
-};
-
-// cudnn support elementwised op
-// CUDNN_OP_TENSOR_ADD
-// CUDNN_OP_TENSOR_MUL
-// CUDNN_OP_TENSOR_MIN
-// CUDNN_OP_TENSOR_MAX
-// CUDNN_OP_TENSOR_SQRT
-// CUDNN_OP_TENSOR_NOT
-
-static const std::unordered_map<std::type_index, cudnnOpTensorOp_t> element_op_map{
-    {TI(ngraph::op::Add), CUDNN_OP_TENSOR_ADD},
-    {TI(ngraph::op::Multiply), CUDNN_OP_TENSOR_MUL},
-    {TI(ngraph::op::Maximum), CUDNN_OP_TENSOR_MAX},
-    {TI(ngraph::op::Minimum), CUDNN_OP_TENSOR_MIN},
-    {TI(ngraph::op::Sqrt), CUDNN_OP_TENSOR_SQRT}};
 
 namespace ngraph
 {
@@ -187,22 +156,21 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     return;
                 }
 
-                const std::string args0 = "x_descriptor";
-                const std::string args1 = "w_descriptor";
-                const std::string out0 = "y_descriptor";
-                const std::string conv_descriptor = "conv_descriptor";
-                const std::string data_type = "CUDNN_DATA_FLOAT";
-                const std::string tensor_format = "CUDNN_TENSOR_NCHW";
-                const std::string mode = "CUDNN_CROSS_CORRELATION";
-                const std::string conv_algo = "CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM";
                 auto convolution = static_cast<const ngraph::op::Convolution*>(node);
                 Strides window_dilation_strides = convolution->get_window_dilation_strides();
                 Strides window_movement_strides = convolution->get_window_movement_strides();
                 Strides data_dilation_strides = convolution->get_data_dilation_strides();
-                CoordinateDiff padding = convolution->get_padding_below();
-                CoordinateDiff padding_above = convolution->get_padding_above();
+                CoordinateDiff padding_below_diff = convolution->get_padding_below();
+                CoordinateDiff padding_above_diff = convolution->get_padding_above();
+                Shape padding_below(padding_below_diff.size(), 0);
+                Shape padding_above(padding_above_diff.size(), 0);
+                for (int i = 0; i < padding_below_diff.size(); i++)
+                {
+                    padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
+                    padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
+                }
 
-                if (padding.size() > 3)
+                if (padding_below.size() > 3)
                 {
                     throw std::runtime_error(node->get_name() +
                                              "with more than 3D is not implemented.");
@@ -215,49 +183,76 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                  "with data dilation is not implemented.");
                     }
                 }
-                for (int i = 0; i < padding.size(); i++)
+
+                bool pad_required = false;
+                if (padding_below != padding_above)
                 {
-                    if (padding[i] != padding_above[i])
-                    {
-                        throw std::runtime_error(node->get_name() +
-                                                 "with asymmetric padding is not implemented.");
-                    }
+                    pad_required = true;
+                }
+                auto input_shape = args[0].get_shape();
+                auto input_shape_padded = input_shape;
+
+                if (pad_required)
+                {
+                    input_shape_padded =
+                        get_padded_shape(input_shape, padding_below, padding_above, {});
+                    auto temp_size =
+                        shape_size(input_shape_padded) * args[0].get_element_type().size();
+                    GPUAllocator allocator =
+                        external_function->get_primitive_emitter()->get_memory_allocator();
+                    size_t idx_workspace = allocator.reserve_workspace(temp_size);
+                    writer << "void* pad_buffer = runtime::gpu::invoke_memory_primitive(ctx, "
+                           << idx_workspace << ");\n";
+                    auto& cuda_emitter =
+                        external_function->get_primitive_emitter()->get_cuda_emitter();
+                    auto pad_index =
+                        cuda_emitter->build_pad(external_function->ctx().get(),
+                                                {{args[0].get_type(), out[0].get_type()}},
+                                                input_shape,
+                                                input_shape_padded,
+                                                padding_below,
+                                                padding_above,
+                                                Shape{},
+                                                std::string("0"));
+
+                    writer << "gpu::invoke_primitive(ctx, " << pad_index << ", ";
+                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{pad_buffer}.data()";
+                    writer << ");\n";
+                    // asymetric padding has been applied, zero out padding vectors to
+                    // ensure cudnn does not assume padding
+                    std::fill(padding_below.begin(), padding_below.end(), 0);
+                    std::fill(padding_above.begin(), padding_above.end(), 0);
                 }
 
+                auto& cudnn_emitter =
+                    external_function->get_primitive_emitter()->get_cudnn_emitter();
+
+                cudnnDataType_t data_type = CUDNN_DATA_FLOAT;
+                size_t index = cudnn_emitter->build_convolution(external_function->ctx().get(),
+                                                                data_type,
+                                                                input_shape_padded,
+                                                                args[1].get_shape(),
+                                                                out[0].get_shape(),
+                                                                window_movement_strides,
+                                                                window_dilation_strides,
+                                                                padding_below);
+
                 writer.block_begin("  // " + node->get_name());
-                writer << "float alpha = 1.0;\n";
-                writer << "float beta = 0.0;\n";
 
-                // construct input and output tensor descriptor
-                kernel::emit_cudnnTensorDescriptor(
-                    writer, args0, tensor_format, data_type, args[0].get_shape());
-                kernel::emit_cudnnFilterDescriptor(
-                    writer, args1, tensor_format, data_type, args[1].get_shape());
-                kernel::emit_cudnnTensorDescriptor(
-                    writer, out0, tensor_format, data_type, out[0].get_shape());
-                kernel::emit_cudnnConvolutionDescriptor(writer,
-                                                        conv_descriptor,
-                                                        padding,
-                                                        window_movement_strides,
-                                                        window_dilation_strides,
-                                                        mode,
-                                                        data_type);
-
-                writer << "size_t workSpaceSizeInBytes = 0;\n";
-                writer << "CUDNN_SAFE_CALL(cudnnGetConvolutionForwardWorkspaceSize(*ctx->cudnn_"
-                          "handle, "
-                       << args0 << ", " << args1 << ", " << conv_descriptor << ", " << out0 << ", "
-                       << conv_algo << ", "
-                       << "&workSpaceSizeInBytes));\n";
-
-                writer << "void* workspace = "
-                          "runtime::gpu::create_gpu_buffer(workSpaceSizeInBytes);\n";
-                writer << "CUDNN_SAFE_CALL(cudnnConvolutionForward(*ctx->cudnn_handle, "
-                       << "&alpha, " << args0 << ", " << args[0].get_name() << ", " << args1 << ", "
-                       << args[1].get_name() << ", " << conv_descriptor << ", " << conv_algo << ", "
-                       << "workspace, workSpaceSizeInBytes, "
-                       << "&beta, " << out0 << ", " << out[0].get_name() << "));\n";
-                writer << "runtime::gpu::free_gpu_buffer(workspace);\n";
+                writer << "gpu::invoke_primitive(ctx, " << index << ", ";
+                if (pad_required)
+                {
+                    writer << "std::vector<void*>{pad_buffer, " << args[1].get_name()
+                           << "}.data(), ";
+                }
+                else
+                {
+                    writer << "std::vector<void*>{" << args[0].get_name() << ","
+                           << args[1].get_name() << "}.data(), ";
+                }
+                writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                writer << ");\n";
                 writer.block_end();
             }
 
@@ -269,25 +264,22 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     return;
                 }
 
-                const std::string args0 = "w_descriptor";
-                const std::string args1 = "dy_descriptor";
-                const std::string out0 = "dx_descriptor";
-                const std::string conv_descriptor = "conv_descriptor";
-                const std::string data_type = "CUDNN_DATA_FLOAT";
-                const std::string tensor_format = "CUDNN_TENSOR_NCHW";
-                const std::string mode = "CUDNN_CROSS_CORRELATION";
-                const std::string conv_algo = "CUDNN_CONVOLUTION_BWD_DATA_ALGO_0";
-
                 auto convolution = static_cast<const ngraph::op::ConvolutionBackpropData*>(node);
                 Strides window_dilation_strides =
                     convolution->get_window_dilation_strides_forward();
                 Strides window_movement_strides =
                     convolution->get_window_movement_strides_forward();
                 Strides data_dilation_strides = convolution->get_data_dilation_strides_forward();
-                CoordinateDiff padding = convolution->get_padding_below_forward();
-                CoordinateDiff padding_above = convolution->get_padding_above_forward();
-
-                if (padding.size() > 3)
+                CoordinateDiff padding_below_diff = convolution->get_padding_below_forward();
+                CoordinateDiff padding_above_diff = convolution->get_padding_above_forward();
+                Shape padding_below(padding_below_diff.size(), 0);
+                Shape padding_above(padding_above_diff.size(), 0);
+                for (int i = 0; i < padding_below_diff.size(); i++)
+                {
+                    padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
+                    padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
+                }
+                if (padding_below.size() > 3)
                 {
                     throw std::runtime_error(node->get_name() +
                                              "with more than 3D is not implemented.");
@@ -300,51 +292,126 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                  "with data dilation is not implemented.");
                     }
                 }
-                for (int i = 0; i < padding.size(); i++)
+                bool pad_required = false;
+                if (padding_below != padding_above)
                 {
-                    if (padding[i] != padding_above[i])
-                    {
-                        throw std::runtime_error(node->get_name() +
-                                                 "with asymmetric padding is not implemented.");
-                    }
+                    pad_required = true;
+                }
+                auto output_shape = out[0].get_shape();
+                auto output_shape_padded = output_shape;
+                Shape padding_below_back(output_shape.size(), 0);
+                size_t i = padding_below_back.size() - padding_below.size();
+                size_t j = 0;
+                for (; i < padding_below_back.size(); i++)
+                {
+                    padding_below_back[i] = padding_below[j++];
                 }
 
                 writer.block_begin("  // " + node->get_name());
-                writer << "float alpha = 1.0;\n";
-                writer << "float beta = 0.0;\n";
+                if (pad_required)
+                {
+                    output_shape_padded =
+                        get_padded_shape(output_shape, padding_below, padding_above, {});
+                    auto temp_size =
+                        shape_size(output_shape_padded) * args[0].get_element_type().size();
+                    GPUAllocator allocator =
+                        external_function->get_primitive_emitter()->get_memory_allocator();
+                    size_t idx_workspace = allocator.reserve_workspace(temp_size);
+                    writer << "void* pad_buffer = runtime::gpu::invoke_memory_primitive(ctx, "
+                           << idx_workspace << ");\n";
+                    auto& cuda_emitter =
+                        external_function->get_primitive_emitter()->get_cuda_emitter();
+                    auto pad_index =
+                        cuda_emitter->build_pad(external_function->ctx().get(),
+                                                {{args[0].get_type(), out[0].get_type()}},
+                                                output_shape,
+                                                output_shape_padded,
+                                                padding_below,
+                                                padding_above,
+                                                Shape{},
+                                                std::string("0"));
 
-                // construct input and output tensor descriptor
-                kernel::emit_cudnnFilterDescriptor(
-                    writer, args0, tensor_format, data_type, args[0].get_shape());
-                kernel::emit_cudnnTensorDescriptor(
-                    writer, args1, tensor_format, data_type, args[1].get_shape());
-                kernel::emit_cudnnTensorDescriptor(
-                    writer, out0, tensor_format, data_type, out[0].get_shape());
-                kernel::emit_cudnnConvolutionDescriptor(writer,
-                                                        conv_descriptor,
-                                                        padding,
-                                                        window_movement_strides,
-                                                        window_dilation_strides,
-                                                        mode,
-                                                        data_type);
+                    writer << "gpu::invoke_primitive(ctx, " << pad_index << ", ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{pad_buffer}.data()";
+                    writer << ");\n";
+                    // asymetric padding has been applied, zero out padding vectors to
+                    // ensure cudnn does not assume padding
+                    std::fill(padding_below.begin(), padding_below.end(), 0);
+                    std::fill(padding_above.begin(), padding_above.end(), 0);
+                }
 
-                writer << "size_t workSpaceSizeInBytes = 0;\n";
-                writer << "CUDNN_SAFE_CALL(cudnnGetConvolutionBackwardDataWorkspaceSize(*ctx->"
-                          "cudnn_handle, "
-                       << args0 << ", " << args1 << ", " << conv_descriptor << ", " << out0 << ", "
-                       << conv_algo << ", "
-                       << "&workSpaceSizeInBytes));\n";
+                auto& cudnn_emitter =
+                    external_function->get_primitive_emitter()->get_cudnn_emitter();
 
-                writer << "void* workspace = "
-                          "runtime::gpu::create_gpu_buffer(workSpaceSizeInBytes);\n";
+                cudnnDataType_t data_type = CUDNN_DATA_FLOAT;
+                size_t index =
+                    cudnn_emitter->build_convolution_backward_data(external_function->ctx().get(),
+                                                                   data_type,
+                                                                   args[0].get_shape(),
+                                                                   args[1].get_shape(),
+                                                                   output_shape_padded,
+                                                                   window_movement_strides,
+                                                                   window_dilation_strides,
+                                                                   padding_below);
 
-                writer << "CUDNN_SAFE_CALL(cudnnConvolutionBackwardData(*ctx->cudnn_handle, "
-                       << "&alpha, " << args0 << ", " << args[0].get_name() << ", " << args1 << ", "
-                       << args[1].get_name() << ", " << conv_descriptor << ", " << conv_algo << ", "
-                       << "workspace, workSpaceSizeInBytes, "
-                       << "&beta, " << out0 << ", " << out[0].get_name() << "));\n";
+                writer << "gpu::invoke_primitive(ctx, " << index << ", ";
+                writer << "std::vector<void*>{" << args[0].get_name() << "," << args[1].get_name()
+                       << "}.data(), ";
 
-                writer << "runtime::gpu::free_gpu_buffer(workspace);\n";
+                if (pad_required)
+                {
+                    writer << "std::vector<void*>{pad_buffer}.data()";
+                }
+                else
+                {
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                }
+                writer << ");\n";
+
+                // since we padded output with temp buffer, we need to copy back to ouput
+                if (pad_required)
+                {
+                    const auto arg_rank = output_shape.size();
+                    const Strides slice_strides(output_shape.size(), 1);
+                    const auto input_strides = row_major_strides(output_shape_padded);
+                    const auto output_strides = row_major_strides(output_shape);
+                    GPUAllocator allocator =
+                        external_function->get_primitive_emitter()->get_memory_allocator();
+                    size_t idx_input_strides = allocator.reserve_argspace(
+                        input_strides.data(), input_strides.size() * sizeof(size_t));
+                    size_t idx_output_strides = allocator.reserve_argspace(
+                        output_strides.data(), output_strides.size() * sizeof(size_t));
+                    size_t idx_lower_bounds = allocator.reserve_argspace(
+                        padding_below_back.data(), padding_below_back.size() * sizeof(size_t));
+                    size_t idx_slice_strides = allocator.reserve_argspace(
+                        slice_strides.data(), slice_strides.size() * sizeof(size_t));
+
+                    writer << "size_t rank = " << arg_rank << ";\n";
+                    writer << "void* input_strides_d = "
+                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_input_strides
+                           << ");\n";
+                    writer << "void* output_strides_d = "
+                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_output_strides
+                           << ");\n";
+                    writer << "void* slice_strides_d = "
+                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_slice_strides
+                           << ");\n";
+                    writer << "void* lower_bounds_d = "
+                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_lower_bounds
+                           << ");\n";
+
+                    writer << "runtime::gpu::emit_slice(\"" << node->description()
+                           << "\", CUdeviceptr(pad_buffer), CUdeviceptr(" << out[0].get_name()
+                           << ")"
+                           << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type()
+                           << "\"}"
+                           << ", "
+                           << "ctx, "
+                           << "CUdeviceptr(input_strides_d), CUdeviceptr(lower_bounds_d), "
+                              "CUdeviceptr(slice_strides_d), CUdeviceptr(output_strides_d)"
+                           << ", " << arg_rank << ", " << out[0].get_size() << ");\n";
+                }
                 writer.block_end();
             }
 
@@ -356,25 +423,25 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     return;
                 }
 
-                const std::string args0 = "x_descriptor";
-                const std::string args1 = "dy_descriptor";
-                const std::string out0 = "dw_descriptor";
-                const std::string conv_descriptor = "conv_descriptor";
-                const std::string data_type = "CUDNN_DATA_FLOAT";
-                const std::string tensor_format = "CUDNN_TENSOR_NCHW";
-                const std::string mode = "CUDNN_CROSS_CORRELATION";
-                const std::string conv_algo = "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0";
-
                 auto convolution = static_cast<const ngraph::op::ConvolutionBackpropFilters*>(node);
+
                 Strides window_dilation_strides =
                     convolution->get_window_dilation_strides_forward();
                 Strides window_movement_strides =
                     convolution->get_window_movement_strides_forward();
                 Strides data_dilation_strides = convolution->get_data_dilation_strides_forward();
-                CoordinateDiff padding = convolution->get_padding_below_forward();
-                CoordinateDiff padding_above = convolution->get_padding_above_forward();
+                CoordinateDiff padding_below_diff = convolution->get_padding_below_forward();
+                CoordinateDiff padding_above_diff = convolution->get_padding_above_forward();
+                Shape padding_below(padding_below_diff.size(), 0);
+                Shape padding_above(padding_above_diff.size(), 0);
 
-                if (padding.size() > 3)
+                for (int i = 0; i < padding_below_diff.size(); i++)
+                {
+                    padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
+                    padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
+                }
+
+                if (padding_below.size() > 3)
                 {
                     throw std::runtime_error(node->get_name() +
                                              "with more than 3D is not implemented.");
@@ -387,51 +454,75 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                  "with data dilation is not implemented.");
                     }
                 }
-                for (int i = 0; i < padding.size(); i++)
+                bool pad_required = false;
+                if (padding_below != padding_above)
                 {
-                    if (padding[i] != padding_above[i])
-                    {
-                        throw std::runtime_error(node->get_name() +
-                                                 "with asymmetric padding is not implemented.");
-                    }
+                    pad_required = true;
+                }
+                auto input_shape = args[0].get_shape();
+                auto input_shape_padded = input_shape;
+
+                writer.block_begin("  // " + node->get_name());
+                if (pad_required)
+                {
+                    input_shape_padded =
+                        get_padded_shape(input_shape, padding_below, padding_above, {});
+                    auto temp_size =
+                        shape_size(input_shape_padded) * args[0].get_element_type().size();
+                    GPUAllocator allocator =
+                        external_function->get_primitive_emitter()->get_memory_allocator();
+                    size_t idx_workspace = allocator.reserve_workspace(temp_size);
+                    writer << "void* pad_buffer = runtime::gpu::invoke_memory_primitive(ctx, "
+                           << idx_workspace << ");\n";
+                    auto& cuda_emitter =
+                        external_function->get_primitive_emitter()->get_cuda_emitter();
+                    auto pad_index =
+                        cuda_emitter->build_pad(external_function->ctx().get(),
+                                                {{args[0].get_type(), out[0].get_type()}},
+                                                input_shape,
+                                                input_shape_padded,
+                                                padding_below,
+                                                padding_above,
+                                                Shape{},
+                                                std::string("0"));
+
+                    writer << "gpu::invoke_primitive(ctx, " << pad_index << ", ";
+                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{pad_buffer}.data()";
+                    writer << ");\n";
+                    // asymetric padding has been applied, zero out padding vectors to
+                    // ensure cudnn does not assume padding
+                    std::fill(padding_below.begin(), padding_below.end(), 0);
+                    std::fill(padding_above.begin(), padding_above.end(), 0);
                 }
 
-                writer.block_begin("  //data_dilation_ " + node->get_name());
-                writer << "int count = " << out[0].get_size() << ";\n";
-                writer << "float alpha = 1.0;\n";
-                writer << "float beta = 0.0;\n";
+                auto& cudnn_emitter =
+                    external_function->get_primitive_emitter()->get_cudnn_emitter();
 
-                // construct input and output tensor descriptor
-                kernel::emit_cudnnTensorDescriptor(
-                    writer, args0, tensor_format, data_type, args[0].get_shape());
-                kernel::emit_cudnnTensorDescriptor(
-                    writer, args1, tensor_format, data_type, args[1].get_shape());
-                kernel::emit_cudnnFilterDescriptor(
-                    writer, out0, tensor_format, data_type, out[0].get_shape());
-                kernel::emit_cudnnConvolutionDescriptor(writer,
-                                                        conv_descriptor,
-                                                        padding,
-                                                        window_movement_strides,
-                                                        window_dilation_strides,
-                                                        mode,
-                                                        data_type);
+                cudnnDataType_t data_type = CUDNN_DATA_FLOAT;
+                size_t index =
+                    cudnn_emitter->build_convolution_backward_filter(external_function->ctx().get(),
+                                                                     data_type,
+                                                                     input_shape_padded,
+                                                                     args[1].get_shape(),
+                                                                     out[0].get_shape(),
+                                                                     window_movement_strides,
+                                                                     window_dilation_strides,
+                                                                     padding_below);
 
-                writer << "size_t workSpaceSizeInBytes = 0;\n";
-                writer << "CUDNN_SAFE_CALL(cudnnGetConvolutionBackwardFilterWorkspaceSize(*ctx->"
-                          "cudnn_handle, "
-                       << args0 << ", " << args1 << ", " << conv_descriptor << ", " << out0 << ", "
-                       << conv_algo << ", "
-                       << "&workSpaceSizeInBytes));\n";
-
-                writer << "void* workspace = "
-                          "runtime::gpu::create_gpu_buffer(workSpaceSizeInBytes);\n";
-
-                writer << "CUDNN_SAFE_CALL(cudnnConvolutionBackwardFilter(*ctx->cudnn_handle, "
-                       << "&alpha, " << args0 << ", " << args[0].get_name() << ", " << args1 << ", "
-                       << args[1].get_name() << ", " << conv_descriptor << ", " << conv_algo << ", "
-                       << "workspace, workSpaceSizeInBytes, "
-                       << "&beta, " << out0 << ", " << out[0].get_name() << "));\n";
-                writer << "runtime::gpu::free_gpu_buffer(workspace);\n";
+                writer << "gpu::invoke_primitive(ctx, " << index << ", ";
+                if (pad_required)
+                {
+                    writer << "std::vector<void*>{pad_buffer, " << args[1].get_name()
+                           << "}.data(), ";
+                }
+                else
+                {
+                    writer << "std::vector<void*>{" << args[0].get_name() << ","
+                           << args[1].get_name() << "}.data(), ";
+                }
+                writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                writer << ");\n";
                 writer.block_end();
             }
 
@@ -508,7 +599,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                               "CUBLAS_POINTER_MODE_HOST));\n";
                     writer << "CUBLAS_SAFE_CALL(cublasSgemv("
                            << "*ctx->cublas_handle,"
-                           << "CUBLAS_OP_T," << arg0_shape[0] << "," << arg0_shape[1] << ","
+                           << "CUBLAS_OP_T," << arg0_shape[1] << "," << arg0_shape[0] << ","
                            << "&alpha," // Alpha
                            << args[0].get_name() << "," << arg0_shape[1] << ","
                            << args[1].get_name() << ","
@@ -806,12 +897,13 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer.block_begin("  // " + node->get_name());
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer << "int num_inputs = " << args.size() << ";\n";
-                writer << "std::vector<size_t> block_strides_h = {" << join(block_strides)
-                       << "};\n";
-                writer << "void* block_strides_d = "
-                          "runtime::gpu::create_gpu_buffer(sizeof(size_t) * num_inputs);\n";
-                writer << "runtime::gpu::cuda_memcpyHtD(block_strides_d, block_strides_h.data(), "
-                          "sizeof(size_t) * num_inputs);\n";
+
+                GPUAllocator allocator =
+                    external_function->get_primitive_emitter()->get_memory_allocator();
+                size_t idx_block_strides = allocator.reserve_argspace(
+                    block_strides.data(), block_strides.size() * sizeof(size_t));
+                writer << "void* block_strides_d = runtime::gpu::invoke_memory_primitive(ctx, "
+                       << idx_block_strides << ");\n";
 
                 writer << "ngraph::runtime::gpu::emit_concat_op(\"" << node->description() << "\""
                        << ", std::vector<std::string>{";
@@ -905,31 +997,20 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     {
                         trans_strides[input_order[i]] = output_strides[i];
                     }
-                    writer << "size_t rank = " << arg_rank << ";\n";
-                    writer << "std::vector<size_t> input_strides_h = {" << input_strides[0] << "UL";
-                    for (int i = 1; i < arg_rank; i++)
-                    {
-                        writer << ", " << input_strides[i] << "UL";
-                    }
-                    writer << "};\n";
 
-                    writer << "std::vector<size_t> trans_strides_h = {" << trans_strides[0] << "UL";
-                    for (int i = 1; i < arg_rank; i++)
-                    {
-                        writer << ", " << trans_strides[i] << "UL";
-                    }
-                    writer << "};\n";
+                    GPUAllocator allocator =
+                        external_function->get_primitive_emitter()->get_memory_allocator();
+                    size_t idx_input_strides = allocator.reserve_argspace(
+                        input_strides.data(), input_strides.size() * sizeof(size_t));
+                    size_t idx_trans_strides = allocator.reserve_argspace(
+                        trans_strides.data(), trans_strides.size() * sizeof(size_t));
 
                     writer << "void* input_strides_d = "
-                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                              "runtime::gpu::invoke_memory_primitive(ctx, "
+                           << idx_input_strides << ");\n";
                     writer << "void* trans_strides_d = "
-                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
-                    writer
-                        << "runtime::gpu::cuda_memcpyHtD(input_strides_d, input_strides_h.data(), "
-                           "sizeof(size_t) * rank);\n";
-                    writer
-                        << "runtime::gpu::cuda_memcpyHtD(trans_strides_d, trans_strides_h.data(), "
-                           "sizeof(size_t) * rank);\n";
+                              "runtime::gpu::invoke_memory_primitive(ctx, "
+                           << idx_trans_strides << ");\n";
                     writer << "runtime::gpu::emit_reshape(\"" << node->description() << "\", {\""
                            << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
                            << ", ctx"
@@ -938,8 +1019,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                            << ", "
                            << "CUdeviceptr(input_strides_d), CUdeviceptr(trans_strides_d)"
                            << ", " << arg_rank << ", " << args[0].get_size() << ");\n";
-                    writer << "runtime::gpu::free_gpu_buffer(input_strides_d);\n";
-                    writer << "runtime::gpu::free_gpu_buffer(trans_strides_d);\n";
                 }
                 writer.block_end();
             }
@@ -968,35 +1047,30 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
                 else
                 {
-                    writer << "size_t rank = " << arg_rank << ";\n";
-                    writer << "std::vector<size_t> input_strides_h = {"
-                           << join(input_strides, "UL,") << "UL};\n";
-                    writer << "std::vector<size_t> output_strides_h = {"
-                           << join(output_strides, "UL,") << "UL};\n";
-                    writer << "std::vector<size_t> lower_bounds_h = {" << join(lower_bounds, "UL,")
-                           << "UL};\n";
-                    writer << "std::vector<size_t> slice_strides_h = {"
-                           << join(slice_strides, "UL,") << "UL};\n";
+                    GPUAllocator allocator =
+                        external_function->get_primitive_emitter()->get_memory_allocator();
+                    size_t idx_input_strides = allocator.reserve_argspace(
+                        input_strides.data(), input_strides.size() * sizeof(size_t));
+                    size_t idx_output_strides = allocator.reserve_argspace(
+                        output_strides.data(), output_strides.size() * sizeof(size_t));
+                    size_t idx_lower_bounds = allocator.reserve_argspace(
+                        lower_bounds.data(), lower_bounds.size() * sizeof(size_t));
+                    size_t idx_slice_strides = allocator.reserve_argspace(
+                        slice_strides.data(), slice_strides.size() * sizeof(size_t));
 
+                    writer << "size_t rank = " << arg_rank << ";\n";
                     writer << "void* input_strides_d = "
-                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_input_strides
+                           << ");\n";
                     writer << "void* output_strides_d = "
-                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_output_strides
+                           << ");\n";
                     writer << "void* slice_strides_d = "
-                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_slice_strides
+                           << ");\n";
                     writer << "void* lower_bounds_d = "
-                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
-                    writer
-                        << "runtime::gpu::cuda_memcpyHtD(input_strides_d, input_strides_h.data(), "
-                           "sizeof(size_t) * rank);\n";
-                    writer << "runtime::gpu::cuda_memcpyHtD(output_strides_d, "
-                              "output_strides_h.data(), "
-                              "sizeof(size_t) * rank);\n";
-                    writer
-                        << "runtime::gpu::cuda_memcpyHtD(slice_strides_d, slice_strides_h.data(), "
-                           "sizeof(size_t) * rank);\n";
-                    writer << "runtime::gpu::cuda_memcpyHtD(lower_bounds_d, lower_bounds_h.data(), "
-                              "sizeof(size_t) * rank);\n";
+                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_lower_bounds
+                           << ");\n";
 
                     writer << "runtime::gpu::emit_slice(\"" << node->description()
                            << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
@@ -1008,10 +1082,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                            << "CUdeviceptr(input_strides_d), CUdeviceptr(lower_bounds_d), "
                               "CUdeviceptr(slice_strides_d), CUdeviceptr(output_strides_d)"
                            << ", " << arg_rank << ", " << out[0].get_size() << ");\n";
-                    writer << "runtime::gpu::free_gpu_buffer(input_strides_d);\n";
-                    writer << "runtime::gpu::free_gpu_buffer(output_strides_d);\n";
-                    writer << "runtime::gpu::free_gpu_buffer(slice_strides_d);\n";
-                    writer << "runtime::gpu::free_gpu_buffer(lower_bounds_d);\n";
                 }
                 writer.block_end();
             }
@@ -1041,21 +1111,20 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
                 else
                 {
-                    writer << "size_t rank = " << arg_rank << ";\n";
-                    writer << "std::vector<size_t> input_shapes_h = {" << join(arg_shape, "UL,")
-                           << "UL};\n";
-                    writer << "std::vector<size_t> reverse_axes_h = {"
-                           << join(reverse_axes_flag, "UL,") << "UL};\n";
+                    GPUAllocator allocator =
+                        external_function->get_primitive_emitter()->get_memory_allocator();
+                    size_t idx_arg_shape = allocator.reserve_argspace(
+                        arg_shape.data(), arg_shape.size() * sizeof(size_t));
+                    size_t idx_reverse_axes_flag = allocator.reserve_argspace(
+                        reverse_axes_flag.data(), reverse_axes_flag.size() * sizeof(size_t));
 
+                    writer << "size_t rank = " << arg_rank << ";\n";
                     writer << "void* input_shapes_d = "
-                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
+                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_arg_shape
+                           << ");\n";
                     writer << "void* reverse_axes_d = "
-                              "runtime::gpu::create_gpu_buffer(sizeof(size_t) * rank);\n";
-                    writer << "runtime::gpu::cuda_memcpyHtD(input_shapes_d, input_shapes_h.data(), "
-                              "sizeof(size_t) * rank);\n";
-                    writer << "runtime::gpu::cuda_memcpyHtD(reverse_axes_d, "
-                              "reverse_axes_h.data(), "
-                              "sizeof(size_t) * rank);\n";
+                           << " runtime::gpu::invoke_memory_primitive(ctx, "
+                           << idx_reverse_axes_flag << ");\n";
 
                     writer << "runtime::gpu::emit_reverse(\"" << node->description()
                            << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
@@ -1066,8 +1135,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                            << "ctx, "
                            << "CUdeviceptr(input_shapes_d), CUdeviceptr(reverse_axes_d), "
                            << arg_rank << ", " << out[0].get_size() << ");\n";
-                    writer << "runtime::gpu::free_gpu_buffer(input_shapes_d);\n";
-                    writer << "runtime::gpu::free_gpu_buffer(reverse_axes_d);\n";
                 }
                 writer.block_end();
             }
@@ -1204,13 +1271,19 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         // one of args[] axes has zero size, zero output
                         if (args[0].get_size() == 0)
                         {
-                            writer << "std::vector<float> temp(" << out[0].get_size()
-                                   << ", -std::numeric_limits<float>::infinity());\n";
-                            writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
-                                   << ", (void*)temp.data(), " << out[0].get_size() << " * "
+                            GPUAllocator allocator =
+                                external_function->get_primitive_emitter()->get_memory_allocator();
+                            std::vector<float> negative_inf(
+                                out[0].get_size(), -std::numeric_limits<float>::infinity());
+                            size_t idx_float_inf = allocator.reserve_argspace(
+                                negative_inf.data(), negative_inf.size() * sizeof(float));
+                            writer << "void* temp_d = runtime::gpu::invoke_memory_primitive(ctx, "
+                                   << idx_float_inf << ");\n";
+                            writer << "runtime::gpu::cuda_memcpyDtD(" << out[0].get_name()
+                                   << ", temp_d, " << out[0].get_size() << " * "
                                    << out[0].get_element_type().size() << ");\n";
                         }
-                        else if (args[0].get_shape().size() == out[0].get_shape().size())
+                        else if (args[0].get_size() == out[0].get_size())
                         {
                             kernel::emit_memcpyDtD(writer, out[0], args[0]);
                         }
@@ -1246,13 +1319,19 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         // one of args[] axes has zero size, zero output
                         if (args[0].get_size() == 0)
                         {
-                            writer << "std::vector<float> temp(" << out[0].get_size()
-                                   << ", std::numeric_limits<float>::infinity());\n";
-                            writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
-                                   << ", (void*)temp.data(), " << out[0].get_size() << " * "
+                            GPUAllocator allocator =
+                                external_function->get_primitive_emitter()->get_memory_allocator();
+                            std::vector<float> positive_inf(out[0].get_size(),
+                                                            std::numeric_limits<float>::infinity());
+                            size_t idx_float_inf = allocator.reserve_argspace(
+                                positive_inf.data(), positive_inf.size() * sizeof(float));
+                            writer << "void* temp_d = runtime::gpu::invoke_memory_primitive(ctx, "
+                                   << idx_float_inf << ");\n";
+                            writer << "runtime::gpu::cuda_memcpyDtD(" << out[0].get_name()
+                                   << ", temp_d, " << out[0].get_size() << " * "
                                    << out[0].get_element_type().size() << ");\n";
                         }
-                        else if (args[0].get_shape().size() == out[0].get_shape().size())
+                        else if (args[0].get_size() == out[0].get_size())
                         {
                             kernel::emit_memcpyDtD(writer, out[0], args[0]);
                         }
@@ -1290,7 +1369,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         {
                             kernel::emit_memset(writer, out[0], 0);
                         }
-                        else if (args[0].get_shape().size() == out[0].get_shape().size())
+                        else if (args[0].get_size() == out[0].get_size())
                         {
                             kernel::emit_memcpyDtD(writer, out[0], args[0]);
                         }
@@ -1317,8 +1396,68 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             }
 
             template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Product)
+            {
+                const ngraph::op::Product* product = static_cast<const ngraph::op::Product*>(node);
+                writer.block_begin("  // " + node->get_name());
+                {
+                    if (out[0].get_size() != 0)
+                    {
+                        // one of args[] axes has zero size, fill output with 1
+                        if (args[0].get_size() == 0)
+                        {
+                            writer << "float init_value = 1;\n";
+                            writer << "std::vector<float> temp(" << out[0].get_size()
+                                   << ", init_value);\n";
+                            writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
+                                   << ", (void*)temp.data(), " << out[0].get_size() << " * "
+                                   << out[0].get_element_type().size() << ");\n";
+                        }
+                        else if (args[0].get_size() == out[0].get_size())
+                        {
+                            kernel::emit_memcpyDtD(writer, out[0], args[0]);
+                        }
+                        // descriptors for tensors  with <= 4 dimensions
+                        else
+                        {
+                            auto& cudnn_emitter =
+                                external_function->get_primitive_emitter()->get_cudnn_emitter();
+                            auto index =
+                                cudnn_emitter->build_reduce_forward(external_function->ctx().get(),
+                                                                    CUDNN_REDUCE_TENSOR_MUL,
+                                                                    args[0].get_shape(),
+                                                                    product->get_reduction_axes());
+
+                            writer << "gpu::invoke_primitive(ctx, " << index << ", ";
+                            writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                            writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                            writer << ");\n";
+                        }
+                    }
+                }
+                writer.block_end();
+                return;
+            }
+
+            template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Reduce)
             {
+                // reduction function supported by GPU
+                // CUDNN_REDUCE_TENSOR_ADD
+                // CUDNN_REDUCE_TENSOR_MUL
+                // CUDNN_REDUCE_TENSOR_MIN
+                // CUDNN_REDUCE_TENSOR_MAX
+                // CUDNN_REDUCE_TENSOR_AMAX
+                // CUDNN_REDUCE_TENSOR_AVG
+                // CUDNN_REDUCE_TENSOR_NORM1
+                // CUDNN_REDUCE_TENSOR_NORM2
+                // CUDNN_REDUCE_TENSOR_MUL_NO_ZEROS
+
+                static const std::unordered_map<std::type_index, cudnnReduceTensorOp_t> reduce_map{
+                    {TI(ngraph::op::Add), CUDNN_REDUCE_TENSOR_ADD},
+                    {TI(ngraph::op::Multiply), CUDNN_REDUCE_TENSOR_MUL},
+                    {TI(ngraph::op::Maximum), CUDNN_REDUCE_TENSOR_MAX},
+                    {TI(ngraph::op::Minimum), CUDNN_REDUCE_TENSOR_MIN}};
                 const ngraph::op::Reduce* reduce_op = static_cast<const ngraph::op::Reduce*>(node);
                 writer.block_begin("  // " + node->get_name());
                 {
@@ -1337,7 +1476,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                    << ", (void*)temp.data(), " << out[0].get_size() << " * "
                                    << out[0].get_element_type().size() << ");\n";
                         }
-                        else if (args[0].get_shape().size() == out[0].get_shape().size())
+                        else if (args[0].get_size() == out[0].get_size())
                         {
                             kernel::emit_memcpyDtD(writer, out[0], args[0]);
                         }
@@ -1347,8 +1486,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             // 1. reduction function should only have one op
                             // 2. the op should be in the op_map
                             // otherwise, throw an error message
-                            auto reduction_function_ops = reduce_op->get_functions()[0]->get_ops();
                             cudnnReduceTensorOp_t reduce_tensor_op;
+                            auto reduction_function_ops = reduce_op->get_functions()[0]->get_ops();
                             int op_count = 0;
                             for (auto op : reduction_function_ops)
                             {
@@ -1385,6 +1524,113 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                 reduce_tensor_op,
                                 args[0].get_shape(),
                                 reduce_op->get_reduction_axes());
+
+                            writer << "gpu::invoke_primitive(ctx, " << reduce_index << ", ";
+                            writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                            writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                            writer << ");\n";
+                        }
+                    }
+                }
+                writer.block_end();
+                return;
+            }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::ReduceWindow)
+            {
+                static const std::unordered_map<std::type_index, ngraph::runtime::gpu::OpName>
+                    reduce_window_map{
+                        {TI(ngraph::op::Add), ngraph::runtime::gpu::OpName::add},
+                        {TI(ngraph::op::Multiply), ngraph::runtime::gpu::OpName::multiply},
+                        {TI(ngraph::op::Maximum), ngraph::runtime::gpu::OpName::maximum},
+                        {TI(ngraph::op::Minimum), ngraph::runtime::gpu::OpName::minimum}};
+
+                const ngraph::op::ReduceWindow* reduce_window_op =
+                    static_cast<const ngraph::op::ReduceWindow*>(node);
+                writer.block_begin("  // " + node->get_name());
+                {
+                    if (out[0].get_size() != 0)
+                    {
+                        // one of args0 axes has zero size, zero output, use args1 value
+                        if (args[0].get_size() == 0)
+                        {
+                            writer << "float init_value;\n";
+                            writer << "runtime::gpu::cuda_memcpyDtH(&init_value, "
+                                   << args[1].get_name() << " ,"
+                                   << args[1].get_element_type().size() << ");\n";
+                            writer << "std::vector<float> temp(" << out[0].get_size()
+                                   << ", init_value);\n";
+                            writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
+                                   << ", (void*)temp.data(), " << out[0].get_size() << " * "
+                                   << out[0].get_element_type().size() << ");\n";
+                        }
+                        else if (args[0].get_size() == out[0].get_size())
+                        {
+                            kernel::emit_memcpyDtD(writer, out[0], args[0]);
+                        }
+                        else
+                        {
+                            // in current implementation:
+                            // 1. reduction function should only have one op
+                            // 2. the op should be in the op_map
+                            // otherwise, throw an error message
+                            auto reduction_function_ops =
+                                reduce_window_op->get_functions()[0]->get_ops();
+                            std::unordered_map<std::type_index,
+                                               ngraph::runtime::gpu::OpName>::const_iterator it =
+                                reduce_window_map.end();
+                            int op_count = 0;
+                            for (auto op : reduction_function_ops)
+                            {
+                                if (op->is_constant() || op->is_parameter() || op->is_output())
+                                {
+                                    continue;
+                                }
+                                op_count++;
+                                // Work around a compiler warning (*node inside typeid may have effects
+                                // with shared pointers, which is fine here but clang doesn't like it.)
+                                auto& fn = *op;
+                                auto f_ptr = reduce_window_map.find(type_index(typeid(fn)));
+                                if (op_count != 1)
+                                {
+                                    throw std::runtime_error(
+                                        "reduce with more than one op is not implement yet.");
+                                }
+                                else if (f_ptr == reduce_window_map.end())
+                                {
+                                    throw std::runtime_error("reduce with function " +
+                                                             fn.get_name() +
+                                                             " is not implement yet.");
+                                }
+                                else
+                                {
+                                    it = f_ptr;
+                                }
+                            }
+
+                            if (it == reduce_window_map.end())
+                            {
+                                throw std::runtime_error(
+                                    "no valid op found in reduction function.");
+                            }
+
+                            auto& cuda_emitter =
+                                external_function->get_primitive_emitter()->get_cuda_emitter();
+                            size_t reduce_index;
+
+                            // this dtypes is two build the binary op, expect both input has same type with args[0]
+                            std::vector<std::string> dtypes{
+                                args[0].get_type(), args[0].get_type(), out[0].get_type()};
+
+                            reduce_index = cuda_emitter->build_reduce_window(
+                                external_function->ctx().get(),
+                                it->second,
+                                dtypes,
+                                args[0].get_shape(),
+                                out[0].get_shape(),
+                                reduce_window_op->get_window_shape(),
+                                reduce_window_op->get_window_movement_strides());
 
                             writer << "gpu::invoke_primitive(ctx, " << reduce_index << ", ";
                             writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
@@ -1477,7 +1723,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                     shape_to_pool,
                                                     padding_below,
                                                     padding_above,
-                                                    /*padding_interior*/ {},
+                                                    Shape{},
                                                     ss.str());
 
                         writer << "gpu::invoke_primitive(ctx, " << pad_index << ", ";
@@ -1815,6 +2061,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
                 writer.block_end();
             }
+
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::AvgPoolBackprop)
             {
@@ -1854,6 +2101,90 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
                         writer << ");\n";
                     }
+                }
+                writer.block_end();
+            }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::ReplaceSlice)
+            {
+                // assumes NC{d1,d2,...} format
+                auto rep_slice = static_cast<const ngraph::op::ReplaceSlice*>(node);
+                writer.block_begin("  // " + node->get_name());
+                {
+                    auto& input_shape = args[0].get_shape();
+                    auto& source_shape = args[1].get_shape();
+                    auto& lower_bounds = rep_slice->get_lower_bounds();
+                    auto& upper_bounds = rep_slice->get_upper_bounds();
+                    auto& strides = rep_slice->get_strides();
+                    Shape slice_shape(upper_bounds.size(), 0);
+                    std::transform(upper_bounds.begin(),
+                                   upper_bounds.end(),
+                                   lower_bounds.begin(),
+                                   slice_shape.begin(),
+                                   std::minus<size_t>());
+                    std::transform(slice_shape.begin(),
+                                   slice_shape.end(),
+                                   strides.begin(),
+                                   slice_shape.begin(),
+                                   std::divides<size_t>());
+                    // replace the input with the source if the slice shape and input shape are equal
+                    if (input_shape == slice_shape)
+                    {
+                        kernel::emit_memcpyDtD(writer, out[0], args[1]);
+                    }
+                    else
+                    {
+                        auto& cuda_emitter =
+                            external_function->get_primitive_emitter()->get_cuda_emitter();
+
+                        auto replace_slice_index = cuda_emitter->build_replace_slice(
+                            external_function->ctx().get(),
+                            {{args[0].get_type(), args[1].get_type(), out[0].get_type()}},
+                            input_shape,
+                            source_shape,
+                            lower_bounds,
+                            upper_bounds,
+                            rep_slice->get_strides());
+
+                        writer << "gpu::invoke_primitive(ctx, " << replace_slice_index << ", ";
+                        writer << "std::vector<void*>{" << args[0].get_name() << ", "
+                               << args[1].get_name() << "}.data(), ";
+                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                        writer << ");\n";
+                    }
+                }
+                writer.block_end();
+            }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Softmax)
+            {
+                writer.block_begin("  // " + node->get_name());
+                {
+                    auto softmax = static_cast<const ngraph::op::Softmax*>(node);
+                    auto tensor_shape = args[0].get_shape();
+                    auto axes = softmax->get_axes();
+                    if (axes.size() != tensor_shape.size())
+                    {
+                        throw std::runtime_error(
+                            "Softmax implementation currently only supports all axis activation.");
+                    }
+
+                    auto& cudnn_emitter =
+                        external_function->get_primitive_emitter()->get_cudnn_emitter();
+
+                    size_t softmax_index =
+                        cudnn_emitter->build_softmax(external_function->ctx().get(),
+                                                     CUDNN_SOFTMAX_FAST,
+                                                     CUDNN_SOFTMAX_MODE_INSTANCE,
+                                                     CUDNNEmitter::Prop::Forward,
+                                                     tensor_shape);
+
+                    writer << "gpu::invoke_primitive(ctx, " << softmax_index << ", ";
+                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                    writer << ");\n";
                 }
                 writer.block_end();
             }
