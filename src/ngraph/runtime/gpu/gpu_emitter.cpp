@@ -1970,10 +1970,20 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 Shape padded_shape = input_shape;
                 int64_t i = input_shape.size() - 1;
                 int64_t j = padding_below.size() - 1;
-                for (; j >= 0; j--, i--)
+                if (padding_interior.empty())
                 {
-                    padded_shape[i] = (padded_shape[i] - 1) * padding_interior[j] + 1 +
-                                      padding_below[j] + padding_above[j];
+                    for (; j >= 0; j--, i--)
+                    {
+                        padded_shape[i] += padding_below[j] + padding_above[j];
+                    }
+                }
+                else
+                {
+                    for (; j >= 0; j--, i--)
+                    {
+                        padded_shape[i] = (padded_shape[i] - 1) * padding_interior[j] + 1 +
+                                          padding_below[j] + padding_above[j];
+                    }
                 }
                 return padded_shape;
             }

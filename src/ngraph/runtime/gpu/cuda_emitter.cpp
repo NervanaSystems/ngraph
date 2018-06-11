@@ -241,17 +241,12 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
     std::stringstream kernel_name;
     kernel_name << "pad_dilation_" << join(dtypes, "_");
 
-    // Need to check: are there models in which some tensors will have different types? if so, this
-    // hash needs to include the tensor types.
     std::string hash = kernel_name.str() + "pad_i" + join(input_shape, "_") + "pad_o" +
                        join(output_shape) + "_pb" + join(padding_below, "_") + "_pi" +
                        join(dilation_strides, "_");
     // For backwards compatability we currently use two unordered maps
     // 1. one looks up the compiled cuda kernel (CudaFunctionPool)
     // 2. the other looks to see if this kernel is already in the primitive list
-    // Once all previously implemented cuda kernels are refactored to use the
-    // CUDAEmitter/GPUPrimittiveEmitter interface, only one map (from hash to primitive index)
-    // will be required.
 
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash);
@@ -280,9 +275,6 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
     Shape pad_below(input_shape.size(), 0);
     Shape pad_interior(input_shape.size(), 1);
 
-    // if padding_interior is not zero length, it
-    // is from op::Pad for which padding_below will
-    // always be equal in size to padding_above
     int64_t i = padding_below.size() - 1;
     int64_t j = input_shape.size() - 1;
     for (; i >= 0; i--, j--)
@@ -294,8 +286,6 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
     Shape input_strides = row_major_strides(input_shape);
     Shape output_strides = row_major_strides(output_shape);
 
-    NGRAPH_INFO << join(input_strides);
-    NGRAPH_INFO << join(output_strides);
     // get an allocator for transient per kernel gpu memory
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
 

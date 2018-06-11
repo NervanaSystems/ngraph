@@ -281,12 +281,6 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURunt
     const cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
     const cudnnConvolutionMode_t mode = CUDNN_CROSS_CORRELATION;
 
-    NGRAPH_INFO << "input " << join(input_tensor_shape);
-    NGRAPH_INFO << "output " << join(output_tensor_shape);
-    NGRAPH_INFO << "filter " << join(input_filter_shape);
-    NGRAPH_INFO << "padding " << join(padding_below);
-    NGRAPH_INFO << "window move " << join(window_movement_strides);
-    NGRAPH_INFO << "window dilate " << join(window_dilation_strides);
     auto& tensor_desc_0 = tensor_descriptor_from_shape(input_tensor_shape);
     auto& tensor_desc_1 = tensor_descriptor_from_shape(output_tensor_shape);
     auto& filter_desc = get_cudnn_filter_descriptor(input_filter_shape, data_type, tensor_format);
