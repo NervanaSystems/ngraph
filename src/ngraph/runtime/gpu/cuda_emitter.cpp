@@ -277,19 +277,19 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
 
     size_t rank = input_shape.size();
     size_t nthreads = shape_size(input_shape);
-        Shape pad_below(input_shape.size(), 0);
-        Shape pad_interior(input_shape.size(), 1);
+    Shape pad_below(input_shape.size(), 0);
+    Shape pad_interior(input_shape.size(), 1);
 
-        // if padding_interior is not zero length, it
-        // is from op::Pad for which padding_below will
-        // always be equal in size to padding_above
-        int64_t i = padding_below.size() - 1; 
-        int64_t j = input_shape.size() - 1;
-            for (; i >= 0; i--, j--)
-            {
-                pad_below[j] = padding_below[i];
-                pad_interior[j] = dilation_strides[i];
-            }
+    // if padding_interior is not zero length, it
+    // is from op::Pad for which padding_below will
+    // always be equal in size to padding_above
+    int64_t i = padding_below.size() - 1;
+    int64_t j = input_shape.size() - 1;
+    for (; i >= 0; i--, j--)
+    {
+        pad_below[j] = padding_below[i];
+        pad_interior[j] = dilation_strides[i];
+    }
 
     Shape input_strides = row_major_strides(input_shape);
     Shape output_strides = row_major_strides(output_shape);
@@ -305,8 +305,8 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
         allocator.reserve_argspace(output_strides.data(), output_strides.size() * sizeof(size_t));
     size_t idx_padding_below =
         allocator.reserve_argspace(pad_below.data(), pad_below.size() * sizeof(size_t));
-    size_t idx_dilation_strides = allocator.reserve_argspace(
-        pad_interior.data(), pad_interior.size() * sizeof(size_t));
+    size_t idx_dilation_strides =
+        allocator.reserve_argspace(pad_interior.data(), pad_interior.size() * sizeof(size_t));
 
     // create the launch primitive
     std::unique_ptr<gpu::primitive> pad_dilation(new gpu::primitive{[=](void** inputs,
