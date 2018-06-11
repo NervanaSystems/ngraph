@@ -24,6 +24,7 @@
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/util.hpp"
 #include "nop_elimination.hpp"
@@ -87,12 +88,19 @@ HANDLER_DECL(eliminate_broadcast)
     return false;
 }
 
+HANDLER_DECL(eliminate_stop_gradient)
+{
+    ngraph::replace_node(node, node->get_argument(0));
+    return true;
+}
+
 static const std::unordered_map<std::type_index,
                                 std::function<bool(const std::shared_ptr<ngraph::Node>&)>>
     dispatcher{{TI(ngraph::op::Pad), &eliminate_pad},
                {TI(ngraph::op::Sum), &eliminate_sum},
                {TI(ngraph::op::Convert), &eliminate_convert},
                {TI(ngraph::op::Slice), &eliminate_slice},
+               {TI(ngraph::op::StopGradient), &eliminate_stop_gradient},
                {TI(ngraph::op::Broadcast), &eliminate_broadcast}};
 
 bool ngraph::pass::NopElimination::run_on_function(std::shared_ptr<ngraph::Function> function)

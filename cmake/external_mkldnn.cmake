@@ -54,6 +54,8 @@ if(${CMAKE_VERSION} VERSION_LESS 3.2)
         # Uncomment below with any in-flight MKL-DNN patches
         # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
         CMAKE_ARGS
+            -DWITH_TEST=FALSE
+            -DWITH_EXAMPLE=FALSE
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
             -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
@@ -75,6 +77,8 @@ else()
         # Uncomment below with any in-flight MKL-DNN patches
         # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
         CMAKE_ARGS
+            -DWITH_TEST=FALSE
+            -DWITH_EXAMPLE=FALSE
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
             -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
@@ -103,9 +107,7 @@ ExternalProject_Add_Step(
 add_library(libmkldnn INTERFACE)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
 target_link_libraries(libmkldnn INTERFACE
-    ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn.so
-    ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmklml_intel.so
-    ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libiomp5.so
+    ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn${CMAKE_SHARED_LIBRARY_SUFFIX}
     )
 
-install(DIRECTORY ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/ DESTINATION ${NGRAPH_INSTALL_LIB})
+install(DIRECTORY ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/ DESTINATION ${NGRAPH_INSTALL_LIB} OPTIONAL)

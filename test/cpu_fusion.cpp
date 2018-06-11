@@ -34,7 +34,6 @@
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tanh.hpp"
-#include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
@@ -43,6 +42,7 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
+#include "ngraph/runtime/cpu/op/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
@@ -54,9 +54,9 @@
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_concat_inputs.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_rnn_mat_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -66,9 +66,8 @@
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/matcher.hpp"
 #include "util/random.hpp"
-#include "util/test_tools.hpp"
-
 #include "util/random.hpp"
+#include "util/test_tools.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -880,46 +879,6 @@ TEST(cpu_fusion, fuse_conv_relu)
     pass_manager.run_passes(func);
     size_t cb = count_ops_of_type<op::ConvolutionRelu>(func);
     ASSERT_GT(cb, 0);
-}
-
-template <typename T>
-static std::vector<std::vector<T>>
-    execute(std::shared_ptr<Function> f, std::vector<std::vector<T>> args, std::string cbackend)
-{
-    auto backend = runtime::Backend::create(cbackend);
-
-    auto parms = f->get_parameters();
-
-    if (parms.size() != args.size())
-    {
-        throw ngraph_error("number of parameters and arguments don't match");
-    }
-
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> arg_tensors(args.size());
-    for (size_t i = 0; i < args.size(); i++)
-    {
-        auto t = backend->create_tensor(parms.at(i)->get_element_type(), parms.at(i)->get_shape());
-        copy_data(t, args.at(i));
-        arg_tensors.at(i) = t;
-    }
-
-    auto results = f->get_results();
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> result_tensors(results.size());
-
-    for (size_t i = 0; i < results.size(); i++)
-    {
-        result_tensors.at(i) =
-            backend->create_tensor(results.at(i)->get_element_type(), results.at(i)->get_shape());
-    }
-
-    backend->call(f, result_tensors, arg_tensors);
-
-    std::vector<std::vector<T>> result_vectors;
-    for (auto rt : result_tensors)
-    {
-        result_vectors.push_back(read_vector<T>(rt));
-    }
-    return result_vectors;
 }
 
 TEST(cpu_fusion, conv_relu_n2c1h2w2_2)
@@ -2075,6 +2034,45 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
                                                  input_1_param,
                                                  expected_0,
                                                  expected_1);
+    }
+}
+
+TEST(cpu_fusion, fuse_batch_dot)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchDotFusion>();
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/batch_dot_3.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    size_t ccg = count_ops_of_type<op::BatchDot>(func);
+    ASSERT_EQ(ccg, 1);
+}
+
+TEST(cpu_fusion, fuse_batch_dot_forward)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchDotFusion>();
+
+    const std::string file_name("mxnet/batch_dot_3.json");
+    auto cpu_f = make_function(file_name);
+    auto int_f = make_function(file_name);
+    pass_manager.run_passes(cpu_f);
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < int_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }
 

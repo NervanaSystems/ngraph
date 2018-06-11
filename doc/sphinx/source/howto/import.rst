@@ -149,7 +149,7 @@ specify the relative path to the location of the ``.onnx`` file.
 Enable ONNX and load an ONNX file from disk
 --------------------------------------------
 
-.. literalinclude:: ../../../examples/onnx_example.py
+.. literalinclude:: ../../../examples/onnx/onnx_example.py
    :language: python
    :lines: 17-19
 
@@ -157,7 +157,7 @@ Enable ONNX and load an ONNX file from disk
 Convert an ONNX model to an ngraph model 
 -------------------------------------------
 
-.. literalinclude:: ../../../examples/onnx_example.py
+.. literalinclude:: ../../../examples/onnx/onnx_example.py
    :language: python
    :lines: 22-23
 
@@ -184,7 +184,7 @@ input parameters for the computation which generates the output.
 Using ngraph_api, create a callable computation object
 -------------------------------------------------------
 
-.. literalinclude:: ../../../examples/onnx_example.py
+.. literalinclude:: ../../../examples/onnx/onnx_example.py
    :language: python
    :lines: 27-29
 
@@ -192,14 +192,14 @@ Using ngraph_api, create a callable computation object
 Load or create an image
 ------------------------
 
-.. literalinclude:: ../../../examples/onnx_example.py
+.. literalinclude:: ../../../examples/onnx/onnx_example.py
    :language: python
    :lines: 32-33
 
 Run ResNet inference on picture
 ---------------------------------
 
-.. literalinclude:: ../../../examples/onnx_example.py
+.. literalinclude:: ../../../examples/onnx/onnx_example.py
    :language: python
    :lines: 36-37
  
@@ -207,7 +207,7 @@ Run ResNet inference on picture
 Put it all together
 ===================
 
-.. literalinclude:: ../../../examples/onnx_example.py
+.. literalinclude:: ../../../examples/onnx/onnx_example.py
    :language: python
    :lines: 17-37
    :caption: "Demo sample code to run inference with nGraph"
