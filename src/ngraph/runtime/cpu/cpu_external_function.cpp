@@ -109,13 +109,16 @@
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
 #include "ngraph/pass/result_copy_elimination.hpp"
+#include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
+#include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
@@ -130,6 +133,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_concat_inputs.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_shuffle_folding.hpp"
@@ -211,6 +215,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Multiply), &runtime::cpu::CPU_Emitter::emit<op::Multiply>},
     {TI(ngraph::op::Parameter), &runtime::cpu::CPU_Emitter::nop},
     {TI(ngraph::op::Abs), &runtime::cpu::CPU_Emitter::emit<op::Abs>},
+    {TI(ngraph::op::BatchDot), &runtime::cpu::CPU_Emitter::emit<op::BatchDot>},
     {TI(ngraph::op::Concat), &runtime::cpu::CPU_Emitter::emit<op::Concat>},
     {TI(ngraph::op::Divide), &runtime::cpu::CPU_Emitter::emit<op::Divide>},
     {TI(ngraph::op::Equal), &runtime::cpu::CPU_Emitter::emit<op::Equal>},
@@ -311,6 +316,8 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     , m_emit_timing(false)
     , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
     , m_function_name(function->get_name())
+    , m_is_built(false)
+    , m_direct_execution(std::getenv("NGRAPH_DEX") != nullptr)
 {
 }
 
@@ -335,6 +342,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchDotFusion>();
     pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
@@ -677,25 +685,6 @@ using namespace ngraph::runtime;
             }
         }
 
-        // create output alias map
-        /*
-        size_t output_index = 0;
-        unordered_map<descriptor::TensorView*, vector<size_t>> output_alias_map;
-        vector<size_t> aliases;
-        for (size_t i = 0; i < current_function->get_output_size(); ++i)
-        {
-            shared_ptr<Node> op = current_function->get_output_op(i);
-            shared_ptr<descriptor::TensorView> otv = op->get_output_tensor_view();
-            vector<size_t>& al = output_alias_map[otv.get()];
-            al.push_back(output_index);
-            if (al.size() > 1)
-            {
-                aliases.push_back(output_index);
-            }
-            output_index++;
-        }
-        */
-
         // Add outputs to the variable name map
         for (size_t i = 0; i < current_function->get_output_size(); ++i)
         {
@@ -956,41 +945,6 @@ using namespace ngraph::runtime;
         writer += "}\n\n";
     }
 
-    // Store layouts assigned for arguments
-    for (const auto& parameter : m_function->get_parameters())
-    {
-        for (size_t i = 0; i < parameter->get_output_size(); ++i)
-        {
-            auto tv = parameter->get_output_tensor_view(i);
-            if (tv->get_tensor_view_layout() == nullptr)
-            {
-                throw ngraph_error("layout missing on function parameter's tensor view: " +
-                                   tv->get_name());
-            }
-            parameter_layout_descriptors.emplace_back(
-                static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout()));
-        }
-    }
-    // Store layouts assigned for results
-    if (!result_layout_descriptors.empty())
-    {
-        throw ngraph_error("Function output layouts should not be pre-assigned");
-    }
-    for (size_t i = 0; i < m_function->get_output_size(); ++i)
-    {
-        const auto& output = m_function->get_output_op(i);
-        for (size_t j = 0; j < output->get_output_size(); ++j)
-        {
-            auto tv = output->get_output_tensor_view(j);
-            if (tv->get_tensor_view_layout() == nullptr)
-            {
-                throw ngraph_error("layout missing on function output tensor: " + tv->get_name());
-            }
-            result_layout_descriptors.emplace_back(
-                static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout()));
-        }
-    }
-
     // TODO: Cleanup and make this a utility function
     file_util::make_directory(s_output_dir);
     string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");
@@ -1019,7 +973,223 @@ using namespace ngraph::runtime;
         throw runtime_error("could not find compiled function");
     }
 
+    // Store layouts assigned for arguments
+    for (const auto& parameter : m_function->get_parameters())
+    {
+        for (size_t i = 0; i < parameter->get_output_size(); ++i)
+        {
+            auto tv = parameter->get_output_tensor_view(i);
+            if (tv->get_tensor_view_layout() == nullptr)
+            {
+                throw ngraph_error("layout missing on function parameter's tensor view: " +
+                                   tv->get_name());
+            }
+            parameter_layout_descriptors.emplace_back(
+                static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout()));
+        }
+    }
+
+    // Store layouts assigned for results
+    if (!result_layout_descriptors.empty())
+    {
+        throw ngraph_error("Function output layouts should not be pre-assigned");
+    }
+    for (size_t i = 0; i < m_function->get_output_size(); ++i)
+    {
+        const auto& output = m_function->get_output_op(i);
+        for (size_t j = 0; j < output->get_output_size(); ++j)
+        {
+            auto tv = output->get_output_tensor_view(j);
+            if (tv->get_tensor_view_layout() == nullptr)
+            {
+                throw ngraph_error("layout missing on function output tensor: " + tv->get_name());
+            }
+            result_layout_descriptors.emplace_back(
+                static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout()));
+        }
+    }
+
     m_is_compiled = true;
+    if (m_release_function)
+    {
+        release_function();
+    }
+}
+
+void runtime::cpu::CPU_ExternalFunction::build()
+{
+    if (m_is_built)
+    {
+        return;
+    }
+
+    m_mkldnn_emitter.reset(new MKLDNNEmitter());
+
+    ngraph::pass::Manager pass_manager;
+
+    //nv_cwi is required only by some frontends
+    //in which case they should run this pass(CPUWorkspaceInsertion) explicitly
+    NodeVector nv_cwi;
+    pass_manager.register_pass<ngraph::pass::NopElimination>();
+    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
+    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+    pass_manager.register_pass<ngraph::pass::CoreFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
+    pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
+    pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
+    pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUShuffleFolding>();
+    pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
+    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
+    pass_manager.register_pass<ngraph::pass::Liveness>();
+    pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment, true);
+    pass_manager.run_passes(m_function);
+
+    // Store layouts assigned for arguments
+    for (const auto& parameter : m_function->get_parameters())
+    {
+        for (size_t i = 0; i < parameter->get_output_size(); ++i)
+        {
+            auto tv = parameter->get_output_tensor_view(i);
+            if (tv->get_tensor_view_layout() == nullptr)
+            {
+                throw ngraph_error("layout missing on function parameter's tensor view: " +
+                                   tv->get_name());
+            }
+            parameter_layout_descriptors.emplace_back(
+                static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout()));
+        }
+    }
+
+    // Store layouts assigned for results
+    if (!result_layout_descriptors.empty())
+    {
+        throw ngraph_error("Function output layouts should not be pre-assigned");
+    }
+    for (size_t i = 0; i < m_function->get_output_size(); ++i)
+    {
+        const auto& output = m_function->get_output_op(i);
+        for (size_t j = 0; j < output->get_output_size(); ++j)
+        {
+            auto tv = output->get_output_tensor_view(j);
+            if (tv->get_tensor_view_layout() == nullptr)
+            {
+                throw ngraph_error("layout missing on function output tensor: " + tv->get_name());
+            }
+            result_layout_descriptors.emplace_back(
+                static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout()));
+        }
+    }
+
+    // Build executor
+    // Inputs
+    size_t arg_index = 0;
+    for (auto& param : m_function->get_parameters())
+    {
+        for (size_t i = 0; i < param->get_output_size(); ++i)
+        {
+            shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_view(i);
+            function_input_index[tv->get_tensor().get_name()] = arg_index;
+            arg_index++;
+        }
+    }
+
+    // Outputs
+    for (size_t i = 0; i < m_function->get_output_size(); ++i)
+    {
+        shared_ptr<Node> op = m_function->get_output_op(i);
+        shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
+        function_output_index[tv->get_tensor().get_name()] = i;
+
+        auto res = std::dynamic_pointer_cast<ngraph::op::Result>(op);
+        if (!res->needs_copy())
+        {
+            shared_ptr<descriptor::TensorView> itv =
+                res->get_inputs().at(0).get_output().get_tensor_view();
+            function_output_index[itv->get_tensor().get_name()] = i;
+        }
+    }
+
+    // Intermediates
+    if (m_function->get_temporary_pool_size())
+    {
+        m_memory_buffer_sizes.push_back(m_function->get_temporary_pool_size());
+
+        for (auto& node : m_function->get_ordered_ops())
+        {
+            for (auto tensor : node->liveness_new_list)
+            {
+                intermediates_offsets[tensor->get_name()] = tensor->get_pool_offset();
+            }
+        }
+    }
+
+    // Constants
+    for (auto& node : m_function->get_ordered_ops())
+    {
+        const auto c = dynamic_cast<ngraph::op::Constant*>(node.get());
+        if (c)
+        {
+            auto tv = node->get_outputs()[0].get_tensor_view();
+            tensor_data[tv->get_tensor().get_name()] = const_cast<void*>(c->get_data_ptr());
+        }
+    }
+
+    for (shared_ptr<Node> node : m_function->get_ordered_ops())
+    {
+        auto& n = *node; // Work around a compiler warning (*node inside typeid may have effects
+        // with shared pointers, which is fine here but clang doesn't like it.)
+        auto handler = build_dispatcher.find(type_index(typeid(n)));
+        if (handler == build_dispatcher.end())
+        {
+            throw ngraph_error("Unhandled op during code generation : " + node->description());
+        }
+        vector<TensorViewWrapper> in;
+        for (const descriptor::Input& input : node->get_inputs())
+        {
+            const descriptor::Output& output = input.get_output();
+            shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+            in.push_back(TensorViewWrapper(tv, tv->get_tensor().get_name()));
+        }
+        vector<TensorViewWrapper> out;
+        for (const descriptor::Output& output : node->get_outputs())
+        {
+            shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+            out.push_back(TensorViewWrapper(tv, tv->get_tensor().get_name()));
+        }
+
+        handler->second(this, node.get(), in, out);
+    }
+
+    executor = [&](CPURuntimeContext* ctx, vector<void*>& inputs, vector<void*>& outputs) {
+        for (auto& p : intermediates_offsets)
+        {
+            tensor_data[p.first] =
+                static_cast<uint8_t*>(ctx->memory_buffers[0]->get_ptr()) + p.second;
+        }
+
+        for (const auto& p : function_input_index)
+        {
+            tensor_data[p.first] = inputs[p.second];
+        }
+
+        for (const auto& p : function_output_index)
+        {
+            tensor_data[p.first] = outputs[p.second];
+        }
+
+        for (const auto& functor : functors)
+        {
+            functor(ctx);
+        }
+    };
+
+    m_is_built = true;
+
     if (m_release_function)
     {
         release_function();
@@ -1029,9 +1199,14 @@ using namespace ngraph::runtime;
 shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
     runtime::cpu::CPU_ExternalFunction::make_call_frame()
 {
-    if (!m_is_compiled)
+    if (!m_is_compiled && !m_direct_execution)
     {
         compile();
+    }
+
+    if (!m_is_built && m_direct_execution)
+    {
+        build();
     }
 
     return make_shared<ngraph::runtime::cpu::CPU_CallFrame>(shared_from_this(),

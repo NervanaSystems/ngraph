@@ -43,7 +43,7 @@ namespace ngraph
 
                 ~GPUAllocator();
                 size_t reserve_argspace(const void* data, size_t size);
-                size_t reserve_workspace(size_t size);
+                size_t reserve_workspace(size_t size, bool zero_initialize = true);
 
             private:
                 GPUMemoryManager* m_manager;
@@ -68,7 +68,7 @@ namespace ngraph
                 size_t m_buffer_offset;
                 std::vector<uint8_t> m_buffered_mem;
                 pass::MemoryManager m_workspace_manager;
-                static constexpr const uint16_t alignment = 4;
+                static constexpr const uint16_t alignment = 8;
                 void* m_argspace;
                 void* m_workspace;
                 size_t m_allocation_size;

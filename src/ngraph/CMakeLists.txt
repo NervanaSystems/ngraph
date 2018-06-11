@@ -93,6 +93,7 @@ set (SRC
     op/slice.cpp
     op/softmax.cpp
     op/sqrt.cpp
+    op/stop_gradient.cpp
     op/subtract.cpp
     op/sum.cpp
     op/tan.cpp
@@ -131,7 +132,6 @@ set (SRC
     runtime/aligned_buffer.cpp
     runtime/backend.cpp
     runtime/host_tensor_view.cpp
-    runtime/interpreter/int_backend.cpp
     runtime/tensor_view.cpp
     serializer.cpp
     type/element_type.cpp
@@ -158,166 +158,26 @@ message(STATUS "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt")
 string(REPLACE ";" "\n" OP_CLASS_LINES "${OP_CLASS_LIST}")
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt" "${OP_CLASS_LINES}")
 
-# find_program (GRAPHVIZ dot)
-# message (STATUS "graphviz '${GRAPHVIZ}'")
 find_package(Graphviz QUIET)
 if (GRAPHVIZ_FOUND)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGRAPHVIZ_FOUND")
 endif()
+
 if(NGRAPH_ADDRESS_SANITIZER)
     message(STATUS "Enable Address Sanitizer")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
 endif()
 
 include_directories("${NGRAPH_INCLUDE_PATH}")
-include_directories(SYSTEM "${EIGEN_INCLUDE_DIR}")
 
-if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
-    find_package(ZLIB REQUIRED)
-
-    if (NGRAPH_TBB_ENABLE)
-        include(${TBB_ROOT}/cmake/TBBBuild.cmake)
-        tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
-                  tbb_build_prefix=tbb CONFIG_DIR TBB_DIR)
-        find_package(TBB REQUIRED tbb)
-        if (NOT TBB_FOUND)
-            message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")
-        else()
-            message(STATUS "Found TBB and imported target ${TBB_IMPORTED_TARGETS}")
-        endif()
-    endif()
-
-    include_directories(SYSTEM ${LLVM_INCLUDE_DIR} ${MKLDNN_INCLUDE_DIR})
-    link_directories(${LLVM_LIB_DIR} ${MKLDNN_LIB_DIR})
-
-    # Add sources for the CPU backend
-    # and all its dependencies
-    set(SRC ${SRC}
-        codegen/code_writer.cpp
-        codegen/compiler.cpp
-        codegen/execution_engine.cpp
-        runtime/cpu/cpu_call_frame.cpp
-        runtime/cpu/cpu_backend.cpp
-        runtime/cpu/cpu_kernels.cpp
-        runtime/cpu/cpu_kernel_emitters.cpp
-        runtime/cpu/cpu_kernel_utils.cpp
-        runtime/cpu/cpu_emitter.cpp
-        runtime/cpu/cpu_external_function.cpp
-        runtime/cpu/cpu_tensor_view.cpp
-        runtime/cpu/cpu_tensor_view_wrapper.cpp
-        runtime/cpu/cpu_layout_descriptor.cpp
-        runtime/cpu/cpu_tracing.cpp
-        runtime/cpu/mkldnn_emitter.cpp
-        runtime/cpu/mkldnn_invoke.cpp
-        runtime/cpu/mkldnn_utils.cpp
-        runtime/cpu/kernel/eigen_thread_pool.cpp
-        runtime/cpu/kernel/pad.cpp
-        runtime/cpu/kernel/reduce_max.cpp
-        runtime/cpu/kernel/reduce_sum.cpp
-        runtime/cpu/kernel/reshape.cpp
-        runtime/cpu/op/conv_bias.cpp
-        runtime/cpu/op/conv_relu.cpp
-        runtime/cpu/op/convert_layout.cpp
-        runtime/cpu/op/sigmoid.cpp
-	runtime/cpu/op/sigmoid_mul.cpp
-        runtime/cpu/op/rnn.cpp
-        runtime/cpu/op/lstm.cpp
-        runtime/cpu/op/matmul_bias.cpp
-        runtime/cpu/op/max_pool_with_indices.cpp
-        runtime/cpu/op/batch_norm_relu.cpp
-        runtime/cpu/pass/cpu_assignment.cpp
-        runtime/cpu/pass/cpu_fusion.cpp
-        runtime/cpu/pass/cpu_rnn_fusion.cpp
-        runtime/cpu/pass/cpu_concat_inputs.cpp
-        runtime/cpu/pass/cpu_workspace_insertion.cpp
-        runtime/cpu/pass/cpu_layout.cpp
-        runtime/cpu/pass/cpu_rnn_mat_fusion.cpp
-        runtime/cpu/pass/cpu_post_layout_optimizations.cpp
-        runtime/cpu/pass/cpu_shuffle_folding.cpp
-    )
-    # LLVM binary builds are typically built without RTTI
-    # The built-in headers are in a version-specific directory
-    # This must be kept in sync with the LLVM + Clang version in use
-    set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
-
-    set(HEADER_SEARCH_DEFINES
-        "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\""
-        "MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\""
-        "CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.1/include\""
-        "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
-        "INSTALLED_HEADERS_PATH=\"${CMAKE_INSTALL_PREFIX}/include\""
-    )
-
-    if (NGRAPH_TBB_ENABLE)
-        set_source_files_properties(runtime/cpu/cpu_external_function.cpp PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
-        set(HEADER_SEARCH_DEFINES ${HEADER_SEARCH_DEFINES}
-            "TBB_HEADERS_PATH=\"${TBB_ROOT}/include\""
-            "NGRAPH_TBB_ENABLE"
-        )
-    endif()
-    set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES};")
-    set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
-
-if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_CXX_INCLUDE_PATH)
-    find_package(MPI REQUIRED)
-    string(REPLACE ";" "\\;" MPI_C_INCLUDE_PATH "${MPI_C_INCLUDE_PATH}")
-    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-
-    set_property(SOURCE codegen/compiler.cpp APPEND PROPERTY COMPILE_DEFINITIONS
-        "MPI_HEADER_PATH=\"${MPI_C_INCLUDE_PATH}\";")
-endif()
-
-    # GPU backend current requires CPU because they share compiler.cpp,
-    # and compiler.cpp requires MKLDNN
-    if(NGRAPH_GPU_ENABLE)
-        include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS})
-
-        # Add sources for the GPU backend
-        # and all its dependencies
-        set(SRC ${SRC}
-            runtime/gpu/gpu_call_frame.cpp
-            runtime/gpu/gpu_backend.cpp
-            runtime/gpu/gpu_emitter.cpp
-            runtime/gpu/gpu_external_function.cpp
-            runtime/gpu/gpu_kernel_emitters.cpp
-            runtime/gpu/gpu_tensor_view.cpp
-            runtime/gpu/gpu_tensor_view_wrapper.cpp
-            runtime/gpu/gpu_util.cpp
-            runtime/gpu/gpu_cuda_kernel_emitters.cpp
-            runtime/gpu/gpu_cuda_kernel_builder.cpp
-            runtime/gpu/gpu_cuda_function_builder.cpp
-            runtime/gpu/gpu_cuda_function_pool.cpp
-            runtime/gpu/gpu_cuda_context_manager.cpp
-            runtime/gpu/gpu_runtime_context.cpp
-            runtime/gpu/gpu_primitive_emitter.cpp
-            runtime/gpu/gpu_invoke.cpp
-            runtime/gpu/cudnn_emitter.cpp
-            runtime/gpu/cuda_emitter.cpp
-            runtime/gpu/type_info.cpp
-	    runtime/gpu/gpu_memory_manager.cpp
-            )
-        set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
-        "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
-        set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
-        "CUDNN_HEADER_PATHS=\"${CUDNN_INCLUDE_DIRS}\";")
-    endif()
-endif()
+add_subdirectory(codegen)
+add_subdirectory(runtime)
 
 add_library(ngraph SHARED ${SRC})
+add_definitions("-DSHARED_LIB_EXT=\"${CMAKE_SHARED_LIBRARY_SUFFIX}\"")
+add_definitions("-DLIBRARY_VERSION=\"${NGRAPH_VERSION}\"")
 set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
-if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
-    # Generate the resource file containing all headers used by the codegen compiler
-    add_custom_target(header_resource
-        resource_generator --output ${CMAKE_BINARY_DIR}/header_resource.hpp --base codegen
-        DEPENDS resource_generator ext_eigen ext_llvm ext_mkldnn
-        BYPRODUCTS
-    )
-    add_dependencies(ngraph header_resource)
-    include_directories(SYSTEM ${CMAKE_BINARY_DIR})
-endif()
-add_dependencies(ngraph ext_json)
-include_directories(SYSTEM ${JSON_INCLUDE_DIR})
+target_link_libraries(ngraph PUBLIC libjson)
 
 if (NOT APPLE)
     # NGraph links against one or more libraries (ex. LLVM) but we don't want to
@@ -339,35 +199,12 @@ endif()
 
 # Defines macro in C++ to load backend plugin
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
-target_link_libraries(ngraph PRIVATE dl)
-
-if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND LLVM_LINK_LIBS)
-    target_link_libraries(ngraph PRIVATE ${LLVM_LINK_LIBS})
-endif()
+target_link_libraries(ngraph PUBLIC dl pthread)
 
 if (APPLE)
     set_property(TARGET ngraph PROPERTY PREFIX "lib")
     set_property(TARGET ngraph PROPERTY OUTPUT_NAME "ngraph.so")
     set_property(TARGET ngraph PROPERTY SUFFIX "")
-endif()
-
-if(NGRAPH_CPU_ENABLE AND MKLDNN_LIB_DIR)
-    target_link_libraries(ngraph PRIVATE mkldnn)
-endif()
-
-if(NGRAPH_CPU_ENABLE)
-    target_link_libraries(ngraph PRIVATE ${TBB_IMPORTED_TARGETS})
-endif()
-
-# Nvidia
-if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
-    find_library(CUDA_nvrtc_LIBRARY nvrtc /usr/local/cuda/lib64)
-    find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64/stubs)
-    target_link_libraries(ngraph PUBLIC ${CUDA_cuda_LIBRARY} ${CUDA_nvrtc_LIBRARY} ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
-endif()
-
-if(MPI_CXX_INCLUDE_PATH)
-    target_link_libraries(ngraph PRIVATE ${MPI_CXX_LIBRARIES})
 endif()
 
 #-----------------------------------------------------------------------------------------------
@@ -383,20 +220,16 @@ install(DIRECTORY
     FILES_MATCHING PATTERN "*.hpp"
 )
 
-if(MKLDNN_LIB_DIR)
-    install(DIRECTORY
-        ${MKLDNN_LIB_DIR}/
-        DESTINATION "${NGRAPH_INSTALL_LIB}"
-    )
-endif()
+set(CPACK_GENERATOR "DEB")
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A most excellent graph library")
+set(CPACK_PACKAGE_NAME "nGraph")
+set(CPACK_PACKAGE_CONTACT "Robert Kimball")
+# set(CPACK_PACKAGE_VERSION
+set(CPACK_PACKAGE_VENDOR "Intel Nervana")
+# set(CPACK_PACKAGE_DESCRIPTION_FILE "")
 
-if (NGRAPH_TBB_ENABLE)
-    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
-        DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING REGEX "/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
-    )
-    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
-        DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING REGEX "/libtbb_debug${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
-    )
-endif()
+set(CPACK_PACKAGE_VERSION_MAJOR ${NGRAPH_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${NGRAPH_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${NGRAPH_VERSION_PATCH})
+include(CPack)
