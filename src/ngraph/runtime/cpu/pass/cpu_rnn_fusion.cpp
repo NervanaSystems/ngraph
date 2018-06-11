@@ -823,17 +823,7 @@ void ngraph::runtime::cpu::pass::RecurrentRNNFusion::construct_multi_layer_rnn_f
                 }
                 else if (rnn_goe_node->get_n() == 1)
                 {
-                    auto ht_slice = std::make_shared<op::Slice>(
-                        layer_rnn_ht_ct,
-                        Coordinate{0, 0},
-                        Coordinate{static_cast<unsigned long>(batch_size),
-                                   static_cast<unsigned long>(feature_size)});
-                    auto ct_slice = std::make_shared<op::Slice>(
-                        layer_rnn_ht_ct,
-                        Coordinate{static_cast<unsigned long>(batch_size), 0},
-                        Coordinate{static_cast<unsigned long>(2 * batch_size),
-                                   static_cast<unsigned long>(feature_size)});
-                    ngraph::replace_node(rnn_goes, ct_slice);
+                    ngraph::replace_node(rnn_goes, layer_rnn_ht_ct);
                 }
             }
         }
