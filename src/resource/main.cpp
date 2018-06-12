@@ -94,7 +94,7 @@ int main(int argc, char** argv)
 #endif
     include_paths.push_back({NGRAPH_HEADERS_PATH, {}, true});
     include_paths.push_back({CLANG_BUILTIN_HEADERS_PATH, {}, true});
-    // include_paths.push_back({"/Library/Developer/CommandLineTools/usr/include/c++/v1", {}});
+// include_paths.push_back({"/Library/Developer/CommandLineTools/usr/include/c++/v1", {}});
 #else // __APPLE__
     include_paths.push_back({CLANG_BUILTIN_HEADERS_PATH, {}, true});
     // string cpp0 = find_path("/usr/include/x86_64-linux-gnu/c++/");
