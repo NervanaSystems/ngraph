@@ -2083,7 +2083,7 @@ TEST(cpu_fusion, fuse_rnn_across_layer)
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    pass_manager.register_pass<runtime::cpu::pass::RecurrentRNNFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
     const string json_path =
         file_util::path_join(SERIALIZED_ZOO, "mxnet/2rnn_layer_1timestep.json");
     const string json_string = file_util::read_file_to_string(json_path);

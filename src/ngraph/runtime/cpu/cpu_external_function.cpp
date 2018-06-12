@@ -343,7 +343,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    pass_manager.register_pass<runtime::cpu::pass::RecurrentRNNFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
     pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchDotFusion>();
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();

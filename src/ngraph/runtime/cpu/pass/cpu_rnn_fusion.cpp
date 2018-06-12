@@ -635,7 +635,7 @@ static std::shared_ptr<Node>
     return std::make_shared<op::Concat>(node_labels, 0);
 }
 
-void ngraph::runtime::cpu::pass::RecurrentRNNFusion::construct_multi_layer_rnn_fusion_fprop()
+void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_fusion_fprop()
 {
     auto src_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{30, 100});
     auto slice_pred = [](std::shared_ptr<Node> n) {
