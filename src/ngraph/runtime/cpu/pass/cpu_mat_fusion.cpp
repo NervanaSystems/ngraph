@@ -378,7 +378,7 @@ std::shared_ptr<Node> fuse_batch_dot(const std::shared_ptr<Node>& n)
     return {nullptr};
 }
 
-bool runtime::cpu::pass::CPUBatchDotFusion::run_on_function(std::shared_ptr<Function> func)
+bool runtime::cpu::pass::CPUBatchFusion::run_on_function(std::shared_ptr<Function> func)
 {
     bool modified = false;
 

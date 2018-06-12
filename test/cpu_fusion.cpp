@@ -1443,7 +1443,7 @@ TEST(cpu_fusion, group_convolution_fusion)
     auto f = make_shared<Function>(NodeVector{concat}, op::ParameterVector{A, B});
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::VisualizeTree>("before_group.pdf");
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchDotFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
     pass_manager.register_pass<pass::VisualizeTree>("after_group.pdf");
     pass_manager.run_passes(f);
     auto gc =
@@ -2162,7 +2162,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
 TEST(cpu_fusion, fuse_batch_dot)
 {
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchDotFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/batch_dot_3.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
@@ -2175,7 +2175,7 @@ TEST(cpu_fusion, fuse_batch_dot)
 TEST(cpu_fusion, fuse_batch_dot_forward)
 {
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchDotFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
 
     const std::string file_name("mxnet/batch_dot_3.json");
     auto cpu_f = make_function(file_name);
