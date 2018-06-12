@@ -232,11 +232,11 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
 }
 
 size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const runtime::gpu::GPURuntimeContext* ctx,
-                                                     const std::array<std::string, 2>& dtypes,
-                                                     const Shape& input_shape,
-                                                     const Shape& output_shape,
-                                                     const Shape& padding_below,
-                                                     const Shape& padding_interior)
+                                                    const std::array<std::string, 2>& dtypes,
+                                                    const Shape& input_shape,
+                                                    const Shape& output_shape,
+                                                    const Shape& padding_below,
+                                                    const Shape& padding_interior)
 {
     std::stringstream kernel_name;
     kernel_name << "pad_dynamic_" << join(dtypes, "_");
@@ -297,7 +297,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const runtime::gpu::GPURunti
 
     // create the launch primitive
     std::unique_ptr<gpu::primitive> pad_dynamic(new gpu::primitive{[=](void** inputs,
-                                                                        void** outputs) mutable {
+                                                                       void** outputs) mutable {
         void* param_input_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_input_strides);
         void* param_output_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_output_strides);
         void* param_padding_below = runtime::gpu::invoke_memory_primitive(ctx, idx_padding_below);
