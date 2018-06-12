@@ -184,18 +184,18 @@ void runtime::gpu::CudaKernelBuilder::get_pad_dynamic_op(
     writer
         << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
         << data_types[1]
-        << "* out, size_t* input_strides, size_t* output_strides, size_t* padding_below, size_t* "
-           "padding_interior, size_t rank, size_t n)\n";
+        << "* out, unsigned int* input_strides, unsigned int* output_strides, unsigned int* padding_below, unsigned int* "
+           "padding_interior, unsigned int rank, unsigned int n)\n";
     writer.block_begin();
     {
-        writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
+        writer << "unsigned int tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
         writer << "if (tid < n)\n";
         writer.block_begin();
         {
-            writer << "size_t output_idx = 0;\n";
-            writer << "size_t input_idx = tid;\n";
+            writer << "unsigned int output_idx = 0;\n";
+            writer << "unsigned int input_idx = tid;\n";
 
-            writer << "for(size_t i = 0; i < rank; i++)\n";
+            writer << "for(unsigned int i = 0; i < rank; i++)\n";
             writer.block_begin();
             {
                 writer << "output_idx += (input_idx / input_strides[i] * padding_interior[i]  + "

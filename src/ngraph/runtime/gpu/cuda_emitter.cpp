@@ -233,10 +233,10 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
 
 size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const runtime::gpu::GPURuntimeContext* ctx,
                                                     const std::array<std::string, 2>& dtypes,
-                                                    const Shape& input_shape,
-                                                    const Shape& output_shape,
-                                                    const Shape& padding_below,
-                                                    const Shape& padding_interior)
+                                                    GPUShape input_shape,
+                                                    GPUShape output_shape,
+                                                    GPUShape padding_below,
+                                                    GPUShape padding_interior)
 {
     std::stringstream kernel_name;
     kernel_name << "pad_dynamic_" << join(dtypes, "_");
@@ -268,10 +268,10 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const runtime::gpu::GPURunti
         compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
 
-    size_t rank = input_shape.size();
-    size_t nthreads = shape_size(input_shape);
-    Shape pad_below(input_shape.size(), 0);
-    Shape pad_interior(input_shape.size(), 1);
+    unsigned int rank = static_cast<unsigned int>(input_shape.size());
+    unsigned int nthreads = static_cast<unsigned int>(shape_size(input_shape));
+    GPUShape pad_below(input_shape.size(), 0);
+    GPUShape pad_interior(input_shape.size(), 1);
 
     int64_t i = padding_below.size() - 1;
     int64_t j = input_shape.size() - 1;
@@ -281,19 +281,19 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const runtime::gpu::GPURunti
         pad_interior[j] = padding_interior[i];
     }
 
-    Shape input_strides = row_major_strides(input_shape);
-    Shape output_strides = row_major_strides(output_shape);
+    GPUShape input_strides = row_major_strides(input_shape);
+    GPUShape output_strides = row_major_strides(output_shape);
 
     // get an allocator for transient per kernel gpu memory
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
     size_t idx_input_strides =
-        allocator.reserve_argspace(input_strides.data(), input_strides.size() * sizeof(size_t));
+        allocator.reserve_argspace(input_strides.data(), input_strides.size() * sizeof(unsigned int));
     size_t idx_output_strides =
-        allocator.reserve_argspace(output_strides.data(), output_strides.size() * sizeof(size_t));
+        allocator.reserve_argspace(output_strides.data(), output_strides.size() * sizeof(unsigned int));
     size_t idx_padding_below =
-        allocator.reserve_argspace(pad_below.data(), pad_below.size() * sizeof(size_t));
+        allocator.reserve_argspace(pad_below.data(), pad_below.size() * sizeof(unsigned int));
     size_t idx_padding_interior =
-        allocator.reserve_argspace(pad_interior.data(), pad_interior.size() * sizeof(size_t));
+        allocator.reserve_argspace(pad_interior.data(), pad_interior.size() * sizeof(unsigned int));
 
     // create the launch primitive
     std::unique_ptr<gpu::primitive> pad_dynamic(new gpu::primitive{[=](void** inputs,
