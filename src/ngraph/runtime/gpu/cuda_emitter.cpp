@@ -1144,8 +1144,8 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const GPURuntimeContext* ctx,
 
     int nthreads = static_cast<int>(shape_size(result_shape));
 
-    std::unique_ptr<gpu::primitive> softmax(new gpu::primitive{[=](void** inputs,
-                                                                   void** outputs) mutable {
+    std::unique_ptr<gpu::primitive> broadcast(new gpu::primitive{[=](void** inputs,
+                                                                     void** outputs) mutable {
         void* strides_d = runtime::gpu::invoke_memory_primitive(ctx, idx_strides);
         void* stride_magic_d = runtime::gpu::invoke_memory_primitive(ctx, idx_stride_magic);
         void* stride_shift_d = runtime::gpu::invoke_memory_primitive(ctx, idx_stride_shift);
@@ -1166,7 +1166,7 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const GPURuntimeContext* ctx,
         CUDA_SAFE_CALL(cuCtxSynchronize());
     }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(softmax));
+    primitive_index = this->m_primitive_emitter->insert(std::move(broadcast));
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }
