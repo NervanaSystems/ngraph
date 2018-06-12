@@ -252,10 +252,8 @@ namespace ngraph
 
                     if (default_weights_format)
                     {
-                        const size_t IC = 1;
-                        arg0_shape.at(IC) /=
-                            std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node)
-                                ->get_groups();
+                        arg1_shape = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node)
+                                         ->get_weights_dimensions();
                     }
                     auto result_shape = node->get_output_shape(0);
                     auto filter_strides = convolution->get_window_movement_strides();
@@ -342,7 +340,10 @@ namespace ngraph
 
                     if (default_weights_format)
                     {
-                        prim_input_formats.push_back(prim_input_formats.back());
+                        //note, we need the original shape (4D) while arg_shape1 is redefined
+                        prim_input_formats.push_back(
+                            runtime::cpu::mkldnn_utils::CreateNativeDataFormat(
+                                node->get_input_shape(1)));
                     }
                     else
                     {

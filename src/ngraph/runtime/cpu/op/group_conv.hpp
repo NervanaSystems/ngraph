@@ -37,6 +37,7 @@ namespace ngraph
                              size_t groups,
                              const Shape& output_shape);
 
+            Shape get_weights_dimensions() const;
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }

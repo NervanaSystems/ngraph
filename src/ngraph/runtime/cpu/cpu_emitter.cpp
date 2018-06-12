@@ -2632,18 +2632,7 @@ namespace ngraph
                     auto input_data_desc =
                         mkldnn_emitter->build_memory_descriptor(args[0], input_format);
 
-                    //reshape weights into 5d tensors that includes groups
-                    const size_t OC = 0;
-                    const size_t IC = 1;
-                    Shape weights_shape_groups{args[1].get_shape()};
-                    //adjust output and channel given a number of groups
-
-                    weights_shape_groups.at(OC) /= convolution->get_groups();
-                    weights_shape_groups.at(IC) =
-                        args[0].get_shape().at(IC) / convolution->get_groups();
-                    //push_front the number of groups
-                    weights_shape_groups.insert(weights_shape_groups.begin(),
-                                                convolution->get_groups());
+                    Shape weights_shape_groups = convolution->get_weights_dimensions();
 
                     auto weights_desc_any = mkldnn::memory::desc(
                         mkldnn::memory::dims(weights_shape_groups.begin(),
