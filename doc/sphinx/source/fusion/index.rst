@@ -1,7 +1,7 @@
 .. fusion/index.rst: 
 
 
-Optimize graphs 
+Optimize Graphs 
 ===============
 
 with nGraph Compiler fusions
