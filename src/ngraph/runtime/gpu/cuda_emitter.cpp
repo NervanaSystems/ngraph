@@ -231,7 +231,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
     return primitive_index;
 }
 
-size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURuntimeContext* ctx,
+size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const runtime::gpu::GPURuntimeContext* ctx,
                                                      const std::array<std::string, 2>& dtypes,
                                                      const Shape& input_shape,
                                                      const Shape& output_shape,
@@ -239,7 +239,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
                                                      const Shape& padding_interior)
 {
     std::stringstream kernel_name;
-    kernel_name << "pad_dilation_" << join(dtypes, "_");
+    kernel_name << "pad_dynamic_" << join(dtypes, "_");
 
     std::string hash = kernel_name.str() + "pad_i" + join(input_shape, "_") + "pad_o" +
                        join(output_shape) + "_pb" + join(padding_below, "_") + "_pi" +
@@ -264,7 +264,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
-        CudaKernelBuilder::get_pad_dilation_op(writer, kernel_name.str(), dtypes);
+        CudaKernelBuilder::get_pad_dynamic_op(writer, kernel_name.str(), dtypes);
         compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
 
@@ -296,7 +296,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
         allocator.reserve_argspace(pad_interior.data(), pad_interior.size() * sizeof(size_t));
 
     // create the launch primitive
-    std::unique_ptr<gpu::primitive> pad_dilation(new gpu::primitive{[=](void** inputs,
+    std::unique_ptr<gpu::primitive> pad_dynamic(new gpu::primitive{[=](void** inputs,
                                                                         void** outputs) mutable {
         void* param_input_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_input_strides);
         void* param_output_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_output_strides);
@@ -326,7 +326,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
         CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
     }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(pad_dilation));
+    primitive_index = this->m_primitive_emitter->insert(std::move(pad_dynamic));
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }

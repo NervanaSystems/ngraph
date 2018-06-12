@@ -211,15 +211,15 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                            << temp_size << ");\n";
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
-                    auto pad_dilation_index =
-                        cuda_emitter->build_pad_dilation(external_function->ctx().get(),
+                    auto pad_dynamic_index =
+                        cuda_emitter->build_pad_dynamic(external_function->ctx().get(),
                                                          {{args[0].get_type(), out[0].get_type()}},
                                                          input_shape,
                                                          input_shape_padded,
                                                          padding_below,
                                                          padding_interior);
 
-                    writer << "gpu::invoke_primitive(ctx, " << pad_dilation_index << ", ";
+                    writer << "gpu::invoke_primitive(ctx, " << pad_dynamic_index << ", ";
                     writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
                     writer << "std::vector<void*>{pad_buffer}.data()";
                     writer << ");\n";
@@ -331,15 +331,15 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                            << temp_size << ");\n";
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
-                    auto pad_dilation_index =
-                        cuda_emitter->build_pad_dilation(external_function->ctx().get(),
+                    auto pad_dynamic_index =
+                        cuda_emitter->build_pad_dynamic(external_function->ctx().get(),
                                                          {{args[0].get_type(), out[0].get_type()}},
                                                          output_shape,
                                                          output_shape_padded,
                                                          padding_below,
                                                          padding_interior);
 
-                    writer << "gpu::invoke_primitive(ctx, " << pad_dilation_index << ", ";
+                    writer << "gpu::invoke_primitive(ctx, " << pad_dynamic_index << ", ";
                     writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
                     writer << "std::vector<void*>{pad_buffer}.data()";
                     writer << ");\n";
@@ -484,15 +484,15 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                            << temp_size << ");\n";
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
-                    auto pad_dilation_index =
-                        cuda_emitter->build_pad_dilation(external_function->ctx().get(),
+                    auto pad_dynamic_index =
+                        cuda_emitter->build_pad_dynamic(external_function->ctx().get(),
                                                          {{args[0].get_type(), out[0].get_type()}},
                                                          input_shape,
                                                          input_shape_padded,
                                                          padding_below,
                                                          padding_interior);
 
-                    writer << "gpu::invoke_primitive(ctx, " << pad_dilation_index << ", ";
+                    writer << "gpu::invoke_primitive(ctx, " << pad_dynamic_index << ", ";
                     writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
                     writer << "std::vector<void*>{pad_buffer}.data()";
                     writer << ");\n";

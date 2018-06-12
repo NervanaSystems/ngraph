@@ -79,7 +79,7 @@ namespace ngraph
                                               const std::string& math_kernel,
                                               const std::vector<std::string>& data_types);
 
-                static void get_pad_dilation_op(codegen::CodeWriter& writer,
+                static void get_pad_dynamic_op(codegen::CodeWriter& writer,
                                                 const std::string& name,
                                                 const std::array<std::string, 2>& data_types);
 

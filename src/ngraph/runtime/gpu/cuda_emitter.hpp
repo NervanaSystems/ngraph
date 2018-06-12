@@ -47,7 +47,7 @@ namespace ngraph
                                  GPUShape pad_interior,
                                  const std::string& pad_value = "");
 
-                size_t build_pad_dilation(const runtime::gpu::GPURuntimeContext* ctx,
+                size_t build_pad_dynamic(const runtime::gpu::GPURuntimeContext* ctx,
                                           const std::array<std::string, 2>& dtypes,
                                           const Shape& input_shape,
                                           const Shape& output_shape,
