@@ -236,14 +236,14 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
                                                      const Shape& input_shape,
                                                      const Shape& output_shape,
                                                      const Shape& padding_below,
-                                                     const Shape& dilation_strides)
+                                                     const Shape& padding_interior)
 {
     std::stringstream kernel_name;
     kernel_name << "pad_dilation_" << join(dtypes, "_");
 
     std::string hash = kernel_name.str() + "pad_i" + join(input_shape, "_") + "pad_o" +
                        join(output_shape) + "_pb" + join(padding_below, "_") + "_pi" +
-                       join(dilation_strides, "_");
+                       join(padding_interior, "_");
     // For backwards compatability we currently use two unordered maps
     // 1. one looks up the compiled cuda kernel (CudaFunctionPool)
     // 2. the other looks to see if this kernel is already in the primitive list
@@ -264,9 +264,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
-
         CudaKernelBuilder::get_pad_dilation_op(writer, kernel_name.str(), dtypes);
-
         compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
 
@@ -280,7 +278,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
     for (; i >= 0; i--, j--)
     {
         pad_below[j] = padding_below[i];
-        pad_interior[j] = dilation_strides[i];
+        pad_interior[j] = padding_interior[i];
     }
 
     Shape input_strides = row_major_strides(input_shape);
@@ -288,14 +286,13 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
 
     // get an allocator for transient per kernel gpu memory
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
-
     size_t idx_input_strides =
         allocator.reserve_argspace(input_strides.data(), input_strides.size() * sizeof(size_t));
     size_t idx_output_strides =
         allocator.reserve_argspace(output_strides.data(), output_strides.size() * sizeof(size_t));
     size_t idx_padding_below =
         allocator.reserve_argspace(pad_below.data(), pad_below.size() * sizeof(size_t));
-    size_t idx_dilation_strides =
+    size_t idx_padding_interior =
         allocator.reserve_argspace(pad_interior.data(), pad_interior.size() * sizeof(size_t));
 
     // create the launch primitive
@@ -304,14 +301,14 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dilation(const runtime::gpu::GPURunt
         void* param_input_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_input_strides);
         void* param_output_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_output_strides);
         void* param_padding_below = runtime::gpu::invoke_memory_primitive(ctx, idx_padding_below);
-        void* param_dilation_strides =
-            runtime::gpu::invoke_memory_primitive(ctx, idx_dilation_strides);
+        void* param_padding_interior =
+            runtime::gpu::invoke_memory_primitive(ctx, idx_padding_interior);
         std::vector<void*> args_list{&inputs[0],
                                      &outputs[0],
                                      &param_input_strides,
                                      &param_output_strides,
                                      &param_padding_below,
-                                     &param_dilation_strides,
+                                     &param_padding_interior,
                                      &rank,
                                      &nthreads};
 

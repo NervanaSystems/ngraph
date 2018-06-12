@@ -1,4 +1,4 @@
-/******************************************************************************* 
+/*******************************************************************************
 * Copyright 2017-2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -191,23 +191,23 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     pad_required = true;
                 }
                 auto input_shape = args[0].get_shape();
-                Shape input_padded_shape = input_shape;
+                Shape input_shape_padded = input_shape;
                 Shape padding_interior(data_dilation_strides);
                 writer.block_begin("  // " + node->get_name());
                 if (pad_required || is_deconvolution)
                 {
-                    input_padded_shape = get_padded_shape(
+                    input_shape_padded = get_padded_shape(
                         input_shape, padding_below, padding_above, padding_interior);
-                    Shape input_padded_strides = row_major_strides(input_padded_shape);
+                    Shape input_padded_strides = row_major_strides(input_shape_padded);
                     auto temp_size =
-                        shape_size(input_padded_shape) * args[0].get_element_type().size();
+                        shape_size(input_shape_padded) * args[0].get_element_type().size();
                     GPUAllocator allocator =
                         external_function->get_primitive_emitter()->get_memory_allocator();
                     size_t idx_workspace = allocator.reserve_workspace(temp_size);
                     writer << "void* pad_buffer = runtime::gpu::invoke_memory_primitive(ctx, "
                            << idx_workspace << ");\n";
                     writer << "std::vector<" << args[0].get_type() << "> pad_buffer_host("
-                           << shape_size(input_padded_shape) << ", 0);\n";
+                           << shape_size(input_shape_padded) << ", 0);\n";
                     writer << "runtime::gpu::cuda_memcpyHtD(pad_buffer, pad_buffer_host.data(), "
                            << temp_size << ");\n";
                     auto& cuda_emitter =
@@ -216,7 +216,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         cuda_emitter->build_pad_dilation(external_function->ctx().get(),
                                                          {{args[0].get_type(), out[0].get_type()}},
                                                          input_shape,
-                                                         input_padded_shape,
+                                                         input_shape_padded,
                                                          padding_below,
                                                          padding_interior);
 
@@ -234,7 +234,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 cudnnDataType_t data_type = CUDNN_DATA_FLOAT;
                 size_t index = cudnn_emitter->build_convolution(external_function->ctx().get(),
                                                                 data_type,
-                                                                input_padded_shape,
+                                                                input_shape_padded,
                                                                 args[1].get_shape(),
                                                                 out[0].get_shape(),
                                                                 window_movement_strides,
@@ -465,23 +465,23 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     pad_required = true;
                 }
                 auto input_shape = args[0].get_shape();
-                auto input_padded_shape = input_shape;
+                auto input_shape_padded = input_shape;
 
                 Shape padding_interior(data_dilation_strides);
                 writer.block_begin("  // " + node->get_name());
                 if (pad_required || is_deconvolution)
                 {
-                    input_padded_shape = get_padded_shape(
+                    input_shape_padded = get_padded_shape(
                         input_shape, padding_below, padding_above, padding_interior);
                     auto temp_size =
-                        shape_size(input_padded_shape) * args[0].get_element_type().size();
+                        shape_size(input_shape_padded) * args[0].get_element_type().size();
                     GPUAllocator allocator =
                         external_function->get_primitive_emitter()->get_memory_allocator();
                     size_t idx_workspace = allocator.reserve_workspace(temp_size);
                     writer << "void* pad_buffer = runtime::gpu::invoke_memory_primitive(ctx, "
                            << idx_workspace << ");\n";
                     writer << "std::vector<" << args[0].get_type() << "> pad_buffer_host("
-                           << shape_size(input_padded_shape) << ", 0);\n";
+                           << shape_size(input_shape_padded) << ", 0);\n";
                     writer << "runtime::gpu::cuda_memcpyHtD(pad_buffer, pad_buffer_host.data(), "
                            << temp_size << ");\n";
                     auto& cuda_emitter =
@@ -490,7 +490,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         cuda_emitter->build_pad_dilation(external_function->ctx().get(),
                                                          {{args[0].get_type(), out[0].get_type()}},
                                                          input_shape,
-                                                         input_padded_shape,
+                                                         input_shape_padded,
                                                          padding_below,
                                                          padding_interior);
 
@@ -510,7 +510,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 size_t index =
                     cudnn_emitter->build_convolution_backward_filter(external_function->ctx().get(),
                                                                      data_type,
-                                                                     input_padded_shape,
+                                                                     input_shape_padded,
                                                                      args[1].get_shape(),
                                                                      out[0].get_shape(),
                                                                      window_movement_strides,

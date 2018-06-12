@@ -185,7 +185,7 @@ void runtime::gpu::CudaKernelBuilder::get_pad_dilation_op(
         << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
         << data_types[1]
         << "* out, size_t* input_strides, size_t* output_strides, size_t* padding_below, size_t* "
-           "dilation_strides, size_t rank, size_t n)\n";
+           "padding_interior, size_t rank, size_t n)\n";
     writer.block_begin();
     {
         writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
@@ -198,7 +198,7 @@ void runtime::gpu::CudaKernelBuilder::get_pad_dilation_op(
             writer << "for(size_t i = 0; i < rank; i++)\n";
             writer.block_begin();
             {
-                writer << "output_idx += (input_idx / input_strides[i] * dilation_strides[i]  + "
+                writer << "output_idx += (input_idx / input_strides[i] * padding_interior[i]  + "
                           "padding_below[i]) "
                           "* output_strides[i];\n";
                 writer << "input_idx %= input_strides[i];\n";

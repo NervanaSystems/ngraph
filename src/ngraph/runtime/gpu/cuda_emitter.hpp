@@ -52,7 +52,7 @@ namespace ngraph
                                           const Shape& input_shape,
                                           const Shape& output_shape,
                                           const Shape& padding_below,
-                                          const Shape& dilation_strides);
+                                          const Shape& padding_interior);
 
                 size_t build_1d_max_pool(const GPURuntimeContext* ctx,
                                          const std::array<std::string, 2>& dtypes,
