@@ -60,6 +60,7 @@ namespace ngraph
         class Select;
         class And;
         class Or;
+        class Nop;
     }
     namespace runtime
     {
@@ -207,6 +208,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "subtractf";
                 static constexpr const char* math_kernel = "x0-x1";
+                static constexpr const char* atomic = "atomicSub";
             };
 
             template <>
@@ -305,6 +307,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "logical_and";
                 static constexpr const char* math_kernel = "x0 & x1";
+                static constexpr const char* atomic = "atomicAnd";
             };
 
             template <>
@@ -312,6 +315,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "logical_or";
                 static constexpr const char* math_kernel = "x0 | x1";
+                static constexpr const char* atomic = "atomicOr";
             };
 
             template <>
@@ -319,6 +323,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "add";
                 static constexpr const char* math_kernel = "x0 + x1";
+                static constexpr const char* atomic = "atomicAdd";
             };
 
             template <>
@@ -333,6 +338,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "min";
                 static constexpr const char* math_kernel = "x0 > x1 ? x1 : x0";
+                static constexpr const char* atomic = "atomicMin";
             };
 
             template <>
@@ -340,6 +346,15 @@ namespace ngraph
             {
                 static constexpr const char* op = "max";
                 static constexpr const char* math_kernel = "x0 > x1 ? x0 : x1";
+                static constexpr const char* atomic = "atomicMax";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Nop>
+            {
+                static constexpr const char* op = "";
+                static constexpr const char* math_kernel = "";
+                static constexpr const char* atomic = "";
             };
         }
     }

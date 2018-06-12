@@ -80,6 +80,25 @@ namespace ngraph
                         ctx, dtypes, tensor_shape, CudaOpMap<T>::op, CudaOpMap<T>::math_kernel);
                 }
 
+                template <typename ELEMENTWISE_OP_TYPE, typename REDUCE_OP_TYPE = ngraph::op::Nop>
+                size_t build_elementwise_collective(const GPURuntimeContext* ctx,
+                                                    const std::vector<std::string>& dtypes,
+                                                    GPUShape tensor_shape,
+                                                    const std::set<size_t>& reduced_tensors = {},
+                                                    const std::set<size_t>& axes = {},
+                                                    bool save_elementwise = false)
+                {
+                    return build_fused_ew_to_collective(ctx,
+                                                        dtypes,
+                                                        tensor_shape,
+                                                        reduced_tensors,
+                                                        axes,
+                                                        CudaOpMap<ELEMENTWISE_OP_TYPE>::op,
+                                                        CudaOpMap<ELEMENTWISE_OP_TYPE>::math_kernel,
+                                                        CudaOpMap<REDUCE_OP_TYPE>::atomic,
+                                                        save_elementwise);
+                }
+
                 size_t build_replace_slice(const GPURuntimeContext* ctx,
                                            const std::array<std::string, 3>& dtypes,
                                            GPUShape tensor_shape,
@@ -87,6 +106,11 @@ namespace ngraph
                                            GPUShape lower_bounds,
                                            GPUShape upper_bounds,
                                            GPUShape slice_stride);
+
+                size_t build_broadcast(const GPURuntimeContext* ctx,
+                                       const std::array<std::string, 2>& dtypes,
+                                       GPUShape result_shape,
+                                       const std::set<size_t>& bcast_axes);
 
             private:
                 CUDAEmitter(GPUPrimitiveEmitter* emitter);
@@ -99,6 +123,15 @@ namespace ngraph
                                                 GPUShape tensor_shape,
                                                 const char* op,
                                                 const char* kernel);
+                size_t build_fused_ew_to_collective(const GPURuntimeContext* ctx,
+                                                    const std::vector<std::string>& dtypes,
+                                                    GPUShape tensor_shape,
+                                                    const std::set<size_t>& reduced_tensors,
+                                                    const std::set<size_t>& axes,
+                                                    const char* op,
+                                                    const char* kernel,
+                                                    const char* reduce_op,
+                                                    bool save_elementwise);
 
                 GPUPrimitiveEmitter* m_primitive_emitter;
             };
