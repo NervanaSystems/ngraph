@@ -162,19 +162,13 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 Strides data_dilation_strides = convolution->get_data_dilation_strides();
                 CoordinateDiff padding_below_diff = convolution->get_padding_below();
                 CoordinateDiff padding_above_diff = convolution->get_padding_above();
-                Shape padding_below(padding_below_diff.size(), 0);
-                Shape padding_above(padding_above_diff.size(), 0);
-                for (int i = 0; i < padding_below.size(); i++)
-                {
-                    padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
-                    padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
-                }
 
-                if (padding_below.size() > 3)
+                if (padding_below_diff.size() > 3)
                 {
                     throw std::runtime_error(node->get_name() +
                                              "with more than 3D is not implemented.");
                 }
+
                 bool is_deconvolution = false;
                 for (auto a : data_dilation_strides)
                 {
@@ -185,11 +179,16 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     }
                 }
 
-                bool pad_required = false;
-                if (padding_below != padding_above)
+                bool pad_required = (padding_below_diff != padding_below_diff);
+
+                Shape padding_below(padding_below_diff.size(), 0);
+                Shape padding_above(padding_above_diff.size(), 0);
+                for (int i = 0; i < padding_below.size(); i++)
                 {
-                    pad_required = true;
+                    padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
+                    padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
                 }
+
                 auto input_shape = args[0].get_shape();
                 Shape input_shape_padded = input_shape;
                 Shape padding_interior(data_dilation_strides);
@@ -273,18 +272,13 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 Strides data_dilation_strides = convolution->get_data_dilation_strides_forward();
                 CoordinateDiff padding_below_diff = convolution->get_padding_below_forward();
                 CoordinateDiff padding_above_diff = convolution->get_padding_above_forward();
-                Shape padding_below(padding_below_diff.size(), 0);
-                Shape padding_above(padding_above_diff.size(), 0);
-                for (int i = 0; i < padding_below_diff.size(); i++)
-                {
-                    padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
-                    padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
-                }
-                if (padding_below.size() > 3)
+
+                if (padding_below_diff.size() > 3)
                 {
                     throw std::runtime_error(node->get_name() +
                                              "with more than 3D is not implemented.");
                 }
+
                 bool is_deconvolution = false;
                 for (auto a : data_dilation_strides)
                 {
@@ -294,11 +288,17 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         break;
                     }
                 }
-                bool pad_required = false;
-                if (padding_below != padding_above)
+
+                bool pad_required = (padding_below_diff != padding_below_diff);
+
+                Shape padding_below(padding_below_diff.size(), 0);
+                Shape padding_above(padding_above_diff.size(), 0);
+                for (int i = 0; i < padding_below.size(); i++)
                 {
-                    pad_required = true;
+                    padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
+                    padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
                 }
+
                 auto output_shape = out[0].get_shape();
                 auto output_shape_padded = output_shape;
                 Shape padding_below_back(output_shape.size(), 0);
@@ -436,20 +436,13 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 Strides data_dilation_strides = convolution->get_data_dilation_strides_forward();
                 CoordinateDiff padding_below_diff = convolution->get_padding_below_forward();
                 CoordinateDiff padding_above_diff = convolution->get_padding_above_forward();
-                Shape padding_below(padding_below_diff.size(), 0);
-                Shape padding_above(padding_above_diff.size(), 0);
-
-                for (int i = 0; i < padding_below_diff.size(); i++)
-                {
-                    padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
-                    padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
-                }
-
-                if (padding_below.size() > 3)
+ 
+                if (padding_below_diff.size() > 3)
                 {
                     throw std::runtime_error(node->get_name() +
                                              "with more than 3D is not implemented.");
                 }
+
                 bool is_deconvolution = false;
                 for (auto a : data_dilation_strides)
                 {
@@ -459,14 +452,19 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         break;
                     }
                 }
-                bool pad_required = false;
-                if (padding_below != padding_above)
+
+                bool pad_required = (padding_below_diff != padding_below_diff);
+
+                Shape padding_below(padding_below_diff.size(), 0);
+                Shape padding_above(padding_above_diff.size(), 0);
+                for (int i = 0; i < padding_below.size(); i++)
                 {
-                    pad_required = true;
+                    padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
+                    padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
                 }
+
                 auto input_shape = args[0].get_shape();
                 auto input_shape_padded = input_shape;
-
                 Shape padding_interior(data_dilation_strides);
                 writer.block_begin("  // " + node->get_name());
                 if (pad_required || is_deconvolution)
