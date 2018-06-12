@@ -2156,13 +2156,14 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
 
                         // exponentiate with fused sum reduction to calculate softmax denominator
                         size_t exp_sum_reduce =
-                            cuda_emitter->build_elementwise<ngraph::op::Exp, ngraph::op::Add>(
-                                external_function->ctx().get(),
-                                {{args[0].get_type(), out[0].get_type()}},
-                                args[0].get_shape(),
-                                {},
-                                axes,
-                                true /* multi-output */);
+                            cuda_emitter
+                                ->build_elementwise_collective<ngraph::op::Exp, ngraph::op::Add>(
+                                    external_function->ctx().get(),
+                                    {{args[0].get_type(), out[0].get_type()}},
+                                    args[0].get_shape(),
+                                    {},
+                                    axes,
+                                    true /* multi-output */);
 
                         writer << "void* workspace = gpu::invoke_memory_primitive(ctx, "
                                << workspace_idx << ");\n";
@@ -2175,12 +2176,13 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         writer << ");\n";
 
                         // inplace binary division with fused broadcast to calculate softmax
-                        size_t div_broadcast = cuda_emitter->build_elementwise<ngraph::op::Divide>(
-                            external_function->ctx().get(),
-                            {{out[0].get_type(), out[0].get_type(), out[0].get_type()}},
-                            out[0].get_shape(),
-                            {1},
-                            axes);
+                        size_t div_broadcast =
+                            cuda_emitter->build_elementwise_collective<ngraph::op::Divide>(
+                                external_function->ctx().get(),
+                                {{out[0].get_type(), out[0].get_type(), out[0].get_type()}},
+                                out[0].get_shape(),
+                                {1},
+                                axes);
 
                         writer << "gpu::invoke_primitive(ctx, " << div_broadcast << ", ";
                         writer << "std::vector<void*>{" << out[0].get_name();
