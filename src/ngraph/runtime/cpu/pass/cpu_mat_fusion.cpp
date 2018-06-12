@@ -271,6 +271,7 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
         if (arg->get_input_shape(0).size() != 4)
         {
             NGRAPH_DEBUG << "convolution data's rank isn't equal to 4";
+            return {nullptr};
         }
         if (!is_trivial_convolution(std::dynamic_pointer_cast<op::Convolution>(arg)))
         {
@@ -394,7 +395,7 @@ bool runtime::cpu::pass::CPUBatchDotFusion::run_on_function(std::shared_ptr<Func
             }
             else if (auto fused_conv = fuse_group_convolution(n))
             {
-                func->replace_node(n, fused_node);
+                func->replace_node(n, fused_conv);
                 modified = true;
             }
         }

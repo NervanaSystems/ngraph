@@ -27,6 +27,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/negative.hpp"
@@ -1406,6 +1407,50 @@ TEST(cpu_fusion, batch_norm_folding)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
+TEST(cpu_fusion, group_convolution_fusion)
+{
+    Shape shape_a{1, 32, 2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{2, 16, 1, 1};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{1, 2, 2, 2};
+
+    auto a_slice0 = std::make_shared<op::Slice>(A, Coordinate{0, 0, 0, 0}, Coordinate{1, 16, 2, 2});
+    auto a_slice1 =
+        std::make_shared<op::Slice>(A, Coordinate{0, 16, 0, 0}, Coordinate{1, 32, 2, 2});
+
+    auto b_slice0 = std::make_shared<op::Slice>(B, Coordinate{0, 0, 0, 0}, Coordinate{1, 16, 1, 1});
+    auto b_slice1 = std::make_shared<op::Slice>(B, Coordinate{1, 0, 0, 0}, Coordinate{2, 16, 1, 1});
+
+    auto conv_lower = make_shared<op::Convolution>(a_slice0,
+                                                   b_slice0,
+                                                   Strides{1, 1},
+                                                   Strides{1, 1},
+                                                   CoordinateDiff{0, 0},
+                                                   CoordinateDiff{0, 0},
+                                                   Strides{1, 1});
+
+    auto conv_upper = make_shared<op::Convolution>(a_slice1,
+                                                   b_slice1,
+                                                   Strides{1, 1},
+                                                   Strides{1, 1},
+                                                   CoordinateDiff{0, 0},
+                                                   CoordinateDiff{0, 0},
+                                                   Strides{1, 1});
+
+    auto concat = make_shared<op::Concat>(NodeVector{conv_lower, conv_upper}, 1);
+
+    auto f = make_shared<Function>(NodeVector{concat}, op::ParameterVector{A, B});
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("before_group.pdf");
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchDotFusion>();
+    pass_manager.register_pass<pass::VisualizeTree>("after_group.pdf");
+    pass_manager.run_passes(f);
+    auto gc =
+        std::dynamic_pointer_cast<op::GroupConvolution>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(gc);
+}
+
 TEST(cpu_fusion, group_convolution)
 {
     auto backend = runtime::Backend::create("CPU");
@@ -1479,6 +1524,7 @@ TEST(cpu_fusion, group_convolution)
     backend->call(f, {group_result, lower_result, upper_result}, {a_, b_, c_, d_, e_, f_});
     ASSERT_EQ(rv, erv);
 }
+
 TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
 {
     auto src_layer = make_shared<op::Parameter>(element::f32, Shape{10, 100});
