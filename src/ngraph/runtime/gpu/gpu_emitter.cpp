@@ -179,7 +179,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     }
                 }
 
-                bool pad_required = (padding_below_diff != padding_below_diff);
+                bool pad_required = (padding_below_diff != padding_above_diff);
 
                 Shape padding_below(padding_below_diff.size(), 0);
                 Shape padding_above(padding_above_diff.size(), 0);
@@ -289,7 +289,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     }
                 }
 
-                bool pad_required = (padding_below_diff != padding_below_diff);
+                bool pad_required = (padding_below_diff != padding_above_diff);
 
                 Shape padding_below(padding_below_diff.size(), 0);
                 Shape padding_above(padding_above_diff.size(), 0);
@@ -453,7 +453,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     }
                 }
 
-                bool pad_required = (padding_below_diff != padding_below_diff);
+                bool pad_required = (padding_below_diff != padding_above_diff);
 
                 Shape padding_below(padding_below_diff.size(), 0);
                 Shape padding_above(padding_above_diff.size(), 0);
