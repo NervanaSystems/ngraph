@@ -49,10 +49,10 @@ namespace ngraph
 
                 size_t build_pad_dynamic(const runtime::gpu::GPURuntimeContext* ctx,
                                          const std::array<std::string, 2>& dtypes,
-                                         const Shape& input_shape,
-                                         const Shape& output_shape,
-                                         const Shape& padding_below,
-                                         const Shape& padding_interior);
+                                         GPUShape input_shape,
+                                         GPUShape output_shape,
+                                         GPUShape padding_below,
+                                         GPUShape padding_interior);
 
                 size_t build_1d_max_pool(const GPURuntimeContext* ctx,
                                          const std::array<std::string, 2>& dtypes,

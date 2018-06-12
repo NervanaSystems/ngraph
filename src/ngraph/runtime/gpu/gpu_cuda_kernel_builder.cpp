@@ -181,11 +181,10 @@ void runtime::gpu::CudaKernelBuilder::get_pad_dynamic_op(
     const std::string& name,
     const std::array<std::string, 2>& data_types)
 {
-    writer
-        << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
-        << data_types[1]
-        << "* out, unsigned int* input_strides, unsigned int* output_strides, unsigned int* padding_below, unsigned int* "
-           "padding_interior, unsigned int rank, unsigned int n)\n";
+    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
+           << data_types[1] << "* out, unsigned int* input_strides, unsigned int* output_strides, "
+                               "unsigned int* padding_below, unsigned int* "
+                               "padding_interior, unsigned int rank, unsigned int n)\n";
     writer.block_begin();
     {
         writer << "unsigned int tid = blockIdx.x * blockDim.x + threadIdx.x;\n";

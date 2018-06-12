@@ -286,10 +286,10 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const runtime::gpu::GPURunti
 
     // get an allocator for transient per kernel gpu memory
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
-    size_t idx_input_strides =
-        allocator.reserve_argspace(input_strides.data(), input_strides.size() * sizeof(unsigned int));
-    size_t idx_output_strides =
-        allocator.reserve_argspace(output_strides.data(), output_strides.size() * sizeof(unsigned int));
+    size_t idx_input_strides = allocator.reserve_argspace(
+        input_strides.data(), input_strides.size() * sizeof(unsigned int));
+    size_t idx_output_strides = allocator.reserve_argspace(
+        output_strides.data(), output_strides.size() * sizeof(unsigned int));
     size_t idx_padding_below =
         allocator.reserve_argspace(pad_below.data(), pad_below.size() * sizeof(unsigned int));
     size_t idx_padding_interior =
