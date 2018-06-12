@@ -687,7 +687,7 @@ size_t
                                                             const std::vector<std::string>& dtypes,
                                                             GPUShape tensor_shape,
                                                             const std::set<size_t>& reduced_tensors,
-                                                            const AxisSet& axes,
+                                                            const std::set<size_t>& axes,
                                                             const char* op,
                                                             const char* kernel,
                                                             const char* reduce_op,
@@ -1076,7 +1076,7 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
 size_t runtime::gpu::CUDAEmitter::build_broadcast(const GPURuntimeContext* ctx,
                                                   const std::array<std::string, 2>& dtypes,
                                                   GPUShape result_shape,
-                                                  const AxisSet& reduce_axes)
+                                                  const std::set<size_t>& reduce_axes)
 {
     // assumes NC{d1,...,dn} format
     std::string kernel_name = "broadcast_" + join(dtypes, "_");
@@ -1279,7 +1279,7 @@ __device__ __forceinline__ float  load(const float*  __restrict__ in, int i=0, b
 }
 __device__ __forceinline__ int64_t  load(const int64_t*  __restrict__ in, int i=0, bool b=true)
 {
-    int64_t v = 0.0f;
+    int64_t v = 0;
     if (b)
     {
         v = __ldg(in + i);
