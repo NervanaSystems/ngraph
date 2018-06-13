@@ -2879,6 +2879,112 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::GroupConvolutionBackpropData)
+            {
+                auto convolution = static_cast<const ngraph::op::GroupConvolutionBackpropData*>(node);
+
+                auto arg0_shape = args[0].get_shape();
+                auto arg1_shape = args[1].get_shape();
+                auto result_shape = out[0].get_shape();
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    Strides window_dilation_strides_adjusted;
+
+                    for (size_t s : convolution->get_window_dilation_strides_forward())
+                    {
+                        window_dilation_strides_adjusted.push_back(s - 1);
+                    }
+
+                    auto padding_below = convolution->get_padding_below();
+                    auto padding_above = convolution->get_padding_above();
+                    auto filter_strides = convolution->get_window_movement_strides();
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+
+                    Shape weights_shape_groups = convolution->get_weights_dimensions();
+
+                    auto weights_desc_any = mkldnn::memory::desc(
+                        mkldnn::memory::dims(weights_shape_groups.begin(),
+                                             weights_shape_groups.end()),
+                        mkldnn_utils::get_mkldnn_data_type(args[1].get_element_type()),
+                        mkldnn::memory::format::any);
+
+                    auto delta_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[1], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
+
+                    auto weights_optimized_format =
+                        mkldnn_emitter->query_convolution_forward_weight_format(
+                            result_desc,
+                            weights_desc_any,
+                            delta_desc,
+                            filter_strides,
+                            window_dilation_strides_adjusted,
+                            padding_below,
+                            padding_above);
+
+                    auto weights_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[0], weights_optimized_format);
+
+                    ///
+                    //create workspace for holding the result of converting weights layouts
+                    auto ws = std::unique_ptr<MKLDNNWorkspace>(new MKLDNNWorkspace(
+                        shape_size(args[0].get_shape()) * args[0].get_element_type().size()));
+                    auto ws_buf_index = mkldnn_emitter->insert_workspace(ws);
+
+                    {
+                        //descriptors for reorder operation
+                        auto input_reorder_desc =
+                            mkldnn_emitter->build_memory_descriptor(weights_shape_groups,
+                                                                    args[0].get_element_type(),
+                                                                    mkldnn::memory::format::goihw);
+
+                        auto result_reorder_desc = mkldnn_emitter->build_memory_descriptor(
+                            weights_shape_groups, args[0].get_element_type(), weights_optimized_format);
+
+                        size_t reorder_index = mkldnn_emitter->build_reorder(input_reorder_desc, result_reorder_desc);
+                        auto& deps = mkldnn_emitter->get_primitive_deps(reorder_index);
+                        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                                << ", " << args[0].get_name() << ");\n";
+
+                        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                                << ", "
+                                << "ctx->mkldnn_workspaces[" << ws_buf_index << "]);\n";
+
+                        writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                                << to_string(reorder_index) << ");\n";
+                    }
+
+                    size_t conv_bwd_data_index = mkldnn_emitter->build_convolution_backward_data(
+                        weights_desc,
+                        delta_desc,
+                        result_desc,
+                        convolution->get_window_movement_strides_forward(),
+                        window_dilation_strides_adjusted,
+                        convolution->get_padding_below_forward(),
+                        convolution->get_padding_above_forward());
+
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_bwd_data_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                            << ", "
+                            << "ctx->mkldnn_workspaces[" << ws_buf_index << "]);\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(conv_bwd_data_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("group convolution backprop data for given dimensions, strides and dilations isn't supported");
+                }
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::ConvolutionBackpropData)
             {
                 auto convolution = static_cast<const ngraph::op::ConvolutionBackpropData*>(node);
