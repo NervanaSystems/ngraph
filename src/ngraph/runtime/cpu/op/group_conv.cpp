@@ -97,7 +97,35 @@ shared_ptr<Node> op::GroupConvolution::copy_with_new_args(const NodeVector& new_
 
 void op::GroupConvolution::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
-    throw ngraph_error("NYI");
+    auto delta = deltas.at(0);
+
+    auto x = get_argument(0);
+    const auto x_shape = x->get_shape();
+
+    auto f = get_argument(1);
+    const auto f_shape = f->get_shape();
+
+    adjoints.add_delta(x,
+                       make_shared<op::GroupConvolutionBackpropData>(x_shape,
+                                                                m_groups,
+                                                                f,
+                                                                delta,
+                                                                m_window_movement_strides,
+                                                                m_window_dilation_strides,
+                                                                m_padding_below,
+                                                                m_padding_above,
+                                                                m_data_dilation_strides));
+
+    adjoints.add_delta(f,
+                       make_shared<op::GroupConvolutionBackpropFilters>(x,
+                                                                   f_shape,
+                                                                   m_groups,
+                                                                   delta,
+                                                                   m_window_movement_strides,
+                                                                   m_window_dilation_strides,
+                                                                   m_padding_below,
+                                                                   m_padding_above,
+                                                                   m_data_dilation_strides));
 }
 
 op::GroupConvolutionBackpropData::GroupConvolutionBackpropData(const Shape& data_batch_shape,
