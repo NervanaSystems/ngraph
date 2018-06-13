@@ -14,8 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <numeric>
 #include <memory>
+#include <numeric>
 #include <set>
 
 #include "algebraic_simplification.hpp"
