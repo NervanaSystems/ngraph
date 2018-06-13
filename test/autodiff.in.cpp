@@ -1517,7 +1517,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
-TEST(${BACKEND_NAME}, backwards_batch_norm_three_outputs)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_batch_norm_three_outputs)
 {
     auto shape_in = Shape{2, 3, 1, 1};
     auto shape_mean = Shape{3};
