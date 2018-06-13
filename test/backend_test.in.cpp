@@ -2391,6 +2391,39 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
     EXPECT_EQ((vector<float>{1, 3, 5, 2, 4, 6}), read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, reshape_4d_transpose)
+{
+    vector<float> a_data(2 * 2 * 5 * 5);
+    for (int i = 0; i < 2 * 2 * 5 * 5; i++)
+    {
+        a_data[i] = float(i + 1);
+    }
+
+    Shape shape_a{2, 2, 5, 5};
+    Shape shape_r{2, 5, 2, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto r = make_shared<op::Reshape>(A, AxisVector{0, 2, 1, 3}, shape_r);
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, a_data);
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call(f, {result}, {a});
+    EXPECT_EQ(
+        (vector<float>{1.,  2.,  3.,  4.,  5.,  26., 27., 28., 29., 30., 6.,  7.,  8.,  9.,  10.,
+                       31., 32., 33., 34., 35., 11., 12., 13., 14., 15., 36., 37., 38., 39., 40.,
+                       16., 17., 18., 19., 20., 41., 42., 43., 44., 45., 21., 22., 23., 24., 25.,
+                       46., 47., 48., 49., 50., 51., 52., 53., 54., 55., 76., 77., 78., 79., 80.,
+                       56., 57., 58., 59., 60., 81., 82., 83., 84., 85., 61., 62., 63., 64., 65.,
+                       86., 87., 88., 89., 90., 66., 67., 68., 69., 70., 91., 92., 93., 94., 95.,
+                       71., 72., 73., 74., 75., 96., 97., 98., 99., 100.}),
+        read_vector<float>(result));
+}
+
 //
 // Numpy:
 //

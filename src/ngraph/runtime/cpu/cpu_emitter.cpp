@@ -1652,35 +1652,95 @@ namespace ngraph
                     writer << "               );\n";
                 }
 #else
-                if (args[0].get_element_type() == element::f32 && args[0].get_shape().size() == 3 &&
-                    out[0].get_shape().size() == 3)
+                if ((args[0].get_element_type() == element::f32) &&
+                    ((args[0].get_shape().size() == 4 && out[0].get_shape().size() != 4) ||
+                     (args[0].get_shape().size() == 5 && out[0].get_shape().size() == 5)))
                 {
-                    writer << "cpu::kernel::reshape_3d_3d_float32(" << args[0].get_name() << ", "
-                           << out[0].get_name() << ", "
-                           << "{" << join(args[0].get_shape()) << "}, "
-                           << "{" << join(reshape->get_input_order()) << "}, "
-                           << "{" << join(out[0].get_shape()) << "}"
-                           << ");\n";
-                }
-                else if (args[0].get_element_type() == element::f32 &&
-                         args[0].get_shape().size() == 4 && out[0].get_shape().size() == 4)
-                {
-                    writer << "cpu::kernel::reshape_4d_4d_float32(" << args[0].get_name() << ", "
-                           << out[0].get_name() << ", "
-                           << "{" << join(args[0].get_shape()) << "}, "
-                           << "{" << join(reshape->get_input_order()) << "}, "
-                           << "{" << join(out[0].get_shape()) << "}"
-                           << ");\n";
+                    std::cout << "IN HERE " << std::endl;
+                    auto input_tvl = node->get_inputs()[0]
+                                         .get_output()
+                                         .get_tensor_view()
+                                         ->get_tensor_view_layout();
+                    auto input_cpu_tvl =
+                        dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(input_tvl);
+                    auto input_format = input_cpu_tvl->get_mkldnn_format();
+
+                    // Reorder input shape if needed
+                    auto input_axis_order = input_cpu_tvl->get_axis_order();
+                    Shape input_shape(input_axis_order.size());
+                    for (size_t idx = 0; idx < input_axis_order.size(); idx++)
+                    {
+                        input_shape[idx] = args[0].get_shape()[input_axis_order[idx]];
+                    }
+
+                    auto output_tvl = node->get_output_tensor_view(0)->get_tensor_view_layout();
+                    auto output_format = dynamic_cast<runtime::cpu::LayoutDescriptor&>(*output_tvl)
+                                             .get_mkldnn_format();
+
+                    // MKLDNN relies on format names for selecting optimized kernel implementations
+                    // Hacky way to deal with this until they move to using canonicalized layouts
+                    if (input_format == mkldnn::memory::format::nchw &&
+                        runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(output_format))
+                    {
+                        input_format = mkldnn::memory::format::oihw;
+                    }
+                    if (output_format == mkldnn::memory::format::nchw &&
+                        runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(input_format))
+                    {
+                        output_format = mkldnn::memory::format::oihw;
+                    }
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+
+                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                        input_shape, args[0].get_element_type(), input_format);
+                    auto result_desc =
+                        mkldnn_emitter->build_memory_descriptor(out[0], output_format);
+
+                    size_t reorder_index = mkldnn_emitter->build_reorder(input_desc, result_desc);
+
+                    auto& deps = mkldnn_emitter->get_primitive_deps(reorder_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(reorder_index) << ");\n";
                 }
                 else
                 {
-                    kernel::emit_reshape(writer,
-                                         args[0].get_element_type().c_type_string(),
-                                         args[0].get_name(),
-                                         out[0].get_name(),
-                                         args[0].get_shape(),
-                                         out[0].get_shape(),
-                                         reshape->get_input_order());
+                    if (args[0].get_element_type() == element::f32 &&
+                        args[0].get_shape().size() == 3 && out[0].get_shape().size() == 3)
+                    {
+                        writer << "cpu::kernel::reshape_3d_3d_float32(" << args[0].get_name()
+                               << ", " << out[0].get_name() << ", "
+                               << "{" << join(args[0].get_shape()) << "}, "
+                               << "{" << join(reshape->get_input_order()) << "}, "
+                               << "{" << join(out[0].get_shape()) << "}"
+                               << ");\n";
+                    }
+                    else if (args[0].get_element_type() == element::f32 &&
+                             args[0].get_shape().size() == 4 && out[0].get_shape().size() == 4)
+                    {
+                        std::cout << "Non Eigen" << std::endl;
+                        writer << "cpu::kernel::reshape_4d_4d_float32(" << args[0].get_name()
+                               << ", " << out[0].get_name() << ", "
+                               << "{" << join(args[0].get_shape()) << "}, "
+                               << "{" << join(reshape->get_input_order()) << "}, "
+                               << "{" << join(out[0].get_shape()) << "}"
+                               << ");\n";
+                    }
+                    else
+                    {
+                        kernel::emit_reshape(writer,
+                                             args[0].get_element_type().c_type_string(),
+                                             args[0].get_name(),
+                                             out[0].get_name(),
+                                             args[0].get_shape(),
+                                             out[0].get_shape(),
+                                             reshape->get_input_order());
+                    }
                 }
 #endif
                 writer.block_end();
