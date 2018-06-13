@@ -333,15 +333,18 @@ void runtime::gpu::CudaKernelBuilder::get_reverse_sequence_op(
             writer << "uint32_t input_idx = tid;\n";
             for (size_t i = 0; i < rank; i++)
             {
-                writer << "uint32_t output_idx_" << i << " = input_idx / output_strides[" << i << "];\n";
+                writer << "uint32_t output_idx_" << i << " = input_idx / output_strides[" << i
+                       << "];\n";
                 writer << "input_idx %= output_strides[" << i << "];\n";
             }
             writer << "uint32_t sequence_length = sequence[output_idx_" << batch_axis << "];\n";
-            writer << "assert(sequence_length > output_shape[" << sequence_axis << "]);\n";
+            writer << "assert(sequence_length <= output_shape[" << sequence_axis << "]);\n";
 
-            writer << "bool need_reverse = output_idx_" << sequence_axis << " < sequence_length && sequence_length > 1;\n";
-            writer << "output_idx_" << sequence_axis << " = need_reverse ? sequence_length - output_idx_"
-                   << sequence_axis << " - 1 : output_idx_" << sequence_axis << ";\n";
+            writer << "bool need_reverse = (output_idx_" << sequence_axis
+                   << " < sequence_length) && (sequence_length > 1);\n";
+            writer << "output_idx_" << sequence_axis
+                   << " = need_reverse ? sequence_length - output_idx_" << sequence_axis
+                   << " - 1 : output_idx_" << sequence_axis << ";\n";
             writer << "uint32_t output_idx = need_reverse ? 0 ";
             for (size_t i = 0; i < rank; i++)
             {

@@ -286,10 +286,10 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const runtime::gpu::GPURunti
 
     // get an allocator for transient per kernel gpu memory
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
-    size_t idx_input_strides = allocator.reserve_argspace(
-        input_strides.data(), input_strides.size() * sizeof(uint32_t));
-    size_t idx_output_strides = allocator.reserve_argspace(
-        output_strides.data(), output_strides.size() * sizeof(uint32_t));
+    size_t idx_input_strides =
+        allocator.reserve_argspace(input_strides.data(), input_strides.size() * sizeof(uint32_t));
+    size_t idx_output_strides =
+        allocator.reserve_argspace(output_strides.data(), output_strides.size() * sizeof(uint32_t));
     size_t idx_padding_below =
         allocator.reserve_argspace(pad_below.data(), pad_below.size() * sizeof(uint32_t));
     size_t idx_padding_interior =
@@ -332,19 +332,19 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const runtime::gpu::GPURunti
 }
 
 size_t runtime::gpu::CUDAEmitter::build_reverse_sequence(const runtime::gpu::GPURuntimeContext* ctx,
-                                                    const std::array<std::string, 3>& dtypes,
-                                                    GPUShape input_shape0,
-                                                    GPUShape input_shape1,
-                                                    GPUShape output_shape,
-                                                    size_t batch_axis,
-                                                    size_t sequence_axis)
+                                                         const std::array<std::string, 3>& dtypes,
+                                                         GPUShape input_shape0,
+                                                         GPUShape input_shape1,
+                                                         GPUShape output_shape,
+                                                         size_t batch_axis,
+                                                         size_t sequence_axis)
 {
     std::stringstream kernel_name;
-    kernel_name << "reverse_sequence_" << join(dtypes, "_") << "_bi_" << batch_axis 
-                << "_si_" << sequence_axis << "_r_" << output_shape.size();
+    kernel_name << "reverse_sequence_" << join(dtypes, "_") << "_bi_" << batch_axis << "_si_"
+                << sequence_axis << "_r_" << output_shape.size();
 
-    std::string hash = kernel_name.str() + "_i" + join(input_shape0, "_") + 
-                       "_i" + join(input_shape1, "_") + "_o" + join(output_shape);
+    std::string hash = kernel_name.str() + "_i" + join(input_shape0, "_") + "_i" +
+                       join(input_shape1, "_") + "_o" + join(output_shape);
     // For backwards compatability we currently use two unordered maps
     // 1. one looks up the compiled cuda kernel (CudaFunctionPool)
     // 2. the other looks to see if this kernel is already in the primitive list
@@ -365,7 +365,8 @@ size_t runtime::gpu::CUDAEmitter::build_reverse_sequence(const runtime::gpu::GPU
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
-        CudaKernelBuilder::get_reverse_sequence_op(writer, kernel_name.str(), dtypes, batch_axis, sequence_axis, output_shape.size());
+        CudaKernelBuilder::get_reverse_sequence_op(
+            writer, kernel_name.str(), dtypes, batch_axis, sequence_axis, output_shape.size());
         compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
 
@@ -374,16 +375,17 @@ size_t runtime::gpu::CUDAEmitter::build_reverse_sequence(const runtime::gpu::GPU
 
     // get an allocator for transient per kernel gpu memory
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
-    size_t idx_output_shape = allocator.reserve_argspace(
-        output_shape.data(), output_shape.size() * sizeof(uint32_t));
-    size_t idx_output_strides = allocator.reserve_argspace(
-        output_strides.data(), output_strides.size() * sizeof(uint32_t));
+    size_t idx_output_shape =
+        allocator.reserve_argspace(output_shape.data(), output_shape.size() * sizeof(uint32_t));
+    size_t idx_output_strides =
+        allocator.reserve_argspace(output_strides.data(), output_strides.size() * sizeof(uint32_t));
 
     // create the launch primitive
     std::unique_ptr<gpu::primitive> pad_dynamic(new gpu::primitive{[=](void** inputs,
                                                                        void** outputs) mutable {
         void* param_output_shape = runtime::gpu::invoke_memory_primitive(ctx, idx_output_shape);
-        void* param_output_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_output_strides);;
+        void* param_output_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_output_strides);
+        ;
         std::vector<void*> args_list{&inputs[0],
                                      &inputs[1],
                                      &outputs[0],

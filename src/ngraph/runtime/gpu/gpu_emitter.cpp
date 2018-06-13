@@ -1130,16 +1130,17 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
 
                 auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
 
-                auto rs_index =
-                    cuda_emitter->build_reverse_sequence(external_function->ctx().get(),
-                                                  {{args[0].get_type(), args[1].get_type(), out[0].get_type()}},
-                                                  arg_shape0,
-                                                  arg_shape1,
-                                                  out_shape,
-                                                  bi,
-                                                  si);
+                auto rs_index = cuda_emitter->build_reverse_sequence(
+                    external_function->ctx().get(),
+                    {{args[0].get_type(), args[1].get_type(), out[0].get_type()}},
+                    arg_shape0,
+                    arg_shape1,
+                    out_shape,
+                    bi,
+                    si);
                 writer << "gpu::invoke_primitive(ctx, " << rs_index << ", ";
-                writer << "std::vector<void*>{" << args[0].get_name() << ", " << args[1].get_name() << "}.data(), ";
+                writer << "std::vector<void*>{" << args[0].get_name() << ", " << args[1].get_name()
+                       << "}.data(), ";
                 writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
                 writer << ");\n";
             }
