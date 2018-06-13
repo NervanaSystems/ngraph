@@ -1519,9 +1519,6 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
 
 TEST(${BACKEND_NAME}, backwards_batch_norm_three_outputs)
 {
-    SKIP_TEST_FOR("CPU", "${BACKEND_NAME}");
-    SKIP_TEST_FOR("GPU", "${BACKEND_NAME}");
-
     auto shape_in = Shape{2, 3, 1, 1};
     auto shape_mean = Shape{3};
 

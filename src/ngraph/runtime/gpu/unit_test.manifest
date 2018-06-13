@@ -4,6 +4,7 @@ backwards_reverse_sequence_n3_c2_h3
 backwards_slice
 batch_norm_one_output
 batch_norm_three_outputs
+backwards_batch_norm_three_outputs
 computation_reuse
 concat_matrix_int64
 constant_equality_bool
