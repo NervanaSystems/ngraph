@@ -386,7 +386,6 @@ size_t runtime::gpu::CUDAEmitter::build_reverse_sequence(const runtime::gpu::GPU
             void* param_output_shape = runtime::gpu::invoke_memory_primitive(ctx, idx_output_shape);
             void* param_output_strides =
                 runtime::gpu::invoke_memory_primitive(ctx, idx_output_strides);
-            ;
             std::vector<void*> args_list{&inputs[0],
                                          &inputs[1],
                                          &outputs[0],
