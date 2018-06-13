@@ -58,16 +58,22 @@ op::GroupConvolution::GroupConvolution(const shared_ptr<Node>& data_batch,
 
 Shape op::GroupConvolution::get_weights_dimensions() const
 {
+    return get_weights_dimensions(get_inputs().at(0)->get_shape(), get_inputs().at(1)->get_shape(), get_groups());
+}
+
+
+Shape op::GroupConvolution::get_weights_dimensions(const Shape& data_shape, const Shape& filters_shape, size_t groups)
+{
     //reshape weights into 5d tensors that includes groups
     const size_t OC = 0;
     const size_t IC = 1;
-    Shape weights_shape_groups{get_inputs().at(1).get_shape()};
+    Shape weights_shape_groups{filters_shape};
     //adjust output and channel given a number of groups
 
-    weights_shape_groups.at(OC) /= get_groups();
-    weights_shape_groups.at(IC) = get_inputs().at(0).get_shape().at(IC) / get_groups();
+    weights_shape_groups.at(OC) /= groups;
+    weights_shape_groups.at(IC) = data_shape.at(IC) / groups;
     //push_front the number of groups
-    weights_shape_groups.insert(weights_shape_groups.begin(), get_groups());
+    weights_shape_groups.insert(weights_shape_groups.begin(), groups);
     return weights_shape_groups;
 }
 
@@ -90,6 +96,134 @@ shared_ptr<Node> op::GroupConvolution::copy_with_new_args(const NodeVector& new_
 }
 
 void op::GroupConvolution::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+{
+    throw ngraph_error("NYI");
+}
+
+op::GroupConvolutionBackpropData::GroupConvolutionBackpropData(const Shape& data_batch_shape,
+                                                     size_t groups,
+                                                     const shared_ptr<Node>& filters,
+                                                     const shared_ptr<Node>& output_delta,
+                                                     const Strides& window_movement_strides_forward,
+                                                     const Strides& window_dilation_strides_forward,
+                                                     const CoordinateDiff& padding_below_forward,
+                                                     const CoordinateDiff& padding_above_forward,
+                                                     const Strides& data_dilation_strides_forward)
+    : RequiresTensorViewArgs("GroupConvolutionBackpropData", {filters, output_delta})
+    , m_data_batch_shape(data_batch_shape)
+    , m_window_movement_strides_forward(window_movement_strides_forward)
+    , m_window_dilation_strides_forward(window_dilation_strides_forward)
+    , m_padding_below_forward(padding_below_forward)
+    , m_padding_above_forward(padding_above_forward)
+    , m_data_dilation_strides_forward(data_dilation_strides_forward)
+    , m_groups(groups)
+{
+    auto& filters_shape = get_inputs().at(0).get_shape();
+    auto& filters_et = get_inputs().at(0).get_element_type();
+    auto& output_delta_shape = get_inputs().at(1).get_shape();
+    auto& output_delta_et = get_inputs().at(1).get_element_type();
+
+    //
+    // Make sure filter and output delta element types match.
+    //
+    if (filters_et != output_delta_et)
+    {
+        throw ngraph_error(
+            "Convolution data batch backprop filter and output delta element types do not match");
+    }
+
+    //                              Forward               Backward
+    // Window movement strides      q                     p_x
+    // Window dilation strides      p_f                   p_f
+    // Padding below                a_x                   (S_F - 1)p_f - a_x
+    // Padding above                b_x                   (S_f - 1)p_f + ((a_x + (S_x - 1)p_x + b_x - (S_f - 1)p_f) % q) - b_x
+    // Data dilation strides        p_x                   q
+
+    for (size_t i = 0; i < data_batch_shape.size() - 2; i++)
+    {
+        m_window_movement_strides_backward.push_back(data_dilation_strides_forward[i]);
+        m_window_dilation_strides_backward.push_back(window_dilation_strides_forward[i]);
+        m_padding_below_backward.push_back((filters_shape[i + 2] - 1) *
+                                               window_dilation_strides_forward[i] -
+                                           padding_below_forward[i]);
+        m_padding_above_backward.push_back(
+            (filters_shape[i + 2] - 1) * window_dilation_strides_forward[i] +
+            ((padding_below_forward[i] +
+              (data_batch_shape[i + 2] - 1) * data_dilation_strides_forward[i] +
+              padding_above_forward[i] -
+              (filters_shape[i + 2] - 1) * window_dilation_strides_forward[i]) %
+             window_movement_strides_forward[i]) -
+            padding_above_forward[i]);
+        m_data_dilation_strides_backward.push_back(window_movement_strides_forward[i]);
+    }
+
+    set_value_type_checked(filters_et, data_batch_shape);
+}
+
+shared_ptr<Node> op::GroupConvolutionBackpropData::copy_with_new_args(const NodeVector& new_args) const
+{
+    throw ngraph_error("NYI");
+}
+
+op::GroupConvolutionBackpropFilters::ConvolutionBackpropFilters(
+    const shared_ptr<Node>& data_batch,
+    const Shape& filters_shape,
+    size_t groups,
+    const shared_ptr<Node>& output_delta,
+    const Strides& window_movement_strides_forward,
+    const Strides& window_dilation_strides_forward,
+    const CoordinateDiff& padding_below_forward,
+    const CoordinateDiff& padding_above_forward,
+    const Strides& data_dilation_strides_forward)
+    : RequiresTensorViewArgs("ConvolutionBackpropFilters", {data_batch, output_delta})
+    , m_filters_shape(filters_shape)
+    , m_window_movement_strides_forward(window_movement_strides_forward)
+    , m_window_dilation_strides_forward(window_dilation_strides_forward)
+    , m_padding_below_forward(padding_below_forward)
+    , m_padding_above_forward(padding_above_forward)
+    , m_data_dilation_strides_forward(data_dilation_strides_forward)
+    , m_groups(groups)
+{
+    auto& data_batch_shape = get_inputs().at(0).get_shape();
+    auto& data_batch_et = get_inputs().at(0).get_element_type();
+    auto& output_delta_shape = get_inputs().at(1).get_shape();
+    auto& output_delta_et = get_inputs().at(1).get_element_type();
+
+    //
+    // Make sure data batch and output delta element types match.
+    //
+    if (data_batch_et != output_delta_et)
+    {
+        throw ngraph_error(
+            "Convolution filter backprop data batch and output delta element types do not match");
+    }
+
+    //                              Forward               Backward
+    // Window movement strides      q                     p_f
+    // Window dilation strides      p_f                   q
+    // Padding below                a_x                   a_x
+    // Padding above                b_x                   b_x - (a_x + (S_x - 1)p_x + b_x - (S_f - 1)p_f) % q
+    // Data dilation strides        p_x                   p_x
+
+    for (size_t i = 0; i < filters_shape.size() - 2; i++)
+    {
+        m_window_movement_strides_backward.push_back(window_dilation_strides_forward[i]);
+        m_window_dilation_strides_backward.push_back(window_movement_strides_forward[i]);
+        m_padding_below_backward.push_back(padding_below_forward[i]);
+        m_padding_above_backward.push_back(
+            padding_above_forward[i] -
+            (padding_below_forward[i] +
+             (data_batch_shape[i + 2] - 1) * data_dilation_strides_forward[i] +
+             padding_above_forward[i] -
+             (filters_shape[i + 2] - 1) * window_dilation_strides_forward[i]) %
+                window_movement_strides_forward[i]);
+        m_data_dilation_strides_backward.push_back(data_dilation_strides_forward[i]);
+    }
+
+    set_value_type_checked(data_batch_et, filters_shape);
+}
+
+shared_ptr<Node> op::GroupConvolutionBackpropFilters::copy_with_new_args(const NodeVector& new_args) const
 {
     throw ngraph_error("NYI");
 }

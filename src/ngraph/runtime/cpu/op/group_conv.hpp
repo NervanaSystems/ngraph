@@ -38,6 +38,7 @@ namespace ngraph
                              const Shape& output_shape);
 
             Shape get_weights_dimensions() const;
+            static Shape get_weights_dimensions(const Shape& data_shape, const Shape& filters_shape, size_t groups);
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
@@ -57,6 +58,199 @@ namespace ngraph
             CoordinateDiff m_padding_below;
             CoordinateDiff m_padding_above;
             Strides m_data_dilation_strides;
+            size_t m_groups = 1;
+        };
+
+
+        /// \brief Data batch backprop for batched convolution operation.
+        class GroupConvolutionBackpropData : public util::RequiresTensorViewArgs
+        {
+        public:
+            GroupConvolutionBackpropData(const Shape& data_batch_shape,
+                                    size_t groups,
+                                    const std::shared_ptr<Node>& filters,
+                                    const std::shared_ptr<Node>& output_delta,
+                                    const Strides& window_movement_strides_forward,
+                                    const Strides& window_dilation_strides_forward,
+                                    const CoordinateDiff& padding_below_forward,
+                                    const CoordinateDiff& padding_above_forward,
+                                    const Strides& data_dilation_strides_forward);
+
+
+            size_t get_groups() const { return m_groups; }
+            Shape get_weights_dimensions() const { return GroupConvolution::get_weights_dimensions(m_data_batch_shape, get_inputs().at(0)->get_shape(), m_groups); }
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+            /// \return The data batch shape.
+            const Shape& get_data_batch_shape() const { return m_data_batch_shape; }
+            /// \return The window movement strides from the forward prop.
+            const Strides& get_window_movement_strides_forward() const
+            {
+                return m_window_movement_strides_forward;
+            }
+            /// \return The window dilation strides from the forward prop.
+            const Strides& get_window_dilation_strides_forward() const
+            {
+                return m_window_dilation_strides_forward;
+            }
+            /// \return The padding-below sizes (possibly negative) from the forward prop.
+            const CoordinateDiff& get_padding_below_forward() const
+            {
+                return m_padding_below_forward;
+            }
+            /// \return The padding-above sizes (possibly negative) from the forward prop.
+            const CoordinateDiff& get_padding_above_forward() const
+            {
+                return m_padding_above_forward;
+            }
+            /// \return The input data dilation strides from the forward prop.
+            const Strides& get_data_dilation_strides_forward() const
+            {
+                return m_data_dilation_strides_forward;
+            }
+
+            /// \return The window movement strides for the backward prop.
+            const Strides& get_window_movement_strides_backward() const
+            {
+                return m_window_movement_strides_backward;
+            }
+            /// \return The window dilation strides for the backward prop.
+            const Strides& get_window_dilation_strides_backward() const
+            {
+                return m_window_dilation_strides_backward;
+            }
+            /// \return The padding-below sizes (possibly negative) for the backward prop.
+            const CoordinateDiff& get_padding_below_backward() const
+            {
+                return m_padding_below_backward;
+            }
+            /// \return The padding-above sizes (possibly negative) for the backward prop.
+            const CoordinateDiff& get_padding_above_backward() const
+            {
+                return m_padding_above_backward;
+            }
+            /// \return The input data dilation strides for the backward prop.
+            const Strides& get_data_dilation_strides_backward() const
+            {
+                return m_data_dilation_strides_backward;
+            }
+
+        protected:
+            Shape m_data_batch_shape;
+            Strides m_window_movement_strides_forward;
+            Strides m_window_dilation_strides_forward;
+            CoordinateDiff m_padding_below_forward;
+            CoordinateDiff m_padding_above_forward;
+            Strides m_data_dilation_strides_forward;
+
+            Strides m_window_movement_strides_backward;
+            Strides m_window_dilation_strides_backward;
+            CoordinateDiff m_padding_below_backward;
+            CoordinateDiff m_padding_above_backward;
+            Strides m_data_dilation_strides_backward;
+            size_t m_groups = 1;
+        };
+
+
+                /// \brief Filters backprop for batched convolution operation.
+        class GroupConvolutionBackpropFilters : public util::RequiresTensorViewArgs
+        {
+        public:
+            /// \brief Constructs a batched-convolution filter-backprop operation.
+            ///
+            /// \param data_batch The tensor producing the data batch from forward-prop.
+            /// \param filters_shape The shape of the filters from forward-prop.
+            /// \param output_delta The node producing output delta.
+            /// \param window_movement_strides_forward The window movement strides from forward-prop.
+            /// \param window_dilation_strides_forward The window dilation strides from forward-prop.
+            /// \param padding_below_forward The padding-below sizes from forward-prop.
+            /// \param padding_above_forward The padding-above sizes from forward-prop.
+            /// \param data_dilation_strides_forward The data dilation strides from forward-prop.
+            GroupConvolutionBackpropFilters(const std::shared_ptr<Node>& data_batch,
+                                       const Shape& filters_shape,
+                                       size_t groups,
+                                       const std::shared_ptr<Node>& output_delta,
+                                       const Strides& window_movement_strides_forward,
+                                       const Strides& window_dilation_strides_forward,
+                                       const CoordinateDiff& padding_below_forward,
+                                       const CoordinateDiff& padding_above_forward,
+                                       const Strides& data_dilation_strides_forward);
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+            /// \return The filters tensor shape.
+            const Shape& get_filters_shape() const { return m_filters_shape; }
+            /// \return The window movement strides from the forward prop.
+            const Strides& get_window_movement_strides_forward() const
+            {
+                return m_window_movement_strides_forward;
+            }
+            /// \return The window dilation strides from the forward prop.
+            const Strides& get_window_dilation_strides_forward() const
+            {
+                return m_window_dilation_strides_forward;
+            }
+            /// \return The padding-below sizes (possibly negative) from the forward prop.
+            const CoordinateDiff& get_padding_below_forward() const
+            {
+                return m_padding_below_forward;
+            }
+            /// \return The padding-above sizes (possibly negative) from the forward prop.
+            const CoordinateDiff& get_padding_above_forward() const
+            {
+                return m_padding_above_forward;
+            }
+            /// \return The data dilation strides from the forward prop.
+            const Strides& get_data_dilation_strides_forward() const
+            {
+                return m_data_dilation_strides_forward;
+            }
+
+            /// \return The window movement strides for the backward prop.
+            const Strides& get_window_movement_strides_backward() const
+            {
+                return m_window_movement_strides_backward;
+            }
+            /// \return The window dilation strides for the backward prop.
+            const Strides& get_window_dilation_strides_backward() const
+            {
+                return m_window_dilation_strides_backward;
+            }
+            /// \return The padding-below sizes (possibly negative) for the backward prop.
+            const CoordinateDiff& get_padding_below_backward() const
+            {
+                return m_padding_below_backward;
+            }
+            /// \return The padding-above sizes (possibly negative) for the backward prop.
+            const CoordinateDiff& get_padding_above_backward() const
+            {
+                return m_padding_above_backward;
+            }
+            /// \return The data dilation strides for the backward prop.
+            const Strides& get_data_dilation_strides_backward() const
+            {
+                return m_data_dilation_strides_backward;
+            }
+
+            size_t get_groups() const { return m_groups; }
+            Shape get_weights_dimensions() const { return GroupConvolution::get_weights_dimensions(get_inputs().at(0)->get_shape(), m_filters_shape, m_groups); }
+
+        protected:
+            Shape m_filters_shape;
+            Strides m_window_movement_strides_forward;
+            Strides m_window_dilation_strides_forward;
+            CoordinateDiff m_padding_below_forward;
+            CoordinateDiff m_padding_above_forward;
+            Strides m_data_dilation_strides_forward;
+
+            Strides m_window_movement_strides_backward;
+            Strides m_window_dilation_strides_backward;
+            CoordinateDiff m_padding_below_backward;
+            CoordinateDiff m_padding_above_backward;
+            Strides m_data_dilation_strides_backward;
             size_t m_groups = 1;
         };
     }

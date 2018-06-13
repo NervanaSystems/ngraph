@@ -457,83 +457,126 @@ namespace ngraph
                     }
                 }
 
+
+                template <typename T>
+                void ConvolutionBackpropDataLayout(T* convolution, Shape arg1_shape,
+                                       vector<memory::format>& prim_input_formats,
+                                       vector<memory::format>& prim_output_formats)
+                {
+                    auto arg0_shape = node->get_input_shape(0);
+                    auto result_shape = node->get_output_shape(0);
+                    auto filter_strides = convolution->get_window_movement_strides_forward();
+                    auto padding_below = convolution->get_padding_below_forward();
+                    auto padding_above = convolution->get_padding_above_forward();
+
+                    Strides window_dilation_strides_adjusted;
+
+                    for (size_t s : convolution->get_window_dilation_strides_forward())
+                    {
+                        window_dilation_strides_adjusted.push_back(s - 1);
+                    }
+
+                    memory::data_type et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
+                        node->get_input_element_type(0));
+
+                    engine cpu_engine(engine::cpu, 0);
+                    memory::dims mkldnn_arg0_shape(arg0_shape.begin(), arg0_shape.end());
+                    memory::dims mkldnn_arg1_shape(arg1_shape.begin(), arg1_shape.end());
+                    memory::dims mkldnn_result_shape(result_shape.begin(), result_shape.end());
+                    memory::dims mkldnn_filter_strides(filter_strides.begin(),
+                                                        filter_strides.end());
+                    memory::dims mkldnn_dilated_strides(
+                        window_dilation_strides_adjusted.begin(),
+                        window_dilation_strides_adjusted.end());
+                    memory::dims mkldnn_padding_below(padding_below.begin(),
+                                                        padding_below.end());
+                    memory::dims mkldnn_padding_above(padding_above.begin(),
+                                                        padding_above.end());
+
+                    const memory::desc weights_desc(mkldnn_arg0_shape, et, memory::format::any);
+                    const memory::desc delta_desc(mkldnn_arg1_shape, et, memory::format::any);
+                    const memory::desc result_desc(
+                        mkldnn_result_shape, et, memory::format::any);
+
+                    convolution_backward_data::desc bwd_desc(algorithm::convolution_direct,
+                                                                result_desc,
+                                                                weights_desc,
+                                                                delta_desc,
+                                                                mkldnn_filter_strides,
+                                                                mkldnn_dilated_strides,
+                                                                mkldnn_padding_below,
+                                                                mkldnn_padding_above,
+                                                                padding_kind::zero);
+
+                    convolution_forward::desc fwd_desc(prop_kind::forward,
+                                                        algorithm::convolution_direct,
+                                                        result_desc,
+                                                        weights_desc,
+                                                        delta_desc,
+                                                        mkldnn_filter_strides,
+                                                        mkldnn_dilated_strides,
+                                                        mkldnn_padding_below,
+                                                        mkldnn_padding_above,
+                                                        padding_kind::zero);
+                    convolution_forward::primitive_desc fwd_prim_desc(fwd_desc, cpu_engine);
+
+                    convolution_backward_data::primitive_desc prim_desc(
+                        bwd_desc, cpu_engine, fwd_prim_desc);
+
+                    vector<memory::format> prim_input_formats;
+                    vector<memory::format> prim_output_formats;
+                    prim_input_formats.push_back(static_cast<memory::format>(
+                        prim_desc.weights_primitive_desc().desc().data.format));
+                    prim_input_formats.push_back(static_cast<memory::format>(
+                        prim_desc.diff_dst_primitive_desc().desc().data.format));
+                    prim_output_formats.push_back(static_cast<memory::format>(
+                        prim_desc.diff_src_primitive_desc().desc().data.format));
+                }
+                
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::GroupConvolutionBackpropData)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        auto convolution =
+                            static_cast<const ngraph::op::GroupConvolutionBackpropData*>(node.get());
+
+                        auto arg0_shape = convolution->get_weights_dimensions();
+                        auto arg1_shape = node->get_input_shape(1); 
+
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+                        ConvolutionBackpropDataLayout(convolution, arg1_shape, prim_input_formats, prim_output_formats);
+
+                        //reset weights to default format
+                        const size_t WEIGHTS_FORMAT_INDEX = 0;
+                        prim_input_formats.at(0) = runtime::cpu::mkldnn_utils::CreateNativeDataFormat(node->get_input_shape(0));
+
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
+
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::ConvolutionBackpropData)
                 {
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         auto convolution =
-                            static_cast<const ngraph::op::ConvolutionBackpropData*>(node.get());
+                            static_cast<const ngraph::op::GroupConvolutionBackpropData*>(node.get());
 
                         auto arg0_shape = node->get_input_shape(0);
                         auto arg1_shape = node->get_input_shape(1);
-                        auto result_shape = node->get_output_shape(0);
-                        auto filter_strides = convolution->get_window_movement_strides_forward();
-                        auto padding_below = convolution->get_padding_below_forward();
-                        auto padding_above = convolution->get_padding_above_forward();
-
-                        Strides window_dilation_strides_adjusted;
-
-                        for (size_t s : convolution->get_window_dilation_strides_forward())
-                        {
-                            window_dilation_strides_adjusted.push_back(s - 1);
-                        }
-
-                        memory::data_type et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
-                            node->get_input_element_type(0));
-
-                        engine cpu_engine(engine::cpu, 0);
-                        memory::dims mkldnn_arg0_shape(arg0_shape.begin(), arg0_shape.end());
-                        memory::dims mkldnn_arg1_shape(arg1_shape.begin(), arg1_shape.end());
-                        memory::dims mkldnn_result_shape(result_shape.begin(), result_shape.end());
-                        memory::dims mkldnn_filter_strides(filter_strides.begin(),
-                                                           filter_strides.end());
-                        memory::dims mkldnn_dilated_strides(
-                            window_dilation_strides_adjusted.begin(),
-                            window_dilation_strides_adjusted.end());
-                        memory::dims mkldnn_padding_below(padding_below.begin(),
-                                                          padding_below.end());
-                        memory::dims mkldnn_padding_above(padding_above.begin(),
-                                                          padding_above.end());
-
-                        const memory::desc weights_desc(mkldnn_arg0_shape, et, memory::format::any);
-                        const memory::desc delta_desc(mkldnn_arg1_shape, et, memory::format::any);
-                        const memory::desc result_desc(
-                            mkldnn_result_shape, et, memory::format::any);
-
-                        convolution_backward_data::desc bwd_desc(algorithm::convolution_direct,
-                                                                 result_desc,
-                                                                 weights_desc,
-                                                                 delta_desc,
-                                                                 mkldnn_filter_strides,
-                                                                 mkldnn_dilated_strides,
-                                                                 mkldnn_padding_below,
-                                                                 mkldnn_padding_above,
-                                                                 padding_kind::zero);
-
-                        convolution_forward::desc fwd_desc(prop_kind::forward,
-                                                           algorithm::convolution_direct,
-                                                           result_desc,
-                                                           weights_desc,
-                                                           delta_desc,
-                                                           mkldnn_filter_strides,
-                                                           mkldnn_dilated_strides,
-                                                           mkldnn_padding_below,
-                                                           mkldnn_padding_above,
-                                                           padding_kind::zero);
-                        convolution_forward::primitive_desc fwd_prim_desc(fwd_desc, cpu_engine);
-
-                        convolution_backward_data::primitive_desc prim_desc(
-                            bwd_desc, cpu_engine, fwd_prim_desc);
 
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
-                        prim_input_formats.push_back(static_cast<memory::format>(
-                            prim_desc.weights_primitive_desc().desc().data.format));
-                        prim_input_formats.push_back(static_cast<memory::format>(
-                            prim_desc.diff_dst_primitive_desc().desc().data.format));
-                        prim_output_formats.push_back(static_cast<memory::format>(
-                            prim_desc.diff_src_primitive_desc().desc().data.format));
+                        ConvolutionBackpropDataLayout(convolution, arg0_shape, prim_input_formats, prim_output_formats);
 
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
@@ -547,6 +590,7 @@ namespace ngraph
 
                 template <typename T, bool use_bias>
                 void ConvolutionBackpropFiltersLayout(std::shared_ptr<ngraph::Node> node,
+                                                      Shape filters_shape,
                                                       vector<memory::format>& prim_input_formats,
                                                       vector<memory::format>& prim_output_formats)
                 {
@@ -554,7 +598,6 @@ namespace ngraph
 
                     auto data_shape = node->get_input_shape(0);
                     auto delta_shape = node->get_input_shape(1);
-                    auto filters_shape = node->get_output_shape(0);
                     auto filter_strides = convolution->get_window_movement_strides_forward();
                     auto padding_below = convolution->get_padding_below_forward();
                     auto padding_above = convolution->get_padding_above_forward();
@@ -657,15 +700,44 @@ namespace ngraph
                 }
 
                 template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::GroupConvolutionBackpropFilters)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        auto conv = std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBackpropFilters>(node);
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+                        auto filters_shape = conv->get_weights_dimensions();
+                        ConvolutionBackpropFiltersLayout<ngraph::op::GroupConvolutionBackpropFilters,
+                                                         false>(
+                            node, filters_shape, prim_input_formats, prim_output_formats);
+
+
+                        //reset weights to default format
+                        const size_t WEIGHTS_FORMAT_INDEX = 0;
+                        prim_input_formats.at(0) = runtime::cpu::mkldnn_utils::CreateNativeDataFormat(conv->get_filter_shape());
+
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
+
+                template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::ConvolutionBackpropFilters)
                 {
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
+                        auto filters_shape = node->get_output_shape(0);
                         ConvolutionBackpropFiltersLayout<ngraph::op::ConvolutionBackpropFilters,
                                                          false>(
-                            node, prim_input_formats, prim_output_formats);
+                            node, filters_shape, prim_input_formats, prim_output_formats);
 
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
@@ -684,9 +756,10 @@ namespace ngraph
                     {
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
+                        auto filters_shape = node->get_output_shape(0);
                         ConvolutionBackpropFiltersLayout<
                             ngraph::op::ConvolutionBiasBackpropFiltersBias,
-                            true>(node, prim_input_formats, prim_output_formats);
+                            true>(node, filters_shape, prim_input_formats, prim_output_formats);
 
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
