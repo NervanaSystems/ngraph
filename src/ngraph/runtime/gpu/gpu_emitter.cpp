@@ -1132,7 +1132,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
 
                 auto rs_index =
                     cuda_emitter->build_reverse_sequence(external_function->ctx().get(),
-                                                  {{args[0].get_type(), args[0].get_type(), out[0].get_type()}},
+                                                  {{args[0].get_type(), args[1].get_type(), out[0].get_type()}},
                                                   arg_shape0,
                                                   arg_shape1,
                                                   out_shape,
