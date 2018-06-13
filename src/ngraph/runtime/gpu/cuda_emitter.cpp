@@ -381,7 +381,7 @@ size_t runtime::gpu::CUDAEmitter::build_reverse_sequence(const runtime::gpu::GPU
         allocator.reserve_argspace(output_strides.data(), output_strides.size() * sizeof(uint32_t));
 
     // create the launch primitive
-    std::unique_ptr<gpu::primitive> pad_dynamic(new gpu::primitive{[=](void** inputs,
+    std::unique_ptr<gpu::primitive> reserve_sequence(new gpu::primitive{[=](void** inputs,
                                                                        void** outputs) mutable {
         void* param_output_shape = runtime::gpu::invoke_memory_primitive(ctx, idx_output_shape);
         void* param_output_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_output_strides);
@@ -407,7 +407,7 @@ size_t runtime::gpu::CUDAEmitter::build_reverse_sequence(const runtime::gpu::GPU
         CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
     }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(pad_dynamic));
+    primitive_index = this->m_primitive_emitter->insert(std::move(reserve_sequence));
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }
