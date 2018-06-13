@@ -14,6 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <numeric>
 #include <memory>
 #include <set>
 
