@@ -81,7 +81,7 @@ namespace ngraph
                                                     const std::array<std::string, 3>& data_types,
                                                     const size_t batch_axis,
                                                     const size_t sequence_axis,
-                                                    const size_t rank)
+                                                    const size_t rank);
 
                 static void get_device_helper(codegen::CodeWriter& writer,
                                               const std::string& name,

@@ -369,7 +369,7 @@ size_t runtime::gpu::CUDAEmitter::build_reverse_sequence(const runtime::gpu::GPU
         compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
 
-    uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
+    uint32_t nthreads = static_cast<uint32_t>(shape_size(output_shape));
     GPUShape output_strides = row_major_strides(output_shape);
 
     // get an allocator for transient per kernel gpu memory
@@ -1404,7 +1404,7 @@ std::string runtime::gpu::CUDAEmitter::include_helpers()
     ss << "typedef signed long int int64_t;\n";
     ss << "typedef unsigned char uint8_t;\n";
     ss << "typedef unsigned short uint16_t;\n";
-    ss << "typedef uint32_t uint32_t;\n";
+    ss << "typedef unsigned int uint32_t;\n";
     ss << "typedef unsigned long int uint64_t;\n";
     ss << "\n";
 

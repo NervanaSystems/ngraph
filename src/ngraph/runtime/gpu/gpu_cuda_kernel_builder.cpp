@@ -342,12 +342,12 @@ void runtime::gpu::CudaKernelBuilder::get_reverse_sequence_op(
             writer << "bool need_reverse = output_idx_" << sequence_axis << " < sequence_length && sequence_length > 1;\n";
             writer << "output_idx_" << sequence_axis << " = need_reverse ? sequence_length - output_idx_"
                    << sequence_axis << " - 1 : output_idx_" << sequence_axis << ";\n";
-            wirter << "uint32_t output_idx = need_reverse ? 0 "
+            writer << "uint32_t output_idx = need_reverse ? 0 ";
             for (size_t i = 0; i < rank; i++)
             {
                 writer << " + output_idx_" << i << " * output_strides[" << i << "]";
             }
-                   << " : tid;\n";
+            writer << " : tid;\n";
             writer << "out[output_idx] = in[tid];\n";
         }
         writer.block_end();
@@ -625,7 +625,7 @@ void runtime::gpu::CudaKernelBuilder::add_pod_typedefs(codegen::CodeWriter& writ
     writer << "typedef signed long int int64_t;\n";
     writer << "typedef unsigned char uint8_t;\n";
     writer << "typedef unsigned short uint16_t;\n";
-    writer << "typedef uint32_t uint32_t;\n";
+    writer << "typedef unsigned int uint32_t;\n";
     writer << "typedef unsigned long int uint64_t;\n";
     writer << "\n";
 }
