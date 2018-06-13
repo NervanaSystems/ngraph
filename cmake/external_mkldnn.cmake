@@ -48,6 +48,7 @@ set(MKLVERSION "2018.0.3.20180406")
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     set(MKLPACKAGE "mklml_lnx_${MKLVERSION}.tgz")
     set(MKL_SHA1_HASH aea0d9ce65773cfcf5d8292b8db553bde965fc8f)
+    set(MKL_LIBS libiomp5.so libmklml_intel.so)
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     set(MKLPACKAGE "mklml_mac_${MKLVERSION}.tgz")
     set(MKL_SHA1_HASH d76083fd5a79767a96572ad0e23e7f4c892818f2)
@@ -72,6 +73,11 @@ ExternalProject_Add(
 ExternalProject_Get_Property(ext_mkl source_dir)
 set(MKL_ROOT ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/external/mkl)
 set(MKL_SOURCE_DIR ${source_dir})
+add_library(libmkl INTERFACE)
+add_dependencies(libmkl ext_mkl)
+foreach(LIB ${MKL_LIBS})
+    target_link_libraries(libmkl INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${LIB})
+endforeach()
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
 set(MKLDNN_GIT_TAG "0e7ca73")
@@ -143,6 +149,7 @@ add_library(libmkldnn INTERFACE)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
 target_link_libraries(libmkldnn INTERFACE
     ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn${CMAKE_SHARED_LIBRARY_SUFFIX}
+    libmkl
     )
 
 install(DIRECTORY ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/ DESTINATION ${NGRAPH_INSTALL_LIB} OPTIONAL)
