@@ -95,6 +95,7 @@
 #include "ngraph/runtime/cpu/kernel/abs.hpp"
 #include "ngraph/runtime/cpu/kernel/add.hpp"
 #include "ngraph/runtime/cpu/kernel/multiply.hpp"
+#include "ngraph/runtime/cpu/kernel/relu.hpp"
 #include "ngraph/runtime/cpu/kernel/result.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
@@ -218,6 +219,25 @@ namespace ngraph
                 std::function<void(void*, void*, size_t)> kernel;
 
                 SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::abs);
+
+                auto element_count = out[0].get_size();
+                auto& arg0_tensor = tensor_data[args[0].get_name()];
+                auto& out0_tensor = tensor_data[out[0].get_name()];
+
+                auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {
+                    kernel(arg0_tensor, out0_tensor, element_count);
+                };
+                functors.emplace_back(functor);
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Relu)
+            {
+                auto& functors = external_function->get_functors();
+                auto& tensor_data = external_function->get_tensor_data();
+                std::function<void(void*, void*, size_t)> kernel;
+
+                SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::relu);
 
                 auto element_count = out[0].get_size();
                 auto& arg0_tensor = tensor_data[args[0].get_name()];
@@ -426,6 +446,7 @@ namespace ngraph
                 {TI(ngraph::op::Multiply), &runtime::cpu::Builder::build<ngraph::op::Multiply>},
                 {TI(ngraph::op::Parameter), &runtime::cpu::Builder::nop},
                 {TI(ngraph::op::Abs), &runtime::cpu::Builder::build<ngraph::op::Abs>},
+                {TI(ngraph::op::Relu), &runtime::cpu::Builder::build<ngraph::op::Relu>},
                 {TI(ngraph::op::Result), &runtime::cpu::Builder::build<ngraph::op::Result>},
                 {TI(ngraph::op::MatmulBias), &runtime::cpu::Builder::build<ngraph::op::MatmulBias>},
                 {TI(ngraph::op::Constant), &runtime::cpu::Builder::build<ngraph::op::Constant>}};
