@@ -381,31 +381,32 @@ size_t runtime::gpu::CUDAEmitter::build_reverse_sequence(const runtime::gpu::GPU
         allocator.reserve_argspace(output_strides.data(), output_strides.size() * sizeof(uint32_t));
 
     // create the launch primitive
-    std::unique_ptr<gpu::primitive> reserve_sequence(new gpu::primitive{[=](void** inputs,
-                                                                       void** outputs) mutable {
-        void* param_output_shape = runtime::gpu::invoke_memory_primitive(ctx, idx_output_shape);
-        void* param_output_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_output_strides);
-        ;
-        std::vector<void*> args_list{&inputs[0],
-                                     &inputs[1],
-                                     &outputs[0],
-                                     &param_output_shape,
-                                     &param_output_strides,
-                                     &nthreads};
+    std::unique_ptr<gpu::primitive> reserve_sequence(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void* param_output_shape = runtime::gpu::invoke_memory_primitive(ctx, idx_output_shape);
+            void* param_output_strides =
+                runtime::gpu::invoke_memory_primitive(ctx, idx_output_strides);
+            ;
+            std::vector<void*> args_list{&inputs[0],
+                                         &inputs[1],
+                                         &outputs[0],
+                                         &param_output_shape,
+                                         &param_output_strides,
+                                         &nthreads};
 
-        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                      static_cast<uint32_t>(nthreads),
-                                      1,
-                                      1, // grid dim
-                                      1,
-                                      1,
-                                      1, // block dim
-                                      0,
-                                      NULL, // shared mem and stream
-                                      args_list.data(),
-                                      0));  // arguments
-        CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
-    }});
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          static_cast<uint32_t>(nthreads),
+                                          1,
+                                          1, // grid dim
+                                          1,
+                                          1,
+                                          1, // block dim
+                                          0,
+                                          NULL, // shared mem and stream
+                                          args_list.data(),
+                                          0));  // arguments
+            CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+        }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(reserve_sequence));
     m_primitive_emitter->cache(hash, primitive_index);
