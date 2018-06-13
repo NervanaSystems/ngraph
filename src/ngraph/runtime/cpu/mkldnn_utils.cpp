@@ -163,7 +163,12 @@ bool runtime::cpu::mkldnn_utils::IsMKLDNNOp(ngraph::Node& op)
 mkldnn::memory::format runtime::cpu::mkldnn_utils::CreateNativeDataFormat(
     const ngraph::runtime::cpu::LayoutDescriptor& layout)
 {
-    switch (layout.get_shape().size())
+    return CreateNativeDataFormat(layout.get_shape());
+}
+
+mkldnn::memory::format runtime::cpu::mkldnn_utils::CreateNativeDataFormat(const Shape& shape)
+{
+    switch (shape.size())
     {
     case 1: return mkldnn::memory::format::x;
     case 2: return mkldnn::memory::format::nc;
