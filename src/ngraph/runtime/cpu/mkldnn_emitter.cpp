@@ -102,6 +102,63 @@ size_t MKLDNNEmitter::build_memory_primitive(const mkldnn::memory::desc& desc)
         new mkldnn::memory({desc, mkldnn_utils::global_cpu_engine}, reinterpret_cast<void*>(0x42)));
 }
 
+mkldnn::memory::format MKLDNNEmitter::query_convolution_forward_weight_format(
+    const mkldnn::memory::desc& input_data_desc,
+    const mkldnn::memory::desc& weights_desc_any,
+    const mkldnn::memory::desc& result_desc,
+    const ngraph::Strides& filter_strides,
+    const ngraph::Strides& window_dilation_strides_adjusted,
+    const ngraph::CoordinateDiff& padding_below,
+    const ngraph::CoordinateDiff& padding_above)
+
+{
+    mkldnn::memory::dims mkldnn_filter_strides(filter_strides.begin(), filter_strides.end());
+    mkldnn::memory::dims mkldnn_dilated_strides(window_dilation_strides_adjusted.begin(),
+                                                window_dilation_strides_adjusted.end());
+    mkldnn::memory::dims mkldnn_padding_below(padding_below.begin(), padding_below.end());
+    mkldnn::memory::dims mkldnn_padding_above(padding_above.begin(), padding_above.end());
+
+    mkldnn::engine cpu_engine(mkldnn::engine::cpu, 0);
+    mkldnn::convolution_forward::desc conv_desc_layout(
+        mkldnn::prop_kind::forward,
+        mkldnn::algorithm::convolution_direct,
+        input_data_desc,
+        weights_desc_any, //this needs to be in default format
+        result_desc,
+        mkldnn_filter_strides,
+        mkldnn_dilated_strides,
+        mkldnn_padding_below,
+        mkldnn_padding_above,
+        mkldnn::padding_kind::zero);
+
+    mkldnn::convolution_forward::primitive_desc prim_desc(conv_desc_layout, cpu_engine);
+    return static_cast<mkldnn::memory::format>(
+        prim_desc.weights_primitive_desc().desc().data.format);
+}
+
+std::pair<size_t, size_t> MKLDNNEmitter::build_group_convolution_forward(
+    const mkldnn::memory::desc& input_reorder_desc,
+    const mkldnn::memory::desc& input_conv_desc,
+    const mkldnn::memory::desc& weights_desc,
+    const mkldnn::memory::desc& result_reorder_desc,
+    const mkldnn::memory::desc& result_desc,
+    const ngraph::Strides& filter_strides,
+    const ngraph::Strides& window_dilation_strides_adjusted,
+    const ngraph::CoordinateDiff& padding_below,
+    const ngraph::CoordinateDiff& padding_above)
+{
+    size_t reorder_index = this->build_reorder(input_reorder_desc, result_reorder_desc);
+    size_t conv_index = this->build_convolution_forward(input_conv_desc,
+                                                        weights_desc,
+                                                        result_desc,
+                                                        filter_strides,
+                                                        window_dilation_strides_adjusted,
+                                                        padding_below,
+                                                        padding_above);
+
+    return std::make_pair(reorder_index, conv_index);
+}
+
 size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& input_data_desc,
                                                 const mkldnn::memory::desc& weights_desc,
                                                 const mkldnn::memory::desc& result_desc,
