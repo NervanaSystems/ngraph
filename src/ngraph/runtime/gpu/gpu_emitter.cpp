@@ -1113,6 +1113,37 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             }
 
             template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::ReverseSequence)
+            {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
+                auto rs = static_cast<const ngraph::op::ReverseSequence*>(node);
+
+                size_t bi = rs->get_batch_axis();
+                size_t si = rs->get_sequence_axis();
+                auto arg_shape0 = args[0].get_shape();
+                auto arg_shape1 = args[1].get_shape();
+                auto out_shape = out[0].get_shape();
+
+                auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
+
+                auto rs_index =
+                    cuda_emitter->build_reverse_sequence(external_function->ctx().get(),
+                                                  {{args[0].get_type(), args[0].get_type(), out[0].get_type()}},
+                                                  arg_shape0,
+                                                  arg_shape1,
+                                                  out_shape,
+                                                  bi,
+                                                  si);
+                writer << "gpu::invoke_primitive(ctx, " << rs_index << ", ";
+                writer << "std::vector<void*>{" << args[0].get_name() << ", " << args[1].get_name() << "}.data(), ";
+                writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                writer << ");\n";
+            }
+
+            template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::FunctionCall)
             {
             }

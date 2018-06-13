@@ -285,19 +285,19 @@ void runtime::gpu::CudaKernelBuilder::get_pad_dynamic_op(
     const std::array<std::string, 2>& data_types)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
-           << data_types[1] << "* out, unsigned int* input_strides, unsigned int* output_strides, "
-                               "unsigned int* padding_below, unsigned int* "
-                               "padding_interior, unsigned int rank, unsigned int n)\n";
+           << data_types[1] << "* out, uint32_t* input_strides, uint32_t* output_strides, "
+                               "uint32_t* padding_below, uint32_t* "
+                               "padding_interior, uint32_t rank, uint32_t n)\n";
     writer.block_begin();
     {
-        writer << "unsigned int tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
+        writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
         writer << "if (tid < n)\n";
         writer.block_begin();
         {
-            writer << "unsigned int output_idx = 0;\n";
-            writer << "unsigned int input_idx = tid;\n";
+            writer << "uint32_t output_idx = 0;\n";
+            writer << "uint32_t input_idx = tid;\n";
 
-            writer << "for(unsigned int i = 0; i < rank; i++)\n";
+            writer << "for(uint32_t i = 0; i < rank; i++)\n";
             writer.block_begin();
             {
                 writer << "output_idx += (input_idx / input_strides[i] * padding_interior[i]  + "
@@ -313,6 +313,47 @@ void runtime::gpu::CudaKernelBuilder::get_pad_dynamic_op(
     writer.block_end();
 }
 
+void runtime::gpu::CudaKernelBuilder::get_reverse_sequence_op(
+    codegen::CodeWriter& writer,
+    const std::string& name,
+    const std::array<std::string, 3>& data_types,
+    const size_t batch_axis,
+    const size_t sequence_axis,
+    const size_t rank)
+{
+    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
+           << data_types[1] << "* sequence, " << data_types[2] << "* out, "
+           << "uint32_t* output_shape, uint32_t* output_strides, uint32_t n)\n";
+    writer.block_begin();
+    {
+        writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
+        writer << "if (tid < n)\n";
+        writer.block_begin();
+        {
+            writer << "uint32_t input_idx = tid;\n";
+            for (size_t i = 0; i < rank; i++)
+            {
+                writer << "uint32_t output_idx_" << i << " = input_idx / output_strides[" << i << "];\n";
+                writer << "input_idx %= output_strides[" << i << "];\n";
+            }
+            writer << "uint32_t sequence_length = sequence[output_idx_" << batch_axis << "];\n";
+            writer << "assert(sequence_length > output_shape[" << sequence_axis << "]);\n";
+
+            writer << "bool need_reverse = output_idx_" << sequence_axis << " < sequence_length && sequence_length > 1;\n";
+            writer << "output_idx_" << sequence_axis << " = need_reverse ? sequence_length - output_idx_"
+                   << sequence_axis << " - 1 : output_idx_" << sequence_axis << ";\n";
+            wirter << "uint32_t output_idx = need_reverse ? 0 "
+            for (size_t i = 0; i < rank; i++)
+            {
+                writer << " + output_idx_" << i << " * output_strides[" << i << "]";
+            }
+                   << " : tid;\n";
+            writer << "out[output_idx] = in[tid];\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+}
 void runtime::gpu::CudaKernelBuilder::get_slice_op(codegen::CodeWriter& writer,
                                                    const std::string& name,
                                                    const std::array<std::string, 2>& data_types)
@@ -584,7 +625,7 @@ void runtime::gpu::CudaKernelBuilder::add_pod_typedefs(codegen::CodeWriter& writ
     writer << "typedef signed long int int64_t;\n";
     writer << "typedef unsigned char uint8_t;\n";
     writer << "typedef unsigned short uint16_t;\n";
-    writer << "typedef unsigned int uint32_t;\n";
+    writer << "typedef uint32_t uint32_t;\n";
     writer << "typedef unsigned long int uint64_t;\n";
     writer << "\n";
 }
