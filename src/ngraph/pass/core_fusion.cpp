@@ -82,6 +82,41 @@ void pass::CoreFusion::construct_relu()
     this->add_matcher(m);
 }
 
+
+void pass::CoreFusion::construct_sigmoid()
+{
+    // auto iconst0 = construct_constant_node(0);
+    // auto val = make_shared<pattern::op::Label>(iconst0);
+    // auto zero = make_shared<pattern::op::Label>(iconst0, nullptr, NodeVector{iconst0});
+
+    // auto broadcast_pred = [](std::shared_ptr<Node> n) {
+    //     return static_cast<bool>(std::dynamic_pointer_cast<op::Broadcast>(n));
+    // };
+    // auto skip_broadcast = std::make_shared<pattern::op::Skip>(zero, broadcast_pred);
+    // auto max = make_shared<op::Maximum>(skip_broadcast, val);
+
+    // pattern::graph_rewrite_callback callback = [val, zero](pattern::Matcher& m) {
+    //     NGRAPH_DEBUG << "In a callback for construct_relu against "
+    //                  << m.get_match_root()->get_name();
+
+    //     auto pattern_map = m.get_pattern_map();
+    //     auto mzero = m.get_pattern_map()[zero];
+    //     if (!ngraph::is_zero(mzero))
+    //     {
+    //         NGRAPH_DEBUG << "zero constant = " << mzero->get_name() << " not equal to 0\n";
+    //         return false;
+    //     }
+    //     auto mpattern = m.get_match_root();
+
+    //     auto cg = shared_ptr<Node>(new op::Relu(pattern_map[val]));
+    //     ngraph::replace_node(m.get_match_root(), cg);
+    //     return true;
+    // };
+
+    // auto m = make_shared<pattern::Matcher>(max, callback);
+    // this->add_matcher(m);
+}
+
 void pass::CoreFusion::construct_folded_batch_norm()
 {
     Shape shape{2, 2, 1, 1};
