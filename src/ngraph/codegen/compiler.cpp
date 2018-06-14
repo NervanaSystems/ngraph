@@ -265,7 +265,6 @@ void codegen::StaticCompiler::add_header_search_path(const string& p)
     vector<string> paths = split(p, ';');
     for (const string& path : paths)
     {
-        NGRAPH_INFO << path;
         if (!contains(m_extra_search_path_list, path))
         {
             m_extra_search_path_list.push_back(path);

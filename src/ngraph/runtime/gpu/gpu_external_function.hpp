@@ -83,6 +83,13 @@ namespace ngraph
                     const Node&,
                     const std::unordered_map<descriptor::TensorView*, std::vector<size_t>>&);
                 void release_function() { m_function = nullptr; }
+                std::string emit_op_as_function(const Node& node, const std::string& function_name);
+                std::string strip_comments(const std::string& s) const;
+                bool is_functionally_identical(
+                    const Node& n1,
+                    const Node& n2,
+                    const std::unordered_map<const Node*, std::string>& node_cache) const;
+
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
                 bool m_emit_timing;
