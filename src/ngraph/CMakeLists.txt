@@ -181,17 +181,23 @@ target_link_libraries(ngraph PUBLIC libjson)
 
 if (${NGRAPH_CPU_ENABLE})
     get_target_property(BIN cpu_backend BINARY_DIR)
+if (NOT APPLE)
     set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,${BIN}")
+endif()
 endif()
 
 if (${NGRAPH_GPU_ENABLE})
     get_target_property(BIN gpu_backend BINARY_DIR)
+if (NOT APPLE)
     set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,${BIN}")
+endif()
 endif()
 
 if (${NGRAPH_INTERPRETER_ENABLE})
     get_target_property(BIN interpreter_backend BINARY_DIR)
+if (NOT APPLE)
     set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,${BIN}")
+endif()
 endif()
 
 if (NOT APPLE)
