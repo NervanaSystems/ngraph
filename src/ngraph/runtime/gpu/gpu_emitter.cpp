@@ -119,7 +119,7 @@ namespace ngraph
                 {
                     return;
                 }
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
@@ -137,7 +137,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_ADD,
                             CUDNN_DATA_FLOAT,
                             CUDNN_NOT_PROPAGATE_NAN));
-    )";
+)";
 
                 writer << "CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
@@ -194,7 +194,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 auto input_shape = args[0].get_shape();
                 Shape input_shape_padded = input_shape;
                 Shape padding_interior(data_dilation_strides);
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 if (pad_required || is_deconvolution)
                 {
                     input_shape_padded = get_padded_shape(
@@ -315,7 +315,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
 
                 Shape padding_interior(data_dilation_strides);
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 if (pad_required || is_deconvolution)
                 {
                     output_shape_padded = get_padded_shape(
@@ -468,7 +468,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 auto input_shape = args[0].get_shape();
                 auto input_shape_padded = input_shape;
                 Shape padding_interior(data_dilation_strides);
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 if (pad_required || is_deconvolution)
                 {
                     input_shape_padded = get_padded_shape(
@@ -550,7 +550,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     auto& first = (arg0_shape.empty() ? args[0] : args[1]);
                     auto& second = (arg0_shape.empty() ? args[1] : args[0]);
 
-                    writer.block_begin("  // " + node->get_name());
+                    writer.block_begin();
                     writer << "int count = " << second.get_size() << ";\n";
                     writer << "CUBLAS_SAFE_CALL(cublasScopy("
                            << "*ctx->cublas_handle,"
@@ -567,7 +567,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 // set output to 0 if input size is 0
                 if (args[0].get_size() == 0 || args[1].get_size() == 0)
                 {
-                    writer.block_begin("  // " + node->get_name());
+                    writer.block_begin();
                     writer << "runtime::gpu::cuda_memset(" << out[0].get_name() << ", 0, "
                            << out[0].get_size() << " * sizeof(float));\n";
                     writer.block_end();
@@ -587,7 +587,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                 "arg0 and arg1 shape does not match for dot.");
                         }
                     }
-                    writer.block_begin("  // " + node->get_name());
+                    writer.block_begin();
                     writer << "CUBLAS_SAFE_CALL(cublasSdot("
                            << "*ctx->cublas_handle," << args[0].get_size() << ","
                            << args[0].get_name() << ","
@@ -599,7 +599,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1) &&
                          (dot->get_reduction_axes_count() == 1))
                 {
-                    writer.block_begin("  // " + node->get_name());
+                    writer.block_begin();
                     writer << "const float alpha = 1.0;\n";
                     writer << "const float beta  = 0;\n";
                     writer << "CUBLAS_SAFE_CALL(cublasSetPointerMode(*ctx->cublas_handle, "
@@ -669,7 +669,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     }
 
                     // GEMM Call
-                    writer.block_begin("  // " + node->get_name());
+                    writer.block_begin();
                     writer << "const float alpha = 1.0;\n";
                     writer << "const float beta  = 0.0;\n";
                     writer << "int m = " << m << ";\n";
@@ -704,7 +704,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     return;
                 }
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
@@ -722,7 +722,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_MAX,
                             CUDNN_DATA_FLOAT,
                             CUDNN_NOT_PROPAGATE_NAN));
-    )";
+)";
 
                 writer << "CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
@@ -742,7 +742,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     return;
                 }
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
@@ -760,7 +760,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_MIN,
                             CUDNN_DATA_FLOAT,
                             CUDNN_NOT_PROPAGATE_NAN));
-    )";
+)";
 
                 writer << "CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
@@ -780,7 +780,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     return;
                 }
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = -1.0, alpha2 = 0, beta = 0;
@@ -798,7 +798,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_ADD,
                             CUDNN_DATA_FLOAT,
                             CUDNN_NOT_PROPAGATE_NAN));
-    )";
+)";
 
                 writer << "CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
@@ -826,7 +826,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 // broadcast axes is empty, do a copy
                 if (axes.empty())
                 {
-                    writer.block_begin("  // " + node->get_name());
+                    writer.block_begin();
                     kernel::emit_memcpyDtD(writer, out[0], args[0]);
                     writer.block_end();
                     return;
@@ -868,7 +868,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     block_size += block_strides[i];
                 }
 
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer << "int num_inputs = " << args.size() << ";\n";
 
@@ -911,7 +911,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     return;
                 }
                 auto reshape = static_cast<const op::Reshape*>(node);
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 auto arg_shape = args[0].get_shape();
                 auto arg_rank = arg_shape.size();
                 auto result_shape = out[0].get_shape();
@@ -1014,7 +1014,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 const auto input_strides = row_major_strides(arg_shape);
                 const auto output_strides = row_major_strides(result_shape);
 
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 if (args[0].get_size() == out[0].get_size())
                 {
                     kernel::emit_memcpyDtD(writer, out[0], args[0]);
@@ -1078,7 +1078,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     reverse_axes_flag[a] = 1;
                 }
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 if (out[0].get_size() == 1)
                 {
                     kernel::emit_memcpyDtD(writer, out[0], args[0]);
@@ -1157,7 +1157,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     return;
                 }
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
@@ -1175,7 +1175,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_MUL,
                             CUDNN_DATA_FLOAT,
                             CUDNN_NOT_PROPAGATE_NAN));
-    )";
+)";
 
                 writer << "CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
@@ -1206,7 +1206,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     repeat_size *= result_shape[i];
                 }
 
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 writer << "runtime::gpu::cuda_memset(" << out[0].get_name() << ", 0, "
                        << out[0].get_size() << " * " << out[0].get_element_type().size() << ");\n";
                 writer << "runtime::gpu::emit_onehot(\"" << node->description() << "\", {\""
@@ -1226,7 +1226,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     return;
                 }
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 writer << "int count = " << out[0].get_size() << ";\n";
                 writer += R"(
 float alpha1 = 1.0, alpha2 = 0, beta = 0;
@@ -1244,7 +1244,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                             CUDNN_OP_TENSOR_SQRT,
                             CUDNN_DATA_FLOAT,
                             CUDNN_NOT_PROPAGATE_NAN));
-    )";
+)";
 
                 writer << "CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,"
                        << "opTensorDesc,"
@@ -1260,7 +1260,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Result)
             {
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 kernel::emit_memcpyDtD(writer, out[0], args[0]);
                 writer.block_end();
                 return;
@@ -1270,7 +1270,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Max)
             {
                 const ngraph::op::Max* max_op = static_cast<const ngraph::op::Max*>(node);
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 {
                     if (out[0].get_size() != 0)
                     {
@@ -1318,7 +1318,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Min)
             {
                 const ngraph::op::Min* min_op = static_cast<const ngraph::op::Min*>(node);
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 {
                     if (out[0].get_size() != 0)
                     {
@@ -1366,7 +1366,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Sum)
             {
                 const ngraph::op::Sum* sum = static_cast<const ngraph::op::Sum*>(node);
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 {
                     if (out[0].get_size() != 0)
                     {
@@ -1405,7 +1405,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Product)
             {
                 const ngraph::op::Product* product = static_cast<const ngraph::op::Product*>(node);
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 {
                     if (out[0].get_size() != 0)
                     {
@@ -1465,7 +1465,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     {TI(ngraph::op::Maximum), CUDNN_REDUCE_TENSOR_MAX},
                     {TI(ngraph::op::Minimum), CUDNN_REDUCE_TENSOR_MIN}};
                 const ngraph::op::Reduce* reduce_op = static_cast<const ngraph::op::Reduce*>(node);
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 {
                     if (out[0].get_size() != 0)
                     {
@@ -1554,7 +1554,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
 
                 const ngraph::op::ReduceWindow* reduce_window_op =
                     static_cast<const ngraph::op::ReduceWindow*>(node);
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 {
                     if (out[0].get_size() != 0)
                     {
@@ -1653,7 +1653,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Pad)
             {
                 auto pad = static_cast<const ngraph::op::Pad*>(node);
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 {
                     auto input_shape = args[0].get_shape();
                     auto output_shape = out[0].get_shape();
@@ -1686,7 +1686,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             {
                 // assumes NC{d1,d2,...} format
                 auto max_pool = static_cast<const ngraph::op::MaxPool*>(node);
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 {
                     auto& input_shape = args[0].get_shape();
                     auto& result_shape = out[0].get_shape();
@@ -1818,7 +1818,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::MaxPoolBackprop)
             {
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 {
                     auto mpb = static_cast<const ngraph::op::MaxPoolBackprop*>(node);
                     auto fp_input_shape = out[0].get_shape();
@@ -1876,7 +1876,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                                args[0].get_shape(),
                                                                batchnorm->get_eps_value());
 
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 {
                     writer << "gpu::invoke_primitive(ctx, " << bn_index << ", ";
                     writer << "std::vector<void*>{" << args.front().get_name();
@@ -1912,7 +1912,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                                args[0].get_shape(),
                                                                batchnorm->get_eps_value());
 
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 {
                     writer << "gpu::invoke_primitive(ctx, " << bn_index << ", ";
                     writer << "std::vector<void*>{" << args.front().get_name();
@@ -1937,7 +1937,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             {
                 auto get_tuple_element = static_cast<const ngraph::op::GetOutputElement*>(node);
 
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 writer << "runtime::gpu::cuda_memcpyDtH(" << out[0].get_name() << ", "
                        << args[get_tuple_element->get_n()].get_name() << ", "
                        << out[0].get_size() * out[0].get_element_type().size() << ");\n";
@@ -1992,7 +1992,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             {
                 // assumes NC{d1,d2,...} format
                 auto avg_pool = static_cast<const ngraph::op::AvgPool*>(node);
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 {
                     auto& input_shape = args[0].get_shape();
                     auto& result_shape = out[0].get_shape();
@@ -2067,7 +2067,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::AvgPoolBackprop)
             {
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 {
                     auto apb = static_cast<const ngraph::op::AvgPoolBackprop*>(node);
                     auto output_shape = out[0].get_shape();
@@ -2112,7 +2112,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             {
                 // assumes NC{d1,d2,...} format
                 auto rep_slice = static_cast<const ngraph::op::ReplaceSlice*>(node);
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 {
                     auto& input_shape = args[0].get_shape();
                     auto& source_shape = args[1].get_shape();
@@ -2162,7 +2162,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Softmax)
             {
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 {
                     auto softmax = static_cast<const ngraph::op::Softmax*>(node);
                     auto tensor_shape = args[0].get_shape();
