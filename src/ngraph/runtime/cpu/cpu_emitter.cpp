@@ -89,7 +89,6 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
-#include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -98,6 +97,7 @@
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
@@ -2185,6 +2185,16 @@ namespace ngraph
                            << ");\n";
                 }
                 else if (args[0].get_element_type() == element::f32 &&
+                         args[0].get_shape().size() == 4 && sum->get_reduction_axes().size() == 2)
+                {
+                    writer << "cpu::kernel::reduce_sum_4d_2rd_float32(" << args[0].get_name()
+                           << ", " << out[0].get_name() << ", "
+                           << "{" << join(args[0].get_shape()) << "}, "
+                           << "{" << join(out[0].get_shape()) << "}, "
+                           << "{" << join(sum->get_reduction_axes()) << "}"
+                           << ");\n";
+                }
+                else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 4 && sum->get_reduction_axes().size() == 4)
                 {
                     writer << "cpu::kernel::reduce_sum_all_4d_float32(" << args[0].get_name()
@@ -2680,6 +2690,126 @@ namespace ngraph
 
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(conv_index) << ");\n";
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::GroupConvolution)
+            {
+                auto convolution = static_cast<const ngraph::op::GroupConvolution*>(node);
+
+                auto arg0_shape = args[0].get_shape();
+                auto arg1_shape = args[1].get_shape();
+                auto result_shape = out[0].get_shape();
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    Strides window_dilation_strides_adjusted;
+                    for (size_t s : convolution->get_window_dilation_strides())
+                    {
+                        window_dilation_strides_adjusted.push_back(s - 1);
+                    }
+
+                    auto input_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
+
+                    auto output_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_data_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[0], input_format);
+
+                    Shape weights_shape_groups = convolution->get_weights_dimensions();
+
+                    auto weights_desc_any = mkldnn::memory::desc(
+                        mkldnn::memory::dims(weights_shape_groups.begin(),
+                                             weights_shape_groups.end()),
+                        mkldnn_utils::get_mkldnn_data_type(args[1].get_element_type()),
+                        mkldnn::memory::format::any);
+
+                    auto padding_below = convolution->get_padding_below();
+                    auto padding_above = convolution->get_padding_above();
+                    auto filter_strides = convolution->get_window_movement_strides();
+
+                    auto result_desc =
+                        mkldnn_emitter->build_memory_descriptor(out[0], output_format);
+
+                    auto weights_optimized_format =
+                        mkldnn_emitter->query_convolution_forward_weight_format(
+                            input_data_desc,
+                            weights_desc_any,
+                            result_desc,
+                            filter_strides,
+                            window_dilation_strides_adjusted,
+                            padding_below,
+                            padding_above);
+
+                    //create workspace for holding the result of converting weights layouts
+                    auto ws = std::unique_ptr<MKLDNNWorkspace>(new MKLDNNWorkspace(
+                        shape_size(args[1].get_shape()) * args[1].get_element_type().size()));
+                    auto ws_buf_index = mkldnn_emitter->insert_workspace(ws);
+
+                    //descriptors for reorder operation
+                    auto input_reorder_desc =
+                        mkldnn_emitter->build_memory_descriptor(weights_shape_groups,
+                                                                args[1].get_element_type(),
+                                                                mkldnn::memory::format::goihw);
+
+                    auto result_reorder_desc = mkldnn_emitter->build_memory_descriptor(
+                        weights_shape_groups, args[1].get_element_type(), weights_optimized_format);
+
+                    auto weights_desc = mkldnn::memory::desc(
+                        mkldnn::memory::dims(weights_shape_groups.begin(),
+                                             weights_shape_groups.end()),
+                        mkldnn_utils::get_mkldnn_data_type(args[1].get_element_type()),
+                        weights_optimized_format);
+
+                    auto prim_indices = mkldnn_emitter->build_group_convolution_forward(
+                        input_reorder_desc, //weights
+                        input_data_desc,
+                        weights_desc,
+                        result_reorder_desc,
+                        result_desc,
+                        convolution->get_window_movement_strides(),
+                        window_dilation_strides_adjusted,
+                        padding_below,
+                        padding_above);
+
+                    //invoke reorder primitive
+                    {
+                        size_t reorder_index = prim_indices.first;
+                        auto& deps = mkldnn_emitter->get_primitive_deps(reorder_index);
+                        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                               << ", " << args[1].get_name() << ");\n";
+
+                        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                               << ", "
+                               << "ctx->mkldnn_workspaces[" << ws_buf_index << "]);\n";
+
+                        writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                               << to_string(reorder_index) << ");\n";
+                    }
+
+                    //invoke group convolution
+                    {
+                        size_t conv_index = prim_indices.second;
+                        auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                               << ", " << args[0].get_name() << ");\n";
+                        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                               << ", "
+                               << "ctx->mkldnn_workspaces[" << ws_buf_index << "]);\n";
+                        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                               << ", " << out[0].get_name() << ");\n";
+
+                        writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                               << to_string(conv_index) << ");\n";
+                    }
+                }
+                else
+                {
+                    throw ngraph_error("unsupported parameters for GroupConvolution");
                 }
             }
 
