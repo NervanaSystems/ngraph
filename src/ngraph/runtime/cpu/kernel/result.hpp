@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,33 +14,22 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <algorithm>
-#include <vector>
+#pragma once
 
-#include "ngraph/shape.hpp"
-
-using namespace std;
-using namespace ngraph;
-
-size_t ngraph::shape_size(const Shape& shape)
+namespace ngraph
 {
-    size_t size = 1;
-    for (auto d : shape)
+    namespace runtime
     {
-        size *= d;
+        namespace cpu
+        {
+            namespace kernel
+            {
+                template <typename ElementType>
+                void result(const void* arg, void* out, size_t count)
+                {
+                    memcpy(out, arg, sizeof(ElementType) * count);
+                }
+            }
+        }
     }
-    return size;
-}
-
-Strides ngraph::row_major_strides(const Shape& shape)
-{
-    Strides strides;
-    size_t s = 1;
-    for (auto d = shape.rbegin(); d != shape.rend(); d++)
-    {
-        strides.push_back(s);
-        s *= *d;
-    }
-    reverse(strides.begin(), strides.end());
-    return strides;
 }
