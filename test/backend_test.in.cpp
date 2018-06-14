@@ -7569,6 +7569,26 @@ NGRAPH_TEST(${BACKEND_NAME}, min_3d_eliminate_zero_dim)
     EXPECT_EQ((vector<float>{inf, inf, inf, inf, inf, inf}), read_vector<float>(result));
 }
 
+
+NGRAPH_TEST(${BACKEND_NAME}, sigmoid_2Dfprop)
+{
+    auto shape_a = Shape{2, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto sigmoid = make_shared<op::Sigmoid>(A);
+    auto shape_rt = Shape{2, 5};
+    auto f = make_shared<Function>(sigmoid, op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5});
+    auto result = backend->create_tensor(element::f32, shape_rt);
+    // vector<float> expected{1, 8, 0, 17, 0, 1, 8, 0, 17, 0};
+
+    backend->call(f, {result}, {a});
+    // EXPECT_EQ(read_vector<float>(result), expected);
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, relu_2Dfprop)
 {
     auto shape_a = Shape{2, 5};
