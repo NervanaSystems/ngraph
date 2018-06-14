@@ -997,6 +997,45 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             }
 
             template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::FunctionCall)
+            {
+                auto function_call = static_cast<const ngraph::op::FunctionCall*>(node);
+                shared_ptr<Function> function = function_call->get_functions()[0];
+
+                writer.block_begin();
+                {
+                    vector<string> input_names;
+                    vector<string> output_names;
+
+                    for (const runtime::gpu::GPU_TensorViewWrapper& input : args)
+                    {
+                        input_names.push_back(input.get_name());
+                    }
+
+                    for (const runtime::gpu::GPU_TensorViewWrapper& output : out)
+                    {
+                        output_names.push_back(output.get_name());
+                    }
+
+                    writer << "void* args[] =\n";
+                    writer.block_begin();
+                    writer << "\n" << join(input_names, ",\n");
+                    writer.block_end();
+                    writer << ";\n";
+
+                    writer << "void* out[] =\n";
+                    writer.block_begin();
+                    writer << "\n" << join(output_names, ",\n");
+                    writer.block_end();
+                    writer << ";\n";
+
+                    writer << "\n";
+                    writer << function->get_name() << "(args, out, ctx);\n";
+                }
+                writer.block_end();
+            }
+
+            template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Slice)
             {
                 if (out[0].get_size() == 0)
