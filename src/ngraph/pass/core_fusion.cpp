@@ -85,6 +85,8 @@ void pass::CoreFusion::construct_relu()
 
 void pass::CoreFusion::construct_sigmoid()
 {
+    NGRAPH_INFO<<" core fusion for construct sigmoid ";
+    
     // auto iconst0 = construct_constant_node(0);
     // auto val = make_shared<pattern::op::Label>(iconst0);
     // auto zero = make_shared<pattern::op::Label>(iconst0, nullptr, NodeVector{iconst0});
