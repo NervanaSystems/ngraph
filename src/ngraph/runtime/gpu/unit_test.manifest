@@ -21,7 +21,6 @@ divide_by_zero_float32
 divide_by_zero_int32
 dot_4d_5d_multi_axis_big_fp64_VERY_SLOW
 dot_matrix_vector_int64
-#function_call
 mkldnn_layouts
 numeric_double_nan
 numeric_float_inf
