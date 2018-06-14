@@ -193,7 +193,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 auto input_shape = args[0].get_shape();
                 Shape input_shape_padded = input_shape;
                 Shape padding_interior(data_dilation_strides);
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 if (pad_required || is_deconvolution)
                 {
                     input_shape_padded = get_padded_shape(
@@ -314,7 +314,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
 
                 Shape padding_interior(data_dilation_strides);
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 if (pad_required || is_deconvolution)
                 {
                     output_shape_padded = get_padded_shape(
@@ -467,7 +467,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 auto input_shape = args[0].get_shape();
                 auto input_shape_padded = input_shape;
                 Shape padding_interior(data_dilation_strides);
-                writer.block_begin("  // " + node->get_name());
+                writer.block_begin();
                 if (pad_required || is_deconvolution)
                 {
                     input_shape_padded = get_padded_shape(
