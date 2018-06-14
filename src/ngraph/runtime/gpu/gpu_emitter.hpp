@@ -77,7 +77,7 @@ namespace ngraph
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
 
-                    writer.block_begin("  // " + node->get_name());
+                    writer.block_begin();
                     {
                         std::vector<std::string> dtypes;
                         for (auto& arg : args)
