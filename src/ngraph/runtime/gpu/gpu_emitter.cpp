@@ -1004,8 +1004,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
 
                 writer.block_begin();
                 {
-                    vector<string> input_names;
-                    vector<string> output_names;
+                    std::vector<string> input_names;
+                    std::vector<string> output_names;
 
                     for (const runtime::gpu::GPU_TensorViewWrapper& input : args)
                     {
