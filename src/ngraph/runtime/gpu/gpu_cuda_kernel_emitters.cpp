@@ -47,7 +47,7 @@ void runtime::gpu::emit_onehot(const std::string& name,
 
     void* args_list[] = {&in, &out, &repeat_size, &repeat_times, &count};
     CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                  static_cast<unsigned int>(count),
+                                  static_cast<uint32_t>(count),
                                   1,
                                   1, // grid dim
                                   1,
@@ -84,7 +84,7 @@ void runtime::gpu::emit_reshape(const std::string& name,
 
     void* args_list[] = {&in, &out, &input_strides, &trans_strides, &rank, &count};
     CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                  static_cast<unsigned int>(count),
+                                  static_cast<uint32_t>(count),
                                   1,
                                   1, // grid dim
                                   1,
@@ -124,7 +124,7 @@ void runtime::gpu::emit_slice(const std::string& name,
     void* args_list[] = {
         &in, &out, &input_strides, &lower_bounds, &slice_strides, &output_strides, &rank, &count};
     CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                  static_cast<unsigned int>(count),
+                                  static_cast<uint32_t>(count),
                                   1,
                                   1, // grid dim
                                   1,
@@ -161,7 +161,7 @@ void runtime::gpu::emit_reverse(const std::string& name,
 
     void* args_list[] = {&in, &out, &input_shapes, &reverse_axes, &rank, &count};
     CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                  static_cast<unsigned int>(count),
+                                  static_cast<uint32_t>(count),
                                   1,
                                   1, // grid dim
                                   1,
