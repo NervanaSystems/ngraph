@@ -98,4 +98,5 @@ private:
     std::string find_header_version(const std::string& path);
     void configure_search_path();
     void load_headers_from_resource();
+    std::vector<std::string> split(const std::string& src, char delimiter) const;
 };

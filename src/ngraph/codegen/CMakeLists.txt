@@ -18,6 +18,7 @@ set(SRC
     code_writer.cpp
     compiler.cpp
     execution_engine.cpp
+    file_util.cpp
 )
 
 # LLVM binary builds are typically built without RTTI
