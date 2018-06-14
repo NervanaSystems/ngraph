@@ -98,11 +98,21 @@ static const std::map<memory::format, const std::string> s_mkldnn_format_string_
     {memory::format::chwn, "memory::format::chwn"},
     {memory::format::nChw8c, "memory::format::nChw8c"},
     {memory::format::nChw16c, "memory::format::nChw16c"},
+    {memory::format::ncdhw, "memory::format::ndhwc"},
+    {memory::format::ncdhw, "memory::format::ndhwc"},
+    {memory::format::nCdhw16c, "memory::format::nCdhw16c"},
     {memory::format::oi, "memory::format::oi"},
     {memory::format::io, "memory::format::io"},
     {memory::format::oihw, "memory::format::oihw"},
     {memory::format::ihwo, "memory::format::ihwo"},
     {memory::format::hwio, "memory::format::hwio"},
+    // TODO (nishant): Uncomment after the next release of mkl-dnn"
+    //{memory::format::dhwio, "memory::format::dhwio"},
+    {memory::format::oidhw, "memory::format::oidhw"},
+    {memory::format::OIdhw16i16o, "memory::format::OIdhw16i16o"},
+    {memory::format::OIdhw16o16i, "memory::format::OIdhw16o16i"},
+    {memory::format::Oidhw16o, "memory::format::Oidhw16o"},
+    {memory::format::Odhwi16o, "memory::format::Odhwi16o"},
     {memory::format::oIhw8i, "memory::format::oIhw8i"},
     {memory::format::oIhw16i, "memory::format::oIhw16i"},
     {memory::format::OIhw8i8o, "memory::format::OIhw8i8o"},
@@ -125,6 +135,13 @@ static const std::set<memory::format> s_filter_formats{
     memory::format::oihw,
     memory::format::ihwo,
     memory::format::hwio,
+    // TODO (nishant): Uncomment after the next release of mkl-dnn"
+    //memory::format::dhwio,
+    memory::format::oidhw,
+    memory::format::OIdhw16i16o,
+    memory::format::OIdhw16o16i,
+    memory::format::Oidhw16o,
+    memory::format::Odhwi16o,
     // memory::format::oIhw8i,             // These currently map to nChw8c and nChw16c
     // memory::format::oIhw16i,
     memory::format::OIhw8i8o,
@@ -146,11 +163,17 @@ bool runtime::cpu::mkldnn_utils::IsMKLDNNOp(ngraph::Node& op)
 mkldnn::memory::format runtime::cpu::mkldnn_utils::CreateNativeDataFormat(
     const ngraph::runtime::cpu::LayoutDescriptor& layout)
 {
-    switch (layout.get_shape().size())
+    return CreateNativeDataFormat(layout.get_shape());
+}
+
+mkldnn::memory::format runtime::cpu::mkldnn_utils::CreateNativeDataFormat(const Shape& shape)
+{
+    switch (shape.size())
     {
     case 1: return mkldnn::memory::format::x;
     case 2: return mkldnn::memory::format::nc;
     case 4: return mkldnn::memory::format::nchw;
+    case 5: return mkldnn::memory::format::ncdhw;
     default: return mkldnn::memory::format::format_undef;
     }
 }

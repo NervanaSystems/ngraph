@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <mkldnn.hpp>
@@ -88,6 +89,26 @@ namespace ngraph
                                                  const ngraph::CoordinateDiff& padding_below,
                                                  const ngraph::CoordinateDiff& padding_above,
                                                  const mkldnn::post_ops& pops = mkldnn::post_ops());
+
+                mkldnn::memory::format query_convolution_forward_weight_format(
+                    const mkldnn::memory::desc& input_data_desc,
+                    const mkldnn::memory::desc& weights_desc_any,
+                    const mkldnn::memory::desc& result_desc,
+                    const ngraph::Strides& filter_strides,
+                    const ngraph::Strides& window_dilation_strides_adjusted,
+                    const ngraph::CoordinateDiff& padding_below,
+                    const ngraph::CoordinateDiff& padding_above);
+
+                std::pair<size_t, size_t> build_group_convolution_forward(
+                    const mkldnn::memory::desc& input_reorder_desc,
+                    const mkldnn::memory::desc& input_conv_desc,
+                    const mkldnn::memory::desc& weights_desc,
+                    const mkldnn::memory::desc& result_reorder_desc,
+                    const mkldnn::memory::desc& result_desc,
+                    const ngraph::Strides& filter_strides,
+                    const ngraph::Strides& window_dilation_strides_adjusted,
+                    const ngraph::CoordinateDiff& padding_below,
+                    const ngraph::CoordinateDiff& padding_above);
 
                 size_t
                     build_convolution_backward_weights(const mkldnn::memory::desc& input_desc,

@@ -27,6 +27,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/negative.hpp"
@@ -42,10 +43,12 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
+#include "ngraph/runtime/cpu/op/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -53,9 +56,9 @@
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_concat_inputs.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_rnn_mat_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -65,9 +68,10 @@
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/matcher.hpp"
 #include "util/random.hpp"
+#include "util/random.hpp"
 #include "util/test_tools.hpp"
 
-#include "util/random.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -881,46 +885,6 @@ TEST(cpu_fusion, fuse_conv_relu)
     ASSERT_GT(cb, 0);
 }
 
-template <typename T>
-static std::vector<std::vector<T>>
-    execute(std::shared_ptr<Function> f, std::vector<std::vector<T>> args, std::string cbackend)
-{
-    auto backend = runtime::Backend::create(cbackend);
-
-    auto parms = f->get_parameters();
-
-    if (parms.size() != args.size())
-    {
-        throw ngraph_error("number of parameters and arguments don't match");
-    }
-
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> arg_tensors(args.size());
-    for (size_t i = 0; i < args.size(); i++)
-    {
-        auto t = backend->create_tensor(parms.at(i)->get_element_type(), parms.at(i)->get_shape());
-        copy_data(t, args.at(i));
-        arg_tensors.at(i) = t;
-    }
-
-    auto results = f->get_results();
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> result_tensors(results.size());
-
-    for (size_t i = 0; i < results.size(); i++)
-    {
-        result_tensors.at(i) =
-            backend->create_tensor(results.at(i)->get_element_type(), results.at(i)->get_shape());
-    }
-
-    backend->call(f, result_tensors, arg_tensors);
-
-    std::vector<std::vector<T>> result_vectors;
-    for (auto rt : result_tensors)
-    {
-        result_vectors.push_back(read_vector<T>(rt));
-    }
-    return result_vectors;
-}
-
 TEST(cpu_fusion, conv_relu_n2c1h2w2_2)
 {
     Shape shape_a{2, 1, 6, 6};
@@ -1441,6 +1405,124 @@ TEST(cpu_fusion, batch_norm_folding)
     auto int_results = execute(int_f, args, "INTERPRETER");
     auto cpu_results = execute(cpu_f, args, "CPU");
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+}
+
+TEST(cpu_fusion, group_convolution_fusion)
+{
+    Shape shape_a{1, 32, 2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{2, 16, 1, 1};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{1, 2, 2, 2};
+
+    auto a_slice0 = std::make_shared<op::Slice>(A, Coordinate{0, 0, 0, 0}, Coordinate{1, 16, 2, 2});
+    auto a_slice1 =
+        std::make_shared<op::Slice>(A, Coordinate{0, 16, 0, 0}, Coordinate{1, 32, 2, 2});
+
+    auto b_slice0 = std::make_shared<op::Slice>(B, Coordinate{0, 0, 0, 0}, Coordinate{1, 16, 1, 1});
+    auto b_slice1 = std::make_shared<op::Slice>(B, Coordinate{1, 0, 0, 0}, Coordinate{2, 16, 1, 1});
+
+    auto conv_lower = make_shared<op::Convolution>(a_slice0,
+                                                   b_slice0,
+                                                   Strides{1, 1},
+                                                   Strides{1, 1},
+                                                   CoordinateDiff{0, 0},
+                                                   CoordinateDiff{0, 0},
+                                                   Strides{1, 1});
+
+    auto conv_upper = make_shared<op::Convolution>(a_slice1,
+                                                   b_slice1,
+                                                   Strides{1, 1},
+                                                   Strides{1, 1},
+                                                   CoordinateDiff{0, 0},
+                                                   CoordinateDiff{0, 0},
+                                                   Strides{1, 1});
+
+    auto concat = make_shared<op::Concat>(NodeVector{conv_lower, conv_upper}, 1);
+
+    auto f = make_shared<Function>(NodeVector{concat}, op::ParameterVector{A, B});
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("before_group.pdf");
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+    pass_manager.register_pass<pass::VisualizeTree>("after_group.pdf");
+    pass_manager.run_passes(f);
+    auto gc =
+        std::dynamic_pointer_cast<op::GroupConvolution>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(gc);
+}
+
+TEST(cpu_fusion, group_convolution)
+{
+    auto backend = runtime::Backend::create("CPU");
+    test::Uniform<float> rng(2.0f, 10.0f);
+
+    const size_t GROUPS = 2;
+    Shape shape_a{1, 32, 2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{2, 16, 1, 1};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{1, 2, 2, 2};
+    auto group_conv = make_shared<op::GroupConvolution>(A,
+                                                        B,
+                                                        Strides{1, 1},
+                                                        Strides{1, 1},
+                                                        CoordinateDiff{0, 0},
+                                                        CoordinateDiff{0, 0},
+                                                        Strides{1, 1},
+                                                        GROUPS,
+                                                        shape_r);
+
+    Shape shape_c{1, 16, 2, 2};
+    auto C = make_shared<op::Parameter>(element::f32, shape_c);
+    Shape shape_d{1, 16, 1, 1};
+    auto D = make_shared<op::Parameter>(element::f32, shape_d);
+    auto conv_lower = make_shared<op::Convolution>(C,
+                                                   D,
+                                                   Strides{1, 1},
+                                                   Strides{1, 1},
+                                                   CoordinateDiff{0, 0},
+                                                   CoordinateDiff{0, 0},
+                                                   Strides{1, 1});
+
+    auto E = make_shared<op::Parameter>(element::f32, shape_c);
+    auto F = make_shared<op::Parameter>(element::f32, shape_d);
+    auto conv_upper = make_shared<op::Convolution>(E,
+                                                   F,
+                                                   Strides{1, 1},
+                                                   Strides{1, 1},
+                                                   CoordinateDiff{0, 0},
+                                                   CoordinateDiff{0, 0},
+                                                   Strides{1, 1});
+
+    auto f = make_shared<Function>(NodeVector{group_conv, conv_lower, conv_upper},
+                                   op::ParameterVector{A, B, C, D, E, F});
+
+    auto a_ = rng.initialize(backend->create_tensor(element::f32, shape_a));
+    auto b_ = rng.initialize(backend->create_tensor(element::f32, shape_b));
+
+    vector<float> rv(shape_size(shape_r), 0);
+    auto group_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(
+        backend->create_tensor(element::f32, shape_r, rv.data()));
+
+    auto av = read_vector<float>(a_);
+    auto bv = read_vector<float>(b_);
+    auto c_ = backend->create_tensor(element::f32, shape_c, av.data()); //lower data
+    auto d_ = backend->create_tensor(element::f32, shape_d, bv.data()); //upper data
+
+    auto e_ =
+        backend->create_tensor(element::f32, shape_c, av.data() + av.size() / 2); //lower weights
+    auto f_ =
+        backend->create_tensor(element::f32, shape_d, bv.data() + bv.size() / 2); //upper weights
+
+    Shape shape_ur{1, 1, 2, 2};
+    //allocate a contigious storage for both lower and upper halves.
+    vector<float> erv(shape_size(shape_r), 0);
+    auto lower_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(
+        backend->create_tensor(element::f32, shape_ur, erv.data()));
+    auto upper_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(
+        backend->create_tensor(element::f32, shape_ur, erv.data() + erv.size() / 2));
+    backend->call(f, {group_result, lower_result, upper_result}, {a_, b_, c_, d_, e_, f_});
+    ASSERT_EQ(rv, erv);
 }
 
 TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
@@ -2074,5 +2156,44 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
                                                  input_1_param,
                                                  expected_0,
                                                  expected_1);
+    }
+}
+
+TEST(cpu_fusion, fuse_batch_dot)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/batch_dot_3.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    size_t ccg = count_ops_of_type<op::BatchDot>(func);
+    ASSERT_EQ(ccg, 1);
+}
+
+TEST(cpu_fusion, fuse_batch_dot_forward)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+
+    const std::string file_name("mxnet/batch_dot_3.json");
+    auto cpu_f = make_function(file_name);
+    auto int_f = make_function(file_name);
+    pass_manager.run_passes(cpu_f);
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < int_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }

@@ -682,6 +682,10 @@ using namespace std;
         // End generated function
         writer += "}\n\n";
     }
+
+    // allocate device buffers for primitive arguments and workspace
+    m_primitive_emitter->allocate_primitive_memory();
+
     // TODO: Cleanup and make this a utility function
 
     // allocate device buffers for primitive arguments and workspace

@@ -94,18 +94,18 @@ int main(int argc, char** argv)
 #endif
     include_paths.push_back({NGRAPH_HEADERS_PATH, {}, true});
     include_paths.push_back({CLANG_BUILTIN_HEADERS_PATH, {}, true});
-    include_paths.push_back({"/Library/Developer/CommandLineTools/usr/include/c++/v1", {}});
+// include_paths.push_back({"/Library/Developer/CommandLineTools/usr/include/c++/v1", {}});
 #else // __APPLE__
-    string cpp0 = find_path("/usr/include/x86_64-linux-gnu/c++/");
-    string cpp1 = find_path("/usr/include/c++/");
-
     include_paths.push_back({CLANG_BUILTIN_HEADERS_PATH, {}, true});
-    include_paths.push_back({"/usr/include/x86_64-linux-gnu", {"asm", "sys", "bits", "gnu"}});
-    include_paths.push_back(
-        {"/usr/include", {"asm", "sys", "bits", "gnu", "linux", "asm-generic"}});
-    include_paths.push_back({cpp0, {"bits"}});
-    include_paths.push_back({"/usr/include/c++/4.8.2/x86_64-redhat-linux", {"bits"}});
-    include_paths.push_back({cpp1, {"bits", "ext", "debug", "backward"}});
+    // string cpp0 = find_path("/usr/include/x86_64-linux-gnu/c++/");
+    // string cpp1 = find_path("/usr/include/c++/");
+
+    // include_paths.push_back({"/usr/include/x86_64-linux-gnu", {"asm", "sys", "bits", "gnu"}});
+    // include_paths.push_back(
+    //     {"/usr/include", {"asm", "sys", "bits", "gnu", "linux", "asm-generic"}});
+    // include_paths.push_back({cpp0, {"bits"}});
+    // include_paths.push_back({"/usr/include/c++/4.8.2/x86_64-redhat-linux", {"bits"}});
+    // include_paths.push_back({cpp1, {"bits", "ext", "debug", "backward"}});
     include_paths.push_back({EIGEN_HEADERS_PATH, {}, true});
     include_paths.push_back({MKLDNN_HEADERS_PATH, {}, true});
     include_paths.push_back({NGRAPH_HEADERS_PATH, {}, true});
