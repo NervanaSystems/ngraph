@@ -788,7 +788,7 @@ std::unique_ptr<runtime::gpu::GPURuntimeContext>& runtime::gpu::GPU_ExternalFunc
 }
 
 bool runtime::gpu::GPU_ExternalFunction::is_functionally_identical(
-    const Node& n1, const Node& n2, const unordered_map<const Node*, string>& node_cache)
+    const Node& n1, const Node& n2, const unordered_map<const Node*, string>& node_cache) const
 {
     return node_cache.at(&n1) == node_cache.at(&n2);
 }
@@ -861,7 +861,7 @@ string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
     return rc;
 }
 
-string runtime::gpu::GPU_ExternalFunction::strip_comments(const string& s)
+string runtime::gpu::GPU_ExternalFunction::strip_comments(const string& s) const
 {
     stringstream out;
     for (size_t i = 0; i < s.size(); i++)
