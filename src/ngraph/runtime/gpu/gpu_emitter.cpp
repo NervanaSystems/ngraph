@@ -1184,6 +1184,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 writer << ");\n";
             }
 
+            template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Multiply)
             {
                 if (out[0].get_size() == 0)
