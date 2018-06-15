@@ -145,6 +145,14 @@ ExternalProject_Add_Step(
     DEPENDERS configure
     )
 
+message(STATUS "************************************* NGRAPH_BUILD_DIR ${NGRAPH_BUILD_DIR}")
+ExternalProject_Add_Step(
+    ext_mkldnn
+    PostBuild
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib ${NGRAPH_BUILD_DIR}
+    DEPENDEES build
+    )
+
 add_library(libmkldnn INTERFACE)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
 target_link_libraries(libmkldnn INTERFACE

@@ -26,6 +26,8 @@ if (NGRAPH_INTERPRETER_ENABLE)
     add_library(interpreter_backend SHARED int_backend.cpp)
     set_target_properties(interpreter_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
     target_link_libraries(interpreter_backend PUBLIC ngraph)
+    add_custom_command(TARGET interpreter_backend POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE_DIR:interpreter_backend>/*interpreter_backend* ${NGRAPH_BUILD_DIR})
 
     install(TARGETS interpreter_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

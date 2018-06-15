@@ -103,6 +103,8 @@ if (NGRAPH_CPU_ENABLE)
 
     target_link_libraries(cpu_backend PUBLIC ngraph codegen libmkldnn libeigen libjson libtbb)
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
+    add_custom_command(TARGET cpu_backend POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE_DIR:cpu_backend>/*cpu_backend* ${NGRAPH_BUILD_DIR})
 
     install(TARGETS cpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

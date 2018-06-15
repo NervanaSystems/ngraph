@@ -179,20 +179,7 @@ add_definitions("-DLIBRARY_VERSION=\"${NGRAPH_VERSION}\"")
 set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
 target_link_libraries(ngraph PUBLIC libjson)
 
-if (${NGRAPH_CPU_ENABLE})
-    get_target_property(BIN cpu_backend BINARY_DIR)
-    set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,${BIN}")
-endif()
-
-if (${NGRAPH_GPU_ENABLE})
-    get_target_property(BIN gpu_backend BINARY_DIR)
-    set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,${BIN}")
-endif()
-
-if (${NGRAPH_INTERPRETER_ENABLE})
-    get_target_property(BIN interpreter_backend BINARY_DIR)
-    set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,${BIN}")
-endif()
+set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,$ORIGIN")
 
 if (NOT APPLE)
     # NGraph links against one or more libraries (ex. LLVM) but we don't want to
