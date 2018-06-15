@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include <memory>
+#include <numeric>
 #include <set>
 
 #include "algebraic_simplification.hpp"
@@ -23,12 +24,16 @@
 #include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/reshape.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/pattern/matcher.hpp"
@@ -57,6 +62,98 @@ static std::shared_ptr<pattern::op::Label>
     get_broadcast_label(std::shared_ptr<pattern::Matcher> matcher)
 {
     return std::dynamic_pointer_cast<pattern::op::Label>(matcher->get_pattern()->get_argument(1));
+}
+
+//`simplify_concat` identifies slices-concat sequences
+// that cancel each other. Namely it replaces subgraphs
+//similar to the one below with `arg`
+//
+//                 +----------+
+//            +----+slice(n/2..n)---+
+// +-------+  |    +----------+    |  +-----------+
+// |  arg  +--+                    +--+  concat   |
+// +-------+  |    +----------+    |  +-----------+
+//            +----+slice(0..n/2)---+
+//                 +----------+
+static bool simplify_concat(std::shared_ptr<Node> n)
+{
+    NGRAPH_DEBUG << "In simplify_concat for " << n->get_name();
+
+    std::shared_ptr<Node> goe;
+
+    auto lgoe = std::make_shared<pattern::op::Label>(element::i32, Shape{2, 1});
+
+    auto slice =
+        std::make_shared<op::Slice>(lgoe, Coordinate{0, 0}, Coordinate{2, 1}, Strides{1, 1});
+
+    auto reshape_pred = [](std::shared_ptr<Node> r) {
+        return std::dynamic_pointer_cast<op::Reshape>(r) != nullptr;
+    };
+
+    auto skip_reshape = std::make_shared<pattern::op::Skip>(slice, reshape_pred);
+
+    auto matcher = std::make_shared<pattern::Matcher>(skip_reshape, nullptr);
+
+    for (auto carg : n->get_arguments())
+    {
+        if (!matcher->match(carg))
+        {
+            NGRAPH_DEBUG << carg->get_name() << " doesn't match";
+            return false;
+        }
+
+        if (goe)
+        {
+            if (goe != matcher->get_pattern_map()[lgoe])
+            {
+                NGRAPH_DEBUG << goe->get_name() << " doesn't match "
+                             << matcher->get_pattern_map()[lgoe]->get_name();
+                return false;
+            }
+        }
+        else
+        {
+            goe = matcher->get_pattern_map()[lgoe];
+            NGRAPH_DEBUG << "setting goe to " << goe->get_name();
+        }
+
+        auto it = carg;
+        while (it != goe)
+        {
+            if (auto rcarg = std::dynamic_pointer_cast<op::Reshape>(carg))
+            {
+                Shape default_shape(rcarg->get_argument(0)->get_shape().size());
+                std::iota(begin(default_shape), end(default_shape), 0);
+                if (default_shape != rcarg->get_input_order())
+                {
+                    NGRAPH_DEBUG << carg->get_name() << " reshape also does transposes";
+                    return false;
+                }
+            }
+            if (carg->get_users().size() > 1)
+            {
+                NGRAPH_DEBUG << carg->get_name() << " has more than one user";
+                return false;
+            }
+
+            it = it->get_argument(0);
+        }
+    }
+
+    if (!std::dynamic_pointer_cast<op::GetOutputElement>(goe))
+    {
+        NGRAPH_DEBUG << goe->get_name() << " isn't GOE ";
+        return false;
+    }
+
+    auto replacement = goe;
+    if (goe->get_shape().size() != n->get_shape().size())
+    {
+        return false;
+    }
+
+    ngraph::replace_node(n, replacement);
+    return true;
 }
 
 //`simplify_multiply` optimizes the following 4 *base* cases
@@ -286,6 +383,7 @@ static std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<No
     return std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>(
         {{TI(op::Add), simplify_add},
          {TI(op::Multiply), simplify_multiply},
+         {TI(op::Concat), simplify_concat},
          {TI(op::Sum),
           std::function<bool(std::shared_ptr<Node>)>{
               simplify_reduction<op::Sum, get_sum_constant>}},

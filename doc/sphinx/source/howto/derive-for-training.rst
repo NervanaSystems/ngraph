@@ -77,7 +77,7 @@ We begin by building the graph, starting with the input parameter
 ``X``. We define a fully-connected layer, including a parameter for
 weights and bias.
 
-.. literalinclude:: ../../../examples/mnist_mlp.cpp
+.. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
    :lines: 124-136
 
@@ -85,7 +85,7 @@ weights and bias.
 We repeat the process for the next layer, which we
 normalize with a ``softmax``.
 
-.. literalinclude:: ../../../examples/mnist_mlp.cpp
+.. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
    :lines: 138-149
 
@@ -99,7 +99,7 @@ We use cross-entropy to compute the loss. nGraph does not currenty
 have a cross-entropy op, so we implement it directly, adding clipping
 to prevent underflow.
 
-.. literalinclude:: ../../../examples/mnist_mlp.cpp
+.. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
    :lines: 151-166
 
@@ -116,7 +116,7 @@ interpreted frameworks. In nGraph, we augment the loss computation
 with computations for the weight adjustments. This allows the
 calculations for the adjustments to be further optimized.
 
-.. literalinclude:: ../../../examples/mnist_mlp.cpp
+.. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
    :lines: 172-175
 
@@ -131,7 +131,7 @@ update computation for ``N`` will be given by the node
 The different update nodes will share intermediate computations. So to
 get the updated values for the weights we just say:
 
-.. literalinclude:: ../../../examples/mnist_mlp.cpp
+.. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
    :lines: 177-217
 
@@ -151,7 +151,7 @@ use the same nodes in different functions, nGraph currently does not
 allow the same nodes to be compiled in different functions, so we
 compile clones of the nodes.
 
-.. literalinclude:: ../../../examples/mnist_mlp.cpp
+.. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
    :lines: 220-226
 
