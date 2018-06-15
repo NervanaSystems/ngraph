@@ -177,7 +177,7 @@ if (NGRAPH_CPU_ENABLE)
 endif()
 
 if (NGRAPH_INTELGPU_ENABLE)
-    unit_test_control(BACKEND INTELGPU MANIFEST src/ngraph/runtime/intelgpu/unit_test.manifest)
+    #unit_test_control(BACKEND INTELGPU MANIFEST src/ngraph/runtime/intelgpu/unit_test.manifest)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_INTELGPU_ENABLE")
 endif()
 
