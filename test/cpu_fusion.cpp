@@ -52,7 +52,7 @@
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
-#include "ngraph/runtime/cpu/op/sigmoid.hpp"
+#include "ngraph/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_concat_inputs.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"

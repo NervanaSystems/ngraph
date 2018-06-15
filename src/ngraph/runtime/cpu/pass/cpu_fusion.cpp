@@ -49,7 +49,7 @@
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
-#include "ngraph/runtime/cpu/op/sigmoid.hpp"
+#include "ngraph/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 
 static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,

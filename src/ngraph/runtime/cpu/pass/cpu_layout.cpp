@@ -47,7 +47,7 @@
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
-#include "ngraph/runtime/cpu/op/sigmoid.hpp"
+#include "ngraph/op/sigmoid.hpp"
 
 using namespace std;
 using namespace mkldnn;
