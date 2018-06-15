@@ -160,8 +160,7 @@ void pass::CoreFusion::construct_folded_batch_norm()
 
     };
 
-    auto m =
-        std::make_shared<ngraph::pattern::Matcher>(bn, callback, std::string("folded_batch_norm"));
+    auto m = std::make_shared<ngraph::pattern::Matcher>(bn, callback);
     this->add_matcher(m);
 }
 
