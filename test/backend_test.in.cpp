@@ -4893,54 +4893,6 @@ NGRAPH_TEST(${BACKEND_NAME}, numeric_double_inf)
     EXPECT_EQ((vector<char>{false, false, true, false, false}), read_vector<char>(result));
 }
 
-#ifdef NGRAPH_TBB_ENABLE
-NGRAPH_TEST(${BACKEND_NAME}, abc_tbb)
-{
-    // Force TBB flow graph generation in the CPU backend
-    // This has no effect on other backends
-    bool use_tbb = (getenv("NGRAPH_CPU_USE_TBB") != nullptr);
-    if (!use_tbb)
-    {
-        setenv("NGRAPH_CPU_USE_TBB", "1", 1);
-    }
-
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::TensorView> c = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::TensorView> result = backend->create_tensor(element::f32, shape);
-
-    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
-    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
-    copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
-
-    backend->call(f, {result}, {a, b, c});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
-
-    backend->call(f, {result}, {b, a, c});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
-
-    backend->call(f, {result}, {a, c, b});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
-
-    if (!use_tbb)
-    {
-        unsetenv("NGRAPH_CPU_USE_TBB");
-    }
-}
-#endif // NGRAPH_TBB_ENABLE
-
 //
 // The unit tests for ReduceWindow follow exactly what we test for MaxPool---but they use ReduceWindow to do it.
 //
