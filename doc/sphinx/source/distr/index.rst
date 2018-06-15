@@ -6,27 +6,22 @@ Distributed Training in nGraph
 Data scientists with locally-scalable or cloud-based resources at their disposal 
 may find it worthwhile to experiment with several modes or variations for  
 distributed training. With more data and bigger models, distributed deep 
-learning accelerates training when working with large datasets or models with 
-many layers that usually cannot be fit to a single device.
+learning accelerates training when working with large datasets or when working 
+with models having many layers that usually cannot be fit to a single device.
 
 The more data that is fed to a Deep Learning (DL) model, the “smarter” it gets; 
-a natural result, then, is that the neural network model as a whole gets “smarter”.  
-Likewise, one indicator of getting “smarter” is being able to make better use 
-of fewer resources, something that is not possible with the traditional, 
-GPU-based approach. When it comes to distributed training,  
+a natural result, then, is that the neural network model as a whole gets
+“smarter”.  Likewise, one indicator of getting “smarter” is being able to make
+better use of fewer resources, something that is not possible with the traditional, GPU-based approach.  
 
 Using multiple machines helps to scale and speed up deep learning. With large 
 mini-batch training, `one could train Resnet-50 with Imagenet-1k data`_ to the 
-:term:`top 5` classifier in minutes using thousands of CPU nodes. See also: 
+*Top 5* classifier in minutes using thousands of CPU nodes. See also: 
 `arxiv.org/pdf/1709.05011.pdf`_.
   
-Currently, we support data parallel and plan to extend to model parallel in 
-
-.. Data parallel importing / parallelism / etc 
-
-nGraph. Data parallel splits the data and each worker node has the same model; 
-during each iteration, the gradients are aggregated across all workers with 
-`AllReduce` | `allreduce` and applied to update the weights. 
+Currently, we support data parallelism and plan to extend to model parallelism 
+for nGraph. Data parallelism splits the data, and each worker node has the same
+model; during each iteration, the gradients are aggregated across all workers with ``AllReduce | allreduce`` and applied to update the weights. 
 
 MXNet
 -----
