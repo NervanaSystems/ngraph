@@ -171,7 +171,7 @@ using namespace ngraph;
     auto& tensor_data = external_function->get_tensor_data();                                      \
     std::function<void(void*, void*, size_t)> kernel;                                              \
                                                                                                    \
-    SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::OP);                    \
+    SELECT_KERNEL(kernel, out[0].get_element_type(), OP);                                          \
                                                                                                    \
     auto element_count = out[0].get_size();                                                        \
     auto& arg0_tensor = tensor_data[args[0].get_name()];                                           \
@@ -187,7 +187,7 @@ using namespace ngraph;
     auto& tensor_data = external_function->get_tensor_data();                                      \
     std::function<void(void*, void*, void*, size_t)> kernel;                                       \
                                                                                                    \
-    SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::OP);                    \
+    SELECT_KERNEL(kernel, out[0].get_element_type(), OP);                                          \
                                                                                                    \
     auto element_count = out[0].get_size();                                                        \
     auto& arg0_tensor = tensor_data[args[0].get_name()];                                           \
@@ -208,37 +208,37 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Add)
             {
-                BUILD_BINARY_ELEMWISE_FUNCTOR(add);
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::add);
             }
 
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Multiply)
             {
-                BUILD_BINARY_ELEMWISE_FUNCTOR(multiply);
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::multiply);
             }
 
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Abs)
             {
-                BUILD_UNARY_ELEMWISE_FUNCTOR(abs);
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::abs);
             }
 
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Ceiling)
             {
-                BUILD_UNARY_ELEMWISE_FUNCTOR(ceil);
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::ceil);
             }
 
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Relu)
             {
-                BUILD_UNARY_ELEMWISE_FUNCTOR(relu);
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::relu);
             }
 
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Result)
             {
-                BUILD_UNARY_ELEMWISE_FUNCTOR(result);
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::result);
             }
 
             template <>
