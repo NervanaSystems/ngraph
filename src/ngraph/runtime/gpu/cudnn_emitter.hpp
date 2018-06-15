@@ -50,10 +50,37 @@ namespace ngraph
             public:
                 enum class Prop
                 {
-                    Inference,
+                    Inference = 0,
                     Forward,
                     Backward
                 };
+
+                size_t build_convolution(const runtime::gpu::GPURuntimeContext* ctx,
+                                         const cudnnDataType_t data_type,
+                                         const Shape& input_tensor_shape,
+                                         const Shape& input_filter_shape,
+                                         const Shape& output_tensor_shape,
+                                         const Strides& window_movement_strides,
+                                         const Strides& window_dilation_strides,
+                                         const Shape& padding_below);
+
+                size_t build_convolution_backward_data(const runtime::gpu::GPURuntimeContext* ctx,
+                                                       const cudnnDataType_t data_type,
+                                                       const Shape& input_filter_shape,
+                                                       const Shape& input_tensor_shape,
+                                                       const Shape& output_tensor_shape,
+                                                       const Strides& window_movement_strides,
+                                                       const Strides& window_dilation_strides,
+                                                       const Shape& padding_below);
+
+                size_t build_convolution_backward_filter(const runtime::gpu::GPURuntimeContext* ctx,
+                                                         const cudnnDataType_t data_type,
+                                                         const Shape& input_tensor_shape_0,
+                                                         const Shape& input_tensor_shape_1,
+                                                         const Shape& output_filter_shape,
+                                                         const Strides& window_movement_strides,
+                                                         const Strides& window_dilation_strides,
+                                                         const Shape& padding_below);
 
                 size_t build_reduce_forward(const GPURuntimeContext* ctx,
                                             const cudnnReduceTensorOp_t& reduce_op,
@@ -77,7 +104,23 @@ namespace ngraph
                                        const Shape& param_shape,
                                        double epsilon);
 
+                size_t build_softmax(const runtime::gpu::GPURuntimeContext* ctx,
+                                     const cudnnSoftmaxAlgorithm_t& algorithm,
+                                     const cudnnSoftmaxMode_t& mode,
+                                     const Prop& direction,
+                                     const Shape& tensor_shape);
+
                 cudnnTensorDescriptor_t& tensor_descriptor_from_shape(const Shape& shape);
+                cudnnFilterDescriptor_t&
+                    get_cudnn_filter_descriptor(const Shape& shape,
+                                                const cudnnDataType_t data_type,
+                                                const cudnnTensorFormat_t tensor_format);
+                cudnnConvolutionDescriptor_t&
+                    get_cudnn_convolution_descriptor(const Shape& padding,
+                                                     const Strides& window_movement_strides,
+                                                     const Strides& window_dilation_strides,
+                                                     cudnnConvolutionMode_t mode,
+                                                     cudnnDataType_t data_type);
 
             private:
                 CUDNNEmitter(GPUPrimitiveEmitter* emitter);

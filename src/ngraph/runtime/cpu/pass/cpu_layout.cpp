@@ -43,7 +43,10 @@
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/group_conv.hpp"
+#include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 
 using namespace std;
@@ -237,7 +240,7 @@ namespace ngraph
         {
             namespace pass
             {
-                template <typename T, bool use_bias>
+                template <typename T, bool use_bias, bool default_weights_format>
                 void ConvolutionLayout(std::shared_ptr<ngraph::Node> node,
                                        vector<memory::format>& prim_input_formats,
                                        vector<memory::format>& prim_output_formats)
@@ -246,6 +249,12 @@ namespace ngraph
 
                     auto arg0_shape = node->get_input_shape(0);
                     auto arg1_shape = node->get_input_shape(1);
+
+                    if (default_weights_format)
+                    {
+                        arg1_shape = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node)
+                                         ->get_weights_dimensions();
+                    }
                     auto result_shape = node->get_output_shape(0);
                     auto filter_strides = convolution->get_window_movement_strides();
                     auto padding_below = convolution->get_padding_below();
@@ -280,37 +289,68 @@ namespace ngraph
                         auto arg2_shape = node->get_input_shape(2);
                         memory::dims mkldnn_arg2_shape(arg2_shape.begin(), arg2_shape.end());
                         const memory::desc bias_desc(mkldnn_arg2_shape, et, memory::format::any);
-
-                        fwd_desc.reset(new convolution_forward::desc(prop_kind::forward,
-                                                                     algorithm::convolution_direct,
-                                                                     input_data_desc,
-                                                                     weights_desc,
-                                                                     bias_desc, // with bias
-                                                                     result_desc,
-                                                                     mkldnn_filter_strides,
-                                                                     mkldnn_dilated_strides,
-                                                                     mkldnn_padding_below,
-                                                                     mkldnn_padding_above,
-                                                                     padding_kind::zero));
+                        try
+                        {
+                            fwd_desc.reset(
+                                new convolution_forward::desc(prop_kind::forward,
+                                                              algorithm::convolution_direct,
+                                                              input_data_desc,
+                                                              weights_desc,
+                                                              bias_desc, // with bias
+                                                              result_desc,
+                                                              mkldnn_filter_strides,
+                                                              mkldnn_dilated_strides,
+                                                              mkldnn_padding_below,
+                                                              mkldnn_padding_above,
+                                                              padding_kind::zero));
+                        }
+                        catch (const mkldnn::error& e)
+                        {
+                            throw ngraph_error(
+                                "setting layouts on Convolution failed with MKLDNN error: " +
+                                e.message);
+                        }
                     }
                     else
                     {
-                        fwd_desc.reset(new convolution_forward::desc(prop_kind::forward,
-                                                                     algorithm::convolution_direct,
-                                                                     input_data_desc,
-                                                                     weights_desc,
-                                                                     result_desc,
-                                                                     mkldnn_filter_strides,
-                                                                     mkldnn_dilated_strides,
-                                                                     mkldnn_padding_below,
-                                                                     mkldnn_padding_above,
-                                                                     padding_kind::zero));
+                        try
+                        {
+                            fwd_desc.reset(
+                                new convolution_forward::desc(prop_kind::forward,
+                                                              algorithm::convolution_direct,
+                                                              input_data_desc,
+                                                              weights_desc,
+                                                              result_desc,
+                                                              mkldnn_filter_strides,
+                                                              mkldnn_dilated_strides,
+                                                              mkldnn_padding_below,
+                                                              mkldnn_padding_above,
+                                                              padding_kind::zero));
+                        }
+                        catch (const mkldnn::error& e)
+                        {
+                            throw ngraph_error(
+                                "setting layouts on Convolution failed with MKLDNN error: " +
+                                e.message);
+                        }
                     }
                     convolution_forward::primitive_desc prim_desc(*fwd_desc, cpu_engine);
                     prim_input_formats.push_back(static_cast<memory::format>(
                         prim_desc.src_primitive_desc().desc().data.format));
-                    prim_input_formats.push_back(static_cast<memory::format>(
-                        prim_desc.weights_primitive_desc().desc().data.format));
+
+                    if (default_weights_format)
+                    {
+                        //note, we need the original shape (4D) while arg_shape1 is redefined
+                        prim_input_formats.push_back(
+                            runtime::cpu::mkldnn_utils::CreateNativeDataFormat(
+                                node->get_input_shape(1)));
+                    }
+                    else
+                    {
+                        prim_input_formats.push_back(static_cast<memory::format>(
+                            prim_desc.weights_primitive_desc().desc().data.format));
+                    }
+
                     if (use_bias)
                     {
                         prim_input_formats.push_back(static_cast<memory::format>(
@@ -327,7 +367,27 @@ namespace ngraph
                     {
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
-                        ConvolutionLayout<ngraph::op::Convolution, false>(
+                        ConvolutionLayout<ngraph::op::Convolution, false, false>(
+                            node, prim_input_formats, prim_output_formats);
+
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::GroupConvolution)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+                        ConvolutionLayout<ngraph::op::GroupConvolution, false, true>(
                             node, prim_input_formats, prim_output_formats);
 
                         node =
@@ -347,7 +407,7 @@ namespace ngraph
                     {
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
-                        ConvolutionLayout<ngraph::op::ConvolutionBias, true>(
+                        ConvolutionLayout<ngraph::op::ConvolutionBias, true, false>(
                             node, prim_input_formats, prim_output_formats);
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
@@ -366,7 +426,7 @@ namespace ngraph
                     {
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
-                        ConvolutionLayout<ngraph::op::ConvolutionRelu, false>(
+                        ConvolutionLayout<ngraph::op::ConvolutionRelu, false, false>(
                             node, prim_input_formats, prim_output_formats);
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
@@ -385,7 +445,7 @@ namespace ngraph
                     {
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
-                        ConvolutionLayout<ngraph::op::ConvolutionBiasRelu, true>(
+                        ConvolutionLayout<ngraph::op::ConvolutionBiasRelu, true, false>(
                             node, prim_input_formats, prim_output_formats);
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
@@ -1349,6 +1409,38 @@ namespace ngraph
                         set_default_layouts(external_function, node);
                     }
                 }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Lstm)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        // TODO: for now, framework formats for src_layer, src_iter, weights_layer and weights_iter
+                        // matches to the expected mkldnn format. we need to handle a case to insert convert Op's
+                        // if the format doesn't matches.
+                        set_default_layouts(external_function, node, false);
+                    }
+                    else
+                    {
+                        throw ngraph_error("LSTM fused op is only supported in MKLDNN for now.");
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Rnn)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        // TODO: for now, framework formats for src_layer, src_iter, weights_layer and weights_iter
+                        // matches to the expected mkldnn format. we need to handle a case to insert convert Op's
+                        // if the format doesn't matches.
+                        set_default_layouts(external_function, node, false);
+                    }
+                    else
+                    {
+                        throw ngraph_error("RNN fused op is only supported in MKLDNN for now.");
+                    }
+                }
             }
         }
     }
@@ -1363,6 +1455,8 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::AvgPoolBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPoolBackprop>},
     {TI(ngraph::op::Convolution), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Convolution>},
+    {TI(ngraph::op::GroupConvolution),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::GroupConvolution>},
     {TI(ngraph::op::ConvolutionBackpropData),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBackpropData>},
     {TI(ngraph::op::ConvolutionBackpropFilters),
@@ -1396,6 +1490,8 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::Sigmoid), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Sigmoid>},
     {TI(ngraph::op::SigmoidBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::SigmoidBackprop>},
+    {TI(ngraph::op::Lstm), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Lstm>},
+    {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Rnn>},
 };
 
 bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)

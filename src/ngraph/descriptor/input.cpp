@@ -37,6 +37,16 @@ void Input::replace_output(Output& new_output)
     new_output.add_input(this);
     m_output = &new_output;
     m_src_node = std::shared_ptr<Node>(new_output.get_node());
+
+    static const auto nerc = std::getenv("NGRAPH_ENABLE_REPLACE_CHECK");
+
+    if (nerc)
+    {
+        //the result of copy_with_new_args will be thrown away or
+        //an exception will be thrown by `m_node`'s class c-tor
+        //if a new input violates one of the type checks in the c-tor.
+        (this->m_node->copy_with_new_args(this->m_node->get_arguments()));
+    }
 }
 
 void Input::replace_output(std::shared_ptr<Node> node, size_t i)
@@ -44,7 +54,7 @@ void Input::replace_output(std::shared_ptr<Node> node, size_t i)
     replace_output(node->m_outputs.at(i));
 }
 
-std::shared_ptr<Node> Input::get_node()
+std::shared_ptr<Node> Input::get_node() const
 {
     return m_node->shared_from_this();
 }

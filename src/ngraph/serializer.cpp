@@ -96,16 +96,7 @@ using const_data_callback_t = shared_ptr<Node>(const string&, const element::Typ
 template <typename T>
 T get_or_default(nlohmann::json& j, const std::string& key, const T& default_value)
 {
-    T rc;
-    try
-    {
-        rc = j.at(key).get<T>();
-    }
-    catch (...)
-    {
-        rc = default_value;
-    }
-    return rc;
+    return j.count(key) != 0 ? j.at(key).get<T>() : default_value;
 }
 
 static std::shared_ptr<ngraph::Function>
@@ -213,17 +204,10 @@ std::string ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t ind
 
 shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
 {
-    std::stringstream ss;
-    ss << in.rdbuf();
-    return deserialize(ss.str());
-}
-
-shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
-{
     shared_ptr<Function> rc;
-    if (file_util::exists(s))
+    if (cpio::is_cpio(in))
     {
-        cpio::Reader reader(s);
+        cpio::Reader reader(in);
         vector<cpio::FileInfo> file_info = reader.get_file_info();
         if (file_info.size() > 0)
         {
@@ -258,6 +242,25 @@ shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
                 rc = f;
             }
         }
+    }
+    else
+    {
+        // json file?
+        std::stringstream ss;
+        ss << in.rdbuf();
+        rc = deserialize(ss.str());
+    }
+    return rc;
+}
+
+shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
+{
+    shared_ptr<Function> rc;
+    if (file_util::exists(s))
+    {
+        // s is a file and not a json string
+        ifstream in(s, ios_base::binary | ios_base::in);
+        rc = deserialize(in);
     }
     else
     {

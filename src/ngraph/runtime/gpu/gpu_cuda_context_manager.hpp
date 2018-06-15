@@ -30,19 +30,19 @@ namespace ngraph
             class CudaContextManager
             {
             public:
-                static CudaContextManager& instance();
+                static CudaContextManager& Instance();
                 CudaContextManager(CudaContextManager const&) = delete;
                 CudaContextManager(CudaContextManager&&) = delete;
                 CudaContextManager& operator=(CudaContextManager const&) = delete;
                 CudaContextManager& operator=(CudaContextManager&&) = delete;
 
-                std::shared_ptr<CUcontext> get_context() { return m_context_ptr; }
+                CUcontext GetContext() { return m_context; }
+                void SetContextCurrent() { cuCtxSetCurrent(m_context); }
             protected:
                 CudaContextManager();
                 ~CudaContextManager();
                 CUdevice m_device;
                 CUcontext m_context;
-                std::shared_ptr<CUcontext> m_context_ptr;
             };
         }
     }
