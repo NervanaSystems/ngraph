@@ -184,6 +184,11 @@ if (${NGRAPH_CPU_ENABLE})
     set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,${BIN}")
 endif()
 
+if (${NGRAPH_INTELGPU_ENABLE})
+    get_target_property(BIN intelgpu_backend BINARY_DIR)
+    set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,${BIN}")
+endif()
+
 if (${NGRAPH_GPU_ENABLE})
     get_target_property(BIN gpu_backend BINARY_DIR)
     set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,${BIN}")
