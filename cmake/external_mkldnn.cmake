@@ -91,6 +91,7 @@ if(${CMAKE_VERSION} VERSION_LESS 3.2)
         GIT_TAG ${MKLDNN_GIT_TAG}
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND
+        PATCH_COMMAND patch ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/src/CMakeLists.txt -i ${CMAKE_SOURCE_DIR}/cmake/mkldnn.diff
         # Uncomment below with any in-flight MKL-DNN patches
         # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
         CMAKE_ARGS
@@ -116,6 +117,7 @@ else()
         GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
         GIT_TAG ${MKLDNN_GIT_TAG}
         UPDATE_COMMAND ""
+        PATCH_COMMAND patch ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/src/CMakeLists.txt -i ${CMAKE_SOURCE_DIR}/cmake/mkldnn.diff
         # Uncomment below with any in-flight MKL-DNN patches
         # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
         CMAKE_ARGS
@@ -145,13 +147,10 @@ ExternalProject_Add_Step(
     DEPENDERS configure
     )
 
-message(STATUS "************************************* NGRAPH_BUILD_DIR ${NGRAPH_BUILD_DIR}")
-ExternalProject_Add_Step(
-    ext_mkldnn
-    PostBuild
+add_custom_command(TARGET ext_mkldnn POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib ${NGRAPH_BUILD_DIR}
-    DEPENDEES build
-    )
+    COMMENT "Move mkldnn libraries to ngraph build directory"
+)
 
 add_library(libmkldnn INTERFACE)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
