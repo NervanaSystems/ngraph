@@ -179,9 +179,9 @@ add_definitions("-DLIBRARY_VERSION=\"${NGRAPH_VERSION}\"")
 set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
 target_link_libraries(ngraph PUBLIC libjson)
 
-set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,$ORIGIN")
-
 if (NOT APPLE)
+    set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,$ORIGIN")
+
     # NGraph links against one or more libraries (ex. LLVM) but we don't want to
     # export these symbols as part of the DSO. This is a GNU ld (and derivatives) specific
     # option so making this portable is still an open issue. As a note for the future,
