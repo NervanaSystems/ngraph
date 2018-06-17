@@ -87,7 +87,7 @@ normalize with a ``softmax``.
 
 .. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
-   :lines: 138-149
+   :lines: 137-149
 
 
 .. _loss:
