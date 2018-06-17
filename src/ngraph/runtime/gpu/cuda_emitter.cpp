@@ -331,6 +331,87 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const runtime::gpu::GPURunti
     return primitive_index;
 }
 
+size_t runtime::gpu::CUDAEmitter::build_reverse_sequence(const runtime::gpu::GPURuntimeContext* ctx,
+                                                         const std::array<std::string, 3>& dtypes,
+                                                         GPUShape input_shape0,
+                                                         GPUShape input_shape1,
+                                                         GPUShape output_shape,
+                                                         size_t batch_axis,
+                                                         size_t sequence_axis)
+{
+    std::stringstream kernel_name;
+    kernel_name << "reverse_sequence_" << join(dtypes, "_") << "_bi_" << batch_axis << "_si_"
+                << sequence_axis << "_r_" << output_shape.size();
+
+    std::string hash = kernel_name.str() + "_i" + join(input_shape0, "_") + "_i" +
+                       join(input_shape1, "_") + "_o" + join(output_shape);
+    // For backwards compatability we currently use two unordered maps
+    // 1. one looks up the compiled cuda kernel (CudaFunctionPool)
+    // 2. the other looks to see if this kernel is already in the primitive list
+
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    // check if the kernel has already been compiled. if so, create
+    // a launch primitive for it based on the input tensor shape
+    // but do not recompile the kernel. otherwise, do it all:
+    // recompile the kernel and then create the primitive
+    auto compiled_kernel = ctx->compiled_kernel_pool->get(kernel_name.str());
+    if (compiled_kernel == nullptr)
+    {
+        codegen::CodeWriter writer;
+        CudaKernelBuilder::add_pod_typedefs(writer);
+        CudaKernelBuilder::get_reverse_sequence_op(
+            writer, kernel_name.str(), dtypes, batch_axis, sequence_axis, output_shape.size());
+        compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
+    }
+
+    uint32_t nthreads = static_cast<uint32_t>(shape_size(output_shape));
+    GPUShape output_strides = row_major_strides(output_shape);
+
+    // get an allocator for transient per kernel gpu memory
+    GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+    size_t idx_output_shape =
+        allocator.reserve_argspace(output_shape.data(), output_shape.size() * sizeof(uint32_t));
+    size_t idx_output_strides =
+        allocator.reserve_argspace(output_strides.data(), output_strides.size() * sizeof(uint32_t));
+
+    // create the launch primitive
+    std::unique_ptr<gpu::primitive> reserve_sequence(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void* param_output_shape = runtime::gpu::invoke_memory_primitive(ctx, idx_output_shape);
+            void* param_output_strides =
+                runtime::gpu::invoke_memory_primitive(ctx, idx_output_strides);
+            std::vector<void*> args_list{&inputs[0],
+                                         &inputs[1],
+                                         &outputs[0],
+                                         &param_output_shape,
+                                         &param_output_strides,
+                                         &nthreads};
+
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          static_cast<uint32_t>(nthreads),
+                                          1,
+                                          1, // grid dim
+                                          1,
+                                          1,
+                                          1, // block dim
+                                          0,
+                                          NULL, // shared mem and stream
+                                          args_list.data(),
+                                          0));  // arguments
+            CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+        }});
+
+    primitive_index = this->m_primitive_emitter->insert(std::move(reserve_sequence));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
+
 size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx,
                                                     const std::array<std::string, 2>& dtypes,
                                                     GPUShape input_shape,
@@ -1371,6 +1452,15 @@ __device__ __forceinline__ int msub16(int a, int b, int c)
 __device__ __forceinline__ float  load(const float*  __restrict__ in, int i=0, bool b=true)
 {
     float v = 0.0f;
+    if (b)
+    {
+        v = __ldg(in + i);
+    }
+    return v;
+}
+__device__ __forceinline__ int32_t  load(const int32_t*  __restrict__ in, int i=0, bool b=true)
+{
+    int32_t v = 0;
     if (b)
     {
         v = __ldg(in + i);
