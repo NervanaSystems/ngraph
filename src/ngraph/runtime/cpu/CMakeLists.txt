@@ -16,6 +16,7 @@
 
 set(SRC
     cpu_backend.cpp
+    cpu_builder.cpp
     cpu_call_frame.cpp
     cpu_emitter.cpp
     cpu_external_function.cpp
@@ -36,6 +37,7 @@ set(SRC
     mkldnn_utils.cpp
     op/batch_dot.cpp
     op/batch_norm_relu.cpp
+    op/group_conv.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
     op/convert_layout.cpp

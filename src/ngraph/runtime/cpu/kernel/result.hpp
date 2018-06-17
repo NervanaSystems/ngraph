@@ -16,26 +16,19 @@
 
 #pragma once
 
-#include "ngraph/pass/pass.hpp"
-
 namespace ngraph
 {
     namespace runtime
     {
         namespace cpu
         {
-            namespace pass
+            namespace kernel
             {
-                class CPURnnMatFusion : public ngraph::pass::FunctionPass
+                template <typename ElementType>
+                void result(const void* arg, void* out, size_t count)
                 {
-                public:
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-                };
-                class CPUBatchFusion : public ngraph::pass::FunctionPass
-                {
-                public:
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-                };
+                    memcpy(out, arg, sizeof(ElementType) * count);
+                }
             }
         }
     }

@@ -188,3 +188,35 @@ TEST(CSE, abs_add_abs_add_negative)
     ASSERT_EQ(oadd4->get_argument(1), D);
     ASSERT_EQ(oadd3->get_argument(0), oadd4->get_argument(0));
 }
+
+template <typename T>
+static void execute_cse_reduction_test()
+{
+    Shape zero_shape{0};
+    auto A = std::make_shared<op::Parameter>(element::i32, Shape{3, 5});
+    auto a_reduction_op = std::make_shared<T>(A, AxisSet{0, 1});
+    auto a_reduction_op2 = std::make_shared<T>(A, AxisSet{0, 1});
+    auto a_reduction_op3 = std::make_shared<T>(A, AxisSet{0});
+    auto sub_aa = a_reduction_op - a_reduction_op2;
+
+    auto B = std::make_shared<op::Parameter>(element::i32, Shape{3, 5});
+    auto b_reduction_op = std::make_shared<T>(B, AxisSet{0, 1});
+
+    auto sub_ab = a_reduction_op - b_reduction_op;
+    auto f = std::make_shared<Function>(NodeVector{sub_aa, sub_ab, a_reduction_op3},
+                                        op::ParameterVector{A, B});
+    pass::Manager pass_manager;
+
+    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(sub_aa->get_argument(0), sub_aa->get_argument(1));
+    ASSERT_NE(sub_ab->get_argument(0), sub_ab->get_argument(1));
+    ASSERT_NE(f->get_results().at(2)->get_argument(0), sub_aa->get_argument(0));
+}
+
+TEST(CSE, reduction_ops)
+{
+    execute_cse_reduction_test<op::Sum>();
+    execute_cse_reduction_test<op::Product>();
+}
