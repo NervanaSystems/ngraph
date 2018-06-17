@@ -56,8 +56,7 @@ if (NGRAPH_GPU_ENABLE)
         ${CUDA_LIBRARIES}
         ${CUDA_CUBLAS_LIBRARIES}
         ${CUDNN_LIBRARIES})
-    add_custom_command(TARGET gpu_backend POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE_DIR:gpu_backend>/*gpu_backend* ${NGRAPH_BUILD_DIR})
+    set_target_properties(gpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
     install(TARGETS gpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()
