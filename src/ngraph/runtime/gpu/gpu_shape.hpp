@@ -25,6 +25,7 @@
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
+#include "ngraph/axis_vector.hpp"
 
 namespace ngraph
 {
@@ -135,6 +136,20 @@ namespace ngraph
                 {
                     throw std::runtime_error(
                         "Request for Coordinate which exceed the bitwidth available for GPUShapes "
+                        "(32)");
+                }
+                this->push_back(static_cast<uint32_t>(size));
+            }
+        }
+
+        GPUShape(const AxisVector& vec)
+        {
+            for (auto const& size : vec)
+            {
+                if (size >> 32 != 0)
+                {
+                    throw std::runtime_error(
+                        "Request for axis vector which exceed the bitwidth available for GPUShapes "
                         "(32)");
                 }
                 this->push_back(static_cast<uint32_t>(size));
