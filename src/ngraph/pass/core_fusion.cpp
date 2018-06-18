@@ -27,11 +27,13 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
+#include "ngraph/op/exp.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
@@ -86,37 +88,98 @@ void pass::CoreFusion::construct_relu()
 void pass::CoreFusion::construct_sigmoid()
 {
     NGRAPH_INFO<<" core fusion for construct sigmoid ";
-    
-    // auto iconst0 = construct_constant_node(0);
-    // auto val = make_shared<pattern::op::Label>(iconst0);
-    // auto zero = make_shared<pattern::op::Label>(iconst0, nullptr, NodeVector{iconst0});
+    //construct variance
+    auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
+    auto neg_input = std::make_shared<op::Negative>(input);
+    auto exp_neg_input = std::make_shared<op::Exp>(neg_input);
 
-    // auto broadcast_pred = [](std::shared_ptr<Node> n) {
-    //     return static_cast<bool>(std::dynamic_pointer_cast<op::Broadcast>(n));
-    // };
-    // auto skip_broadcast = std::make_shared<pattern::op::Skip>(zero, broadcast_pred);
-    // auto max = make_shared<op::Maximum>(skip_broadcast, val);
+    // broadcast input
+    auto constant = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto broadcast_constant = std::make_shared<op::Broadcast>(constant, Shape{3, 4}, AxisSet{0, 1});
 
-    // pattern::graph_rewrite_callback callback = [val, zero](pattern::Matcher& m) {
-    //     NGRAPH_DEBUG << "In a callback for construct_relu against "
-    //                  << m.get_match_root()->get_name();
+    auto add_exp = std::make_shared<op::Add>(exp_neg_input, broadcast_constant);
+    auto divide_1_over_exp = std::make_shared<op::Divide>(broadcast_constant, add_exp);
 
-    //     auto pattern_map = m.get_pattern_map();
-    //     auto mzero = m.get_pattern_map()[zero];
-    //     if (!ngraph::is_zero(mzero))
-    //     {
-    //         NGRAPH_DEBUG << "zero constant = " << mzero->get_name() << " not equal to 0\n";
-    //         return false;
-    //     }
-    //     auto mpattern = m.get_match_root();
+    //Define a call back that needs to called once the DFG matches the pattern
+    ngraph::pattern::graph_rewrite_callback callback = [input](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
+                     << m.get_match_root()->get_name();
+        auto pattern_map = m.get_pattern_map();
 
-    //     auto cg = shared_ptr<Node>(new op::Relu(pattern_map[val]));
-    //     ngraph::replace_node(m.get_match_root(), cg);
-    //     return true;
-    // };
+        if (m.get_match_root()->get_element_type() != element::f32)
+        {
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+                         << " type is not float!";
+            return false;
+        }
 
-    // auto m = make_shared<pattern::Matcher>(max, callback);
-    // this->add_matcher(m);
+        if (m.get_match_root()->get_outputs().size() != pattern_map[input]->get_outputs().size())
+        {
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+                         << "input= " << pattern_map[input]->get_name() << "size dont match!";
+            return false;
+        }
+
+        auto sigmoid_node = std::make_shared<op::Sigmoid>(pattern_map[input]);
+        ngraph::replace_node(m.get_match_root(), sigmoid_node);
+        return true;
+    };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(divide_1_over_exp, callback);
+    this->add_matcher(m);
+}
+
+
+void pass::CoreFusion::construct_sigmoid_bprop()
+{
+    //construct variance
+    auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
+    auto neg_input = std::make_shared<op::Negative>(input);
+    auto exp_neg_input = std::make_shared<op::Exp>(neg_input);
+
+    // broadcast input
+    auto constant = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto broadcast_constant = std::make_shared<op::Broadcast>(constant, Shape{3, 4}, AxisSet{0, 1});
+
+    auto add_exp = std::make_shared<op::Add>(exp_neg_input, broadcast_constant);
+    // //auto divide_1_over_exp = std::make_shared<op::Divide>(broadcast_constant, add_exp);
+    auto sigmoid_fwd = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
+
+    auto delta = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
+    auto neg_delta = std::make_shared<op::Negative>(delta);
+
+    auto multiply_sigmoid_delta = std::make_shared<op::Multiply>(sigmoid_fwd, neg_delta);
+    auto divide_2 = std::make_shared<op::Divide>(multiply_sigmoid_delta, add_exp);
+
+    auto multiply_2 = std::make_shared<op::Multiply>(divide_2, exp_neg_input);
+    auto negtive_2 = std::make_shared<op::Negative>(multiply_2);
+
+    //Define a call back that needs to called once the DFG matches the pattern
+    ngraph::pattern::graph_rewrite_callback callback = [input, delta](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
+                     << m.get_match_root()->get_name();
+        auto pattern_map = m.get_pattern_map();
+        if (m.get_match_root()->get_element_type() != element::f32)
+        {
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+                         << " type is not float!";
+            return false;
+        }
+
+        if (m.get_match_root()->get_shape().size() != pattern_map[input]->get_shape().size())
+        {
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+                         << "input= " << pattern_map[input]->get_name() << "size dont match!";
+            return false;
+        }
+        auto dsigmoid =
+            std::make_shared<op::SigmoidBackprop>(pattern_map[input], pattern_map[delta]);
+        ngraph::replace_node(m.get_match_root(), dsigmoid);
+        return true;
+    };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(negtive_2, callback);
+    this->add_matcher(m);
 }
 
 void pass::CoreFusion::construct_folded_batch_norm()
