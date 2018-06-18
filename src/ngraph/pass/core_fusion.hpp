@@ -34,7 +34,9 @@ public:
     {
         construct_relu();
         construct_folded_batch_norm();
+        construct_optimized_strided_conv();
     }
     void construct_relu();
     void construct_folded_batch_norm();
+    void construct_optimized_strided_conv();
 };

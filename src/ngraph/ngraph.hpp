@@ -119,6 +119,7 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"

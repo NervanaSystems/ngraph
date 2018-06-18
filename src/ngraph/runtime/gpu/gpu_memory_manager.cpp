@@ -84,6 +84,7 @@ runtime::gpu::GPUAllocator::GPUAllocator(const GPUAllocator& g)
 size_t runtime::gpu::GPUAllocator::reserve_argspace(const void* data, size_t size)
 {
     // add parameter data to host buffer that will be transfered to device
+    size = pass::MemoryManager::align(size, runtime::gpu::GPUMemoryManager::alignment);
     size_t offset = m_manager->queue_for_transfer(data, size);
     // required to capture m_manager pointer
     // directly rather than `this` pointer
@@ -101,7 +102,7 @@ size_t runtime::gpu::GPUAllocator::reserve_argspace(const void* data, size_t siz
     return m_manager->m_primitive_emitter->insert(mem_primitive);
 }
 
-size_t runtime::gpu::GPUAllocator::reserve_workspace(size_t size)
+size_t runtime::gpu::GPUAllocator::reserve_workspace(size_t size, bool zero_initialize)
 {
     size_t offset = m_manager->m_workspace_manager.allocate(size);
     m_active.push(offset);
@@ -116,7 +117,12 @@ size_t runtime::gpu::GPUAllocator::reserve_workspace(size_t size)
             throw std::runtime_error("An attempt was made to use unallocated device memory.");
         }
         auto gpu_mem = static_cast<uint8_t*>(manager->m_workspace);
-        return static_cast<void*>(gpu_mem + offset);
+        auto workspace = static_cast<void*>(gpu_mem + offset);
+        if (zero_initialize)
+        {
+            runtime::gpu::cuda_memset(workspace, 0, size);
+        }
+        return workspace;
     };
     return m_manager->m_primitive_emitter->insert(mem_primitive);
 }
