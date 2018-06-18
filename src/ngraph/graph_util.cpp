@@ -161,7 +161,7 @@ std::list<std::shared_ptr<ngraph::Node>>
             size_t count = node_dependency_count[user];
             if (count == 0)
             {
-                independent_nodes.push_front(user);
+                independent_nodes.push_back(user);
             }
         }
     }
