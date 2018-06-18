@@ -184,27 +184,19 @@ std::string codegen::file_util::get_temp_directory()
 vector<char> codegen::file_util::read_file_contents(const string& path)
 {
     size_t file_size = get_file_size(path);
-    vector<char> data;
-    data.reserve(file_size);
-    data.resize(file_size);
+    vector<char> data(file_size);
 
-    FILE* f = fopen(path.c_str(), "rb");
-    if (f)
-    {
-        char* p = data.data();
-        size_t remainder = file_size;
-        size_t offset = 0;
-        while (f && remainder > 0)
-        {
-            size_t rc = fread(&p[offset], 1, remainder, f);
-            offset += rc;
-            remainder -= rc;
-        }
-        fclose(f);
-    }
-    else
-    {
+    std::unique_ptr<FILE, decltype(&fclose)> f(fopen(path.c_str(), "rb"), &fclose);
+    if (!f) {
         throw std::runtime_error("error opening file '" + path + "'");
+    }
+    char* p = data.data();
+    size_t remainder = file_size;
+    size_t offset = 0;
+    while (f && remainder > 0) {
+        size_t rc = fread(&p[offset], 1, remainder, f.get());
+        offset += rc;
+        remainder -= rc;
     }
     return data;
 }
