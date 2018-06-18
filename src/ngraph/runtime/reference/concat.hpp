@@ -41,18 +41,7 @@ namespace ngraph
                 {
                     // CoordinateTransform gets confused when the last input has a zero-size dim, so we will
                     // just skip for zero-element tensors.
-                    bool any_zero = false;
-
-                    for (size_t len : in_shapes[i])
-                    {
-                        if (len == 0)
-                        {
-                            any_zero = true;
-                            break;
-                        }
-                    }
-
-                    if (any_zero)
+                    if (shape_size(in_shapes[i]) == 0)
                     {
                         continue;
                     }

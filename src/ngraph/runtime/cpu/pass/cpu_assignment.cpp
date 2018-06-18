@@ -91,15 +91,12 @@ namespace ngraph
                         // dimensions, so don't assign it in such cases.
                         bool any_zero = false;
 
-                        for (size_t i = 0; i < node->get_input_size() && !any_zero; i++)
+                        for (size_t i = 0; i < node->get_input_size(); i++)
                         {
-                            for (size_t len : node->get_input_shape(i))
+                            if (shape_size(node->get_input_shape(i)) == 0)
                             {
-                                if (len == 0)
-                                {
-                                    any_zero = true;
-                                    break;
-                                }
+                                any_zero = true;
+                                break;
                             }
                         }
 
