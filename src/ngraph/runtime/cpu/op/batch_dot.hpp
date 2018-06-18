@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,27 +16,28 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/op/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace op
     {
-        class CoreFusion;
+        class BatchDot : public util::RequiresTensorViewArgs
+        {
+        public:
+            BatchDot(std::shared_ptr<Node> a,
+                     std::shared_ptr<Node> b,
+                     bool transpose_a,
+                     bool transpose_b);
+
+            bool get_is_a_transposed() const { return m_transpose_a; }
+            bool get_is_b_transposed() const { return m_transpose_b; }
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+        private:
+            bool m_transpose_a;
+            bool m_transpose_b;
+        };
     }
 }
-
-class ngraph::pass::CoreFusion : public ngraph::pass::GraphRewrite
-{
-public:
-    CoreFusion()
-        : GraphRewrite()
-    {
-        construct_relu();
-        construct_folded_batch_norm();
-        construct_optimized_strided_conv();
-    }
-    void construct_relu();
-    void construct_folded_batch_norm();
-    void construct_optimized_strided_conv();
-};

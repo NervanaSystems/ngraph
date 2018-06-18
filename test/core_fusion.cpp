@@ -55,3 +55,59 @@ TEST(core_fusion, core_fusion_pass_basic)
     pass_manager.run_passes(func);
     ASSERT_NE(std::dynamic_pointer_cast<op::Relu>(graph->get_argument(0)), nullptr);
 }
+
+TEST(core_fusion, sparsity_opt_56x56)
+{
+    Shape win_size_3{1, 1, 3, 3};
+    Shape win_size_1{1, 1, 1, 1};
+    Strides stride_2{2, 2};
+    Strides stride_1{1, 1};
+    CoordinateDiff pad_0{0, 0};
+    CoordinateDiff pad_1{1, 1};
+    auto data_stride3 = std::make_shared<op::Parameter>(element::f32, Shape{1, 64, 56, 56});
+    auto weights_stride3 = std::make_shared<op::Parameter>(element::f32, Shape{64, 64, 3, 3});
+
+    auto conv_stride3 = std::make_shared<op::Convolution>(
+        data_stride3, weights_stride3, stride_1, stride_1, pad_1, pad_1);
+    auto param_broadcast_w3 = std::make_shared<op::Parameter>(element::f32, Shape{64});
+    auto broadcast_w3 =
+        std::make_shared<op::Broadcast>(param_broadcast_w3, Shape{1, 64, 56, 56}, AxisSet{0, 2, 3});
+    auto add_w3 = std::make_shared<op::Add>(conv_stride3, broadcast_w3);
+    auto relu_w3 = std::make_shared<op::Relu>(add_w3);
+    ///
+    auto weights_stride1 = std::make_shared<op::Parameter>(element::f32, Shape{256, 64, 1, 1});
+    auto conv_stride1 = std::make_shared<op::Convolution>(relu_w3, weights_stride1);
+    auto param_broadcast_w1 = std::make_shared<op::Parameter>(element::f32, Shape{256});
+    auto broadcast_w1 = std::make_shared<op::Broadcast>(
+        param_broadcast_w1, Shape{1, 256, 56, 56}, AxisSet{0, 2, 3});
+    auto add_w1 = std::make_shared<op::Add>(conv_stride1, broadcast_w1);
+    ////
+    auto other_arg = std::make_shared<op::Parameter>(element::f32, Shape{1, 256, 56, 56});
+    auto add_two_convs = std::make_shared<op::Add>(add_w1, other_arg);
+    auto relu_two_convs = std::make_shared<op::Relu>(add_two_convs);
+    ///
+    auto weights_conv_s2 = std::make_shared<op::Parameter>(element::f32, Shape{512, 256, 1, 1});
+    auto conv_s2_1 = std::make_shared<op::Convolution>(relu_two_convs, weights_conv_s2, stride_2);
+    auto conv_s2_2 = std::make_shared<op::Convolution>(relu_two_convs, weights_conv_s2, stride_2);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CoreFusion>();
+    auto params = op::ParameterVector{data_stride3,
+                                      weights_stride3,
+                                      param_broadcast_w3,
+                                      weights_stride1,
+                                      param_broadcast_w1,
+                                      other_arg,
+                                      weights_conv_s2};
+    auto func = make_shared<Function>(NodeVector{conv_s2_1, conv_s2_2}, params);
+    pass_manager.run_passes(func);
+    auto results = func->get_results();
+    auto t_eltwise_conv1 =
+        std::dynamic_pointer_cast<op::Convolution>(results.at(0)->get_argument(0));
+    auto t_eltwise_conv2 =
+        std::dynamic_pointer_cast<op::Convolution>(results.at(1)->get_argument(0));
+    ASSERT_TRUE(t_eltwise_conv1);
+    ASSERT_TRUE(t_eltwise_conv2);
+    ASSERT_EQ(t_eltwise_conv1->get_window_movement_strides(), stride_1);
+    ASSERT_EQ(t_eltwise_conv2->get_window_movement_strides(), stride_1);
+}
