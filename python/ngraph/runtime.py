@@ -40,9 +40,9 @@ def runtime(backend_name='CPU'):  # type: (str) -> 'Runtime'
 class Runtime:
     """Represents the ngraph++ runtime environment."""
 
-    def __init__(self, backend_name):  # type: (str) -> None
+    def __init__(self, backend_name, **options):  # type: (str) -> None
         self.backend_name = backend_name
-        self.backend = Backend.create(backend_name)
+        self.backend = Backend.create(backend_name, options)
 
     def __repr__(self):  # type: () -> str
         return '<Runtime: Backend=\'{}\'>'.format(self.backend_name)

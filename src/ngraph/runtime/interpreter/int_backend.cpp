@@ -29,11 +29,16 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorViewLayout;
 
-extern "C" void create_backend()
+extern "C" runtime::Backend* create_backend(const std::string&, const runtime::Backend::OptionsMap&)
 {
-    runtime::Backend::register_backend("INTERPRETER",
-                                       make_shared<runtime::interpreter::INTBackend>());
+    return new runtime::interpreter::INTBackend();
 };
+
+extern "C" void destroy_backend(runtime::Backend* pBackend)
+{
+    if (pBackend != nullptr)
+        delete pBackend;
+}
 
 shared_ptr<runtime::TensorView>
     runtime::interpreter::INTBackend::create_tensor(const element::Type& type, const Shape& shape)

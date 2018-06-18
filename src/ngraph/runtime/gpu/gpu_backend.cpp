@@ -23,10 +23,16 @@
 using namespace ngraph;
 using namespace std;
 
-extern "C" void create_backend()
+extern "C" runtime::Backend* create_backend(const std::string&, const runtime::Backend::OptionsMap&)
 {
-    runtime::Backend::register_backend("GPU", make_shared<runtime::gpu::GPU_Backend>());
+    return new runtime::gpu::GPU_Backend();
 };
+
+extern "C" void destroy_backend(runtime::Backend* pBackend)
+{
+    if (pBackend != nullptr)
+        delete pBackend;
+}
 
 shared_ptr<runtime::gpu::GPU_CallFrame> runtime::gpu::GPU_Backend::make_call_frame(
     const shared_ptr<GPU_ExternalFunction>& external_function)
