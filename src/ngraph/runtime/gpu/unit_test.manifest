@@ -1,6 +1,4 @@
 abc_int64
-backwards_reverse_sequence_n4d2c3h2w2
-backwards_reverse_sequence_n3_c2_h3
 batch_norm_one_output
 batch_norm_three_outputs
 computation_reuse
@@ -23,9 +21,6 @@ one_hot_scalar_oob_in_3
 one_hot_vector_1_barely_oob
 one_hot_vector_1_far_oob
 one_hot_vector_1_fp_nonint
-reverse_sequence_n4d2c3h2w2
-reverse_sequence_n4c3h2w2
-reverse_sequence_n2c3h4w2
 select_and_scatter_3d_without_overlap
 select_and_scatter_with_overlap
 select_and_scatter_without_overlap

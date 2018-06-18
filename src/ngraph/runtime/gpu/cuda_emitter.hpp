@@ -78,6 +78,14 @@ namespace ngraph
                                            GPUShape reduce_window_shape,
                                            GPUShape reduce_window_strides);
 
+                size_t build_reverse_sequence(const runtime::gpu::GPURuntimeContext* ctx,
+                                              const std::array<std::string, 3>& dtypes,
+                                              GPUShape input_shape0,
+                                              GPUShape input_shape1,
+                                              GPUShape output_shape,
+                                              size_t batch_axis,
+                                              size_t sequence_axis);
+
                 template <typename T>
                 size_t build_elementwise(const GPURuntimeContext* ctx,
                                          const std::vector<std::string>& dtypes,
