@@ -1506,3 +1506,585 @@ TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }
+
+std::shared_ptr<Node> get_leader (std::shared_ptr<Node> oldn, const std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>>& groups)
+{
+    auto it = oldn;
+    while (it != groups.at(it))
+    {
+        it = groups.at(it);
+    }
+    return it;
+}
+
+void log_group2(std::shared_ptr<Node> leader, const std::unordered_map<std::shared_ptr<Node>, NodeVector>& groups)
+{
+    NGRAPH_DEBUG << "Group leader : " << leader->get_name() << std::endl;
+
+    std::vector<std::string> sgroup;
+    for (auto m : groups.at(leader))
+    {
+        sgroup.push_back(m->get_name());   
+    }
+    NGRAPH_DEBUG << "Group members : " << vector_to_string(sgroup) << std::endl;
+}
+
+void log_group(std::shared_ptr<Node> leader, const std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>>& groups)
+{
+    NGRAPH_DEBUG << "Group leader : " << leader->get_name() << std::endl;
+
+    std::vector<std::string> sgroup;
+    for (auto e : groups)
+    {
+        if (e.second == leader)
+        {
+            sgroup.push_back(e.first->get_name());
+        }
+        
+    }
+    NGRAPH_DEBUG << "Group members : " << vector_to_string(sgroup) << std::endl;
+}
+
+void update_leader(std::shared_ptr<Node> oldn, std::shared_ptr<Node> newn, std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>>& groups)
+{
+
+
+	for (auto it = groups.begin(); it != groups.end(); ++it)
+	{
+        if (it->second == oldn)
+        {
+            it->second = newn;
+        }
+	}
+}
+
+
+
+void update_leader2(std::shared_ptr<Node> oldn, std::shared_ptr<Node> newn, std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>>& groups)
+{
+
+
+	for (auto it = groups.begin(); it != groups.end(); ++it)
+	{
+        if (it->second == oldn)
+        {
+            it->second = newn;
+        }
+	}
+}
+
+static bool is_fusable(std::shared_ptr<Node> n)
+{
+	return (std::dynamic_pointer_cast<op::util::BinaryElementwiseArithmetic> (n) ||
+		std::dynamic_pointer_cast<op::util::UnaryElementwiseArithmetic>(n));
+}
+
+/*
+TEST(cpu_fusion, graph_partition)
+{
+	
+    Shape shape{};
+	auto a = make_shared<op::Parameter>(element::i32, shape);
+    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto c = make_shared<op::Parameter>(element::i32, shape);
+	auto add_ab = a + b;
+	auto add_abs = std::make_shared<op::Abs>(add_ab);
+    auto abs_neg = std::make_shared<op::Negative>(add_abs);
+    auto sub_c_neg = c - abs_neg;
+
+	auto f = std::make_shared<Function>(ngraph::NodeVector{ sub_c_neg }, op::ParameterVector{ a, b, c });
+	
+
+    std::unordered_map<std::shared_ptr<Node>, NodeVector> groups;
+	for (auto n : f->get_ordered_ops())
+	{
+		if (is_fusable(n))
+		{
+			std::shared_ptr<Node> smallest_group_leader;
+			NodeVector group_leaders;
+			for (auto arg : n->get_arguments())
+			{
+				//an argument is fusable and a part of some group
+                NGRAPH_DEBUG << "Considering " << arg->get_name();
+				if (groups.count(arg) != 0)
+				{
+					if (!smallest_group_leader)
+					{
+						smallest_group_leader = arg;
+					}
+					else
+					{
+						//out of two groups pick one; ties are broken with the "<" operator
+						smallest_group_leader = arg < smallest_group_leader ? arg : smallest_group_leader;
+					}
+					group_leaders.push_back(arg);
+				}
+			}
+
+			//create a new group
+			if (!smallest_group_leader)
+			{
+				groups.insert(std::make_pair(n, NodeVector{ n }));
+                log_group(n, groups.at(n));
+			}
+			else
+			{
+				//note, groups being merged are completely disjoint
+				//we can join these groups only because n is connected to both
+				//which means both groups have the exact same shapes and thus
+				//can be run in the same loop
+				//also, note, that we maintain the topological order:
+				//we add "n" the latest.
+				//it doesn't matter in which order we add other argument groups
+				//since they are disjoint and also topologically sorted internally
+				auto& group_of_smallest_group_leader = groups.at(smallest_group_leader);
+				for (auto gl : group_leaders)
+				{
+					if (gl != smallest_group_leader)
+					{
+						group_of_smallest_group_leader.insert(group_of_smallest_group_leader.end(),
+							groups.at(gl).begin(), groups.at(gl).end());
+					}
+				}
+				group_of_smallest_group_leader.push_back(n);
+                log_group(smallest_group_leader, group_of_smallest_group_leader);
+			}
+		}
+	}
+
+	static const size_t MIN_NODES_TO_FUSE = 3;
+	for (auto it = groups.begin(); it != groups.end();)
+	{
+		if (it->second.size() < MIN_NODES_TO_FUSE)
+		{
+			it = groups.erase(it);
+		}
+		else
+		{
+			it++;
+		}	
+	}
+}
+*/
+
+/*
+TEST(cpu_fusion, graph_partition2)
+{
+	
+    Shape shape{};
+	auto a = make_shared<op::Parameter>(element::i32, shape);
+    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto c = make_shared<op::Parameter>(element::i32, shape);
+	auto add_ab = a + b;
+	auto add_abs = std::make_shared<op::Abs>(add_ab);
+    auto abs_neg = std::make_shared<op::Negative>(add_abs);
+    auto sub_c_neg = c - abs_neg;
+
+
+    auto d = make_shared<op::Parameter>(element::i32, shape);
+    auto d_abs = std::make_shared<op::Abs>(d);
+    auto goe_ab = make_shared<op::GetOutputElement>(add_ab, 0);
+    auto add_d = d_abs + goe_ab;
+    auto neg_d = std::make_shared<op::Negative>(add_d);
+
+    auto mul_cd = neg_d * sub_c_neg;
+	auto f = std::make_shared<Function>(ngraph::NodeVector{ mul_cd }, op::ParameterVector{ a, b, c, d });
+	
+
+    std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>> groups;
+	for (auto n : f->get_ordered_ops())
+	{
+		if (is_fusable(n))
+		{
+			std::shared_ptr<Node> smallest_group_leader;
+			NodeVector group_leaders;
+			for (auto arg : n->get_arguments())
+			{
+				//an argument is fusable and a part of some group
+                NGRAPH_DEBUG << "Considering " << arg->get_name();
+				if (groups.count(arg) != 0)
+				{
+					if (!smallest_group_leader)
+					{
+						smallest_group_leader = groups.at(arg);
+					}
+					else
+					{
+						//out of two groups pick one; ties are broken with the "<" operator
+						smallest_group_leader = groups.at(arg) < smallest_group_leader ? groups.at(arg) : smallest_group_leader;
+					}
+					group_leaders.push_back(groups.at(arg));
+				}
+			}
+
+			//create a new group
+			if (!smallest_group_leader)
+			{
+				groups.insert(std::make_pair(n, n));
+                log_group(n, groups);
+			}
+			else
+			{
+				//note, groups being merged are completely disjoint
+				//we can join these groups only because n is connected to both
+				//which means both groups have the exact same shapes and thus
+				//can be run in the same loop
+				//also, note, that we maintain the topological order:
+				//we add "n" the latest.
+				//it doesn't matter in which order we add other argument groups
+				//since they are disjoint and also topologically sorted internally
+				for (auto gl : group_leaders)
+				{
+					if (gl != smallest_group_leader)
+					{
+                        update_leader(gl, smallest_group_leader, groups);
+					}
+				}
+                groups.insert(std::make_pair(n, smallest_group_leader));
+                log_group(smallest_group_leader, groups);
+			}
+		}
+	}
+
+    //unordered_set<std::shared_ptr<Node>> seen;
+    std::unordered_map<std::shared_ptr<Node>, NodeVector> graphs;
+
+    for (auto e : groups)
+    {
+        if (e.first == e.second)
+        {
+            std::cout << "Adding group " << e.first->get_name() << std::endl;
+            graphs.insert(std::make_pair(e.first, NodeVector{e.first}));
+        }
+    }
+
+    for (auto n : f->get_ordered_ops())
+    {
+        if (groups.count(n) != 0)
+        {
+            
+            auto head = get_leader(n, groups);
+            std::cout << "Looking at " << n->get_name() << " , leader is " << head->get_name() << std::endl;
+            if (head != n)
+            {
+                graphs.at(head).push_back(n);
+            }
+        }
+    }
+
+    std::cout << "After merge : \n";
+	static const size_t MIN_NODES_TO_FUSE = 3;
+	for (auto it = graphs.begin(); it != graphs.end();)
+	{
+        log_group2(it->first, graphs);
+		if (it->second.size() < MIN_NODES_TO_FUSE)
+		{
+			it = graphs.erase(it);
+		}
+		else
+		{
+			it++;
+		}	
+	}
+}
+*/
+
+
+
+TEST(cpu_fusion, graph_partition3)
+{
+	
+    Shape shape{};
+	auto a = make_shared<op::Parameter>(element::i32, shape);
+    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto c = make_shared<op::Parameter>(element::i32, shape);
+	auto add_ab = a + b;
+	auto add_abs = std::make_shared<op::Abs>(add_ab);
+    auto abs_neg = std::make_shared<op::Negative>(add_abs);
+    auto sub_c_neg = c - abs_neg;
+
+
+    auto d = make_shared<op::Parameter>(element::i32, shape);
+    auto d_abs = std::make_shared<op::Abs>(d);
+    auto goe_ab = make_shared<op::GetOutputElement>(add_ab, 0);
+    auto add_d = d_abs + goe_ab;
+    auto neg_d = std::make_shared<op::Negative>(add_d);
+
+    auto mul_cd = neg_d * sub_c_neg;
+	auto f = std::make_shared<Function>(ngraph::NodeVector{ mul_cd }, op::ParameterVector{ a, b, c, d });
+	
+
+    std::unordered_map<std::shared_ptr<Node>, NodeVector> graphs;
+    std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>> heads;
+	for (auto n : f->get_ordered_ops())
+	{
+		if (is_fusable(n))
+		{
+			std::shared_ptr<Node> arg_with_smallest_head;
+			NodeVector args_with_heads;
+			for (auto arg : n->get_arguments())
+			{
+				//an argument is fusable and a part of some group
+                NGRAPH_DEBUG << "Considering " << arg->get_name();
+				if (heads.count(arg) != 0)
+				{
+					if (!arg_with_smallest_head)
+					{
+						arg_with_smallest_head = arg;
+					}
+					else
+					{
+						//out of two graphs pick one; ties are broken with the "<" operator
+						arg_with_smallest_head = heads.at(arg) < heads.at(arg_with_smallest_head) ? arg : arg_with_smallest_head;
+					}
+					args_with_heads.push_back(arg);
+				}
+			}
+
+			//create a new group
+			if (!arg_with_smallest_head)
+			{
+                heads.insert(std::make_pair(n, n));
+				graphs.insert(std::make_pair(n, NodeVector{ n }));
+                log_group2(n, graphs);
+			}
+			else
+			{
+				//note, graphs being merged are completely disjoint
+				//we can join these graphs only because n is connected to both
+				//which means both graphs have the exact same shapes and thus
+				//can be run in the same loop
+				//also, note, that we maintain the topological order:
+				//we add "n" the latest.
+				//it doesn't matter in which order we add other argument graphs
+				//since they are disjoint and also topologically sorted internally
+                auto smallest_head = heads.at(arg_with_smallest_head);
+				auto& graph_with_smallest_head = graphs.at(smallest_head);
+
+				for (auto awh : args_with_heads)
+				{
+					if (awh != arg_with_smallest_head)
+					{
+                        //merge groups
+						graph_with_smallest_head.insert(graph_with_smallest_head.end(),
+							graphs.at(heads.at(awh)).begin(), graphs.at(heads.at(awh)).end());
+                        //set smallest head for a graph we are merging into smallest_head
+                        for (auto g : graphs.at(heads.at(awh)))
+                        {
+                            heads.at(g) = smallest_head;
+                        }
+					}
+				}
+				graph_with_smallest_head.push_back(n);
+                heads.insert(std::make_pair(n, smallest_head));
+                log_group2(smallest_head, graphs);
+			}
+		}
+	}
+
+	static const size_t MIN_NODES_TO_FUSE = 3;
+	for (auto it = graphs.begin(); it != graphs.end();)
+	{
+		if (it->second.size() < MIN_NODES_TO_FUSE)
+		{
+			it = graphs.erase(it);
+		}
+		else
+		{
+			it++;
+		}	
+	}
+}
+
+class LoopKernelCollector
+{
+public:
+	LoopKernelCollector(std::shared_ptr<Function> f, size_t MIN_NODES_TO_FUSE)
+	{
+		for (auto n : f->get_ordered_ops())
+		{
+			if (is_fusable(n))
+			{
+				collect_fusable_args(n);
+
+				//create a new group
+				if (!m_arg_with_smallest_head)
+				{
+					m_heads.insert(std::make_pair(n, n));
+					m_graphs.insert(std::make_pair(n, NodeVector{ n }));
+					log_group(n);
+				}
+				else
+				{
+					//note, graphs being merged are completely disjoint
+					//we can join these graphs only because n is connected to both
+					//which means both graphs have the exact same shapes and thus
+					//can be run in the same loop
+					//also, note, that we maintain the topological order:
+					//we add "n" the latest.
+					//it doesn't matter in which order we add other argument graphs
+					//since they are disjoint and also topologically sorted internally
+					auto smallest_head = m_heads.at(m_arg_with_smallest_head);
+
+					for (auto awh : m_args_with_heads)
+					{
+						if (awh != m_arg_with_smallest_head)
+						{
+							merge(m_heads.at(awh), smallest_head);
+						}
+					}
+
+					//add n to the group with the smallest head
+					m_graphs.at(smallest_head).push_back(n);
+					m_heads.insert(std::make_pair(n, smallest_head));
+					log_group(smallest_head);
+
+                    //clean current iteration state
+                    m_arg_with_smallest_head = nullptr;
+                    m_args_with_heads.clear();
+				}
+			}
+		}
+
+		prune_graphs(MIN_NODES_TO_FUSE);
+	}
+
+    const std::unordered_map<std::shared_ptr<Node>, NodeVector>& get_graphs() const { return m_graphs; }
+
+private:
+	void prune_graphs(size_t MIN_NODES_TO_FUSE)
+	{
+		for (auto it = m_graphs.begin(); it != m_graphs.end();)
+		{
+			if (it->second.size() < MIN_NODES_TO_FUSE)
+			{
+				it = m_graphs.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
+	}
+
+	void merge(std::shared_ptr<Node> src, std::shared_ptr<Node> dst)
+	{
+		auto& dst_graph = m_graphs.at(dst);
+		auto& src_graph = m_graphs.at(src);
+
+		//merge groups
+		dst_graph.insert(dst_graph.end(),
+			src_graph.begin(), src_graph.end());
+		//set smallest head for a graph we are merging into smallest_head
+		for (auto g : src_graph)
+		{
+			m_heads.at(g) = dst;
+		}
+
+        m_graphs.erase(src);
+	}
+
+	void log_group(std::shared_ptr<Node> head) const
+	{
+		NGRAPH_DEBUG << "Group leader : " << head->get_name() << std::endl;
+
+		std::vector<std::string> sgroup;
+		for (auto m : m_graphs.at(head))
+		{
+			sgroup.push_back(m->get_name());
+		}
+		NGRAPH_DEBUG << "Group members : " << vector_to_string(sgroup) << std::endl;
+	}
+
+	void collect_fusable_args(std::shared_ptr<Node> n)
+	{
+		for (auto arg : n->get_arguments())
+		{
+			//an argument is fusable and a part of some group
+			NGRAPH_DEBUG << "Considering " << arg->get_name();
+			if (m_heads.count(arg) != 0)
+			{
+				if (!m_arg_with_smallest_head)
+				{
+					m_arg_with_smallest_head = arg;
+				}
+				else
+				{
+					//out of two graphs pick one; ties are broken with the "<" operator
+					m_arg_with_smallest_head = m_heads.at(arg) < m_heads.at(m_arg_with_smallest_head) ? arg : m_arg_with_smallest_head;
+				}
+				m_args_with_heads.push_back(arg);
+			}
+		}
+	}
+
+	NodeVector m_args_with_heads;
+	std::shared_ptr<Node> m_arg_with_smallest_head;
+	std::unordered_map<std::shared_ptr<Node>, NodeVector> m_graphs;
+	std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>> m_heads;
+};
+
+TEST(cpu_fusion, graph_partition4)
+{
+	
+    Shape shape{};
+	auto a = make_shared<op::Parameter>(element::i32, shape);
+    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto c = make_shared<op::Parameter>(element::i32, shape);
+	auto add_ab = a + b;
+	auto add_abs = std::make_shared<op::Abs>(add_ab);
+    auto abs_neg = std::make_shared<op::Negative>(add_abs);
+    auto sub_c_neg = c - abs_neg;
+
+
+    auto d = make_shared<op::Parameter>(element::i32, shape);
+    auto d_abs = std::make_shared<op::Abs>(d);
+    auto goe_ab = make_shared<op::GetOutputElement>(add_ab, 0);
+    auto add_d = d_abs + goe_ab;
+    auto neg_d = std::make_shared<op::Negative>(add_d);
+
+    auto mul_cd = neg_d * sub_c_neg;
+	auto f = std::make_shared<Function>(ngraph::NodeVector{ mul_cd }, op::ParameterVector{ a, b, c, d });
+
+    const size_t MIN_NODES_TO_FUSE = 3;
+    LoopKernelCollector lkc(f, MIN_NODES_TO_FUSE);
+    const auto& graphs = lkc.get_graphs();
+
+    NGRAPH_DEBUG << " PRUNED GROUPS : ";
+    for (auto e : graphs)
+    {
+        log_group2(e.first, graphs);
+    }
+    ASSERT_EQ(graphs.size(), 1);
+}
+
+TEST(cpu_fusion, graph_partition5)
+{
+	
+    Shape shape{};
+	auto a = make_shared<op::Parameter>(element::i32, shape);
+    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto c = make_shared<op::Parameter>(element::i32, shape);
+	auto add_ab = a + b;
+	auto add_abs = std::make_shared<op::Abs>(add_ab);
+    auto abs_neg = std::make_shared<op::Negative>(add_abs);
+    auto sub_c_neg = c - abs_neg;
+
+
+    auto d = make_shared<op::Parameter>(element::i32, shape);
+    auto d_abs = std::make_shared<op::Abs>(d);
+    auto goe_ab = make_shared<op::GetOutputElement>(add_ab, 0);
+    auto add_d = d_abs + goe_ab;
+    auto neg_d = std::make_shared<op::Negative>(add_d);
+
+	auto f = std::make_shared<Function>(ngraph::NodeVector{ neg_d, sub_c_neg }, op::ParameterVector{ a, b, c, d });
+
+    const size_t MIN_NODES_TO_FUSE = 3;
+    LoopKernelCollector lkc(f, MIN_NODES_TO_FUSE);
+    const auto& graphs = lkc.get_graphs();
+    ASSERT_EQ(graphs.size(), 2);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("graph.pdf");
+    pass_manager.run_passes(f);
+}
