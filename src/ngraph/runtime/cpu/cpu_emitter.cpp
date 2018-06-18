@@ -100,6 +100,7 @@
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
+#include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
@@ -110,7 +111,9 @@
 #ifdef NGRAPH_DISTRIBUTED
 #include <mpi.h>
 #include "ngraph/op/allreduce.hpp"
-#endif using namespace std;
+#endif
+
+using namespace std;
 using namespace ngraph;
 
 // Enables old unoptimized Eigen code paths
@@ -369,6 +372,7 @@ namespace ngraph
 
                 writer.block_end();
             }
+
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchDot)
             {
