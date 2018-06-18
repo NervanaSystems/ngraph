@@ -17,6 +17,7 @@
 #pragma once
 
 #include <array>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -40,7 +41,8 @@ namespace ngraph
 
                 static void get_broadcast_op(codegen::CodeWriter& writer,
                                              const std::string& name,
-                                             const std::array<std::string, 2>& data_types);
+                                             const std::array<std::string, 2>& data_types,
+                                             const size_t rank);
 
                 static void get_concat_op(codegen::CodeWriter& writer,
                                           const std::string& name,
@@ -63,23 +65,55 @@ namespace ngraph
                                            const std::string& name,
                                            const std::array<std::string, 2>& data_types);
 
+                static void get_replace_slice_op(codegen::CodeWriter& writer,
+                                                 const std::string& name,
+                                                 const std::array<std::string, 3>& data_types,
+                                                 int nthreads_per_block);
+
                 static void get_reduce_window_op(codegen::CodeWriter& writer,
                                                  const std::string& name,
                                                  const std::string& op,
                                                  const std::vector<std::string>& data_types,
                                                  const size_t rank);
 
-                static void get_replace_slice_op(codegen::CodeWriter& writer,
-                                                 const std::string& name,
-                                                 const std::array<std::string, 3>& data_types,
-                                                 int nthreads_per_block);
+                static void get_reverse_sequence_op(codegen::CodeWriter& writer,
+                                                    const std::string& name,
+                                                    const std::array<std::string, 3>& data_types,
+                                                    const size_t batch_axis,
+                                                    const size_t sequence_axis,
+                                                    const size_t rank);
 
                 static void get_device_helper(codegen::CodeWriter& writer,
                                               const std::string& name,
                                               const std::string& math_kernel,
                                               const std::vector<std::string>& data_types);
 
+                static void get_pad_dynamic_op(codegen::CodeWriter& writer,
+                                               const std::string& name,
+                                               const std::array<std::string, 2>& data_types);
+
+                static void get_ew_collective_op(codegen::CodeWriter& writer,
+                                                 const std::string& name,
+                                                 const std::string& op,
+                                                 const std::string& reduce_op,
+                                                 const std::vector<std::string>& data_types,
+                                                 const std::set<size_t>& reduced_tensors,
+                                                 bool save_elementwise,
+                                                 size_t rank);
+
                 static void add_pod_typedefs(codegen::CodeWriter& writer);
+
+                /// \brief Given kernel input variables i_* produce register variables o_coordinates{i}
+                ///        of the non-reduced tensor and return the string name of integer index into reduced tensor
+                static std::string
+                    collective_coordinate_transform_helper(codegen::CodeWriter& writer,
+                                                           std::string i_thread_index,
+                                                           std::string i_strides,
+                                                           std::string i_stride_magic,
+                                                           std::string i_stride_shift,
+                                                           std::string i_reduced_strides,
+                                                           std::string o_coordinates,
+                                                           size_t rank);
             };
         }
     }
