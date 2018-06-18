@@ -102,6 +102,7 @@
 #include "ngraph/runtime/reference/reverse_sequence.hpp"
 #include "ngraph/runtime/reference/select.hpp"
 #include "ngraph/runtime/reference/select_and_scatter.hpp"
+#include "ngraph/runtime/reference/sigmoid.hpp"
 #include "ngraph/runtime/reference/sign.hpp"
 #include "ngraph/runtime/reference/sin.hpp"
 #include "ngraph/runtime/reference/sinh.hpp"
