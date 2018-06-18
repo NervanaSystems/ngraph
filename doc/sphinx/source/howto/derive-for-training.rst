@@ -101,7 +101,7 @@ to prevent underflow.
 
 .. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
-   :lines: 151-166
+   :lines: 151-169
 
 
 .. _backprop:
