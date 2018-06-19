@@ -36,8 +36,9 @@ I1K training in MXNet 1, 2, 4, (and 8 if available) nodes, x-axis is the number
 of nodes while y-axis is the throughput (images/sec).
 
 
-.. figure:: graphics/distributed-training-ngraph-backends.png
-   :width: 650px   
+
+.. TODO add figure graphics/distributed-training-ngraph-backends.png
+   
 
 
 
