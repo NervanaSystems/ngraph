@@ -268,8 +268,8 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const runtime::gpu::GPURunti
         compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
 
-    unsigned int rank = static_cast<unsigned int>(input_shape.size());
-    unsigned int nthreads = static_cast<unsigned int>(shape_size(input_shape));
+    uint32_t rank = static_cast<uint32_t>(input_shape.size());
+    uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
     GPUShape pad_below(input_shape.size(), 0);
     GPUShape pad_interior(input_shape.size(), 1);
 
@@ -286,14 +286,14 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const runtime::gpu::GPURunti
 
     // get an allocator for transient per kernel gpu memory
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
-    size_t idx_input_strides = allocator.reserve_argspace(
-        input_strides.data(), input_strides.size() * sizeof(unsigned int));
-    size_t idx_output_strides = allocator.reserve_argspace(
-        output_strides.data(), output_strides.size() * sizeof(unsigned int));
+    size_t idx_input_strides =
+        allocator.reserve_argspace(input_strides.data(), input_strides.size() * sizeof(uint32_t));
+    size_t idx_output_strides =
+        allocator.reserve_argspace(output_strides.data(), output_strides.size() * sizeof(uint32_t));
     size_t idx_padding_below =
-        allocator.reserve_argspace(pad_below.data(), pad_below.size() * sizeof(unsigned int));
+        allocator.reserve_argspace(pad_below.data(), pad_below.size() * sizeof(uint32_t));
     size_t idx_padding_interior =
-        allocator.reserve_argspace(pad_interior.data(), pad_interior.size() * sizeof(unsigned int));
+        allocator.reserve_argspace(pad_interior.data(), pad_interior.size() * sizeof(uint32_t));
 
     // create the launch primitive
     std::unique_ptr<gpu::primitive> pad_dynamic(new gpu::primitive{[=](void** inputs,
@@ -1015,7 +1015,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window(const GPURuntimeContext* c
         args_list[6] = &nthreads;
 
         CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                      static_cast<unsigned int>(nthreads),
+                                      static_cast<uint32_t>(nthreads),
                                       1,
                                       1, // grid dim
                                       1,
