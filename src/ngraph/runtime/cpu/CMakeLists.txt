@@ -41,6 +41,7 @@ set(SRC
     op/conv_bias.cpp
     op/conv_relu.cpp
     op/convert_layout.cpp
+    op/loop_kernel.cpp
     op/lstm.cpp
     op/matmul_bias.cpp
     op/max_pool_with_indices.cpp
