@@ -91,7 +91,12 @@ if(${CMAKE_VERSION} VERSION_LESS 3.2)
         GIT_TAG ${MKLDNN_GIT_TAG}
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND
-        PATCH_COMMAND patch ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/src/CMakeLists.txt -i ${CMAKE_SOURCE_DIR}/cmake/mkldnn.diff
+        # Patch gets mad if it applied for a second time so:
+        #    --forward tells patch to ignore if it has already been applied
+        #    --reject-file tells patch to not right a reject file
+        #    || exit 0 changes the exit code for the PATCH_COMMAND to zero so it is not an error
+        # I don't like it, but it works
+        PATCH_COMMAND patch ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/src/CMakeLists.txt --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/mkldnn.diff || exit 0
         # Uncomment below with any in-flight MKL-DNN patches
         # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
         CMAKE_ARGS
