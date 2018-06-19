@@ -119,6 +119,7 @@ target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for graph_partition, convolution, and backwards unit tests
     target_link_libraries(unit-test cpu_backend interpreter_backend)
+    target_link_libraries(unit-test libmkldnn)
 endif()
 
 if (NGRAPH_TBB_ENABLE)
