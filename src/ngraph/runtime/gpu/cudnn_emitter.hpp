@@ -89,12 +89,12 @@ namespace ngraph
                                             const AxisSet& reduction_axes);
 
                 size_t build_tensor_op(const GPURuntimeContext* ctx,
-                                            const cudnnOpTensorOp_t& tensor_op,
-                                            const std::string& dtype,
-                                            const Shape& input_shape,
-                                            const float alpha0,
-                                            const float alpha1,
-                                            const float beta);
+                                       const cudnnOpTensorOp_t& tensor_op,
+                                       const std::string& dtype,
+                                       const Shape& input_shape,
+                                       const float alpha0,
+                                       const float alpha1,
+                                       const float beta);
 
                 size_t build_pooling(const GPURuntimeContext* ctx,
                                      const cudnnPoolingMode_t& pool_op,
@@ -126,9 +126,10 @@ namespace ngraph
                 CUDNNEmitter(GPUPrimitiveEmitter* emitter);
                 cudnnDataType_t getCudnnDataType(std::string dtype);
 
-                cudnnTensorDescriptor_t& tensor_descriptor_from_shape(const Shape& shape,
-                                                const cudnnDataType_t data_type,
-                                                const cudnnTensorFormat_t tensor_format);
+                cudnnTensorDescriptor_t&
+                    tensor_descriptor_from_shape(const Shape& shape,
+                                                 const cudnnDataType_t data_type,
+                                                 const cudnnTensorFormat_t tensor_format);
                 cudnnFilterDescriptor_t&
                     get_cudnn_filter_descriptor(const Shape& shape,
                                                 const cudnnDataType_t data_type,
