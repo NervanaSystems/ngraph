@@ -29,7 +29,7 @@
 using namespace ngraph;
 
 cudnnTensorDescriptor_t&
-    runtime::gpu::CUDNNEmitter::tensor_descriptor_from_shape(const Shape& shapeconst,
+    runtime::gpu::CUDNNEmitter::tensor_descriptor_from_shape(const Shape& shape,
                                                 const cudnnDataType_t data_type,
                                                 const cudnnTensorFormat_t tensor_format)
 {
@@ -122,15 +122,12 @@ cudnnDataType_t runtime::gpu::CUDNNEmitter::getCudnnDataType(std::string dtype)
     // The data is 64-bit double-precision floating point (double).
     // CUDNN_DATA_INT8
     // The data is 8-bit signed integer.
-    // CUDNN_DATA_UINT8 (new for 7.1)
-    // The data is 8-bit unsigned integer.
     // CUDNN_DATA_INT32
     // The data is 32-bit signed integer.
     static const std::unordered_map<std::string, cudnnDataType_t> datatype_map{
         {"float", CUDNN_DATA_FLOAT},
         {"double", CUDNN_DATA_DOUBLE},
         {"int8_t", CUDNN_DATA_INT8},
-        {"uint8_t", CUDNN_DATA_UINT8},
         {"int32_t", CUDNN_DATA_INT32}};
     auto p = datatype_map.find(dtype);
     if(p == datatype_map.end())
@@ -696,7 +693,6 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
                                                    double epsilon)
 {
     // Assumes NC{d1...dN} format
-    cudnnDataType_t data_type = getCudnnDataType(dtype);
     std::stringstream ss;
     ss.precision(std::numeric_limits<double>::digits10 + 2);
 
