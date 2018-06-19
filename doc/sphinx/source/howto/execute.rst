@@ -172,11 +172,10 @@ the three parameters and the return value as follows:
    :language: cpp
    :lines: 41-46
 
-
-Each tensor is a shared pointer to the interface backends implement for tensor 
-use. When there are no more references to the tensor view, it will be freed 
-when convenient for the backend. See the :doc:`../programmable/index` documentation 
-for details on this ``TensorView``.
+Each tensor is a shared pointer to an interface backends implement for tensor 
+use. When there are no more references to the tensor view, it will be freed when 
+convenient for the backend. See the :doc:`../programmable/index` documentation 
+for details on how to work with the ``TensorView`` interface.
 
 
 .. _initialize_inputs:
