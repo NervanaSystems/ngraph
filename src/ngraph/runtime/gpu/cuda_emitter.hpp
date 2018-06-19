@@ -130,18 +130,17 @@ namespace ngraph
                 size_t build_reshape(const GPURuntimeContext* ctx,
                                      const std::array<std::string, 2>& dtypes,
                                      GPUShape input_shape,
-                                     GPUShape result_shape,
                                      GPUShape input_order);
 
                 size_t build_convolution(const GPURuntimeContext* ctx,
-                                         const std::array<std::string, 2>& dtypes,
+                                         const std::array<std::string, 3>& dtypes,
                                          GPUShape input_shape,
                                          GPUShape input_pad_below,
-                                         GPUShape input_pad_above,
                                          GPUShape input_dilation,
                                          GPUShape filter_shape,
                                          GPUShape filter_stride,
-                                         GPUShape filter_dilation);
+                                         GPUShape filter_dilation,
+                                         GPUShape output_shape);
 
             private:
                 CUDAEmitter(GPUPrimitiveEmitter* emitter);

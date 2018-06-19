@@ -101,6 +101,16 @@ namespace ngraph
                                                  bool save_elementwise,
                                                  size_t rank);
 
+                static void get_convolution_forward(codegen::CodeWriter& writer,
+                                                    const std::string& name,
+                                                    const std::array<std::string, 3>& data_types,
+                                                    int N,
+                                                    int K,
+                                                    int filter_size,
+                                                    int rank,
+                                                    int sm_tile_size=8,
+                                                    int reg_tile_size=1);
+
                 static void add_pod_typedefs(codegen::CodeWriter& writer);
 
                 /// \brief Given kernel input variables i_* produce register variables o_coordinates{i}
