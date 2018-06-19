@@ -528,6 +528,7 @@ using namespace ngraph::runtime;
         unordered_map<const Node*, string> node_cache;
         for (size_t i = 0; i < op_list.size(); i++)
         {
+            // constants and parameters cannot be outlined
             if (op_list[i]->is_constant() || op_list[i]->is_parameter())
             {
                 continue;
@@ -556,6 +557,10 @@ using namespace ngraph::runtime;
             string match_function_name;
             for (size_t j = i + 1; j < op_list.size(); j++)
             {
+                if (op_list[j]->is_constant() || op_list[j]->is_parameter())
+                {
+                    continue;
+                }
                 Node* op1 = op_list[i].get();
                 Node* op2 = op_list[j].get();
                 if (is_functionally_identical(*op1, *op2, node_cache))
