@@ -654,6 +654,10 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeC
     }
     case (Prop::Backward):
     {
+        if (data_type == CUDNN_DATA_INT8 || data_type == CUDNN_DATA_INT32)
+        {
+            throw std::runtime_error("Pooling does not support int type by CuDNN.");
+        }
         pool.reset(new gpu::primitive{
             [=, &desc, &input_desc, &output_desc](void** inputs, void** outputs) {
                 float alpha = 1.0, beta = 0.0;
