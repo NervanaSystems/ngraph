@@ -25,3 +25,8 @@ select_and_scatter_3d_without_overlap
 select_and_scatter_with_overlap
 select_and_scatter_without_overlap
 tensorview_custom_mem
+#backwards_maxpool_n4_c1_hw4_2x2_max
+#backwards_maxpool_n2_c1_hw5_3x3_str2_max
+#backwards_avgpool_n1_c1_hw2x2
+#backwards_avgpool_n1_c1_hw4x4
+#backwards_avgpool_n2_c2_hw4x4
