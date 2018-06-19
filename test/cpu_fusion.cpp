@@ -50,6 +50,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
+#include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -1237,6 +1238,196 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
+TEST(cpu_fusion, loop_kernel_one_input_one_output)
+{
+    Shape shapeA{2, 2};
+    auto A = make_shared<op::Parameter>(element::i32, shapeA);
+    auto neg_a = make_shared<op::Negative>(A);
+    auto lk = make_shared<runtime::cpu::op::LoopKernel>(
+        NodeVector{neg_a}, NodeVector{neg_a}, NodeVector{A});
+    auto f = make_shared<Function>(NodeVector{lk}, op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::TensorView> result = backend->create_tensor(element::i32, shapeA);
+
+    vector<int> dataA{1, 4, 1, 4};
+    copy_data(a, dataA);
+    vector<int> expected{-1, -4, -1, -4};
+
+    backend->call(f, {result}, {a});
+
+    EXPECT_EQ(read_vector<int>(result), expected);
+}
+
+TEST(cpu_fusion, loop_kernel_embedded_graph)
+{
+    Shape shapeA{2, 2};
+    auto A = make_shared<op::Parameter>(element::i32, shapeA);
+    auto B = make_shared<op::Parameter>(element::i32, shapeA);
+    auto neg_a = make_shared<op::Negative>(A);
+    auto neg_b = make_shared<op::Negative>(B);
+    auto add = neg_a + neg_b;
+    auto lk = make_shared<runtime::cpu::op::LoopKernel>(
+        NodeVector{add}, NodeVector{add}, NodeVector{neg_a, neg_b});
+    auto f = make_shared<Function>(NodeVector{lk}, op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::TensorView> result = backend->create_tensor(element::i32, shapeA);
+
+    vector<int> dataA{1, 4, 1, 4};
+    copy_data(a, dataA);
+    vector<int> dataB{1, 2, 3, 4};
+    copy_data(b, dataB);
+    vector<int> expected{-2, -6, -4, -8};
+    backend->call(f, {result}, {a, b});
+    EXPECT_EQ(read_vector<int>(result), expected);
+}
+
+TEST(cpu_fusion, loop_kernel_two_inputs_one_output)
+{
+    Shape shapeA{2, 2};
+    auto A = make_shared<op::Parameter>(element::i32, shapeA);
+    auto B = make_shared<op::Parameter>(element::i32, shapeA);
+    auto add = A + B;
+    auto lk = make_shared<runtime::cpu::op::LoopKernel>(
+        NodeVector{add}, NodeVector{add}, NodeVector{A, B});
+    auto f = make_shared<Function>(NodeVector{lk}, op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::TensorView> result = backend->create_tensor(element::i32, shapeA);
+
+    vector<int> dataA{1, 4, 1, 4};
+    copy_data(a, dataA);
+    vector<int> dataB{1, 2, 3, 4};
+    copy_data(b, dataB);
+    vector<int> expected{2, 6, 4, 8};
+
+    backend->call(f, {result}, {a, b});
+
+    EXPECT_EQ(read_vector<int>(result), expected);
+}
+
+TEST(cpu_fusion, loop_kernel_multiple_outputs)
+{
+    Shape shapeA{2, 2};
+    auto A = make_shared<op::Parameter>(element::i32, shapeA);
+    auto B = make_shared<op::Parameter>(element::i32, shapeA);
+    auto C = make_shared<op::Parameter>(element::i32, shapeA);
+    auto D = make_shared<op::Parameter>(element::i32, shapeA);
+
+    auto neg_a = make_shared<op::Negative>(A);
+    auto neg_b = make_shared<op::Negative>(B);
+    auto add_ab = neg_a + neg_b;
+    auto add_cd = C + B;
+    auto add_cd_abs = make_shared<op::Abs>(add_cd);
+    auto add_ab_abs = make_shared<op::Abs>(add_ab);
+    auto add_aab = add_ab_abs + A;
+    auto add_cdd = add_cd_abs + D;
+
+    auto lk = make_shared<runtime::cpu::op::LoopKernel>(
+        NodeVector{neg_a, neg_b, add_ab, add_cd, add_cd_abs, add_ab_abs, add_aab, add_cdd},
+        NodeVector{add_aab, add_cdd, neg_b},
+        NodeVector{A, B, C, D});
+    auto add_aab_goe = std::make_shared<op::GetOutputElement>(lk, 0);
+    auto add_cdd_goe = std::make_shared<op::GetOutputElement>(lk, 1);
+    auto neg_b_goe = std::make_shared<op::GetOutputElement>(lk, 2);
+
+    auto f = make_shared<Function>(NodeVector{add_aab_goe, add_cdd_goe, neg_b_goe},
+                                   op::ParameterVector{A, B, C, D});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::TensorView> c = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::TensorView> d = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::TensorView> r1 = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::TensorView> r2 = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::TensorView> r3 = backend->create_tensor(element::i32, shapeA);
+
+    vector<int> dataA{1, 4, 1, 4};
+    vector<int> dataB{3, 3, 3, 9};
+    vector<int> dataC{1, 2, 3, 4};
+    vector<int> dataD{-2, 2, -1, 1};
+    copy_data(a, dataA);
+    copy_data(b, dataB);
+    copy_data(c, dataC);
+    copy_data(d, dataD);
+
+    backend->call(f, {r1, r2, r3}, {a, b, c, d});
+
+    vector<int> expected1{5, 11, 5, 17};
+    vector<int> expected2{2, 7, 5, 14};
+    vector<int> expected3{-3, -3, -3, -9};
+    EXPECT_EQ(read_vector<int>(r1), expected1);
+    EXPECT_EQ(read_vector<int>(r2), expected2);
+    EXPECT_EQ(read_vector<int>(r3), expected3);
+}
+
+TEST(cpu_fusion, loop_kernel_copy_with_new_args)
+{
+    Shape shapeA{2, 2};
+    auto A = make_shared<op::Parameter>(element::i32, shapeA);
+    auto B = make_shared<op::Parameter>(element::i32, shapeA);
+    auto C = make_shared<op::Parameter>(element::i32, shapeA);
+    auto D = make_shared<op::Parameter>(element::i32, shapeA);
+
+    auto neg_a = make_shared<op::Negative>(A);
+    auto neg_b = make_shared<op::Negative>(B);
+    auto add_ab = neg_a + neg_b;
+    auto add_cd = C + B;
+    auto add_cd_abs = make_shared<op::Abs>(add_cd);
+    auto add_ab_abs = make_shared<op::Abs>(add_ab);
+    auto add_aab = add_ab_abs + A;
+    auto add_cdd = add_cd_abs + D;
+
+    auto lk = make_shared<runtime::cpu::op::LoopKernel>(
+        NodeVector{neg_a, neg_b, add_ab, add_cd, add_cd_abs, add_ab_abs, add_aab, add_cdd},
+        NodeVector{add_aab, add_cdd, neg_b},
+        NodeVector{A, B, C, D});
+    auto add_aab_goe = std::make_shared<op::GetOutputElement>(lk, 0);
+    auto add_cdd_goe = std::make_shared<op::GetOutputElement>(lk, 1);
+    auto neg_b_goe = std::make_shared<op::GetOutputElement>(lk, 2);
+
+    auto f = make_shared<Function>(NodeVector{add_aab_goe, add_cdd_goe, neg_b_goe},
+                                   op::ParameterVector{A, B, C, D});
+
+    auto copy_f = clone_function(*f);
+
+    auto backend = runtime::Backend::create("CPU");
+
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::TensorView> c = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::TensorView> d = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::TensorView> r1 = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::TensorView> r2 = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::TensorView> r3 = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::TensorView> copy_r1 = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::TensorView> copy_r2 = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::TensorView> copy_r3 = backend->create_tensor(element::i32, shapeA);
+
+    vector<int> dataA{1, 4, 1, 4};
+    vector<int> dataB{3, 3, 3, 9};
+    vector<int> dataC{1, 2, 3, 4};
+    vector<int> dataD{-2, 2, -1, 1};
+    copy_data(a, dataA);
+    copy_data(b, dataB);
+    copy_data(c, dataC);
+    copy_data(d, dataD);
+
+    backend->call(f, {r1, r2, r3}, {a, b, c, d});
+    backend->call(copy_f, {copy_r1, copy_r2, copy_r3}, {a, b, c, d});
+
+    EXPECT_EQ(read_vector<int>(r1), read_vector<int>(copy_r1));
+    EXPECT_EQ(read_vector<int>(r2), read_vector<int>(copy_r2));
+    EXPECT_EQ(read_vector<int>(r3), read_vector<int>(copy_r3));
+}
 static std::shared_ptr<ngraph::Function> make_forward_function()
 {
     Shape shape_a{10, 3, 28, 28};
