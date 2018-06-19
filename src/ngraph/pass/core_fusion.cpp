@@ -261,6 +261,13 @@ void pass::CoreFusion::construct_optimized_strided_conv()
         NGRAPH_DEBUG << "In a callback for construct_conv_skip against "
                      << m.get_match_root()->get_name();
 
+        if (m.get_match_root()->get_users().empty())
+        {
+            NGRAPH_DEBUG << m.get_match_root()
+                         << " has already been replaced by a preceding callback";
+            return false;
+        }
+
         auto pattern_map = m.get_pattern_map();
         auto m_eltwise = pattern_map[eltwise_label];
         auto strided_convs = m_eltwise->get_users();
