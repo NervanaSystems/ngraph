@@ -56,7 +56,7 @@ namespace ngraph
                 };
 
                 size_t build_convolution(const runtime::gpu::GPURuntimeContext* ctx,
-                                         const cudnnDataType_t data_type,
+                                         const std::string& dtype,
                                          const Shape& input_tensor_shape,
                                          const Shape& input_filter_shape,
                                          const Shape& output_tensor_shape,
@@ -65,7 +65,7 @@ namespace ngraph
                                          const Shape& padding_below);
 
                 size_t build_convolution_backward_data(const runtime::gpu::GPURuntimeContext* ctx,
-                                                       const cudnnDataType_t data_type,
+                                                       const std::string& dtype,
                                                        const Shape& input_filter_shape,
                                                        const Shape& input_tensor_shape,
                                                        const Shape& output_tensor_shape,
@@ -74,7 +74,7 @@ namespace ngraph
                                                        const Shape& padding_below);
 
                 size_t build_convolution_backward_filter(const runtime::gpu::GPURuntimeContext* ctx,
-                                                         const cudnnDataType_t data_type,
+                                                         const std::string& dtype,
                                                          const Shape& input_tensor_shape_0,
                                                          const Shape& input_tensor_shape_1,
                                                          const Shape& output_filter_shape,
@@ -84,11 +84,21 @@ namespace ngraph
 
                 size_t build_reduce_forward(const GPURuntimeContext* ctx,
                                             const cudnnReduceTensorOp_t& reduce_op,
+                                            const std::string& dtype,
                                             const Shape& input_shape,
                                             const AxisSet& reduction_axes);
 
+                size_t build_tensor_op(const GPURuntimeContext* ctx,
+                                            const cudnnOpTensorOp_t& tensor_op,
+                                            const std::string& dtype,
+                                            const Shape& input_shape,
+                                            const float alpha0,
+                                            const float alpha1,
+                                            const float beta);
+
                 size_t build_pooling(const GPURuntimeContext* ctx,
                                      const cudnnPoolingMode_t& pool_op,
+                                     const std::string& dtype,
                                      const Prop& direction,
                                      const ngraph::Shape& input_shape,
                                      const ngraph::Shape& output_shape,
@@ -99,6 +109,7 @@ namespace ngraph
 
                 size_t build_batchnorm(const runtime::gpu::GPURuntimeContext* ctx,
                                        const cudnnBatchNormMode_t& bn_op,
+                                       const std::string& dtype,
                                        const Prop& direction,
                                        const Shape& tensor_shape,
                                        const Shape& param_shape,
@@ -107,10 +118,17 @@ namespace ngraph
                 size_t build_softmax(const runtime::gpu::GPURuntimeContext* ctx,
                                      const cudnnSoftmaxAlgorithm_t& algorithm,
                                      const cudnnSoftmaxMode_t& mode,
+                                     const std::string& dtype,
                                      const Prop& direction,
                                      const Shape& tensor_shape);
 
-                cudnnTensorDescriptor_t& tensor_descriptor_from_shape(const Shape& shape);
+            private:
+                CUDNNEmitter(GPUPrimitiveEmitter* emitter);
+                cudnnDataType_t getCudnnDataType(std::string dtype);
+
+                cudnnTensorDescriptor_t& tensor_descriptor_from_shape(const Shape& shape,
+                                                const cudnnDataType_t data_type,
+                                                const cudnnTensorFormat_t tensor_format);
                 cudnnFilterDescriptor_t&
                     get_cudnn_filter_descriptor(const Shape& shape,
                                                 const cudnnDataType_t data_type,
@@ -121,9 +139,6 @@ namespace ngraph
                                                      const Strides& window_dilation_strides,
                                                      cudnnConvolutionMode_t mode,
                                                      cudnnDataType_t data_type);
-
-            private:
-                CUDNNEmitter(GPUPrimitiveEmitter* emitter);
 
                 CUDNNDescriptors m_descriptors;
                 GPUPrimitiveEmitter* m_primitive_emitter;

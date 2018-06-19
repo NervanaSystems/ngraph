@@ -29,7 +29,9 @@
 using namespace ngraph;
 
 cudnnTensorDescriptor_t&
-    runtime::gpu::CUDNNEmitter::tensor_descriptor_from_shape(const Shape& shape)
+    runtime::gpu::CUDNNEmitter::tensor_descriptor_from_shape(const Shape& shapeconst,
+                                                const cudnnDataType_t data_type,
+                                                const cudnnTensorFormat_t tensor_format)
 {
     cudnnTensorDescriptor_t& desc = m_descriptors.build<cudnnTensorDescriptor_t>();
     if (shape.size() < 4)
@@ -45,8 +47,8 @@ cudnnTensorDescriptor_t&
             dimensions[pos++] = static_cast<int>(shape[i]);
         }
         CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(desc,
-                                                   CUDNN_TENSOR_NCHW,
-                                                   CUDNN_DATA_FLOAT,
+                                                   tensor_format,
+                                                   data_type,
                                                    dimensions[0],
                                                    dimensions[1],
                                                    dimensions[2],
@@ -55,8 +57,8 @@ cudnnTensorDescriptor_t&
     else if (shape.size() == 4)
     {
         CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(desc,
-                                                   CUDNN_TENSOR_NCHW,
-                                                   CUDNN_DATA_FLOAT,
+                                                   tensor_format,
+                                                   data_type,
                                                    static_cast<int>(shape[0]),
                                                    static_cast<int>(shape[1]),
                                                    static_cast<int>(shape[2]),
@@ -71,7 +73,7 @@ cudnnTensorDescriptor_t&
         }
         CUDNN_SAFE_CALL(cudnnSetTensorNdDescriptor(
             desc,
-            CUDNN_DATA_FLOAT,
+            data_type,
             static_cast<int>(dimensions.size()),
             dimensions.data(),
             runtime::gpu::cudnn_util::compute_strides(dimensions).data()));
@@ -112,13 +114,41 @@ runtime::gpu::CUDNNEmitter::CUDNNEmitter(GPUPrimitiveEmitter* emitter)
 {
 }
 
+cudnnDataType_t runtime::gpu::CUDNNEmitter::getCudnnDataType(std::string dtype)
+{
+    // CUDNN_DATA_FLOAT
+    // The data is 32-bit single-precision floating point (float).
+    // CUDNN_DATA_DOUBLE
+    // The data is 64-bit double-precision floating point (double).
+    // CUDNN_DATA_INT8
+    // The data is 8-bit signed integer.
+    // CUDNN_DATA_UINT8 (new for 7.1)
+    // The data is 8-bit unsigned integer.
+    // CUDNN_DATA_INT32
+    // The data is 32-bit signed integer.
+    static const std::unordered_map<std::string, cudnnDataType_t> datatype_map{
+        {"float", CUDNN_DATA_FLOAT},
+        {"double", CUDNN_DATA_DOUBLE},
+        {"int8_t", CUDNN_DATA_INT8},
+        {"uint8_t", CUDNN_DATA_UINT8},
+        {"int32_t", CUDNN_DATA_INT32}};
+    auto p = datatype_map.find(dtype);
+    if(p == datatype_map.end())
+    {
+        std::string err = dtype + "is not supported by CuDNN";
+        throw std::runtime_error(err);
+    }
+    return p->second;
+}
+
 size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPURuntimeContext* ctx,
                                                         const cudnnReduceTensorOp_t& reduce_op,
+                                                        const std::string& dtype,
                                                         const Shape& input_shape,
                                                         const AxisSet& reduction_axes)
 {
     std::stringstream ss;
-    ss << "reduce_op" << reduce_op << "_i" << join(input_shape, "_") << "_ra"
+    ss << "reduce_op_" << reduce_op << "_dtype_" << dtype << "_i" << join(input_shape, "_") << "_ra"
        << join(reduction_axes, "_");
     std::string hash = ss.str();
 
@@ -130,14 +160,16 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
     }
 
     auto& desc = m_descriptors.build<cudnnReduceTensorDescriptor_t>();
-    auto& input_desc = tensor_descriptor_from_shape(input_shape);
+    cudnnDataType_t data_type = getCudnnDataType(dtype);
+    cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
+    auto& input_desc = tensor_descriptor_from_shape(input_shape, data_type, tensor_format);
     Shape output_shape = input_shape;
     // mark reduced axes of input tensor for output tensor descriptor
     for (auto const& idx_dim : reduction_axes)
     {
         output_shape[idx_dim] = 1;
     }
-    auto& output_desc = tensor_descriptor_from_shape(output_shape);
+    auto& output_desc = tensor_descriptor_from_shape(output_shape, data_type, tensor_format);
 
     // get an allocator for transient per kernel gpu memory
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
@@ -151,7 +183,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
         new gpu::primitive{[=, &desc, &input_desc, &output_desc](void** inputs, void** outputs) {
             CUDNN_SAFE_CALL(cudnnSetReduceTensorDescriptor(desc,
                                                            reduce_op,
-                                                           CUDNN_DATA_FLOAT,
+                                                           data_type,
                                                            CUDNN_NOT_PROPAGATE_NAN,
                                                            CUDNN_REDUCE_TENSOR_NO_INDICES,
                                                            CUDNN_32BIT_INDICES));
@@ -174,6 +206,55 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
         }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(reduce));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
+
+size_t runtime::gpu::CUDNNEmitter::build_tensor_op(const GPURuntimeContext* ctx,
+                                            const cudnnOpTensorOp_t& tensor_op,
+                                            const std::string& dtype,
+                                            const Shape& input_shape,
+                                            const float alpha0,
+                                            const float alpha1,
+                                            const float beta)
+{
+    std::stringstream ss;
+    ss << "tensor_op" << tensor_op << "_dtype_" << dtype << "_i" << join(input_shape, "_");
+    std::string hash = ss.str();
+
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    auto& opTensorDesc = m_descriptors.build<cudnnOpTensorDescriptor_t>();
+    cudnnDataType_t data_type = getCudnnDataType(dtype);
+    cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
+    auto& descriptor = tensor_descriptor_from_shape(input_shape, data_type, tensor_format);
+
+    // emit tensor binary operation
+    std::unique_ptr<gpu::primitive> tensor(
+        new gpu::primitive{[=, &opTensorDesc, &descriptor](void** inputs, void** outputs) {
+            CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
+                                                           tensor_op,
+                                                           data_type,
+                                                           CUDNN_NOT_PROPAGATE_NAN));
+            CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,
+                                              opTensorDesc,
+                                              &alpha0,
+                                              descriptor,
+                                              inputs[0],
+                                              &alpha1,
+                                              descriptor,
+                                              inputs[1],
+                                              &beta,
+                                              descriptor,
+                                              outputs[0]));
+        }});
+
+    primitive_index = this->m_primitive_emitter->insert(std::move(tensor));
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }
@@ -256,7 +337,7 @@ cudnnConvolutionDescriptor_t& runtime::gpu::CUDNNEmitter::get_cudnn_convolution_
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURuntimeContext* ctx,
-                                                     const cudnnDataType_t data_type,
+                                                     const std::string& dtype,
                                                      const Shape& input_tensor_shape,
                                                      const Shape& input_filter_shape,
                                                      const Shape& output_tensor_shape,
@@ -267,7 +348,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURunt
     // construct hash to determine if kernel needs to be emitted
     // or if it already exists in the primitive list
     std::stringstream ss;
-    ss << "convolution_op" << data_type << "_i" << join(input_tensor_shape, "_") << "_w"
+    ss << "convolution_op_" << dtype << "_i" << join(input_tensor_shape, "_") << "_w"
        << join(input_filter_shape, "_") << "_o" << join(output_tensor_shape, "_") << "_ws"
        << join(window_movement_strides, "_") << "_wd" << join(window_dilation_strides, "_") << "_p"
        << join(padding_below, "_");
@@ -278,11 +359,13 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURunt
     {
         return primitive_index;
     }
+
+    cudnnDataType_t data_type = getCudnnDataType(dtype);
     const cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
     const cudnnConvolutionMode_t mode = CUDNN_CROSS_CORRELATION;
 
-    auto& tensor_desc_0 = tensor_descriptor_from_shape(input_tensor_shape);
-    auto& tensor_desc_1 = tensor_descriptor_from_shape(output_tensor_shape);
+    auto& tensor_desc_0 = tensor_descriptor_from_shape(input_tensor_shape, data_type, tensor_format);
+    auto& tensor_desc_1 = tensor_descriptor_from_shape(output_tensor_shape, data_type, tensor_format);
     auto& filter_desc = get_cudnn_filter_descriptor(input_filter_shape, data_type, tensor_format);
     auto& conv_desc = get_cudnn_convolution_descriptor(
         padding_below, window_movement_strides, window_dilation_strides, mode, data_type);
@@ -330,7 +413,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURunt
 
 size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
     const runtime::gpu::GPURuntimeContext* ctx,
-    const cudnnDataType_t data_type,
+    const std::string& dtype,
     const Shape& input_filter_shape,
     const Shape& input_tensor_shape,
     const Shape& output_tensor_shape,
@@ -341,7 +424,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
     // construct hash to determine if kernel needs to be emitted
     // or if it already exists in the primitive list
     std::stringstream ss;
-    ss << "convolution_bp_data_op" << data_type << "_i" << join(input_tensor_shape, "_") << "_w"
+    ss << "convolution_bp_data_op_" << dtype << "_i" << join(input_tensor_shape, "_") << "_w"
        << join(input_filter_shape, "_") << "_o" << join(output_tensor_shape, "_") << "_ws"
        << join(window_movement_strides, "_") << "_wd" << join(window_dilation_strides, "_") << "_p"
        << join(padding_below, "_");
@@ -352,11 +435,12 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
     {
         return primitive_index;
     }
+    const cudnnDataType_t data_type = getCudnnDataType(dtype);
     const cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
     const cudnnConvolutionMode_t mode = CUDNN_CROSS_CORRELATION;
 
-    auto& tensor_desc_0 = tensor_descriptor_from_shape(input_tensor_shape);
-    auto& tensor_desc_1 = tensor_descriptor_from_shape(output_tensor_shape);
+    auto& tensor_desc_0 = tensor_descriptor_from_shape(input_tensor_shape, data_type, tensor_format);
+    auto& tensor_desc_1 = tensor_descriptor_from_shape(output_tensor_shape, data_type, tensor_format);
     auto& filter_desc = get_cudnn_filter_descriptor(input_filter_shape, data_type, tensor_format);
     auto& conv_desc = get_cudnn_convolution_descriptor(
         padding_below, window_movement_strides, window_dilation_strides, mode, data_type);
@@ -404,7 +488,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
 
 size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(
     const runtime::gpu::GPURuntimeContext* ctx,
-    const cudnnDataType_t data_type,
+    const std::string& dtype,
     const Shape& input_tensor_shape_0,
     const Shape& input_tensor_shape_1,
     const Shape& output_filter_shape,
@@ -414,8 +498,9 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(
 {
     // construct hash to determine if kernel needs to be emitted
     // or if it already exists in the primitive list
+
     std::stringstream ss;
-    ss << "convolution_bp_filter_op" << data_type << "_i" << join(input_tensor_shape_0, "_") << "_w"
+    ss << "convolution_bp_filter_op_" << dtype << "_i" << join(input_tensor_shape_0, "_") << "_w"
        << join(output_filter_shape, "_") << "_o" << join(input_tensor_shape_1, "_") << "_ws"
        << join(window_movement_strides, "_") << "_wd" << join(window_dilation_strides, "_") << "_p"
        << join(padding_below, "_");
@@ -426,11 +511,12 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(
     {
         return primitive_index;
     }
+    const cudnnDataType_t data_type = getCudnnDataType(dtype);
     const cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
     const cudnnConvolutionMode_t mode = CUDNN_CROSS_CORRELATION;
 
-    auto& tensor_desc_0 = tensor_descriptor_from_shape(input_tensor_shape_0);
-    auto& tensor_desc_1 = tensor_descriptor_from_shape(input_tensor_shape_1);
+    auto& tensor_desc_0 = tensor_descriptor_from_shape(input_tensor_shape_0, data_type, tensor_format);
+    auto& tensor_desc_1 = tensor_descriptor_from_shape(input_tensor_shape_1, data_type, tensor_format);
     auto& filter_desc = get_cudnn_filter_descriptor(output_filter_shape, data_type, tensor_format);
     auto& conv_desc = get_cudnn_convolution_descriptor(
         padding_below, window_movement_strides, window_dilation_strides, mode, data_type);
@@ -479,6 +565,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(
 
 size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeContext* ctx,
                                                  const cudnnPoolingMode_t& pool_op,
+                                                 const std::string& dtype,
                                                  const Prop& direction,
                                                  const Shape& input_shape,
                                                  const Shape& output_shape,
@@ -490,7 +577,7 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeC
     // construct hash to determine if kernel needs to be emitted
     // or if it already exists in the primitive list
     std::stringstream ss;
-    ss << "pool_op" << pool_op << "_dir" << static_cast<int>(direction) << "_i"
+    ss << "pool_op" << pool_op << "dtype_" << dtype << "_dir" << static_cast<int>(direction) << "_i"
        << join(input_shape, "_") << "_o" << join(output_shape, "_") << "_ws"
        << join(window_shape, "_") << "_wst" << join(window_strides, "_") << "_pb"
        << join(padding_below, "_") << "_pb" << join(padding_above, "_");
@@ -503,9 +590,11 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeC
         return primitive_index;
     }
 
+    const cudnnDataType_t data_type = getCudnnDataType(dtype);
+    const cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
     auto& desc = m_descriptors.build<cudnnPoolingDescriptor_t>();
-    auto& input_desc = tensor_descriptor_from_shape(input_shape);
-    auto& output_desc = tensor_descriptor_from_shape(output_shape);
+    auto& input_desc = tensor_descriptor_from_shape(input_shape, data_type, tensor_format);
+    auto& output_desc = tensor_descriptor_from_shape(output_shape, data_type, tensor_format);
 
     if (input_shape.size() == 4)
     {
@@ -600,16 +689,18 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeC
 
 size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntimeContext* ctx,
                                                    const cudnnBatchNormMode_t& bn_op,
+                                                   const std::string& dtype,
                                                    const Prop& direction,
                                                    const Shape& tensor_shape,
                                                    const Shape& param_shape,
                                                    double epsilon)
 {
     // Assumes NC{d1...dN} format
+    cudnnDataType_t data_type = getCudnnDataType(dtype);
     std::stringstream ss;
     ss.precision(std::numeric_limits<double>::digits10 + 2);
 
-    ss << "bn_op" << bn_op << "_dir" << static_cast<int>(direction) << "_ts"
+    ss << "bn_op" << bn_op << "_dtype_" << dtype << "_dir" << static_cast<int>(direction) << "_ts"
        << join(tensor_shape, "_") << "_ps" << join(param_shape, "_") << "_eps" << epsilon;
     std::string hash = ss.str();
     std::replace(hash.begin(), hash.end(), '.', '_');
@@ -625,8 +716,10 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
         throw std::runtime_error("Batch Norm epsilon is less than CUDNN_BN_MIN_EPSILON");
     }
 
+    const cudnnDataType_t data_type = getCudnnDataType(dtype);
+    const cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
     auto& derived_param_desc = m_descriptors.build<cudnnTensorDescriptor_t>();
-    auto& tensor_desc = tensor_descriptor_from_shape(tensor_shape);
+    auto& tensor_desc = tensor_descriptor_from_shape(tensor_shape, data_type, tensor_format);
     CUDNN_SAFE_CALL(cudnnDeriveBNTensorDescriptor(derived_param_desc, tensor_desc, bn_op));
 
     float alpha = 1.0, beta = 0.0;
@@ -658,7 +751,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
     {
         auto& op_desc = m_descriptors.build<cudnnOpTensorDescriptor_t>();
         CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(
-            op_desc, CUDNN_OP_TENSOR_MUL, CUDNN_DATA_FLOAT, CUDNN_NOT_PROPAGATE_NAN));
+            op_desc, CUDNN_OP_TENSOR_MUL, data_type, CUDNN_NOT_PROPAGATE_NAN));
 
         // currently not using the cudnn moving average
         // calculation so this factor needs to be set to 1.0
@@ -742,13 +835,14 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
 size_t runtime::gpu::CUDNNEmitter::build_softmax(const runtime::gpu::GPURuntimeContext* ctx,
                                                  const cudnnSoftmaxAlgorithm_t& algorithm,
                                                  const cudnnSoftmaxMode_t& mode,
+                                                 const std::string& dtype,
                                                  const Prop& direction,
                                                  const Shape& tensor_shape)
 {
     // construct hash to determine if kernel needs to be emitted
     // or if it already exists in the primitive list
     std::stringstream ss;
-    ss << "softmax_op" << mode << "_alg" << algorithm << "_dir" << static_cast<int>(direction)
+    ss << "softmax_op_" << mode << "_dtype_" << dtype << "_alg" << algorithm << "_dir" << static_cast<int>(direction)
        << "_s" << join(tensor_shape, "_");
     std::string hash = ss.str();
 
@@ -759,7 +853,9 @@ size_t runtime::gpu::CUDNNEmitter::build_softmax(const runtime::gpu::GPURuntimeC
         return primitive_index;
     }
 
-    auto& tensor_desc = tensor_descriptor_from_shape(tensor_shape);
+    cudnnDataType_t data_type = getCudnnDataType(dtype);
+    cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
+    auto& tensor_desc = tensor_descriptor_from_shape(tensor_shape, data_type, tensor_format);
 
     float alpha = 1.0, beta = 0.0;
     std::unique_ptr<runtime::gpu::primitive> softmax;
