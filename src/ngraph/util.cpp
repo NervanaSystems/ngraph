@@ -365,4 +365,14 @@ namespace ngraph
         }
         return result;
     }
+
+    std::vector<std::string> node_vector_to_string(const NodeVector& v)
+    {
+        std::vector<std::string> nodes_names;
+        for (auto n : v)
+        {
+            nodes_names.push_back(n->get_name());
+        }
+        return nodes_names;
+    }
 }

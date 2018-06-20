@@ -26,6 +26,8 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/node_vector.hpp"
+
 namespace ngraph
 {
     class Node;
@@ -196,6 +198,8 @@ namespace ngraph
 
         return result;
     }
+
+    std::vector<std::string> node_vector_to_string(const ngraph::NodeVector& v);
 
     template <typename T>
     T ceil_div(const T& x, const T& y)
