@@ -868,6 +868,11 @@ private:
                                              select_and_scatter->get_window_shape(),
                                              select_and_scatter->get_window_movement_strides());
         }
+        else if (node_op == "Sigmoid")
+        {
+            reference::sigmoid<T>(
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+        }
         else if (node_op == "Sign")
         {
             reference::sign<T>(
