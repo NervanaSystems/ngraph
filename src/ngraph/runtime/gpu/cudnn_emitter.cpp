@@ -753,7 +753,6 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
     {
     case Prop::Inference:
     {
-        NGRAPH_INFO << epsilon;
         batchnorm.reset(new gpu::primitive{
             [=, &tensor_desc, &derived_param_desc](void** inputs, void** outputs) {
                 CUDNN_SAFE_CALL(cudnnBatchNormalizationForwardInference(*ctx->cudnn_handle,
@@ -782,14 +781,12 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
         // currently not using the cudnn moving average
         // calculation so this factor needs to be set to 1.0
         double exp_avg_factor = 1.0;
-        NGRAPH_INFO << exp_avg_factor;
         // factor to convert unbiased variance to biased variance estimate
         // mini-batch statistics (variance of the sample) should be used
         // in training and population statistics (sample variance) used
         // during inference. see commit note for 3b081ce for more details.
         double m = shape_size(tensor_shape) / tensor_shape[1];
         void* bias_factor = getDataByType(data_type, (m - 1) / m);
-        NGRAPH_INFO << static_cast<double*>(bias_factor)[0];
         batchnorm.reset(new gpu::primitive{
             [=, &op_desc, &tensor_desc, &derived_param_desc](void** inputs, void** outputs) {
                 CUDNN_SAFE_CALL(cudnnBatchNormalizationForwardTraining(*ctx->cudnn_handle,
