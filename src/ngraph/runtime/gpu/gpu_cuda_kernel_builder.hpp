@@ -108,8 +108,8 @@ namespace ngraph
                                                     int K,
                                                     int filter_size,
                                                     int rank,
-                                                    int sm_tile_size=8,
-                                                    int reg_tile_size=1);
+                                                    int sm_tile_size = 8,
+                                                    int reg_tile_size = 1);
 
                 static void add_pod_typedefs(codegen::CodeWriter& writer);
 
@@ -131,7 +131,6 @@ namespace ngraph
                                                             std::string i_coord_product,
                                                             std::string o_coordinates,
                                                             size_t rank);
-
             };
         }
     }

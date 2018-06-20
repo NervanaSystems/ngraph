@@ -182,9 +182,12 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
 
                     GPUAllocator allocator =
                         external_function->get_primitive_emitter()->get_memory_allocator();
-                    size_t transposed_data_idx = allocator.reserve_workspace(args[0].get_size() * args[0].get_element_type().size());
-                    size_t transposed_filter_idx = allocator.reserve_workspace(args[1].get_size() * args[1].get_element_type().size());
-                    size_t transposed_output_idx = allocator.reserve_workspace(out[0].get_size() * out[0].get_element_type().size());
+                    size_t transposed_data_idx = allocator.reserve_workspace(
+                        args[0].get_size() * args[0].get_element_type().size());
+                    size_t transposed_filter_idx = allocator.reserve_workspace(
+                        args[1].get_size() * args[1].get_element_type().size());
+                    size_t transposed_output_idx = allocator.reserve_workspace(
+                        out[0].get_size() * out[0].get_element_type().size());
 
                     GPUShape input_order;
                     for (int i = 1; i <= rank; i++)
@@ -192,14 +195,16 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         input_order.push_back(i % rank);
                     }
 
-                    auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
+                    auto& cuda_emitter =
+                        external_function->get_primitive_emitter()->get_cuda_emitter();
 
                     size_t reshape_data_index =
                         cuda_emitter->build_reshape(external_function->ctx().get(),
                                                     {{args[0].get_type(), args[0].get_type()}},
                                                     input_shape,
                                                     input_order);
-                    writer << "void* data = gpu::invoke_memory_primitive(ctx, " << transposed_data_idx << ");\n";
+                    writer << "void* data = gpu::invoke_memory_primitive(ctx, "
+                           << transposed_data_idx << ");\n";
                     writer << "gpu::invoke_primitive(ctx, " << reshape_data_index << ", ";
                     writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
                     writer << "std::vector<void*>{data}.data());\n";
@@ -209,14 +214,15 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                     {{args[1].get_type(), args[1].get_type()}},
                                                     filter_shape,
                                                     input_order);
-                    writer << "void* filter = gpu::invoke_memory_primitive(ctx, " << transposed_filter_idx << ");\n";
+                    writer << "void* filter = gpu::invoke_memory_primitive(ctx, "
+                           << transposed_filter_idx << ");\n";
                     writer << "gpu::invoke_primitive(ctx, " << reshape_filter_index << ", ";
                     writer << "std::vector<void*>{" << args[1].get_name() << "}.data(), ";
                     writer << "std::vector<void*>{filter}.data());\n";
 
                     // local helper to reshape tensor shape objects
                     auto reshape = [](const Shape& shape, const GPUShape& order) {
-                        Shape output(shape.size(),0);
+                        Shape output(shape.size(), 0);
                         for (size_t i = 0; i < shape.size(); i++)
                         {
                             output[i] = shape[order[i]];
@@ -231,25 +237,26 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                     // reorder axes of the output shape (NK{do_1,...,do_n} -> K{do_1,...,do_n}N)
                     output_shape = reshape(output_shape, input_order);
 
-                    size_t conv_index =
-                        cuda_emitter->build_convolution(external_function->ctx().get(),
-                                                        {{args[0].get_type(), args[1].get_type(), out[0].get_type()}},
-                                                        input_shape,
-                                                        padding_below_diff,
-                                                        data_dilation_strides,
-                                                        filter_shape,
-                                                        window_movement_strides,
-                                                        window_dilation_strides,
-                                                        output_shape);
-                    writer << "void* output = gpu::invoke_memory_primitive(ctx, " << transposed_output_idx << ");\n";
+                    size_t conv_index = cuda_emitter->build_convolution(
+                        external_function->ctx().get(),
+                        {{args[0].get_type(), args[1].get_type(), out[0].get_type()}},
+                        input_shape,
+                        padding_below_diff,
+                        data_dilation_strides,
+                        filter_shape,
+                        window_movement_strides,
+                        window_dilation_strides,
+                        output_shape);
+                    writer << "void* output = gpu::invoke_memory_primitive(ctx, "
+                           << transposed_output_idx << ");\n";
                     writer << "gpu::invoke_primitive(ctx, " << conv_index << ", ";
                     writer << "std::vector<void*>{data, filter}.data(), ";
                     writer << "std::vector<void*>{output}.data());\n";
 
                     // reshape output tensor (K{do_1,...,do_n}N -> NK{do_1,...,do_n})
                     input_order.clear();
-                    input_order.push_back(static_cast<int>(rank-1));
-                    for (int i = 0; i < rank-1; i++)
+                    input_order.push_back(static_cast<int>(rank - 1));
+                    for (int i = 0; i < rank - 1; i++)
                     {
                         input_order.push_back(i);
                     }
@@ -265,8 +272,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
                 else
                 {
-
-
                     bool is_deconvolution = false;
                     for (auto a : data_dilation_strides)
                     {
@@ -304,17 +309,18 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                << idx_workspace << ");\n";
                         writer << "std::vector<" << args[0].get_type() << "> pad_buffer_host("
                                << shape_size(input_shape_padded) << ", 0);\n";
-                        writer << "runtime::gpu::cuda_memcpyHtD(pad_buffer, pad_buffer_host.data(), "
-                               << temp_size << ");\n";
+                        writer
+                            << "runtime::gpu::cuda_memcpyHtD(pad_buffer, pad_buffer_host.data(), "
+                            << temp_size << ");\n";
                         auto& cuda_emitter =
                             external_function->get_primitive_emitter()->get_cuda_emitter();
-                        auto pad_dynamic_index =
-                            cuda_emitter->build_pad_dynamic(external_function->ctx().get(),
-                                                            {{args[0].get_type(), out[0].get_type()}},
-                                                            input_shape,
-                                                            input_shape_padded,
-                                                            padding_below,
-                                                            padding_interior);
+                        auto pad_dynamic_index = cuda_emitter->build_pad_dynamic(
+                            external_function->ctx().get(),
+                            {{args[0].get_type(), out[0].get_type()}},
+                            input_shape,
+                            input_shape_padded,
+                            padding_below,
+                            padding_interior);
 
                         writer << "gpu::invoke_primitive(ctx, " << pad_dynamic_index << ", ";
                         writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
@@ -1048,7 +1054,8 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 // Other cases (reordering of axes for tensors with rank>2).
                 else
                 {
-                    auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
+                    auto& cuda_emitter =
+                        external_function->get_primitive_emitter()->get_cuda_emitter();
                     auto reshape_index =
                         cuda_emitter->build_reshape(external_function->ctx().get(),
                                                     {{args[0].get_type(), out[0].get_type()}},

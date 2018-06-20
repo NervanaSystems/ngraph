@@ -21,11 +21,11 @@
 #include <vector>
 
 #include "ngraph/axis_set.hpp"
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
-#include "ngraph/axis_vector.hpp"
 
 namespace ngraph
 {
@@ -135,7 +135,8 @@ namespace ngraph
                 if (dim > 0 && dim >> 32 != 0)
                 {
                     throw std::runtime_error(
-                        "Request for CoordinateDiff which exceed the bitwidth available for GPUShapes "
+                        "Request for CoordinateDiff which exceed the bitwidth available for "
+                        "GPUShapes "
                         "(32)");
                 }
                 this->push_back(static_cast<int32_t>(dim));
