@@ -18,14 +18,6 @@ set(SRC
     intelgpu_backend.cpp
 )
 
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    find_package(MPI REQUIRED)
-    add_definitions(-DNGRAPH_DISTRIBUTED)
-    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-    link_libraries(${MPI_CXX_LIBRARIES})
-endif()
-
 if (NGRAPH_INTELGPU_ENABLE)
     add_library(intelgpu_backend SHARED ${SRC})
     set_target_properties(intelgpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
