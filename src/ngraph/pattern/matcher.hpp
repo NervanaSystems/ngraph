@@ -66,12 +66,15 @@ namespace ngraph
             /// \param pattern_node is a pattern sub graph that will be matched against input graphs
             /// \param callback is a callback function that will be called on a successful match
             Matcher(const std::shared_ptr<Node> pattern_node = nullptr,
-                    graph_rewrite_callback callback = nullptr)
+                    graph_rewrite_callback callback = nullptr,
+                    const std::string& name = "Unnamed")
                 : m_pattern_node(pattern_node)
                 , m_callback(callback)
                 , m_depth(0)
+                , m_name(name)
             {
             }
+
             virtual ~Matcher() {}
             /// \brief Matches a pattern to \p graph_node
             ///
@@ -108,6 +111,7 @@ namespace ngraph
             bool process_match(graph_rewrite_callback callback = nullptr);
 
             void reset() {}
+            std::string get_name() { return m_name; }
             std::shared_ptr<Node> get_pattern() { return m_pattern_node; }
             std::shared_ptr<Node> get_match_root();
             PatternMap get_pattern_map() { return PatternMap{m_pattern_map}; }
@@ -149,6 +153,7 @@ namespace ngraph
 
             graph_rewrite_callback m_callback;
             size_t m_depth;
+            std::string m_name;
         };
 
         class RecurrentMatcher

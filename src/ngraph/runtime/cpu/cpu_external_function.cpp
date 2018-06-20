@@ -124,6 +124,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
+#include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
@@ -304,6 +305,8 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::SigmoidBackprop), &runtime::cpu::CPU_Emitter::emit<op::SigmoidBackprop>},
     {TI(ngraph::op::And), &runtime::cpu::CPU_Emitter::emit<op::And>},
     {TI(ngraph::op::Or), &runtime::cpu::CPU_Emitter::emit<op::Or>},
+    {TI(ngraph::runtime::cpu::op::LoopKernel),
+     &runtime::cpu::CPU_Emitter::emit<runtime::cpu::op::LoopKernel>},
 };
 
 const size_t runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction::s_memory_pool_alignment =
@@ -344,9 +347,10 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
@@ -527,6 +531,7 @@ using namespace ngraph::runtime;
         unordered_map<const Node*, string> node_cache;
         for (size_t i = 0; i < op_list.size(); i++)
         {
+            // constants and parameters cannot be outlined
             if (op_list[i]->is_constant() || op_list[i]->is_parameter())
             {
                 continue;
@@ -555,6 +560,10 @@ using namespace ngraph::runtime;
             string match_function_name;
             for (size_t j = i + 1; j < op_list.size(); j++)
             {
+                if (op_list[j]->is_constant() || op_list[j]->is_parameter())
+                {
+                    continue;
+                }
                 Node* op1 = op_list[i].get();
                 Node* op2 = op_list[j].get();
                 if (is_functionally_identical(*op1, *op2, node_cache))

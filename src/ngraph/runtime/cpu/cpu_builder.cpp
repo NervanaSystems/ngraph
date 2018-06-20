@@ -90,10 +90,13 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/kernel/abs.hpp"
 #include "ngraph/runtime/cpu/kernel/add.hpp"
+#include "ngraph/runtime/cpu/kernel/ceil.hpp"
 #include "ngraph/runtime/cpu/kernel/multiply.hpp"
+#include "ngraph/runtime/cpu/kernel/relu.hpp"
 #include "ngraph/runtime/cpu/kernel/result.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
@@ -163,6 +166,39 @@ using namespace ngraph;
         KV = K<uint64_t>;                                                                          \
     }
 
+#define BUILD_UNARY_ELEMWISE_FUNCTOR(OP)                                                           \
+    auto& functors = external_function->get_functors();                                            \
+    auto& tensor_data = external_function->get_tensor_data();                                      \
+    std::function<void(void*, void*, size_t)> kernel;                                              \
+                                                                                                   \
+    SELECT_KERNEL(kernel, out[0].get_element_type(), OP);                                          \
+                                                                                                   \
+    auto element_count = out[0].get_size();                                                        \
+    auto& arg0_tensor = tensor_data[args[0].get_name()];                                           \
+    auto& out0_tensor = tensor_data[out[0].get_name()];                                            \
+                                                                                                   \
+    auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {                            \
+        kernel(arg0_tensor, out0_tensor, element_count);                                           \
+    };                                                                                             \
+    functors.emplace_back(functor);
+
+#define BUILD_BINARY_ELEMWISE_FUNCTOR(OP)                                                          \
+    auto& functors = external_function->get_functors();                                            \
+    auto& tensor_data = external_function->get_tensor_data();                                      \
+    std::function<void(void*, void*, void*, size_t)> kernel;                                       \
+                                                                                                   \
+    SELECT_KERNEL(kernel, out[0].get_element_type(), OP);                                          \
+                                                                                                   \
+    auto element_count = out[0].get_size();                                                        \
+    auto& arg0_tensor = tensor_data[args[0].get_name()];                                           \
+    auto& arg1_tensor = tensor_data[args[1].get_name()];                                           \
+    auto& out0_tensor = tensor_data[out[0].get_name()];                                            \
+                                                                                                   \
+    auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {                            \
+        kernel(arg0_tensor, arg1_tensor, out0_tensor, element_count);                              \
+    };                                                                                             \
+    functors.emplace_back(functor);
+
 namespace ngraph
 {
     namespace runtime
@@ -172,77 +208,180 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Add)
             {
-                auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
-                std::function<void(void*, void*, void*, size_t)> kernel;
-
-                SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::add);
-
-                auto element_count = out[0].get_size();
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& out0_tensor = tensor_data[out[0].get_name()];
-
-                auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {
-                    kernel(arg0_tensor, arg1_tensor, out0_tensor, element_count);
-                };
-                functors.emplace_back(functor);
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::add);
             }
 
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Multiply)
             {
-                auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
-                std::function<void(void*, void*, void*, size_t)> kernel;
-
-                SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::multiply);
-
-                auto element_count = out[0].get_size();
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& out0_tensor = tensor_data[out[0].get_name()];
-
-                auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {
-                    kernel(arg0_tensor, arg1_tensor, out0_tensor, element_count);
-                };
-                functors.emplace_back(functor);
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::multiply);
             }
 
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Abs)
             {
-                auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
-                std::function<void(void*, void*, size_t)> kernel;
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::abs);
+            }
 
-                SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::abs);
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Ceiling)
+            {
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::ceil);
+            }
 
-                auto element_count = out[0].get_size();
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& out0_tensor = tensor_data[out[0].get_name()];
-
-                auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {
-                    kernel(arg0_tensor, out0_tensor, element_count);
-                };
-                functors.emplace_back(functor);
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Relu)
+            {
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::relu);
             }
 
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Result)
             {
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::result);
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::MatmulBias)
+            {
                 auto& functors = external_function->get_functors();
                 auto& tensor_data = external_function->get_tensor_data();
-                std::function<void(void*, void*, size_t)> kernel;
-
-                SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::result);
 
                 auto& arg0_tensor = tensor_data[args[0].get_name()];
+                auto& arg1_tensor = tensor_data[args[1].get_name()];
                 auto& out0_tensor = tensor_data[out[0].get_name()];
-                auto size = shape_size(node->get_shape());
 
-                auto functor = [&, kernel, size](CPURuntimeContext* ctx) {
-                    kernel(arg0_tensor, out0_tensor, size);
+                const ngraph::op::MatmulBias* mm = static_cast<const ngraph::op::MatmulBias*>(node);
+
+                const auto& arg0_shape = mm->get_arg0_shape();
+                const auto& arg1_shape = mm->get_arg1_shape();
+                const auto& arg2_shape = node->get_shape();
+
+                auto m = arg0_shape[0];
+                auto n = arg1_shape[1];
+                auto k = arg0_shape[1];
+
+                bool transpose_A = false, transpose_B = false;
+                auto lda = arg0_shape[1];
+                auto ldb = arg1_shape[1];
+
+                if (mm->get_is_arg0_transposed())
+                {
+                    transpose_A = true;
+                    m = arg0_shape[1];
+                    k = arg0_shape[0];
+                }
+
+                if (mm->get_is_arg1_transposed())
+                {
+                    transpose_B = true;
+                    n = arg1_shape[0];
+                }
+
+                const float beta = 0.0f;
+
+                auto mm_functor =
+                    [&, transpose_A, transpose_B, m, n, k, lda, ldb, beta, arg2_shape](
+                        CPURuntimeContext* ctx) {
+                        cblas::cblas_sgemm(
+                            cblas::Layout::RowMajor,
+                            transpose_A ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                            transpose_B ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                            m,
+                            n,
+                            k,
+                            1.0f,
+                            static_cast<float*>(arg0_tensor),
+                            max(1UL, lda),
+                            static_cast<float*>(arg1_tensor),
+                            max(1UL, ldb),
+                            beta,
+                            static_cast<float*>(out0_tensor),
+                            max(1UL, arg2_shape[1]));
+                    };
+
+                function<void(CPURuntimeContext*)> bias_functor = [](CPURuntimeContext* ctx) {};
+
+                if (args.size() > 2)
+                {
+                    auto& arg2_tensor = tensor_data[args[2].get_name()];
+
+                    auto axes = mm->get_broadcast_axes();
+                    if (axes.size() == 1)
+                    {
+                        if (*(axes.begin()) == 0)
+                        {
+                            vector<float> ones_row(arg2_shape[0], 1.0f);
+                            bias_functor = [&, ones_row, arg2_shape](CPURuntimeContext* ctx) {
+                                cblas::cblas_sgemm(cblas::Layout::RowMajor,
+                                                   cblas::Transpose::None,
+                                                   cblas::Transpose::None,
+                                                   arg2_shape[0],
+                                                   arg2_shape[1],
+                                                   1,
+                                                   1.0f,
+                                                   ones_row.data(),
+                                                   1UL,
+                                                   static_cast<float*>(arg2_tensor),
+                                                   max(1UL, arg2_shape[1]),
+                                                   1.0f,
+                                                   static_cast<float*>(out0_tensor),
+                                                   max(1UL, arg2_shape[1]));
+                            };
+                        }
+                        else
+                        {
+                            vector<float> ones_col(arg2_shape[1], 1.0f);
+                            bias_functor = [&, ones_col, arg2_shape](CPURuntimeContext* ctx) {
+                                cblas::cblas_sgemm(cblas::Layout::RowMajor,
+                                                   cblas::Transpose::None,
+                                                   cblas::Transpose::None,
+                                                   arg2_shape[0],
+                                                   arg2_shape[1],
+                                                   1,
+                                                   1.0f,
+                                                   static_cast<float*>(arg2_tensor),
+                                                   1UL,
+                                                   ones_col.data(),
+                                                   max(1UL, arg2_shape[1]),
+                                                   1.0f,
+                                                   static_cast<float*>(out0_tensor),
+                                                   max(1UL, arg2_shape[1]));
+                            };
+                        }
+                    }
+                    else
+                    {
+                        if (axes.size() != 2)
+                        {
+                            throw ngraph_error("unexpected broadcast rank");
+                        }
+
+                        vector<float> ones_scalar(arg2_shape[0], 1.0f);
+
+                        bias_functor = [&, ones_scalar, arg2_shape](CPURuntimeContext* ctx) {
+                            vector<float> bias(arg2_shape[1], *static_cast<float*>(arg2_tensor));
+                            cblas::cblas_sgemm(cblas::Layout::RowMajor,
+                                               cblas::Transpose::None,
+                                               cblas::Transpose::None,
+                                               arg2_shape[0],
+                                               arg2_shape[1],
+                                               1,
+                                               1.0f,
+                                               ones_scalar.data(),
+                                               1UL,
+                                               bias.data(),
+                                               max(1UL, arg2_shape[1]),
+                                               1.0f,
+                                               static_cast<float*>(out0_tensor),
+                                               max(1UL, arg2_shape[1]));
+                        };
+                    }
+                }
+
+                auto functor = [&, mm_functor, bias_functor](CPURuntimeContext* ctx) {
+                    mm_functor(ctx);
+                    bias_functor(ctx);
                 };
                 functors.emplace_back(functor);
             }
@@ -279,7 +418,10 @@ namespace ngraph
                 {TI(ngraph::op::Multiply), &runtime::cpu::Builder::build<ngraph::op::Multiply>},
                 {TI(ngraph::op::Parameter), &runtime::cpu::Builder::nop},
                 {TI(ngraph::op::Abs), &runtime::cpu::Builder::build<ngraph::op::Abs>},
+                {TI(ngraph::op::Ceiling), &runtime::cpu::Builder::build<ngraph::op::Ceiling>},
+                {TI(ngraph::op::Relu), &runtime::cpu::Builder::build<ngraph::op::Relu>},
                 {TI(ngraph::op::Result), &runtime::cpu::Builder::build<ngraph::op::Result>},
+                {TI(ngraph::op::MatmulBias), &runtime::cpu::Builder::build<ngraph::op::MatmulBias>},
                 {TI(ngraph::op::Constant), &runtime::cpu::Builder::build<ngraph::op::Constant>}};
         }
     }
