@@ -16,8 +16,8 @@ convolution_4d_4items_strided_dilated
 convolution_4d_4items_strided_dilated_padded
 convolution_4d_4items_strided_dilated_padded_neg
 convolution_4d_4items_strided_dilated_padded_same
-#int32 divide by zero not handled
-divide_by_zero_int32
+#cudnn does not have arithmetic exceptions
+#divide_by_zero_int32
 #int64 is not supprted by cudnn
 dot_matrix_vector_int64
 #no mkldnn on GPU
