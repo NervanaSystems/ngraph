@@ -1421,7 +1421,7 @@ namespace ngraph
                             writer << "runtime::gpu::cuda_memcpyDtH(&init_value, "
                                    << args[1].get_name() << " ,"
                                    << args[1].get_element_type().size() << ");\n";
-                            writer << "std::vector<" << out[0].get_type << "> temp(" << out[0].get_size()
+                            writer << "std::vector<" << out[0].get_type() << "> temp(" << out[0].get_size()
                                    << ", init_value);\n";
                             writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
                                    << ", (void*)temp.data(), " << out[0].get_size() << " * "
