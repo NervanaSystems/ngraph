@@ -14,7 +14,6 @@
 * limitations under the License.
 *******************************************************************************/
 #include <algorithm>
-#include <cassert>
 #include <iostream>
 #include <limits>
 #include <ostream>
@@ -1453,6 +1452,14 @@ size_t runtime::gpu::CUDAEmitter::build_convolution(const GPURuntimeContext* ctx
     // filter_shape: C{df_1,...,df_n}K
     // output_shape: K{do_1,...,do_n}N
 
+    // The basic strategy performed by this kernel is to convert Nd convolution
+    // into a single 2D GEMM that can be block multiplied via a hierarchical strategy.
+    // The spatial dimensions are squashed into a single column axis and the
+    // batch number N and filter number K are the rows of A and B in the 2D GEMM
+    // A * B = C, respectively. By keeping N and K in contiguous memory space,
+    // coalescing and vectorization is maintained regardless of coordinate access
+    // (e.g. data and filter dilation).
+
     std::string kernel_name = "convolution_fprop_" + join(dtypes, "_");
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
 
@@ -1508,6 +1515,11 @@ size_t runtime::gpu::CUDAEmitter::build_convolution(const GPURuntimeContext* ctx
 
     // ----- build primitive arguments -----
 
+    // TODO: as each cuda_emitter has a regular structure
+    // it would be beneficial to factor these into classes
+    // with seperate methods for compiling the kernel, building
+    // the primitive, and transfering arguments to device memory
+
     int C = input_shape.front();
     int input_channel_size = 1;
     int filter_channel_size = 1;
@@ -1559,9 +1571,6 @@ size_t runtime::gpu::CUDAEmitter::build_convolution(const GPURuntimeContext* ctx
         filter_sz *= filter_shape[i];
     }
 
-    // TODO(PR): remove this assert before pushing
-    assert(filter_sz == filter_size);
-
     // remaining kernel arguments
     std::vector<int> data_dilation_magic(input_dilation.size(), 0);
     std::vector<int> data_dilation_shift(input_dilation.size(), 0);
@@ -1595,6 +1604,14 @@ size_t runtime::gpu::CUDAEmitter::build_convolution(const GPURuntimeContext* ctx
     size_t idx_filter_str_magic = allocator.reserve_argspace(filter_str_magic);
     size_t idx_filter_str_shift = allocator.reserve_argspace(filter_str_shift);
 
+    // launch arguments:
+    // each output pixel is its own block. if the batch size is greater than reg_tile_size * sm_tile_size, a single
+    // output pixel is spread over multiple blocks along the batch axis so that memory coordination is not required
+    // each block consists of 2 warps in an 8 x 8 array used for accessing the SM block of the GEMM
+
+    // do_i = output pixel coordinates
+    // grid = (do_1*do_2*...*do_N*ceil_div(N, REG_TILE_SIZE*SM_TILE_SIZE), ceil_div(K, REG_TILE_SIZE*SM_TILE_SIZE), 1)
+    // block = (8, 8, 1)
     dim3 blocks(output_pixels * idiv_ceil(N, reg_tile_size * sm_tile_size),
                 idiv_ceil(K, reg_tile_size * sm_tile_size),
                 1);

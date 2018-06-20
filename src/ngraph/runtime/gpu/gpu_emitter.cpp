@@ -170,8 +170,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 CoordinateDiff padding_below_diff = convolution->get_padding_below();
                 CoordinateDiff padding_above_diff = convolution->get_padding_above();
 
-                // TODO remove this input_shape.size(), only here for testing
-                if (input_shape.size() || padding_below_diff.size() > 3)
+                if (padding_below_diff.size() > 3)
                 {
                     // Reshape from NC{d1,..,dn} -> C{d1,...,dn}N
                     // and from KC{df1,...,dfn} -> C{df1,...,dfn}N.

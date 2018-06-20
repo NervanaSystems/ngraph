@@ -590,7 +590,7 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_forward(
            << "int N, "
            << "int C, "
            << "int K, "
-           << "int input_channel_size, " // {d1*...*dn}*N / REG_TILE_SIZE
+           << "int input_channel_size, "
            << "int filter_channel_size, "
            << "int output_filter_size, "
            << "int output_pixels, "
@@ -611,11 +611,6 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_forward(
            << "int* filter_str_magic, "
            << "int* filter_str_shift"
            << ")\n";
-
-    // output dimension 1 = do1 = d1 - df1 + 1
-    // grid = (do1*do2*...*doN*__ceil_div(N, REG_TILE_SIZE*SM_TILE_SIZE), __ceil_div(K, REG_TILE_SIZE*SM_TILE_SIZE), 1)
-    // block = (8,8,1)
-
     writer.block_begin();
     {
         writer << "Matrix* I = reinterpret_cast<Matrix*>(in);\n";
@@ -717,7 +712,7 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_forward(
                 {
                     writer << "int input_d" << i << " = input_base_d" << i << " + filter_d" << i
                            << " * filter_dilation[" << i << "];\n";
-                    // determine coordinate in undilated input
+                    // determine coordinate in undilated input space
                     writer << "undilated_coordinate = division_by_invariant_multiplication(input_d"
                            << i << ", data_dilation_magic[" << i << "], data_dilation_shift[" << i
                            << "]);\n";
