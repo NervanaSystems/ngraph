@@ -37,7 +37,7 @@ namespace ngraph
 
             /// \return The index of the tuple element to get.
             size_t get_n() const { return m_n; }
-            virtual NodeVector get_arguments() override;
+            virtual NodeVector get_arguments() const override;
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
