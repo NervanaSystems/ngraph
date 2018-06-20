@@ -35,6 +35,7 @@ namespace ngraph
                 bool IsMKLDNNOp(ngraph::Node& op);
                 mkldnn::memory::format
                     CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout);
+                mkldnn::memory::format CreateNativeDataFormat(const Shape& shape);
                 const std::string& get_mkldnn_data_type_string(const ngraph::element::Type& type);
                 mkldnn::memory::data_type get_mkldnn_data_type(const ngraph::element::Type& type);
                 const std::string& get_mkldnn_format_string(mkldnn::memory::format fmt);

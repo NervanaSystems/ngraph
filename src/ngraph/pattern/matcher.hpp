@@ -17,9 +17,12 @@
 #pragma once
 
 #include <cassert>
+#include <functional>
 #include <memory.h>
+
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
 
@@ -35,6 +38,16 @@ namespace ngraph
         using graph_rewrite_callback = std::function<bool(class Matcher& m)>;
         using recurrent_graph_rewrite_callback = std::function<bool(class RecurrentMatcher& m)>;
         using RPatternMap = std::map<std::shared_ptr<op::Label>, NodeVector>;
+
+        template <typename T>
+        std::function<bool(std::shared_ptr<Node>)> has_class()
+        {
+            auto pred = [](std::shared_ptr<Node> node) -> bool {
+                return std::dynamic_pointer_cast<T>(node) != nullptr;
+            };
+
+            return pred;
+        }
 
         namespace op
         {
@@ -53,12 +66,15 @@ namespace ngraph
             /// \param pattern_node is a pattern sub graph that will be matched against input graphs
             /// \param callback is a callback function that will be called on a successful match
             Matcher(const std::shared_ptr<Node> pattern_node = nullptr,
-                    graph_rewrite_callback callback = nullptr)
+                    graph_rewrite_callback callback = nullptr,
+                    const std::string& name = "Unnamed")
                 : m_pattern_node(pattern_node)
                 , m_callback(callback)
                 , m_depth(0)
+                , m_name(name)
             {
             }
+
             virtual ~Matcher() {}
             /// \brief Matches a pattern to \p graph_node
             ///
@@ -95,6 +111,7 @@ namespace ngraph
             bool process_match(graph_rewrite_callback callback = nullptr);
 
             void reset() {}
+            std::string get_name() { return m_name; }
             std::shared_ptr<Node> get_pattern() { return m_pattern_node; }
             std::shared_ptr<Node> get_match_root();
             PatternMap get_pattern_map() { return PatternMap{m_pattern_map}; }
@@ -130,9 +147,13 @@ namespace ngraph
             bool match_skip(const std::shared_ptr<op::Skip>& pattern_node,
                             const std::shared_ptr<Node>& graph_node,
                             PatternMap& pattern_map);
+            bool match_any(const std::shared_ptr<op::Any>& pattern_node,
+                           const std::shared_ptr<Node>& graph_node,
+                           PatternMap& pattern_map);
 
             graph_rewrite_callback m_callback;
             size_t m_depth;
+            std::string m_name;
         };
 
         class RecurrentMatcher

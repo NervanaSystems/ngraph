@@ -42,7 +42,7 @@ shared_ptr<Node> op::GetOutputElement::copy_with_new_args(const NodeVector& new_
     return make_shared<GetOutputElement>(new_args.at(0), m_n);
 }
 
-NodeVector op::GetOutputElement::get_arguments()
+NodeVector op::GetOutputElement::get_arguments() const
 {
     return NodeVector{get_inputs().at(0).get_output().get_node()};
 }

@@ -23,43 +23,6 @@
 using namespace ngraph;
 using namespace ngraph::runtime::gpu;
 
-void runtime::gpu::emit_broadcast(const std::string& name,
-                                  std::array<std::string, 2> data_types,
-                                  GPURuntimeContext* ctx,
-                                  CUdeviceptr in,
-                                  CUdeviceptr out,
-                                  size_t repeat_size,
-                                  size_t repeat_times,
-                                  size_t count)
-{
-    std::string name_signature = name + "_" + data_types[0] + "_" + data_types[1];
-    std::replace(name_signature.begin(), name_signature.end(), ' ', '_');
-    // Create an instance of nvrtcProgram with the code string.
-    auto compiled_kernel = ctx->compiled_kernel_pool->get(name_signature);
-    if (compiled_kernel == nullptr)
-    {
-        codegen::CodeWriter writer;
-        CudaKernelBuilder::add_pod_typedefs(writer);
-        CudaKernelBuilder::get_broadcast_op(writer, name_signature, data_types);
-        std::string kernel = writer.get_code();
-        compiled_kernel = ctx->compiled_kernel_pool->set(name_signature, kernel);
-    }
-
-    void* args_list[] = {&in, &out, &repeat_size, &repeat_times, &count};
-    CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                  static_cast<unsigned int>(count),
-                                  1,
-                                  1, // grid dim
-                                  1,
-                                  1,
-                                  1, // block dim
-                                  0,
-                                  NULL, // shared mem and stream
-                                  args_list,
-                                  0));  // arguments
-    CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
-}
-
 void runtime::gpu::emit_onehot(const std::string& name,
                                std::array<std::string, 2> data_types,
                                GPURuntimeContext* ctx,
@@ -84,7 +47,7 @@ void runtime::gpu::emit_onehot(const std::string& name,
 
     void* args_list[] = {&in, &out, &repeat_size, &repeat_times, &count};
     CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                  static_cast<unsigned int>(count),
+                                  static_cast<uint32_t>(count),
                                   1,
                                   1, // grid dim
                                   1,
@@ -121,7 +84,7 @@ void runtime::gpu::emit_reshape(const std::string& name,
 
     void* args_list[] = {&in, &out, &input_strides, &trans_strides, &rank, &count};
     CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                  static_cast<unsigned int>(count),
+                                  static_cast<uint32_t>(count),
                                   1,
                                   1, // grid dim
                                   1,
@@ -161,7 +124,7 @@ void runtime::gpu::emit_slice(const std::string& name,
     void* args_list[] = {
         &in, &out, &input_strides, &lower_bounds, &slice_strides, &output_strides, &rank, &count};
     CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                  static_cast<unsigned int>(count),
+                                  static_cast<uint32_t>(count),
                                   1,
                                   1, // grid dim
                                   1,
@@ -198,7 +161,7 @@ void runtime::gpu::emit_reverse(const std::string& name,
 
     void* args_list[] = {&in, &out, &input_shapes, &reverse_axes, &rank, &count};
     CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                  static_cast<unsigned int>(count),
+                                  static_cast<uint32_t>(count),
                                   1,
                                   1, // grid dim
                                   1,

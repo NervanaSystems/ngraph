@@ -14,17 +14,19 @@
 # limitations under the License.
 # ******************************************************************************
 
-if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
-    set(EXTERNAL_PROJECTS_ROOT ${CMAKE_CURRENT_BINARY_DIR})
+if(NGRAPH_DISTRIBUTED_ENABLE)
+    find_package(MPI REQUIRED)
+    add_definitions(-DNGRAPH_DISTRIBUTED)
+    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    link_libraries(${MPI_CXX_LIBRARIES})
 endif()
 
-include( ../cmake/external_gtest.cmake )
-include( ../cmake/external_json.cmake )
-include( ../cmake/external_eigen.cmake )
-include( ../cmake/external_mkldnn.cmake )
-if (NGRAPH_USE_PREBUILT_LLVM OR DEFINED LLVM_TARBALL_URL)
-    include( ../cmake/external_llvm_prebuilt.cmake )
-else()
-    include( ../cmake/external_llvm.cmake )
+if (NGRAPH_INTERPRETER_ENABLE)
+    add_library(interpreter_backend SHARED int_backend.cpp)
+    set_target_properties(interpreter_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
+    target_link_libraries(interpreter_backend PUBLIC ngraph)
+    set_target_properties(interpreter_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+
+    install(TARGETS interpreter_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()
-include( ../cmake/external_tbb.cmake )
