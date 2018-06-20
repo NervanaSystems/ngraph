@@ -139,24 +139,18 @@ cudnnDataType_t runtime::gpu::CUDNNEmitter::getCudnnDataType(std::string dtype)
 void* runtime::gpu::CUDNNEmitter::getDataByType(cudnnDataType_t data_type, double value)
 {
     void* r = NULL;
-    switch(data_type)
+    switch (data_type)
     {
-        case CUDNN_DATA_FLOAT:
-            r = static_cast<void*>(new float[1]{static_cast<float>(value)});
-            break;
-        case CUDNN_DATA_DOUBLE:
-            r = static_cast<void*>(new double[1]{value});
-            break;
-        case CUDNN_DATA_INT8:
-            r = static_cast<void*>(new int8_t[1]{static_cast<int8_t>(value)});
-            break;
-        case CUDNN_DATA_INT32:
-            r = static_cast<void*>(new int32_t[1]{static_cast<int32_t>(value)});
-            break;
-        case CUDNN_DATA_HALF:
-        case CUDNN_DATA_INT8x4:
-            std::string err = "datatype is not supported by CuDNN";
-            throw std::runtime_error(err);
+    case CUDNN_DATA_FLOAT: r = static_cast<void*>(new float[1]{static_cast<float>(value)}); break;
+    case CUDNN_DATA_DOUBLE: r = static_cast<void*>(new double[1]{value}); break;
+    case CUDNN_DATA_INT8: r = static_cast<void*>(new int8_t[1]{static_cast<int8_t>(value)}); break;
+    case CUDNN_DATA_INT32:
+        r = static_cast<void*>(new int32_t[1]{static_cast<int32_t>(value)});
+        break;
+    case CUDNN_DATA_HALF:
+    case CUDNN_DATA_INT8x4:
+        std::string err = "datatype is not supported by CuDNN";
+        throw std::runtime_error(err);
     }
     return r;
 }
@@ -255,7 +249,6 @@ size_t runtime::gpu::CUDNNEmitter::build_tensor_op(const GPURuntimeContext* ctx,
     cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
     auto& descriptor = tensor_descriptor_from_shape(input_shape, data_type, tensor_format);
 
-    
     void* alpha_dt0 = getDataByType(data_type, alpha0);
     void* alpha_dt1 = getDataByType(data_type, alpha1);
     void* beta_dt = getDataByType(data_type, beta);
@@ -486,7 +479,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
     // (lazy) allocation for kernel arguments
     size_t workspace_idx = allocator.reserve_workspace(workspace_size_in_bytes);
-    
+
     void* alpha = getDataByType(data_type, 1.0);
     void* beta = getDataByType(data_type, 0);
     std::unique_ptr<gpu::primitive> conv;
