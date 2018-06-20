@@ -873,6 +873,13 @@ private:
             reference::sigmoid<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
         }
+        else if (node_op == "SigmoidBackprop")
+        {
+            reference::sigmoid_backprop<T>(args[0]->get_data_ptr<T>(),
+                                           args[1]->get_data_ptr<T>(),
+                                           out[0]->get_data_ptr<T>(),
+                                           out[0]->get_element_count());
+        }
         else if (node_op == "Sign")
         {
             reference::sign<T>(
