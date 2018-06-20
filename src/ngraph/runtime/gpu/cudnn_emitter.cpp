@@ -136,28 +136,28 @@ cudnnDataType_t runtime::gpu::CUDNNEmitter::getCudnnDataType(std::string dtype)
     return p->second;
 }
 
-void* runtime::gpu::CUDNNEmitter::getDataByType(std::string dtype, double value)
+void* runtime::gpu::CUDNNEmitter::getDataByType(cudnnDataType_t data_type, double value)
 {
-    switch(dtype)
+    switch(data_type)
     {
-        case "float":
-            float* temp = new float[1];
-            temp[0] = static_cast<float> value;
-            return static_cast<void*>(temp);
+        case CUDNN_DATA_FLOAT:
+            float* temp1 = new float[1];
+            temp1[0] = static_cast<float>(value);
+            return static_cast<void*>(temp1);
             break;
-        case "double":
-            double* temp = new double[1];
-            temp[0] = value;
-            return static_cast<void*>(temp);
+        case CUDNN_DATA_DOUBLE:
+            double* temp2 = new double[1];
+            temp2[0] = value;
+            return static_cast<void*>(temp2);
             break;
-        case "int8_t":
-            int8_t* temp = new int8_t[1];
-            temp[0] = static_cast<int8_t> value;
-            return static_cast<void*>(temp);
-        case "int32_t":
-            int32_t* temp = new int32_t[1];
-            temp[0] = static_cast<int32_t> value;
-            return static_cast<void*>(temp);
+        case CUDNN_DATA_INT8:
+            int8_t* temp3 = new int8_t[1];
+            temp3[0] = static_cast<int8_t>(value);
+            return static_cast<void*>(temp3);
+        case CUDNN_DATA_INT32:
+            int32_t* temp4 = new int32_t[1];
+            temp4[0] = static_cast<int32_t>(value);
+            return static_cast<void*>(temp4);
         default:
             std::string err = dtype + "is not supported by CuDNN";
             throw std::runtime_error(err);
@@ -201,8 +201,8 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
         *ctx->cudnn_handle, desc, input_desc, output_desc, &workspace_size));
     size_t workspace_idx = allocator.reserve_workspace(workspace_size);
 
-    void* alpha = getDataByType(dtype, 1.0);
-    void* beta = getDataByType(dtype, 0);
+    void* alpha = getDataByType(data_type, 1.0);
+    void* beta = getDataByType(data_type, 0);
     // emit reduce operation
     std::unique_ptr<gpu::primitive> reduce(
         new gpu::primitive{[=, &desc, &input_desc, &output_desc](void** inputs, void** outputs) {
@@ -753,8 +753,8 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
     auto& tensor_desc = tensor_descriptor_from_shape(tensor_shape, data_type, tensor_format);
     CUDNN_SAFE_CALL(cudnnDeriveBNTensorDescriptor(derived_param_desc, tensor_desc, bn_op));
 
-    void* alpha = getDataByType(dtype, 1.0);
-    void* beta = getDataByType(dtype, 0);
+    void* alpha = getDataByType(data_type, 1.0);
+    void* beta = getDataByType(data_type, 0);
     std::unique_ptr<gpu::primitive> batchnorm;
     switch (direction)
     {
@@ -794,7 +794,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
         // in training and population statistics (sample variance) used
         // during inference. see commit note for 3b081ce for more details.
         double m = shape_size(tensor_shape) / tensor_shape[1];
-        void* bias_factor = getDataByType(dtype, (m - 1) / m);
+        void* bias_factor = getDataByType(data_type, (m - 1) / m);
 
         batchnorm.reset(new gpu::primitive{
             [=, &op_desc, &tensor_desc, &derived_param_desc](void** inputs, void** outputs) {
