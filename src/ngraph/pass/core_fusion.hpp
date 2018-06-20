@@ -40,5 +40,5 @@ public:
     void construct_relu();
     void construct_folded_batch_norm();
     void construct_sigmoid();
-    void construct_sigmoid_bprop(); 
+    void construct_sigmoid_bprop();
 };

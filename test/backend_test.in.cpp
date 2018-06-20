@@ -7569,7 +7569,6 @@ NGRAPH_TEST(${BACKEND_NAME}, min_3d_eliminate_zero_dim)
     EXPECT_EQ((vector<float>{inf, inf, inf, inf, inf, inf}), read_vector<float>(result));
 }
 
-
 NGRAPH_TEST(${BACKEND_NAME}, sigmoid_2Dfprop)
 {
     auto shape_a = Shape{2, 5};

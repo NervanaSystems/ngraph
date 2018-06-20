@@ -27,12 +27,25 @@ namespace ngraph
         {
             template <typename T>
             void sigmoid(const T* arg, T* out, size_t count)
-            {   
+            {
                 float exp_value;
                 for (size_t i = 0; i < count; i++)
-                {   
-                    exp_value = std::exp((double) -arg[i]);
+                {
+                    exp_value = std::exp((double)-arg[i]);
                     out[i] = 1 / (1 + exp_value);
+                }
+            }
+
+            template <typename T>
+            void sigmoid_backprop(const T* arg, T* out, size_t count)
+            {
+                float exp_value;
+                float func_x;
+                for (size_t i = 0; i < count; i++)
+                {
+                    exp_value = std::exp((double)-arg[i]);
+                    func_x = 1 / (1 + exp_value);
+                    out[i] = func_x * (1 - func_x);
                 }
             }
         }

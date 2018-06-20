@@ -84,10 +84,9 @@ void pass::CoreFusion::construct_relu()
     this->add_matcher(m);
 }
 
-
 void pass::CoreFusion::construct_sigmoid()
 {
-    NGRAPH_INFO<<" core fusion for construct sigmoid ";
+    NGRAPH_INFO << " core fusion for construct sigmoid ";
     //construct variance
     auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
     auto neg_input = std::make_shared<op::Negative>(input);
@@ -128,7 +127,6 @@ void pass::CoreFusion::construct_sigmoid()
     auto m = std::make_shared<ngraph::pattern::Matcher>(divide_1_over_exp, callback);
     this->add_matcher(m);
 }
-
 
 void pass::CoreFusion::construct_sigmoid_bprop()
 {
