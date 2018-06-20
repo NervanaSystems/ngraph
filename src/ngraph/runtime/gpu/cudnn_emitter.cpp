@@ -136,6 +136,34 @@ cudnnDataType_t runtime::gpu::CUDNNEmitter::getCudnnDataType(std::string dtype)
     return p->second;
 }
 
+void* runtime::gpu::CUDNNEmitter::getDataByType(std::string dtype, double value)
+{
+    switch(dtype)
+    {
+        case "float":
+            float* temp = new float[1];
+            temp[0] = static_cast<float> value;
+            return static_cast<void*>(temp);
+            break;
+        case "double":
+            double* temp = new double[1];
+            temp[0] = value;
+            return static_cast<void*>(temp);
+            break;
+        case "int8_t":
+            int8_t* temp = new int8_t[1];
+            temp[0] = static_cast<int8_t> value;
+            return static_cast<void*>(temp);
+        case "int32_t":
+            int32_t* temp = new int32_t[1];
+            temp[0] = static_cast<int32_t> value;
+            return static_cast<void*>(temp);
+        default:
+            std::string err = dtype + "is not supported by CuDNN";
+            throw std::runtime_error(err);
+    }
+}
+
 size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPURuntimeContext* ctx,
                                                         const cudnnReduceTensorOp_t& reduce_op,
                                                         const std::string& dtype,
@@ -173,6 +201,8 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
         *ctx->cudnn_handle, desc, input_desc, output_desc, &workspace_size));
     size_t workspace_idx = allocator.reserve_workspace(workspace_size);
 
+    void* alpha = getDataByType(dtype, 1.0);
+    void* beta = getDataByType(dtype, 0);
     // emit reduce operation
     std::unique_ptr<gpu::primitive> reduce(
         new gpu::primitive{[=, &desc, &input_desc, &output_desc](void** inputs, void** outputs) {
@@ -185,17 +215,16 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
 
             void* workspace_ptr = runtime::gpu::invoke_memory_primitive(ctx, workspace_idx);
 
-            float alpha = 1.0, beta = 0.0;
             CUDNN_SAFE_CALL(cudnnReduceTensor(*ctx->cudnn_handle,
                                               desc,
                                               nullptr,
                                               0,
                                               workspace_ptr,
                                               workspace_size,
-                                              &alpha,
+                                              alpha,
                                               input_desc,
                                               inputs[0],
-                                              &beta,
+                                              beta,
                                               output_desc,
                                               outputs[0]));
         }});
@@ -724,7 +753,8 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
     auto& tensor_desc = tensor_descriptor_from_shape(tensor_shape, data_type, tensor_format);
     CUDNN_SAFE_CALL(cudnnDeriveBNTensorDescriptor(derived_param_desc, tensor_desc, bn_op));
 
-    float alpha = 1.0, beta = 0.0;
+    void* alpha = getDataByType(dtype, 1.0);
+    void* beta = getDataByType(dtype, 0);
     std::unique_ptr<gpu::primitive> batchnorm;
     switch (direction)
     {
@@ -734,8 +764,8 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
             [=, &tensor_desc, &derived_param_desc](void** inputs, void** outputs) {
                 CUDNN_SAFE_CALL(cudnnBatchNormalizationForwardInference(*ctx->cudnn_handle,
                                                                         bn_op,
-                                                                        &alpha,
-                                                                        &beta,
+                                                                        alpha,
+                                                                        beta,
                                                                         tensor_desc,
                                                                         inputs[2], // tensor
                                                                         tensor_desc,
@@ -763,14 +793,15 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
         // mini-batch statistics (variance of the sample) should be used
         // in training and population statistics (sample variance) used
         // during inference. see commit note for 3b081ce for more details.
-        float m = shape_size(tensor_shape) / tensor_shape[1];
-        float bias_factor = (m - 1) / m;
+        double m = shape_size(tensor_shape) / tensor_shape[1];
+        void* bias_factor = getDataByType(dtype, (m - 1) / m);
+
         batchnorm.reset(new gpu::primitive{
             [=, &op_desc, &tensor_desc, &derived_param_desc](void** inputs, void** outputs) {
                 CUDNN_SAFE_CALL(cudnnBatchNormalizationForwardTraining(*ctx->cudnn_handle,
                                                                        bn_op,
-                                                                       &alpha,
-                                                                       &beta,
+                                                                       alpha,
+                                                                       beta,
                                                                        tensor_desc,
                                                                        inputs[2],
                                                                        tensor_desc,
@@ -788,13 +819,13 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
                 // convert to biased variance
                 CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,
                                               op_desc,
-                                              &beta,
+                                              beta,
                                               derived_param_desc,
                                               outputs[2],
-                                              &beta,
+                                              beta,
                                               derived_param_desc,
                                               outputs[2],
-                                              &bias_factor,
+                                              bias_factor,
                                               derived_param_desc,
                                               outputs[2]));
             }});
@@ -807,9 +838,9 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
                 CUDNN_SAFE_CALL(cudnnBatchNormalizationBackward(
                     *ctx->cudnn_handle,
                     bn_op,
-                    &alpha,
+                    alpha,
                     &beta,
-                    &alpha,
+                    alpha,
                     &beta,
                     tensor_desc,
                     inputs[2 /* input tensor x */],

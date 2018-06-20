@@ -124,6 +124,9 @@ namespace ngraph
 
             private:
                 CUDNNEmitter(GPUPrimitiveEmitter* emitter);
+
+                void* getDataByType(std::string dtype, double value);
+
                 cudnnDataType_t getCudnnDataType(std::string dtype);
 
                 cudnnTensorDescriptor_t&
