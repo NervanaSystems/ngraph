@@ -858,8 +858,8 @@ static shared_ptr<ngraph::Function>
             }
             else if (node_op == "Softmax")
             {
-                auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
-                node = make_shared<op::Softmax>(args[0], reduction_axes);
+                auto softmax_axes = node_js.at("softmax_axes").get<set<size_t>>();
+                node = make_shared<op::Softmax>(args[0], softmax_axes);
             }
             else if (node_op == "Sqrt")
             {
@@ -1289,6 +1289,11 @@ static json write(const Node& n, bool binary_constant_data)
     {
         auto tmp = dynamic_cast<const op::Sum*>(&n);
         node["reduction_axes"] = tmp->get_reduction_axes();
+    }
+    else if (node_op == "Softmax")
+    {
+        auto tmp = dynamic_cast<const op::Softmax*>(&n);
+        node["softmax_axes"] = tmp->get_axes();
     }
     else if (node_op == "Tan")
     {
