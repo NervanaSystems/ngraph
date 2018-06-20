@@ -1493,7 +1493,7 @@ size_t runtime::gpu::CUDAEmitter::build_convolution(const GPURuntimeContext* ctx
     int reg_tile_size = 1;
     int sm_tile_size = 8;
     // if N is a multiple of 32 use register tiling
-    if (N % 4*sm_tile_size == 0)
+    if (N % (sm_tile_size * 4) == 0)
     {
         reg_tile_size = 4;
     }

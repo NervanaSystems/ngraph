@@ -659,7 +659,7 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_forward(codegen::CodeWrite
         bool need_image_bounds_check = N % (reg_tile_size * sm_tile_size) != 0;
         if (need_image_bounds_check)
         {
-            writer << "int image_load_in_bounds = (k_offset + threadIdx.x);\n";
+            writer << "int image_load_in_bounds = (n_offset + threadIdx.x);\n";
             if (reg_tile_size == 4)
             {
                 writer << "image_load_in_bounds <<= 2;\n";
@@ -717,8 +717,9 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_forward(codegen::CodeWrite
                     writer << "undilated_coordinate = division_by_invariant_multiplication(input_d" << i
                            << ", data_dilation_magic[" << i << "], data_dilation_shift[" << i << "]);\n";
                     // if division remainder is 0, then dilated coordinate is on an input element
-                    writer << "off_dilation_stride += (undilated_coordinate - input_d" << i << " * data_dilation[" << i << "]);\n";
-
+                    writer << "off_dilation_stride += (input_d" << i << " - undilated_coordinate * data_dilation[" << i << "]);\n";
+                    // reassign dilated coordinate to undilated input coordinate
+                    writer << "input_d" << i << " = undilated_coordinate;\n";
                 }
 
                 // check if the index is in bounds of the input tensor
@@ -776,8 +777,10 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_forward(codegen::CodeWrite
                     }
                     writer << ";\n";
 
-                    // save coordinates to shared lookup table for later loading
+                    // count the number of active threads with index less than
+                    // current tid use this as an offset into the lookup table
                     writer << "int index = lookup_size_local + __popc(threads & mask);\n";
+                    // save coordinates to shared lookup table for later loading
                     writer << "lookup_table[index] = entry;\n";
                 }
                 writer.block_end();
@@ -812,7 +815,7 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_forward(codegen::CodeWrite
             // loop from the back of the filter (highest index) to the front
             // in order to handle filter pixel edge conditionals first (outside of gemm loop)
             writer << "int total_filter_idx = total_filter_size % NUM_ROWS;\n";
-            // want total_filter_idx always >=0
+            // want total_filter_idx always >=0 in order to mask threads with t.y > total_filter_idx
             writer << "total_filter_idx = (total_filter_idx == 0) ? 8 : total_filter_idx;\n";
 
             // first iteration from back of filter
@@ -826,21 +829,20 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_forward(codegen::CodeWrite
                    << ": lookup_table[filter_idx];\n";
 
             // helper to emit call to cuda make_float function
-            auto make_float_i = [](int n)
+            auto make_float_i = [](int n) {
+                std::stringstream ss;
+                ss << "make_float" << n << "(";
+                for (int i = 0; i < n; i++)
                 {
-                    std::stringstream ss;
-                    ss << "make_float" << n << "(";
-                    for (int i = 0; i < n; i++)
+                    if (i != 0)
                     {
-                        if (i != 0)
-                        {
-                            ss <<", ";
-                        }
-                        ss << "0";
+                        ss <<", ";
                     }
-                    ss << ")";
-                    return ss.str();
-                };
+                    ss << "0";
+                }
+                ss << ")";
+                return ss.str();
+            };
 
             // use the y index of threads to load data into the tile rows
             // threadIdx.x is used for iterating over the fastest moving dimensions
@@ -883,7 +885,7 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_forward(codegen::CodeWrite
 
 
             // iterate over filter from back to front
-            writer << "for (total_filter_idx = total_filter_size - total_filter_idx - 1; total_filter_idx > 0; total_filter_idx -= NUM_ROWS)\n";
+            writer << "for (total_filter_idx = total_filter_size - total_filter_idx; total_filter_idx > 0; total_filter_idx -= NUM_ROWS)\n";
             writer.block_begin();
             {
                 // finish loads
@@ -929,7 +931,6 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_forward(codegen::CodeWrite
                     writer << ": ";
                 }
                 writer << "I[(c * input_channel_size) + entry.x].f" << reg_tile_size << ";\n";
-
 
                 // --- filter load ---
                 writer << "b_tile[threadIdx.y][threadIdx.x].f" << reg_tile_size << " =\n";
