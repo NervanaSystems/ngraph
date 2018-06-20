@@ -92,9 +92,9 @@ namespace ngraph
                                        const cudnnOpTensorOp_t& tensor_op,
                                        const std::string& dtype,
                                        const Shape& input_shape,
-                                       const float alpha0,
-                                       const float alpha1,
-                                       const float beta);
+                                       const double alpha0,
+                                       const double alpha1,
+                                       const double beta);
 
                 size_t build_pooling(const GPURuntimeContext* ctx,
                                      const cudnnPoolingMode_t& pool_op,

@@ -554,7 +554,7 @@ namespace ngraph
                 {
                     writer.block_begin();
                     writer << "runtime::gpu::cuda_memset(" << out[0].get_name() << ", 0, "
-                           << out[0].get_size() << " * sizeof(float));\n";
+                           << out[0].get_size() << " * " << out[0].get_element_type().size()  << ");\n";
                     writer.block_end();
                     return;
                 }
@@ -1356,8 +1356,8 @@ namespace ngraph
                         // one of args[] axes has zero size, fill output with 1
                         if (args[0].get_size() == 0)
                         {
-                            writer << "float init_value = 1;\n";
-                            writer << "std::vector<float> temp(" << out[0].get_size()
+                            writer << out[0].get_type() << " init_value = 1;\n";
+                            writer << "std::vector<" << out[0].get_type() << "> temp(" << out[0].get_size()
                                    << ", init_value);\n";
                             writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
                                    << ", (void*)temp.data(), " << out[0].get_size() << " * "
@@ -1417,11 +1417,11 @@ namespace ngraph
                         // one of args0 axes has zero size, zero output, use args1 value
                         if (args[0].get_size() == 0)
                         {
-                            writer << "float init_value;\n";
+                            writer << out[0].get_type() << " init_value;\n";
                             writer << "runtime::gpu::cuda_memcpyDtH(&init_value, "
                                    << args[1].get_name() << " ,"
                                    << args[1].get_element_type().size() << ");\n";
-                            writer << "std::vector<float> temp(" << out[0].get_size()
+                            writer << "std::vector<" << out[0].get_type << "> temp(" << out[0].get_size()
                                    << ", init_value);\n";
                             writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
                                    << ", (void*)temp.data(), " << out[0].get_size() << " * "
@@ -1507,11 +1507,11 @@ namespace ngraph
                         // one of args0 axes has zero size, zero output, use args1 value
                         if (args[0].get_size() == 0)
                         {
-                            writer << "float init_value;\n";
+                            writer << out[0].get_type() << " init_value;\n";
                             writer << "runtime::gpu::cuda_memcpyDtH(&init_value, "
                                    << args[1].get_name() << " ,"
                                    << args[1].get_element_type().size() << ");\n";
-                            writer << "std::vector<float> temp(" << out[0].get_size()
+                            writer << "std::vector<" << out[0].get_type() << "> temp(" << out[0].get_size()
                                    << ", init_value);\n";
                             writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
                                    << ", (void*)temp.data(), " << out[0].get_size() << " * "
