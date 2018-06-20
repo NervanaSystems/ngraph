@@ -815,6 +815,10 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         for (auto& rnn_goes : rnn_node->get_users())
         {
             NGRAPH_DEBUG << "rnn_goes: " << rnn_goes->get_name();
+            if (rnn_goes->get_users().size() == 0)
+            {
+                continue;
+            }
             if (auto rnn_goe_node = std::dynamic_pointer_cast<op::GetOutputElement>(rnn_goes))
             {
                 if (rnn_goe_node->get_n() == 0)
