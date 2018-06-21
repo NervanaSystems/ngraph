@@ -1622,14 +1622,13 @@ namespace ngraph
                     // Emit an MKL transpose call if possible
                     if (result_element_type == ngraph::element::f32)
                     {
-                        writer.block_begin();
-                        writer << "mkl::MKL_Somatcopy('R', 'T', " << to_string(arg_shape[0])
-                               << ",\n"
-                               << "                   " << to_string(arg_shape[1]) << ", 1.0f,\n"
-                               << "                   " << args[0].get_name() << ", "
-                               << to_string(arg_shape[1]) << ",\n"
-                               << "                   " << out[0].get_name() << ", "
-                               << to_string(arg_shape[0]) << ");\n";
+                        writer.block_begin() writer
+                            << "mkl::MKL_Somatcopy('R', 'T', " << to_string(arg_shape[0]) << ",\n"
+                            << "                   " << to_string(arg_shape[1]) << ", 1.0f,\n"
+                            << "                   " << args[0].get_name() << ", "
+                            << to_string(arg_shape[1]) << ",\n"
+                            << "                   " << out[0].get_name() << ", "
+                            << to_string(arg_shape[0]) << ");\n";
                         writer.block_end();
                     }
                     else
@@ -1652,18 +1651,14 @@ namespace ngraph
                     writer << "               );\n";
                 }
 #else
-                if ((args[0].get_element_type() == element::f32) &&
-                    ((args[0].get_shape().size() == 4 && out[0].get_shape().size() != 4) ||
-                     (args[0].get_shape().size() == 5 && out[0].get_shape().size() == 5)))
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    std::cout << "IN HERE " << std::endl;
                     auto input_tvl = node->get_inputs()[0]
                                          .get_output()
                                          .get_tensor_view()
                                          ->get_tensor_view_layout();
                     auto input_cpu_tvl =
                         dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(input_tvl);
-                    auto input_format = input_cpu_tvl->get_mkldnn_format();
 
                     // Reorder input shape if needed
                     auto input_axis_order = input_cpu_tvl->get_axis_order();
@@ -1674,28 +1669,29 @@ namespace ngraph
                     }
 
                     auto output_tvl = node->get_output_tensor_view(0)->get_tensor_view_layout();
-                    auto output_format = dynamic_cast<runtime::cpu::LayoutDescriptor&>(*output_tvl)
-                                             .get_mkldnn_format();
+                    auto input_strides = input_tvl->get_strides();
+                    auto output_strides = output_tvl->get_strides();
+                    auto axis_order = reshape->get_input_order();
 
-                    // MKLDNN relies on format names for selecting optimized kernel implementations
-                    // Hacky way to deal with this until they move to using canonicalized layouts
-                    if (input_format == mkldnn::memory::format::nchw &&
-                        runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(output_format))
-                    {
-                        input_format = mkldnn::memory::format::oihw;
-                    }
-                    if (output_format == mkldnn::memory::format::nchw &&
-                        runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(input_format))
-                    {
-                        output_format = mkldnn::memory::format::oihw;
-                    }
+                    Strides new_output_strides(output_strides.size());
+                    for (int i = 0; i < output_strides.size(); i++)
+                        new_output_strides[axis_order[i]] = output_strides[i];
+
+                    mkldnn::memory::data_type et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
+                        node->get_input_element_type(0));
+
+                    mkldnn::memory::dims mkldnn_input_shape(input_shape.begin(), input_shape.end());
+                    mkldnn::memory::dims mkldnn_input_strides(input_strides.begin(),
+                                                              input_strides.end());
+                    mkldnn::memory::dims mkldnn_output_strides(new_output_strides.begin(),
+                                                               new_output_strides.end());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
 
-                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
-                        input_shape, args[0].get_element_type(), input_format);
-                    auto result_desc =
-                        mkldnn_emitter->build_memory_descriptor(out[0], output_format);
+                    auto input_desc = mkldnn_emitter->build_blocked_memory_descriptor(
+                        mkldnn_input_shape, mkldnn_input_strides, et);
+                    auto result_desc = mkldnn_emitter->build_blocked_memory_descriptor(
+                        mkldnn_input_shape, mkldnn_output_strides, et);
 
                     size_t reorder_index = mkldnn_emitter->build_reorder(input_desc, result_desc);
 
@@ -1709,7 +1705,7 @@ namespace ngraph
                            << to_string(reorder_index) << ");\n";
                 }
                 else
-                {
+                { //Dead Code : What should be done?
                     if (args[0].get_element_type() == element::f32 &&
                         args[0].get_shape().size() == 3 && out[0].get_shape().size() == 3)
                     {
@@ -1720,10 +1716,10 @@ namespace ngraph
                                << "{" << join(out[0].get_shape()) << "}"
                                << ");\n";
                     }
+                    //Dead Code : What should be done?
                     else if (args[0].get_element_type() == element::f32 &&
                              args[0].get_shape().size() == 4 && out[0].get_shape().size() == 4)
                     {
-                        std::cout << "Non Eigen" << std::endl;
                         writer << "cpu::kernel::reshape_4d_4d_float32(" << args[0].get_name()
                                << ", " << out[0].get_name() << ", "
                                << "{" << join(args[0].get_shape()) << "}, "
