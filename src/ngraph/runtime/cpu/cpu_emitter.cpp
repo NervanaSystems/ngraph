@@ -1622,13 +1622,13 @@ namespace ngraph
                     // Emit an MKL transpose call if possible
                     if (result_element_type == ngraph::element::f32)
                     {
-                        writer.block_begin() writer
-                            << "mkl::MKL_Somatcopy('R', 'T', " << to_string(arg_shape[0]) << ",\n"
-                            << "                   " << to_string(arg_shape[1]) << ", 1.0f,\n"
-                            << "                   " << args[0].get_name() << ", "
-                            << to_string(arg_shape[1]) << ",\n"
-                            << "                   " << out[0].get_name() << ", "
-                            << to_string(arg_shape[0]) << ");\n";
+                        writer.block_begin();
+                        writer << "mkl::MKL_Somatcopy('R', 'T', " << to_string(arg_shape[0]) << ",\n"
+                               << "                   " << to_string(arg_shape[1]) << ", 1.0f,\n"
+                               << "                   " << args[0].get_name() << ", "
+                               << to_string(arg_shape[1]) << ",\n"
+                               << "                   " << out[0].get_name() << ", "
+                               << to_string(arg_shape[0]) << ");\n";
                         writer.block_end();
                     }
                     else

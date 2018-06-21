@@ -92,10 +92,6 @@ mkldnn::memory::desc
                                                    const mkldnn::memory::dims& strides,
                                                    mkldnn::memory::data_type dtype) const
 {
-    // We have to construct memory descriptor in a C style. This is not at all
-    // ideal but MKLDNN does not offer any API to construct descriptor in
-    // blocked format except a copy constructor that accepts
-    // mkldnn_memory_desc_t.
     mkldnn_memory_desc_t md;
     md.primitive_kind = mkldnn_memory;
     md.ndims = dim.size();
