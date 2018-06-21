@@ -80,6 +80,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/op/sign.hpp"
@@ -997,6 +998,45 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             }
 
             template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::FunctionCall)
+            {
+                auto function_call = static_cast<const ngraph::op::FunctionCall*>(node);
+                shared_ptr<Function> function = function_call->get_functions()[0];
+
+                writer.block_begin();
+                {
+                    std::vector<string> input_names;
+                    std::vector<string> output_names;
+
+                    for (const runtime::gpu::GPU_TensorViewWrapper& input : args)
+                    {
+                        input_names.push_back(input.get_name());
+                    }
+
+                    for (const runtime::gpu::GPU_TensorViewWrapper& output : out)
+                    {
+                        output_names.push_back(output.get_name());
+                    }
+
+                    writer << "void* args[] =\n";
+                    writer.block_begin();
+                    writer << "\n" << join(input_names, ",\n");
+                    writer.block_end();
+                    writer << ";\n";
+
+                    writer << "void* out[] =\n";
+                    writer.block_begin();
+                    writer << "\n" << join(output_names, ",\n");
+                    writer.block_end();
+                    writer << ";\n";
+
+                    writer << "\n";
+                    writer << function->get_name() << "(args, out, ctx);\n";
+                }
+                writer.block_end();
+            }
+
+            template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Slice)
             {
                 if (out[0].get_size() == 0)
@@ -1113,8 +1153,35 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
             }
 
             template <>
-            void GPU_Emitter::EMITTER_DECL(ngraph::op::FunctionCall)
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::ReverseSequence)
             {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
+                auto rs = static_cast<const ngraph::op::ReverseSequence*>(node);
+
+                size_t bi = rs->get_batch_axis();
+                size_t si = rs->get_sequence_axis();
+                auto arg_shape0 = args[0].get_shape();
+                auto arg_shape1 = args[1].get_shape();
+                auto out_shape = out[0].get_shape();
+
+                auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
+
+                auto rs_index = cuda_emitter->build_reverse_sequence(
+                    external_function->ctx().get(),
+                    {{args[0].get_type(), args[1].get_type(), out[0].get_type()}},
+                    arg_shape0,
+                    arg_shape1,
+                    out_shape,
+                    bi,
+                    si);
+                writer << "gpu::invoke_primitive(ctx, " << rs_index << ", ";
+                writer << "std::vector<void*>{" << args[0].get_name() << ", " << args[1].get_name()
+                       << "}.data(), ";
+                writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                writer << ");\n";
             }
 
             template <>

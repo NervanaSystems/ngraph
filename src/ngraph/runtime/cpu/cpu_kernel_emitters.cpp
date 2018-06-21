@@ -138,6 +138,11 @@ void ngraph::runtime::cpu::kernel::emit_concat(codegen::CodeWriter& writer,
 
     for (size_t i = 0; i < args.size(); i++)
     {
+        if (shape_size(in_shapes[i]) == 0)
+        {
+            continue;
+        }
+
         Coordinate out_start_coord = Coordinate(out_shape.size(), 0);
         out_start_coord[concatenation_axis] = concatenation_pos;
 

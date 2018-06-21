@@ -91,6 +91,12 @@ if(${CMAKE_VERSION} VERSION_LESS 3.2)
         GIT_TAG ${MKLDNN_GIT_TAG}
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND
+        # Patch gets mad if it applied for a second time so:
+        #    --forward tells patch to ignore if it has already been applied
+        #    --reject-file tells patch to not right a reject file
+        #    || exit 0 changes the exit code for the PATCH_COMMAND to zero so it is not an error
+        # I don't like it, but it works
+        PATCH_COMMAND patch ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/src/CMakeLists.txt --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/mkldnn.diff || exit 0
         # Uncomment below with any in-flight MKL-DNN patches
         # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
         CMAKE_ARGS
@@ -116,6 +122,12 @@ else()
         GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
         GIT_TAG ${MKLDNN_GIT_TAG}
         UPDATE_COMMAND ""
+        # Patch gets mad if it applied for a second time so:
+        #    --forward tells patch to ignore if it has already been applied
+        #    --reject-file tells patch to not right a reject file
+        #    || exit 0 changes the exit code for the PATCH_COMMAND to zero so it is not an error
+        # I don't like it, but it works
+        PATCH_COMMAND patch ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/src/CMakeLists.txt --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/mkldnn.diff || exit 0
         # Uncomment below with any in-flight MKL-DNN patches
         # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
         CMAKE_ARGS
@@ -144,6 +156,11 @@ ExternalProject_Add_Step(
     DEPENDEES download
     DEPENDERS configure
     )
+
+add_custom_command(TARGET ext_mkldnn POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib ${NGRAPH_BUILD_DIR}
+    COMMENT "Move mkldnn libraries to ngraph build directory"
+)
 
 add_library(libmkldnn INTERFACE)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
