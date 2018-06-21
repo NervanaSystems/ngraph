@@ -130,7 +130,7 @@ cudnnDataType_t runtime::gpu::CUDNNEmitter::get_cudnn_datatype(std::string dtype
 
 void* runtime::gpu::CUDNNEmitter::get_data_by_type(cudnnDataType_t data_type, double value)
 {
-    void* r = NULL;
+    void* r = nullptr;
     switch (data_type)
     {
     case CUDNN_DATA_FLOAT: r = static_cast<void*>(new float[1]{static_cast<float>(value)}); break;
