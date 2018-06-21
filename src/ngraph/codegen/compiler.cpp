@@ -48,7 +48,8 @@
 
 #include "header_resource.hpp"
 #include "ngraph/codegen/compiler.hpp"
-#include "ngraph/codegen/file_util.hpp"
+#include "ngraph/file_util.hpp"
+#include "ngraph/util.hpp"
 
 #if defined(__clang__)
 #define IS_RTTI_ENABLED __has_feature(cxx_rtti)
@@ -273,21 +274,6 @@ bool codegen::StaticCompiler::is_version_number(const string& path)
             {
                 rc = false;
             }
-        }
-    }
-    return rc;
-}
-
-static template <typename U, typename T>
-bool contains(const U& container, const T& obj)
-{
-    bool rc = false;
-    for (auto o : container)
-    {
-        if (o == obj)
-        {
-            rc = true;
-            break;
         }
     }
     return rc;
