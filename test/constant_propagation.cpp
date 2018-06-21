@@ -53,8 +53,8 @@ TEST(constant_propagation, constant_reshape_permute)
     Shape shape_in{2, 4};
     Shape shape_out{4, 2};
 
-    vector<float> values_in{0, 1, 2, 3, 4, 5, 6, 7};
-    auto constant = make_shared<op::Constant>(element::f32, shape_in, values_in);
+    vector<double> values_in{0, 1, 2, 3, 4, 5, 6, 7};
+    auto constant = make_shared<op::Constant>(element::f64, shape_in, values_in);
     auto reshape = make_shared<op::Reshape>(constant, AxisVector{1, 0}, shape_out);
     auto f = make_shared<Function>(reshape, op::ParameterVector{});
 
@@ -68,8 +68,8 @@ TEST(constant_propagation, constant_reshape_permute)
     auto new_const =
         std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
-    auto values_out = new_const->get_vector<float>();
+    auto values_out = new_const->get_vector<double>();
 
-    vector<float> values_permute{0, 4, 1, 5, 2, 6, 3, 7};
+    vector<double> values_permute{0, 4, 1, 5, 2, 6, 3, 7};
     ASSERT_EQ(values_permute, values_out);
 }

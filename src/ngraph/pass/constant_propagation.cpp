@@ -25,6 +25,22 @@
 using namespace std;
 using namespace ngraph;
 
+template <class T>
+shared_ptr<op::Constant> make_constant_reshape(shared_ptr<op::Constant> constant,
+                                               shared_ptr<op::Reshape> reshape)
+{
+    auto out_shape = reshape->get_shape();
+    auto out_vec = vector<T>(shape_size(out_shape));
+
+    runtime::reference::reshape<T>(constant->get_vector<T>().data(),
+                                   out_vec.data(),
+                                   constant->get_shape(),
+                                   reshape->get_input_order(),
+                                   out_shape);
+
+    return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
+}
+
 void ngraph::pass::ConstantPropagation::construct_constant_reshape()
 {
     auto constant_pred = [](shared_ptr<Node> n) {
@@ -42,48 +58,28 @@ void ngraph::pass::ConstantPropagation::construct_constant_reshape()
         auto reshape_match = dynamic_pointer_cast<op::Reshape>(pattern_map[reshape_label]);
 
         auto type = constant_match->get_element_type();
-        auto in_shape = constant_match->get_shape();
-        auto out_shape = reshape_match->get_shape();
-        auto order = reshape_match->get_input_order();
-
         if (type == element::i32)
         {
-            auto in_vec = constant_match->get_vector<int>();
-            auto out_vec = vector<int>(shape_size(out_shape));
-            runtime::reference::reshape<int>(
-                in_vec.data(), out_vec.data(), in_shape, order, out_shape);
-            auto new_const = make_shared<op::Constant>(type, out_shape, out_vec);
-            replace_node(m.get_match_root(), new_const);
+            replace_node(m.get_match_root(),
+                         make_constant_reshape<int>(constant_match, reshape_match));
             return true;
         }
         else if (type == element::i8)
         {
-            auto in_vec = constant_match->get_vector<signed char>();
-            auto out_vec = vector<signed char>(shape_size(out_shape));
-            runtime::reference::reshape<signed char>(
-                in_vec.data(), out_vec.data(), in_shape, order, out_shape);
-            auto new_const = make_shared<op::Constant>(type, out_shape, out_vec);
-            replace_node(m.get_match_root(), new_const);
+            replace_node(m.get_match_root(),
+                         make_constant_reshape<signed char>(constant_match, reshape_match));
             return true;
         }
         else if (type == element::f32)
         {
-            auto in_vec = constant_match->get_vector<float>();
-            auto out_vec = vector<float>(shape_size(out_shape));
-            runtime::reference::reshape<float>(
-                in_vec.data(), out_vec.data(), in_shape, order, out_shape);
-            auto new_const = make_shared<op::Constant>(type, out_shape, out_vec);
-            replace_node(m.get_match_root(), new_const);
+            replace_node(m.get_match_root(),
+                         make_constant_reshape<float>(constant_match, reshape_match));
             return true;
         }
         else if (type == element::f64)
         {
-            auto in_vec = constant_match->get_vector<double>();
-            auto out_vec = vector<double>(shape_size(out_shape));
-            runtime::reference::reshape<double>(
-                in_vec.data(), out_vec.data(), in_shape, order, out_shape);
-            auto new_const = make_shared<op::Constant>(type, out_shape, out_vec);
-            replace_node(m.get_match_root(), new_const);
+            replace_node(m.get_match_root(),
+                         make_constant_reshape<double>(constant_match, reshape_match));
             return true;
         }
 
