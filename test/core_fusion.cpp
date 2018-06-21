@@ -36,6 +36,7 @@
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
+#include "util/autodiff/backprop_function.hpp"
 #include "util/matcher.hpp"
 #include "util/test_tools.hpp"
 
@@ -54,4 +55,30 @@ TEST(core_fusion, core_fusion_pass_basic)
     auto func = make_shared<Function>(graph, op::ParameterVector{B});
     pass_manager.run_passes(func);
     ASSERT_NE(std::dynamic_pointer_cast<op::Relu>(graph->get_argument(0)), nullptr);
+}
+
+TEST(core_fusion, sigmoid_fprop_fusion)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CoreFusion>();
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Graph_fprop_sigmoid.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    size_t ccg = count_ops_of_type<op::Sigmoid>(func);
+    ASSERT_EQ(ccg, 1);
+}
+
+TEST(core_fusion, sigmoid_bprop_fusion)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Graph_fprop_sigmoid.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    auto df = autodiff::backprop_function(func);
+    auto backend = runtime::Backend::create("CPU");
+    backend->compile(df);
+    size_t ccg = count_ops_of_type<op::SigmoidBackprop>(df);
+    ASSERT_EQ(ccg, 1);
 }

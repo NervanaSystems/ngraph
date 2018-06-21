@@ -45,7 +45,7 @@ namespace ngraph
                 {
                     exp_value = std::exp((double)-arg[i]);
                     func_x = 1 / (1 + exp_value);
-                    out[i] =  delta_arg[i] * func_x * (1 - func_x);
+                    out[i] = delta_arg[i] * func_x * (1 - func_x);
                 }
             }
         }

@@ -86,7 +86,6 @@ void pass::CoreFusion::construct_relu()
 
 void pass::CoreFusion::construct_sigmoid()
 {
-    NGRAPH_INFO << " core fusion for construct sigmoid ";
     //construct variance
     auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
     auto neg_input = std::make_shared<op::Negative>(input);
