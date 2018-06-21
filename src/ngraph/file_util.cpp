@@ -145,22 +145,6 @@ bool file_util::make_directory(const string& dir)
     return true;
 }
 
-string file_util::make_temp_directory(const string& path)
-{
-    string fname = path.empty() ? file_util::get_temp_directory_path() : path;
-    string tmp_template = file_util::path_join(fname, "ngraph_XXXXXX");
-    char* tmpname = strdup(tmp_template.c_str());
-
-    string rc;
-    if (mkdtemp(tmpname))
-    {
-        rc = tmpname;
-    }
-
-    free(tmpname);
-    return rc;
-}
-
 string file_util::get_temp_directory_path()
 {
     const vector<string> potential_tmps = {"NGRAPH_TMP", "TMPDIR", "TMP", "TEMP", "TEMPDIR"};
@@ -308,18 +292,6 @@ string file_util::tmp_filename(const string& extension)
     string rc = tmpname;
     free(tmpname);
     return rc;
-}
-
-void file_util::touch(const string& filename)
-{
-    // inspired by http://chris-sharpe.blogspot.com/2013/05/better-than-systemtouch.html
-    int fd = open(filename.c_str(), O_WRONLY | O_CREAT | O_NOCTTY | O_NONBLOCK, 0666);
-    assert(fd >= 0);
-    close(fd);
-
-    // update timestamp for filename
-    int rc = utimes(filename.c_str(), nullptr);
-    assert(!rc);
 }
 
 bool file_util::exists(const string& filename)

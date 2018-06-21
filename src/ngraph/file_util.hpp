@@ -51,12 +51,6 @@ namespace ngraph
         // @return true if the directory was created, false otherwise
         bool make_directory(const std::string& dir);
 
-        // @brief Creates a directory in the system temporary directory or in the supplied path
-        // @param path Optional parameter specifying the directory to contain the created temporary
-        //    directory
-        // @return The path of the temporary directory created
-        std::string make_temp_directory(const std::string& path = "");
-
         // @brief Gets the path of the system temporary directory
         // @return the path to the system temporary directory
         std::string get_temp_directory_path();
@@ -87,10 +81,6 @@ namespace ngraph
         // @param extension Optional extension for the temporary file
         // @return Name of the temporary file
         std::string tmp_filename(const std::string& extension = "");
-
-        // @brief Update file's last access time
-        // @param file The to operate on
-        void touch(const std::string& file);
 
         // @brief Test for the existence of a path or file
         // @param path The path to test
