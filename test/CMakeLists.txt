@@ -18,7 +18,7 @@ set(SRC
     algebraic_simplification.cpp
     builder_autobroadcast.cpp
     build_graph.cpp
-    constant_propagation.cpp
+    constant_folding.cpp
     copy.cpp
     core_fusion.cpp
     cpio.cpp
