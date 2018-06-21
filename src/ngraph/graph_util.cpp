@@ -112,6 +112,11 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
         throw ngraph_error("Result nodes cannot be replaced.");
     }
 
+    if (target->get_users().size() == 0)
+    {
+        throw ngraph_error("replacing an unreachable node");
+    }
+
     // Fix input/output descriptors
     assert(target->get_outputs().size() == replacement->get_outputs().size());
 
