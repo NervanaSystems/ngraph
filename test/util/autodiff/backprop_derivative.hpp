@@ -166,15 +166,14 @@ namespace ngraph
             // create fprop cache
             // creates modified forward function -> (y, cached) = f(x)
             // creates modified backward function -> df/dX* = f'(c, cached)
-            auto fprop_cache = cache_fprop(f, df, {c_param});
+            auto fprop_cache = cache_fprop(f, df);
 
             // (y, cached) arguments
             std::vector<std::shared_ptr<runtime::TensorView>> mod_f_output_args;
             mod_f_output_args.push_back(backend->create_tensor<T>(y_shape));
 
             // (c, cached) arguments
-            std::vector<std::shared_ptr<runtime::TensorView>> mod_df_input_args;
-            mod_df_input_args.push_back(c_arg);
+            std::vector<std::shared_ptr<runtime::TensorView>> mod_df_input_args = df_input_args;
 
             // add cached nodes to both modified f output and modified f' input arguments
             for (auto node : fprop_cache.fprop_output_nodes)
