@@ -48,14 +48,13 @@ shared_ptr<runtime::TensorView> runtime::gpu::GPU_Backend::create_tensor(
 
 bool runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func)
 {
-    if (!contains_key(m_function_map, func))
+    FunctionInstance& instance = m_function_map[func];
+    if (instance.m_external_function == nullptr)
     {
-        FunctionInstance instance;
         instance.m_external_function = make_shared<GPU_ExternalFunction>(func);
         instance.m_external_function->m_emit_timing = instance.m_performance_counters_enabled;
         auto cf = instance.m_external_function->make_call_frame();
         instance.m_call_frame = dynamic_pointer_cast<GPU_CallFrame>(cf);
-        m_function_map.insert({func, instance});
     }
     return true;
 }
@@ -68,36 +67,30 @@ bool runtime::gpu::GPU_Backend::call(shared_ptr<Function> func,
 
     validate_call(func, outputs, inputs);
 
-    auto it = m_function_map.find(func);
-    if (it == m_function_map.end())
+    FunctionInstance& instance = m_function_map[func];
+    if (instance.m_external_function == nullptr)
     {
-        compile(func);
-        it = m_function_map.find(func);
+        rc = compile(func);
     }
 
-    if (it == m_function_map.end())
-    {
-        throw runtime_error("Error constructing backend.");
-    }
-
-    FunctionInstance& instance = it->second;
     instance.m_call_frame->call(outputs, inputs);
 
     return rc;
 }
 
+void runtime::gpu::GPU_Backend::remove_compiled_function(shared_ptr<Function> func)
+{
+    m_function_map.erase(func);
+}
+
 void runtime::gpu::GPU_Backend::enable_performance_data(shared_ptr<Function> func, bool enable)
 {
-    if (contains_key(m_function_map, func))
+    FunctionInstance& instance = m_function_map[func];
+    if (instance.m_external_function != nullptr)
     {
-        FunctionInstance& instance = m_function_map[func];
-        if (instance.m_external_function != nullptr)
-        {
-            throw runtime_error("Performance data collection must be enabled prior to compiling.");
-        }
-        instance.m_performance_counters_enabled = enable;
+        throw runtime_error("Performance data collection must be enabled prior to compiling.");
     }
-    return;
+    instance.m_performance_counters_enabled = enable;
 }
 
 vector<runtime::PerformanceCounter>

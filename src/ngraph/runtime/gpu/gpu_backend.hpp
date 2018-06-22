@@ -53,6 +53,8 @@ namespace ngraph
                 bool call(std::shared_ptr<Function> func,
                           const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
                           const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
+
+                void remove_compiled_function(std::shared_ptr<Function> func) override;
                 void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;
                 std::vector<PerformanceCounter>
                     get_performance_data(std::shared_ptr<Function> func) const override;
