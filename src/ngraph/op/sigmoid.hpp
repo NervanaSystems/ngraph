@@ -27,7 +27,7 @@ namespace ngraph
         class Sigmoid : public util::UnaryElementwiseArithmetic
         {
         public:
-            Sigmoid(std::shared_ptr<Node> input);
+            Sigmoid(std::shared_ptr<Node> arg);
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
