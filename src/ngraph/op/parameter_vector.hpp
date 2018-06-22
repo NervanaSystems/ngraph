@@ -26,25 +26,6 @@ namespace ngraph
     namespace op
     {
         /// \brief Zero or more nodes.
-        class ParameterVector : public std::vector<std::shared_ptr<op::Parameter>>
-        {
-        public:
-            ParameterVector(const std::initializer_list<std::shared_ptr<op::Parameter>>& parameters)
-                : std::vector<std::shared_ptr<op::Parameter>>(parameters)
-            {
-            }
-
-            ParameterVector(const std::vector<std::shared_ptr<op::Parameter>>& parameters)
-                : std::vector<std::shared_ptr<op::Parameter>>(parameters)
-            {
-            }
-
-            ParameterVector(const ParameterVector& parameters)
-                : std::vector<std::shared_ptr<op::Parameter>>(parameters)
-            {
-            }
-
-            ParameterVector() {}
-        };
+        using ParameterVector = std::vector<std::shared_ptr<Parameter>>;
     }
 }

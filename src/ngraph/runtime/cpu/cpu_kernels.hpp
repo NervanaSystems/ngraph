@@ -19,6 +19,8 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "ngraph/shape.hpp"
+
 // CBLAS types and wrappers
 
 namespace cblas
@@ -124,7 +126,6 @@ namespace mkl
 
 namespace ngraph
 {
-    class Shape;
     class AxisSet;
     class AxisVector;
 
