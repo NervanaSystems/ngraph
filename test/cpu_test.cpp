@@ -71,7 +71,7 @@ TEST(cpu_test, trivial_inplace_relu)
     auto relu = make_shared<op::Relu>(add);
     auto f = make_shared<Function>(relu, op::ParameterVector{A, B});
     auto backend = runtime::Backend::create("CPU");
-    auto cf = backend->compile(f);
+    (backend->compile(f));
     ASSERT_EQ(relu->get_outputs().at(0).get_tensor().get_pool_offset(),
               add->get_outputs().at(0).get_tensor().get_pool_offset());
 }
@@ -85,7 +85,7 @@ TEST(cpu_test, trivial_inplace_relu_fail)
     auto add2 = relu + add;
     auto f = make_shared<Function>(add2, op::ParameterVector{A, B});
     auto backend = runtime::Backend::create("CPU");
-    auto cf = backend->compile(f);
+    (backend->compile(f));
     ASSERT_NE(relu->get_outputs().at(0).get_tensor().get_pool_offset(),
               add->get_outputs().at(0).get_tensor().get_pool_offset());
 }
