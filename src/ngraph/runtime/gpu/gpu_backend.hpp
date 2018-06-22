@@ -53,6 +53,9 @@ namespace ngraph
                 bool call(std::shared_ptr<Function> func,
                           const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
                           const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
+                void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;
+                std::vector<PerformanceCounter>
+                    get_performance_data(std::shared_ptr<Function> func) const override;
 
             private:
                 class FunctionInstance
@@ -60,6 +63,7 @@ namespace ngraph
                 public:
                     std::shared_ptr<GPU_ExternalFunction> m_external_function;
                     std::shared_ptr<GPU_CallFrame> m_call_frame;
+                    bool m_performance_counters_enabled = false;
                 };
 
                 std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;

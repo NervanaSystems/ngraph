@@ -52,6 +52,7 @@ namespace ngraph
             class GPU_ExternalFunction : public std::enable_shared_from_this<GPU_ExternalFunction>
             {
                 friend class GPU_CallFrame;
+                friend class GPU_Backend;
 
             public:
                 GPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
@@ -98,7 +99,6 @@ namespace ngraph
                 std::shared_ptr<ngraph::Function> m_function;
                 bool m_release_function;
                 bool m_is_compiled;
-                bool m_timing;
 
                 cublasHandle_t m_cublas_handle;
                 cudnnHandle_t m_cudnn_handle;

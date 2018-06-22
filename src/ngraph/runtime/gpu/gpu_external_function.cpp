@@ -252,11 +252,10 @@ static const runtime::gpu::OpMap dispatcher{
 runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
     : m_compiled_function(nullptr)
-    , m_emit_timing(true)
+    , m_emit_timing(false)
     , m_function(function)
     , m_release_function(release_function)
     , m_is_compiled(false)
-    , m_timing(false)
     , m_ctx(new GPURuntimeContext)
 {
     // Create context use driver API and make it current, the runtime call will pickup the context

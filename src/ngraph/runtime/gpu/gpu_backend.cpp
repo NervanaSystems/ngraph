@@ -52,6 +52,7 @@ bool runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func)
     {
         FunctionInstance instance;
         instance.m_external_function = make_shared<GPU_ExternalFunction>(func);
+        instance.m_external_function->m_emit_timing = instance.m_performance_counters_enabled;
         auto cf = instance.m_external_function->make_call_frame();
         instance.m_call_frame = dynamic_pointer_cast<GPU_CallFrame>(cf);
         m_function_map.insert({func, instance});
@@ -82,5 +83,53 @@ bool runtime::gpu::GPU_Backend::call(shared_ptr<Function> func,
     FunctionInstance& instance = it->second;
     instance.m_call_frame->call(outputs, inputs);
 
+    return rc;
+}
+
+void runtime::gpu::GPU_Backend::enable_performance_data(shared_ptr<Function> func, bool enable)
+{
+    if (contains_key(m_function_map, func))
+    {
+        FunctionInstance& instance = m_function_map[func];
+        if (instance.m_external_function != nullptr)
+        {
+            throw runtime_error("Performance data collection must be enabled prior to compiling.");
+        }
+        instance.m_performance_counters_enabled = enable;
+    }
+    return;
+}
+
+vector<runtime::PerformanceCounter>
+    runtime::gpu::GPU_Backend::get_performance_data(shared_ptr<Function> func) const
+{
+    std::vector<runtime::PerformanceCounter> rc;
+    auto it = m_function_map.find(func);
+    if (it != m_function_map.end())
+    {
+        const FunctionInstance& instance = it->second;
+        if (instance.m_external_function != nullptr)
+        {
+            auto* engine = instance.m_external_function->m_execution_engine.get();
+            if (engine)
+            {
+                auto get_count = engine->find_function<size_t()>("get_debug_timer_count");
+                auto get_name = engine->find_function<const char*(size_t)>("get_debug_timer_name");
+                auto get_microseconds =
+                    engine->find_function<size_t(size_t)>("get_debug_timer_microseconds");
+                auto get_call_count =
+                    engine->find_function<size_t(size_t)>("get_debug_timer_call_count");
+
+                if (get_count && get_name && get_microseconds && get_call_count)
+                {
+                    size_t count = get_count();
+                    for (size_t i = 0; i < count; i++)
+                    {
+                        rc.push_back({get_name(i), get_microseconds(i), get_call_count(i)});
+                    }
+                }
+            }
+        }
+    }
     return rc;
 }
