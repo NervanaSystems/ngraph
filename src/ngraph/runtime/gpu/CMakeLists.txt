@@ -56,6 +56,7 @@ if (NGRAPH_GPU_ENABLE)
         ${CUDA_LIBRARIES}
         ${CUDA_CUBLAS_LIBRARIES}
         ${CUDNN_LIBRARIES})
+    set_target_properties(gpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
     install(TARGETS gpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

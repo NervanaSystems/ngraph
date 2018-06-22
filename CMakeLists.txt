@@ -194,6 +194,8 @@ endif()
 # External projects install directory
 #-----------------------------------------------------------------------------------------------
 
+set(NGRAPH_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/src/ngraph)
+
 set(EXTERNAL_INSTALL_DIR ${CMAKE_BINARY_DIR}/external)
 
 if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
