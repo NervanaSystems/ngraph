@@ -34,7 +34,7 @@ shared_ptr<Node> op::Sigmoid::copy_with_new_args(const NodeVector& new_args) con
 op::Sigmoid::Sigmoid(shared_ptr<Node> arg)
     : UnaryElementwiseArithmetic("Sigmoid", {arg})
 {
-    add_output(arg->get_element_type(), arg->get_shape());
+    set_value_type_checked(arg->get_element_type(), arg->get_shape());
 }
 
 op::SigmoidBackprop::SigmoidBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
