@@ -31,7 +31,7 @@ namespace ngraph
                 T exp_value;
                 for (size_t i = 0; i < count; i++)
                 {
-                    exp_value = std::exp((double)-arg[i]);
+                    exp_value = std::exp((-arg[i]));
                     out[i] = 1 / (1 + exp_value);
                 }
             }
@@ -43,7 +43,7 @@ namespace ngraph
                 T func_x;
                 for (size_t i = 0; i < count; i++)
                 {
-                    exp_value = std::exp((double)-arg[i]);
+                    exp_value = std::exp(-arg[i]);
                     func_x = 1 / (1 + exp_value);
                     out[i] = delta_arg[i] * func_x * (1 - func_x);
                 }
