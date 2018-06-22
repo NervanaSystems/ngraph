@@ -32,10 +32,9 @@ shared_ptr<Node> op::Sigmoid::copy_with_new_args(const NodeVector& new_args) con
 }
 
 op::Sigmoid::Sigmoid(shared_ptr<Node> input)
-    : RequiresTensorViewArgs("Sigmoid", {input})
-    , m_shape_input(input->get_shape())
+    : UnaryElementwiseArithmetic("Sigmoid", {input})
 {
-    add_output(input->get_element_type(), m_shape_input);
+    add_output(input->get_element_type(), input->get_shape());
 }
 
 op::SigmoidBackprop::SigmoidBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)

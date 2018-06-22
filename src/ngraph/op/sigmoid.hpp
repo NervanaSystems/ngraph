@@ -17,24 +17,21 @@
 #pragma once
 
 #include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
 #include "ngraph/util.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class Sigmoid : public util::RequiresTensorViewArgs
+        class Sigmoid : public util::UnaryElementwiseArithmetic
         {
         public:
             Sigmoid(std::shared_ptr<Node> input);
-            Shape get_input_shape() const { return m_shape_input; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-
-        private:
-            Shape m_shape_input;
         };
 
         /// \brief Elementwise SigmoidBackprop operation.
