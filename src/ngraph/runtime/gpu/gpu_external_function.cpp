@@ -252,7 +252,7 @@ static const runtime::gpu::OpMap dispatcher{
 runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
     : m_compiled_function(nullptr)
-    , m_emit_timing(std::getenv("NGRAPH_GPU_EMIT_TIMING") != nullptr)
+    , m_emit_timing(true)
     , m_function(function)
     , m_release_function(release_function)
     , m_is_compiled(false)
@@ -311,6 +311,12 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     pass_manager.register_pass<pass::DumpSorted>(dump_filename);
     pass_manager.run_passes(m_function);
 
+    unordered_map<shared_ptr<Function>, list<shared_ptr<Node>>> function_ordered_ops;
+    for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
+    {
+        function_ordered_ops.insert({current_function, current_function->get_ordered_ops()});
+    }
+
     codegen::CodeWriter writer;
 
     writer +=
@@ -356,6 +362,59 @@ using namespace std;
     // to register cleanup handlers. We use it, and not atexit(), because
     // atexit() happens too late, when the JIT is no longer alive
     writer << "void *__dso_handle = 0;\n\n";
+    if (m_emit_timing)
+    {
+        writer << "// Declare debug timers\n";
+        vector<string> names;
+        size_t index = 0;
+        for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
+        {
+            for (shared_ptr<Node> node : function_ordered_ops.at(current_function))
+            {
+                if (!node->is_parameter() && !node->is_constant())
+                {
+                    names.push_back(node->get_name());
+                    m_name_index_map.insert({node->get_name(), index++});
+                }
+            }
+        }
+        writer << "ngraph::stopwatch timers[" << names.size() << "];\n";
+        writer << "extern \"C\" size_t get_debug_timer_count() { return " << names.size()
+               << "; }\n";
+        writer << "extern \"C\" const char* get_debug_timer_name(size_t index)\n";
+        writer << "{\n";
+        writer.indent++;
+        writer << "static const char* timer_names[" << names.size() << "] =\n";
+        writer << "{\n";
+        writer.indent++;
+        vector<string> quoted_names;
+        for (const string& name : names)
+        {
+            quoted_names.push_back("\"" + name + "\"");
+        }
+        writer << emit_string_array(quoted_names, 100 - (4 * 2 + 1));
+        writer << "\n};\n";
+        writer.indent--;
+        writer << "return timer_names[index];\n";
+        writer.indent--;
+        writer << "}\n";
+
+        writer << "extern \"C\" const size_t get_debug_timer_microseconds(size_t index)\n";
+        writer << "{\n";
+        writer.indent++;
+        writer << "return (index < " << names.size()
+               << " ? timers[index].get_total_microseconds() : 0);\n";
+        writer.indent--;
+        writer << "}\n";
+
+        writer << "extern \"C\" const size_t get_debug_timer_call_count(size_t index)\n";
+        writer << "{\n";
+        writer.indent++;
+        writer << "return (index < " << names.size() << " ? timers[index].get_call_count() : 0);\n";
+        writer.indent--;
+        writer << "}\n";
+        writer << "\n";
+    }
     writer << "// Declare all constants\n";
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
@@ -773,7 +832,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_debug_function_entry(
     const std::vector<GPU_TensorViewWrapper>& in,
     const std::vector<GPU_TensorViewWrapper>& out)
 {
-    writer << "timer_" << node->get_name() << ".start();\n";
+    writer << "timers[" << m_name_index_map[node->get_name()] << "].start();\n";
 }
 
 void runtime::gpu::GPU_ExternalFunction::emit_debug_function_exit(
@@ -782,7 +841,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_debug_function_exit(
     const std::vector<GPU_TensorViewWrapper>& in,
     const std::vector<GPU_TensorViewWrapper>& out)
 {
-    writer << "timer_" << node->get_name() << ".stop();\n";
+    writer << "timers[" << m_name_index_map[node->get_name()] << "].stop();\n";
 }
 
 std::unique_ptr<runtime::gpu::GPURuntimeContext>& runtime::gpu::GPU_ExternalFunction::ctx()
