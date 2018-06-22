@@ -319,35 +319,6 @@ static std::shared_ptr<ngraph::Node>
     }
 }
 
-static bool is_unreachable(std::shared_ptr<ngraph::Node> node)
-{
-    std::unordered_set<std::shared_ptr<ngraph::Node>> instances_seen;
-    std::deque<std::shared_ptr<ngraph::Node>> stack;
-    stack.push_front(node);
-
-    while (stack.size() > 0)
-    {
-        std::shared_ptr<ngraph::Node> n = stack.front();
-        if (instances_seen.count(n) == 0)
-        {
-            if (n->is_output())
-            {
-                return false;
-            }
-            instances_seen.insert(n);
-        }
-        stack.pop_front();
-        for (auto arg : n->get_users())
-        {
-            if (instances_seen.count(arg) == 0)
-            {
-                stack.push_front(arg);
-            }
-        }
-    }
-    return true;
-}
-
 void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 {
     auto ht_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
@@ -568,7 +539,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                     {
                         if (std::find(lstm_nodes.begin(), lstm_nodes.end(), goe0_user) ==
                                 lstm_nodes.end() &&
-                            !is_unreachable(goe0_user))
+                            ngraph::is_used(goe0_user))
                         {
                             lstm_goe0_user.insert(goe0_user);
                             map_goe_to_lstm_slices[goe_0] = ht_slice_per_timestep[index];
