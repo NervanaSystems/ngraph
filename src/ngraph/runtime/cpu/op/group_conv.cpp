@@ -59,12 +59,13 @@ op::GroupConvolution::GroupConvolution(const shared_ptr<Node>& data_batch,
 Shape op::GroupConvolution::get_weights_dimensions() const
 {
     //reshape weights into 5d tensors that includes groups
-    const size_t OC = 0;
+    const size_t OC = 1;
+    const size_t SHIFTED_OC = 0;
     const size_t IC = 1;
     Shape weights_shape_groups{get_inputs().at(1).get_shape()};
     //adjust output and channel given a number of groups
 
-    weights_shape_groups.at(OC) /= get_groups();
+    weights_shape_groups.at(SHIFTED_OC) = weights_shape_groups.at(OC) / get_groups();
     weights_shape_groups.at(IC) = get_inputs().at(0).get_shape().at(IC) / get_groups();
     //push_front the number of groups
     weights_shape_groups.insert(weights_shape_groups.begin(), get_groups());
