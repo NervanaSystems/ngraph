@@ -97,6 +97,8 @@
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/group_conv.hpp"
+#include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
@@ -370,6 +372,7 @@ namespace ngraph
 
                 writer.block_end();
             }
+
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchDot)
             {
@@ -2605,6 +2608,126 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::GroupConvolution)
+            {
+                auto convolution = static_cast<const ngraph::op::GroupConvolution*>(node);
+
+                auto arg0_shape = args[0].get_shape();
+                auto arg1_shape = args[1].get_shape();
+                auto result_shape = out[0].get_shape();
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    Strides window_dilation_strides_adjusted;
+                    for (size_t s : convolution->get_window_dilation_strides())
+                    {
+                        window_dilation_strides_adjusted.push_back(s - 1);
+                    }
+
+                    auto input_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
+
+                    auto output_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_data_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[0], input_format);
+
+                    Shape weights_shape_groups = convolution->get_weights_dimensions();
+
+                    auto weights_desc_any = mkldnn::memory::desc(
+                        mkldnn::memory::dims(weights_shape_groups.begin(),
+                                             weights_shape_groups.end()),
+                        mkldnn_utils::get_mkldnn_data_type(args[1].get_element_type()),
+                        mkldnn::memory::format::any);
+
+                    auto padding_below = convolution->get_padding_below();
+                    auto padding_above = convolution->get_padding_above();
+                    auto filter_strides = convolution->get_window_movement_strides();
+
+                    auto result_desc =
+                        mkldnn_emitter->build_memory_descriptor(out[0], output_format);
+
+                    auto weights_optimized_format =
+                        mkldnn_emitter->query_convolution_forward_weight_format(
+                            input_data_desc,
+                            weights_desc_any,
+                            result_desc,
+                            filter_strides,
+                            window_dilation_strides_adjusted,
+                            padding_below,
+                            padding_above);
+
+                    //create workspace for holding the result of converting weights layouts
+                    auto ws = std::unique_ptr<MKLDNNWorkspace>(new MKLDNNWorkspace(
+                        shape_size(args[1].get_shape()) * args[1].get_element_type().size()));
+                    auto ws_buf_index = mkldnn_emitter->insert_workspace(ws);
+
+                    //descriptors for reorder operation
+                    auto input_reorder_desc =
+                        mkldnn_emitter->build_memory_descriptor(weights_shape_groups,
+                                                                args[1].get_element_type(),
+                                                                mkldnn::memory::format::goihw);
+
+                    auto result_reorder_desc = mkldnn_emitter->build_memory_descriptor(
+                        weights_shape_groups, args[1].get_element_type(), weights_optimized_format);
+
+                    auto weights_desc = mkldnn::memory::desc(
+                        mkldnn::memory::dims(weights_shape_groups.begin(),
+                                             weights_shape_groups.end()),
+                        mkldnn_utils::get_mkldnn_data_type(args[1].get_element_type()),
+                        weights_optimized_format);
+
+                    auto prim_indices = mkldnn_emitter->build_group_convolution_forward(
+                        input_reorder_desc, //weights
+                        input_data_desc,
+                        weights_desc,
+                        result_reorder_desc,
+                        result_desc,
+                        convolution->get_window_movement_strides(),
+                        window_dilation_strides_adjusted,
+                        padding_below,
+                        padding_above);
+
+                    //invoke reorder primitive
+                    {
+                        size_t reorder_index = prim_indices.first;
+                        auto& deps = mkldnn_emitter->get_primitive_deps(reorder_index);
+                        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                               << ", " << args[1].get_name() << ");\n";
+
+                        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                               << ", "
+                               << "ctx->mkldnn_workspaces[" << ws_buf_index << "]);\n";
+
+                        writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                               << to_string(reorder_index) << ");\n";
+                    }
+
+                    //invoke group convolution
+                    {
+                        size_t conv_index = prim_indices.second;
+                        auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                               << ", " << args[0].get_name() << ");\n";
+                        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                               << ", "
+                               << "ctx->mkldnn_workspaces[" << ws_buf_index << "]);\n";
+                        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                               << ", " << out[0].get_name() << ");\n";
+
+                        writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                               << to_string(conv_index) << ");\n";
+                    }
+                }
+                else
+                {
+                    throw ngraph_error("unsupported parameters for GroupConvolution");
+                }
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Convolution)
             {
                 auto convolution = static_cast<const ngraph::op::Convolution*>(node);
@@ -4364,6 +4487,130 @@ namespace ngraph
                        << "                      " << out[0].get_name() << ",\n"
                        << "                      " << out[0].get_size() << ");\n";
             }
+
+#define TI(x) std::type_index(typeid(x))
+
+            static std::string emit_infix_operator(const std::string& opname,
+                                                   const std::vector<std::string>& args)
+            {
+                if (args.size() != 2)
+                {
+                    throw ngraph_error("args must be equal to 2");
+                }
+                return args.at(0) + " " + opname + " " + args.at(1);
+            }
+
+            static std::string emit_prefix_operator(const std::string& opname,
+                                                    const std::vector<std::string>& args)
+            {
+                if (args.size() != 1)
+                {
+                    throw ngraph_error("args must be equal to 2");
+                }
+                return opname + args.at(0);
+            }
+
+            static std::string emit_function_call(const std::string& opname,
+                                                  const std::vector<std::string>& args)
+            {
+                return opname + "(" + join(args) + ")";
+            }
+
+            static std::unordered_map<std::type_index,
+                                      std::function<std::string(const std::vector<std::string>&)>>
+                initialize_inline_emitters()
+            {
+                auto abse =
+                    std::bind(emit_function_call, std::string("std::abs"), std::placeholders::_1);
+                auto adde = std::bind(emit_infix_operator, std::string("+"), std::placeholders::_1);
+                auto nege =
+                    std::bind(emit_prefix_operator, std::string("-"), std::placeholders::_1);
+                auto sube = std::bind(emit_infix_operator, std::string("-"), std::placeholders::_1);
+
+                return std::unordered_map<
+                    std::type_index,
+                    std::function<std::string(const std::vector<std::string>&)>>{
+                    {TI(ngraph::op::Abs), abse},
+                    {TI(ngraph::op::Add), adde},
+                    {TI(ngraph::op::Negative), nege},
+                    {TI(ngraph::op::Subtract), sube},
+                };
+            }
+
+            static std::unordered_map<std::type_index,
+                                      std::function<std::string(const std::vector<std::string>&)>>
+                inline_emitters = initialize_inline_emitters();
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::runtime::cpu::op::LoopKernel)
+            {
+                std::unordered_map<std::shared_ptr<Node>, std::string> loop_symbol_table;
+                //pre-fill symbol table with inputs
+
+                const ngraph::runtime::cpu::op::LoopKernel* clk =
+                    static_cast<const ngraph::runtime::cpu::op::LoopKernel*>(node);
+
+                NodeVector output_nodes = clk->get_kernel_outputs();
+                NodeVector node_list = clk->get_node_list();
+                for (size_t i = 0; i < args.size(); i++)
+                {
+                    std::string sname = std::string(args[i].get_name()) + "[i]";
+                    auto entry = std::make_pair(clk->get_argument(i), sname);
+                    loop_symbol_table.insert(entry);
+                }
+
+                //add outputs so we write output values directly into their
+                //corresponding tensors
+                for (size_t i = 0; i < out.size(); i++)
+                {
+                    std::string sname = std::string(out[i].get_name()) + "[i]";
+                    auto entry = std::make_pair(output_nodes.at(i), sname);
+                    loop_symbol_table.insert(entry);
+                }
+
+                std::string tmp_prefix{"tmp"};
+
+                writer << "#pragma omp parallel for\n";
+                writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                writer.block_begin();
+
+                for (size_t i = 0; i < node_list.size(); i++)
+                {
+                    auto op = node_list[i];
+                    std::string tmp;
+                    if (loop_symbol_table.count(op) == 0)
+                    {
+                        //"allocate" a new temp
+                        tmp = tmp_prefix + std::to_string(i);
+                        //remember the new temp in symbol name
+                        auto entry = std::make_pair(op, tmp);
+                        loop_symbol_table.insert(entry);
+                        //declare a new tmp
+                        writer << op->get_element_type().c_type_string() << " ";
+                    }
+                    else
+                    {
+                        //this means we are dealing with an output
+                        tmp = loop_symbol_table.at(op);
+                    }
+
+                    //prepare arguments
+                    std::vector<std::string> sargs;
+                    for (auto arg : op->get_arguments())
+                    {
+                        //args are expected to be in a map already
+                        sargs.push_back(loop_symbol_table.at(arg));
+                    }
+
+                    const Node& n = *op;
+                    auto emitter = inline_emitters.at(TI(n));
+                    writer << tmp << " = " << emitter(sargs) << ";\n";
+                }
+
+                writer.block_end();
+            }
+
+#undef TI
         }
     }
 }

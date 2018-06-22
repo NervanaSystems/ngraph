@@ -16,7 +16,8 @@
 
 #pragma once
 
-#include "ngraph/pass/pass.hpp"
+#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -24,17 +25,24 @@ namespace ngraph
     {
         namespace cpu
         {
-            namespace pass
+            namespace op
             {
-                class CPURnnMatFusion : public ngraph::pass::FunctionPass
+                /// \brief LoopKernel represents graphs consisting
+                /// of arithmetic operations that can be executed in the same loop
+                class LoopKernel : public ngraph::op::util::RequiresTensorViewArgs
                 {
                 public:
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-                };
-                class CPUBatchFusion : public ngraph::pass::FunctionPass
-                {
-                public:
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                    LoopKernel(const NodeVector& node_list,
+                               const NodeVector& outputs,
+                               const NodeVector& args);
+                    virtual std::shared_ptr<Node>
+                        copy_with_new_args(const NodeVector& new_args) const override;
+
+                    const NodeVector& get_node_list() const { return m_node_list; }
+                    const NodeVector& get_kernel_outputs() const { return m_outputs; }
+                private:
+                    NodeVector m_node_list;
+                    NodeVector m_outputs;
                 };
             }
         }

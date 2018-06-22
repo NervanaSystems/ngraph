@@ -24,6 +24,8 @@
 using namespace std;
 using namespace ngraph;
 
+std::unordered_map<string, void*> runtime::Backend::s_open_backends;
+
 bool runtime::Backend::register_backend(const string& name, shared_ptr<Backend> backend)
 {
     get_backend_map().insert({name, backend});
@@ -65,8 +67,10 @@ void* runtime::Backend::open_shared_library(string type)
         }
         else
         {
+            dlclose(handle);
             throw runtime_error("Failed to find create_backend function in library '" + name + "'");
         }
+        s_open_backends.insert({name, handle});
     }
     else
     {

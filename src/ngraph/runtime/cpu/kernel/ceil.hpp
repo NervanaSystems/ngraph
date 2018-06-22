@@ -16,7 +16,10 @@
 
 #pragma once
 
-#include "ngraph/pass/pass.hpp"
+#define EIGEN_USE_THREADS
+#include <unsupported/Eigen/CXX11/Tensor>
+
+#include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
 
 namespace ngraph
 {
@@ -24,18 +27,22 @@ namespace ngraph
     {
         namespace cpu
         {
-            namespace pass
+            namespace kernel
             {
-                class CPURnnMatFusion : public ngraph::pass::FunctionPass
+                template <typename ElementType>
+                void ceil(void* input0, void* output, size_t count)
                 {
-                public:
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-                };
-                class CPUBatchFusion : public ngraph::pass::FunctionPass
-                {
-                public:
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-                };
+                    Eigen::array<Eigen::Index, 1> out_dims, in_dims;
+
+                    out_dims[0] = in_dims[0] = count;
+
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> out(
+                        static_cast<ElementType*>(output), out_dims);
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> in0(
+                        static_cast<ElementType*>(input0), in_dims);
+
+                    out.device(eigen::global_thread_pool_device) = in0.ceil();
+                }
             }
         }
     }

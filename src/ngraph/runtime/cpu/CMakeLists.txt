@@ -37,9 +37,11 @@ set(SRC
     mkldnn_utils.cpp
     op/batch_dot.cpp
     op/batch_norm_relu.cpp
+    op/group_conv.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
     op/convert_layout.cpp
+    op/loop_kernel.cpp
     op/lstm.cpp
     op/matmul_bias.cpp
     op/max_pool_with_indices.cpp
@@ -102,6 +104,7 @@ if (NGRAPH_CPU_ENABLE)
 
     target_link_libraries(cpu_backend PUBLIC ngraph codegen libmkldnn libeigen libjson libtbb)
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
+    set_target_properties(cpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
     install(TARGETS cpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

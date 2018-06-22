@@ -16,27 +16,25 @@
 
 #pragma once
 
-#include "ngraph/pass/pass.hpp"
+#include "ngraph/pass/graph_rewrite.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace pass
     {
-        namespace cpu
-        {
-            namespace pass
-            {
-                class CPURnnMatFusion : public ngraph::pass::FunctionPass
-                {
-                public:
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-                };
-                class CPUBatchFusion : public ngraph::pass::FunctionPass
-                {
-                public:
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-                };
-            }
-        }
+        class ConstantFolding;
     }
 }
+
+class ngraph::pass::ConstantFolding : public ngraph::pass::GraphRewrite
+{
+public:
+    ConstantFolding()
+        : GraphRewrite()
+    {
+        construct_constant_reshape();
+    }
+
+private:
+    void construct_constant_reshape();
+};
