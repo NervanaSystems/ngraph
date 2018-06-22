@@ -88,6 +88,7 @@ option(NGRAPH_GPU_ENABLE "Control the building of the GPU backend" FALSE)
 option(NGRAPH_INTERPRETER_ENABLE "Control the building of the INTERPRETER backend" TRUE)
 option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
+option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
@@ -197,6 +198,10 @@ endif()
 set(NGRAPH_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/src/ngraph)
 
 set(EXTERNAL_INSTALL_DIR ${CMAKE_BINARY_DIR}/external)
+
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    find_package(Protobuf REQUIRED)
+endif()
 
 if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
     set(EXTERNAL_PROJECTS_ROOT ${CMAKE_CURRENT_BINARY_DIR})

@@ -143,6 +143,8 @@ set (SRC
     cpio.cpp
     )
 
+add_subdirectory(frontend)
+
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/op)
 file(GLOB OPS "${CMAKE_CURRENT_SOURCE_DIR}/op" "${CMAKE_CURRENT_SOURCE_DIR}/op/*.hpp")
 foreach(OP ${OPS})
@@ -180,6 +182,10 @@ add_definitions("-DLIBRARY_VERSION=\"${NGRAPH_VERSION}\"")
 set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
 target_link_libraries(ngraph PUBLIC libjson)
 
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    add_dependencies(ngraph onnx_import)
+endif()
+
 if (NOT APPLE)
     set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,$ORIGIN")
 
@@ -208,6 +214,11 @@ if (APPLE)
     set_property(TARGET ngraph PROPERTY PREFIX "lib")
     set_property(TARGET ngraph PROPERTY OUTPUT_NAME "ngraph.so")
     set_property(TARGET ngraph PROPERTY SUFFIX "")
+endif()
+
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    target_sources(ngraph PRIVATE $<TARGET_OBJECTS:onnx_import_interface>)
+    target_link_libraries(ngraph PRIVATE onnx_import)
 endif()
 
 #-----------------------------------------------------------------------------------------------
