@@ -23,32 +23,6 @@ namespace ngraph
 {
     class Node;
 
-    namespace op
-    {
-        class Result;
-    }
-
     /// \brief Zero or more nodes.
-    class NodeVector : public std::vector<std::shared_ptr<Node>>
-    {
-    public:
-        NodeVector(const std::initializer_list<std::shared_ptr<Node>>& nodes)
-            : std::vector<std::shared_ptr<Node>>(nodes)
-        {
-        }
-
-        NodeVector(const std::vector<std::shared_ptr<Node>>& nodes)
-            : std::vector<std::shared_ptr<Node>>(nodes)
-        {
-        }
-
-        NodeVector(const NodeVector& nodes)
-            : std::vector<std::shared_ptr<Node>>(nodes)
-        {
-        }
-
-        NodeVector& operator=(const NodeVector& other) = default;
-
-        NodeVector() {}
-    };
+    using NodeVector = std::vector<std::shared_ptr<Node>>;
 }
