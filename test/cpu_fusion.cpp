@@ -37,6 +37,7 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
+#include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
@@ -1839,6 +1840,7 @@ TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
 TEST(cpu_fusion, sigmoid_multiply_fusion)
 {
     pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/3_lstm_cell_forward.json");
     const string json_string = file_util::read_file_to_string(json_path);
