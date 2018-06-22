@@ -40,6 +40,10 @@ unordered_map<string, shared_ptr<runtime::Backend>>& runtime::Backend::get_backe
 
 runtime::Backend::~Backend()
 {
+    for (auto& p : s_open_backends)
+    {
+        dlclose(p.second);
+    }
 }
 
 void* runtime::Backend::open_shared_library(string type)
