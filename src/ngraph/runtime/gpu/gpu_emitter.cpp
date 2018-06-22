@@ -216,7 +216,7 @@ namespace ngraph
                     writer << "std::vector<void*>{pad_buffer}.data()";
                     writer << ");\n";
                     // asymetric padding has been applied, zero out padding vectors to
-                    // ensure cudnn does not assume padding
+                    // ensure cuDNN does not assume padding
                     std::fill(padding_below.begin(), padding_below.end(), 0);
                 }
                 auto& cudnn_emitter =
@@ -335,7 +335,7 @@ namespace ngraph
                     writer << "std::vector<void*>{pad_buffer}.data()";
                     writer << ");\n";
                     // asymetric padding has been applied, zero out padding vectors to
-                    // ensure cudnn does not assume padding
+                    // ensure cuDNN does not assume padding
                     std::fill(padding_below.begin(), padding_below.end(), 0);
                 }
                 auto& cudnn_emitter =
@@ -486,7 +486,7 @@ namespace ngraph
                     writer << "std::vector<void*>{pad_buffer}.data()";
                     writer << ");\n";
                     // asymetric padding has been applied, zero out padding vectors to
-                    // ensure cudnn does not assume padding
+                    // ensure cuDNN does not assume padding
                     std::fill(padding_below.begin(), padding_below.end(), 0);
                 }
 
@@ -1685,7 +1685,7 @@ namespace ngraph
                         writer << ");\n";
 
                         // asymetric padding has been applied, zero out padding vectors to
-                        // ensure cudnn does not assume padding during pooling
+                        // ensure cuDNN does not assume padding during pooling
                         std::fill(padding_below.begin(), padding_below.end(), 0);
                         std::fill(padding_above.begin(), padding_above.end(), 0);
                     }
@@ -2047,7 +2047,7 @@ namespace ngraph
                                                          apb->get_padding_above());
 
                         writer << "gpu::invoke_primitive(ctx, " << avg_pool_bp_index << ", ";
-                        // CUDNN backwards pooling requests input and output tensors from
+                        // cuDNN backwards pooling requests input and output tensors from
                         // the forward pass but does not use them. It also behaves differently
                         // for max pool vs avg pool. The repetition of args below is to address
                         // this interface in a way that supports both max and avg pooling

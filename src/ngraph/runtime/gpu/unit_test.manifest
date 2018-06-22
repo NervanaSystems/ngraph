@@ -1,4 +1,4 @@
-#int64 is not supprted by cudnn
+#int64 is not supprted by cuDNN
 abc_int64
 batch_norm_one_output
 batch_norm_three_outputs
@@ -16,9 +16,9 @@ convolution_4d_4items_strided_dilated
 convolution_4d_4items_strided_dilated_padded
 convolution_4d_4items_strided_dilated_padded_neg
 convolution_4d_4items_strided_dilated_padded_same
-#cudnn does not have arithmetic exceptions
+#cuDNN does not have arithmetic exceptions
 divide_by_zero_int32
-#int64 is not supprted by cudnn
+#int64 is not supprted by cuDNN
 dot_matrix_vector_int64
 #no mkldnn on GPU
 mkldnn_layouts
@@ -34,7 +34,7 @@ select_and_scatter_with_overlap
 select_and_scatter_without_overlap
 #custom_mem is not implemented on GPU
 tensorview_custom_mem
-#integer is not supported by cudnn on backward pooling
+#integer is not supported by cuDNN on backward pooling
 backwards_maxpool_n4_c1_hw4_2x2_max
 backwards_maxpool_n2_c1_hw5_3x3_str2_max
 backwards_avgpool_n1_c1_hw2x2

@@ -122,7 +122,7 @@ cudnnDataType_t runtime::gpu::CUDNNEmitter::get_cudnn_datatype(std::string dtype
     auto p = datatype_map.find(dtype);
     if (p == datatype_map.end())
     {
-        std::string err = dtype + "is not supported by CuDNN";
+        std::string err = dtype + "is not supported by cuDNN";
         throw std::runtime_error(err);
     }
     return p->second;
@@ -141,7 +141,7 @@ void* runtime::gpu::CUDNNEmitter::get_data_by_type(cudnnDataType_t data_type, do
         break;
     case CUDNN_DATA_HALF:
     case CUDNN_DATA_INT8x4:
-        std::string err = "datatype is not supported by CuDNN";
+        std::string err = "datatype is not supported by cuDNN";
         throw std::runtime_error(err);
     }
     return r;
@@ -672,7 +672,7 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeC
     {
         if (data_type == CUDNN_DATA_INT8 || data_type == CUDNN_DATA_INT32)
         {
-            throw std::runtime_error("Pooling does not support int type by CuDNN.");
+            throw std::runtime_error("Pooling does not support int type by cuDNN.");
         }
         pool.reset(new gpu::primitive{
             [=, &desc, &input_desc, &output_desc](void** inputs, void** outputs) {
@@ -770,7 +770,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
         CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(
             op_desc, CUDNN_OP_TENSOR_MUL, data_type, CUDNN_NOT_PROPAGATE_NAN));
 
-        // currently not using the cudnn moving average
+        // currently not using the cuDNN moving average
         // calculation so this factor needs to be set to 1.0
         double exp_avg_factor = 1.0;
         // factor to convert unbiased variance to biased variance estimate
