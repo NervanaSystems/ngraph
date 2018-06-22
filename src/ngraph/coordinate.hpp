@@ -26,7 +26,7 @@ namespace ngraph
 {
     /// \brief Coordinates for a tensor element
     using Coordinate = std::vector<std::size_t>;
-    
+
     // Removes some values from a vector of axis values
     template <typename AXIS_VALUES>
     AXIS_VALUES project(const AXIS_VALUES& axis_values, const AxisSet& deleted_axes)

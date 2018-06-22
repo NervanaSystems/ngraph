@@ -26,6 +26,6 @@ namespace ngraph
     namespace op
     {
         /// \brief Zero or more nodes.
-	using ParameterVector = std::vector<std::shared_ptr<Parameter>>;
+        using ParameterVector = std::vector<std::shared_ptr<Parameter>>;
     }
 }
