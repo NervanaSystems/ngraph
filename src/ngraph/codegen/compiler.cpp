@@ -242,26 +242,6 @@ codegen::StaticCompiler::~StaticCompiler()
     // }
 }
 
-vector<string> codegen::StaticCompiler::split(const string& src, char delimiter) const
-{
-    size_t pos;
-    string token;
-    size_t start = 0;
-    vector<string> rc;
-    while ((pos = src.find(delimiter, start)) != std::string::npos)
-    {
-        token = src.substr(start, pos - start);
-        start = pos + 1;
-        rc.push_back(token);
-    }
-    if (start <= src.size())
-    {
-        token = src.substr(start);
-        rc.push_back(token);
-    }
-    return rc;
-}
-
 bool codegen::StaticCompiler::is_version_number(const string& path)
 {
     bool rc = true;
@@ -292,6 +272,7 @@ void codegen::StaticCompiler::add_header_search_path(const string& p)
         }
     }
 }
+
 std::unique_ptr<codegen::Module>
     codegen::StaticCompiler::compile(std::unique_ptr<clang::CodeGenAction>& m_compiler_action,
                                      const string& source)
