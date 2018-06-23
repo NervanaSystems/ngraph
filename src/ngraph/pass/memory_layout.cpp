@@ -55,7 +55,7 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
                     {
                         NGRAPH_DEBUG << input->get_name() << " will be reused for "
                                      << output->get_name();
-                        in_place_outputs.insert(make_pair(output, input));
+                        in_place_outputs.insert({output, input});
                         reused_inputs.insert(input);
                     }
                 }
