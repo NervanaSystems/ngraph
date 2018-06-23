@@ -37,6 +37,7 @@ namespace ngraph
                 }
 
             private:
+                //map of output-input pairs for which in-place computation is valid
                 std::map<size_t, size_t> m_in_place_oi_pairs;
             };
         }

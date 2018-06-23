@@ -38,13 +38,12 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
     MemoryManager mm(m_alignment);
     for (shared_ptr<Node> node : function->get_ordered_ops())
     {
-        std::map<descriptor::Tensor*, descriptor::Tensor*> inplace_outputs;
+        std::map<descriptor::Tensor*, descriptor::Tensor*> in_place_outputs;
         std::set<const descriptor::Tensor*> reused_inputs;
 
         if (auto op = std::dynamic_pointer_cast<op::Op>(node))
         {
-            auto op_annotations = std::dynamic_pointer_cast<op::Op>(node)->get_op_annotations();
-            if (op_annotations)
+            if (auto op_annotations = std::dynamic_pointer_cast<op::Op>(node)->get_op_annotations())
             {
                 for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                 {
@@ -56,7 +55,7 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
                     {
                         NGRAPH_DEBUG << input->get_name() << " will be reused for "
                                      << output->get_name();
-                        inplace_outputs.insert(make_pair(output, input));
+                        in_place_outputs.insert(make_pair(output, input));
                         reused_inputs.insert(input);
                     }
                 }
@@ -65,8 +64,8 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
 
         for (descriptor::Tensor* tensor : node->liveness_new_list)
         {
-            size_t offset = inplace_outputs.count(tensor)
-                                ? inplace_outputs.at(tensor)->get_pool_offset()
+            size_t offset = in_place_outputs.count(tensor)
+                                ? in_place_outputs.at(tensor)->get_pool_offset()
                                 : mm.allocate(tensor->size());
 
             tensor->set_pool_offset(offset);
