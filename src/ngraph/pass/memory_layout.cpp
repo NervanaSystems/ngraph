@@ -39,7 +39,7 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
     for (shared_ptr<Node> node : function->get_ordered_ops())
     {
         std::map<descriptor::Tensor*, descriptor::Tensor*> inplace_outputs;
-        std::set<descriptor::Tensor*> reused_inputs;
+        std::set<const descriptor::Tensor*> reused_inputs;
 
         if (auto op = std::dynamic_pointer_cast<op::Op>(node))
         {
@@ -74,7 +74,7 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
 
         if (!m_disable_memory_sharing)
         {
-            for (descriptor::Tensor* tensor : node->liveness_free_list)
+            for (const descriptor::Tensor* tensor : node->liveness_free_list)
             {
                 if (reused_inputs.count(tensor) == 0)
                 {
