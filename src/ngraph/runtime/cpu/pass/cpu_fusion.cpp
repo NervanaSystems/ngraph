@@ -1146,6 +1146,24 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
                 // return false;
             }
 
+            if (std::dynamic_pointer_cast<op::Parameter>(pattern_map[add_input]))
+            {
+                NGRAPH_DEBUG
+                    << "Unsafe to use in-place kernel since add's in-place input is a parameter";
+                return false;
+            }
+
+            for (auto add_user : m.get_match_root()->get_users())
+            {
+                if (std::dynamic_pointer_cast<op::Result>(add_user))
+                {
+                    // TODO: Remove restriction once we handle this case in codegen
+                    NGRAPH_DEBUG
+                        << "Unsafe to use in-place kernel since add's in-place output is a result";
+                    return false;
+                }
+            }
+
             auto conv_add = std::shared_ptr<Node>(
                 new op::ConvolutionBiasAdd(conv_m, pattern_map[add_input], false));
             ngraph::replace_node(m.get_match_root(), conv_add);
@@ -1187,6 +1205,17 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add_relu()
             NGRAPH_DEBUG << "Convolution has more than one user";
             return false;
         }
+
+        for (auto conv_bias_user : m.get_match_root()->get_users())
+        {
+            if (std::dynamic_pointer_cast<op::Result>(conv_bias_user))
+            {
+                // TODO: Remove restriction once we handle this case in codegen
+                NGRAPH_DEBUG << "Unsafe to use in-place kernel since in-place output is a result";
+                return false;
+            }
+        }
+
         // ConvolutionBiasAdd created only if it can run with MKLDNN.
         // No further checks needed.
         auto conv_n =

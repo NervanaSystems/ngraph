@@ -3179,11 +3179,6 @@ namespace ngraph
                            << ", " << args[1].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
                            << ", " << args[2].get_name() << ");\n";
-                    // TODO - Add support for in-place ConvolutionAdd
-                    if (args[3].get_name() != out[0].get_name())
-                    {
-                        // throw ngraph_error("Only in-place ConvolutionAdd is supported by MKLDNN");
-                    }
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
                            << ", " << out[0].get_name() << ");\n";
 

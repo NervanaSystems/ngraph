@@ -233,6 +233,10 @@ namespace ngraph
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
+                        const int ADD_INPUT = 3;
+                        // Accumulates conv into the second input of the unfused add
+                        std::map<size_t, size_t> oi_pairs = {{0, ADD_INPUT}};
+                        op_annotations->set_in_place_oi_pairs(oi_pairs);
                         convolution->set_op_annotations(op_annotations);
                     }
                 }
