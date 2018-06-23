@@ -43,7 +43,7 @@ runtime::Backend::~Backend()
 {
 }
 
-// This doodad finds the containing shared library
+// This doodad finds the full path of the containing shared library
 static string find_my_file()
 {
     Dl_info dl_info;
@@ -51,27 +51,17 @@ static string find_my_file()
     return dl_info.dli_fname;
 }
 
-static bool is_backend(const string& path)
-{
-    bool rc = false;
-    string name = file_util::get_file_name(path);
-    if (name.find("_backend.") != string::npos)
-    {
-        NGRAPH_INFO << name;
-    }
-    return rc;
-}
-
-static string get_directory(const string& s)
-{
-    string rc = s;
-    auto pos = s.find_last_of('/');
-    if (pos != string::npos)
-    {
-        rc = s.substr(0, pos);
-    }
-    return rc;
-}
+// This will be uncommented when we add support for listing all known backends
+// static bool is_backend(const string& path)
+// {
+//     bool rc = false;
+//     string name = file_util::get_file_name(path);
+//     if (name.find("_backend.") != string::npos)
+//     {
+//         NGRAPH_INFO << name;
+//     }
+//     return rc;
+// }
 
 void* runtime::Backend::open_shared_library(string type)
 {
@@ -87,7 +77,7 @@ void* runtime::Backend::open_shared_library(string type)
         type = type.substr(0, colon);
     }
     string lib_name = "lib" + to_lower(type) + "_backend" + ext;
-    string my_directory = get_directory(find_my_file());
+    string my_directory = file_util::get_directory(find_my_file());
     string full_path = file_util::path_join(my_directory, lib_name);
     NGRAPH_INFO << full_path;
     handle = dlopen(full_path.c_str(), RTLD_NOW | RTLD_GLOBAL);

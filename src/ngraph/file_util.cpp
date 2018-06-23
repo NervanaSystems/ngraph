@@ -62,6 +62,17 @@ string file_util::get_file_ext(const string& s)
     return rc;
 }
 
+string file_util::get_directory(const string& s)
+{
+    string rc = s;
+    auto pos = s.find_last_of('/');
+    if (pos != string::npos)
+    {
+        rc = s.substr(0, pos);
+    }
+    return rc;
+}
+
 string file_util::path_join(const string& s1, const string& s2)
 {
     string rc;

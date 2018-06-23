@@ -30,7 +30,11 @@ namespace ngraph
 
         // @brief Returns the file extension
         // @param path The path to the output file
-        std::string get_file_ext(const std::string&);
+        std::string get_file_ext(const std::string& path);
+
+        // @brief Returns the directory portion of the given path
+        // @param path The path to the output file
+        std::string get_directory(const std::string& path);
 
         // @brief Serialize a Function to as a json file
         // @param s1 Left side of path
