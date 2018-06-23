@@ -610,7 +610,8 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
 {
     auto src_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{30, 100});
 
-    auto src_slice = std::make_shared<pattern::op::Skip>(src_layer_label, pattern::has_class<op::Slice>());
+    auto src_slice =
+        std::make_shared<pattern::op::Skip>(src_layer_label, pattern::has_class<op::Slice>());
 
     auto src_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{20, 100});
     auto weights_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});

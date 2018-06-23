@@ -176,7 +176,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul()
     auto x = std::make_shared<pattern::op::Label>(element::f32, shape_x);
 
     auto reshape_pred = pattern::has_class<op::Reshape>();
-    
+
     auto skip_w = std::make_shared<pattern::op::Skip>(W, reshape_pred);
     auto skip_x = std::make_shared<pattern::op::Skip>(x, reshape_pred);
 

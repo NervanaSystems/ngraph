@@ -47,7 +47,8 @@ static std::shared_ptr<pattern::Matcher>
     create_binary_matcher(std::shared_ptr<pattern::op::Label> label,
                           std::shared_ptr<pattern::op::Label> const_label)
 {
-    auto bcst = std::make_shared<pattern::op::Skip>(const_label, pattern::has_class<op::Broadcast>());
+    auto bcst =
+        std::make_shared<pattern::op::Skip>(const_label, pattern::has_class<op::Broadcast>());
     auto bcst_label = std::make_shared<pattern::op::Label>(bcst, nullptr, NodeVector{bcst});
     auto matcher =
         std::make_shared<pattern::Matcher>(std::make_shared<T>(label, bcst_label), nullptr);
@@ -82,7 +83,8 @@ static bool simplify_concat(std::shared_ptr<Node> n)
     auto slice =
         std::make_shared<op::Slice>(lgoe, Coordinate{0, 0}, Coordinate{2, 1}, Strides{1, 1});
 
-    auto skip_reshape = std::make_shared<pattern::op::Skip>(slice, pattern::has_class<op::Reshape>());
+    auto skip_reshape =
+        std::make_shared<pattern::op::Skip>(slice, pattern::has_class<op::Reshape>());
 
     auto matcher = std::make_shared<pattern::Matcher>(skip_reshape, nullptr);
 
