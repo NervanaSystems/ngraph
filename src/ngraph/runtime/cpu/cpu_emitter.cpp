@@ -564,6 +564,8 @@ namespace ngraph
                        << out[0].get_name() << ");\n";
                 writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[6]) << ", "
                        << out[1].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[7])
+                       << ", ctx->mkldnn_workspaces[" << deps[8] << "]);\n";
 
                 writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                        << to_string(lstm_index) << ");\n";
@@ -665,7 +667,8 @@ namespace ngraph
                        << out[0].get_name() << ");\n";
                 writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[6]) << ", "
                        << out[1].get_name() << ");\n";
-
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[7])
+                       << ", ctx->mkldnn_workspaces[" << deps[8] << "]);\n";
                 writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, " << to_string(rnn_index)
                        << ");\n";
             }
