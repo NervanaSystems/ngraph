@@ -36,7 +36,7 @@ namespace ngraph
                 CUDNNHostParameters() = default;
                 ~CUDNNHostParameters() = default;
 
-                void* runtime::gpu::CUDNNEmitter::allocate_data_by_type(cudnnDataType_t data_type, double value)
+                void* runtime::gpu::CUDNNEmitter::allocate_by_datatype(cudnnDataType_t data_type, double value)
                 {
                     void* r = nullptr;
                     switch (data_type)
