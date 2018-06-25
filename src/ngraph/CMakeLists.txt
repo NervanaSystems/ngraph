@@ -108,6 +108,7 @@ set (SRC
     op/util/unary_elementwise.cpp
     pass/assign_placement.cpp
     pass/algebraic_simplification.cpp
+    pass/constant_folding.cpp
     pass/cse.cpp
     pass/dump_sorted.cpp
     pass/get_output_element_elimination.cpp
@@ -180,11 +181,13 @@ set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NG
 target_link_libraries(ngraph PUBLIC libjson)
 
 if (NOT APPLE)
+    set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,$ORIGIN")
+
     # NGraph links against one or more libraries (ex. LLVM) but we don't want to
     # export these symbols as part of the DSO. This is a GNU ld (and derivatives) specific
     # option so making this portable is still an open issue. As a note for the future,
     # this is not an issue on Windows and LLVM's lld does support --exclude-libs.
-    set_target_properties(ngraph PROPERTIES LINK_FLAGS "-Wl,--exclude-libs,ALL")
+    set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--exclude-libs,ALL")
 
     # GCC invokes the linker with --as-needed by default which doesn't work for us
     # because generated code needs to find symbols in these DSOs at runtime.
@@ -200,12 +203,6 @@ endif()
 # Defines macro in C++ to load backend plugin
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 target_link_libraries(ngraph PUBLIC dl pthread)
-
-if (APPLE)
-    set_property(TARGET ngraph PROPERTY PREFIX "lib")
-    set_property(TARGET ngraph PROPERTY OUTPUT_NAME "ngraph.so")
-    set_property(TARGET ngraph PROPERTY SUFFIX "")
-endif()
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...

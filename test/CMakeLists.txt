@@ -18,6 +18,7 @@ set(SRC
     algebraic_simplification.cpp
     builder_autobroadcast.cpp
     build_graph.cpp
+    constant_folding.cpp
     copy.cpp
     core_fusion.cpp
     cpio.cpp
@@ -119,6 +120,7 @@ target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for graph_partition, convolution, and backwards unit tests
     target_link_libraries(unit-test cpu_backend interpreter_backend)
+    target_link_libraries(unit-test libmkldnn)
 endif()
 
 if (NGRAPH_TBB_ENABLE)
@@ -139,8 +141,8 @@ add_custom_target(style-check
 )
 
 add_custom_target(unit-test-check
-	COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
-	DEPENDS unit-test
+    COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
+    DEPENDS unit-test
 )
 
 add_custom_target(check

@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include <memory>
+#include <numeric>
 #include <set>
 
 #include "algebraic_simplification.hpp"
@@ -46,11 +47,8 @@ static std::shared_ptr<pattern::Matcher>
     create_binary_matcher(std::shared_ptr<pattern::op::Label> label,
                           std::shared_ptr<pattern::op::Label> const_label)
 {
-    auto bcst_pred = [](std::shared_ptr<Node> n) {
-        return std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr;
-    };
-
-    auto bcst = std::make_shared<pattern::op::Skip>(const_label, bcst_pred);
+    auto bcst =
+        std::make_shared<pattern::op::Skip>(const_label, pattern::has_class<op::Broadcast>());
     auto bcst_label = std::make_shared<pattern::op::Label>(bcst, nullptr, NodeVector{bcst});
     auto matcher =
         std::make_shared<pattern::Matcher>(std::make_shared<T>(label, bcst_label), nullptr);
@@ -85,11 +83,8 @@ static bool simplify_concat(std::shared_ptr<Node> n)
     auto slice =
         std::make_shared<op::Slice>(lgoe, Coordinate{0, 0}, Coordinate{2, 1}, Strides{1, 1});
 
-    auto reshape_pred = [](std::shared_ptr<Node> r) {
-        return std::dynamic_pointer_cast<op::Reshape>(r) != nullptr;
-    };
-
-    auto skip_reshape = std::make_shared<pattern::op::Skip>(slice, reshape_pred);
+    auto skip_reshape =
+        std::make_shared<pattern::op::Skip>(slice, pattern::has_class<op::Reshape>());
 
     auto matcher = std::make_shared<pattern::Matcher>(skip_reshape, nullptr);
 

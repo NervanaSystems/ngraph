@@ -49,7 +49,6 @@
 #include "header_resource.hpp"
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/file_util.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
 
 #if defined(__clang__)
@@ -273,6 +272,7 @@ void codegen::StaticCompiler::add_header_search_path(const string& p)
         }
     }
 }
+
 std::unique_ptr<codegen::Module>
     codegen::StaticCompiler::compile(std::unique_ptr<clang::CodeGenAction>& m_compiler_action,
                                      const string& source)
@@ -363,7 +363,9 @@ void codegen::StaticCompiler::configure_search_path()
 {
 #ifdef USE_BUILTIN
     load_headers_from_resource();
-#elif defined(__APPLE__)
+#endif
+
+#if defined(__APPLE__)
     add_header_search_path(EIGEN_HEADERS_PATH);
     add_header_search_path(MKLDNN_HEADERS_PATH);
     add_header_search_path(TBB_HEADERS_PATH);
@@ -379,36 +381,20 @@ void codegen::StaticCompiler::configure_search_path()
     // Instead of re-implementing all of that functionality in a custom toolchain
     // just hardcode the paths relevant to frequently used build/test machines for now
     add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
+
+    string header_version = find_header_version("/usr/include/c++");
+
+    // /usr/include/c++/7
+    add_header_search_path("/usr/include/c++/" + header_version);
+
+    // /usr/include/x86_64-linux-gnu/c++/7
+    add_header_search_path("/usr/include/x86_64-linux-gnu/c++/" + header_version);
+
+    add_header_search_path("/usr/lib/gcc/x86_64-linux-gnu/" + header_version + "/include");
+    add_header_search_path("/usr/local/include");
+    add_header_search_path("/usr/lib/gcc/x86_64-linux-gnu/" + header_version + "/include-fixed");
     add_header_search_path("/usr/include/x86_64-linux-gnu");
     add_header_search_path("/usr/include");
-
-    // Search for headers in
-    //    /usr/include/x86_64-linux-gnu/c++/N.N
-    //    /usr/include/c++/N.N
-    // and add them to the header search path
-
-    file_util::iterate_files("/usr/include/x86_64-linux-gnu/c++/",
-                             [&](const std::string& file, bool is_dir) {
-                                 if (is_dir)
-                                 {
-                                     string dir_name = file_util::get_file_name(file);
-                                     if (is_version_number(dir_name))
-                                     {
-                                         add_header_search_path(file);
-                                     }
-                                 }
-                             });
-
-    file_util::iterate_files("/usr/include/c++/", [&](const std::string& file, bool is_dir) {
-        if (is_dir)
-        {
-            string dir_name = file_util::get_file_name(file);
-            if (is_version_number(dir_name))
-            {
-                add_header_search_path(file);
-            }
-        }
-    });
 
     add_header_search_path(EIGEN_HEADERS_PATH);
     add_header_search_path(MKLDNN_HEADERS_PATH);
@@ -434,14 +420,14 @@ void codegen::StaticCompiler::configure_search_path()
 
 void codegen::StaticCompiler::load_headers_from_resource()
 {
-    const string builtin_root = "/$builtin";
+    const string builtin_root = "";
     HeaderSearchOptions& hso = m_compiler->getInvocation().getHeaderSearchOpts();
     PreprocessorOptions& preprocessor_options = m_compiler->getInvocation().getPreprocessorOpts();
-    for (const string& search_path : builtin_search_paths)
-    {
-        string builtin = builtin_root + search_path;
-        hso.AddPath(builtin, clang::frontend::System, false, false);
-    }
+    // for (const string& search_path : builtin_search_paths)
+    // {
+    //     string builtin = builtin_root + search_path;
+    //     hso.AddPath(builtin, clang::frontend::System, false, false);
+    // }
     for (const pair<string, string>& header_info : builtin_headers)
     {
         string absolute_path = header_info.first;
@@ -455,4 +441,27 @@ void codegen::StaticCompiler::load_headers_from_resource()
 void codegen::StaticCompiler::set_precompiled_header_source(const std::string& source)
 {
     m_precomiled_header_source = source;
+}
+
+string codegen::StaticCompiler::find_header_version(const string& path)
+{
+    vector<string> directories;
+    string rc;
+    auto f = [&](const std::string& file, bool is_dir) {
+        if (is_dir)
+        {
+            directories.push_back(file);
+        }
+    };
+    file_util::iterate_files(path, f);
+    for (const string& dir : directories)
+    {
+        string dir_name = file_util::get_file_name(dir);
+        if (is_version_number(dir_name))
+        {
+            rc = dir_name;
+            break;
+        }
+    }
+    return rc;
 }

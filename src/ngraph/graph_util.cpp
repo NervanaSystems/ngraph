@@ -112,6 +112,11 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
         throw ngraph_error("Result nodes cannot be replaced.");
     }
 
+    if (target->get_users().size() == 0)
+    {
+        throw ngraph_error("replacing an unreachable node");
+    }
+
     // Fix input/output descriptors
     assert(target->get_outputs().size() == replacement->get_outputs().size());
 
@@ -428,4 +433,33 @@ bool ngraph::is_one(std::shared_ptr<Node> reduce_constant)
 {
     auto result_bool = is_equal_to_const_value("1", reduce_constant);
     return result_bool;
+}
+
+bool ngraph::is_used(std::shared_ptr<ngraph::Node> node)
+{
+    std::unordered_set<std::shared_ptr<ngraph::Node>> instances_seen;
+    std::deque<std::shared_ptr<ngraph::Node>> stack;
+    stack.push_front(node);
+
+    while (stack.size() > 0)
+    {
+        std::shared_ptr<ngraph::Node> n = stack.front();
+        if (instances_seen.count(n) == 0)
+        {
+            if (n->is_output())
+            {
+                return true;
+            }
+            instances_seen.insert(n);
+        }
+        stack.pop_front();
+        for (auto arg : n->get_users())
+        {
+            if (instances_seen.count(arg) == 0)
+            {
+                stack.push_front(arg);
+            }
+        }
+    }
+    return false;
 }

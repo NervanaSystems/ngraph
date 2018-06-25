@@ -36,15 +36,6 @@ namespace ngraph
             template <typename T>
             struct CudaOpMap;
 
-            void emit_broadcast(const std::string& name,
-                                std::array<std::string, 2> data_types,
-                                GPURuntimeContext* ctx,
-                                CUdeviceptr in,
-                                CUdeviceptr out,
-                                size_t repeat_size,
-                                size_t repeat_times,
-                                size_t count);
-
             void emit_onehot(const std::string& name,
                              std::array<std::string, 2> data_types,
                              GPURuntimeContext* ctx,
