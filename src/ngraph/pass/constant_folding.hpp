@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,24 +16,25 @@
 
 #pragma once
 
-#include "ngraph/op/util/op_annotations.hpp"
+#include "ngraph/pass/graph_rewrite.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace pass
     {
-        namespace cpu
-        {
-            /// \brief Annotations added to graph ops by CPU backend passes
-            class CPUOpAnnotations : public ngraph::op::util::OpAnnotations
-            {
-            public:
-                CPUOpAnnotations() {}
-                bool is_mkldnn_op() { return m_mkldnn_op; }
-                void set_mkldnn_op(bool val) { m_mkldnn_op = val; }
-            private:
-                bool m_mkldnn_op = false;
-            };
-        }
+        class ConstantFolding;
     }
 }
+
+class ngraph::pass::ConstantFolding : public ngraph::pass::GraphRewrite
+{
+public:
+    ConstantFolding()
+        : GraphRewrite()
+    {
+        construct_constant_reshape();
+    }
+
+private:
+    void construct_constant_reshape();
+};

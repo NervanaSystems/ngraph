@@ -668,6 +668,100 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_5d)
         read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_1d_last)
+{
+    Shape shape_a{4};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{0};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{4};
+
+    auto r = make_shared<op::Concat>(NodeVector{A, B}, 0);
+    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    vector<float> a_data{1, 2, 3, 4};
+    vector<float> b_data(0);
+
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, a_data);
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, b_data);
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call(f, {result}, {a, b});
+    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_1d_middle)
+{
+    Shape shape_a{4};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{0};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_c{4};
+    auto C = make_shared<op::Parameter>(element::f32, shape_c);
+    Shape shape_r{8};
+
+    auto r = make_shared<op::Concat>(NodeVector{A, B, C}, 0);
+    auto f = make_shared<Function>(r, op::ParameterVector{A, B, C});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    vector<float> a_data{1, 2, 3, 4};
+    vector<float> b_data(0);
+    vector<float> c_data{5, 6, 7, 8};
+
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, a_data);
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, b_data);
+    auto c = backend->create_tensor(element::f32, shape_c);
+    copy_data(c, c_data);
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call(f, {result}, {a, b, c});
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_4d_middle)
+{
+    Shape shape_a{2, 2, 1, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{2, 2, 0, 1};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_c{2, 2, 1, 1};
+    auto C = make_shared<op::Parameter>(element::f32, shape_c);
+    Shape shape_r{2, 2, 2, 1};
+
+    auto r = make_shared<op::Concat>(NodeVector{A, B, C}, 2);
+    auto f = make_shared<Function>(r, op::ParameterVector{A, B, C});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    vector<float> a_data{1, 2, 3, 4};
+    vector<float> b_data(0);
+    vector<float> c_data{5, 6, 7, 8};
+
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, a_data);
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, b_data);
+    auto c = backend->create_tensor(element::f32, shape_c);
+    copy_data(c, c_data);
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call(f, {result}, {a, b, c});
+    EXPECT_EQ((vector<float>{1, 5, 2, 6, 3, 7, 4, 8}), read_vector<float>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, divide)
 {
     Shape shape{2, 2};
