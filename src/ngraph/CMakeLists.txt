@@ -144,7 +144,7 @@ set (SRC
     )
 
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/op)
-file(GLOB OPS "${CMAKE_CURRENT_SOURCE_DIR}/op" "${CMAKE_CURRENT_SOURCE_DIR}/op/*.hpp")
+file(GLOB OPS "${CMAKE_CURRENT_SOURCE_DIR}/op/" "${CMAKE_CURRENT_SOURCE_DIR}/op/*.hpp")
 foreach(OP ${OPS})
     file(STRINGS ${OP} OP_CLASS REGEX "class [A-Za-z0-9_]+ :")
     foreach(LINE ${OP_CLASS})
