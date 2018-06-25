@@ -783,7 +783,19 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
             {
                 if (std::dynamic_pointer_cast<op::Sum>(delta_user))
                 {
-                    auto bias_shape = delta_user->get_output_shape(0);
+                    auto bias = std::dynamic_pointer_cast<op::Sum>(delta_user);
+                    auto bias_shape = bias->get_shape();
+                    if (bias_shape.size() > 1)
+                    {
+                        NGRAPH_DEBUG
+                            << "mpattern = " << m.get_match_root()->get_name()
+                            << "conv_bias bias shape != 1, requires reshape to match filter count.";
+                        ngraph::AxisVector order(bias_shape.size());
+                        std::iota(begin(order), end(order), 0);
+                        auto bias_reshape = std::make_shared<op::Reshape>(
+                            bias, order, Shape{conv_bprop->get_filters_shape()[0]});
+                        bias_shape = bias_reshape->get_shape();
+                    }
                     auto conv_bias_bprop = std::make_shared<op::ConvolutionBiasBackpropFiltersBias>(
                         pattern_map[data_batch],
                         conv_bprop->get_filters_shape(),
