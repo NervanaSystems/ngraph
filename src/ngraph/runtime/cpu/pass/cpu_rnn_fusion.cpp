@@ -609,10 +609,9 @@ static std::shared_ptr<Node>
 void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_fusion_fprop()
 {
     auto src_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{30, 100});
-    auto slice_pred = [](std::shared_ptr<Node> n) {
-        return static_cast<bool>(std::dynamic_pointer_cast<op::Slice>(n));
-    };
-    auto src_slice = std::make_shared<pattern::op::Skip>(src_layer_label, slice_pred);
+
+    auto src_slice =
+        std::make_shared<pattern::op::Skip>(src_layer_label, pattern::has_class<op::Slice>());
 
     auto src_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{20, 100});
     auto weights_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
