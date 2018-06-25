@@ -39,6 +39,8 @@ namespace ngraph
             size_t get_n() const { return m_n; }
             virtual NodeVector get_arguments() const override;
 
+            static NodeVector get_get_output_elements(std::shared_ptr<Node> mon);
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
