@@ -4273,6 +4273,11 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto softmax = static_cast<const ngraph::op::Softmax*>(node);
+
+                    if (softmax->get_axes().size() != 1)
+                    {
+                        throw ngraph_error("MKLDNN supports softmax only across single axis");
+                    }
                     int softmax_axis = static_cast<int>(*(softmax->get_axes().begin()));
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_desc = mkldnn_emitter->build_memory_descriptor(
