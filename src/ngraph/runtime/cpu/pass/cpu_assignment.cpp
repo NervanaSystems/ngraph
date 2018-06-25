@@ -87,10 +87,26 @@ namespace ngraph
                         ((node->get_input_shape(0)).size() == 4 ||
                          (node->get_input_shape(0)).size() == 2))
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        concat->set_op_annotations(op_annotations);
+                        // MKLDNN seems to throw an exception when given tensors with 0-length
+                        // dimensions, so don't assign it in such cases.
+                        bool any_zero = false;
+
+                        for (size_t i = 0; i < node->get_input_size(); i++)
+                        {
+                            if (shape_size(node->get_input_shape(i)) == 0)
+                            {
+                                any_zero = true;
+                                break;
+                            }
+                        }
+
+                        if (!any_zero)
+                        {
+                            auto op_annotations =
+                                std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                            op_annotations->set_mkldnn_op(true);
+                            concat->set_op_annotations(op_annotations);
+                        }
                     }
                 }
 
@@ -452,6 +468,8 @@ namespace ngraph
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
+                        std::map<size_t, size_t> oi_pairs = {{0, 0}};
+                        op_annotations->set_in_place_oi_pairs(oi_pairs);
                         relu->set_op_annotations(op_annotations);
                     }
                 }

@@ -130,7 +130,7 @@ void Function::set_temporary_pool_size(size_t size)
     m_temporary_pool_size = size;
 }
 
-std::ostream& ngraph::operator<<(std::ostream& out, const Function& f)
+std::ostream& operator<<(std::ostream& out, const Function& f)
 {
     out << "Function(" << f.get_name() << ")";
     return out;

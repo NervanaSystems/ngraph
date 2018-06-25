@@ -39,6 +39,13 @@ namespace ngraph
 
                 for (size_t i = 0; i < args.size(); i++)
                 {
+                    // CoordinateTransform gets confused when the last input has a zero-size dim, so we will
+                    // just skip for zero-element tensors.
+                    if (shape_size(in_shapes[i]) == 0)
+                    {
+                        continue;
+                    }
+
                     // The start coordinate for the copy is (0,...,0) except at the concatenation axis.
                     Coordinate out_start_coord(out_shape.size(), 0);
                     out_start_coord[concatenation_axis] = concatenation_pos;

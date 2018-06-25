@@ -108,6 +108,7 @@ set (SRC
     op/util/unary_elementwise.cpp
     pass/assign_placement.cpp
     pass/algebraic_simplification.cpp
+    pass/constant_folding.cpp
     pass/cse.cpp
     pass/dump_sorted.cpp
     pass/get_output_element_elimination.cpp
@@ -179,28 +180,9 @@ add_definitions("-DLIBRARY_VERSION=\"${NGRAPH_VERSION}\"")
 set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
 target_link_libraries(ngraph PUBLIC libjson)
 
-if (${NGRAPH_CPU_ENABLE})
-    get_target_property(BIN cpu_backend BINARY_DIR)
 if (NOT APPLE)
-    set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,${BIN}")
-endif()
-endif()
+    set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,$ORIGIN")
 
-if (${NGRAPH_GPU_ENABLE})
-    get_target_property(BIN gpu_backend BINARY_DIR)
-if (NOT APPLE)
-    set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,${BIN}")
-endif()
-endif()
-
-if (${NGRAPH_INTERPRETER_ENABLE})
-    get_target_property(BIN interpreter_backend BINARY_DIR)
-if (NOT APPLE)
-    set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,${BIN}")
-endif()
-endif()
-
-if (NOT APPLE)
     # NGraph links against one or more libraries (ex. LLVM) but we don't want to
     # export these symbols as part of the DSO. This is a GNU ld (and derivatives) specific
     # option so making this portable is still an open issue. As a note for the future,
@@ -221,12 +203,6 @@ endif()
 # Defines macro in C++ to load backend plugin
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 target_link_libraries(ngraph PUBLIC dl pthread)
-
-if (APPLE)
-    set_property(TARGET ngraph PROPERTY PREFIX "lib")
-    set_property(TARGET ngraph PROPERTY OUTPUT_NAME "ngraph.dylib")
-    set_property(TARGET ngraph PROPERTY SUFFIX "")
-endif()
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
