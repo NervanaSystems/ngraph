@@ -63,7 +63,7 @@ TEST(cpu_test, unhandled_op)
     ASSERT_THROW(backend->compile(f), ngraph_error);
 }
 
-TEST(cpu_test, trivial_inplace_relu)
+TEST(cpu_test, trivial_in_place_relu)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{16, 1});
     auto B = make_shared<op::Parameter>(element::f32, Shape{16, 1});
@@ -76,7 +76,7 @@ TEST(cpu_test, trivial_inplace_relu)
               add->get_outputs().at(0).get_tensor().get_pool_offset());
 }
 
-TEST(cpu_test, trivial_inplace_relu_fail)
+TEST(cpu_test, trivial_in_place_relu_fail)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{16, 1});
     auto B = make_shared<op::Parameter>(element::f32, Shape{16, 1});
