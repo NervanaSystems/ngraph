@@ -1,5 +1,4 @@
 /*******************************************************************************
-:q
 * Copyright 2017-2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -74,7 +73,7 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
 
         if (!m_disable_memory_sharing)
         {
-            for (descriptor::Tensor* tensor : node->liveness_free_list)
+            for (const descriptor::Tensor* tensor : node->liveness_free_list)
             {
                 if (reused_inputs.count(tensor) == 0)
                 {
