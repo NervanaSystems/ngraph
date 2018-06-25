@@ -1540,7 +1540,7 @@ test::Uniform<double> rng(-1.0, 1.0);
     auto x1 = rng.initialize(backend->create_tensor<double>(shape_mean));
     auto x2 = rng.initialize(backend->create_tensor<double>(shape_mean));
 
-    EXPECT_TRUE(autodiff_numeric_compare<double>(backend, make_graph, {x0, x1, x2}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<double>(backend, make_graph, {x0, x1, x2}, .01, .01));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_sequence_n3_c2_h3)
