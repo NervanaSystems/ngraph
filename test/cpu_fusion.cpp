@@ -1533,7 +1533,7 @@ TEST(cpu_fusion, maxpool_with_indices_in_mxnet)
     auto maybe_bf = bfa.first;
     auto adjoints = bfa.second;
     optimize_graph(f, maybe_bf);
-    auto fprop_cache = ngraph::cache_fprop(f, maybe_bf, adjoints);
+    auto fprop_cache = ngraph::cache_fprop(f, maybe_bf);
 
     auto mpwi_bprop = fprop_cache.bprop->get_results().at(0)->get_argument(0);
     ASSERT_TRUE(std::dynamic_pointer_cast<op::Parameter>(mpwi_bprop->get_argument(0)));
