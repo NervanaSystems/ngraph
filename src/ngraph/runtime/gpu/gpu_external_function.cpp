@@ -381,37 +381,29 @@ using namespace std;
         writer << "extern \"C\" size_t get_debug_timer_count() { return " << names.size()
                << "; }\n";
         writer << "extern \"C\" const char* get_debug_timer_name(size_t index)\n";
-        writer << "{\n";
-        writer.indent++;
+        writer.block_begin();
         writer << "static const char* timer_names[" << names.size() << "] =\n";
-        writer << "{\n";
-        writer.indent++;
+        writer.block_begin();
         vector<string> quoted_names;
         for (const string& name : names)
         {
             quoted_names.push_back("\"" + name + "\"");
         }
         writer << emit_string_array(quoted_names, 100 - (4 * 2 + 1));
-        writer << "\n};\n";
-        writer.indent--;
+        writer.block_end();
         writer << "return timer_names[index];\n";
-        writer.indent--;
-        writer << "}\n";
+        writer.block_end();
 
         writer << "extern \"C\" const size_t get_debug_timer_microseconds(size_t index)\n";
-        writer << "{\n";
-        writer.indent++;
+        writer.block_begin();
         writer << "return (index < " << names.size()
                << " ? timers[index].get_total_microseconds() : 0);\n";
-        writer.indent--;
-        writer << "}\n";
+        writer.block_end();
 
         writer << "extern \"C\" const size_t get_debug_timer_call_count(size_t index)\n";
-        writer << "{\n";
-        writer.indent++;
+        writer.block_begin();
         writer << "return (index < " << names.size() << " ? timers[index].get_call_count() : 0);\n";
-        writer.indent--;
-        writer << "}\n";
+        writer.block_end();
         writer << "\n";
     }
     writer << "// Declare all constants\n";
