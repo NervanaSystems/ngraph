@@ -43,7 +43,7 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
 
         if (auto op = std::dynamic_pointer_cast<op::Op>(node))
         {
-            if (auto op_annotations = std::dynamic_pointer_cast<op::Op>(node)->get_op_annotations())
+            if (auto op_annotations = op->get_op_annotations())
             {
                 for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                 {
