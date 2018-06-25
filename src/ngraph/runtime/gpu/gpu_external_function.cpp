@@ -390,7 +390,8 @@ using namespace std;
             quoted_names.push_back("\"" + name + "\"");
         }
         writer << emit_string_array(quoted_names, 100 - (4 * 2 + 1));
-        writer.block_end();
+        writer.indent--;
+        writer << "\n};\n";
         writer << "return timer_names[index];\n";
         writer.block_end();
 
