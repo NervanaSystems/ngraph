@@ -121,7 +121,7 @@ Register `simplify_neg` handler
                 {TI(op::Add), simplify_add},
                 {TI(op::Multiply), simplify_multiply},
                 {TI(op::Sum), simplify_sum},
-                <mark>{TI(op::Negative), simplify_neg}</mark>
+                {TI(op::Negative), simplify_neg}
             });
         }
 
