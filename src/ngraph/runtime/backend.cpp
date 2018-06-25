@@ -17,6 +17,7 @@
 #include <dlfcn.h>
 #include <sstream>
 
+#include "ngraph/file_util.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/util.hpp"
@@ -40,11 +41,27 @@ unordered_map<string, shared_ptr<runtime::Backend>>& runtime::Backend::get_backe
 
 runtime::Backend::~Backend()
 {
-    for (auto& p : s_open_backends)
-    {
-        dlclose(p.second);
-    }
 }
+
+// This doodad finds the full path of the containing shared library
+static string find_my_file()
+{
+    Dl_info dl_info;
+    dladdr(reinterpret_cast<void*>(find_my_file), &dl_info);
+    return dl_info.dli_fname;
+}
+
+// This will be uncommented when we add support for listing all known backends
+// static bool is_backend(const string& path)
+// {
+//     bool rc = false;
+//     string name = file_util::get_file_name(path);
+//     if (name.find("_backend.") != string::npos)
+//     {
+//         NGRAPH_INFO << name;
+//     }
+//     return rc;
+// }
 
 void* runtime::Backend::open_shared_library(string type)
 {
@@ -59,8 +76,11 @@ void* runtime::Backend::open_shared_library(string type)
     {
         type = type.substr(0, colon);
     }
-    string name = "lib" + to_lower(type) + "_backend" + ext;
-    handle = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
+    string lib_name = "lib" + to_lower(type) + "_backend" + ext;
+    string my_directory = file_util::get_directory(find_my_file());
+    string full_path = file_util::path_join(my_directory, lib_name);
+    NGRAPH_INFO << full_path;
+    handle = dlopen(full_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
     if (handle)
     {
         function<void()> create_backend =
@@ -72,14 +92,16 @@ void* runtime::Backend::open_shared_library(string type)
         else
         {
             dlclose(handle);
-            throw runtime_error("Failed to find create_backend function in library '" + name + "'");
+            throw runtime_error("Failed to find create_backend function in library '" + lib_name +
+                                "'");
         }
-        s_open_backends.insert({name, handle});
+        s_open_backends.insert({lib_name, handle});
     }
     else
     {
         string err = dlerror();
-        throw runtime_error("Library open for Backend '" + name + "' failed with error:\n" + err);
+        throw runtime_error("Library open for Backend '" + lib_name + "' failed with error:\n" +
+                            err);
     }
     return handle;
 }

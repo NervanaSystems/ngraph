@@ -39,10 +39,10 @@ namespace ngraph
                         copy_with_new_args(const NodeVector& new_args) const override;
 
                     const NodeVector& get_node_list() const { return m_node_list; }
-                    const NodeVector& get_kernel_outputs() const { return m_outputs; }
+                    const NodeVector& get_kernel_outputs() const { return m_output_nodes; }
                 private:
                     NodeVector m_node_list;
-                    NodeVector m_outputs;
+                    NodeVector m_output_nodes;
                 };
             }
         }
