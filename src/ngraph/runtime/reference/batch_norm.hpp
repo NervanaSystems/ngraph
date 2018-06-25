@@ -227,10 +227,11 @@ namespace ngraph
                 for (size_t i = 0; i < arg2_num_elements; i++)
                 {
                     auto scale_normalized = gamma_bcast[i] / stddev_bcast[i];
-                    out0[i] = scale_normalized *
-                              (arg5[i] -
-                               (normalized[i] * delta_gamma_bcast[i] + delta_beta_bcast[i]) /
-                                   reduction_axes_size);
+                    out0[i] = static_cast<T>(
+                        scale_normalized *
+                        (arg5[i] -
+                         (normalized[i] * delta_gamma_bcast[i] + delta_beta_bcast[i]) /
+                             reduction_axes_size));
                 }
             }
         }
