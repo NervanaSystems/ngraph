@@ -166,7 +166,7 @@ you switch between odd/even generations of variables on each update.
 
 Backends are responsible for managing storage. If the storage is off-CPU, caches 
 are used to minimize copying between device and CPU. We can allocate storage for 
-the three parameters and the return value as follows:
+the three parameters and the return value.
 
 .. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp

@@ -71,8 +71,9 @@ Python-based API. See the `ngraph onnx companion tool`_ to get started.
 
    TensorFlow, Yes, Yes
    MXNet, Yes, Yes
+   PaddlePaddle, Coming Soon, Yes
    neon, none needed, Yes
-   PyTorch, Not yet, Yes
+   PyTorch, Coming Soon, Yes
    CNTK, Not yet, Yes
    Other, Not yet, Doable
 
@@ -140,15 +141,17 @@ Contents
 
    install.rst
    graph-basics.rst
+   fusion/index.rst
    howto/index.rst
    ops/index.rst
    framework-integration-guides.rst
-   optimize/index.rst
+   frameworks/index.rst
    programmable/index.rst
    distr/index.rst
    python_api/index.rst
    project/index.rst
 
+=======
 
 
 
