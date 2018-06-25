@@ -145,6 +145,8 @@ namespace ngraph
                                                      cudnnDataType_t data_type);
 
                 CUDNNDescriptors m_descriptors;
+                CUDNNHostParameters m_host_parameters;
+
                 GPUPrimitiveEmitter* m_primitive_emitter;
             };
         }

@@ -128,25 +128,6 @@ cudnnDataType_t runtime::gpu::CUDNNEmitter::get_cudnn_datatype(std::string dtype
     return p->second;
 }
 
-void* runtime::gpu::CUDNNEmitter::get_data_by_type(cudnnDataType_t data_type, double value)
-{
-    void* r = nullptr;
-    switch (data_type)
-    {
-    case CUDNN_DATA_FLOAT: r = static_cast<void*>(new float[1]{static_cast<float>(value)}); break;
-    case CUDNN_DATA_DOUBLE: r = static_cast<void*>(new double[1]{value}); break;
-    case CUDNN_DATA_INT8: r = static_cast<void*>(new int8_t[1]{static_cast<int8_t>(value)}); break;
-    case CUDNN_DATA_INT32:
-        r = static_cast<void*>(new int32_t[1]{static_cast<int32_t>(value)});
-        break;
-    case CUDNN_DATA_HALF:
-    case CUDNN_DATA_INT8x4:
-        std::string err = "datatype is not supported by cuDNN";
-        throw std::runtime_error(err);
-    }
-    return r;
-}
-
 size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPURuntimeContext* ctx,
                                                         const cudnnReduceTensorOp_t& reduce_op,
                                                         const std::string& dtype,
@@ -183,9 +164,9 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
     CUDNN_SAFE_CALL(cudnnGetReductionWorkspaceSize(
         *ctx->cudnn_handle, desc, input_desc, output_desc, &workspace_size));
     size_t workspace_idx = allocator.reserve_workspace(workspace_size);
+    void* alpha = m_host_parameters.allocate_by_type(data_type, 1.0);
+    void* beta = m_host_parameters.allocate_by_type(data_type, 0);
 
-    void* alpha = get_data_by_type(data_type, 1.0);
-    void* beta = get_data_by_type(data_type, 0);
     // emit reduce operation
     std::unique_ptr<gpu::primitive> reduce(
         new gpu::primitive{[=, &desc, &input_desc, &output_desc](void** inputs, void** outputs) {
@@ -197,7 +178,6 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
                                                            CUDNN_32BIT_INDICES));
 
             void* workspace_ptr = runtime::gpu::invoke_memory_primitive(ctx, workspace_idx);
-
             CUDNN_SAFE_CALL(cudnnReduceTensor(*ctx->cudnn_handle,
                                               desc,
                                               nullptr,
@@ -240,15 +220,16 @@ size_t runtime::gpu::CUDNNEmitter::build_tensor_op(const GPURuntimeContext* ctx,
     cudnnDataType_t data_type = get_cudnn_datatype(dtype);
     cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
     auto& descriptor = tensor_descriptor_from_shape(input_shape, data_type, tensor_format);
+    void* alpha_dt0 = m_host_parameters.allocate_by_type(data_type, alpha0);
+    void* alpha_dt1 = m_host_parameters.allocate_by_type(data_type, alpha1);
+    void* beta_dt = m_host_parameters.allocate_by_type(data_type, beta);
 
-    void* alpha_dt0 = get_data_by_type(data_type, alpha0);
-    void* alpha_dt1 = get_data_by_type(data_type, alpha1);
-    void* beta_dt = get_data_by_type(data_type, beta);
     // emit tensor binary operation
     std::unique_ptr<gpu::primitive> tensor(
         new gpu::primitive{[=, &opTensorDesc, &descriptor](void** inputs, void** outputs) {
             CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(
                 opTensorDesc, tensor_op, data_type, CUDNN_NOT_PROPAGATE_NAN));
+
             CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,
                                           opTensorDesc,
                                           alpha_dt0,
@@ -260,6 +241,9 @@ size_t runtime::gpu::CUDNNEmitter::build_tensor_op(const GPURuntimeContext* ctx,
                                           beta_dt,
                                           descriptor,
                                           outputs[0]));
+            delete_data_by_type(data_type, alpha_dt0);
+                    delete_data_by_type(data_type, alpha_dt1);
+                            delete_data_by_type(data_type, beta_dt);
         }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(tensor));
@@ -380,6 +364,8 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURunt
     auto& conv_desc = get_cudnn_convolution_descriptor(
         padding_below, window_movement_strides, window_dilation_strides, mode, data_type);
     const cudnnConvolutionFwdAlgo_t conv_fwd_algo = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM;
+    void* alpha = m_host_parameters.allocate_by_type(data_type, 1.0);
+    void* beta = m_host_parameters.allocate_by_type(data_type, 0);
 
     size_t workspace_size_in_bytes = 0;
     CUDNN_SAFE_CALL(cudnnGetConvolutionForwardWorkspaceSize(*ctx->cudnn_handle,
@@ -394,8 +380,6 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURunt
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
     // (lazy) allocation for kernel arguments
     size_t workspace_idx = allocator.reserve_workspace(workspace_size_in_bytes);
-    void* alpha = get_data_by_type(data_type, 1.0);
-    void* beta = get_data_by_type(data_type, 0);
 
     std::unique_ptr<gpu::primitive> conv;
     conv.reset(new gpu::primitive{[=, &conv_desc, &tensor_desc_0, &filter_desc, &tensor_desc_1](
@@ -457,6 +441,8 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
     auto& conv_desc = get_cudnn_convolution_descriptor(
         padding_below, window_movement_strides, window_dilation_strides, mode, data_type);
     const cudnnConvolutionBwdDataAlgo_t conv_bwd_data_algo = CUDNN_CONVOLUTION_BWD_DATA_ALGO_0;
+    void* alpha = m_host_parameters.allocate_by_type(data_type, 1.0);
+    void* beta = m_host_parameters.allocate_by_type(data_type, 0);
 
     size_t workspace_size_in_bytes = 0;
     CUDNN_SAFE_CALL(cudnnGetConvolutionBackwardDataWorkspaceSize(*ctx->cudnn_handle,
@@ -472,8 +458,6 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
     // (lazy) allocation for kernel arguments
     size_t workspace_idx = allocator.reserve_workspace(workspace_size_in_bytes);
 
-    void* alpha = get_data_by_type(data_type, 1.0);
-    void* beta = get_data_by_type(data_type, 0);
     std::unique_ptr<gpu::primitive> conv;
     conv.reset(new gpu::primitive{[=, &conv_desc, &tensor_desc_0, &filter_desc, &tensor_desc_1](
         void** inputs, void** outputs) {
@@ -550,9 +534,9 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
     // (lazy) allocation for kernel arguments
     size_t workspace_idx = allocator.reserve_workspace(workspace_size_in_bytes);
+    void* alpha = m_host_parameters.allocate_by_type(data_type, 1.0);
+    void* beta = m_host_parameters.allocate_by_type(data_type, 0);
 
-    void* alpha = get_data_by_type(data_type, 1.0);
-    void* beta = get_data_by_type(data_type, 0);
     std::unique_ptr<gpu::primitive> conv;
     conv.reset(new gpu::primitive{[=, &conv_desc, &tensor_desc_0, &filter_desc, &tensor_desc_1](
         void** inputs, void** outputs) {
@@ -571,7 +555,6 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(
                                                        filter_desc,
                                                        outputs[0]));
     }});
-
     primitive_index = this->m_primitive_emitter->insert(std::move(conv));
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
@@ -647,9 +630,9 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeC
     }
 
     std::unique_ptr<gpu::primitive> pool;
+    void* alpha = m_host_parameters.allocate_by_type(data_type, 1.0);
+    void* beta = m_host_parameters.allocate_by_type(data_type, 0);
 
-    void* alpha = get_data_by_type(data_type, 1.0);
-    void* beta = get_data_by_type(data_type, 0);
     switch (direction)
     {
     case (Prop::Inference):
@@ -738,8 +721,8 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
     auto& derived_param_desc = m_descriptors.build<cudnnTensorDescriptor_t>();
     auto& tensor_desc = tensor_descriptor_from_shape(tensor_shape, data_type, tensor_format);
     CUDNN_SAFE_CALL(cudnnDeriveBNTensorDescriptor(derived_param_desc, tensor_desc, bn_op));
-    void* alpha = get_data_by_type(data_type, 1.0);
-    void* beta = get_data_by_type(data_type, 0);
+    void* alpha = m_host_parameters.allocate_by_type(data_type, 1.0);
+    void* beta = m_host_parameters.allocate_by_type(data_type, 0);
     std::unique_ptr<gpu::primitive> batchnorm;
     switch (direction)
     {
@@ -778,7 +761,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
         // in training and population statistics (sample variance) used
         // during inference. see commit note for 3b081ce for more details.
         double m = shape_size(tensor_shape) / tensor_shape[1];
-        void* bias_factor = get_data_by_type(data_type, (m - 1) / m);
+        void* bias_factor = m_host_parameters.allocate_by_type(data_type, (m - 1) / m);
         batchnorm.reset(new gpu::primitive{
             [=, &op_desc, &tensor_desc, &derived_param_desc](void** inputs, void** outputs) {
                 CUDNN_SAFE_CALL(cudnnBatchNormalizationForwardTraining(*ctx->cudnn_handle,
@@ -872,9 +855,8 @@ size_t runtime::gpu::CUDNNEmitter::build_softmax(const runtime::gpu::GPURuntimeC
     cudnnDataType_t data_type = get_cudnn_datatype(dtype);
     cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
     auto& tensor_desc = tensor_descriptor_from_shape(tensor_shape, data_type, tensor_format);
-
-    void* alpha = get_data_by_type(data_type, 1.0);
-    void* beta = get_data_by_type(data_type, 0);
+    void* alpha = m_host_parameters.allocate_by_type(data_type, 1.0);
+    void* beta = m_host_parameters.allocate_by_type(data_type, 0);
     std::unique_ptr<runtime::gpu::primitive> softmax;
     switch (direction)
     {
