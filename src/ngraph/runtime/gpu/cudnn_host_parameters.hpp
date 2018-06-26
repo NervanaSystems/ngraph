@@ -36,26 +36,26 @@ namespace ngraph
                 CUDNNHostParameters() = default;
                 ~CUDNNHostParameters() = default;
 
-                void* runtime::gpu::CUDNNEmitter::allocate_by_datatype(cudnnDataType_t data_type, double value)
+                void* allocate_by_datatype(cudnnDataType_t data_type, double value)
                 {
                     void* r = nullptr;
                     switch (data_type)
                     {
                     case CUDNN_DATA_FLOAT:
                         m_host_parameters_float.push_back(static_cast<float>(value));
-                        r = static_cast<void*>(&m_host_parameters_float.back()); 
+                        r = static_cast<void*>(&m_host_parameters_float.back());
                         break;
                     case CUDNN_DATA_DOUBLE:
                         m_host_parameters_double.push_back(value);
-                        r = static_cast<void*>(&m_host_parameters_double.back()); 
+                        r = static_cast<void*>(&m_host_parameters_double.back());
                         break;
                     case CUDNN_DATA_INT8:
                         m_host_parameters_int8_t.push_back(static_cast<int8_t>(value));
-                        r = static_cast<void*>(&m_host_parameters_int8_t.back()); 
+                        r = static_cast<void*>(&m_host_parameters_int8_t.back());
                         break;
                     case CUDNN_DATA_INT32:
                         m_host_parameters_int32_t.push_back(static_cast<int32_t>(value));
-                        r = static_cast<void*>(&m_host_parameters_int32_t.back()); 
+                        r = static_cast<void*>(&m_host_parameters_int32_t.back());
                         break;
                     case CUDNN_DATA_HALF:
                     case CUDNN_DATA_INT8x4:

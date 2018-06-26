@@ -241,9 +241,6 @@ size_t runtime::gpu::CUDNNEmitter::build_tensor_op(const GPURuntimeContext* ctx,
                                           beta_dt,
                                           descriptor,
                                           outputs[0]));
-            delete_data_by_type(data_type, alpha_dt0);
-                    delete_data_by_type(data_type, alpha_dt1);
-                            delete_data_by_type(data_type, beta_dt);
         }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(tensor));
