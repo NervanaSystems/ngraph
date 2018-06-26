@@ -1008,7 +1008,7 @@ TEST(cpu_fusion, fuse_conv_bias_add)
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.run_passes(func_fuse);
-    ASSERT_GT(count_ops_of_type<op::ConvolutionBiasAdd>(func_fuse), 0);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(func_fuse), 1);
 
     pass_manager.run_passes(func_nofuse1);
     ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(func_nofuse1), 0);

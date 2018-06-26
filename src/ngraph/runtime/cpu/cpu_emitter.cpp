@@ -3111,7 +3111,6 @@ namespace ngraph
                 auto arg0_shape = args[0].get_shape();
                 auto arg1_shape = args[1].get_shape();
                 auto arg2_shape = args[2].get_shape();
-                auto arg3_shape = args[3].get_shape();
                 auto result_shape = out[0].get_shape();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
@@ -3144,6 +3143,8 @@ namespace ngraph
                     auto weights_desc =
                         mkldnn_emitter->build_memory_descriptor(args[1], weights_format);
                     auto bias_desc = mkldnn_emitter->build_memory_descriptor(args[2], bias_format);
+                    // Since this is an in-place kernel, args[3] and out[0] will share the same
+                    // memory buffer and descriptor
                     auto result_desc =
                         mkldnn_emitter->build_memory_descriptor(out[0], output_format);
                     size_t conv_index = 0;
@@ -3184,6 +3185,10 @@ namespace ngraph
 
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(conv_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("ConvolutionBiasAdd is only supported with MKLDNN kernel.");
                 }
             }
 

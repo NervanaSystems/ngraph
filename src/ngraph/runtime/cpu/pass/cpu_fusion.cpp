@@ -1089,86 +1089,86 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
     auto add_input = std::make_shared<pattern::op::Label>(element::f32, pconv->get_shape());
     auto padd = std::make_shared<op::Add>(add_input, pconv);
 
-    pattern::graph_rewrite_callback callback =
-        [data_batch, filters, add_input](pattern::Matcher& m) {
-            NGRAPH_DEBUG << "In a callback for construct_conv_sum against "
-                         << m.get_match_root()->get_name();
+    pattern::graph_rewrite_callback callback = [data_batch, filters](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_conv_sum against "
+                     << m.get_match_root()->get_name();
 
-            auto add_m = m.get_match_root();
-            auto pattern_map = m.get_pattern_map();
-            auto conv_m = std::dynamic_pointer_cast<op::ConvolutionBias>(add_m->get_argument(1));
-            auto inplace_input = add_m->get_argument(0);
+        auto add_m = m.get_match_root();
+        auto pattern_map = m.get_pattern_map();
+        auto conv_m = std::dynamic_pointer_cast<op::ConvolutionBias>(add_m->get_argument(1));
+        auto inplace_input = add_m->get_argument(0);
 
-            if (!conv_m)
+        if (!conv_m)
+        {
+            conv_m = std::dynamic_pointer_cast<op::ConvolutionBias>(add_m->get_argument(0));
+            inplace_input = add_m->get_argument(1);
+        }
+
+        //These checks are to make sure a MKLDNN Convolution kernel can be used.
+        bool data_dilated = false;
+        for (size_t s : conv_m->get_data_dilation_strides())
+        {
+            data_dilated = data_dilated || (s != 1);
+        }
+
+        if (data_dilated)
+        {
+            NGRAPH_DEBUG << "Convolution has dilations greater than 1";
+            return false;
+        }
+
+        if (conv_m->get_element_type() != element::f32)
+        {
+            NGRAPH_DEBUG << "Convolution isn't of type float";
+            return false;
+        }
+
+        auto arg0_rank = conv_m->get_input_shape(0).size();
+        auto arg1_rank = conv_m->get_input_shape(1).size();
+
+        if (arg0_rank != 4 || arg1_rank != 4)
+        {
+            NGRAPH_DEBUG << "Convolution's arguments ranks aren't equal to 4";
+            return false;
+        }
+
+        if (conv_m->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "Convolution has more than one user";
+
+            // return false;
+        }
+
+        if (inplace_input->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "Add has more than one user. Convolution Add might use an in-place "
+                            "destructive kernel";
+            // return false;
+        }
+
+        if (inplace_input->is_parameter())
+        {
+            NGRAPH_DEBUG
+                << "Unsafe to use in-place kernel since add's in-place input is a parameter";
+            return false;
+        }
+
+        for (auto add_user : m.get_match_root()->get_users())
+        {
+            if (add_user->is_output())
             {
-                conv_m = std::dynamic_pointer_cast<op::ConvolutionBias>(add_m->get_argument(0));
-                inplace_input = add_m->get_argument(1);
-            }
-
-            //These checks are to make sure a MKLDNN Convolution kernel can be used.
-            bool data_dilated = false;
-            for (size_t s : conv_m->get_data_dilation_strides())
-            {
-                data_dilated = data_dilated || (s != 1);
-            }
-
-            if (data_dilated)
-            {
-                NGRAPH_DEBUG << "Convolution has dilations greater than 1";
-                return false;
-            }
-
-            if (conv_m->get_element_type() != element::f32)
-            {
-                NGRAPH_DEBUG << "Convolution isn't of type float";
-                return false;
-            }
-
-            auto arg0_rank = conv_m->get_input_shape(0).size();
-            auto arg1_rank = conv_m->get_input_shape(1).size();
-
-            if (arg0_rank != 4 || arg1_rank != 4)
-            {
-                NGRAPH_DEBUG << "Convolution's arguments ranks aren't equal to 4";
-                return false;
-            }
-
-            if (conv_m->get_users().size() > 1)
-            {
-                NGRAPH_DEBUG << "Convolution has more than one user";
-                // return false;
-            }
-
-            if (inplace_input->get_users().size() > 1)
-            {
-                NGRAPH_DEBUG << "Add has more than one user. Convolution Add might use an in-place "
-                                "destructive kernel";
-                // return false;
-            }
-
-            if (std::dynamic_pointer_cast<op::Parameter>(pattern_map[add_input]))
-            {
+                // TODO: Remove restriction once we handle this case in codegen
                 NGRAPH_DEBUG
-                    << "Unsafe to use in-place kernel since add's in-place input is a parameter";
+                    << "Unsafe to use in-place kernel since add's in-place output is a result";
                 return false;
             }
+        }
 
-            for (auto add_user : m.get_match_root()->get_users())
-            {
-                if (std::dynamic_pointer_cast<op::Result>(add_user))
-                {
-                    // TODO: Remove restriction once we handle this case in codegen
-                    NGRAPH_DEBUG
-                        << "Unsafe to use in-place kernel since add's in-place output is a result";
-                    return false;
-                }
-            }
-
-            auto conv_add = std::shared_ptr<Node>(
-                new op::ConvolutionBiasAdd(conv_m, inplace_input, false));
-            ngraph::replace_node(m.get_match_root(), conv_add);
-            return true;
-        };
+        auto conv_add =
+            std::shared_ptr<Node>(new op::ConvolutionBiasAdd(conv_m, inplace_input, false));
+        ngraph::replace_node(m.get_match_root(), conv_add);
+        return true;
+    };
 
     auto m = std::make_shared<pattern::Matcher>(padd, callback, "conv_bias_add");
     this->add_matcher(m);
@@ -1208,7 +1208,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add_relu()
 
         for (auto conv_bias_user : m.get_match_root()->get_users())
         {
-            if (std::dynamic_pointer_cast<op::Result>(conv_bias_user))
+            if (conv_bias_user->is_output())
             {
                 // TODO: Remove restriction once we handle this case in codegen
                 NGRAPH_DEBUG << "Unsafe to use in-place kernel since in-place output is a result";
