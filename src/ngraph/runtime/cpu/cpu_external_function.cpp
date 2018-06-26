@@ -1036,22 +1036,27 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
     //we start with a particular output
     //which is an argument to a given op::Result
     size_t offset = res_src_output->get_tensor().get_pool_offset();
-    auto it = res_src_output->get_node();
+    auto it = res_src_output;
 
     bool propagate_further = true;
-    while (!it->is_parameter() && propagate_further)
+    while (!it->get_node()->is_parameter() && propagate_further)
     {
         propagate_further = false;
-        for (auto& input : it->get_inputs())
+        auto arg = std::dynamic_pointer_cast<ngraph::op::Op>(it->get_node());        
+        if (auto op_annotations = arg->get_op_annotations())
         {
-            //found inplace computation from some input
-            if (input.get_tensor().get_pool_offset() == offset)
+            auto oi_pairs = op_annotations->get_in_place_oi_pairs();
+            if (oi_pairs.count(it->get_index()) != 0)
             {
-                //make input.get_tensor() use output's storage directly
-                m_variable_name_map[input.get_tensor().get_name()] = output_name;
-                it = input.get_output().get_node();
-                propagate_further = true;
-                break;
+                size_t input_index = oi_pairs.at(it->get_index());
+                auto& input_tensor = arg->get_inputs().at(input_index).get_tensor();
+                if (input_tensor.get_pool_offset() == offset)
+                {
+                    NGRAPH_DEBUG << "Reusing " << output_name << " for " << input_tensor.get_name();
+                    m_variable_name_map[input_tensor.get_name()] = output_name;
+                    it = &arg->get_inputs().at(input_index).get_output();
+                    propagate_further = true;
+                }
             }
         }
     }
