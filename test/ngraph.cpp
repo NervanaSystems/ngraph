@@ -28,7 +28,7 @@ using namespace std;
 
 TEST(NGraph, loadTest)
 {
-    // load the triangle library
+// load the triangle library
 #ifndef __APPLE__
     void* ngraphImplLib = dlopen("../src/libngraph.so", RTLD_LAZY);
 #else
