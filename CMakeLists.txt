@@ -200,7 +200,7 @@ set(NGRAPH_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/src/ngraph)
 set(EXTERNAL_INSTALL_DIR ${CMAKE_BINARY_DIR}/external)
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
-    find_package(Protobuf REQUIRED)
+    find_package(Protobuf 2.6.1 REQUIRED)
 endif()
 
 if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
