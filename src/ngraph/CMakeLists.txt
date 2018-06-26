@@ -108,6 +108,7 @@ set (SRC
     op/util/unary_elementwise.cpp
     pass/assign_placement.cpp
     pass/algebraic_simplification.cpp
+    pass/constant_folding.cpp
     pass/cse.cpp
     pass/dump_sorted.cpp
     pass/get_output_element_elimination.cpp
@@ -202,12 +203,6 @@ endif()
 # Defines macro in C++ to load backend plugin
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 target_link_libraries(ngraph PUBLIC dl pthread)
-
-if (APPLE)
-    set_property(TARGET ngraph PROPERTY PREFIX "lib")
-    set_property(TARGET ngraph PROPERTY OUTPUT_NAME "ngraph.so")
-    set_property(TARGET ngraph PROPERTY SUFFIX "")
-endif()
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...

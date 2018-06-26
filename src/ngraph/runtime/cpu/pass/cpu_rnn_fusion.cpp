@@ -319,35 +319,6 @@ static std::shared_ptr<ngraph::Node>
     }
 }
 
-static bool is_unreachable(std::shared_ptr<ngraph::Node> node)
-{
-    std::unordered_set<std::shared_ptr<ngraph::Node>> instances_seen;
-    std::deque<std::shared_ptr<ngraph::Node>> stack;
-    stack.push_front(node);
-
-    while (stack.size() > 0)
-    {
-        std::shared_ptr<ngraph::Node> n = stack.front();
-        if (instances_seen.count(n) == 0)
-        {
-            if (n->is_output())
-            {
-                return false;
-            }
-            instances_seen.insert(n);
-        }
-        stack.pop_front();
-        for (auto arg : n->get_users())
-        {
-            if (instances_seen.count(arg) == 0)
-            {
-                stack.push_front(arg);
-            }
-        }
-    }
-    return true;
-}
-
 void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 {
     auto ht_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
@@ -568,7 +539,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                     {
                         if (std::find(lstm_nodes.begin(), lstm_nodes.end(), goe0_user) ==
                                 lstm_nodes.end() &&
-                            !is_unreachable(goe0_user))
+                            ngraph::is_used(goe0_user))
                         {
                             lstm_goe0_user.insert(goe0_user);
                             map_goe_to_lstm_slices[goe_0] = ht_slice_per_timestep[index];
@@ -642,10 +613,9 @@ static std::shared_ptr<Node>
 void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_fusion_fprop()
 {
     auto src_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{30, 100});
-    auto slice_pred = [](std::shared_ptr<Node> n) {
-        return static_cast<bool>(std::dynamic_pointer_cast<op::Slice>(n));
-    };
-    auto src_slice = std::make_shared<pattern::op::Skip>(src_layer_label, slice_pred);
+
+    auto src_slice =
+        std::make_shared<pattern::op::Skip>(src_layer_label, pattern::has_class<op::Slice>());
 
     auto src_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{20, 100});
     auto weights_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
