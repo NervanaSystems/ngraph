@@ -18,6 +18,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <vector>
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate_transform.hpp"
@@ -110,8 +111,8 @@ namespace ngraph
                                           T* out2,
                                           const Shape& arg2_shape)
             {
-                std::unique_ptr<T[]> centered(new T[shape_size(arg2_shape)]());
-                std::unique_ptr<T[]> normalized(new T[shape_size(arg2_shape)]());
+                std::vector<T> centered(shape_size(arg2_shape));
+                std::vector<T> normalized(shape_size(arg2_shape));
                 batch_norm_three_outputs_with_intermediates(eps,
                                                             arg0,
                                                             arg1,
@@ -119,8 +120,8 @@ namespace ngraph
                                                             out0,
                                                             out1,
                                                             out2,
-                                                            centered.get(),
-                                                            normalized.get(),
+                                                            centered.data(),
+                                                            normalized.data(),
                                                             arg2_shape);
             }
 
@@ -181,21 +182,23 @@ namespace ngraph
                 auto reduction_axes_size = arg2_num_elements / mean_num_elements;
 
                 // Compute the mean, variance, and normalized values
-                std::unique_ptr<T[]> bn_output(new T[arg2_num_elements]());
-                std::unique_ptr<T[]> centered(new T[arg2_num_elements]());
-                std::unique_ptr<T[]> normalized(new T[arg2_num_elements]());
-                std::unique_ptr<T[]> mean(new T[mean_num_elements]());
-                std::unique_ptr<T[]> variance(new T[mean_num_elements]());
-                std::unique_ptr<T[]> stddev(new T[mean_num_elements]());
+
+                std::vector<T> bn_output(arg2_num_elements);
+                std::vector<T> centered(arg2_num_elements);
+                std::vector<T> normalized(arg2_num_elements);
+
+                std::vector<T> mean(mean_num_elements);
+                std::vector<T> variance(mean_num_elements);
+                std::vector<T> stddev(mean_num_elements);
                 batch_norm_three_outputs_with_intermediates(eps,
                                                             arg0,
                                                             arg1,
                                                             arg2,
-                                                            bn_output.get(),
-                                                            mean.get(),
-                                                            variance.get(),
-                                                            centered.get(),
-                                                            normalized.get(),
+                                                            bn_output.data(),
+                                                            mean.data(),
+                                                            variance.data(),
+                                                            centered.data(),
+                                                            normalized.data(),
                                                             arg2_shape);
 
                 for (size_t i = 0; i < mean_num_elements; i++)
@@ -204,24 +207,25 @@ namespace ngraph
                 }
 
                 // Broadcast gamma and the standard deviation
-                std::unique_ptr<T[]> gamma_bcast(new T[arg2_num_elements]());
-                std::unique_ptr<T[]> stddev_bcast(new T[arg2_num_elements]());
-                broadcast(arg0, gamma_bcast.get(), mean_shape, arg2_shape, reduction_axes);
-                broadcast(stddev.get(), stddev_bcast.get(), mean_shape, arg2_shape, reduction_axes);
+                std::vector<T> gamma_bcast(arg2_num_elements);
+                std::vector<T> stddev_bcast(arg2_num_elements);
+                broadcast(arg0, gamma_bcast.data(), mean_shape, arg2_shape, reduction_axes);
+                broadcast(
+                    stddev.data(), stddev_bcast.data(), mean_shape, arg2_shape, reduction_axes);
 
                 // Bprop into gamma
-                std::unique_ptr<T[]> delta_times_normalized(new T[arg2_num_elements]());
-                multiply(normalized.get(), arg5, delta_times_normalized.get(), arg2_num_elements);
-                sum(delta_times_normalized.get(), out1, arg2_shape, mean_shape, reduction_axes);
+                std::vector<T> delta_times_normalized(arg2_num_elements);
+                multiply(normalized.data(), arg5, delta_times_normalized.data(), arg2_num_elements);
+                sum(delta_times_normalized.data(), out1, arg2_shape, mean_shape, reduction_axes);
 
                 // Bprop into beta
                 sum(arg5, out2, arg2_shape, mean_shape, reduction_axes);
 
                 // // Broadcast the gamma and beta grads
-                std::unique_ptr<T[]> delta_gamma_bcast(new T[arg2_num_elements]());
-                broadcast(out1, delta_gamma_bcast.get(), mean_shape, arg2_shape, reduction_axes);
-                std::unique_ptr<T[]> delta_beta_bcast(new T[arg2_num_elements]());
-                broadcast(out2, delta_beta_bcast.get(), mean_shape, arg2_shape, reduction_axes);
+                std::vector<T> delta_gamma_bcast(arg2_num_elements);
+                broadcast(out1, delta_gamma_bcast.data(), mean_shape, arg2_shape, reduction_axes);
+                std::vector<T> delta_beta_bcast(arg2_num_elements);
+                broadcast(out2, delta_beta_bcast.data(), mean_shape, arg2_shape, reduction_axes);
 
                 // Bprop into the input
                 for (size_t i = 0; i < arg2_num_elements; i++)
