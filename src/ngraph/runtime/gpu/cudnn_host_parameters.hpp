@@ -60,6 +60,8 @@ namespace ngraph
                         break;
                     case CUDNN_DATA_HALF:
                     case CUDNN_DATA_INT8x4:
+                    case CUDNN_DATA_UINT8:
+                    case CUDNN_DATA_UINT8x4:
                         std::string err = "datatype is not supported by cuDNN";
                         throw std::runtime_error(err);
                     }
