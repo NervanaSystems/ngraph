@@ -1097,12 +1097,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
             auto add_m = m.get_match_root();
             auto pattern_map = m.get_pattern_map();
             auto conv_m = std::dynamic_pointer_cast<op::ConvolutionBias>(add_m->get_argument(1));
-            auto add_input = add_m->get_argument(0);
+            auto inplace_input = add_m->get_argument(0);
 
             if (!conv_m)
             {
                 conv_m = std::dynamic_pointer_cast<op::ConvolutionBias>(add_m->get_argument(0));
-                add_input = add_m->get_argument(1);
+                inplace_input = add_m->get_argument(1);
             }
 
             //These checks are to make sure a MKLDNN Convolution kernel can be used.
@@ -1139,7 +1139,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
                 // return false;
             }
 
-            if (pattern_map[add_input]->get_users().size() > 1)
+            if (inplace_input->get_users().size() > 1)
             {
                 NGRAPH_DEBUG << "Add has more than one user. Convolution Add might use an in-place "
                                 "destructive kernel";
@@ -1165,7 +1165,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
             }
 
             auto conv_add = std::shared_ptr<Node>(
-                new op::ConvolutionBiasAdd(conv_m, add_input, false));
+                new op::ConvolutionBiasAdd(conv_m, inplace_input, false));
             ngraph::replace_node(m.get_match_root(), conv_add);
             return true;
         };
