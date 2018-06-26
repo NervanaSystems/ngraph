@@ -111,6 +111,8 @@ namespace ngraph
                 void compile();
 
             private:
+                void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
+                                               std::string output_name);
                 void emit_debug_function_entry(codegen::CodeWriter& writer,
                                                Node* node,
                                                const std::vector<TensorViewWrapper>& in,

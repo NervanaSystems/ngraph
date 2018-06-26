@@ -713,7 +713,10 @@ using namespace ngraph::runtime;
             {
                 shared_ptr<descriptor::TensorView> itv =
                     res->get_inputs().at(0).get_output().get_tensor_view();
+
+                auto output_name = ss.str();
                 m_variable_name_map[itv->get_tensor().get_name()] = ss.str();
+                propagate_in_place_output(&(res->get_inputs().at(0).get_output()), output_name);
             }
         }
 
@@ -1024,6 +1027,33 @@ using namespace ngraph::runtime;
     if (m_release_function)
     {
         release_function();
+    }
+}
+
+void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
+    ngraph::descriptor::Output* res_src_output, std::string output_name)
+{
+    //we start with a particular output
+    //which is an argument to a given op::Result
+    size_t offset = res_src_output->get_tensor().get_pool_offset();
+    auto it = res_src_output->get_node();
+
+    bool propagate_further = true;
+    while (!it->is_parameter() && propagate_further)
+    {
+        propagate_further = false;
+        for (auto& input : it->get_inputs())
+        {
+            //found inplace computation from some input
+            if (input.get_tensor().get_pool_offset() == offset)
+            {
+                //make input.get_tensor() use output's storage directly
+                m_variable_name_map[input.get_tensor().get_name()] = output_name;
+                it = input.get_output().get_node();
+                propagate_further = true;
+                break;
+            }
+        }
     }
 }
 
