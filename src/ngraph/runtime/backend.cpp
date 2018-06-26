@@ -79,7 +79,6 @@ void* runtime::Backend::open_shared_library(string type)
     string lib_name = "lib" + to_lower(type) + "_backend" + ext;
     string my_directory = file_util::get_directory(find_my_file());
     string full_path = file_util::path_join(my_directory, lib_name);
-    NGRAPH_INFO << full_path;
     handle = dlopen(full_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
     if (handle)
     {
