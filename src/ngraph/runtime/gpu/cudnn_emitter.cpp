@@ -220,6 +220,7 @@ size_t runtime::gpu::CUDNNEmitter::build_tensor_op(const GPURuntimeContext* ctx,
     cudnnDataType_t data_type = get_cudnn_datatype(dtype);
     cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
     auto& descriptor = tensor_descriptor_from_shape(input_shape, data_type, tensor_format);
+
     void* alpha_dt0 = m_host_parameters.allocate_by_datatype(data_type, alpha0);
     void* alpha_dt1 = m_host_parameters.allocate_by_datatype(data_type, alpha1);
     void* beta_dt = m_host_parameters.allocate_by_datatype(data_type, beta);

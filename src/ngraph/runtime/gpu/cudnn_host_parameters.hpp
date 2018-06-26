@@ -15,13 +15,13 @@
 *******************************************************************************/
 #pragma once
 
+#include <list>
 #include <memory>
-#include <vector>
 
 #include <cudnn.h>
 
+#include "ngraph/log.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
-#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -37,14 +37,13 @@ namespace ngraph
                 CUDNNHostParameters() = default;
                 ~CUDNNHostParameters() = default;
 
-                void* allocate_by_datatype(cudnnDataType_t data_type, double value)
+                void* allocate_by_datatype(const cudnnDataType_t data_type, const double value)
                 {
                     void* r = nullptr;
                     switch (data_type)
                     {
                     case CUDNN_DATA_FLOAT:
                         m_host_parameters_float.push_back(static_cast<float>(value));
-                        NGRAPH_INFO << m_host_parameters_float.back();
                         r = static_cast<void*>(&m_host_parameters_float.back());
                         break;
                     case CUDNN_DATA_DOUBLE:
@@ -68,10 +67,10 @@ namespace ngraph
                 }
 
             private:
-                std::vector<int8_t> m_host_parameters_int8_t;
-                std::vector<int32_t> m_host_parameters_int32_t;
-                std::vector<float> m_host_parameters_float;
-                std::vector<double> m_host_parameters_double;
+                std::list<int8_t> m_host_parameters_int8_t;
+                std::list<int32_t> m_host_parameters_int32_t;
+                std::list<float> m_host_parameters_float;
+                std::list<double> m_host_parameters_double;
             };
         }
     }
