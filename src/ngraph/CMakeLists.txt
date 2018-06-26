@@ -210,12 +210,6 @@ endif()
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 target_link_libraries(ngraph PUBLIC dl pthread)
 
-if (APPLE)
-    set_property(TARGET ngraph PROPERTY PREFIX "lib")
-    set_property(TARGET ngraph PROPERTY OUTPUT_NAME "ngraph.so")
-    set_property(TARGET ngraph PROPERTY SUFFIX "")
-endif()
-
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     target_sources(ngraph PRIVATE $<TARGET_OBJECTS:onnx_import_interface>)
     target_link_libraries(ngraph PRIVATE onnx_import)
