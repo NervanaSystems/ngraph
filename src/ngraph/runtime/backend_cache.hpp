@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2018 Intel Corporation
+* Copyright 2017-2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,23 +14,29 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
-#include "ngraph/runtime/backend.hpp"
-#include "ngraph/util.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
+#include <memory>
+#include <string>
+#include <unordered_map>
 
-// TEST(backend_api, registered_devices)
-// {
-//     vector<string> devices = runtime::Backend::get_registered_devices();
-//     EXPECT_GE(devices.size(), 1);
-
-//     EXPECT_TRUE(contains(devices, "INTERPRETER"));
-// }
-
-TEST(backend_api, invalid_name)
+namespace ngraph
 {
-    ASSERT_ANY_THROW(ngraph::runtime::Backend::create("COMPLETELY-BOGUS-NAME"));
+    namespace runtime
+    {
+        class BackendCache;
+        class Backend;
+    }
 }
+
+class ngraph::runtime::BackendCache
+{
+public:
+    static std::shared_ptr<Backend> create(const std::string& type);
+    static bool register_backend(const std::string& name, std::shared_ptr<Backend>);
+
+private:
+    static void* open_shared_library(std::string type);
+    static std::unordered_map<std::string, std::shared_ptr<Backend>>& get_backend_map();
+    static std::unordered_map<std::string, void*> s_open_backends;
+};
