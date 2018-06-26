@@ -421,11 +421,9 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
     auto input_width = input_shape.back();
     auto output_width = output_shape.back();
 
-    std::string kernel_name = "maxpool_" + join(dtypes, "_")
-        + "_iw" + std::to_string(input_width)
-        + "_ow" + std::to_string(output_width)
-        + "_ww" + std::to_string(window_width)
-        + "_wst" + std::to_string(window_stride);
+    std::string kernel_name = "maxpool_" + join(dtypes, "_") + "_iw" + std::to_string(input_width) +
+                              "_ow" + std::to_string(output_width) + "_ww" +
+                              std::to_string(window_width) + "_wst" + std::to_string(window_stride);
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
 
     // primitive hash and kernel name are equivalent for maxpool_1d
@@ -438,33 +436,34 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
         return primitive_index;
     }
 
-
     // if the kernel has not been compiled, build it
     auto compiled_kernel = ctx->compiled_kernel_pool->get(hash);
     if (compiled_kernel == nullptr)
     {
         codegen::CodeWriter writer;
-        CudaKernelBuilder::get_max_pool_1d(writer,kernel_name,dtypes,input_width,output_width,window_width,window_stride);
+        CudaKernelBuilder::get_max_pool_1d(
+            writer, kernel_name, dtypes, input_width, output_width, window_width, window_stride);
         compiled_kernel = ctx->compiled_kernel_pool->set(hash, writer.get_code());
     }
 
     size_t nthreads = shape_size(output_shape);
 
-    std::unique_ptr<gpu::primitive> pool(new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-        void* args_list[] = {&inputs[0], &outputs[0], &nthreads};
-        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                      static_cast<uint32_t>(nthreads),
-                                      1,
-                                      1, // grid dim
-                                      1,
-                                      1,
-                                      1, // block dim
-                                      0,
-                                      NULL, // shared mem and stream
-                                      args_list,
-                                      0));  // arguments
-        CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
-    }});
+    std::unique_ptr<gpu::primitive> pool(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void* args_list[] = {&inputs[0], &outputs[0], &nthreads};
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          static_cast<uint32_t>(nthreads),
+                                          1,
+                                          1, // grid dim
+                                          1,
+                                          1,
+                                          1, // block dim
+                                          0,
+                                          NULL, // shared mem and stream
+                                          args_list,
+                                          0));  // arguments
+            CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+        }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(pool));
     m_primitive_emitter->cache(hash, primitive_index);
@@ -1130,7 +1129,8 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const GPURuntimeContext* ctx,
                                                   const std::set<size_t>& reduce_axes)
 {
     // assumes NC{d1,...,dn} format
-    std::string kernel_name = "broadcast_" + join(dtypes, "_") + "_r" + std::to_string(result_shape.size());
+    std::string kernel_name =
+        "broadcast_" + join(dtypes, "_") + "_r" + std::to_string(result_shape.size());
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
 
     std::stringstream ss;
