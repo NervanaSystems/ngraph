@@ -243,6 +243,7 @@ namespace ngraph
             //clear our state
             m_match_root.reset();
             m_pattern_map.clear();
+            m_matched_list.clear();
 
             if (!m_pattern_node || !graph_node)
             {
