@@ -33,6 +33,12 @@ Glossary
       The Intel nGraph library uses a function graph to represent an
       ``op``'s parameters and results.
 
+   fusion
+   
+      Fusion is the fusing, combining, merging, collapsing, or refactoring
+      of a graph's functional operations (``ops``) into one or more of
+      nGraph's core ops.   
+
    op
 
       An op represents an operation. Ops are stateless and have zero
@@ -97,6 +103,14 @@ Glossary
 
       Tensors are maps from *coordinates* to scalar values, all of the
       same type, called the *element type* of the tensor.
+
+   
+   Tensorview 
+
+      The interface backends implement for tensor use. When there are no more 
+      references to the tensor view, it will be freed when convenient for the 
+      backend.
+
 
    model description
 
