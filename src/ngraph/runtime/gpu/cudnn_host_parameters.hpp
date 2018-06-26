@@ -21,6 +21,7 @@
 #include <cudnn.h>
 
 #include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -43,6 +44,7 @@ namespace ngraph
                     {
                     case CUDNN_DATA_FLOAT:
                         m_host_parameters_float.push_back(static_cast<float>(value));
+                        NGRAPH_INFO << m_host_parameters_float.back();
                         r = static_cast<void*>(&m_host_parameters_float.back());
                         break;
                     case CUDNN_DATA_DOUBLE:
