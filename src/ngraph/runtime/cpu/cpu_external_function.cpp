@@ -1033,6 +1033,8 @@ using namespace ngraph::runtime;
 void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
     ngraph::descriptor::Output* res_src_output, std::string output_name)
 {
+    //we start with a particular output
+    //which is an argument to a given op::Result
     size_t offset = res_src_output->get_tensor().get_pool_offset();
     auto it = res_src_output->get_node();
 
@@ -1042,8 +1044,10 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
         propagate_further = false;
         for (auto& input : it->get_inputs())
         {
+            //found inplace computation from some input
             if (input.get_tensor().get_pool_offset() == offset)
             {
+                //make input.get_tensor() use output's storage directly
                 m_variable_name_map[input.get_tensor().get_name()] = output_name;
                 it = input.get_output().get_node();
                 propagate_further = true;
