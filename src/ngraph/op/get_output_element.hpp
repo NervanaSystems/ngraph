@@ -22,6 +22,8 @@ namespace ngraph
 {
     namespace op
     {
+        NodeVector get_output_elements(const std::shared_ptr<Node>& mon);
+
         /// \brief Operation to get an output from a node.
         class GetOutputElement : public Node
         {
@@ -38,8 +40,6 @@ namespace ngraph
             /// \return The index of the tuple element to get.
             size_t get_n() const { return m_n; }
             virtual NodeVector get_arguments() const override;
-
-            static NodeVector get_get_output_elements(std::shared_ptr<Node> mon);
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
