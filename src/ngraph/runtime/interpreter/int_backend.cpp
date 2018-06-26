@@ -29,11 +29,10 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorViewLayout;
 
-extern "C" void create_backend()
+extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
-    runtime::Backend::register_backend("INTERPRETER",
-                                       make_shared<runtime::interpreter::INTBackend>());
-};
+    return new runtime::interpreter::INTBackend();
+}
 
 shared_ptr<runtime::TensorView>
     runtime::interpreter::INTBackend::create_tensor(const element::Type& type, const Shape& shape)

@@ -26,12 +26,12 @@
 using namespace ngraph;
 using namespace std;
 
-extern "C" void create_backend()
+extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
     // Force TBB to link to the backend
     tbb::TBB_runtime_interface_version();
-    runtime::Backend::register_backend("CPU", make_shared<runtime::cpu::CPU_Backend>());
-};
+    return new runtime::cpu::CPU_Backend();
+}
 
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
     const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function)

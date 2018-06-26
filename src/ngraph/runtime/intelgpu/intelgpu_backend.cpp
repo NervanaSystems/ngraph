@@ -19,11 +19,10 @@
 using namespace std;
 using namespace ngraph;
 
-extern "C" void create_backend(void)
+extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
-    runtime::Backend::register_backend("INTELGPU",
-                                       make_shared<runtime::intelgpu::IntelGPUBackend>());
-};
+    return new runtime::intelgpu::IntelGPUBackend();
+}
 
 shared_ptr<runtime::TensorView>
     runtime::intelgpu::IntelGPUBackend::create_tensor(const element::Type& element_type,
