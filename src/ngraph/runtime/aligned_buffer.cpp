@@ -14,6 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <cstdlib> // llvm 8.1 gets confused about `malloc` otherwise
 #include <memory>
 
 #include "ngraph/runtime/aligned_buffer.hpp"
