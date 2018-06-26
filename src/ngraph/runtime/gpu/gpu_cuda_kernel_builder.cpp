@@ -598,6 +598,7 @@ void runtime::gpu::CudaKernelBuilder::get_max_pool_1d(codegen::CodeWriter& write
     }
     writer.block_end();
 }
+
 void runtime::gpu::CudaKernelBuilder::get_avg_pool(codegen::CodeWriter& writer,
                                                    const std::string& name,
                                                    const std::array<std::string, 2>& data_types,
