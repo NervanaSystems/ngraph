@@ -1042,7 +1042,7 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
     while (!it->get_node()->is_parameter() && propagate_further)
     {
         propagate_further = false;
-        auto arg = std::dynamic_pointer_cast<ngraph::op::Op>(it->get_node());        
+        auto arg = std::dynamic_pointer_cast<ngraph::op::Op>(it->get_node());
         if (auto op_annotations = arg->get_op_annotations())
         {
             auto oi_pairs = op_annotations->get_in_place_oi_pairs();
