@@ -7,25 +7,23 @@ Optimize Graphs
 with nGraph Compiler fusions
 -----------------------------
 
-The nGraph Compiler is an *optimizing* compiler. As such, it performs a series 
+The nGraph Compiler is an optimizing compiler. As such, it performs a series 
 of optimization passes over a given function graph to translate it into a 
 semantically-equivalent and inherently-optimized graph with superior runtime 
-characteristics for any of nGraph's current or future backends.
-
-Indeed, the ability to increase training performance or to reduce inference 
-latency by simply adding another device of *any* form factor -- compute, ASIC, 
-or VPU -- is a key benefit for frameworks that integrates nGraph Library.  
+characteristics for any of nGraph's current or future backends. Indeed, a  
+framework's capability to increase training performance or to reduce inference 
+latency by simply adding another device of *any* specialized form factor (CPU, 
+GPU, VPU, or FPGA) is one of the :doc:`key benefits <../project/about>` of 
+developing upon a framework that uses the nGraph Compiler.   
 
 In handling a :term:`function graph`, there are many ways to describe what 
 happens when we translate the framework's output of ops into an nGraph 
-graph. *Fusion* is the term we use in our documentation, but the the action also 
-can be described as: *combining*, *folding*, *collapsing*, or *merging* graph 
-functions. The most common use case is to *fuse* a subgraph from the function 
-graph into :doc:`one of the nGraph Core ops <../ops/index>`. In other words, 
-the nGraph compiler can find and take a sub-set (subgraph) of computations 
-from the function graph and make it more efficient via :term:`fusion`.
+graph. :term:`Fusion` is the term we shall use in our documentation, but the the 
+action also can be described as: *combining*, *folding*, *collapsing*, or 
+*merging* of graph functions. The most common use case is to *fuse* a subgraph 
+from the function graph into :doc:`one of the nGraph Core ops <../ops/index>`. 
 
-The optimization passes may include algebraic simplifications, domain-specific 
+Optimization passes may include algebraic simplifications, domain-specific 
 simplifications, and fusion. Most passes share the same mode of operation (or 
 the same operational structure) and consist of two stages:
 
@@ -38,8 +36,8 @@ Optimization passes can be programmed ahead of time if you know what your graph
 will look like when it's ready to be executed, or the optimization passes can 
 be figured out manually with *Interpreter* mode on a stateless graph. 
 
-Let's consider an example. A user would like to execute a simple graph that 
-describes the following arithmetic expression:
+Let us first consider an example. A user would like to execute a simple graph 
+that describes the following arithmetic expression:
 
 :math:`a + b * 1` or :math:`Add(a, Mul(b, 1))` 
 
@@ -48,7 +46,7 @@ the identity element is equal to itself. This is the same as saying:
 
 :math:`b * 1 = b` 
 
-The writer of an optimization pass that uses algebraic simplification would 
+The writer of an optimization pass which uses algebraic simplification would 
 probably want to first ``locate`` all multiplication expressions where 
 multiplicands are multiplied by `1` (for stage 1) and to then ``transform``, 
 ``simplify``, or ``replace`` those expressions with just their multiplicands 
