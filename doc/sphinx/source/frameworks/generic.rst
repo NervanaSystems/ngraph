@@ -1,8 +1,8 @@
-.. generic-frameworks.rst
+.. frameworks/generic.rst
 
 
-Activating nGraph on generic frameworks
-========================================
+Activate nGraph |trade| on generic frameworks
+=============================================
 
 This section details some of the *configuration options* and some of the 
 *environment variables* that can be used to tune for optimal performance when 
@@ -62,12 +62,12 @@ use these configuration settings.
 * ``KMP_AFFINITY`` Enables the runtime library to bind threads to physical 
   processing units. 
 * ``KMP_SETTINGS`` Enables (``true``) or disables (``false``) the printing of 
-  OpenMP* runtime library environment variables during program execution.
+  OpenMP\* runtime library environment variables during program execution.
 * ``OMP_NUM_THREADS`` Specifies the number of threads to use.
 
 
-nGraph-enabled Intel® Xeon®
-===========================
+nGraph-enabled Intel® Xeon® 
+============================
 
 The list below includes recommendations on data layout, parameters, and 
 application configuration to achieve best performance running DNN workloads on 
@@ -88,8 +88,10 @@ and activated as follows:
 Memory allocation 
 -----------------
 
-Buffer pointers should be aligned at the 64-byte boundary. NUMA policy should be 
-configured for local memory allocation (``numactl --localloc``)
+Buffer pointers should be aligned on 64-byte boundaries. NUMA policy should be 
+configured for local memory allocation (``numactl --localloc``). 
+
+
 
 Convolution shapes
 ^^^^^^^^^^^^^^^^^^
@@ -129,13 +131,11 @@ Intra-op and inter-op parallelism
 * ``intra_op_parallelism_threads``
 * ``inter_op_parallelism_threads``
 
-Some frameworks, like Tensorflow, use these settings to improve performance; 
-however, they are often not sufficient to achieve optimal performance. 
-Framework-based adjustments cannot access the underlying  NUMA configuration in 
-multi-socket Intel Xeon processor-based platforms, which is a key requirement for
-many kinds of inference-engine computations.  See the next section on 
-NUMA performance to learn more about this performance feature available to systems
-utilizing nGraph. 
+Some frameworks, like TensorFlow\*, use these settings to improve performance; 
+however, they are often not sufficient for optimal performance. Framework-based adjustments cannot access the underlying  NUMA configuration in multi-socket 
+Intel Xeon processor-based platforms, which is a key requirement for many kinds 
+of inference-engine computations.  See the next section on NUMA performance to 
+learn more about this performance feature available to systems utilizing nGraph. 
 
 
 NUMA performance 
