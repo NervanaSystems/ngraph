@@ -1655,7 +1655,9 @@ namespace ngraph
                         pad_required = true;
                     }
 
-                    if (pad_required && padding_below != padding_above)
+                    pad_required = pad_required && (padding_below != padding_above);
+                    // asymetric padding
+                    if (pad_required)
                     {
                         auto& cuda_emitter =
                             external_function->get_primitive_emitter()->get_cuda_emitter();
@@ -1663,8 +1665,11 @@ namespace ngraph
                         // auto temp_buffer = create_gpu_buffer(shape_size(output_shape)*type_size);
                         auto temp_size =
                             shape_size(shape_to_pool) * args[0].get_element_type().size();
-                        writer << "void* pad_buffer = "
-                               << "runtime::gpu::create_gpu_buffer(" << temp_size << ");\n";
+                        GPUAllocator allocator =
+                            external_function->get_primitive_emitter()->get_memory_allocator();
+                        size_t idx_workspace = allocator.reserve_workspace(temp_size);
+                        writer << "void* pad_buffer = runtime::gpu::invoke_memory_primitive(ctx, "
+                               << idx_workspace << ");\n";
 
                         std::stringstream ss;
                         ss << TypeInfo::Get(args[0].get_element_type())->lowest();
@@ -1738,8 +1743,6 @@ namespace ngraph
                         writer << "gpu::invoke_primitive(ctx, " << max_pool_index << ", ";
                         if (pad_required)
                         {
-                            // this would be much cleaner if gpu::memory_primitive's were implemented
-                            // and could be bound to callable primitives.
                             writer << "std::vector<void*>{pad_buffer}.data(), ";
                         }
                         else
@@ -1753,11 +1756,6 @@ namespace ngraph
                     {
                         throw std::runtime_error(
                             "Pooling currently only supports up to 3 spatial dimensions.");
-                    }
-
-                    if (pad_required)
-                    {
-                        writer << "runtime::gpu::free_gpu_buffer(pad_buffer);\n";
                     }
                 }
                 writer.block_end();
@@ -1901,22 +1899,6 @@ namespace ngraph
                                    const Shape& padding_above,
                                    const Shape& padding_interior)
             {
-                enum class padtype
-                {
-                    None,
-                    Symmetric,
-                    Asymmetric
-                };
-                auto type = padtype::None;
-                if (padding_below == padding_above)
-                {
-                    type = padtype::Symmetric;
-                }
-                else
-                {
-                    type = padtype::Asymmetric;
-                }
-
                 Shape padded_shape = input_shape;
                 int64_t i = input_shape.size() - 1;
                 int64_t j = padding_below.size() - 1;

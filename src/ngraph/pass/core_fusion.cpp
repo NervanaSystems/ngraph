@@ -55,10 +55,8 @@ void pass::CoreFusion::construct_relu()
     auto val = make_shared<pattern::op::Label>(iconst0);
     auto zero = make_shared<pattern::op::Label>(iconst0, nullptr, NodeVector{iconst0});
 
-    auto broadcast_pred = [](std::shared_ptr<Node> n) {
-        return static_cast<bool>(std::dynamic_pointer_cast<op::Broadcast>(n));
-    };
-    auto skip_broadcast = std::make_shared<pattern::op::Skip>(zero, broadcast_pred);
+    auto skip_broadcast =
+        std::make_shared<pattern::op::Skip>(zero, pattern::has_class<op::Broadcast>());
     auto max = make_shared<op::Maximum>(skip_broadcast, val);
 
     pattern::graph_rewrite_callback callback = [val, zero](pattern::Matcher& m) {
