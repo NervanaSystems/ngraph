@@ -174,6 +174,33 @@ std::list<std::shared_ptr<ngraph::Node>>
     return result_list;
 }
 
+// Check if all paths from X to a result go through Y
+bool ngraph::is_post_dominated(Node* X, Node* Y)
+{
+    std::unordered_set<Node*> visited;
+    std::deque<Node*> stack;
+    stack.push_front(X);
+
+    while (stack.size() > 0)
+    {
+        ngraph::Node* curr = stack.front();
+        visited.insert(curr);
+        if (curr->is_output())
+        {
+            return false;
+        }
+        stack.pop_front();
+        if (curr != Y)
+        {
+            for (auto next : curr->get_users())
+            {
+                stack.push_front(next.get());
+            }
+        }
+    }
+    return true;
+}
+
 void ngraph::NodeMap::update(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> val)
 {
     if (!exists(orig))
@@ -435,15 +462,15 @@ bool ngraph::is_one(std::shared_ptr<Node> reduce_constant)
     return result_bool;
 }
 
-bool ngraph::is_used(std::shared_ptr<ngraph::Node> node)
+bool ngraph::is_used(Node* node)
 {
-    std::unordered_set<std::shared_ptr<ngraph::Node>> instances_seen;
-    std::deque<std::shared_ptr<ngraph::Node>> stack;
+    std::unordered_set<Node*> instances_seen;
+    std::deque<Node*> stack;
     stack.push_front(node);
 
     while (stack.size() > 0)
     {
-        std::shared_ptr<ngraph::Node> n = stack.front();
+        ngraph::Node* n = stack.front();
         if (instances_seen.count(n) == 0)
         {
             if (n->is_output())
@@ -455,11 +482,21 @@ bool ngraph::is_used(std::shared_ptr<ngraph::Node> node)
         stack.pop_front();
         for (auto arg : n->get_users())
         {
-            if (instances_seen.count(arg) == 0)
+            if (instances_seen.count(arg.get()) == 0)
             {
-                stack.push_front(arg);
+                stack.push_front(arg.get());
             }
         }
     }
     return false;
+}
+
+size_t ngraph::get_user_count(Node* node)
+{
+    size_t count = 0;
+    for (auto node_user : node->get_users())
+    {
+        count += is_used(node_user.get());
+    }
+    return count;
 }

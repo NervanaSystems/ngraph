@@ -52,6 +52,8 @@ namespace ngraph
     std::list<std::shared_ptr<Node>>
         topological_sort(const std::list<std::shared_ptr<Node>>& nodes);
 
+    bool is_post_dominated(Node* X, Node* Y);
+
     bool is_equal_to_const_value(std::string const_value, std::shared_ptr<Node> reduce_constant);
 
     // maps original to replacement nodes e.g. for clone utilities
@@ -132,5 +134,8 @@ namespace ngraph
 
     bool is_one(std::shared_ptr<Node> reduce_constant);
 
-    bool is_used(std::shared_ptr<Node> node);
+    bool is_used(Node* node);
+
+    // Returns count of `node` users that are still live in the graph
+    size_t get_user_count(Node* node);
 }

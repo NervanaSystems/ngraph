@@ -1132,18 +1132,19 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
             return false;
         }
 
-        if (conv_m->get_users().size() > 1)
+        if (get_user_count(conv_m.get()) > 1)
         {
+            std::cout << "Convolution has more than one user: " << get_user_count(conv_m.get())
+                      << std::endl;
             NGRAPH_DEBUG << "Convolution has more than one user";
-
-            // return false;
+            return false;
         }
 
-        if (inplace_input->get_users().size() > 1)
+        if (!is_post_dominated(inplace_input.get(), add_m.get()))
         {
-            NGRAPH_DEBUG << "Add has more than one user. Convolution Add might use an in-place "
-                            "destructive kernel";
-            // return false;
+            NGRAPH_DEBUG << "Unsafe to use in-place kernel since add's in-place input has "
+                            "potential live users";
+            return false;
         }
 
         if (inplace_input->is_parameter())
