@@ -3104,6 +3104,95 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::ConvolutionBiasAdd)
+            {
+                auto convolution = static_cast<const ngraph::op::ConvolutionBiasAdd*>(node);
+
+                auto arg0_shape = args[0].get_shape();
+                auto arg1_shape = args[1].get_shape();
+                auto arg2_shape = args[2].get_shape();
+                auto result_shape = out[0].get_shape();
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    // For dilation, MKLDNN wants to know how many elements to insert between, not how far
+                    // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
+                    Strides window_dilation_strides_adjusted;
+                    for (size_t s : convolution->get_window_dilation_strides())
+                    {
+                        window_dilation_strides_adjusted.push_back(s - 1);
+                    }
+
+                    auto input_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
+                    auto weights_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
+                    auto bias_format = mkldnn_utils::get_input_mkldnn_format(node, 2);
+
+                    // HACK to help MKLDNN pick the right implementation
+                    if (weights_format == mkldnn::memory::format::nchw)
+                    {
+                        weights_format = mkldnn::memory::format::oihw;
+                    }
+                    auto output_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_data_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[0], input_format);
+                    auto weights_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[1], weights_format);
+                    auto bias_desc = mkldnn_emitter->build_memory_descriptor(args[2], bias_format);
+                    // Since this is an in-place kernel, args[3] and out[0] will share the same
+                    // memory buffer and descriptor
+                    auto result_desc =
+                        mkldnn_emitter->build_memory_descriptor(out[0], output_format);
+                    size_t conv_index = 0;
+
+                    mkldnn::post_ops ops;
+                    ops.append_sum(1.f);
+
+                    const float ops_scale = 1.f;
+                    const float ops_alpha = -0.f; // relu negative slope
+                    const float ops_beta = 0.f;
+
+                    if (convolution->with_relu())
+                    {
+                        ops.append_eltwise(
+                            ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
+                    }
+
+                    conv_index = mkldnn_emitter->build_convolution_forward(
+                        input_data_desc,
+                        weights_desc,
+                        bias_desc,
+                        result_desc,
+                        convolution->get_window_movement_strides(),
+                        window_dilation_strides_adjusted,
+                        convolution->get_padding_below(),
+                        convolution->get_padding_above(),
+                        ops);
+
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << args[2].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(conv_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("ConvolutionBiasAdd is only supported with MKLDNN kernel.");
+                }
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::ConvolutionBiasBackpropFiltersBias)
             {
                 auto convolution =
@@ -4272,186 +4361,217 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Softmax)
             {
-                writer.block_begin();
-                const ngraph::op::Softmax* softmax = static_cast<const ngraph::op::Softmax*>(node);
-                auto type = out[0].get_type();
-                auto shape = out[0].get_shape();
-                auto dims = out[0].get_shape().size();
-                auto axes = softmax->get_axes();
-
-                // create arg/out if 1d
-                if (dims < 1)
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    writer << type << "* arg = " << args[0].get_name() << "\n";
-                    writer << type << "* out = " << out[0].get_name() << "\n";
+                    auto softmax = static_cast<const ngraph::op::Softmax*>(node);
+
+                    if (softmax->get_axes().size() != 1)
+                    {
+                        throw ngraph_error("MKLDNN supports softmax only across single axis");
+                    }
+                    int softmax_axis = static_cast<int>(*(softmax->get_axes().begin()));
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+
+                    size_t softmax_index = mkldnn_emitter->build_softmax_forward(
+                        input_desc, result_desc, softmax_axis);
+
+                    auto& deps = mkldnn_emitter->get_primitive_deps(softmax_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(softmax_index) << ");\n";
                 }
-                // else cast arg/out to an Nd array
                 else
                 {
-                    std::string shape1toN;
-                    for (size_t d = 1; d < dims; ++d)
+                    writer.block_begin();
+                    const ngraph::op::Softmax* softmax =
+                        static_cast<const ngraph::op::Softmax*>(node);
+                    auto type = out[0].get_type();
+                    auto shape = out[0].get_shape();
+                    auto dims = out[0].get_shape().size();
+                    auto axes = softmax->get_axes();
+
+                    // create arg/out if 1d
+                    if (dims < 1)
                     {
-                        shape1toN += "[";
-                        shape1toN += std::to_string(shape[d]);
-                        shape1toN += "]";
+                        writer << type << "* arg = " << args[0].get_name() << "\n";
+                        writer << type << "* out = " << out[0].get_name() << "\n";
+                    }
+                    // else cast arg/out to an Nd array
+                    else
+                    {
+                        std::string shape1toN;
+                        for (size_t d = 1; d < dims; ++d)
+                        {
+                            shape1toN += "[";
+                            shape1toN += std::to_string(shape[d]);
+                            shape1toN += "]";
+                        }
+
+                        writer << type << " (*arg)" << shape1toN << " = (" << type << " (*)"
+                               << shape1toN << ") " << args[0].get_name() << ";\n";
+                        writer << type << " (*out)" << shape1toN << " = (" << type << " (*)"
+                               << shape1toN << ") " << out[0].get_name() << ";\n";
                     }
 
-                    writer << type << " (*arg)" << shape1toN << " = (" << type << " (*)"
-                           << shape1toN << ") " << args[0].get_name() << ";\n";
-                    writer << type << " (*out)" << shape1toN << " = (" << type << " (*)"
-                           << shape1toN << ") " << out[0].get_name() << ";\n";
-                }
-
-                // build arg/out index
-                std::string index;
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    index += "[i";
-                    index += std::to_string(d);
-                    index += "]";
-                }
-
-                // calculate e ^ (arg - max)
-                // outer loop(s) - for axis not in axes
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) == axes.end())
+                    // build arg/out index
+                    std::string index;
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer << "#pragma omp parallel for\n";
-                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
-                               << "; ++i" << d << ")\n";
-                        writer.block_begin();
+                        index += "[i";
+                        index += std::to_string(d);
+                        index += "]";
                     }
-                }
 
-                // max inner loop(s)
-                writer << type << " m = 0;\n"; // TODO: needs to be minval for the type
-
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) != axes.end())
+                    // calculate e ^ (arg - max)
+                    // outer loop(s) - for axis not in axes
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
-                               << "; ++i" << d << ")\n";
-                        writer.block_begin();
+                        if (axes.find(d) == axes.end())
+                        {
+                            writer << "#pragma omp parallel for\n";
+                            writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                                   << "; ++i" << d << ")\n";
+                            writer.block_begin();
+                        }
                     }
-                }
 
-                writer << "if (arg" << index << " > m)\n";
-                writer.block_begin();
-                writer << "m = arg" << index << ";\n";
-                writer.block_end();
+                    // max inner loop(s)
+                    writer << type << " m = 0;\n"; // TODO: needs to be minval for the type
 
-                // end max inner loop(s)
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) != axes.end())
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer.block_end();
+                        if (axes.find(d) != axes.end())
+                        {
+                            writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                                   << "; ++i" << d << ")\n";
+                            writer.block_begin();
+                        }
                     }
-                }
 
-                // e ^ (arg - max) inner loop
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) != axes.end())
+                    writer << "if (arg" << index << " > m)\n";
+                    writer.block_begin();
+                    writer << "m = arg" << index << ";\n";
+                    writer.block_end();
+
+                    // end max inner loop(s)
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
-                               << "; ++i" << d << ")\n";
-                        writer.block_begin();
+                        if (axes.find(d) != axes.end())
+                        {
+                            writer.block_end();
+                        }
                     }
-                }
 
-                writer << "out" << index << " = exp(arg" << index << " - m);\n";
-
-                // end e ^ (arg - max) inner loop
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) != axes.end())
+                    // e ^ (arg - max) inner loop
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer.block_end();
+                        if (axes.find(d) != axes.end())
+                        {
+                            writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                                   << "; ++i" << d << ")\n";
+                            writer.block_begin();
+                        }
                     }
-                }
 
-                // end e ^ (arg - max) outer loop(s)
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) == axes.end())
+                    writer << "out" << index << " = exp(arg" << index << " - m);\n";
+
+                    // end e ^ (arg - max) inner loop
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer.block_end();
+                        if (axes.find(d) != axes.end())
+                        {
+                            writer.block_end();
+                        }
                     }
-                }
 
-                // calculate softmax = e ^ (arg - max) / sum (e ^ (arg - max))
-                // outer loop(s) - for axis not in axes
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) == axes.end())
+                    // end e ^ (arg - max) outer loop(s)
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer << "#pragma omp parallel for\n";
-                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
-                               << "; ++i" << d << ")\n";
-                        writer.block_begin();
+                        if (axes.find(d) == axes.end())
+                        {
+                            writer.block_end();
+                        }
                     }
-                }
 
-                // sum (e ^ (arg - max) inner loop(s)
-                writer << type << " d = 0;\n";
-
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) != axes.end())
+                    // calculate softmax = e ^ (arg - max) / sum (e ^ (arg - max))
+                    // outer loop(s) - for axis not in axes
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
-                               << "; ++i" << d << ")\n";
-                        writer.block_begin();
+                        if (axes.find(d) == axes.end())
+                        {
+                            writer << "#pragma omp parallel for\n";
+                            writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                                   << "; ++i" << d << ")\n";
+                            writer.block_begin();
+                        }
                     }
-                }
 
-                writer << "d += out" << index << ";\n";
+                    // sum (e ^ (arg - max) inner loop(s)
+                    writer << type << " d = 0;\n";
 
-                // end sum (e ^ (arg - max) inner loop(s)
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) != axes.end())
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer.block_end();
+                        if (axes.find(d) != axes.end())
+                        {
+                            writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                                   << "; ++i" << d << ")\n";
+                            writer.block_begin();
+                        }
                     }
-                }
 
-                writer << "d = 1 / d;\n";
+                    writer << "d += out" << index << ";\n";
 
-                // softmax inner loop(s)
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) != axes.end())
+                    // end sum (e ^ (arg - max) inner loop(s)
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
-                               << "; ++i" << d << ")\n";
-                        writer.block_begin();
+                        if (axes.find(d) != axes.end())
+                        {
+                            writer.block_end();
+                        }
                     }
-                }
 
-                writer << "out" << index << " *= d;\n";
+                    writer << "d = 1 / d;\n";
 
-                // end softmax inner loop(s)
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) != axes.end())
+                    // softmax inner loop(s)
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer.block_end();
+                        if (axes.find(d) != axes.end())
+                        {
+                            writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                                   << "; ++i" << d << ")\n";
+                            writer.block_begin();
+                        }
                     }
-                }
 
-                // end softmax outer loop(s)
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) == axes.end())
+                    writer << "out" << index << " *= d;\n";
+
+                    // end softmax inner loop(s)
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer.block_end();
+                        if (axes.find(d) != axes.end())
+                        {
+                            writer.block_end();
+                        }
                     }
+
+                    // end softmax outer loop(s)
+                    for (size_t d = 0; d < dims; ++d)
+                    {
+                        if (axes.find(d) == axes.end())
+                        {
+                            writer.block_end();
+                        }
+                    }
+                    writer.block_end();
                 }
-                writer.block_end();
             }
 
             template <>
