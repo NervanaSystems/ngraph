@@ -76,6 +76,7 @@ config_args.txt
 .nfs*
 venv/
 .vscode/
+.vs/
 
 # VisualGDB files
 VisualGDB/
