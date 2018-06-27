@@ -952,16 +952,9 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 // Other cases (reordering of axes for tensors with rank>2).
                 else
                 {
-                    std::vector<size_t> input_strides(arg_rank);
-                    std::vector<size_t> output_strides(arg_rank);
-                    std::vector<size_t> trans_strides(arg_rank);
+                    Shape output_strides = row_major_strides(arg_shape);
+                    Strides trans_strides(arg_rank);
                     size_t stride = 1;
-                    for (int i = static_cast<int>(arg_rank) - 1; i >= 0; i--)
-                    {
-                        input_strides[i] = stride;
-                        stride *= arg_shape[i];
-                    }
-                    stride = 1;
                     for (int i = static_cast<int>(arg_rank) - 1; i >= 0; i--)
                     {
                         output_strides[i] = stride;
@@ -972,27 +965,18 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                         trans_strides[input_order[i]] = output_strides[i];
                     }
 
-                    GPUAllocator allocator =
-                        external_function->get_primitive_emitter()->get_memory_allocator();
-                    size_t idx_input_strides = allocator.reserve_argspace(
-                        input_strides.data(), input_strides.size() * sizeof(size_t));
-                    size_t idx_trans_strides = allocator.reserve_argspace(
-                        trans_strides.data(), trans_strides.size() * sizeof(size_t));
+                    auto& cuda_emitter =
+                        external_function->get_primitive_emitter()->get_cuda_emitter();
+                    auto index =
+                        cuda_emitter->build_reshape(external_function->ctx().get(),
+                                                  {{args[0].get_type(), out[0].get_type()}},
+                                                  arg_shape,
+                                                  trans_strides);
 
-                    writer << "void* input_strides_d = "
-                              "runtime::gpu::invoke_memory_primitive(ctx, "
-                           << idx_input_strides << ");\n";
-                    writer << "void* trans_strides_d = "
-                              "runtime::gpu::invoke_memory_primitive(ctx, "
-                           << idx_trans_strides << ");\n";
-                    writer << "runtime::gpu::emit_reshape(\"" << node->description() << "\", {\""
-                           << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
-                           << ", ctx"
-                           << ", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
-                           << out[0].get_name() << ")"
-                           << ", "
-                           << "CUdeviceptr(input_strides_d), CUdeviceptr(trans_strides_d)"
-                           << ", " << arg_rank << ", " << args[0].get_size() << ");\n";
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
+                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                    writer << ");\n";
                 }
                 writer.block_end();
             }

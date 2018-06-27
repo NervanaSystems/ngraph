@@ -70,6 +70,11 @@ namespace ngraph
                                       GPUShape padding_below,
                                       bool include_pad = false);
 
+                size_t build_reshape(const runtime::gpu::GPURuntimeContext* ctx,
+                                              const std::array<std::string, 2>& dtypes,
+                                              GPUShape input_shape,
+                                              GPUShape trans_strides);
+
                 size_t build_slice(const GPURuntimeContext* ctx,
                                    const std::array<std::string, 2>& dtypes,
                                    GPUShape input_shape,
