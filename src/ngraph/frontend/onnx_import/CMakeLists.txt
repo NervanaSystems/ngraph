@@ -31,7 +31,18 @@ add_library(onnx_import_interface OBJECT
     onnx.proto)
 
 add_library(onnx_import STATIC
-    onnx.pb.cc)
+    onnx.pb.cc
+    attribute.cpp
+    attribute.hpp
+    graph.cpp
+    graph.hpp
+    model.hpp
+    node.cpp
+    node.hpp
+    ops_bridge.cpp
+    ops_bridge.hpp
+    tensor.hpp
+    value_info.hpp)
 
 add_dependencies(onnx_import onnx_import_interface)
 
