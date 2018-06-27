@@ -1623,7 +1623,8 @@ namespace ngraph
                     if (result_element_type == ngraph::element::f32)
                     {
                         writer.block_begin();
-                        writer << "mkl::MKL_Somatcopy('R', 'T', " << to_string(arg_shape[0]) << ",\n"
+                        writer << "mkl::MKL_Somatcopy('R', 'T', " << to_string(arg_shape[0])
+                               << ",\n"
                                << "                   " << to_string(arg_shape[1]) << ", 1.0f,\n"
                                << "                   " << args[0].get_name() << ", "
                                << to_string(arg_shape[1]) << ",\n"
@@ -1705,7 +1706,7 @@ namespace ngraph
                            << to_string(reorder_index) << ");\n";
                 }
                 else
-                { //Dead Code : What should be done?
+                {
                     if (args[0].get_element_type() == element::f32 &&
                         args[0].get_shape().size() == 3 && out[0].get_shape().size() == 3)
                     {
@@ -1716,7 +1717,6 @@ namespace ngraph
                                << "{" << join(out[0].get_shape()) << "}"
                                << ");\n";
                     }
-                    //Dead Code : What should be done?
                     else if (args[0].get_element_type() == element::f32 &&
                              args[0].get_shape().size() == 4 && out[0].get_shape().size() == 4)
                     {

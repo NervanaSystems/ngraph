@@ -479,8 +479,10 @@ namespace ngraph
                 {
                     auto reshape = static_cast<op::Reshape*>(node);
 
+                    // Use Eigen for 3D
                     if (node->get_input_element_type(0) == element::f32 &&
                         node->get_input_shape(0).size() < TENSOR_MAX_DIMS &&
+                        node->get_input_shape(0).size() > 3 &&
                         node->get_input_shape(0).size() == node->get_output_shape(0).size())
                     {
                         auto op_annotations =

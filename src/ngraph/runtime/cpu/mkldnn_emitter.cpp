@@ -94,7 +94,7 @@ mkldnn::memory::desc
 {
     mkldnn_memory_desc_t md;
     md.primitive_kind = mkldnn_memory;
-    md.ndims = dim.size();
+    md.ndims = static_cast<int>(dim.size());
     md.format = mkldnn_blocked;
     md.data_type = mkldnn::memory::convert_to_c(dtype);
 
