@@ -366,16 +366,16 @@ void runtime::gpu::CudaKernelBuilder::get_slice_op(codegen::CodeWriter& writer,
                                                    size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
-           << data_types[1] << "* out, size_t* input_strides, size_t* lower_bounds, size_t* "
-                               "slice_strides, size_t* output_strides, size_t n)\n";
+           << data_types[1] << "* out, uint32_t* input_strides, uint32_t* lower_bounds, uint32_t* "
+                               "slice_strides, uint32_t* output_strides, uint32_t n)\n";
     writer.block_begin();
     {
-        writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
+        writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
         writer << "if (tid < n)\n";
         writer.block_begin();
         {
-            writer << "size_t input_idx = 0;\n";
-            writer << "size_t output_idx = tid;\n";
+            writer << "uint32_t input_idx = 0;\n";
+            writer << "uint32_t output_idx = tid;\n";
             size_t i = 0;
             for(; i < rank - 1; i++)
             {
