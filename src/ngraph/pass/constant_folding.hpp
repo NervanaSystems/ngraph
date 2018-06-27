@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -22,21 +22,19 @@ namespace ngraph
 {
     namespace pass
     {
-        class CoreFusion;
+        class ConstantFolding;
     }
 }
 
-class ngraph::pass::CoreFusion : public ngraph::pass::GraphRewrite
+class ngraph::pass::ConstantFolding : public ngraph::pass::GraphRewrite
 {
 public:
-    CoreFusion()
+    ConstantFolding()
         : GraphRewrite()
     {
-        construct_relu();
-        construct_folded_batch_norm();
-        construct_optimized_strided_conv();
+        construct_constant_reshape();
     }
-    void construct_relu();
-    void construct_folded_batch_norm();
-    void construct_optimized_strided_conv();
+
+private:
+    void construct_constant_reshape();
 };

@@ -98,6 +98,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
+#include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
@@ -371,6 +372,7 @@ namespace ngraph
 
                 writer.block_end();
             }
+
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchDot)
             {
@@ -4485,6 +4487,130 @@ namespace ngraph
                        << "                      " << out[0].get_name() << ",\n"
                        << "                      " << out[0].get_size() << ");\n";
             }
+
+#define TI(x) std::type_index(typeid(x))
+
+            static std::string emit_infix_operator(const std::string& opname,
+                                                   const std::vector<std::string>& args)
+            {
+                if (args.size() != 2)
+                {
+                    throw ngraph_error("args must be equal to 2");
+                }
+                return args.at(0) + " " + opname + " " + args.at(1);
+            }
+
+            static std::string emit_prefix_operator(const std::string& opname,
+                                                    const std::vector<std::string>& args)
+            {
+                if (args.size() != 1)
+                {
+                    throw ngraph_error("args must be equal to 2");
+                }
+                return opname + args.at(0);
+            }
+
+            static std::string emit_function_call(const std::string& opname,
+                                                  const std::vector<std::string>& args)
+            {
+                return opname + "(" + join(args) + ")";
+            }
+
+            static std::unordered_map<std::type_index,
+                                      std::function<std::string(const std::vector<std::string>&)>>
+                initialize_inline_emitters()
+            {
+                auto abse =
+                    std::bind(emit_function_call, std::string("std::abs"), std::placeholders::_1);
+                auto adde = std::bind(emit_infix_operator, std::string("+"), std::placeholders::_1);
+                auto nege =
+                    std::bind(emit_prefix_operator, std::string("-"), std::placeholders::_1);
+                auto sube = std::bind(emit_infix_operator, std::string("-"), std::placeholders::_1);
+
+                return std::unordered_map<
+                    std::type_index,
+                    std::function<std::string(const std::vector<std::string>&)>>{
+                    {TI(ngraph::op::Abs), abse},
+                    {TI(ngraph::op::Add), adde},
+                    {TI(ngraph::op::Negative), nege},
+                    {TI(ngraph::op::Subtract), sube},
+                };
+            }
+
+            static std::unordered_map<std::type_index,
+                                      std::function<std::string(const std::vector<std::string>&)>>
+                inline_emitters = initialize_inline_emitters();
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::runtime::cpu::op::LoopKernel)
+            {
+                std::unordered_map<std::shared_ptr<Node>, std::string> loop_symbol_table;
+                //pre-fill symbol table with inputs
+
+                const ngraph::runtime::cpu::op::LoopKernel* clk =
+                    static_cast<const ngraph::runtime::cpu::op::LoopKernel*>(node);
+
+                NodeVector output_nodes = clk->get_kernel_outputs();
+                NodeVector node_list = clk->get_node_list();
+                for (size_t i = 0; i < args.size(); i++)
+                {
+                    std::string sname = std::string(args[i].get_name()) + "[i]";
+                    auto entry = std::make_pair(clk->get_argument(i), sname);
+                    loop_symbol_table.insert(entry);
+                }
+
+                //add outputs so we write output values directly into their
+                //corresponding tensors
+                for (size_t i = 0; i < out.size(); i++)
+                {
+                    std::string sname = std::string(out[i].get_name()) + "[i]";
+                    auto entry = std::make_pair(output_nodes.at(i), sname);
+                    loop_symbol_table.insert(entry);
+                }
+
+                std::string tmp_prefix{"tmp"};
+
+                writer << "#pragma omp parallel for\n";
+                writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                writer.block_begin();
+
+                for (size_t i = 0; i < node_list.size(); i++)
+                {
+                    auto op = node_list[i];
+                    std::string tmp;
+                    if (loop_symbol_table.count(op) == 0)
+                    {
+                        //"allocate" a new temp
+                        tmp = tmp_prefix + std::to_string(i);
+                        //remember the new temp in symbol name
+                        auto entry = std::make_pair(op, tmp);
+                        loop_symbol_table.insert(entry);
+                        //declare a new tmp
+                        writer << op->get_element_type().c_type_string() << " ";
+                    }
+                    else
+                    {
+                        //this means we are dealing with an output
+                        tmp = loop_symbol_table.at(op);
+                    }
+
+                    //prepare arguments
+                    std::vector<std::string> sargs;
+                    for (auto arg : op->get_arguments())
+                    {
+                        //args are expected to be in a map already
+                        sargs.push_back(loop_symbol_table.at(arg));
+                    }
+
+                    const Node& n = *op;
+                    auto emitter = inline_emitters.at(TI(n));
+                    writer << tmp << " = " << emitter(sargs) << ";\n";
+                }
+
+                writer.block_end();
+            }
+
+#undef TI
         }
     }
 }
