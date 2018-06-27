@@ -33,6 +33,11 @@ extern "C" runtime::Backend* new_backend(const char* configuration_string)
     return new runtime::cpu::CPU_Backend();
 }
 
+extern "C" void delete_backend(runtime::Backend* backend)
+{
+    delete backend;
+}
+
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
     const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function)
 {

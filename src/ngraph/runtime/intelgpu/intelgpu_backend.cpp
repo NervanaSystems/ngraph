@@ -24,6 +24,11 @@ extern "C" runtime::Backend* new_backend(const char* configuration_string)
     return new runtime::intelgpu::IntelGPUBackend();
 }
 
+extern "C" void delete_backend(runtime::Backend* backend)
+{
+    delete backend;
+}
+
 shared_ptr<runtime::TensorView>
     runtime::intelgpu::IntelGPUBackend::create_tensor(const element::Type& element_type,
                                                       const Shape& shape)

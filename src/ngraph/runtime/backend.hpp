@@ -81,7 +81,7 @@ namespace ngraph
             void validate_call(std::shared_ptr<const Function> func,
                                const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
                                const std::vector<std::shared_ptr<runtime::TensorView>>& inputs);
-            virtual void close() {}
+
         private:
             static void* open_shared_library(std::string type);
         };

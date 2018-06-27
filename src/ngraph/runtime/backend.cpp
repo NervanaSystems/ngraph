@@ -87,16 +87,22 @@ shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
     {
         function<runtime::Backend*(const char*)> new_backend =
             reinterpret_cast<runtime::Backend* (*)(const char*)>(dlsym(handle, "new_backend"));
-        if (new_backend)
-        {
-            runtime::Backend* backend = new_backend(type.c_str());
-            rc = shared_ptr<runtime::Backend>(backend, [](runtime::Backend* b) { b->close(); });
-        }
-        else
+        if (!new_backend)
         {
             dlclose(handle);
             throw runtime_error("Backend '" + type + "' does not implement new_backend");
         }
+
+        function<void(runtime::Backend*)> delete_backend =
+            reinterpret_cast<void (*)(runtime::Backend*)>(dlsym(handle, "delete_backend"));
+        if (!delete_backend)
+        {
+            dlclose(handle);
+            throw runtime_error("Backend '" + type + "' does not implement delete_backend");
+        }
+
+        runtime::Backend* backend = new_backend(type.c_str());
+        rc = shared_ptr<runtime::Backend>(backend, [=](runtime::Backend* b) { delete_backend(b); });
     }
     return rc;
 }
