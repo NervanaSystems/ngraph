@@ -215,7 +215,7 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op(codegen::CodeWriter& writer
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
            << data_types[1]
-           << "* out, uint32_t* input_strides, uint32_t* trans_strides, uint32_t rank, uint32_t n)\n";
+           << "* out, uint32_t* input_strides, uint32_t* trans_strides, uint32_t n)\n";
     writer.block_begin();
     {
         writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
