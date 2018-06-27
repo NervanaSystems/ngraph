@@ -52,6 +52,7 @@ namespace ngraph
     std::list<std::shared_ptr<Node>>
         topological_sort(const std::list<std::shared_ptr<Node>>& nodes);
 
+    // Check if all paths from X to a result go through Y
     bool is_post_dominated(Node* X, Node* Y);
 
     bool is_equal_to_const_value(std::string const_value, std::shared_ptr<Node> reduce_constant);
@@ -134,6 +135,8 @@ namespace ngraph
 
     bool is_one(std::shared_ptr<Node> reduce_constant);
 
+    // Returns true if `node` is live in the graph i.e. a result op
+    // transitively uses this `node`
     bool is_used(Node* node);
 
     // Returns count of `node` users that are still live in the graph
