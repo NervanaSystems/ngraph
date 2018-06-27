@@ -362,11 +362,12 @@ void runtime::gpu::CudaKernelBuilder::get_reverse_sequence_op(
 }
 void runtime::gpu::CudaKernelBuilder::get_slice_op(codegen::CodeWriter& writer,
                                                    const std::string& name,
-                                                   const std::array<std::string, 2>& data_types)
+                                                   const std::array<std::string, 2>& data_types,
+                                                   size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
            << data_types[1] << "* out, size_t* input_strides, size_t* lower_bounds, size_t* "
-                               "slice_strides, size_t* output_strides, size_t rank, size_t n)\n";
+                               "slice_strides, size_t* output_strides, size_t n)\n";
     writer.block_begin();
     {
         writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
@@ -375,17 +376,18 @@ void runtime::gpu::CudaKernelBuilder::get_slice_op(codegen::CodeWriter& writer,
         {
             writer << "size_t input_idx = 0;\n";
             writer << "size_t output_idx = tid;\n";
-
-            writer << "for(size_t i = 0; i < rank; i++)\n";
-            writer.block_begin();
+            size_t i = 0;
+            for(; i < rank - 1; i++)
             {
-                writer << "input_idx += (((output_idx / output_strides[i]) * slice_strides[i]) + "
-                          "lower_bounds[i]) * input_strides[i];\n";
-                writer << "output_idx %= output_strides[i];\n";
+                writer << "input_idx += (((output_idx / output_strides[" << i << "]) * slice_strides[" << i << "]) + "
+                          "lower_bounds[" << i << "]) * input_strides[" << i << "];\n";
+                writer << "output_idx %= output_strides[" << i << "];\n";
             }
-            writer.block_end();
+            writer << "input_idx += (((output_idx / output_strides[" << i << "]) * slice_strides[" << i << "]) + "
+                    "lower_bounds[" << i << "]) * input_strides[" << i << "];\n";
             writer << "out[tid] = in[input_idx];\n";
         }
+
         writer.block_end();
     }
     writer.block_end();
