@@ -335,15 +335,15 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const runtime::gpu::GPURunti
 }
 
 size_t runtime::gpu::CUDAEmitter::build_reshape(const runtime::gpu::GPURuntimeContext* ctx,
-                                              const std::array<std::string, 2>& dtypes,
-                                              GPUShape input_shape,
-                                              GPUShape trans_strides)
+                                                const std::array<std::string, 2>& dtypes,
+                                                GPUShape input_shape,
+                                                GPUShape trans_strides)
 {
     std::stringstream kernel_name;
     kernel_name << "slice_" << join(dtypes, "_") << "_r_" << input_shape.size();
 
-    std::string hash = kernel_name.str() + "_i_" + join(input_shape, "_") + "_o_" +
-                       join(trans_strides, "_");
+    std::string hash =
+        kernel_name.str() + "_i_" + join(input_shape, "_") + "_o_" + join(trans_strides, "_");
     // For backwards compatability we currently use two unordered maps
     // 1. one looks up the compiled cuda kernel (CudaFunctionPool)
     // 2. the other looks to see if this kernel is already in the primitive list
@@ -382,15 +382,12 @@ size_t runtime::gpu::CUDAEmitter::build_reshape(const runtime::gpu::GPURuntimeCo
         allocator.reserve_argspace(trans_strides.data(), trans_strides.size() * sizeof(uint32_t));
 
     // create the launch primitive
-    std::unique_ptr<gpu::primitive> kernel_runner(new gpu::primitive{[=](
-        void** inputs, void** outputs) mutable {
+    std::unique_ptr<gpu::primitive> kernel_runner(new gpu::primitive{[=](void** inputs,
+                                                                         void** outputs) mutable {
         void* param_input_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_input_strides);
         void* param_trans_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_trans_strides);
-        std::vector<void*> args_list{&inputs[0],
-                                     &outputs[0],
-                                     &param_input_strides,
-                                     &param_trans_strides,
-                                     &nthreads};
+        std::vector<void*> args_list{
+            &inputs[0], &outputs[0], &param_input_strides, &param_trans_strides, &nthreads};
 
         CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                       aligned_grid_size_x,
@@ -410,7 +407,6 @@ size_t runtime::gpu::CUDAEmitter::build_reshape(const runtime::gpu::GPURuntimeCo
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }
-
 
 size_t runtime::gpu::CUDAEmitter::build_slice(const runtime::gpu::GPURuntimeContext* ctx,
                                               const std::array<std::string, 2>& dtypes,

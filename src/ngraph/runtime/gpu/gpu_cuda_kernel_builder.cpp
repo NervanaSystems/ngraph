@@ -225,12 +225,14 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op(codegen::CodeWriter& writer
             writer << "uint32_t input_idx = tid;\n";
             writer << "uint32_t output_idx = 0;\n";
             size_t i = 0;
-            for(; i < rank - 1; i++)
+            for (; i < rank - 1; i++)
             {
-                writer << "output_idx += (input_idx / input_strides[" << i << "]) * trans_strides[" << i << "];\n";
+                writer << "output_idx += (input_idx / input_strides[" << i << "]) * trans_strides["
+                       << i << "];\n";
                 writer << "input_idx %= input_strides[" << i << "];\n";
             }
-            writer << "output_idx += (input_idx / input_strides[" << i << "]) * trans_strides[" << i << "];\n";
+            writer << "output_idx += (input_idx / input_strides[" << i << "]) * trans_strides[" << i
+                   << "];\n";
             writer << "out[output_idx] = in[tid];\n";
         }
         writer.block_end();
