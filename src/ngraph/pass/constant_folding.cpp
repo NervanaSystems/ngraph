@@ -14,6 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <stdint.h>
+
 #include "constant_folding.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/broadcast.hpp"
@@ -50,6 +52,9 @@ void ngraph::pass::ConstantFolding::construct_constant_reshape()
     auto reshape = make_shared<op::Reshape>(constant_label, AxisVector{0, 1}, Shape{2, 4, 1});
 
     auto constant_reshape_callback = [constant_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_reshape_callback against node = "
+                     << m.get_match_root()->get_name();
+
         auto pattern_map = m.get_pattern_map();
 
         auto constant_match = dynamic_pointer_cast<op::Constant>(pattern_map[constant_label]);
@@ -65,7 +70,7 @@ void ngraph::pass::ConstantFolding::construct_constant_reshape()
         else if (type == element::i8)
         {
             replace_node(m.get_match_root(),
-                         make_constant_reshape<signed char>(constant_match, reshape_match));
+                         make_constant_reshape<int8_t>(constant_match, reshape_match));
             return true;
         }
         else if (type == element::f32)
@@ -112,6 +117,9 @@ void ngraph::pass::ConstantFolding::construct_constant_broadcast()
     auto broadcast = make_shared<op::Broadcast>(constant_label, Shape{2, 4}, AxisSet{1});
 
     auto constant_broadcast_callback = [constant_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_broadcast_callback against node = "
+                     << m.get_match_root()->get_name();
+
         auto pattern_map = m.get_pattern_map();
 
         auto constant_match = dynamic_pointer_cast<op::Constant>(pattern_map[constant_label]);
@@ -127,7 +135,7 @@ void ngraph::pass::ConstantFolding::construct_constant_broadcast()
         else if (type == element::i8)
         {
             replace_node(m.get_match_root(),
-                         make_constant_broadcast<signed char>(constant_match, broadcast_match));
+                         make_constant_broadcast<int8_t>(constant_match, broadcast_match));
             return true;
         }
         else if (type == element::f32)
