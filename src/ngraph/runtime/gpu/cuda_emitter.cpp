@@ -342,7 +342,7 @@ size_t runtime::gpu::CUDAEmitter::build_slice(const runtime::gpu::GPURuntimeCont
                                               GPUShape output_shape)
 {
     std::stringstream kernel_name;
-    kernel_name << "slice_" << join(dtypes, "_");
+    kernel_name << "slice_" << join(dtypes, "_") << "_r_" << output_shape.size();
 
     std::string hash = kernel_name.str() + "_i_" + join(input_shape, "_") + "_o_" +
                        join(output_shape, "_") + "_lb_" + join(lower_bounds, "_") + "_ss_" +
