@@ -377,14 +377,18 @@ void runtime::gpu::CudaKernelBuilder::get_slice_op(codegen::CodeWriter& writer,
             writer << "uint32_t input_idx = 0;\n";
             writer << "uint32_t output_idx = tid;\n";
             size_t i = 0;
-            for(; i < rank - 1; i++)
+            for (; i < rank - 1; i++)
             {
-                writer << "input_idx += (((output_idx / output_strides[" << i << "]) * slice_strides[" << i << "]) + "
-                          "lower_bounds[" << i << "]) * input_strides[" << i << "];\n";
+                writer << "input_idx += (((output_idx / output_strides[" << i
+                       << "]) * slice_strides[" << i << "]) + "
+                                                        "lower_bounds["
+                       << i << "]) * input_strides[" << i << "];\n";
                 writer << "output_idx %= output_strides[" << i << "];\n";
             }
-            writer << "input_idx += (((output_idx / output_strides[" << i << "]) * slice_strides[" << i << "]) + "
-                    "lower_bounds[" << i << "]) * input_strides[" << i << "];\n";
+            writer << "input_idx += (((output_idx / output_strides[" << i << "]) * slice_strides["
+                   << i << "]) + "
+                           "lower_bounds["
+                   << i << "]) * input_strides[" << i << "];\n";
             writer << "out[tid] = in[input_idx];\n";
         }
 

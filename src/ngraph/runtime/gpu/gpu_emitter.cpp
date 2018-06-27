@@ -1046,7 +1046,6 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 auto slice = static_cast<const op::Slice*>(node);
 
                 const auto arg_shape = args[0].get_shape();
-                const auto arg_rank = arg_shape.size();
                 const auto result_shape = out[0].get_shape();
                 const Coordinate& lower_bounds = slice->get_lower_bounds();
                 const Strides slice_strides = slice->get_strides();
@@ -1058,13 +1057,15 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 }
                 else
                 {
+                    auto& cuda_emitter =
+                        external_function->get_primitive_emitter()->get_cuda_emitter();
                     auto index =
                         cuda_emitter->build_slice(external_function->ctx().get(),
-                                                        {{args[0].get_type(), out[0].get_type()}},
-                                                        input_shape,
-                                                        lower_bounds,
-                                                        slice_strides,
-                                                        result_shape);
+                                                  {{args[0].get_type(), out[0].get_type()}},
+                                                  arg_shape,
+                                                  lower_bounds,
+                                                  slice_strides,
+                                                  result_shape);
 
                     writer << "gpu::invoke_primitive(ctx, " << index << ", ";
                     writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
