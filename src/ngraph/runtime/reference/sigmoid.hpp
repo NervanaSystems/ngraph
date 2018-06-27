@@ -31,7 +31,7 @@ namespace ngraph
                 T exp_value;
                 for (size_t i = 0; i < count; i++)
                 {
-                    exp_value = std::exp((-arg[i]));
+                    exp_value = std::exp(-arg[i]);
                     out[i] = 1 / (1 + exp_value);
                 }
             }

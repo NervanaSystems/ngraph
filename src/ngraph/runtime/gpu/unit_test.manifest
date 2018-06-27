@@ -25,3 +25,7 @@ select_and_scatter_3d_without_overlap
 select_and_scatter_with_overlap
 select_and_scatter_without_overlap
 tensorview_custom_mem
+sigmoid_n1c1h2w2
+sigmoid_n1c1h4
+sigmoid_bprop_n1c1h4
+backwards_sigmoid
