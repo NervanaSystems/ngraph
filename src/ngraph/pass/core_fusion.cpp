@@ -57,10 +57,8 @@ void pass::CoreFusion::construct_relu()
     auto val = make_shared<pattern::op::Label>(iconst0);
     auto zero = make_shared<pattern::op::Label>(iconst0, nullptr, NodeVector{iconst0});
 
-    auto broadcast_pred = [](std::shared_ptr<Node> n) {
-        return static_cast<bool>(std::dynamic_pointer_cast<op::Broadcast>(n));
-    };
-    auto skip_broadcast = std::make_shared<pattern::op::Skip>(zero, broadcast_pred);
+    auto skip_broadcast =
+        std::make_shared<pattern::op::Skip>(zero, pattern::has_class<op::Broadcast>());
     auto max = make_shared<op::Maximum>(skip_broadcast, val);
 
     pattern::graph_rewrite_callback callback = [val, zero](pattern::Matcher& m) {
@@ -283,6 +281,21 @@ static bool are_img_dims_equal(Shape conv_shape, Shape image_shape)
     return conv_shape[2] == image_shape[0] && conv_shape[3] == image_shape[1];
 }
 
+static std::shared_ptr<Node> reduce_broadcast(std::shared_ptr<Node> broadcast)
+{
+    const size_t H = 2;
+    const size_t W = 3;
+    auto matched_broadcast_w1 = std::dynamic_pointer_cast<op::Broadcast>(broadcast);
+    Shape shape_w1{matched_broadcast_w1->get_shape()};
+    shape_w1[H] /= 2;
+    shape_w1[W] /= 2;
+    auto new_broadcast_w1 =
+        std::make_shared<op::Broadcast>(matched_broadcast_w1->get_argument(0),
+                                        shape_w1,
+                                        matched_broadcast_w1->get_broadcast_axes());
+    return new_broadcast_w1;
+}
+
 static size_t shape_to_index(Shape shape)
 {
     if (shape.size() != 4)
@@ -450,17 +463,15 @@ void pass::CoreFusion::construct_optimized_strided_conv()
                                                              pad_1,
                                                              pad_1);
 
-        auto maxpool_w3 =
-            std::make_shared<op::MaxPool>(pattern_map[broadcast_w3_label], Shape{1, 1}, stride_2);
-        auto new_add_conv_28w3s2 = std::make_shared<op::Add>(conv_28w3s2, maxpool_w3);
+        auto new_add_conv_28w3s2 = std::make_shared<op::Add>(
+            conv_28w3s2, reduce_broadcast(pattern_map[broadcast_w3_label]));
         auto new_relu_28w3s2 = std::make_shared<op::Relu>(new_add_conv_28w3s2);
 
         auto conv_28w1s1 = std::make_shared<op::Convolution>(
             new_relu_28w3s2, m_conv_stride1->get_argument(1), stride_1, stride_1);
 
-        auto maxpool_w1 =
-            std::make_shared<op::MaxPool>(pattern_map[broadcast_w1_label], Shape{1, 1}, stride_2);
-        auto new_add_conv28s1 = std::make_shared<op::Add>(conv_28w1s1, maxpool_w1);
+        auto new_add_conv28s1 = std::make_shared<op::Add>(
+            conv_28w1s1, reduce_broadcast(pattern_map[broadcast_w1_label]));
 
         auto maxpool =
             std::make_shared<op::MaxPool>(pattern_map[eltwise_arg_label], Shape{1, 1}, stride_2);
