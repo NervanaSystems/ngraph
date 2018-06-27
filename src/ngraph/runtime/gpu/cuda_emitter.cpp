@@ -1424,7 +1424,7 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const GPURuntimeContext* ctx,
     float alpha = 1.0f;
     float beta = 0.0f;
 
-    int nthreads = static_cast<int>(shape_size(result_shape));
+    size_t nthreads = shape_size(result_shape);
     //TODO: currently we set it to 64, will add tuning method later
     uint32_t block_size_x = 64;
     uint32_t aligned_grid_size_x = align(static_cast<uint32_t>(nthreads), block_size_x);
