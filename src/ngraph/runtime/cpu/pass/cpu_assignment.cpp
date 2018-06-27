@@ -32,6 +32,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
@@ -622,6 +623,26 @@ namespace ngraph
                         rnn_node->set_op_annotations(op_annotations);
                     }
                 }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::Softmax)
+                {
+                    auto softmax = static_cast<op::Softmax*>(node);
+
+                    auto arg0_shape = node->get_input_shape(0);
+                    auto arg0_rank = arg0_shape.size();
+                    auto result_shape = node->get_output_shape(0);
+
+                    if ((arg0_rank == 4 || arg0_rank == 2) &&
+                        node->get_input_element_type(0) == element::f32 &&
+                        softmax->get_axes().size() == 1)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        softmax->set_op_annotations(op_annotations);
+                    }
+                }
             }
         }
     }
@@ -673,6 +694,7 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::SigmoidBackprop>},
     {TI(ngraph::op::Lstm), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Lstm>},
     {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Rnn>},
+    {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Softmax>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(

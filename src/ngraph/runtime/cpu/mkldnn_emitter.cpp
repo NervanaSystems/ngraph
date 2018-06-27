@@ -911,3 +911,20 @@ size_t MKLDNNEmitter::build_concat(const std::vector<mkldnn::memory::desc>& inpu
     m_primitive_deps[concat_index] = in_out_index;
     return concat_index;
 }
+
+size_t MKLDNNEmitter::build_softmax_forward(const mkldnn::memory::desc& input_desc,
+                                            const mkldnn::memory::desc& result_desc,
+                                            int softmax_axis)
+{
+    size_t input_index = build_memory_primitive(input_desc);
+    size_t result_index = build_memory_primitive(result_desc);
+
+    size_t primitive_index = insert_primitive(
+        new mkldnn::softmax_forward({{mkldnn::prop_kind::forward_scoring, input_desc, softmax_axis},
+                                     mkldnn_utils::global_cpu_engine},
+                                    *m_mkldnn_primitives[input_index],
+                                    *m_mkldnn_primitives[result_index]));
+
+    m_primitive_deps[primitive_index] = {input_index, result_index};
+    return primitive_index;
+}

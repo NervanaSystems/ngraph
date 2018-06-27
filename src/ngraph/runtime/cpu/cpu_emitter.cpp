@@ -4361,186 +4361,217 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Softmax)
             {
-                writer.block_begin();
-                const ngraph::op::Softmax* softmax = static_cast<const ngraph::op::Softmax*>(node);
-                auto type = out[0].get_type();
-                auto shape = out[0].get_shape();
-                auto dims = out[0].get_shape().size();
-                auto axes = softmax->get_axes();
-
-                // create arg/out if 1d
-                if (dims < 1)
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    writer << type << "* arg = " << args[0].get_name() << "\n";
-                    writer << type << "* out = " << out[0].get_name() << "\n";
+                    auto softmax = static_cast<const ngraph::op::Softmax*>(node);
+
+                    if (softmax->get_axes().size() != 1)
+                    {
+                        throw ngraph_error("MKLDNN supports softmax only across single axis");
+                    }
+                    int softmax_axis = static_cast<int>(*(softmax->get_axes().begin()));
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+
+                    size_t softmax_index = mkldnn_emitter->build_softmax_forward(
+                        input_desc, result_desc, softmax_axis);
+
+                    auto& deps = mkldnn_emitter->get_primitive_deps(softmax_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(softmax_index) << ");\n";
                 }
-                // else cast arg/out to an Nd array
                 else
                 {
-                    std::string shape1toN;
-                    for (size_t d = 1; d < dims; ++d)
+                    writer.block_begin();
+                    const ngraph::op::Softmax* softmax =
+                        static_cast<const ngraph::op::Softmax*>(node);
+                    auto type = out[0].get_type();
+                    auto shape = out[0].get_shape();
+                    auto dims = out[0].get_shape().size();
+                    auto axes = softmax->get_axes();
+
+                    // create arg/out if 1d
+                    if (dims < 1)
                     {
-                        shape1toN += "[";
-                        shape1toN += std::to_string(shape[d]);
-                        shape1toN += "]";
+                        writer << type << "* arg = " << args[0].get_name() << "\n";
+                        writer << type << "* out = " << out[0].get_name() << "\n";
+                    }
+                    // else cast arg/out to an Nd array
+                    else
+                    {
+                        std::string shape1toN;
+                        for (size_t d = 1; d < dims; ++d)
+                        {
+                            shape1toN += "[";
+                            shape1toN += std::to_string(shape[d]);
+                            shape1toN += "]";
+                        }
+
+                        writer << type << " (*arg)" << shape1toN << " = (" << type << " (*)"
+                               << shape1toN << ") " << args[0].get_name() << ";\n";
+                        writer << type << " (*out)" << shape1toN << " = (" << type << " (*)"
+                               << shape1toN << ") " << out[0].get_name() << ";\n";
                     }
 
-                    writer << type << " (*arg)" << shape1toN << " = (" << type << " (*)"
-                           << shape1toN << ") " << args[0].get_name() << ";\n";
-                    writer << type << " (*out)" << shape1toN << " = (" << type << " (*)"
-                           << shape1toN << ") " << out[0].get_name() << ";\n";
-                }
-
-                // build arg/out index
-                std::string index;
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    index += "[i";
-                    index += std::to_string(d);
-                    index += "]";
-                }
-
-                // calculate e ^ (arg - max)
-                // outer loop(s) - for axis not in axes
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) == axes.end())
+                    // build arg/out index
+                    std::string index;
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer << "#pragma omp parallel for\n";
-                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
-                               << "; ++i" << d << ")\n";
-                        writer.block_begin();
+                        index += "[i";
+                        index += std::to_string(d);
+                        index += "]";
                     }
-                }
 
-                // max inner loop(s)
-                writer << type << " m = 0;\n"; // TODO: needs to be minval for the type
-
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) != axes.end())
+                    // calculate e ^ (arg - max)
+                    // outer loop(s) - for axis not in axes
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
-                               << "; ++i" << d << ")\n";
-                        writer.block_begin();
+                        if (axes.find(d) == axes.end())
+                        {
+                            writer << "#pragma omp parallel for\n";
+                            writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                                   << "; ++i" << d << ")\n";
+                            writer.block_begin();
+                        }
                     }
-                }
 
-                writer << "if (arg" << index << " > m)\n";
-                writer.block_begin();
-                writer << "m = arg" << index << ";\n";
-                writer.block_end();
+                    // max inner loop(s)
+                    writer << type << " m = 0;\n"; // TODO: needs to be minval for the type
 
-                // end max inner loop(s)
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) != axes.end())
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer.block_end();
+                        if (axes.find(d) != axes.end())
+                        {
+                            writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                                   << "; ++i" << d << ")\n";
+                            writer.block_begin();
+                        }
                     }
-                }
 
-                // e ^ (arg - max) inner loop
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) != axes.end())
+                    writer << "if (arg" << index << " > m)\n";
+                    writer.block_begin();
+                    writer << "m = arg" << index << ";\n";
+                    writer.block_end();
+
+                    // end max inner loop(s)
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
-                               << "; ++i" << d << ")\n";
-                        writer.block_begin();
+                        if (axes.find(d) != axes.end())
+                        {
+                            writer.block_end();
+                        }
                     }
-                }
 
-                writer << "out" << index << " = exp(arg" << index << " - m);\n";
-
-                // end e ^ (arg - max) inner loop
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) != axes.end())
+                    // e ^ (arg - max) inner loop
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer.block_end();
+                        if (axes.find(d) != axes.end())
+                        {
+                            writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                                   << "; ++i" << d << ")\n";
+                            writer.block_begin();
+                        }
                     }
-                }
 
-                // end e ^ (arg - max) outer loop(s)
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) == axes.end())
+                    writer << "out" << index << " = exp(arg" << index << " - m);\n";
+
+                    // end e ^ (arg - max) inner loop
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer.block_end();
+                        if (axes.find(d) != axes.end())
+                        {
+                            writer.block_end();
+                        }
                     }
-                }
 
-                // calculate softmax = e ^ (arg - max) / sum (e ^ (arg - max))
-                // outer loop(s) - for axis not in axes
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) == axes.end())
+                    // end e ^ (arg - max) outer loop(s)
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer << "#pragma omp parallel for\n";
-                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
-                               << "; ++i" << d << ")\n";
-                        writer.block_begin();
+                        if (axes.find(d) == axes.end())
+                        {
+                            writer.block_end();
+                        }
                     }
-                }
 
-                // sum (e ^ (arg - max) inner loop(s)
-                writer << type << " d = 0;\n";
-
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) != axes.end())
+                    // calculate softmax = e ^ (arg - max) / sum (e ^ (arg - max))
+                    // outer loop(s) - for axis not in axes
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
-                               << "; ++i" << d << ")\n";
-                        writer.block_begin();
+                        if (axes.find(d) == axes.end())
+                        {
+                            writer << "#pragma omp parallel for\n";
+                            writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                                   << "; ++i" << d << ")\n";
+                            writer.block_begin();
+                        }
                     }
-                }
 
-                writer << "d += out" << index << ";\n";
+                    // sum (e ^ (arg - max) inner loop(s)
+                    writer << type << " d = 0;\n";
 
-                // end sum (e ^ (arg - max) inner loop(s)
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) != axes.end())
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer.block_end();
+                        if (axes.find(d) != axes.end())
+                        {
+                            writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                                   << "; ++i" << d << ")\n";
+                            writer.block_begin();
+                        }
                     }
-                }
 
-                writer << "d = 1 / d;\n";
+                    writer << "d += out" << index << ";\n";
 
-                // softmax inner loop(s)
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) != axes.end())
+                    // end sum (e ^ (arg - max) inner loop(s)
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
-                               << "; ++i" << d << ")\n";
-                        writer.block_begin();
+                        if (axes.find(d) != axes.end())
+                        {
+                            writer.block_end();
+                        }
                     }
-                }
 
-                writer << "out" << index << " *= d;\n";
+                    writer << "d = 1 / d;\n";
 
-                // end softmax inner loop(s)
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) != axes.end())
+                    // softmax inner loop(s)
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer.block_end();
+                        if (axes.find(d) != axes.end())
+                        {
+                            writer << "for (size_t i" << d << " = 0; i" << d << " < " << shape[d]
+                                   << "; ++i" << d << ")\n";
+                            writer.block_begin();
+                        }
                     }
-                }
 
-                // end softmax outer loop(s)
-                for (size_t d = 0; d < dims; ++d)
-                {
-                    if (axes.find(d) == axes.end())
+                    writer << "out" << index << " *= d;\n";
+
+                    // end softmax inner loop(s)
+                    for (size_t d = 0; d < dims; ++d)
                     {
-                        writer.block_end();
+                        if (axes.find(d) != axes.end())
+                        {
+                            writer.block_end();
+                        }
                     }
+
+                    // end softmax outer loop(s)
+                    for (size_t d = 0; d < dims; ++d)
+                    {
+                        if (axes.find(d) == axes.end())
+                        {
+                            writer.block_end();
+                        }
+                    }
+                    writer.block_end();
                 }
-                writer.block_end();
             }
 
             template <>
