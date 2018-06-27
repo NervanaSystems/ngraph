@@ -813,7 +813,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
                     ngraph::replace_node(m.get_match_root(), goe1);
                     NGRAPH_DEBUG << "Replacing bias and adding it as a second o/p of "
                                     "ConvolutionBiasBackpropFiltersBias";
-                    ngraph::replace_node(delta_user, goe2);
+                    auto goe2_reshape =
+                        std::make_shared<op::Reshape>(goe2, AxisVector{0}, delta_user->get_shape());
+                    ngraph::replace_node(delta_user, goe2_reshape);
                     return true;
                 }
             }
