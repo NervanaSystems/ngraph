@@ -496,7 +496,7 @@ namespace ngraph
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
-                        if (get_user_count(node) == 1)
+                        if (get_user_count(node->get_argument(0).get()) == 1)
                         {
                             // Safe to overwrite input
                             std::map<size_t, size_t> oi_pairs = {{0, 0}};
