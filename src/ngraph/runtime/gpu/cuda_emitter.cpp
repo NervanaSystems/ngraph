@@ -533,7 +533,7 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
     size_t nthreads = shape_size(output_shape);
     //TODO: currently we set it to 64, will add tuning method later
     uint32_t block_size_x = 64;
-    uint32_t aligned_grid_size_x = align(nthreads, block_size_x);
+    uint32_t aligned_grid_size_x = align(static_cast<uint32_t>(nthreads), block_size_x);
 
     // if the kernel has not been compiled, build it
     auto compiled_kernel = ctx->compiled_kernel_pool->get(hash);
@@ -580,7 +580,7 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
                                       aligned_grid_size_x,
                                       1,
                                       1, // grid dim
-                                      blcok_size_x,
+                                      block_size_x,
                                       1,
                                       1, // block dim
                                       0,
@@ -933,7 +933,7 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeConte
     size_t nthreads = shape_size(tensor_shape);
     //TODO: currently we set it to 64, will add tuning method later
     uint32_t block_size_x = 64;
-    uint32_t aligned_grid_size_x = align(nthreads, block_size_x);
+    uint32_t aligned_grid_size_x = align(static_cast<uint32_t>(nthreads), block_size_x);
 
     // create the launch primitive
     std::unique_ptr<gpu::primitive> ew(
@@ -1446,8 +1446,17 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const GPURuntimeContext* ctx,
                              &beta,
                              &nthreads};
 
-        CUDA_SAFE_CALL(
-            cuLaunchKernel(*compiled_kernel.get(), aligned_grid_size_x, 1, 1, block_size_x, 1, 1, 0, NULL, args_list, 0));
+        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                      aligned_grid_size_x,
+                                      1,
+                                      1,
+                                      block_size_x,
+                                      1,
+                                      1,
+                                      0,
+                                      NULL,
+                                      args_list,
+                                      0));
         CUDA_SAFE_CALL(cuCtxSynchronize());
     }});
 
