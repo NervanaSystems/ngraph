@@ -408,7 +408,7 @@ namespace ngraph
                     n = shape_b[1];
                     ldb = std::max(1UL, k);
                 }
-                size_t ldc = max(1UL, n);
+                size_t ldc = std::max(1UL, n);
                 const size_t offset_a = m * k;
                 const size_t offset_b = k * n;
                 const size_t offset_c = m * n;
@@ -422,14 +422,7 @@ namespace ngraph
                     [&writer](const std::string& var, size_t size, size_t offset) {
                         for (size_t i = 0; i < size; ++i)
                         {
-                            if (i < size - 1)
-                            {
-                                writer << var << "+" << i * offset << ", ";
-                            }
-                            else
-                            {
-                                writer << var << "+" << i * offset;
-                            }
+                            writer << var << "+" << i * offset << ((i < size - 1) ? ", " : "");
                         }
                     };
                 writer << "cblas::Transpose transa_array[] = {" << transpose_a << "};\n";
@@ -990,66 +983,41 @@ namespace ngraph
                         writer.block_end();
                     }
                 }
+                // Specialized handling of rank 3 tensor multiply rank 2 tensor where
+                // each of the
                 else if ((arg0_shape.size() == 3) && (arg1_shape.size() == 2) &&
-                         dot->get_reduction_axes_count() == 1 && args[0].get_element_type() == element::f32)
+                         dot->get_reduction_axes_count() == 1 &&
+                         args[0].get_element_type() == element::f32)
                 {
-
                     auto mat_a = args[0];
                     auto mat_b = args[1];
                     auto mat_c = out[0];
-                    Shape shape_a = mat_a.get_shape();
-                    Shape shape_b = mat_b.get_shape();
-//                    std::cout << "before" << std::endl;
-//                    std::cout << vector_to_string(shape_a) << std::endl;
-//                    std::cout << vector_to_string(shape_b) << std::endl;
-                    if (shape_a.size() != 3) {
-                        shape_a.insert(shape_a.begin(), 1UL);
-                    }
-                    if (shape_b.size() != 3) {
-                        shape_b.insert(shape_b.begin(), 1UL);
-                    }
-//                    std::cout << "after" << std::endl;
-//                    std::cout << vector_to_string(shape_a) << std::endl;
-//                    std::cout << vector_to_string(shape_b) << std::endl;
-                    size_t m = shape_a[1];
-                    size_t k = shape_a[2];
-                    size_t n = shape_b[2];
-                    size_t lda = std::max(1UL, k);
-                    size_t ldb = std::max(1UL, n);
-                    size_t ldc = max(1UL, n);
-                    const char* transpose_a = "cblas::Transpose::None";
-                    const char* transpose_b = "cblas::Transpose::None";
+                    const Shape& shape_a = mat_a.get_shape();
+                    const Shape& shape_b = mat_b.get_shape();
 
-                    size_t offset_a = 0;
-                    if (shape_a[0] != 1) {
-                        offset_a = m * k;
-                    }
-                    size_t offset_b = 0;
-                    if (shape_b[0] != 1) {
-                        offset_b = k * n;
-                    }
+                    const size_t m = shape_a[1];
+                    const size_t k = shape_a[2];
+                    const size_t n = shape_b[1];
+
+                    // this also works when mat_a is shape (1, m, k)
+                    const size_t offset_a = m * k;
+                    // we do not offset mat_b
+                    const size_t offset_b = 0;
                     const size_t offset_c = m * n;
 
                     const size_t group_count = 1;
-                    const size_t group_size = max(shape_a[0], shape_b[0]);
+                    const size_t group_size = shape_a[0];
                     auto populate_array =
                         [&writer](const std::string& var, size_t size, size_t offset) {
                             for (size_t i = 0; i < size; ++i)
                             {
-                                if (i < size - 1)
-                                {
-                                    writer << var << "+" << i * offset << ", ";
-                                }
-                                else
-                                {
-                                    writer << var << "+" << i * offset;
-                                }
+                                writer << var << "+" << i * offset << ((i < size - 1) ? ", " : "");
                             }
                         };
 
                     writer.block_begin();
-                    writer << "cblas::Transpose transa_array[] = {" << transpose_a << "};\n";
-                    writer << "cblas::Transpose transb_array[] = {" << transpose_b << "};\n";
+                    writer << "cblas::Transpose transa_array[] = {cblas::Transpose::None};\n";
+                    writer << "cblas::Transpose transb_array[] = {cblas::Transpose::None};\n";
                     writer << "int64_t m_array[] = {" << m << "};\n";
                     writer << "int64_t n_array[] = {" << n << "};\n";
                     writer << "int64_t k_array[] = {" << k << "};\n";
@@ -1058,18 +1026,18 @@ namespace ngraph
                     populate_array(mat_a.get_name(), group_size, offset_a);
                     writer << "};\n";
                     writer << "const float** a_array = &a[0];\n";
-                    writer << "int64_t lda_array[] = {" << lda << "};\n";
+                    writer << "int64_t lda_array[] = {" << std::max(1UL, k) << "};\n";
                     writer << "std::vector<const float*> b{";
                     populate_array(mat_b.get_name(), group_size, offset_b);
                     writer << "};\n";
                     writer << "const float** b_array = &b[0];\n";
-                    writer << "int64_t ldb_array[] = {" << ldb << "};\n";
+                    writer << "int64_t ldb_array[] = {" << std::max(1UL, n) << "};\n";
                     writer << "float beta_array[] = {0.0f};\n";
                     writer << "std::vector<float*> c{";
                     populate_array(mat_c.get_name(), group_size, offset_c);
                     writer << "};\n";
                     writer << "float** c_array = &c[0];\n";
-                    writer << "int64_t ldc_array[] = {" << ldc << "};\n";
+                    writer << "int64_t ldc_array[] = {" << std::max(1UL, n) << "};\n";
                     writer << "int64_t group_size[] = {" << group_size << "};\n";
 
                     writer << "cblas_sgemm_batch(cblas::Layout::RowMajor, ";

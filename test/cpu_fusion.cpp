@@ -2487,29 +2487,31 @@ TEST(cpu_fusion, fuse_rnn_across_2layer_1timestep)
 
 TEST(cpu_fusion, dot_batch_forward)
 {
-    Shape shape_a{2, 3, 2};
-    Shape shape_b{2, 3};
-    Shape shape_c{2, 3, 3};
+    const Shape shape_a{2, 3, 2};
+    const Shape shape_b{2, 3};
 
-    auto a = make_shared<op::Parameter>(element::f32, shape_a);
-    auto b = make_shared<op::Parameter>(element::f32, shape_b);
-    auto dot = make_shared<op::Dot>(a, b);
+    auto generate_func = [&shape_a, &shape_b]() -> shared_ptr<Function> {
+        auto a = make_shared<op::Parameter>(element::f32, shape_a);
+        auto b = make_shared<op::Parameter>(element::f32, shape_b);
+        auto dot = make_shared<op::Dot>(a, b);
+        return make_shared<Function>(dot, op::ParameterVector{a, b});
+    };
+    shared_ptr<Function> cpu_func = generate_func();
+    shared_ptr<Function> int_func = generate_func();
 
-    auto func = make_shared<Function>(dot, op::ParameterVector{a, b});
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : int_func->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
 
-    auto backend = runtime::Backend::create("CPU");
-    shared_ptr<runtime::TensorView> a_tensor =
-        backend->create_tensor(element::f32, a->get_shape());
-    shared_ptr<runtime::TensorView> b_tensor =
-        backend->create_tensor(element::f32, b->get_shape());
-    shared_ptr<runtime::TensorView> c_tensor =
-        backend->create_tensor(element::f32, shape_c);
-    copy_data(a_tensor, std::vector<float>{1.f, 2.f, 3.f, 4.f, 5.f, 6.f,
-                                           7.f, 8.f, 9.f, 10.f, 11.f, 12.f});
-//    copy_data(a_tensor, std::vector<float>{1.f, 2.f, 3.f, 4.f, 5.f, 6.f});
-    copy_data(b_tensor, std::vector<float>{1.f, 2.f, 3.f, 4.f, 5.f, 6.f});
-    backend->call(func, {c_tensor}, {a_tensor, b_tensor});
-    std::cout << "out: " << vector_to_string(read_vector<float>(c_tensor)) << std::endl;
+    auto int_results = execute(int_func, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_func, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
 }
-
-
