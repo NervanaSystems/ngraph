@@ -25,6 +25,30 @@
 using namespace std;
 using namespace ngraph;
 
+void op::util::validate_convbias_shapes(const Shape& data_shape,
+                                        const Shape& filters_shape,
+                                        const Shape& bias_shape)
+{
+    if (bias_shape.size() != 1)
+    {
+        throw ngraph_error("Convolution+bias is expected to be 1D, but has shape: " +
+                           vector_to_string(bias_shape));
+    }
+    if (bias_shape[0] != filters_shape[0])
+    {
+        throw ngraph_error(
+            "Convolution+bias element size does not match number of filters. bias_size = " +
+            std::to_string(bias_shape[0]) + ", num_filters = " + std::to_string(filters_shape[0]));
+    }
+    if (data_shape[1] != filters_shape[1])
+    {
+        throw ngraph_error(
+            "Convolution+bias data and filter have different number of channels: data_channel=" +
+            std::to_string(data_shape[1]) + ", filter_channel= " +
+            std::to_string(filters_shape[1]));
+    }
+}
+
 op::ConvolutionBias::ConvolutionBias(const shared_ptr<op::Convolution>& conv,
                                      const shared_ptr<Node>& bias)
     : RequiresTensorViewArgs("ConvolutionBias",
@@ -39,6 +63,9 @@ op::ConvolutionBias::ConvolutionBias(const shared_ptr<op::Convolution>& conv,
     {
         throw ngraph_error("Convolution's element type isn't equal to bias!");
     }
+
+    util::validate_convbias_shapes(
+        conv->get_argument(0)->get_shape(), conv->get_argument(1)->get_shape(), bias->get_shape());
 
     set_value_type_checked(conv->get_element_type(), conv->get_shape());
 }
@@ -70,6 +97,7 @@ op::ConvolutionBias::ConvolutionBias(const shared_ptr<Node>& data_batch,
     {
         throw ngraph_error("Convolution data batch and filter element types do not match");
     }
+    util::validate_convbias_shapes(data_batch_shape, filters_shape, bias->get_shape());
 
     set_value_type_checked(
         data_batch_et,
@@ -180,6 +208,7 @@ op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
             "match");
     }
 
+    util::validate_convbias_shapes(data_batch_shape, filters_shape, bias_shape);
     //                              Forward               Backward
     // Window movement strides      q                     p_f
     // Window dilation strides      p_f                   q
@@ -237,6 +266,9 @@ op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<op::Convolution
     , m_data_dilation_strides(conv->get_data_dilation_strides())
     , m_with_relu(with_relu)
 {
+    util::validate_convbias_shapes(conv->get_argument(0)->get_shape(),
+                                   conv->get_argument(1)->get_shape(),
+                                   conv->get_argument(2)->get_shape());
     set_value_type_checked(conv->get_element_type(), conv->get_shape());
 }
 
@@ -271,6 +303,7 @@ op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<Node>& data_bat
         throw ngraph_error("Convolution data batch and filter element types do not match");
     }
 
+    util::validate_convbias_shapes(data_batch_shape, filters_shape, bias->get_shape());
     set_value_type_checked(
         data_batch_et,
         util::infer_convolution_output_shape(data_batch_shape,

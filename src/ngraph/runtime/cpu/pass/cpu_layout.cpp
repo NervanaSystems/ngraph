@@ -288,6 +288,8 @@ namespace ngraph
                     if (use_bias)
                     {
                         auto arg2_shape = node->get_input_shape(2);
+                        ngraph::op::util::validate_convbias_shapes(
+                            arg0_shape, arg1_shape, arg2_shape);
                         memory::dims mkldnn_arg2_shape(arg2_shape.begin(), arg2_shape.end());
                         const memory::desc bias_desc(mkldnn_arg2_shape, et, memory::format::any);
                         try
@@ -611,6 +613,8 @@ namespace ngraph
                     if (use_bias)
                     {
                         auto bias_shape = node->get_output_shape(1);
+                        ngraph::op::util::validate_convbias_shapes(
+                            data_shape, filters_shape, bias_shape);
                         memory::dims mkldnn_bias_shape(bias_shape.begin(), bias_shape.end());
                         const memory::desc bias_desc(mkldnn_bias_shape, et, memory::format::any);
                         bwd_desc.reset(

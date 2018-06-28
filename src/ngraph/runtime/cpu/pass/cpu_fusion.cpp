@@ -1008,7 +1008,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
     Shape shape{2, 2, 1, 1};
     auto data_batch = std::make_shared<pattern::op::Label>(element::f32, shape);
     auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
-    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{1});
+    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{shape[0]});
 
     auto conv_bias = std::make_shared<op::ConvolutionBias>(data_batch,
                                                            filters,
@@ -1076,7 +1076,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
     Shape shape{2, 2, 1, 1};
     auto data_batch = std::make_shared<pattern::op::Label>(element::f32, shape);
     auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
-    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{1});
+    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{shape[0]});
 
     auto pconv = std::make_shared<op::ConvolutionBias>(data_batch,
                                                        filters,
@@ -1179,7 +1179,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add_relu()
     Shape shape{2, 2, 1, 1};
     auto data_batch = std::make_shared<pattern::op::Label>(element::f32, shape);
     auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
-    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{1});
+    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{shape[0]});
     auto add_input = std::make_shared<pattern::op::Label>(element::f32, shape);
 
     auto pconv = std::make_shared<op::ConvolutionBiasAdd>(data_batch,
