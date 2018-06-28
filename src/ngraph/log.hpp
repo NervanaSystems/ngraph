@@ -55,6 +55,7 @@ namespace ngraph
     {
         return find_last(s, s.size() - 1, ch);
     }
+
     constexpr const char* get_file_name(conststring s) { return find_last(s, '/'); }
     enum class LOG_TYPE
     {
@@ -104,12 +105,14 @@ namespace ngraph
                        __LINE__,                                                                   \
                        [](const std::string& content) { std::cout << content << std::endl; })      \
         .stream()
+
 #define NGRAPH_WARN                                                                                \
     ngraph::log_helper(ngraph::LOG_TYPE::_LOG_TYPE_WARNING,                                        \
                        ngraph::get_file_name(__FILE__),                                            \
                        __LINE__,                                                                   \
                        [](const std::string& content) { std::cout << content << std::endl; })      \
         .stream()
+
 #define NGRAPH_INFO                                                                                \
     ngraph::log_helper(ngraph::LOG_TYPE::_LOG_TYPE_INFO,                                           \
                        ngraph::get_file_name(__FILE__),                                            \
