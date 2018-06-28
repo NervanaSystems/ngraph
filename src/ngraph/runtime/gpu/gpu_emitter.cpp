@@ -380,7 +380,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                 {
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
-                    auto index =
+                    auto slice_index =
                         cuda_emitter->build_slice(external_function->ctx().get(),
                                                   {{args[0].get_type(), out[0].get_type()}},
                                                   output_shape_padded,
@@ -388,7 +388,7 @@ CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(opTensorDesc,
                                                   padding_interior_back,
                                                   output_shape);
 
-                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
+                    writer << "gpu::invoke_primitive(ctx, " << slice_index << ", ";
                     writer << "std::vector<void*>{pad_buffer}.data(), ";
                     writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
                     writer << ");\n";
