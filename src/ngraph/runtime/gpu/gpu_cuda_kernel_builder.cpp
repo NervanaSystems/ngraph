@@ -17,6 +17,7 @@
 
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
+#include "ngraph/runtime/gpu/type_info.hpp"
 
 using namespace ngraph;
 
@@ -550,6 +551,159 @@ void runtime::gpu::CudaKernelBuilder::get_replace_slice_op(
             }
             writer.block_end();
             writer << "out[tid] = in_bounds ? source[source_idx] : in[tid];\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+}
+
+void runtime::gpu::CudaKernelBuilder::get_max_pool_1d(codegen::CodeWriter& writer,
+                                                      const std::string& name,
+                                                      const std::array<std::string, 2>& data_types,
+                                                      size_t input_width,
+                                                      size_t output_width,
+                                                      size_t window_width,
+                                                      size_t window_stride)
+{
+    // assumes data is in NCW format
+    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
+           << data_types[1] << "* out, size_t nthreads)\n";
+    writer.block_begin();
+    {
+        // index into output tensor
+        writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
+        writer << "if (tid < nthreads)\n";
+        writer.block_begin();
+        {
+            // index into input tensor
+            writer << "size_t start = (tid / " << output_width << ") * " << input_width << " + "
+                   << " (tid % " << output_width << ") * " << window_stride << ";\n";
+            writer << data_types[0] << " max_val = " << TypeInfo::Get(data_types[0])->lowest()
+                   << ";\n";
+            writer << "for (size_t i = start; i < start + " << window_width << "; i++)\n";
+            writer.block_begin();
+            {
+                writer << "const " << data_types[0] << " input = in[i];\n";
+                writer << "if (input > max_val)\n";
+                writer.block_begin();
+                {
+                    writer << "max_val = input;\n";
+                }
+                writer.block_end();
+            }
+            writer.block_end();
+            writer << "out[tid] = max_val;\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+}
+
+void runtime::gpu::CudaKernelBuilder::get_avg_pool(codegen::CodeWriter& writer,
+                                                   const std::string& name,
+                                                   const std::array<std::string, 2>& data_types,
+                                                   bool include_pad)
+{
+    // In the pooling operation out = P(in) where in: NCDHW -> out: NKMPQ
+    // via pooling window: JTRS. Currently feature pooling
+    // is not supported and so K = C and J is unused
+    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
+           << data_types[1] << "* out, "
+           << "float alpha, float beta, "
+           << "int N, int C, int D, int H, int W, "
+           << "int HW, int DHW, int CDHW, int magic_N, int shift_N, "
+           << "int P, int Q, int magic_P, int shift_P, "
+           << "int PQ, int MPQ, int KMPQ, "
+           << "int S, int RS, int TRS, "
+           << "int magic_S, int shift_S, int magic_RS, int shift_RS, "
+           << "int str_d, int str_h, int str_w, "
+           << "int pad_d, int pad_h, int pad_w"
+           << ")\n";
+    writer.block_begin();
+    {
+        writer << "const int tid = threadIdx.x;\n";
+        writer << "if (tid < 32)\n";
+        writer.block_begin();
+        {
+            writer << "const int q = blockIdx.x;\n";
+            writer << "const int mp = blockIdx.y;\n";
+            writer << "const int nk = blockIdx.z;\n";
+            writer << "const int k = division_by_invariant_multiplication(nk, magic_N, "
+                      "shift_N);\n";
+            writer << "const int n = nk - k * N;\n";
+            writer << "const int m = division_by_invariant_multiplication(mp, magic_P, "
+                      "shift_P);\n";
+            writer << "const int p = mp - m * P;\n";
+            writer << "out += n*KMPQ + k*MPQ + m*PQ + mad16(p, Q, q);\n";
+
+            // coordinate transform factors from MPQ to DHW
+            writer << "int qs = q * str_w - pad_w;\n";
+            writer << "int pr = p * str_h - pad_h;\n";
+            writer << "int mt = m * str_d - pad_d;\n";
+
+            writer << "int pool_size = ";
+            auto pool_size = include_pad ? "TRS" : "0";
+            writer << pool_size << ";\n";
+
+            writer << "float sum = 0.0f;\n";
+            writer << "float rcp_pool_size = 1.0f;\n";
+            // each warp operates on a single pooling window and
+            // reduces the contents of the window within the warp
+            writer << "for (int trs = tid; trs < TRS; trs += 32)\n";
+            writer.block_begin();
+            {
+                writer << "int t = division_by_invariant_multiplication(trs, magic_RS, "
+                          "shift_RS);\n";
+                writer << "int rs = mod16(trs, t, RS);\n";
+                writer << "int r  = division_by_invariant_multiplication(rs, magic_S, shift_S);\n";
+                writer << "int s  = mod16(rs, r, S);\n";
+
+                // coordinate transformation from TRS to DHW
+                // via MPQ transform factors above
+                writer << "int x = qs + s;\n";
+                writer << "int y = pr + r;\n";
+                writer << "int z = mt + t;\n";
+
+                // helper to check participating threads
+                writer << "bool bounds_x = (x >= 0) && (x < W);\n";
+                writer << "bool bounds_y = (y >= 0) && (y < H);\n";
+                writer << "bool bounds_z = (z >= 0) && (z < D);\n";
+                writer << "bool within_tensor_bounds = bounds_x && bounds_y && bounds_z;\n";
+
+                if (include_pad == false)
+                {
+                    // count the number of (non-padded) elements
+                    writer << "pool_size += __popc(__ballot_sync(0xffffffff, "
+                              "within_tensor_bounds));\n";
+                }
+                // this will need to change to k->c once
+                // feature pooling support is added
+                writer << "int idx = n*CDHW + k*DHW + z*HW + y*W + x;\n";
+                writer << "sum += load(in,idx,within_tensor_bounds);\n";
+            }
+            writer.block_end();
+
+            writer << "rcp_pool_size = 1.0f / (float)pool_size;\n";
+            // reduce pooling window within warp.
+            // this could be improved by calculating the
+            // pooling windows each thread can partake in to
+            // reduce loads and increase coalescing. in that case,
+            // multiple warps per block would be required and the
+            // warp reduced sums would need to be accumulated in
+            // shared memory
+            writer << "for (int i = 16; i > 0; i >>= 1)\n";
+            writer.block_begin();
+            {
+                writer << "sum += __shfl_xor_sync(0xffffffff,sum,i,32);\n";
+            }
+            writer.block_end();
+            // write result to output
+            writer << "if (tid == 0)\n";
+            writer.block_begin();
+            {
+                writer << "*out = sum * rcp_pool_size;\n";
+            }
+            writer.block_end();
         }
         writer.block_end();
     }
