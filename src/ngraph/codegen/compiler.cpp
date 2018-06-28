@@ -49,7 +49,6 @@
 #include "header_resource.hpp"
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/file_util.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
 
 #if defined(__clang__)
@@ -273,6 +272,7 @@ void codegen::StaticCompiler::add_header_search_path(const string& p)
         }
     }
 }
+
 std::unique_ptr<codegen::Module>
     codegen::StaticCompiler::compile(std::unique_ptr<clang::CodeGenAction>& m_compiler_action,
                                      const string& source)

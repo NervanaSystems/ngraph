@@ -63,6 +63,33 @@ TEST(cpu_test, unhandled_op)
     ASSERT_THROW(backend->compile(f), ngraph_error);
 }
 
+TEST(cpu_test, trivial_in_place_relu)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{16, 1});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{16, 1});
+    auto add = A + B;
+    auto relu = make_shared<op::Relu>(add);
+    auto f = make_shared<Function>(relu, op::ParameterVector{A, B});
+    auto backend = runtime::Backend::create("CPU");
+    (backend->compile(f));
+    ASSERT_EQ(relu->get_outputs().at(0).get_tensor().get_pool_offset(),
+              add->get_outputs().at(0).get_tensor().get_pool_offset());
+}
+
+TEST(cpu_test, trivial_in_place_relu_fail)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{16, 1});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{16, 1});
+    auto add = A + B;
+    auto relu = make_shared<op::Relu>(add);
+    auto add2 = relu + add;
+    auto f = make_shared<Function>(add2, op::ParameterVector{A, B});
+    auto backend = runtime::Backend::create("CPU");
+    (backend->compile(f));
+    ASSERT_NE(relu->get_outputs().at(0).get_tensor().get_pool_offset(),
+              add->get_outputs().at(0).get_tensor().get_pool_offset());
+}
+
 #ifdef NGRAPH_TBB_ENABLE
 TEST(cpu_test, abc_tbb)
 {
