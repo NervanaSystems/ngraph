@@ -7615,7 +7615,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_3d_eliminate_zero_dim)
     EXPECT_EQ((vector<float>{inf, inf, inf, inf, inf, inf}), read_vector<float>(result));
 }
 
-TEST(${BACKEND_NAME}, sigmoid_n1c1h2w2)
+NGRAPH_TEST(${BACKEND_NAME}, sigmoid_n1c1h2w2)
 {
     auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
     auto sigmoid_node = make_shared<op::Sigmoid>(input);
@@ -7635,7 +7635,7 @@ TEST(${BACKEND_NAME}, sigmoid_n1c1h2w2)
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
 
-TEST(${BACKEND_NAME}, sigmoid_n1c1h4)
+NGRAPH_TEST(${BACKEND_NAME}, sigmoid_n1c1h4)
 {
     auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
     auto sigmoid_node = make_shared<op::Sigmoid>(input);
@@ -7655,7 +7655,7 @@ TEST(${BACKEND_NAME}, sigmoid_n1c1h4)
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
 
-TEST(${BACKEND_NAME}, sigmoid_bprop_n1c1h4)
+NGRAPH_TEST(${BACKEND_NAME}, sigmoid_bprop_n1c1h4)
 {
     auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
     auto delta = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
