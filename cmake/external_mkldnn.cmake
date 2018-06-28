@@ -48,12 +48,15 @@ set(MKLVERSION "2018.0.3.20180406")
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     set(MKLPACKAGE "mklml_lnx_${MKLVERSION}.tgz")
     set(MKL_SHA1_HASH aea0d9ce65773cfcf5d8292b8db553bde965fc8f)
-elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+    set(MKL_LIBS libiomp5.so libmklml_intel.so)
+elseif (APPLE)
     set(MKLPACKAGE "mklml_mac_${MKLVERSION}.tgz")
     set(MKL_SHA1_HASH d76083fd5a79767a96572ad0e23e7f4c892818f2)
-elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
-    set(MKLPACKAGE "mklml_win_${MKLVERSION}.tgz")
+    set(MKL_LIBS libmklml.dylib libiomp5.dylib)
+elseif (WIN32)
+    set(MKLPACKAGE "mklml_win_${MKLVERSION}.zip")
     set(MKL_SHA1_HASH d607ca92d7bfc101f0828c0b005098b75531669b)
+    set(MKL_LIBS mklml.dll libiomp5md.dll)
 endif()
 set(MKLURL ${MKLURLROOT}${MKLPACKAGE})
 
@@ -72,6 +75,11 @@ ExternalProject_Add(
 ExternalProject_Get_Property(ext_mkl source_dir)
 set(MKL_ROOT ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/external/mkl)
 set(MKL_SOURCE_DIR ${source_dir})
+add_library(libmkl INTERFACE)
+add_dependencies(libmkl ext_mkl)
+foreach(LIB ${MKL_LIBS})
+    target_link_libraries(libmkl INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${LIB})
+endforeach()
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
 set(MKLDNN_GIT_TAG "0e7ca73")
@@ -85,6 +93,12 @@ if(${CMAKE_VERSION} VERSION_LESS 3.2)
         GIT_TAG ${MKLDNN_GIT_TAG}
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND
+        # Patch gets mad if it applied for a second time so:
+        #    --forward tells patch to ignore if it has already been applied
+        #    --reject-file tells patch to not right a reject file
+        #    || exit 0 changes the exit code for the PATCH_COMMAND to zero so it is not an error
+        # I don't like it, but it works
+        PATCH_COMMAND patch ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/src/CMakeLists.txt --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/mkldnn.diff || exit 0
         # Uncomment below with any in-flight MKL-DNN patches
         # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
         CMAKE_ARGS
@@ -110,6 +124,12 @@ else()
         GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
         GIT_TAG ${MKLDNN_GIT_TAG}
         UPDATE_COMMAND ""
+        # Patch gets mad if it applied for a second time so:
+        #    --forward tells patch to ignore if it has already been applied
+        #    --reject-file tells patch to not right a reject file
+        #    || exit 0 changes the exit code for the PATCH_COMMAND to zero so it is not an error
+        # I don't like it, but it works
+        PATCH_COMMAND patch ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/src/CMakeLists.txt --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/mkldnn.diff || exit 0
         # Uncomment below with any in-flight MKL-DNN patches
         # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
         CMAKE_ARGS
@@ -139,10 +159,16 @@ ExternalProject_Add_Step(
     DEPENDERS configure
     )
 
+add_custom_command(TARGET ext_mkldnn POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib ${NGRAPH_BUILD_DIR}
+    COMMENT "Move mkldnn libraries to ngraph build directory"
+)
+
 add_library(libmkldnn INTERFACE)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
 target_link_libraries(libmkldnn INTERFACE
     ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn${CMAKE_SHARED_LIBRARY_SUFFIX}
+    libmkl
     )
 
 install(DIRECTORY ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/ DESTINATION ${NGRAPH_INSTALL_LIB} OPTIONAL)

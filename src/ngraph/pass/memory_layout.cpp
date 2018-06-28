@@ -38,16 +38,47 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
     MemoryManager mm(m_alignment);
     for (shared_ptr<Node> node : function->get_ordered_ops())
     {
+        std::map<descriptor::Tensor*, descriptor::Tensor*> in_place_outputs;
+        std::set<const descriptor::Tensor*> reused_inputs;
+
+        if (auto op = std::dynamic_pointer_cast<op::Op>(node))
+        {
+            if (auto op_annotations = op->get_op_annotations())
+            {
+                for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
+                {
+                    auto output = &node->get_outputs().at(oi_pair.first).get_tensor();
+                    auto input = &node->get_inputs().at(oi_pair.second).get_tensor();
+
+                    if (node->liveness_free_list.count(input) != 0 &&
+                        node->liveness_new_list.count(output) != 0)
+                    {
+                        NGRAPH_DEBUG << input->get_name() << " will be reused for "
+                                     << output->get_name();
+                        in_place_outputs.insert({output, input});
+                        reused_inputs.insert(input);
+                    }
+                }
+            }
+        }
+
         for (descriptor::Tensor* tensor : node->liveness_new_list)
         {
-            size_t offset = mm.allocate(tensor->size());
+            size_t offset = in_place_outputs.count(tensor)
+                                ? in_place_outputs.at(tensor)->get_pool_offset()
+                                : mm.allocate(tensor->size());
+
             tensor->set_pool_offset(offset);
         }
+
         if (!m_disable_memory_sharing)
         {
             for (const descriptor::Tensor* tensor : node->liveness_free_list)
             {
-                mm.free(tensor->get_pool_offset());
+                if (reused_inputs.count(tensor) == 0)
+                {
+                    mm.free(tensor->get_pool_offset());
+                }
             }
         }
     }

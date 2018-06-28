@@ -87,7 +87,7 @@ normalize with a ``softmax``.
 
 .. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
-   :lines: 138-149
+   :lines: 137-149
 
 
 .. _loss:
@@ -101,7 +101,7 @@ to prevent underflow.
 
 .. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
-   :lines: 151-166
+   :lines: 151-169
 
 
 .. _backprop:

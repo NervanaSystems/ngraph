@@ -17,6 +17,7 @@
 
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
+#include "ngraph/runtime/gpu/type_info.hpp"
 
 using namespace ngraph;
 
@@ -57,28 +58,131 @@ void runtime::gpu::CudaKernelBuilder::get_elementwise_op(codegen::CodeWriter& wr
     return;
 }
 
+void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
+    codegen::CodeWriter& writer,
+    const std::string& name,
+    const std::string& op,
+    const std::string& reduce_op,
+    const std::vector<std::string>& data_types,
+    const std::set<size_t>& reduced_tensors,
+    bool save_elementwise,
+    size_t rank)
+{
+    auto num_inputs = data_types.size() - 1;
+    writer << "extern \"C\" __global__ void cuda_" << name << "(";
+    for (size_t i = 0; i < num_inputs; i++)
+    {
+        writer << data_types[i] << "* in" << i << ", ";
+    }
+    writer << data_types[num_inputs] << "* out0, ";
+
+    // multi-output to save intermediate elementwise op if requested
+    if (save_elementwise)
+    {
+        writer << data_types[num_inputs] << "* out1, ";
+    }
+    writer << "int* strides, "
+           << "int* stride_magic, "
+           << "int* stride_shift, "
+           << "int* reduced_strides, "
+           << "size_t n)\n";
+    writer.block_begin();
+    {
+        writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x; \n";
+        writer << "if (tid < n)\n";
+        writer.block_begin();
+        {
+            std::string reduced_idx = collective_coordinate_transform_helper(writer,
+                                                                             "tid",
+                                                                             "strides",
+                                                                             "stride_magic",
+                                                                             "stride_shift",
+                                                                             "reduced_strides",
+                                                                             "coordinate",
+                                                                             rank);
+            // element-wise operation
+            writer << data_types[num_inputs] << " output = " << op << "(";
+            for (size_t i = 0; i < num_inputs; i++)
+            {
+                if (i > 0)
+                {
+                    writer << ", ";
+                }
+                writer << "in" << i << "[";
+                if (reduced_tensors.count(i) > 0)
+                {
+                    writer << reduced_idx;
+                }
+                else
+                {
+                    writer << "tid";
+                }
+                writer << "]";
+            }
+            writer << ");\n";
+
+            // global collective reduce or broadcast
+            if (reduce_op != "")
+            {
+                // TODO: mediate atomic memory access contention
+                writer << reduce_op << "(&out0[" << reduced_idx << "], output);\n";
+                if (save_elementwise)
+                {
+                    writer << "out1["
+                           << "tid"
+                           << "] = output;\n";
+                }
+            }
+            else
+            {
+                writer << "out0[tid] = output;\n";
+                if (save_elementwise)
+                {
+                    writer << "out1[" << reduced_idx << "] = output;\n";
+                }
+            }
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+
+    return;
+}
+
 void runtime::gpu::CudaKernelBuilder::get_broadcast_op(codegen::CodeWriter& writer,
                                                        const std::string& name,
-                                                       const std::array<std::string, 2>& data_types)
+                                                       const std::array<std::string, 2>& data_types,
+                                                       const size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
-           << data_types[1] << "* out, size_t m, size_t k, size_t n)\n";
-    writer << "{\n";
-    writer.indent++;
+           << data_types[1] << "* out, "
+           << "int* strides, "
+           << "int* stride_magic, "
+           << "int* stride_shift, "
+           << "int* reduced_strides, "
+           << "float alpha, float beta, "
+           << "size_t nthreads"
+           << ")\n";
+    writer.block_begin();
     {
-        writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
-        writer << "if (tid < n)\n";
-        writer << "{\n";
-        writer.indent++;
+        writer << "const int tid = blockDim.x*blockIdx.x + threadIdx.x;\n";
+        writer << "if (tid < nthreads)\n";
+        writer.block_begin();
         {
-            writer << "size_t idx = tid / (m * k) * m + tid % m;\n";
-            writer << "out[tid] = in[idx];\n";
+            // calculate tensor coordinates (inverse tensor reduction)
+            std::string reduced_idx = collective_coordinate_transform_helper(writer,
+                                                                             "tid",
+                                                                             "strides",
+                                                                             "stride_magic",
+                                                                             "stride_shift",
+                                                                             "reduced_strides",
+                                                                             "coordinate",
+                                                                             rank);
+            writer << "out[tid] = load(in, " << reduced_idx << ");\n";
         }
-        writer.indent--;
-        writer << "}\n";
+        writer.block_end();
     }
-    writer.indent--;
-    writer << "}\n";
+    writer.block_end();
 }
 
 void runtime::gpu::CudaKernelBuilder::get_onehot_op(codegen::CodeWriter& writer,
@@ -176,6 +280,87 @@ void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
     writer.block_end();
 }
 
+void runtime::gpu::CudaKernelBuilder::get_pad_dynamic_op(
+    codegen::CodeWriter& writer,
+    const std::string& name,
+    const std::array<std::string, 2>& data_types)
+{
+    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
+           << data_types[1] << "* out, uint32_t* input_strides, uint32_t* output_strides, "
+                               "uint32_t* padding_below, uint32_t* "
+                               "padding_interior, uint32_t rank, uint32_t n)\n";
+    writer.block_begin();
+    {
+        writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
+        writer << "if (tid < n)\n";
+        writer.block_begin();
+        {
+            writer << "uint32_t output_idx = 0;\n";
+            writer << "uint32_t input_idx = tid;\n";
+
+            writer << "for(uint32_t i = 0; i < rank; i++)\n";
+            writer.block_begin();
+            {
+                writer << "output_idx += (input_idx / input_strides[i] * padding_interior[i]  + "
+                          "padding_below[i]) "
+                          "* output_strides[i];\n";
+                writer << "input_idx %= input_strides[i];\n";
+            }
+            writer.block_end();
+            writer << "out[output_idx] = in[tid];\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+}
+
+void runtime::gpu::CudaKernelBuilder::get_reverse_sequence_op(
+    codegen::CodeWriter& writer,
+    const std::string& name,
+    const std::array<std::string, 3>& data_types,
+    const size_t batch_axis,
+    const size_t sequence_axis,
+    const size_t rank)
+{
+    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
+           << data_types[1] << "* sequence, " << data_types[2] << "* out, "
+           << "uint32_t* output_shape, uint32_t* output_strides, uint32_t n)\n";
+    writer.block_begin();
+    {
+        writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
+        writer << "if (tid < n)\n";
+        writer.block_begin();
+        {
+            writer << "uint32_t input_idx = tid;\n";
+            for (size_t i = 0; i < rank - 1; i++)
+            {
+                writer << "uint32_t output_idx_" << i << " = input_idx / output_strides[" << i
+                       << "];\n";
+                writer << "input_idx %= output_strides[" << i << "];\n";
+            }
+            writer << "uint32_t output_idx_" << rank - 1 << " = input_idx / output_strides["
+                   << rank - 1 << "];\n";
+            writer << "uint32_t sequence_length = sequence[output_idx_" << batch_axis << "];\n";
+            writer << "assert(sequence_length <= output_shape[" << sequence_axis << "]);\n";
+
+            writer << "bool need_reverse = (output_idx_" << sequence_axis
+                   << " < sequence_length) && (sequence_length > 1);\n";
+            writer << "output_idx_" << sequence_axis
+                   << " = need_reverse ? sequence_length - output_idx_" << sequence_axis
+                   << " - 1 : output_idx_" << sequence_axis << ";\n";
+            writer << "uint32_t output_idx = need_reverse ? ";
+            writer << "output_idx_" << 0 << " * output_strides[" << 0 << "]";
+            for (size_t i = 1; i < rank; i++)
+            {
+                writer << " + output_idx_" << i << " * output_strides[" << i << "]";
+            }
+            writer << " : tid;\n";
+            writer << "out[output_idx] = in[tid];\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+}
 void runtime::gpu::CudaKernelBuilder::get_slice_op(codegen::CodeWriter& writer,
                                                    const std::string& name,
                                                    const std::array<std::string, 2>& data_types)
@@ -370,6 +555,200 @@ void runtime::gpu::CudaKernelBuilder::get_replace_slice_op(
         writer.block_end();
     }
     writer.block_end();
+}
+
+void runtime::gpu::CudaKernelBuilder::get_max_pool_1d(codegen::CodeWriter& writer,
+                                                      const std::string& name,
+                                                      const std::array<std::string, 2>& data_types,
+                                                      size_t input_width,
+                                                      size_t output_width,
+                                                      size_t window_width,
+                                                      size_t window_stride)
+{
+    // assumes data is in NCW format
+    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
+           << data_types[1] << "* out, size_t nthreads)\n";
+    writer.block_begin();
+    {
+        // index into output tensor
+        writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
+        writer << "if (tid < nthreads)\n";
+        writer.block_begin();
+        {
+            // index into input tensor
+            writer << "size_t start = (tid / " << output_width << ") * " << input_width << " + "
+                   << " (tid % " << output_width << ") * " << window_stride << ";\n";
+            writer << data_types[0] << " max_val = " << TypeInfo::Get(data_types[0])->lowest()
+                   << ";\n";
+            writer << "for (size_t i = start; i < start + " << window_width << "; i++)\n";
+            writer.block_begin();
+            {
+                writer << "const " << data_types[0] << " input = in[i];\n";
+                writer << "if (input > max_val)\n";
+                writer.block_begin();
+                {
+                    writer << "max_val = input;\n";
+                }
+                writer.block_end();
+            }
+            writer.block_end();
+            writer << "out[tid] = max_val;\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+}
+
+void runtime::gpu::CudaKernelBuilder::get_avg_pool(codegen::CodeWriter& writer,
+                                                   const std::string& name,
+                                                   const std::array<std::string, 2>& data_types,
+                                                   bool include_pad)
+{
+    // In the pooling operation out = P(in) where in: NCDHW -> out: NKMPQ
+    // via pooling window: JTRS. Currently feature pooling
+    // is not supported and so K = C and J is unused
+    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
+           << data_types[1] << "* out, "
+           << "float alpha, float beta, "
+           << "int N, int C, int D, int H, int W, "
+           << "int HW, int DHW, int CDHW, int magic_N, int shift_N, "
+           << "int P, int Q, int magic_P, int shift_P, "
+           << "int PQ, int MPQ, int KMPQ, "
+           << "int S, int RS, int TRS, "
+           << "int magic_S, int shift_S, int magic_RS, int shift_RS, "
+           << "int str_d, int str_h, int str_w, "
+           << "int pad_d, int pad_h, int pad_w"
+           << ")\n";
+    writer.block_begin();
+    {
+        writer << "const int tid = threadIdx.x;\n";
+        writer << "if (tid < 32)\n";
+        writer.block_begin();
+        {
+            writer << "const int q = blockIdx.x;\n";
+            writer << "const int mp = blockIdx.y;\n";
+            writer << "const int nk = blockIdx.z;\n";
+            writer << "const int k = division_by_invariant_multiplication(nk, magic_N, "
+                      "shift_N);\n";
+            writer << "const int n = nk - k * N;\n";
+            writer << "const int m = division_by_invariant_multiplication(mp, magic_P, "
+                      "shift_P);\n";
+            writer << "const int p = mp - m * P;\n";
+            writer << "out += n*KMPQ + k*MPQ + m*PQ + mad16(p, Q, q);\n";
+
+            // coordinate transform factors from MPQ to DHW
+            writer << "int qs = q * str_w - pad_w;\n";
+            writer << "int pr = p * str_h - pad_h;\n";
+            writer << "int mt = m * str_d - pad_d;\n";
+
+            writer << "int pool_size = ";
+            auto pool_size = include_pad ? "TRS" : "0";
+            writer << pool_size << ";\n";
+
+            writer << "float sum = 0.0f;\n";
+            writer << "float rcp_pool_size = 1.0f;\n";
+            // each warp operates on a single pooling window and
+            // reduces the contents of the window within the warp
+            writer << "for (int trs = tid; trs < TRS; trs += 32)\n";
+            writer.block_begin();
+            {
+                writer << "int t = division_by_invariant_multiplication(trs, magic_RS, "
+                          "shift_RS);\n";
+                writer << "int rs = mod16(trs, t, RS);\n";
+                writer << "int r  = division_by_invariant_multiplication(rs, magic_S, shift_S);\n";
+                writer << "int s  = mod16(rs, r, S);\n";
+
+                // coordinate transformation from TRS to DHW
+                // via MPQ transform factors above
+                writer << "int x = qs + s;\n";
+                writer << "int y = pr + r;\n";
+                writer << "int z = mt + t;\n";
+
+                // helper to check participating threads
+                writer << "bool bounds_x = (x >= 0) && (x < W);\n";
+                writer << "bool bounds_y = (y >= 0) && (y < H);\n";
+                writer << "bool bounds_z = (z >= 0) && (z < D);\n";
+                writer << "bool within_tensor_bounds = bounds_x && bounds_y && bounds_z;\n";
+
+                if (include_pad == false)
+                {
+                    // count the number of (non-padded) elements
+                    writer << "pool_size += __popc(__ballot_sync(0xffffffff, "
+                              "within_tensor_bounds));\n";
+                }
+                // this will need to change to k->c once
+                // feature pooling support is added
+                writer << "int idx = n*CDHW + k*DHW + z*HW + y*W + x;\n";
+                writer << "sum += load(in,idx,within_tensor_bounds);\n";
+            }
+            writer.block_end();
+
+            writer << "rcp_pool_size = 1.0f / (float)pool_size;\n";
+            // reduce pooling window within warp.
+            // this could be improved by calculating the
+            // pooling windows each thread can partake in to
+            // reduce loads and increase coalescing. in that case,
+            // multiple warps per block would be required and the
+            // warp reduced sums would need to be accumulated in
+            // shared memory
+            writer << "for (int i = 16; i > 0; i >>= 1)\n";
+            writer.block_begin();
+            {
+                writer << "sum += __shfl_xor_sync(0xffffffff,sum,i,32);\n";
+            }
+            writer.block_end();
+            // write result to output
+            writer << "if (tid == 0)\n";
+            writer.block_begin();
+            {
+                writer << "*out = sum * rcp_pool_size;\n";
+            }
+            writer.block_end();
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+}
+
+std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_helper(
+    codegen::CodeWriter& writer,
+    std::string i_thread_index,
+    std::string i_strides,
+    std::string i_stride_magic,
+    std::string i_stride_shift,
+    std::string i_reduced_strides,
+    std::string o_coordinates,
+    size_t rank)
+{
+    // Translation from flat index to dense tensor coordinates:
+    // Given tensor shape [d0 d1 ... dN] with strides [d1*...*dN, d2*...*dN, ... 1],
+    // calculate coordinates as:
+    //
+    //  product = tid
+    //  d0 = product/stride[0]
+    //  product = product % stride[0]
+    //  d1 = product/stride[1]
+    //  ...
+    writer << "int coordinate_product = " << i_thread_index << ";\n";
+    for (size_t i = 0; i < rank; i++)
+    {
+        writer << "int " << o_coordinates << i << " = division_by_invariant_multiplication("
+               << "coordinate_product, " << i_stride_magic << "[" << i << "], " << i_stride_shift
+               << "[" << i << "]);\n";
+        writer << "coordinate_product -= (" << o_coordinates << i << " * " << i_strides << "[" << i
+               << "]);\n";
+    }
+
+    // index into reduced tensor from coordinates of non-reduced tensor
+    std::string reduced_idx = "reduced_idx";
+    writer << "int " << reduced_idx << " = 0;\n";
+    for (size_t i = 0; i < rank; i++)
+    {
+        writer << "reduced_idx += " << o_coordinates << i << " * " << i_reduced_strides << "[" << i
+               << "];\n";
+    }
+
+    return reduced_idx;
 }
 
 void runtime::gpu::CudaKernelBuilder::get_device_helper(codegen::CodeWriter& writer,

@@ -668,6 +668,100 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_5d)
         read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_1d_last)
+{
+    Shape shape_a{4};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{0};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{4};
+
+    auto r = make_shared<op::Concat>(NodeVector{A, B}, 0);
+    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    vector<float> a_data{1, 2, 3, 4};
+    vector<float> b_data(0);
+
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, a_data);
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, b_data);
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call(f, {result}, {a, b});
+    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_1d_middle)
+{
+    Shape shape_a{4};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{0};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_c{4};
+    auto C = make_shared<op::Parameter>(element::f32, shape_c);
+    Shape shape_r{8};
+
+    auto r = make_shared<op::Concat>(NodeVector{A, B, C}, 0);
+    auto f = make_shared<Function>(r, op::ParameterVector{A, B, C});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    vector<float> a_data{1, 2, 3, 4};
+    vector<float> b_data(0);
+    vector<float> c_data{5, 6, 7, 8};
+
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, a_data);
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, b_data);
+    auto c = backend->create_tensor(element::f32, shape_c);
+    copy_data(c, c_data);
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call(f, {result}, {a, b, c});
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_4d_middle)
+{
+    Shape shape_a{2, 2, 1, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{2, 2, 0, 1};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_c{2, 2, 1, 1};
+    auto C = make_shared<op::Parameter>(element::f32, shape_c);
+    Shape shape_r{2, 2, 2, 1};
+
+    auto r = make_shared<op::Concat>(NodeVector{A, B, C}, 2);
+    auto f = make_shared<Function>(r, op::ParameterVector{A, B, C});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    vector<float> a_data{1, 2, 3, 4};
+    vector<float> b_data(0);
+    vector<float> c_data{5, 6, 7, 8};
+
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, a_data);
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, b_data);
+    auto c = backend->create_tensor(element::f32, shape_c);
+    copy_data(c, c_data);
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call(f, {result}, {a, b, c});
+    EXPECT_EQ((vector<float>{1, 5, 2, 6, 3, 7, 4, 8}), read_vector<float>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, divide)
 {
     Shape shape{2, 2};
@@ -4953,54 +5047,6 @@ NGRAPH_TEST(${BACKEND_NAME}, numeric_double_inf)
     EXPECT_EQ((vector<char>{false, false, true, false, false}), read_vector<char>(result));
 }
 
-#ifdef NGRAPH_TBB_ENABLE
-NGRAPH_TEST(${BACKEND_NAME}, abc_tbb)
-{
-    // Force TBB flow graph generation in the CPU backend
-    // This has no effect on other backends
-    bool use_tbb = (getenv("NGRAPH_CPU_USE_TBB") != nullptr);
-    if (!use_tbb)
-    {
-        setenv("NGRAPH_CPU_USE_TBB", "1", 1);
-    }
-
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::TensorView> c = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::TensorView> result = backend->create_tensor(element::f32, shape);
-
-    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
-    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
-    copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
-
-    backend->call(f, {result}, {a, b, c});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
-
-    backend->call(f, {result}, {b, a, c});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
-
-    backend->call(f, {result}, {a, c, b});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
-
-    if (!use_tbb)
-    {
-        unsetenv("NGRAPH_CPU_USE_TBB");
-    }
-}
-#endif // NGRAPH_TBB_ENABLE
-
 //
 // The unit tests for ReduceWindow follow exactly what we test for MaxPool---but they use ReduceWindow to do it.
 //
@@ -7759,6 +7805,42 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_all)
     EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, softmax_axis_3d)
+{
+    Shape shape{2, 2, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{-10, -20, -30, -40, -50, -60, -1, -2, -3, -4, -5, -6});
+    auto result = backend->create_tensor(element::f32, shape);
+
+    auto d0 = expf(-10) + expf(-1);
+    auto d1 = expf(-20) + expf(-2);
+    auto d2 = expf(-30) + expf(-3);
+    auto d3 = expf(-40) + expf(-4);
+    auto d4 = expf(-50) + expf(-5);
+    auto d5 = expf(-60) + expf(-6);
+
+    backend->call(f, {result}, {a});
+    vector<float> expected{expf(-10) / d0,
+                           expf(-20) / d1,
+                           expf(-30) / d2,
+                           expf(-40) / d3,
+                           expf(-50) / d4,
+                           expf(-60) / d5,
+                           expf(-1) / d0,
+                           expf(-2) / d1,
+                           expf(-3) / d2,
+                           expf(-4) / d3,
+                           expf(-5) / d4,
+                           expf(-6) / d5};
+
+    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, softmax_axis)
 {
     Shape shape{2, 3};
@@ -7782,6 +7864,49 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_axis)
                            expf(-50) / d1,
                            expf(-60) / d1};
     EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, softmax_axis_2)
+{
+    Shape shape{2, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{-10, -20, -30, -40, -50, -60});
+    auto result = backend->create_tensor(element::f32, shape);
+
+    auto d0 = expf(-10) + expf(-40);
+    auto d1 = expf(-20) + expf(-50);
+    auto d2 = expf(-30) + expf(-60);
+
+    backend->call(f, {result}, {a});
+    vector<float> expected{expf(-10) / d0,
+                           expf(-20) / d1,
+                           expf(-30) / d2,
+                           expf(-40) / d0,
+                           expf(-50) / d1,
+                           expf(-60) / d2};
+    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, softmax_axis_3d_trivial)
+{
+    Shape shape{1, 2, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{-10, -20, -30, -40, -50, -60});
+    auto result = backend->create_tensor(element::f32, shape);
+
+    backend->call(f, {result}, {a});
+    vector<float> expected{1, 1, 1, 1, 1, 1};
+    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, softmax_underflow)
