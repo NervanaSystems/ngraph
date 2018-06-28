@@ -296,7 +296,7 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
         auto slice = pattern_map[slice_weights_label];
         if (weights->get_shape().at(IC) != slice->get_shape().at(IC))
         {
-            NGRAPH_DEBUG << "data or weights nodes are different among slices";
+            NGRAPH_DEBUG << "slices are done on the wrong axis (IC)";
             return {nullptr};
         }
     }
