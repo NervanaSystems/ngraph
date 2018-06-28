@@ -27,5 +27,6 @@ namespace ngraph
         }
 
         Graph Attribute::get_graph() const { return Graph{m_attribute_proto.g()}; }
-    }
-}
+    } // namespace onnx_import
+
+} // namespace ngraph

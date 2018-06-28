@@ -32,5 +32,7 @@ namespace ngraph
             }
             return result;
         }
-    }
-}
+
+    } // namespace onnx_import
+
+} // namespace ngraph
