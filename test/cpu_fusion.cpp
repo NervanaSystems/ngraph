@@ -678,8 +678,8 @@ TEST(cpu_fusion, conv_bias_bprop)
     auto data_batch = std::make_shared<op::Parameter>(element::f32, shape);
     auto filters = std::make_shared<op::Parameter>(element::f32, shape);
     auto delta = std::make_shared<op::Parameter>(element::f32, shape);
-    auto bias = make_shared<op::Parameter>(element::f32, Shape{});
-    auto pbroadcast = std::make_shared<op::Broadcast>(bias, shape, AxisSet{0, 1, 2, 3});
+    auto bias = make_shared<op::Parameter>(element::f32, Shape{shape[0]});
+    auto pbroadcast = std::make_shared<op::Broadcast>(bias, shape, AxisSet{1, 2, 3});
     auto conv = std::make_shared<op::Convolution>(data_batch, filters);
     auto conv_bias = std::make_shared<op::Add>(conv, pbroadcast);
 
