@@ -101,6 +101,19 @@ namespace ngraph
                                                  bool save_elementwise,
                                                  size_t rank);
 
+                static void get_max_pool_1d(codegen::CodeWriter& writer,
+                                            const std::string& name,
+                                            const std::array<std::string, 2>& data_types,
+                                            size_t input_width,
+                                            size_t output_width,
+                                            size_t window_width,
+                                            size_t window_stride);
+
+                static void get_avg_pool(codegen::CodeWriter& writer,
+                                         const std::string& name,
+                                         const std::array<std::string, 2>& data_types,
+                                         bool include_pad);
+
                 static void add_pod_typedefs(codegen::CodeWriter& writer);
 
                 /// \brief Given kernel input variables i_* produce register variables o_coordinates{i}
