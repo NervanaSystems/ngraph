@@ -87,6 +87,31 @@ mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor(const Shape& shape,
                                 fmt);
 }
 
+mkldnn::memory::desc
+    MKLDNNEmitter::build_blocked_memory_descriptor(const mkldnn::memory::dims& dim,
+                                                   const mkldnn::memory::dims& strides,
+                                                   mkldnn::memory::data_type dtype) const
+{
+    mkldnn_memory_desc_t md;
+    md.primitive_kind = mkldnn_memory;
+    md.ndims = static_cast<int>(dim.size());
+    md.format = mkldnn_blocked;
+    md.data_type = mkldnn::memory::convert_to_c(dtype);
+
+    for (size_t i = 0; i < dim.size(); i++)
+    {
+        md.layout_desc.blocking.block_dims[i] = 1;
+        md.layout_desc.blocking.strides[1][i] = 1;
+        md.layout_desc.blocking.strides[0][i] = strides[i];
+        md.layout_desc.blocking.padding_dims[i] = dim[i];
+        md.layout_desc.blocking.offset_padding_to_data[i] = 0;
+        md.dims[i] = dim[i];
+    }
+    md.layout_desc.blocking.offset_padding = 0;
+
+    return mkldnn::memory::desc(md);
+}
+
 mkldnn::memory MKLDNNEmitter::build_memory_primitive(const TensorViewWrapper& tvw) const
 {
     return mkldnn::memory({build_memory_descriptor(tvw), mkldnn_utils::global_cpu_engine}, nullptr);
