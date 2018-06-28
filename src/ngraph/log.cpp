@@ -17,6 +17,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <ctime>
+#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <mutex>
@@ -100,7 +101,10 @@ void ngraph::logger::log_item(const string& s)
     queue_condition.notify_one();
 }
 
-ngraph::log_helper::log_helper(LOG_TYPE type, const char* file, int line, const char* func)
+ngraph::log_helper::log_helper(LOG_TYPE type,
+                               const char* file,
+                               int line,
+                               std::function<void(const string&)> handler_func)
 {
     switch (type)
     {
@@ -109,6 +113,8 @@ ngraph::log_helper::log_helper(LOG_TYPE type, const char* file, int line, const 
     case LOG_TYPE::_LOG_TYPE_INFO: _stream << "[INFO] "; break;
     case LOG_TYPE::_LOG_TYPE_DEBUG: _stream << "[DEBUG] "; break;
     }
+
+    _handler_func = handler_func;
 
     std::time_t tt = chrono::system_clock::to_time_t(chrono::system_clock::now());
     auto tm = std::gmtime(&tt);
@@ -126,6 +132,9 @@ ngraph::log_helper::log_helper(LOG_TYPE type, const char* file, int line, const 
 
 ngraph::log_helper::~log_helper()
 {
-    cout << _stream.str() << endl;
+    if (_handler_func)
+    {
+        _handler_func(_stream.str());
+    }
     // logger::log_item(_stream.str());
 }

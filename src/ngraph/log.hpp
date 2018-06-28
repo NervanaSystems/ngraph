@@ -17,6 +17,8 @@
 #pragma once
 
 #include <deque>
+#include <functional>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
 
@@ -65,11 +67,15 @@ namespace ngraph
     class log_helper
     {
     public:
-        log_helper(LOG_TYPE, const char* file, int line, const char* func);
+        log_helper(LOG_TYPE,
+                   const char* file,
+                   int line,
+                   std::function<void(const std::string&)> handler_func);
         ~log_helper();
 
         std::ostream& stream() { return _stream; }
     private:
+        std::function<void(const std::string&)> _handler_func;
         std::stringstream _stream;
     };
 
@@ -96,19 +102,19 @@ namespace ngraph
     ngraph::log_helper(ngraph::LOG_TYPE::_LOG_TYPE_ERROR,                                          \
                        ngraph::get_file_name(__FILE__),                                            \
                        __LINE__,                                                                   \
-                       __PRETTY_FUNCTION__)                                                        \
+                       [](const std::string& content) { std::cout << content << std::endl; })      \
         .stream()
 #define NGRAPH_WARN                                                                                \
     ngraph::log_helper(ngraph::LOG_TYPE::_LOG_TYPE_WARNING,                                        \
                        ngraph::get_file_name(__FILE__),                                            \
                        __LINE__,                                                                   \
-                       __PRETTY_FUNCTION__)                                                        \
+                       [](const std::string& content) { std::cout << content << std::endl; })      \
         .stream()
 #define NGRAPH_INFO                                                                                \
     ngraph::log_helper(ngraph::LOG_TYPE::_LOG_TYPE_INFO,                                           \
                        ngraph::get_file_name(__FILE__),                                            \
                        __LINE__,                                                                   \
-                       __PRETTY_FUNCTION__)                                                        \
+                       [](const std::string& content) { std::cout << content << std::endl; })      \
         .stream()
 
 #ifdef NGRAPH_DEBUG_ENABLE
@@ -116,7 +122,7 @@ namespace ngraph
     ngraph::log_helper(ngraph::LOG_TYPE::_LOG_TYPE_DEBUG,                                          \
                        ngraph::get_file_name(__FILE__),                                            \
                        __LINE__,                                                                   \
-                       __PRETTY_FUNCTION__)                                                        \
+                       [](const std::string& content) { std::cout << content << std::endl; })      \
         .stream()
 #else
 #define NGRAPH_DEBUG ngraph::get_nil_stream()
