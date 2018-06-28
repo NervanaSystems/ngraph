@@ -278,7 +278,6 @@ bool ngraph::is_equal_to_const_value(std::string const_value, std::shared_ptr<No
         // way to compare elements to const_value
         size_t n_bytes = n * rc->get_element_type().size();
         NGRAPH_DEBUG << "Comparing " << n_bytes << " bytes";
-        std::cout << "Comparing " << n_bytes << " bytes";
         return !memcmp(constant_val_op->get_data_ptr(), rc->get_data_ptr(), n_bytes);
     }
     else
