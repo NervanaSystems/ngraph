@@ -261,9 +261,7 @@ namespace ngraph
     * The last argument is the adjoints coming into the bprop function, the output
     * bprop function will have these nodes as the first N input parameters
     **/
-    FpropCache cache_fprop(std::shared_ptr<Function> fprop,
-                           std::shared_ptr<Function> bprop,
-                           std::vector<std::shared_ptr<Node>> adjoints);
+    FpropCache cache_fprop(std::shared_ptr<Function> fprop, std::shared_ptr<Function> bprop);
 } // end namespace ngraph
 
 std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);
