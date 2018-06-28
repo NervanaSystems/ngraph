@@ -20,6 +20,10 @@ if (NGRAPH_CPU_ENABLE)
     add_subdirectory(cpu)
 endif()
 
+if (NGRAPH_INTELGPU_ENABLE)
+    add_subdirectory(intelgpu)
+endif()
+
 if (NGRAPH_GPU_ENABLE)
     add_subdirectory(gpu)
 endif()

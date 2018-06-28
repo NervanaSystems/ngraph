@@ -116,7 +116,7 @@ void ngraph::runtime::cpu::pass::ConcatInputs::concat_lstm_inputs()
                 {
                     NGRAPH_DEBUG << "Replacing 1st output Lstm node " << goe_node->get_name()
                                  << " with " << lstm_ht_out->get_name();
-                    if (goe_node->get_users().size() > 0)
+                    if (!goe_node->get_users().empty())
                     {
                         ngraph::replace_node(goe_node, lstm_ht_out);
                     }
