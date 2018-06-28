@@ -25,7 +25,7 @@ using namespace std;
 
 extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
-    return new runtime::cpu::GPU_Backend();
+    return new runtime::gpu::GPU_Backend();
 }
 
 extern "C" void delete_backend(runtime::Backend* backend)
