@@ -27,6 +27,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
@@ -57,7 +58,8 @@ static const std::unordered_set<std::type_index> s_op_registry{
     TI(ngraph::op::MaxPool),
     TI(ngraph::op::MaxPoolBackprop),
     TI(ngraph::op::Relu),
-    TI(ngraph::op::ReluBackprop)};
+    TI(ngraph::op::ReluBackprop),
+    TI(ngraph::op::Reshape)};
 
 // Mapping from POD types to MKLDNN data types
 static const std::map<element::Type, const mkldnn::memory::data_type> s_mkldnn_data_type_map{
