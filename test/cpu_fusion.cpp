@@ -46,6 +46,7 @@
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/op/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
+#include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
@@ -2479,6 +2480,43 @@ TEST(cpu_fusion, fuse_rnn_across_2layer_1timestep)
     auto cpu_results = execute(cpu_f, args, "CPU");
 
     EXPECT_EQ(1, count_ops_of_type<op::Rnn>(cpu_f));
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(1), int_results.at(1), 1.0e-4f, 1.0e-4f));
+    }
+}
+
+TEST(cpu_fusion, fuse_bounded_relu)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "tensorflow/relu6.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    size_t ccg = count_ops_of_type<op::BoundedRelu>(func);
+    ASSERT_EQ(ccg, 1);
+}
+
+TEST(cpu_fusion, fuse_bounded_relu_inter_vs_cpu)
+{
+    const std::string file_name("tensorflow/relu6.json");
+    auto cpu_f = make_function(file_name);
+    auto int_f = make_function(file_name);
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+
+    EXPECT_EQ(1, count_ops_of_type<op::BoundedRelu>(cpu_f));
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(1), int_results.at(1), 1.0e-4f, 1.0e-4f));

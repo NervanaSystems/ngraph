@@ -132,5 +132,7 @@ namespace ngraph
 
     bool is_one(std::shared_ptr<Node> reduce_constant);
 
+    bool is_six(std::shared_ptr<Node> reduce_constant);
+
     bool is_used(std::shared_ptr<Node> node);
 }

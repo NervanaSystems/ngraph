@@ -957,3 +957,23 @@ size_t MKLDNNEmitter::build_softmax_forward(const mkldnn::memory::desc& input_de
     m_primitive_deps[primitive_index] = {input_index, result_index};
     return primitive_index;
 }
+
+size_t MKLDNNEmitter::build_bounded_relu(const mkldnn::memory::desc& input_desc,
+                                         const mkldnn::memory::desc& result_desc)
+{
+    size_t input_index = build_memory_primitive(input_desc);
+    size_t result_index = build_memory_primitive(result_desc);
+
+    size_t primitive_index =
+        insert_primitive(new mkldnn::eltwise_forward({{mkldnn::prop_kind::forward_training,
+                                                       mkldnn::algorithm::eltwise_bounded_relu,
+                                                       input_desc,
+                                                       6,
+                                                       0},
+                                                      mkldnn_utils::global_cpu_engine},
+                                                     *m_mkldnn_primitives[input_index],
+                                                     *m_mkldnn_primitives[result_index]));
+
+    m_primitive_deps[primitive_index] = {input_index, result_index};
+    return primitive_index;
+}

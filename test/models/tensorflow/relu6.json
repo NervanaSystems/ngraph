@@ -1,0 +1,94 @@
+[{
+  "name" : "Function_0",
+  "ops" : [
+    {
+      "element_type" : "float",
+      "inputs" : [],
+      "name" : "Parameter_0",
+      "op" : "Parameter",
+      "outputs" : ["Parameter_0_0"],
+      "shape" : [ 2, 3 ]
+    },
+    {
+      "element_type" : "float",
+      "inputs" : [],
+      "name" : "Parameter_1",
+      "op" : "Parameter",
+      "outputs" : ["Parameter_1_0"],
+      "shape" : [ 2, 3 ]
+    },
+    {
+      "element_type" : "float",
+      "inputs" : [],
+      "name" : "Parameter_2",
+      "op" : "Parameter",
+      "outputs" : ["Parameter_2_0"],
+      "shape" : [ 2, 3 ]
+    },
+    {
+      "element_type" : "float",
+      "inputs" : [],
+      "name" : "Constant_7",
+      "op" : "Constant",
+      "outputs" : ["Constant_7_0"],
+      "shape" : [ 2, 3 ],
+      "value" : [ "6", "6", "6", "6", "6", "6" ]
+    },
+    {
+      "inputs" : [ "Parameter_2", "Parameter_1" ],
+      "name" : "Add_3",
+      "op" : "Add",
+      "outputs" : ["Add_3_0"]
+    },
+    {
+      "inputs" : [ "Add_3", "Parameter_0" ],
+      "name" : "Add_4",
+      "op" : "Add",
+      "outputs" : ["Add_4_0"]
+    },
+    {
+      "inputs" : [ "Add_3", "Parameter_0" ],
+      "name" : "Add_5",
+      "op" : "Add",
+      "outputs" : ["Add_5_0"]
+    },
+    {
+      "inputs" : ["Add_4"],
+      "name" : "Result_11",
+      "op" : "Result",
+      "outputs" : ["Result_11_0"]
+    },
+    {
+      "inputs" : [ "Add_4", "Add_5" ],
+      "name" : "Multiply_6",
+      "op" : "Multiply",
+      "outputs" : ["Multiply_6_0"]
+    },
+    {
+      "inputs" : ["Multiply_6"],
+      "name" : "Relu_8",
+      "op" : "Relu",
+      "outputs" : ["Relu_8_0"]
+    },
+    {
+      "inputs" : ["Multiply_6"],
+      "name" : "Result_12",
+      "op" : "Result",
+      "outputs" : ["Result_12_0"]
+    },
+    {
+      "inputs" : [ "Relu_8", "Constant_7" ],
+      "name" : "Minimum_9",
+      "op" : "Minimum",
+      "outputs" : ["Minimum_9_0"]
+    },
+    {
+      "inputs" : ["Minimum_9"],
+      "name" : "Result_10",
+      "op" : "Result",
+      "outputs" : ["Result_10_0"]
+    }
+  ],
+  "parameters" : [ "Parameter_2", "Parameter_1", "Parameter_0" ],
+  "result" : [ "Result_10", "Result_11", "Result_12" ]
+}]

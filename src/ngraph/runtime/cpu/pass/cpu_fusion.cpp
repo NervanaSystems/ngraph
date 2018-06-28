@@ -31,6 +31,8 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/maximum.hpp"
+#include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/pad.hpp"
@@ -45,6 +47,7 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
+#include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
@@ -1297,5 +1300,53 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(elem_mul, callback);
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
+{
+    auto relu_input = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto relu = std::make_shared<op::Relu>(relu_input);
+    auto iconst1 = op::Constant::create(element::f32, Shape{}, {1});
+    auto alpha = std::make_shared<pattern::op::Label>(iconst1);
+    auto min = std::make_shared<op::Minimum>(relu, alpha);
+
+    pattern::graph_rewrite_callback callback = [relu_input, alpha](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_bounded_relu against "
+                     << m.get_match_root()->get_name();
+
+        if (m.get_match_root()->get_element_type() != element::f32)
+        {
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+                         << " type is not float!";
+            return false;
+        }
+        auto pattern_map = m.get_pattern_map();
+        if (!std::dynamic_pointer_cast<op::Constant>(pattern_map[alpha]))
+        {
+            throw ngraph_error("alpha must be constant for bounded relu");
+        }
+        //we wont fuse if it is not Relu6
+        if (!ngraph::is_six(pattern_map[alpha]))
+        {
+            return false;
+        }
+        //we wont fuse if the alpha and the Relu output element type are not same
+        if (pattern_map[alpha]->get_element_type() != pattern_map[relu_input]->get_element_type())
+        {
+            return false;
+        }
+        if (pattern_map[alpha]->get_shape() != pattern_map[relu_input]->get_shape())
+        {
+            return false;
+        }
+        NGRAPH_DEBUG << "relu_input: " << pattern_map[relu_input]
+                     << " min_val: " << pattern_map[alpha];
+        auto cg = std::shared_ptr<Node>(new op::BoundedRelu(pattern_map[relu_input]));
+        ngraph::replace_node(m.get_match_root(), cg);
+        return true;
+    };
+
+    auto m = std::make_shared<pattern::Matcher>(min, callback);
     this->add_matcher(m);
 }
