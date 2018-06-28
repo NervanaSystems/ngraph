@@ -365,14 +365,15 @@ namespace ngraph
         }
         return result;
     }
+}
 
-    std::vector<std::string> node_vector_to_string(const NodeVector& v)
+std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv)
+{
+    std::vector<std::string> names;
+    for (auto n : nv)
     {
-        std::vector<std::string> nodes_names;
-        for (auto n : v)
-        {
-            nodes_names.push_back(n->get_name());
-        }
-        return nodes_names;
+        names.push_back(n->get_name());
     }
+    os << vector_to_string(names);
+    return os;
 }

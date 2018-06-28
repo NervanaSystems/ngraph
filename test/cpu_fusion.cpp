@@ -1954,7 +1954,7 @@ public:
                     m_heads.insert(std::make_pair(n, n));
                     m_graphs.insert(std::make_pair(n, LKGraph{{n}, n->get_arguments()}));
                     NGRAPH_DEBUG << "Created a new group for " << n->get_name();
-                    //log_group(n);
+                    log_group(n);
                 }
                 else
                 {
@@ -1969,7 +1969,7 @@ public:
                         }
                     }
                     m_heads.insert(std::make_pair(n, smallest_head));
-                    //log_group(smallest_head);
+                    log_group(smallest_head);
                 }
             }
         }
@@ -2032,12 +2032,8 @@ private:
     void log_group(std::shared_ptr<Node> head) const
     {
         NGRAPH_DEBUG << "Group leader : " << head->get_name() << std::endl;
-        NGRAPH_DEBUG << "Group members : "
-                     << vector_to_string(ngraph::node_vector_to_string(m_graphs.at(head).m_nodes))
-                     << std::endl;
-        NGRAPH_DEBUG << "Inputs: "
-                     << vector_to_string(ngraph::node_vector_to_string(m_graphs.at(head).m_inputs))
-                     << std::endl;
+        NGRAPH_DEBUG << "Group members : " << m_graphs.at(head).m_nodes << std::endl;
+        NGRAPH_DEBUG << "Inputs: " << m_graphs.at(head).m_inputs << std::endl;
     }
 
     void collect_fusable_args(std::shared_ptr<Node> n)
@@ -2089,9 +2085,6 @@ TEST(cpu_fusion, graph_partition_multiple_groups_one_pruned)
     auto mul_cd = neg_d * sub_c_neg;
     auto f =
         std::make_shared<Function>(ngraph::NodeVector{mul_cd}, op::ParameterVector{a, b, c, d});
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("graph.pdf");
-    pass_manager.run_passes(f);
 
     const size_t MIN_NODES_TO_FUSE = 3;
     LoopKernelCollector lkc(f, MIN_NODES_TO_FUSE);

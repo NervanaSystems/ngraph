@@ -199,8 +199,6 @@ namespace ngraph
         return result;
     }
 
-    std::vector<std::string> node_vector_to_string(const ngraph::NodeVector& v);
-
     template <typename T>
     T ceil_div(const T& x, const T& y)
     {
@@ -267,3 +265,5 @@ namespace ngraph
                            std::shared_ptr<Function> bprop,
                            std::vector<std::shared_ptr<Node>> adjoints);
 } // end namespace ngraph
+
+std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);
