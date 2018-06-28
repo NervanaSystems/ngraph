@@ -289,6 +289,13 @@ namespace ngraph
             };
 
             template <>
+            struct CudaOpMap<ngraph::op::Negative>
+            {
+                static constexpr const char* op = "negative";
+                static constexpr const char* math_kernel = "-x0";
+            };
+
+            template <>
             struct CudaOpMap<ngraph::op::Select>
             {
                 static constexpr const char* op = "select";
