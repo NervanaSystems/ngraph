@@ -15,14 +15,16 @@
 *******************************************************************************/
 
 #include <iomanip>
+#include <random>
 
 #include "benchmark.hpp"
+#include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-#include "random.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -116,25 +118,27 @@ static default_random_engine s_random_engine;
 template <typename T>
 void init_int_tv(shared_ptr<runtime::TensorView> tv, T min, T max)
 {
+    size_t size = tv->get_element_count();
     uniform_int_distribution<T> dist(min, max);
-    std::vector<T> vec = read_vector<T>(tv);
+    vector<T> vec(size);
     for (T& element : vec)
     {
         element = dist(s_random_engine);
     }
-    write_vector(tv, vec);
+    tv->write(vec.data(), 0, vec.size());
 }
 
 template <typename T>
 void init_real_tv(shared_ptr<runtime::TensorView> tv, T min, T max)
 {
+    size_t size = tv->get_element_count();
     uniform_real_distribution<T> dist(min, max);
-    std::vector<T> vec = read_vector<T>(tv);
+    vector<T> vec(size);
     for (T& element : vec)
     {
         element = dist(s_random_engine);
     }
-    write_vector(tv, vec);
+    tv->write(vec.data(), 0, vec.size());
 }
 
 static void random_init(shared_ptr<runtime::TensorView> tv)

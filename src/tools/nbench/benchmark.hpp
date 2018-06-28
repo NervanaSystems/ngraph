@@ -17,11 +17,12 @@
 #pragma once
 
 #include <map>
+#include <vector>
+#include <string>
+#include <memory>
 
-#include <ngraph/function.hpp>
-
+#include "ngraph/function.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
-#include "test_tools.hpp"
 
 /// performance test utilities
 std::multimap<size_t, std::string>
