@@ -2000,9 +2000,9 @@ public:
         {
             if (is_fusable(n))
             {
-                collect_fusable_args(n);
+                auto arg_from_fusable_group = collect_fusable_args(n);
                 //create a new group
-                if (!m_arg_from_fusable_group)
+                if (!arg_from_fusable_group)
                 {
                     m_heads.insert(std::make_pair(n, n));
                     m_graphs.insert(std::make_pair(n, LKGraph{{n}, n->get_arguments()}));
@@ -2011,7 +2011,7 @@ public:
                 }
                 else
                 {
-                    auto smallest_head = m_heads.at(m_arg_from_fusable_group);
+                    auto smallest_head = m_heads.at(arg_from_fusable_group);
                     auto& lkgraph = m_graphs.at(smallest_head);
                     lkgraph.m_nodes.push_back(n);
                     for (auto arg : n->get_arguments())
@@ -2089,32 +2089,31 @@ private:
         NGRAPH_DEBUG << "Inputs: " << m_graphs.at(head).m_inputs << std::endl;
     }
 
-    void collect_fusable_args(std::shared_ptr<Node> n)
+    std::shared_ptr<Node> collect_fusable_args(std::shared_ptr<Node> n)
     {
-        m_arg_from_fusable_group = nullptr;
+        std::shared_ptr<Node> arg_from_fusable_group;
         for (auto arg : n->get_arguments())
         {
             //an argument is fusable and a part of some group
             NGRAPH_DEBUG << "Considering " << arg->get_name();
             if (m_heads.count(arg) != 0)
             {
-                if (!m_arg_from_fusable_group)
+                if (!arg_from_fusable_group)
                 {
-                    m_arg_from_fusable_group = arg;
+                    arg_from_fusable_group = arg;
                 }
                 else
                 {
-                    if (!is_leaf(arg) && m_heads.at(arg) != m_heads.at(m_arg_from_fusable_group))
+                    if (!is_leaf(arg) && m_heads.at(arg) != m_heads.at(arg_from_fusable_group))
                     {
-                        m_arg_from_fusable_group = nullptr;
-                        return;
+                        return {nullptr};
                     }
                 }
             }
         }
+        return arg_from_fusable_group;
     }
 
-    std::shared_ptr<Node> m_arg_from_fusable_group;
     std::unordered_map<std::shared_ptr<Node>, LKGraph> m_graphs;
     std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>> m_heads;
 };
