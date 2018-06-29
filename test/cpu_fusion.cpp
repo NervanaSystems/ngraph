@@ -1998,11 +1998,11 @@ public:
     {
         for (auto n : f->get_ordered_ops())
         {
-            if (is_fusable(n))
+            if (is_fusible(n))
             {
-                auto arg_from_fusable_group = collect_fusable_args(n);
+                auto arg_from_fusible_group = collect_fusible_args(n);
                 //create a new group
-                if (!arg_from_fusable_group)
+                if (!arg_from_fusible_group)
                 {
                     m_heads.insert(std::make_pair(n, n));
                     m_graphs.insert(std::make_pair(n, LKGraph{{n}, n->get_arguments()}));
@@ -2011,7 +2011,7 @@ public:
                 }
                 else
                 {
-                    auto smallest_head = m_heads.at(arg_from_fusable_group);
+                    auto smallest_head = m_heads.at(arg_from_fusible_group);
                     auto& lkgraph = m_graphs.at(smallest_head);
                     lkgraph.m_nodes.push_back(n);
                     for (auto arg : n->get_arguments())
@@ -2060,7 +2060,7 @@ public:
     }
 
 private:
-    static bool is_fusable(std::shared_ptr<Node> n)
+    static bool is_fusible(std::shared_ptr<Node> n)
     {
         return (std::dynamic_pointer_cast<op::util::BinaryElementwiseArithmetic>(n) ||
                 std::dynamic_pointer_cast<op::util::UnaryElementwiseArithmetic>(n));
@@ -2089,29 +2089,29 @@ private:
         NGRAPH_DEBUG << "Inputs: " << m_graphs.at(head).m_inputs << std::endl;
     }
 
-    std::shared_ptr<Node> collect_fusable_args(std::shared_ptr<Node> n)
+    std::shared_ptr<Node> collect_fusible_args(std::shared_ptr<Node> n)
     {
-        std::shared_ptr<Node> arg_from_fusable_group;
+        std::shared_ptr<Node> arg_from_fusible_group;
         for (auto arg : n->get_arguments())
         {
-            //an argument is fusable and a part of some group
+            //an argument is fusible and a part of some group
             NGRAPH_DEBUG << "Considering " << arg->get_name();
             if (m_heads.count(arg) != 0)
             {
-                if (!arg_from_fusable_group)
+                if (!arg_from_fusible_group)
                 {
-                    arg_from_fusable_group = arg;
+                    arg_from_fusible_group = arg;
                 }
                 else
                 {
-                    if (!is_leaf(arg) && m_heads.at(arg) != m_heads.at(arg_from_fusable_group))
+                    if (!is_leaf(arg) && m_heads.at(arg) != m_heads.at(arg_from_fusible_group))
                     {
                         return {nullptr};
                     }
                 }
             }
         }
-        return arg_from_fusable_group;
+        return arg_from_fusible_group;
     }
 
     std::unordered_map<std::shared_ptr<Node>, LKGraph> m_graphs;
@@ -2168,7 +2168,6 @@ TEST(cpu_fusion, graph_partition_one_group)
     auto f =
         std::make_shared<Function>(ngraph::NodeVector{neg_e}, op::ParameterVector{a, b, c, d, e});
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("graph.pdf");
     pass_manager.run_passes(f);
 
     const size_t MIN_NODES_TO_FUSE = 3;
