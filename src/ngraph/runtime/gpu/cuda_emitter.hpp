@@ -151,7 +151,7 @@ namespace ngraph
 
             private:
                 CUDAEmitter(GPUPrimitiveEmitter* emitter);
-                uint32_t align_to_blocksize(uint32_t value, uint32_t blocksize);
+                uint32_t align_to_block_size(uint32_t grid_size, uint32_t block_size);
                 void print_tensor_from_gpu(codegen::CodeWriter& writer,
                                            const std::string& tensor_name,
                                            GPUShape shape);
