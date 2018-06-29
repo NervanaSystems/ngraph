@@ -115,7 +115,7 @@ LogHelper::LogHelper(LOG_TYPE type,
 {
     switch (type)
     {
-    case LOG_TYPE::_LOG_TYPE_ERROR: m_stream << "[ERR ] "; break;
+    case LOG_TYPE::_LOG_TYPE_ERROR: m_stream << "[ERR] "; break;
     case LOG_TYPE::_LOG_TYPE_WARNING: m_stream << "[WARN] "; break;
     case LOG_TYPE::_LOG_TYPE_INFO: m_stream << "[INFO] "; break;
     case LOG_TYPE::_LOG_TYPE_DEBUG: m_stream << "[DEBUG] "; break;
@@ -124,14 +124,11 @@ LogHelper::LogHelper(LOG_TYPE type,
     time_t tt = chrono::system_clock::to_time_t(chrono::system_clock::now());
     auto tm = gmtime(&tt);
     char buffer[256];
-    //    strftime(buffer,sizeof(buffer), "%d/%b/%Y:%H:%M:%S %z", tm);
-    //    strftime(buffer,sizeof(buffer), "%Y-%m-%d %H:%M:%S UTC", tm);
     strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%Sz", tm);
     m_stream << buffer << " ";
 
     m_stream << file;
     m_stream << " " << line;
-    //    m_stream << " " << func;
     m_stream << "\t";
 }
 
