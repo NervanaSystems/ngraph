@@ -102,6 +102,11 @@ void Logger::log_item(const string& s)
     queue_condition.notify_one();
 }
 
+void ngraph::default_logger_handler_func(const string& s)
+{
+    cout << s << endl;
+}
+
 LogHelper::LogHelper(LOG_TYPE type,
                      const char* file,
                      int line,

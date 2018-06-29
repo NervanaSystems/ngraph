@@ -18,7 +18,6 @@
 
 #include <deque>
 #include <functional>
-#include <iostream>
 #include <sstream>
 #include <stdexcept>
 
@@ -99,25 +98,27 @@ namespace ngraph
 
     extern std::ostream& get_nil_stream();
 
+    void default_logger_handler_func(const std::string& s);
+
 #define NGRAPH_ERR                                                                                 \
     ngraph::LogHelper(ngraph::LOG_TYPE::_LOG_TYPE_ERROR,                                           \
                       ngraph::get_file_name(__FILE__),                                             \
                       __LINE__,                                                                    \
-                      [](const std::string& content) { std::cout << content << std::endl; })       \
+                      default_logger_handler_func)                                                 \
         .stream()
 
 #define NGRAPH_WARN                                                                                \
     ngraph::LogHelper(ngraph::LOG_TYPE::_LOG_TYPE_WARNING,                                         \
                       ngraph::get_file_name(__FILE__),                                             \
                       __LINE__,                                                                    \
-                      [](const std::string& content) { std::cout << content << std::endl; })       \
+                      default_logger_handler_func)                                                 \
         .stream()
 
 #define NGRAPH_INFO                                                                                \
     ngraph::LogHelper(ngraph::LOG_TYPE::_LOG_TYPE_INFO,                                            \
                       ngraph::get_file_name(__FILE__),                                             \
                       __LINE__,                                                                    \
-                      [](const std::string& content) { std::cout << content << std::endl; })       \
+                      default_logger_handler_func)                                                 \
         .stream()
 
 #ifdef NGRAPH_DEBUG_ENABLE
@@ -125,7 +126,7 @@ namespace ngraph
     ngraph::LogHelper(ngraph::LOG_TYPE::_LOG_TYPE_DEBUG,                                           \
                       ngraph::get_file_name(__FILE__),                                             \
                       __LINE__,                                                                    \
-                      [](const std::string& content) { std::cout << content << std::endl; })       \
+                      default_logger_handler_func)                                                 \
         .stream()
 #else
 #define NGRAPH_DEBUG ngraph::get_nil_stream()
