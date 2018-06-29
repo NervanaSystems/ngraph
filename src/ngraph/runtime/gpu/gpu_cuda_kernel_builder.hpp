@@ -103,6 +103,29 @@ namespace ngraph
                                                  bool save_elementwise,
                                                  size_t rank);
 
+                static void get_max_pool_1d(codegen::CodeWriter& writer,
+                                            const std::string& name,
+                                            const std::array<std::string, 2>& data_types,
+                                            size_t input_width,
+                                            size_t output_width,
+                                            size_t window_width,
+                                            size_t window_stride);
+
+                static void get_avg_pool(codegen::CodeWriter& writer,
+                                         const std::string& name,
+                                         const std::array<std::string, 2>& data_types,
+                                         bool include_pad);
+
+                static void get_convolution_forward(codegen::CodeWriter& writer,
+                                                    const std::string& name,
+                                                    const std::array<std::string, 3>& data_types,
+                                                    int N,
+                                                    int K,
+                                                    int filter_size,
+                                                    int rank,
+                                                    int sm_tile_size = 8,
+                                                    int reg_tile_size = 1);
+
                 static void add_pod_typedefs(codegen::CodeWriter& writer);
 
                 /// \brief Given kernel input variables i_* produce register variables o_coordinates{i}
@@ -116,6 +139,13 @@ namespace ngraph
                                                            std::string i_reduced_strides,
                                                            std::string o_coordinates,
                                                            size_t rank);
+                static void coordinate_transform_to_multi_d(codegen::CodeWriter& writer,
+                                                            std::string i_strides,
+                                                            std::string i_stride_magic,
+                                                            std::string i_stride_shift,
+                                                            std::string i_coord_product,
+                                                            std::string o_coordinates,
+                                                            size_t rank);
             };
         }
     }
