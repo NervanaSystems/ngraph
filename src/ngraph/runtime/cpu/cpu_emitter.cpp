@@ -4199,6 +4199,8 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BoundedRelu)
             {
+                auto bounded_relu_node = static_cast<const ngraph::op::BoundedRelu*>(node);
+                float alpha = bounded_relu_node->get_alpha();
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
@@ -4208,7 +4210,7 @@ namespace ngraph
                         out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
 
                     size_t bounded_relu_index =
-                        mkldnn_emitter->build_bounded_relu(input_desc, result_desc);
+                        mkldnn_emitter->build_bounded_relu(input_desc, result_desc, alpha);
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(bounded_relu_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -4226,8 +4228,8 @@ namespace ngraph
                     writer.block_begin();
                     writer << args[0].get_name() << "[i] = " << args[0].get_name() << "[i] > 0 ? "
                            << args[0].get_name() << "[i] : 0;\n";
-                    writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] < 6 ? "
-                           << args[0].get_name() << "[i] : 6;\n";
+                    writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] < "
+                           << alpha << " ? " << args[0].get_name() << "[i] : " << alpha << ";\n";
                     writer.block_end();
                 }
             }

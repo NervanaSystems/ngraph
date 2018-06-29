@@ -19,8 +19,9 @@
 using namespace std;
 using namespace ngraph;
 
-op::BoundedRelu::BoundedRelu(shared_ptr<Node> arg)
+op::BoundedRelu::BoundedRelu(shared_ptr<Node> arg, float alpha)
     : RequiresTensorViewArgs("BoundedRelu", {arg})
+    , m_alpha(alpha)
 {
     set_value_type_checked(arg->get_element_type(), arg->get_shape());
 }
@@ -31,5 +32,5 @@ shared_ptr<Node> op::BoundedRelu::copy_with_new_args(const NodeVector& new_args)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<BoundedRelu>(new_args.at(0));
+    return make_shared<BoundedRelu>(new_args.at(0), m_alpha);
 }

@@ -24,18 +24,21 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise Relu operation.
+        /// \brief Elementwise Minimum(Relu(arg, 0), alpha) operation.
         ///
         class BoundedRelu : public util::RequiresTensorViewArgs
         {
         public:
-            /// \brief Constructs a BoundedRelu operation. Minimum(Relu(arg, 0), 6)
+            /// \brief Constructs a BoundedRelu operation.
             ///
             /// \param arg Node input to the Relu.
-            BoundedRelu(std::shared_ptr<ngraph::Node> arg);
-
+            BoundedRelu(std::shared_ptr<ngraph::Node> arg, float alpha);
+            float get_alpha() const { return m_alpha; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+
+        private:
+            float m_alpha;
         };
     }
 }

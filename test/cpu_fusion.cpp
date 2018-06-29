@@ -2486,24 +2486,20 @@ TEST(cpu_fusion, fuse_rnn_across_2layer_1timestep)
     }
 }
 
-TEST(cpu_fusion, fuse_bounded_relu)
+static void check_bounded_relu(Shape param_shape, float constant_val)
 {
-    pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "tensorflow/relu6.json");
-    const string json_string = file_util::read_file_to_string(json_path);
-    stringstream ss(json_string);
-    shared_ptr<Function> func = ngraph::deserialize(ss);
-    pass_manager.run_passes(func);
-    size_t ccg = count_ops_of_type<op::BoundedRelu>(func);
-    ASSERT_EQ(ccg, 1);
-}
+    auto make_function = [](Shape input_shape, float alpha_val) {
+        auto relu_input = std::make_shared<op::Parameter>(element::f32, input_shape);
+        auto relu = std::make_shared<op::Relu>(relu_input);
+        auto alpha = op::Constant::create<float>(
+            element::f32, input_shape, std::vector<float>(1.0f, alpha_val));
+        auto min = std::make_shared<op::Minimum>(relu, alpha);
+        auto f = make_shared<Function>(NodeVector{min}, op::ParameterVector{relu_input});
+        return f;
+    };
 
-TEST(cpu_fusion, fuse_bounded_relu_inter_vs_cpu)
-{
-    const std::string file_name("tensorflow/relu6.json");
-    auto cpu_f = make_function(file_name);
-    auto int_f = make_function(file_name);
+    auto cpu_f = make_function(param_shape, constant_val);
+    auto int_f = make_function(param_shape, constant_val);
     test::Uniform<float> rng(0.0f, 1.0f);
     vector<vector<float>> args;
 
@@ -2517,8 +2513,12 @@ TEST(cpu_fusion, fuse_bounded_relu_inter_vs_cpu)
     auto cpu_results = execute(cpu_f, args, "CPU");
 
     EXPECT_EQ(1, count_ops_of_type<op::BoundedRelu>(cpu_f));
-    for (size_t i = 0; i < cpu_results.size(); i++)
-    {
-        EXPECT_TRUE(test::all_close(cpu_results.at(1), int_results.at(1), 1.0e-4f, 1.0e-4f));
-    }
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0), 1.0e-4f, 1.0e-4f));
+}
+
+TEST(cpu_fusion, fuse_bounded_relu_inter_vs_cpu)
+{
+    check_bounded_relu(Shape{4, 3, 2, 2}, 6.0f);
+    check_bounded_relu(Shape{4, 3}, 4.0f);
+    check_bounded_relu(Shape{4, 3, 2}, 2.0f);
 }

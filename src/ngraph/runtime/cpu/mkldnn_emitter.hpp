@@ -244,7 +244,8 @@ namespace ngraph
                                              int softmax_axis);
 
                 size_t build_bounded_relu(const mkldnn::memory::desc& input_desc,
-                                          const mkldnn::memory::desc& result_desc);
+                                          const mkldnn::memory::desc& result_desc,
+                                          float alpha);
 
             private:
                 std::vector<mkldnn::primitive*> m_mkldnn_primitives;

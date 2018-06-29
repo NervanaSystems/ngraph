@@ -1326,11 +1326,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
         {
             throw ngraph_error("alpha must be constant for bounded relu");
         }
-        //we wont fuse if it is not Relu6
-        if (!ngraph::is_six(pattern_map[alpha]))
-        {
-            return false;
-        }
+
         //we wont fuse if the alpha and the Relu output element type are not same
         if (pattern_map[alpha]->get_element_type() != pattern_map[relu_input]->get_element_type())
         {
@@ -1340,9 +1336,13 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
         {
             return false;
         }
-        NGRAPH_DEBUG << "relu_input: " << pattern_map[relu_input]
-                     << " min_val: " << pattern_map[alpha];
-        auto cg = std::shared_ptr<Node>(new op::BoundedRelu(pattern_map[relu_input]));
+
+        auto alpha_const_op = std::dynamic_pointer_cast<op::Constant>(pattern_map[alpha]);
+        float alpha_val = *(static_cast<float const*>(alpha_const_op->get_data_ptr()));
+        NGRAPH_DEBUG << "relu_input: " << pattern_map[relu_input] << " min_val: "
+                     << *(static_cast<float const*>(alpha_const_op->get_data_ptr()));
+
+        auto cg = std::shared_ptr<Node>(new op::BoundedRelu(pattern_map[relu_input], alpha_val));
         ngraph::replace_node(m.get_match_root(), cg);
         return true;
     };
