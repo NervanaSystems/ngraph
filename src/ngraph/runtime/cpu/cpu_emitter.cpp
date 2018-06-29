@@ -1651,8 +1651,8 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Reshape)
             {
                 auto reshape = static_cast<const ngraph::op::Reshape*>(node);
-                if (reshape->get_is_transpose()) {
-                    writer << "// Stride change only, skipping.";
+                if (!reshape->get_is_transpose()) {
+                    writer << "// Stride change only, skipping.\n";
                     return;
                 }
                 writer.block_begin();
