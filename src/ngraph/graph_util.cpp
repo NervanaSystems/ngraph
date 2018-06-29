@@ -429,12 +429,6 @@ bool ngraph::is_zero(std::shared_ptr<Node> reduce_constant)
     return result_bool;
 }
 
-bool ngraph::is_six(std::shared_ptr<Node> reduce_constant)
-{
-    auto result_bool = is_equal_to_const_value("6", reduce_constant);
-    return result_bool;
-}
-
 bool ngraph::is_one(std::shared_ptr<Node> reduce_constant)
 {
     auto result_bool = is_equal_to_const_value("1", reduce_constant);
