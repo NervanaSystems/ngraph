@@ -186,3 +186,9 @@ std::pair<uint64_t, uint64_t> runtime::gpu::idiv_magic_u64(uint64_t divisor)
 {
     return magicU64(divisor);
 }
+
+uint32_t runtime::gpu::idiv_ceil(int n, int d)
+{
+    // compiler fused modulo and division
+    return n / d + (n % d > 0);
+}
