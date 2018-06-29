@@ -27,11 +27,27 @@ add_custom_command(OUTPUT onnx.pb.cc onnx.pb.h
     DEPENDS onnx.proto)
 
 add_library(onnx_import_interface OBJECT
+    onnx_util.cpp
+    onnx_util.hpp
     onnx.pb.h
     onnx.proto)
 
 add_library(onnx_import STATIC
-    onnx.pb.cc)
+    onnx.pb.cc
+    graph.cpp
+    mapping.cpp
+    model.cpp
+    node.cpp
+    ops_bridge.cpp
+    tensor.cpp
+    value_info.cpp
+    graph.hpp
+    mapping.hpp
+    model.hpp
+    node.hpp
+    ops_bridge.hpp
+    tensor.hpp
+    value_info.hpp)
 
 add_dependencies(onnx_import onnx_import_interface)
 

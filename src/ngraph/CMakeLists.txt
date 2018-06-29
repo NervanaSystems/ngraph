@@ -141,7 +141,9 @@ set (SRC
     graph_util.cpp
     placement.cpp
     cpio.cpp
-    )
+)
+
+add_subdirectory(frontend)
 
 add_subdirectory(frontend)
 
@@ -209,6 +211,11 @@ endif()
 # Defines macro in C++ to load backend plugin
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 target_link_libraries(ngraph PUBLIC dl pthread)
+
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    target_sources(ngraph PRIVATE $<TARGET_OBJECTS:onnx_import_interface>)
+    target_link_libraries(ngraph PRIVATE onnx_import)
+endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     target_sources(ngraph PRIVATE $<TARGET_OBJECTS:onnx_import_interface>)

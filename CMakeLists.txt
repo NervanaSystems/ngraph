@@ -42,6 +42,7 @@ endif()
 
 project (ngraph)
 
+
 SET(GCC_MIN_VERSION 4.8)
 SET(CLANG_MIN_VERSION 3.8)
 SET(APPLE_CLANG_MIN_VERSION 8.1)
@@ -235,3 +236,4 @@ else()
 endif()
 
 add_subdirectory(doc)
+
