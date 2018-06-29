@@ -20,10 +20,10 @@ import numpy as np
 from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Function, Node, \
     NodeVector, Shape, Strides
 
-from ngraph.impl.op import Abs, Acos, Add, Asin, Atan, AvgPool, BatchNorm, Broadcast, Ceiling, \
-    Concat, Constant, Convert, Convolution, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, \
+from ngraph.impl.op import Abs, Acos, Add, And, Asin, Atan, AvgPool, BatchNorm, Broadcast, \
+    Ceiling, Concat, Constant, Convert, Convolution, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, \
     FunctionCall, GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, Max, Maximum, MaxPool, \
-    Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Pad, Parameter, Product, Power, \
+    Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, Power, \
     Reduce, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, Sqrt, \
     Subtract, Sum, Tan, Tanh
 
@@ -391,6 +391,30 @@ def less_eq(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, s
              right_node.
     """
     return LessEq(left_node, right_node)
+
+
+@binary_op
+def logical_and(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+    """Return node which perform logical and operation on input nodes element-wise.
+
+    :param left_node: The first input node providing data.
+    :param right_node: The second input node providing data.
+    :param name: The optional new name for output node.
+    :return: The node performing logical and operation on input nodes corresponding elements.
+    """
+    return And(left_node, right_node)
+
+
+@binary_op
+def logical_or(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+    """Return node which performs logical or operation on input nodes element-wise.
+
+    :param left_node: The first input node providing data.
+    :param right_node: The second input node providing data.
+    :param name: The optional new name for output node.
+    :return: The node performing logical or operation on input nodes corresponding elements.
+    """
+    return Or(left_node, right_node)
 
 
 @unary_op
