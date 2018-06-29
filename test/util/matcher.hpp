@@ -22,9 +22,17 @@ class TestMatcher : public ngraph::pattern::Matcher
                             const std::shared_ptr<ngraph::Node>& graph_node,
                             PatternMap& pattern_map) override
     {
+        std::cout << "Calling match_node on " << graph_node->get_name() << " against "
+                  << pattern_node->get_name() << std::endl;
         if (std::dynamic_pointer_cast<::ngraph::op::Parameter>(pattern_node))
         {
-            return pattern_node.get() == dynamic_cast<::ngraph::op::Parameter*>(graph_node.get());
+            bool result =
+                pattern_node.get() == dynamic_cast<::ngraph::op::Parameter*>(graph_node.get());
+            if (result)
+            {
+                m_matched_list.push_back(graph_node);
+            }
+            return result;
         }
 
         return this->ngraph::pattern::Matcher::match_node(pattern_node, graph_node, pattern_map);
@@ -42,6 +50,7 @@ public:
 
         m_pattern_map.clear();
         m_match_root.reset();
+        m_matched_list.clear();
 
         bool is_match = match_node(pattern_node, graph_node, m_pattern_map);
         if (is_match)
