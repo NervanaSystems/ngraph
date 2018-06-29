@@ -1222,6 +1222,344 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const GPURuntimeContext* ctx,
     return primitive_index;
 }
 
+size_t runtime::gpu::CUDAEmitter::build_reshape(const GPURuntimeContext* ctx,
+                                                const std::array<std::string, 2>& dtypes,
+                                                GPUShape input_shape,
+                                                GPUShape input_order)
+{
+    std::string kernel_name = "reshape_" + join(dtypes, "_");
+    std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
+
+    std::stringstream ss;
+    ss << kernel_name << "_s" << join(input_shape, "_") << "_ax" << join(input_order, "_");
+    auto hash = ss.str();
+
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    // if the kernel has not been compiled, build it
+    auto compiled_kernel = ctx->compiled_kernel_pool->get(kernel_name);
+    if (compiled_kernel == nullptr)
+    {
+        codegen::CodeWriter writer;
+        writer << include_helpers();
+        runtime::gpu::CudaKernelBuilder::get_reshape_op(writer, kernel_name, dtypes);
+        compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
+    }
+
+    auto input_rank = input_shape.size();
+    std::vector<size_t> input_strides(input_rank);
+    std::vector<size_t> output_strides(input_rank);
+    std::vector<size_t> trans_strides(input_rank);
+    size_t stride = 1;
+    for (int64_t i = input_rank - 1; i >= 0; i--)
+    {
+        input_strides[i] = stride;
+        stride *= input_shape[i];
+    }
+    stride = 1;
+    for (int64_t i = input_rank - 1; i >= 0; i--)
+    {
+        output_strides[i] = stride;
+        stride *= input_shape[input_order[i]];
+    }
+    for (int64_t i = 0; i < input_rank; i++)
+    {
+        trans_strides[input_order[i]] = output_strides[i];
+    }
+
+    GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+    size_t idx_input_strides =
+        allocator.reserve_argspace(input_strides.data(), input_strides.size() * sizeof(size_t));
+    size_t idx_trans_strides =
+        allocator.reserve_argspace(trans_strides.data(), trans_strides.size() * sizeof(size_t));
+
+    size_t nthreads = shape_size(input_shape);
+
+    std::unique_ptr<gpu::primitive> reshape(new gpu::primitive{[=](void** inputs,
+                                                                   void** outputs) mutable {
+        void* input_strides_d = runtime::gpu::invoke_memory_primitive(ctx, idx_input_strides);
+        void* trans_strides_d = runtime::gpu::invoke_memory_primitive(ctx, idx_trans_strides);
+
+        void* args_list[] = {
+            &inputs[0], &outputs[0], &input_strides_d, &trans_strides_d, &input_rank, &nthreads};
+
+        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                      static_cast<int>(nthreads),
+                                      1,
+                                      1,
+                                      1,
+                                      1,
+                                      1,
+                                      0,
+                                      NULL,
+                                      args_list,
+                                      0));
+        CUDA_SAFE_CALL(cuCtxSynchronize());
+    }});
+
+    primitive_index = this->m_primitive_emitter->insert(std::move(reshape));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
+
+size_t runtime::gpu::CUDAEmitter::build_convolution(const GPURuntimeContext* ctx,
+                                                    const std::array<std::string, 3>& dtypes,
+                                                    GPUShape input_shape,
+                                                    GPUShape input_pad_below,
+                                                    GPUShape input_dilation,
+                                                    GPUShape filter_shape,
+                                                    GPUShape filter_stride,
+                                                    GPUShape filter_dilation,
+                                                    GPUShape output_shape)
+{
+    // convolution is performed on tensors in the following format
+    // input_shape:  C{di_1,...,du_n}N
+    // filter_shape: C{df_1,...,df_n}K
+    // output_shape: K{do_1,...,do_n}N
+
+    // The basic strategy performed by this kernel is to convert Nd convolution
+    // into a single 2D GEMM that can be block multiplied via a hierarchical strategy.
+    // The spatial dimensions are squashed into a single column axis and the
+    // batch number N and filter number K are the rows of A and B in the 2D GEMM
+    // A * B = C, respectively. By keeping N and K in contiguous memory space,
+    // coalescing and vectorization is maintained regardless of coordinate access
+    // (e.g. data and filter dilation).
+
+    std::string kernel_name = "convolution_fprop_" + join(dtypes, "_");
+    std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
+
+    // prerequisits for kernel cacheing and building
+    int N = input_shape.back();
+    int K = filter_shape.back();
+    int filter_size = 1;
+    int rank = 0;
+    for (int i = 1; i < filter_shape.size() - 1; i++)
+    { // skip first and last (non-spatial) dimensions
+        filter_size *= filter_shape[i];
+        rank++;
+    }
+
+    // additional kernel cache parameters
+    kernel_name = kernel_name + "_n" + std::to_string(N) + "_k" + std::to_string(K) + "_fsz" +
+                  std::to_string(filter_size) + "_r" + std::to_string(rank);
+
+    // primitive cache parameters
+    std::stringstream ss;
+    ss << kernel_name << "_s" << join(input_shape, "_") << "_pb" << join(input_pad_below, "_")
+       << "_pi" << join(input_dilation, "_") << "_fs" << join(filter_shape, "_") << "_fst"
+       << join(filter_stride, "_") << "_fdi" << join(filter_dilation, "_");
+    auto hash = ss.str();
+
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    // tiling options are determined by
+    // batch size (N) and number of filters (K)
+    int reg_tile_size = 1;
+    int sm_tile_size = 8;
+    // if N is a multiple of 32 use register tiling
+    if (N % (sm_tile_size * 4) == 0)
+    {
+        reg_tile_size = 4;
+    }
+
+    // if the kernel has not been compiled, build it
+    auto compiled_kernel = ctx->compiled_kernel_pool->get(kernel_name);
+    if (compiled_kernel == nullptr)
+    {
+        codegen::CodeWriter writer;
+        writer << include_helpers();
+        CudaKernelBuilder::get_convolution_forward(
+            writer, kernel_name, dtypes, N, K, filter_size, rank, sm_tile_size, reg_tile_size);
+        compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
+    }
+
+    // ----- build primitive arguments -----
+
+    // TODO: as each cuda_emitter has a regular structure
+    // it would be beneficial to factor these into classes
+    // with seperate methods for compiling the kernel, building
+    // the primitive, and transfering arguments to device memory
+
+    int C = input_shape.front();
+    int input_channel_size = 1;
+    int filter_channel_size = 1;
+    int output_filter_size = 1;
+    for (int i = 1; i < input_shape.size(); i++)
+    {
+        input_channel_size *= input_shape[i];
+        filter_channel_size *= filter_shape[i];
+        output_filter_size *= output_shape[i];
+    }
+    // vector accesses of width `reg_tile_size` are
+    // used reducting the effective tensor array size
+    input_channel_size /= reg_tile_size;
+    filter_channel_size /= reg_tile_size;
+    output_filter_size /= reg_tile_size;
+
+    // arguments derived from output tensor
+    int output_pixels = 1;
+    int output_pixels_magic;
+    int output_pixels_shift;
+    std::vector<int> output_dim_strides(rank, 0);
+    std::vector<int> output_str_magic(rank, 0);
+    std::vector<int> output_str_shift(rank, 0);
+    for (int64_t i = output_shape.size() - 2; i > 0; i--)
+    {
+        output_dim_strides[i - 1] = output_pixels;
+        int magic;
+        int shift;
+        std::tie(magic, shift) = idiv_magic_u64(output_pixels);
+        output_str_magic[i - 1] = magic;
+        output_str_shift[i - 1] = shift;
+        output_pixels *= output_shape[i];
+    }
+    std::tie(output_pixels_magic, output_pixels_shift) = idiv_magic_u64(output_pixels);
+
+    // arguments derived from filter tensor
+    int filter_sz = 1;
+    std::vector<int> filter_dim_strides(rank, 0);
+    std::vector<int> filter_str_magic(rank, 0);
+    std::vector<int> filter_str_shift(rank, 0);
+    for (int64_t i = filter_shape.size() - 2; i > 0; i--)
+    {
+        filter_dim_strides[i - 1] = filter_sz;
+        int magic;
+        int shift;
+        std::tie(magic, shift) = idiv_magic_u64(filter_sz);
+        filter_str_magic[i - 1] = magic;
+        filter_str_shift[i - 1] = shift;
+        filter_sz *= filter_shape[i];
+    }
+
+    // remaining kernel arguments
+    std::vector<int> data_dilation_magic(input_dilation.size(), 0);
+    std::vector<int> data_dilation_shift(input_dilation.size(), 0);
+    for (int i = 0; i < input_dilation.size(); i++)
+    {
+        int magic;
+        int shift;
+        std::tie(magic, shift) = idiv_magic_u64(input_dilation[i]);
+        data_dilation_magic[i] = magic;
+        data_dilation_shift[i] = shift;
+    }
+    GPUShape input_shape_str = row_major_strides(input_shape);
+    float alpha = 1.0f;
+    float beta = 0.0f;
+
+    // ----- register primitive arguments with device -----
+    GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+
+    size_t idx_pad = allocator.reserve_argspace(input_pad_below);
+    size_t idx_data_dilation = allocator.reserve_argspace(input_dilation);
+    size_t idx_data_dilation_magic = allocator.reserve_argspace(data_dilation_magic);
+    size_t idx_data_dilation_shift = allocator.reserve_argspace(data_dilation_shift);
+    size_t idx_filter_strides = allocator.reserve_argspace(filter_stride);
+    size_t idx_filter_dilation = allocator.reserve_argspace(filter_dilation);
+    size_t idx_input_shape = allocator.reserve_argspace(input_shape);
+    size_t idx_input_shape_str = allocator.reserve_argspace(input_shape_str);
+    size_t idx_output_dim_strides = allocator.reserve_argspace(output_dim_strides);
+    size_t idx_output_str_magic = allocator.reserve_argspace(output_str_magic);
+    size_t idx_output_str_shift = allocator.reserve_argspace(output_str_shift);
+    size_t idx_filter_dim_strides = allocator.reserve_argspace(filter_dim_strides);
+    size_t idx_filter_str_magic = allocator.reserve_argspace(filter_str_magic);
+    size_t idx_filter_str_shift = allocator.reserve_argspace(filter_str_shift);
+
+    // launch arguments:
+    // each output pixel is its own block. if the batch size is greater than reg_tile_size * sm_tile_size, a single
+    // output pixel is spread over multiple blocks along the batch axis so that memory coordination is not required
+    // each block consists of 2 warps in an 8 x 8 array used for accessing the SM block of the GEMM
+
+    // do_i = output pixel coordinates
+    // grid = (do_1*do_2*...*do_N*ceil_div(N, REG_TILE_SIZE*SM_TILE_SIZE), ceil_div(K, REG_TILE_SIZE*SM_TILE_SIZE), 1)
+    // block = (8, 8, 1)
+    dim3 blocks(output_pixels * idiv_ceil(N, reg_tile_size * sm_tile_size),
+                idiv_ceil(K, reg_tile_size * sm_tile_size),
+                1);
+    dim3 threads(sm_tile_size, sm_tile_size, 1);
+    // e.g. for 2d without register tiling
+    //      blocks  = (PQ*N/8, K/8, 1)
+    //      threads = (8, 8, 1)
+
+    std::unique_ptr<gpu::primitive> conv(new gpu::primitive{[=](void** inputs,
+                                                                void** outputs) mutable {
+
+        void* pad_d = runtime::gpu::invoke_memory_primitive(ctx, idx_pad);
+        void* data_dilation_d = runtime::gpu::invoke_memory_primitive(ctx, idx_data_dilation);
+        void* data_dilation_magic_d =
+            runtime::gpu::invoke_memory_primitive(ctx, idx_data_dilation_magic);
+        void* data_dilation_shift_d =
+            runtime::gpu::invoke_memory_primitive(ctx, idx_data_dilation_shift);
+        void* filter_strides_d = runtime::gpu::invoke_memory_primitive(ctx, idx_filter_strides);
+        void* filter_dilation_d = runtime::gpu::invoke_memory_primitive(ctx, idx_filter_dilation);
+        void* input_shape_d = runtime::gpu::invoke_memory_primitive(ctx, idx_input_shape);
+        void* input_shape_str_d = runtime::gpu::invoke_memory_primitive(ctx, idx_input_shape_str);
+        void* output_dim_strides_d =
+            runtime::gpu::invoke_memory_primitive(ctx, idx_output_dim_strides);
+        void* output_str_magic_d = runtime::gpu::invoke_memory_primitive(ctx, idx_output_str_magic);
+        void* output_str_shift_d = runtime::gpu::invoke_memory_primitive(ctx, idx_output_str_shift);
+        void* filter_dim_strides_d =
+            runtime::gpu::invoke_memory_primitive(ctx, idx_filter_dim_strides);
+        void* filter_str_magic_d = runtime::gpu::invoke_memory_primitive(ctx, idx_filter_str_magic);
+        void* filter_str_shift_d = runtime::gpu::invoke_memory_primitive(ctx, idx_filter_str_shift);
+
+        void* args_list[] = {&inputs[0],
+                             &inputs[1],
+                             &outputs[0],
+                             &alpha,
+                             &beta,
+                             &N,
+                             &C,
+                             &K,
+                             &input_channel_size,
+                             &filter_channel_size,
+                             &output_filter_size,
+                             &output_pixels,
+                             &output_pixels_magic,
+                             &output_pixels_shift,
+                             &pad_d,
+                             &data_dilation_d,
+                             &data_dilation_magic_d,
+                             &data_dilation_shift_d,
+                             &filter_strides_d,
+                             &filter_dilation_d,
+                             &input_shape_d,
+                             &input_shape_str_d,
+                             &output_dim_strides_d,
+                             &output_str_magic_d,
+                             &output_str_shift_d,
+                             &filter_dim_strides_d,
+                             &filter_str_magic_d,
+                             &filter_str_shift_d};
+
+        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                      blocks.x,
+                                      blocks.y,
+                                      blocks.z,
+                                      threads.x,
+                                      threads.y,
+                                      threads.z,
+                                      0,
+                                      NULL,
+                                      args_list,
+                                      0));
+        CUDA_SAFE_CALL(cuCtxSynchronize());
+    }});
+
+    primitive_index = this->m_primitive_emitter->insert(std::move(conv));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
+
 void runtime::gpu::CUDAEmitter::print_tensor_from_gpu(codegen::CodeWriter& writer,
                                                       const std::string& tensor_name,
                                                       GPUShape shape)
@@ -1301,6 +1639,16 @@ __device__ __forceinline__ int division_by_invariant_multiplication(int value, i
         "}" : "=r"(result) : "r"(value), "r"(magic), "r"(shift));
     return result;
 }
+
+__device__ __forceinline__ void idiv_fast(int numerator, int denominator, float rcp,
+                                          int& result, int& remainder)
+{
+    result = (int)((float)numerator * rcp);
+    remainder = numerator - (result * denominator);
+    result = (remainder >= denominator) ? (result + 1) : result;
+    remainder = (remainder >= denominator) ? (remainder - denominator) : remainder;
+}
+
 __device__ __forceinline__ int mod16(int numerator, int div, int maxdiv)
 {
     int res;
