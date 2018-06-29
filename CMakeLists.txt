@@ -96,7 +96,7 @@ option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
 #-----------------------------------------------------------------------------------------------
 
 if (DEFINED NGRAPH_INSTALL_PREFIX)
-    message(FATAL "NGRAPH_INSTALL_PREFIX is obsolete, use CMAKE_INSTALL_PREFIX instead")
+    set(CMAKE_INSTALL_PREFIX ${})
 endif()
 message(STATUS "Installation directory: ${CMAKE_INSTALL_PREFIX}")
 
