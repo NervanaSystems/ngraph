@@ -143,8 +143,10 @@ set (SRC
     cpio.cpp
     )
 
+add_subdirectory(frontend)
+
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/op)
-file(GLOB OPS "${CMAKE_CURRENT_SOURCE_DIR}/op" "${CMAKE_CURRENT_SOURCE_DIR}/op/*.hpp")
+file(GLOB OPS "${CMAKE_CURRENT_SOURCE_DIR}/op/" "${CMAKE_CURRENT_SOURCE_DIR}/op/*.hpp")
 foreach(OP ${OPS})
     file(STRINGS ${OP} OP_CLASS REGEX "class [A-Za-z0-9_]+ :")
     foreach(LINE ${OP_CLASS})
@@ -180,10 +182,14 @@ add_definitions("-DLIBRARY_VERSION=\"${NGRAPH_VERSION}\"")
 set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
 target_link_libraries(ngraph PUBLIC libjson)
 
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    add_dependencies(ngraph onnx_import)
+endif()
+
 if (NOT APPLE)
     set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,$ORIGIN")
 
-    # NGraph links against one or more libraries (ex. LLVM) but we don't want to
+    # nGraph links against one or more libraries (ex. LLVM) but we don't want to
     # export these symbols as part of the DSO. This is a GNU ld (and derivatives) specific
     # option so making this portable is still an open issue. As a note for the future,
     # this is not an issue on Windows and LLVM's lld does support --exclude-libs.
@@ -204,11 +210,16 @@ endif()
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 target_link_libraries(ngraph PUBLIC dl pthread)
 
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    target_sources(ngraph PRIVATE $<TARGET_OBJECTS:onnx_import_interface>)
+    target_link_libraries(ngraph PRIVATE onnx_import)
+endif()
+
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
 #-----------------------------------------------------------------------------------------------
 
-# NGraph
+# nGraph
 install(FILES ${CMAKE_BINARY_DIR}/VERSION DESTINATION ${CMAKE_INSTALL_PREFIX})
 install(TARGETS ngraph DESTINATION ${NGRAPH_INSTALL_LIB})  # libngraph.so
 install(DIRECTORY

@@ -693,14 +693,12 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         auto bias = compute_multi_layer_rnn_inputs(bias_label, m);
 
         std::vector<std::shared_ptr<op::Rnn>> rnn_nodes;
-        std::set<std::shared_ptr<op::Rnn>> uniq_rnn_nodes;
         for (auto& rnn_goe_input : m.get_bound_nodes_for_pattern(rnn_ht_label))
         {
             auto rnn_op = std::dynamic_pointer_cast<op::Rnn>(rnn_goe_input->get_arguments()[0]);
             if (rnn_op)
             {
-                if (uniq_rnn_nodes.find(rnn_op) == uniq_rnn_nodes.end())
-                    rnn_nodes.push_back(rnn_op);
+                rnn_nodes.push_back(rnn_op);
             }
             else
             {
@@ -820,7 +818,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                     node_to_replace = rnn_ct->get_users()[0];
                 }
             }
-            if (!is_unreachable(node_to_replace))
+            if (ngraph::is_used(node_to_replace))
             {
                 ngraph::replace_node(node_to_replace, ct_slice);
             }
@@ -831,7 +829,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             for (auto& rnn_goes : rnn_nodes[index]->get_users())
             {
                 NGRAPH_DEBUG << "rnn_goes: " << rnn_goes->get_name();
-                if (rnn_goes->get_users().size() == 0)
+                if (rnn_goes->get_users().empty())
                 {
                     continue;
                 }
