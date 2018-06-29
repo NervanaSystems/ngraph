@@ -17,9 +17,9 @@
 #pragma once
 
 #include <map>
-#include <vector>
-#include <string>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
