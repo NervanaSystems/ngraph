@@ -60,7 +60,6 @@ namespace ngraph
                 }
 
                 ops_bridge() {}
-
                 NodeVector operator()(const Node& node) const
                 {
                     try
