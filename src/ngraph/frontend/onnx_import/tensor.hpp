@@ -203,11 +203,11 @@ namespace ngraph
             {
             }
 
-            Tensor(Tensor&&) noexcept = default;
             Tensor(const Tensor&) = default;
+            Tensor(Tensor&&) = default;
 
-            Tensor& operator=(Tensor&&) noexcept = delete;
             Tensor& operator=(const Tensor&) = delete;
+            Tensor& operator=(Tensor&&) = delete;
 
             const Shape& get_shape() const { return m_shape; }
             template <typename T>

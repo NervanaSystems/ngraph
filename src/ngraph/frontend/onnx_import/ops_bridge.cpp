@@ -17,7 +17,6 @@
 #include <algorithm>
 #include <functional>
 
-#include "ngraph/type/element_type.hpp"
 #include "ops_bridge.hpp"
 
 namespace ngraph
@@ -61,13 +60,14 @@ namespace ngraph
                 }
 
                 ops_bridge() {}
+
                 NodeVector operator()(const Node& node) const
                 {
                     try
                     {
                         return m_map.at(node.op_type())(node);
                     }
-                    catch (const std::exception& e)
+                    catch (const std::exception&)
                     {
                         throw detail::error::unknown_operation{node.op_type()};
                     }

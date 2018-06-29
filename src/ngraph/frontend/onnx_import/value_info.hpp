@@ -57,7 +57,7 @@ namespace ngraph
         class ValueInfo
         {
         public:
-            ValueInfo(ValueInfo&&) noexcept = default;
+            ValueInfo(ValueInfo&&) = default;
             ValueInfo(const ValueInfo&) = default;
 
             ValueInfo() = delete;
@@ -74,7 +74,7 @@ namespace ngraph
             }
 
             ValueInfo& operator=(const ValueInfo&) = delete;
-            ValueInfo& operator=(ValueInfo&&) noexcept = delete;
+            ValueInfo& operator=(ValueInfo&&) = delete;
 
             const std::string& get_name() const { return m_value_info_proto.name(); }
             const Shape& get_shape() const { return m_shape; }
