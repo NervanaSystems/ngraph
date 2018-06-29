@@ -6,17 +6,6 @@ batch_norm_three_outputs
 computation_reuse
 #int64 is not supprted 
 concat_matrix_int64
-#convolution 4d is work in progress
-convolution_4d_2items
-convolution_4d_4items
-convolution_4d_4items_dilated
-convolution_4d_4items_padded_neg
-convolution_4d_4items_strided
-convolution_4d_4items_strided_dilated
-convolution_4d_4items_strided_dilated_padded
-convolution_4d_4items_strided_dilated_padded_neg
-convolution_4d_4items_strided_dilated_padded_same
-#cuDNN does not have arithmetic exceptions
 divide_by_zero_int32
 #int64 is not supprted by cuDNN
 dot_matrix_vector_int64
