@@ -16,12 +16,16 @@
 
 set(SRC
     intelgpu_backend.cpp
+    intelgpu_tensor_view.cpp
 )
 
 if (NGRAPH_INTELGPU_ENABLE)
     add_library(intelgpu_backend SHARED ${SRC})
     set_target_properties(intelgpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
     target_link_libraries(intelgpu_backend PUBLIC ngraph)
+    find_package(CLDNN REQUIRED)
+    target_include_directories(intelgpu_backend SYSTEM PUBLIC ${CLDNN_INCLUDE_DIRS})
+    target_link_libraries(intelgpu_backend PUBLIC ${CLDNN_LIBRARIES})
 
     install(TARGETS intelgpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()
