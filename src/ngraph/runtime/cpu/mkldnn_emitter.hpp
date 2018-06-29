@@ -65,6 +65,10 @@ namespace ngraph
                 mkldnn::memory::desc build_memory_descriptor(const Shape& shape,
                                                              const ngraph::element::Type& et,
                                                              mkldnn::memory::format fmt) const;
+                mkldnn::memory::desc
+                    build_blocked_memory_descriptor(const mkldnn::memory::dims& dim,
+                                                    const mkldnn::memory::dims& strides,
+                                                    mkldnn::memory::data_type dtype) const;
                 mkldnn::memory build_memory_primitive(const TensorViewWrapper& tvw) const;
                 size_t build_memory_primitive(const mkldnn::memory::desc& desc);
 
@@ -234,6 +238,10 @@ namespace ngraph
                 size_t build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
                                     const mkldnn::memory::desc& result_desc,
                                     const size_t concat_dim);
+
+                size_t build_softmax_forward(const mkldnn::memory::desc& input_desc,
+                                             const mkldnn::memory::desc& result_desc,
+                                             int softmax_axis);
 
             private:
                 std::vector<mkldnn::primitive*> m_mkldnn_primitives;

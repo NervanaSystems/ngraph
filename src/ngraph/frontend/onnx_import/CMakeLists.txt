@@ -18,8 +18,9 @@ set(ONNX_SOURCE_URL "https://raw.githubusercontent.com/onnx/onnx/v1.1.2/onnx/onn
 
 set_source_files_properties(onnx.pb.h onnx.pb.cc PROPERTIES GENERATED TRUE)
 
-add_custom_command(OUTPUT onnx.proto
-    COMMAND wget --timeout=60 ${ONNX_SOURCE_URL})
+if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/onnx.proto")
+    file(DOWNLOAD ${ONNX_SOURCE_URL} ${CMAKE_CURRENT_BINARY_DIR}/onnx.proto)
+endif()
 
 add_custom_command(OUTPUT onnx.pb.cc onnx.pb.h
     COMMAND ${PROTOBUF_PROTOC_EXECUTABLE} --cpp_out ${CMAKE_CURRENT_BINARY_DIR} --proto_path ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/onnx.proto

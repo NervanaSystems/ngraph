@@ -52,7 +52,7 @@ shared_ptr<Node>
     }
 
     NodeVector new_outputs;
-    for (auto o : m_outputs)
+    for (auto o : m_output_nodes)
     {
         new_outputs.push_back(nm.get(o));
     }
@@ -65,7 +65,7 @@ ngraph::runtime::cpu::op::LoopKernel::LoopKernel(const NodeVector& node_list,
                                                  const NodeVector& args)
     : RequiresTensorViewArgs("LoopKernel", {args})
     , m_node_list(node_list)
-    , m_outputs(outputs)
+    , m_output_nodes(outputs)
 {
     auto ref = node_list.at(0);
     for (auto n : node_list)
