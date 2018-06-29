@@ -17,6 +17,9 @@
 #pragma once
 
 #include <map>
+#include <memory>
+
+#include <CPP/engine.hpp>
 
 #include "ngraph/runtime/backend.hpp"
 
@@ -34,6 +37,7 @@ namespace ngraph
 class ngraph::runtime::intelgpu::IntelGPUBackend : public runtime::Backend
 {
 public:
+    IntelGPUBackend();
     std::shared_ptr<ngraph::runtime::TensorView>
         create_tensor(const ngraph::element::Type& element_type,
                       const Shape& shape,
@@ -49,4 +53,5 @@ public:
               const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
 
 private:
+    std::shared_ptr<cldnn::engine> ocl_engine;
 };
