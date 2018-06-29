@@ -921,12 +921,8 @@ namespace ngraph
                 auto result_shape = out[0].get_shape();
                 auto input_order = reshape->get_input_order();
                 bool same_layout = is_sorted(input_order.begin(), input_order.end());
-                size_t result_shape_product = 1;
+                size_t result_shape_product = shape_size(result_shape);
 
-                for (auto i : result_shape)
-                {
-                    result_shape_product *= i;
-                }
                 // If there is no layout change or we are just going from 1^n to 1^m or a zero-size tensor,
                 // we can just copy.
                 if (same_layout || result_shape_product < 2)
@@ -956,26 +952,13 @@ namespace ngraph
                 // Other cases (reordering of axes for tensors with rank>2).
                 else
                 {
-                    Shape output_strides = row_major_strides(arg_shape);
-                    Strides trans_strides(arg_rank);
-                    size_t stride = 1;
-                    for (int i = static_cast<int>(arg_rank) - 1; i >= 0; i--)
-                    {
-                        output_strides[i] = stride;
-                        stride *= arg_shape[input_order[i]];
-                    }
-                    for (int i = 0; i < arg_rank; i++)
-                    {
-                        trans_strides[input_order[i]] = output_strides[i];
-                    }
-
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
                     auto index =
                         cuda_emitter->build_reshape(external_function->ctx().get(),
                                                     {{args[0].get_type(), out[0].get_type()}},
                                                     arg_shape,
-                                                    trans_strides);
+                                                    input_order);
 
                     writer << "gpu::invoke_primitive(ctx, " << index << ", ";
                     writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
