@@ -31,13 +31,13 @@ void op::util::validate_convbias_shapes(const Shape& data_shape,
 {
     if (bias_shape.size() != 1)
     {
-        throw ngraph_error("Convolution+bias is expected to be 1D, but has shape: " +
+        throw ngraph_error("Convolution+bias bias is expected to be 1D, but has shape: " +
                            vector_to_string(bias_shape));
     }
     if (bias_shape[0] != filters_shape[0])
     {
         throw ngraph_error(
-            "Convolution+bias element size does not match number of filters. bias_size = " +
+            "Convolution+bias bias element size does not match number of filters. bias_size = " +
             std::to_string(bias_shape[0]) + ", num_filters = " + std::to_string(filters_shape[0]));
     }
     if (data_shape[1] != filters_shape[1])
