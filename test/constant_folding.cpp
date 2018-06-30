@@ -73,3 +73,29 @@ TEST(constant_folding, constant_reshape_permute)
     vector<double> values_permute{0, 4, 1, 5, 2, 6, 3, 7};
     ASSERT_EQ(values_permute, values_out);
 }
+
+TEST(constant_folding, constant_broadcast)
+{
+    Shape shape_in{2};
+    Shape shape_out{2, 4};
+
+    vector<int> values_in{0, 1};
+    auto constant = make_shared<op::Constant>(element::i32, shape_in, values_in);
+    auto broadcast = make_shared<op::Broadcast>(constant, shape_out, AxisSet{1});
+    auto f = make_shared<Function>(broadcast, op::ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Broadcast>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int>();
+
+    vector<int> values_permute{0, 0, 0, 0, 1, 1, 1, 1};
+    ASSERT_EQ(values_permute, values_out);
+}

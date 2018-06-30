@@ -47,6 +47,11 @@ namespace ngraph
         {
         }
 
+        NodeVector(size_t size)
+            : std::vector<std::shared_ptr<Node>>(size)
+        {
+        }
+
         NodeVector& operator=(const NodeVector& other) = default;
 
         NodeVector() {}

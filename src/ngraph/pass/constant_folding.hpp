@@ -33,8 +33,10 @@ public:
         : GraphRewrite()
     {
         construct_constant_reshape();
+        construct_constant_broadcast();
     }
 
 private:
     void construct_constant_reshape();
+    void construct_constant_broadcast();
 };
