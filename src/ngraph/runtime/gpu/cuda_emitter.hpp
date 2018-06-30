@@ -127,6 +127,21 @@ namespace ngraph
                                        GPUShape result_shape,
                                        const std::set<size_t>& bcast_axes);
 
+                size_t build_reshape(const GPURuntimeContext* ctx,
+                                     const std::array<std::string, 2>& dtypes,
+                                     GPUShape input_shape,
+                                     GPUShape input_order);
+
+                size_t build_convolution(const GPURuntimeContext* ctx,
+                                         const std::array<std::string, 3>& dtypes,
+                                         GPUShape input_shape,
+                                         GPUShape input_pad_below,
+                                         GPUShape input_dilation,
+                                         GPUShape filter_shape,
+                                         GPUShape filter_stride,
+                                         GPUShape filter_dilation,
+                                         GPUShape output_shape);
+
             private:
                 CUDAEmitter(GPUPrimitiveEmitter* emitter);
                 void print_tensor_from_gpu(codegen::CodeWriter& writer,

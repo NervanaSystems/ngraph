@@ -710,15 +710,473 @@ void runtime::gpu::CudaKernelBuilder::get_avg_pool(codegen::CodeWriter& writer,
     writer.block_end();
 }
 
-std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_helper(
+void runtime::gpu::CudaKernelBuilder::get_convolution_forward(
     codegen::CodeWriter& writer,
-    std::string i_thread_index,
-    std::string i_strides,
-    std::string i_stride_magic,
-    std::string i_stride_shift,
-    std::string i_reduced_strides,
-    std::string o_coordinates,
-    size_t rank)
+    const std::string& name,
+    const std::array<std::string, 3>& data_types,
+    int N,
+    int K,
+    int filter_size,
+    int rank,
+    int sm_tile_size,
+    int reg_tile_size)
+{
+    writer << "#define NUM_ROWS 8\n";
+    writer << "#define FILTER_SIZE " << filter_size << "\n";
+    writer << "#define SM_TILE_SIZE " << sm_tile_size << "\n";
+    writer << "#define REG_TILE_SIZE " << reg_tile_size << "\n";
+    // convenient type def for register tiling
+    writer << "typedef union Matrix\n";
+    writer.block_begin();
+    {
+        writer << data_types[0] << reg_tile_size << " f" << reg_tile_size << ";\n";
+        writer << data_types[0] << " f[" << reg_tile_size << "];\n";
+    }
+    writer.block_end();
+    writer << "Matrix;\n\n";
+
+    writer << "extern \"C\" __global__ void cuda_" << name << "(";
+    writer << data_types[0] << "* in, ";
+    writer << data_types[1] << "* filter, ";
+    writer << data_types[2] << "* out, ";
+    // TODO: add alpha/beta support
+    writer << "float alpha, float beta, "
+           << "int N, "
+           << "int C, "
+           << "int K, "
+           << "int input_channel_size, "
+           << "int filter_channel_size, "
+           << "int output_filter_size, "
+           << "int output_pixels, "
+           << "int output_pixels_magic, "
+           << "int output_pixels_shift, "
+           << "int* pad, "
+           << "int* data_dilation, "
+           << "int* data_dilation_magic, "
+           << "int* data_dilation_shift, "
+           << "int* filter_strides, "
+           << "int* filter_dilation, "
+           << "int* in_shape, "
+           << "int* in_shape_str, "
+           << "int* out_dim_str, "
+           << "int* out_str_magic, "
+           << "int* out_str_shift, "
+           << "int* filter_dim_str, "
+           << "int* filter_str_magic, "
+           << "int* filter_str_shift"
+           << ")\n";
+    writer.block_begin();
+    {
+        writer << "Matrix* I = reinterpret_cast<Matrix*>(in);\n";
+        writer << "Matrix* F = reinterpret_cast<Matrix*>(filter);\n";
+        writer << "Matrix* O = reinterpret_cast<Matrix*>(out);\n";
+
+        writer << "__shared__ int2 lookup_table[FILTER_SIZE];\n";
+        writer << "__shared__ int lookup_size;\n";
+        writer << "__shared__ Matrix a_tile[NUM_ROWS][SM_TILE_SIZE];\n";
+        writer << "__shared__ Matrix b_tile[NUM_ROWS][SM_TILE_SIZE];\n";
+        writer << "int lookup_size_local = 0;\n";
+
+        writer << "int n_batch = division_by_invariant_multiplication(blockIdx.x, "
+                  "output_pixels_magic, output_pixels_shift);\n";
+        writer << "int output_pixel_idx = blockIdx.x - n_batch*output_pixels;\n";
+
+        // multiply by the number of threads per sm tile to get the offset into the
+        // image and filter dimensions (stride 1)
+        writer << "int n_offset = n_batch * blockDim.x;\n";
+        writer << "int k_offset = blockIdx.y * blockDim.x;\n";
+
+        // compute coordinate transform to output tensor axes
+        // up to the last dimension but not including it
+        // : out_dim_str { d2*d3*...*dn, d3*...*dn, ..., dn, 1}
+        // : for 2d {Q, 1}
+        coordinate_transform_to_multi_d(writer,
+                                        "out_dim_str",
+                                        "out_str_magic",
+                                        "out_str_shift",
+                                        "output_pixel_idx",
+                                        "out_d",
+                                        rank);
+
+        // offset tensors by image and filter indices
+        // each thread is responsible for it's own image and filter
+
+        // n and k offsets are required because only REG_TILE_SIZE*SM_TILE_SIZE
+        // images/filters are processed per block
+        writer << "I = &(I[n_offset + threadIdx.x]);\n";
+        writer << "F = &(F[k_offset + threadIdx.x]);\n";
+
+        // if N is a multiple of reg_tile_size * sm_tile_size then no check is needed
+        bool need_image_bounds_check = N % (reg_tile_size * sm_tile_size) != 0;
+        if (need_image_bounds_check)
+        {
+            writer << "int image_load_in_bounds = (n_offset + threadIdx.x);\n";
+            if (reg_tile_size == 4)
+            {
+                writer << "image_load_in_bounds <<= 2;\n";
+            }
+            writer << "image_load_in_bounds = (image_load_in_bounds < N);\n";
+        }
+
+        // if K is a multiple of reg_tile_size * sm_tile_size then no check is needed
+        bool need_filter_bounds_check = K % (reg_tile_size * sm_tile_size) != 0;
+        if (need_filter_bounds_check)
+        {
+            writer << "int filter_load_in_bounds = (k_offset + threadIdx.x);\n";
+            if (reg_tile_size == 4)
+            {
+                writer << "filter_load_in_bounds <<= 2;\n";
+            }
+            writer << "filter_load_in_bounds = (filter_load_in_bounds < K);\n";
+        }
+
+        writer << "int tid = threadIdx.x + threadIdx.y * blockDim.x;\n";
+        // build lookup table for loading elements from data and filter tensors
+        writer << "if (tid < 32)\n";
+        writer.block_begin();
+        {
+            writer << "int filter_pixel = tid;\n";
+
+            for (int i = 0; i < rank; i++)
+            {
+                writer << "int input_base_d" << i << " = out_d" << i << " * filter_strides[" << i
+                       << "] - pad[" << i << "];\n";
+            }
+
+            // a mask marking all threads that have tid less than the current thread
+            writer << "uint32_t mask = (1 << tid) - 1;\n";
+            // loop over filter coordinates
+            writer << "while (filter_pixel < FILTER_SIZE)\n";
+            writer.block_begin();
+            {
+                // transform to filter coordinates
+                // : filter_dim_str is {S, 1} for 2D
+                coordinate_transform_to_multi_d(writer,
+                                                "filter_dim_str",
+                                                "filter_str_magic",
+                                                "filter_str_shift",
+                                                "filter_pixel",
+                                                "filter_d",
+                                                rank);
+                // transform from filter coordinate to input coordinates
+                // and check that each coordinate maps to an input element in the undilated space
+                writer << "int off_dilation_stride = 0;\n";
+                writer << "int undilated_coordinate = 0;\n";
+                for (int i = 0; i < rank; i++)
+                {
+                    writer << "int input_d" << i << " = input_base_d" << i << " + filter_d" << i
+                           << " * filter_dilation[" << i << "];\n";
+                    // determine coordinate in undilated input space
+                    writer << "undilated_coordinate = division_by_invariant_multiplication(input_d"
+                           << i << ", data_dilation_magic[" << i << "], data_dilation_shift[" << i
+                           << "]);\n";
+                    // if division remainder is 0, then dilated coordinate is on an input element
+                    writer << "off_dilation_stride += (input_d" << i
+                           << " - undilated_coordinate * data_dilation[" << i << "]);\n";
+                    // reassign dilated coordinate to undilated input coordinate
+                    writer << "input_d" << i << " = undilated_coordinate;\n";
+                }
+
+                // check if the index is in bounds of the input tensor
+                writer << "bool in_bounds = (off_dilation_stride == 0) && (";
+                for (int i = 0; i < rank; i++)
+                {
+                    if (i != 0)
+                    {
+                        writer << "&& ";
+                    }
+
+                    // in_shape contains the full shape of the input_tensor
+                    // for 2D this is: (C, H, W, N) but rank = 2 and so only [H, W] are used
+                    // condition (input_d0 >=0 && input_d0 < H && input_d1 >= 0 && input_d1 < W)
+                    writer << "input_d" << i << ">= 0 && input_d" << i << " < in_shape[" << i + 1
+                           << "] ";
+                }
+                writer << ");\n";
+
+                // check which threads are within bounds of the input tensor
+                writer << "uint32_t threads = __ballot(in_bounds);\n";
+                writer << "if (in_bounds)\n";
+                writer.block_begin();
+                {
+                    writer << "int2 entry;\n";
+                    // inner product of coordinates and strides up to the last dimension
+                    // for 2D (CHWN) this is: (HWN, WN, N, 1)
+                    // entry.x = input_d0 * WN + input_d1*N
+
+                    writer << "entry.x = (";
+                    for (int i = 0; i < rank; i++)
+                    {
+                        if (i != 0)
+                        {
+                            writer << "+ ";
+                        }
+                        // skips the first and last stride which correspond
+                        // to the channel and batch coordinate, respectively
+                        writer << "input_d" << i << " * in_shape_str[" << i + 1 << "] ";
+                    }
+                    writer << ")";
+                    // if using register tiling, down shift
+                    // as each thread will compute outer
+                    // product with register tiles
+                    if (reg_tile_size == 4)
+                    {
+                        writer << " >> 2";
+                    }
+                    writer << ";\n";
+
+                    // multiply by K filters per filter_pixel
+                    writer << "entry.y = (filter_pixel * K)";
+                    if (reg_tile_size == 4)
+                    {
+                        writer << " >> 2";
+                    }
+                    writer << ";\n";
+
+                    // count the number of active threads with index less than
+                    // current tid use this as an offset into the lookup table
+                    writer << "int index = lookup_size_local + __popc(threads & mask);\n";
+                    // save coordinates to shared lookup table for later loading
+                    writer << "lookup_table[index] = entry;\n";
+                }
+                writer.block_end();
+                writer << "lookup_size_local += __popc(threads);\n";
+                writer << "filter_pixel += 32;\n";
+            }
+            writer.block_end();
+        }
+        writer.block_end();
+
+        // push lookup table size to shared memory so that it is accessible by other threads
+        writer << "if (tid == 0)\n";
+        writer.block_begin();
+        {
+            writer << "lookup_size = lookup_size_local;\n";
+        }
+        writer.block_end();
+        writer << "__syncthreads();\n";
+        // pull lookup table size from shared memory
+        writer << "lookup_size_local = lookup_size;\n";
+        // declare and zero initialize gemm accumulator
+        writer << "Matrix result[" << reg_tile_size << "] = {0};\n";
+        // if the lookup table is empty no multiplication is needed,
+        // skip and write out zero result else, do the gemm
+        writer << "if (lookup_size_local > 0)\n";
+        writer.block_begin();
+        {
+            // calculate total size of filter including each channel
+            writer << "int total_filter_size = lookup_size_local * C;\n";
+            // precompute reciprocal for faster division
+            writer << "float reciprocal = 1.0f / static_cast<float>(lookup_size_local);\n";
+            // loop from the back of the filter (highest index) to the front
+            // in order to handle filter pixel edge conditionals first (outside of gemm loop)
+            writer << "int total_filter_idx = total_filter_size % NUM_ROWS;\n";
+            // want total_filter_idx always >=0 in order to mask threads with t.y > total_filter_idx
+            writer << "total_filter_idx = (total_filter_idx == 0) ? 8 : total_filter_idx;\n";
+
+            // first iteration from back of filter
+            writer << "int c;\n";
+            writer << "int filter_idx;\n";
+            writer << "idiv_fast(total_filter_size - threadIdx.y - 1, lookup_size_local, "
+                      "reciprocal, c, filter_idx);\n";
+            // retrieve the offsets for the data and filter for these filter pixels
+            // only threads that are less than the total_filter_idx are valid, the rest are oob
+            writer << "int2 entry = ((threadIdx.y & 7) >= total_filter_idx) "
+                   << "? make_int2(0, 0)\n"
+                   << ": lookup_table[filter_idx];\n";
+
+            // helper to emit call to cuda make_float function
+            auto make_float_i = [](int n) {
+                std::stringstream ss;
+                ss << "make_float" << n << "(";
+                for (int i = 0; i < n; i++)
+                {
+                    if (i != 0)
+                    {
+                        ss << ", ";
+                    }
+                    ss << "0";
+                }
+                ss << ")";
+                return ss.str();
+            };
+
+            // use the y index of threads to load data into the tile rows
+            // threadIdx.x is used for iterating over the fastest moving dimensions
+            // of the data and filter tensors (N and K respectively)
+
+            // --- image load ---
+            writer << "a_tile[threadIdx.y][threadIdx.x].f" << reg_tile_size << " =\n";
+            if (need_image_bounds_check)
+            {
+                // check if image index is in bounds
+                writer << "(!image_load_in_bounds)\n";
+                writer << "? " << make_float_i(reg_tile_size) << "\n";
+                writer << ": ";
+            }
+            // if filter pixel is out of range,
+            // set all elements in the relevant sm tile row to 0
+            writer << "((threadIdx.y & 7) >= total_filter_idx)\n";
+            writer << "? " << make_float_i(reg_tile_size) << "\n";
+            // else load the image data corresponding to this filter pixel
+            // according to the entry.x offset previously determined
+            writer << ": I[(c * input_channel_size) + entry.x].f" << reg_tile_size << ";\n";
+
+            // --- filter load ---
+            writer << "b_tile[threadIdx.y][threadIdx.x].f" << reg_tile_size << " =\n";
+            if (need_filter_bounds_check)
+            {
+                // check if filter index is in bounds
+                writer << "(!filter_load_in_bounds)\n";
+                writer << "? " << make_float_i(reg_tile_size) << "\n";
+                writer << ": ";
+            }
+            // if filter pixel is out of range,
+            // set all elements in the relevant sm tile row to 0
+            writer << "((threadIdx.y & 7) >= total_filter_idx)\n";
+            writer << "? " << make_float_i(reg_tile_size) << "\n";
+            // else load the filter weights corresponding to this filter pixel
+            // according to the entry.y offset previously determined
+            writer << ": F[(c * filter_channel_size) + entry.y].f" << reg_tile_size << ";\n";
+
+            // iterate over filter from back to front
+            writer << "for (total_filter_idx = total_filter_size - total_filter_idx; "
+                      "total_filter_idx > 0; total_filter_idx -= NUM_ROWS)\n";
+            writer.block_begin();
+            {
+                // finish loads
+                writer << "__syncthreads();\n";
+                writer << "#pragma unroll\n";
+                writer << "for (int i = 0; i < NUM_ROWS; i++)\n";
+                writer.block_begin();
+                {
+                    writer << "Matrix row;\n";
+                    writer << "Matrix col;\n";
+                    writer << "row.f" << reg_tile_size << " = a_tile[i][threadIdx.x].f"
+                           << reg_tile_size << ";\n";
+                    writer << "col.f" << reg_tile_size << " = b_tile[i][threadIdx.y].f"
+                           << reg_tile_size << ";\n";
+
+                    // accumulate the product
+                    writer << "#pragma unroll\n";
+                    writer << "for (int y = 0; y < " << reg_tile_size << "; y++)\n";
+                    writer.block_begin();
+                    {
+                        writer << "#pragma unroll\n";
+                        writer << "for (int x = 0; x < " << reg_tile_size << "; x++)\n";
+                        writer.block_begin();
+                        {
+                            writer << "result[y].f[x] += (row.f[x] * col.f[y]);\n";
+                        }
+                        writer.block_end();
+                    }
+                    writer.block_end();
+                }
+                writer.block_end();
+                writer << "__syncthreads();\n";
+
+                // load new data and weights
+                writer << "idiv_fast(total_filter_idx - threadIdx.y - 1, lookup_size_local, "
+                          "reciprocal, c, filter_idx);\n";
+                writer << "entry = lookup_table[filter_idx];\n";
+
+                // --- image load ---
+                writer << "a_tile[threadIdx.y][threadIdx.x].f" << reg_tile_size << " =\n";
+                if (need_image_bounds_check)
+                {
+                    // check if image index is in bounds
+                    writer << "(!image_load_in_bounds)\n";
+                    writer << "? " << make_float_i(reg_tile_size) << "\n";
+                    writer << ": ";
+                }
+                writer << "I[(c * input_channel_size) + entry.x].f" << reg_tile_size << ";\n";
+
+                // --- filter load ---
+                writer << "b_tile[threadIdx.y][threadIdx.x].f" << reg_tile_size << " =\n";
+                if (need_filter_bounds_check)
+                {
+                    // check if filter index is in bounds
+                    writer << "(!filter_load_in_bounds)\n";
+                    writer << "? " << make_float_i(reg_tile_size) << "\n";
+                    writer << ": ";
+                }
+                writer << "F[(c * filter_channel_size) + entry.y].f" << reg_tile_size << ";\n";
+            }
+            writer.block_end();
+            writer << "__syncthreads();\n";
+
+            // last iteration
+            writer << "#pragma unroll\n";
+            writer << "for (int i = 0; i < NUM_ROWS; i++)\n";
+            writer.block_begin();
+            {
+                writer << "Matrix row;\n";
+                writer << "Matrix col;\n";
+                writer << "row.f" << reg_tile_size << " = a_tile[i][threadIdx.x].f" << reg_tile_size
+                       << ";\n";
+                writer << "col.f" << reg_tile_size << " = b_tile[i][threadIdx.y].f" << reg_tile_size
+                       << ";\n";
+                // accumulate the product
+                writer << "#pragma unroll\n";
+                writer << "for (int y = 0; y < " << reg_tile_size << "; y++)\n";
+                writer.block_begin();
+                {
+                    writer << "#pragma unroll\n";
+                    writer << "for (int x = 0; x < " << reg_tile_size << "; x++)\n";
+                    writer.block_begin();
+                    {
+                        writer << "result[y].f[x] += (row.f[x] * col.f[y]);\n";
+                    }
+                    writer.block_end();
+                }
+                writer.block_end();
+            }
+            writer.block_end();
+        } // end if (lookup_size_local > 0)
+        writer.block_end();
+
+        // store result block to global memory
+        writer << "int n = n_offset + threadIdx.x;\n";
+        std::string k_definition = "int k = (k_offset + threadIdx.y)";
+        std::string output_pixel = "output_pixel_idx = (output_pixel_idx * N)";
+        if (reg_tile_size == 4)
+        {
+            output_pixel += " >> 2";
+            k_definition += " << 2";
+        }
+        writer << output_pixel << ";\n";
+        writer << k_definition << ";\n";
+        writer << "if (k < K && n < N)\n";
+        writer.block_begin();
+        {
+            writer << "#pragma unroll\n";
+            writer << "for (int x = 0; x < " << reg_tile_size << "; x++)\n";
+            writer.block_begin();
+            {
+                writer << "if (k < K)\n";
+                writer.block_begin();
+                {
+                    writer << "int idx = (k * output_filter_size) + output_pixel_idx + n;\n";
+                    writer << "O[idx].f" << reg_tile_size << " = result[x].f" << reg_tile_size
+                           << ";\n";
+                }
+                writer.block_end();
+                writer << "k++;\n";
+            }
+            writer.block_end();
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+}
+
+void runtime::gpu::CudaKernelBuilder::coordinate_transform_to_multi_d(codegen::CodeWriter& writer,
+                                                                      std::string i_strides,
+                                                                      std::string i_stride_magic,
+                                                                      std::string i_stride_shift,
+                                                                      std::string i_coord_product,
+                                                                      std::string o_coordinates,
+                                                                      size_t rank)
 {
     // Translation from flat index to dense tensor coordinates:
     // Given tensor shape [d0 d1 ... dN] with strides [d1*...*dN, d2*...*dN, ... 1],
@@ -729,15 +1187,31 @@ std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_hel
     //  product = product % stride[0]
     //  d1 = product/stride[1]
     //  ...
-    writer << "int coordinate_product = " << i_thread_index << ";\n";
+    writer << "int coordinate_product = " << i_coord_product << ";\n";
     for (size_t i = 0; i < rank; i++)
     {
+        if (i != 0)
+        {
+            writer << "coordinate_product -= (" << o_coordinates << i - 1 << " * " << i_strides
+                   << "[" << i - 1 << "]);\n";
+        }
         writer << "int " << o_coordinates << i << " = division_by_invariant_multiplication("
                << "coordinate_product, " << i_stride_magic << "[" << i << "], " << i_stride_shift
                << "[" << i << "]);\n";
-        writer << "coordinate_product -= (" << o_coordinates << i << " * " << i_strides << "[" << i
-               << "]);\n";
     }
+}
+std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_helper(
+    codegen::CodeWriter& writer,
+    std::string i_thread_index,
+    std::string i_strides,
+    std::string i_stride_magic,
+    std::string i_stride_shift,
+    std::string i_reduced_strides,
+    std::string o_coordinates,
+    size_t rank)
+{
+    coordinate_transform_to_multi_d(
+        writer, i_strides, i_stride_magic, i_stride_shift, i_thread_index, o_coordinates, rank);
 
     // index into reduced tensor from coordinates of non-reduced tensor
     std::string reduced_idx = "reduced_idx";
@@ -750,7 +1224,6 @@ std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_hel
 
     return reduced_idx;
 }
-
 void runtime::gpu::CudaKernelBuilder::get_device_helper(codegen::CodeWriter& writer,
                                                         const std::string& name,
                                                         const std::string& math_kernel,
