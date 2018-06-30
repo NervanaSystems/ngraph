@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -29,17 +30,23 @@ extern "C" void delete_backend(runtime::Backend* backend)
     delete backend;
 }
 
+runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()
+{
+    ocl_engine = std::make_shared<cldnn::engine>();
+}
+
 shared_ptr<runtime::TensorView>
     runtime::intelgpu::IntelGPUBackend::create_tensor(const element::Type& element_type,
                                                       const Shape& shape)
 {
-    throw runtime_error("IntelGPUBackend::create_tensor: Not implemented yet");
+    return make_shared<runtime::intelgpu::IntelGPUTensorView>(element_type, shape, *ocl_engine);
 }
 
 shared_ptr<runtime::TensorView> runtime::intelgpu::IntelGPUBackend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
-    throw runtime_error("IntelGPUBackend::create_tensor: Not implemented yet");
+    return make_shared<runtime::intelgpu::IntelGPUTensorView>(
+        element_type, shape, *ocl_engine, memory_pointer);
 }
 
 bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
