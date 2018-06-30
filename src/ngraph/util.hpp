@@ -26,6 +26,8 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/node_vector.hpp"
+
 namespace ngraph
 {
     class Node;
@@ -261,3 +263,5 @@ namespace ngraph
     **/
     FpropCache cache_fprop(std::shared_ptr<Function> fprop, std::shared_ptr<Function> bprop);
 } // end namespace ngraph
+
+std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);
