@@ -554,6 +554,7 @@ namespace ngraph
                 {
                     auto reshape = static_cast<op::Reshape*>(node);
 
+                    // XXX lfeng9: check for cpu layout?
                     auto op_annotations =
                         std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                     if (!reshape->get_is_transpose()) {
