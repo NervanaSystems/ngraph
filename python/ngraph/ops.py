@@ -430,8 +430,6 @@ def broadcast(node, new_shape, broadcast_axes, name=None):
     :param name: Optional new name for output node.
     :return: New node with broadcast shape.
     """
-    if type(broadcast_axes) is not set:
-        broadcast_axes = set(broadcast_axes)
     return Broadcast(node, Shape(new_shape), AxisSet(broadcast_axes))
 
 

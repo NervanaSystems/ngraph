@@ -27,5 +27,6 @@ void regclass_pyngraph_AxisSet(py::module m)
     axis_set.doc() = "ngraph.impl.AxisSet wraps ngraph::AxisSet";
     axis_set.def(py::init<const std::initializer_list<size_t>&>());
     axis_set.def(py::init<const std::set<size_t>&>());
+    axis_set.def(py::init<const std::vector<size_t>&>());
     axis_set.def(py::init<const ngraph::AxisSet&>());
 }
