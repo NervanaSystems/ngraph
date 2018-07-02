@@ -71,17 +71,18 @@ namespace ngraph
                 EntryPoint m_compiled_function;
 
             private:
-                void emit_debug_function_entry(codegen::CodeWriter& writer,
-                                               Node* node,
+                void emit_header();
+                void emit_timer_functions();
+                void emit_constants();
+
+
+                void emit_debug_function_entry(Node* node,
                                                const std::vector<GPU_TensorViewWrapper>& in,
                                                const std::vector<GPU_TensorViewWrapper>& out);
-                void emit_debug_function_exit(codegen::CodeWriter& writer,
-                                              Node* node,
+                void emit_debug_function_exit(Node* node,
                                               const std::vector<GPU_TensorViewWrapper>& in,
                                               const std::vector<GPU_TensorViewWrapper>& out);
-                void handle_output_alias(
-                    codegen::CodeWriter& writer,
-                    const Node&,
+                void handle_output_alias(const Node&,
                     const std::unordered_map<descriptor::TensorView*, std::vector<size_t>>&);
                 void release_function() { m_function = nullptr; }
                 std::string emit_op_as_function(const Node& node, const std::string& function_name);
@@ -100,6 +101,11 @@ namespace ngraph
                 bool m_release_function;
                 bool m_is_compiled;
 
+                codegen::CodeWriter m_writer;
+                pass::Manager m_pass_manager;
+
+                std::string pch_header_source;
+                bool m_temporaries_used = false;
                 cublasHandle_t m_cublas_handle;
                 cudnnHandle_t m_cudnn_handle;
                 std::unique_ptr<GPUPrimitiveEmitter> m_primitive_emitter;
