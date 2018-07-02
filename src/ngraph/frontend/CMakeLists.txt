@@ -14,28 +14,8 @@
 # limitations under the License.
 # ******************************************************************************
 
-set (SRC
-    nbench.cpp
-    ${PROJECT_SOURCE_DIR}/test/util/benchmark.cpp
-)
-
-add_executable(nbench ${SRC})
-add_dependencies(nbench ngraph)
-
-target_link_libraries(nbench ngraph)
-if (NGRAPH_CPU_ENABLE)
-    target_link_libraries(nbench cpu_backend)
-endif()
-if (NGRAPH_INTELGPU_ENABLE)
-    target_link_libraries(nbench intelgpu_backend)
-endif()
-if (NGRAPH_GPU_ENABLE)
-    target_link_libraries(nbench gpu_backend)
-endif()
-if (NGRAPH_INTERPRETER_ENABLE)
-    target_link_libraries(nbench interpreter_backend)
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    add_subdirectory(onnx_import)
 endif()
 
-include_directories("${PROJECT_SOURCE_DIR}/test")
 
-install(TARGETS nbench RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN})

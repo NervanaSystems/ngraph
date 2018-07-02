@@ -17,34 +17,28 @@
 #pragma once
 
 #include "ngraph/node.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/op/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        NodeVector get_output_elements(const std::shared_ptr<Node>& mon);
-
-        /// \brief Operation to get an output from a node.
-        class GetOutputElement : public Node
+        /// \brief Elementwise Minimum(Relu(arg, 0), alpha) operation.
+        ///
+        class BoundedRelu : public util::RequiresTensorViewArgs
         {
         public:
-            /// \brief Constructs a get-tuple-element operation.
+            /// \brief Constructs a BoundedRelu operation.
             ///
-            /// \param arg The input tuple.
-            /// \param n The index of the tuple element to get.
-            GetOutputElement(const std::shared_ptr<Node>& arg, size_t n);
-
+            /// \param arg Node input to the Relu.
+            BoundedRelu(std::shared_ptr<ngraph::Node> arg, float alpha);
+            float get_alpha() const { return m_alpha; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            /// \return The index of the tuple element to get.
-            size_t get_n() const { return m_n; }
-            virtual NodeVector get_arguments() const override;
-
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-            size_t m_n;
+        private:
+            float m_alpha;
         };
     }
 }

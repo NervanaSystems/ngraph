@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2018 Intel Corporation
+* Copyright 2017-2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -13,30 +13,24 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *******************************************************************************/
+#include "ngraph/runtime/cpu/op/bounded_relu.hpp"
+#include "ngraph/util.hpp"
 
-#pragma once
+using namespace std;
+using namespace ngraph;
 
-#include "ngraph/pass/graph_rewrite.hpp"
-
-namespace ngraph
+op::BoundedRelu::BoundedRelu(shared_ptr<Node> arg, float alpha)
+    : RequiresTensorViewArgs("BoundedRelu", {arg})
+    , m_alpha(alpha)
 {
-    namespace pass
-    {
-        class ConstantFolding;
-    }
+    set_value_type_checked(arg->get_element_type(), arg->get_shape());
 }
 
-class ngraph::pass::ConstantFolding : public ngraph::pass::GraphRewrite
+shared_ptr<Node> op::BoundedRelu::copy_with_new_args(const NodeVector& new_args) const
 {
-public:
-    ConstantFolding()
-        : GraphRewrite()
+    if (new_args.size() != 1)
     {
-        construct_constant_reshape();
-        construct_constant_broadcast();
+        throw ngraph_error("Incorrect number of new arguments");
     }
-
-private:
-    void construct_constant_reshape();
-    void construct_constant_broadcast();
-};
+    return make_shared<BoundedRelu>(new_args.at(0), m_alpha);
+}
