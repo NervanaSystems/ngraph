@@ -1038,8 +1038,8 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
     size_t offset = res_src_output->get_tensor().get_pool_offset();
     auto it = res_src_output;
 
-    bool propagate_further = true;
-    while (!it->get_node()->is_parameter() && propagate_further)
+    bool propagate_further = false;
+    do
     {
         propagate_further = false;
         auto arg = std::dynamic_pointer_cast<ngraph::op::Op>(it->get_node());
@@ -1050,7 +1050,8 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
             {
                 size_t input_index = oi_pairs.at(it->get_index());
                 auto& input_tensor = arg->get_inputs().at(input_index).get_tensor();
-                if (input_tensor.get_pool_offset() == offset)
+                if (input_tensor.get_pool_offset() == offset &&
+                    !arg->get_inputs().at(input_index).get_output().get_node()->is_parameter())
                 {
                     NGRAPH_DEBUG << "Reusing " << output_name << " for " << input_tensor.get_name();
                     m_variable_name_map[input_tensor.get_name()] = output_name;
@@ -1059,7 +1060,7 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
                 }
             }
         }
-    }
+    } while (propagate_further);
 }
 
 void runtime::cpu::CPU_ExternalFunction::build()
