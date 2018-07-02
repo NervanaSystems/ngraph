@@ -47,7 +47,7 @@ namespace ngraph
                                  GPUShape pad_interior,
                                  const std::string& pad_value = "");
 
-                size_t build_pad_dynamic(const runtime::gpu::GPURuntimeContext* ctx,
+                size_t build_pad_dynamic(const GPURuntimeContext* ctx,
                                          const std::array<std::string, 2>& dtypes,
                                          GPUShape input_shape,
                                          GPUShape output_shape,
@@ -69,6 +69,13 @@ namespace ngraph
                                       GPUShape window_stride,
                                       GPUShape padding_below,
                                       bool include_pad = false);
+
+                size_t build_slice(const GPURuntimeContext* ctx,
+                                   const std::array<std::string, 2>& dtypes,
+                                   GPUShape input_shape,
+                                   GPUShape lower_bounds,
+                                   GPUShape slice_strides,
+                                   GPUShape output_shape);
 
                 size_t build_reduce_window(const GPURuntimeContext* ctx,
                                            const OpName op_name,
@@ -144,6 +151,7 @@ namespace ngraph
 
             private:
                 CUDAEmitter(GPUPrimitiveEmitter* emitter);
+                uint32_t align_to_block_size(uint32_t grid_size, uint32_t block_size);
                 void print_tensor_from_gpu(codegen::CodeWriter& writer,
                                            const std::string& tensor_name,
                                            GPUShape shape);
