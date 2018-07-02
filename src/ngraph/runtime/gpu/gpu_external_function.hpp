@@ -26,6 +26,7 @@
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
@@ -56,13 +57,14 @@ namespace ngraph
 
             public:
                 GPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
+                                     std::shared_ptr<GPU_Backend::BackendContext>& shared_context,
                                      bool release_function = true);
                 ~GPU_ExternalFunction();
                 std::shared_ptr<ngraph::runtime::gpu::GPU_CallFrame> make_call_frame();
                 std::unique_ptr<runtime::gpu::GPURuntimeContext>& ctx();
                 const std::unique_ptr<GPUPrimitiveEmitter>& get_primitive_emitter() const
                 {
-                    return m_primitive_emitter;
+                    return m_shared_context->m_primitive_emitter;
                 }
 
             protected:
@@ -100,10 +102,11 @@ namespace ngraph
                 bool m_release_function;
                 bool m_is_compiled;
 
-                cublasHandle_t m_cublas_handle;
-                cudnnHandle_t m_cudnn_handle;
-                std::unique_ptr<GPUPrimitiveEmitter> m_primitive_emitter;
-                std::unique_ptr<GPURuntimeContext> m_ctx;
+                // cublasHandle_t m_cublas_handle;
+                // cudnnHandle_t m_cudnn_handle;
+                // std::unique_ptr<GPUPrimitiveEmitter> m_primitive_emitter;
+                // std::unique_ptr<GPURuntimeContext> m_ctx;
+                std::shared_ptr<GPU_Backend::BackendContext> m_shared_context;
             };
         }
     }

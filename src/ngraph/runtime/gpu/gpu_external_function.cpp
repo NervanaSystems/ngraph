@@ -15,10 +15,6 @@
 *******************************************************************************/
 
 #include <cstdlib>
-#include <cublas_v2.h>
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <cudnn.h>
 #include <fstream>
 #include <memory>
 #include <string>
@@ -250,43 +246,20 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::Or), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Or>}};
 
 runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
-    const shared_ptr<ngraph::Function>& function, bool release_function)
+    const shared_ptr<ngraph::Function>& function,
+    std::shared_ptr<GPU_Backend::BackendContext>& shared_context,
+    bool release_function)
     : m_compiled_function(nullptr)
     , m_emit_timing(false)
     , m_function(function)
     , m_release_function(release_function)
     , m_is_compiled(false)
-    , m_ctx(new GPURuntimeContext)
+    , m_shared_context(shared_context)
 {
-    // Create context use driver API and make it current, the runtime call will pickup the context
-    // http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html
-    // #interoperability-between-runtime-and-driver-apis
-    ngraph::runtime::gpu::CudaContextManager::Instance().SetContextCurrent();
-
-    cublasStatus_t cublasStatus = cublasCreate(&m_cublas_handle);
-    if (cublasStatus != CUBLAS_STATUS_SUCCESS)
-    {
-        throw runtime_error("cuBLAS create handle failed");
-    }
-    cudnnStatus_t cudnnStatus = cudnnCreate(&m_cudnn_handle);
-    if (cudnnStatus != CUDNN_STATUS_SUCCESS)
-    {
-        throw runtime_error("cuDNN create handle failed");
-    }
-    // Pass scalars as reference on the Device
-    cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_DEVICE);
-
-    // register with c-api runtime context
-    m_ctx->cublas_handle = &m_cublas_handle;
-    m_ctx->cudnn_handle = &m_cudnn_handle;
-    m_ctx->compiled_kernel_pool = new CudaFunctionPool;
 }
 
 runtime::gpu::GPU_ExternalFunction::~GPU_ExternalFunction()
 {
-    cublasDestroy(m_cublas_handle);
-    cudnnDestroy(m_cudnn_handle);
-    delete m_ctx->compiled_kernel_pool;
 }
 
 void runtime::gpu::GPU_ExternalFunction::compile()
@@ -295,8 +268,6 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     {
         return;
     }
-
-    m_primitive_emitter.reset(new GPUPrimitiveEmitter());
 
     string function_name = m_function->get_name();
     string dump_filename = file_util::path_join(s_output_dir, function_name + "_ops.txt");
@@ -738,7 +709,7 @@ using namespace std;
     }
 
     // allocate device buffers for primitive arguments and workspace
-    m_primitive_emitter->allocate_primitive_memory();
+    m_shared_context->m_primitive_emitter->allocate_primitive_memory();
 
     // TODO: Cleanup and make this a utility function
     string filename = file_util::path_join(s_output_dir, function_name + "_codegen.cpp");
@@ -834,7 +805,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_debug_function_exit(
 
 std::unique_ptr<runtime::gpu::GPURuntimeContext>& runtime::gpu::GPU_ExternalFunction::ctx()
 {
-    return m_ctx;
+    return m_shared_context->m_ctx;
 }
 
 bool runtime::gpu::GPU_ExternalFunction::is_functionally_identical(
@@ -846,6 +817,8 @@ bool runtime::gpu::GPU_ExternalFunction::is_functionally_identical(
 string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
                                                                const string& function_name)
 {
+    std::cout << function_name << ": " << node.get_name() << std::endl;
+
     codegen::CodeWriter writer;
     writer << "static void " << function_name << "(";
     writer.indent++;

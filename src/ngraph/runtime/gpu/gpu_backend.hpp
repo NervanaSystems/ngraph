@@ -19,6 +19,11 @@
 #include <map>
 #include <memory>
 
+#include <cublas_v2.h>
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <cudnn.h>
+
 #include "ngraph/runtime/backend.hpp"
 
 namespace ngraph
@@ -31,10 +36,13 @@ namespace ngraph
 
             class GPU_ExternalFunction;
             class GPU_CallFrame;
+            class GPUPrimitiveEmitter;
+            struct GPURuntimeContext;
 
             class GPU_Backend : public Backend
             {
             public:
+                GPU_Backend();
                 std::shared_ptr<ngraph::runtime::gpu::GPU_CallFrame> make_call_frame(
                     const std::shared_ptr<ngraph::runtime::gpu::GPU_ExternalFunction>&
                         external_function);
@@ -59,6 +67,17 @@ namespace ngraph
                 std::vector<PerformanceCounter>
                     get_performance_data(std::shared_ptr<Function> func) const override;
 
+                class BackendContext
+                {
+                public:
+                    BackendContext();
+                    ~BackendContext();
+                    cublasHandle_t m_cublas_handle;
+                    cudnnHandle_t m_cudnn_handle;
+                    std::unique_ptr<GPUPrimitiveEmitter> m_primitive_emitter;
+                    std::unique_ptr<GPURuntimeContext> m_ctx;
+                };
+
             private:
                 class FunctionInstance
                 {
@@ -69,6 +88,7 @@ namespace ngraph
                 };
 
                 std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
+                std::shared_ptr<BackendContext> m_context;
             };
         }
     }

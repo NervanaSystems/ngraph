@@ -17,6 +17,7 @@
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
+#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
 #include "ngraph/util.hpp"
 
@@ -27,6 +28,47 @@ extern "C" void create_backend()
 {
     runtime::Backend::register_backend("GPU", make_shared<runtime::gpu::GPU_Backend>());
 };
+
+runtime::gpu::GPU_Backend::GPU_Backend()
+    : runtime::Backend()
+    , m_context(new BackendContext())
+{
+}
+
+runtime::gpu::GPU_Backend::BackendContext::BackendContext()
+    : m_ctx(new GPURuntimeContext)
+    , m_primitive_emitter(new GPUPrimitiveEmitter())
+{
+    // Create context use driver API and make it current, the runtime call will pickup the context
+    // http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html
+    // #interoperability-between-runtime-and-driver-apis
+    ngraph::runtime::gpu::CudaContextManager::Instance().SetContextCurrent();
+
+    cublasStatus_t cublasStatus = cublasCreate(&m_cublas_handle);
+    if (cublasStatus != CUBLAS_STATUS_SUCCESS)
+    {
+        throw runtime_error("cuBLAS create handle failed");
+    }
+    cudnnStatus_t cudnnStatus = cudnnCreate(&m_cudnn_handle);
+    if (cudnnStatus != CUDNN_STATUS_SUCCESS)
+    {
+        throw runtime_error("cuDNN create handle failed");
+    }
+    // Pass scalars as reference on the Device
+    cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_DEVICE);
+
+    // register with c-api runtime context
+    m_ctx->cublas_handle = &m_cublas_handle;
+    m_ctx->cudnn_handle = &m_cudnn_handle;
+    m_ctx->compiled_kernel_pool = new CudaFunctionPool;
+}
+
+runtime::gpu::GPU_Backend::BackendContext::~BackendContext()
+{
+    cublasDestroy(m_cublas_handle);
+    cudnnDestroy(m_cudnn_handle);
+    delete m_ctx->compiled_kernel_pool;
+}
 
 shared_ptr<runtime::gpu::GPU_CallFrame> runtime::gpu::GPU_Backend::make_call_frame(
     const shared_ptr<GPU_ExternalFunction>& external_function)
@@ -51,7 +93,7 @@ bool runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func)
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_external_function == nullptr)
     {
-        instance.m_external_function = make_shared<GPU_ExternalFunction>(func);
+        instance.m_external_function = make_shared<GPU_ExternalFunction>(func, m_context);
         instance.m_external_function->m_emit_timing = instance.m_performance_counters_enabled;
         auto cf = instance.m_external_function->make_call_frame();
         instance.m_call_frame = dynamic_pointer_cast<GPU_CallFrame>(cf);
@@ -70,6 +112,7 @@ bool runtime::gpu::GPU_Backend::call(shared_ptr<Function> func,
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_external_function == nullptr)
     {
+        std::cout << "Compile " << func->get_name() << std::endl;
         rc = compile(func);
     }
 

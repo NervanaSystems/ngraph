@@ -61,15 +61,15 @@ void runtime::gpu::GPU_CallFrame::call(
         outputs.push_back(tv->m_allocated_buffer_pool);
     }
 
-    m_compiled_function(inputs.data(), outputs.data(), m_external_function->m_ctx.get());
+    m_compiled_function(inputs.data(), outputs.data(), m_external_function->ctx().get());
 }
 
 void runtime::gpu::GPU_CallFrame::setup_runtime_context()
 {
     // add pointers to gpu primitives into the gpu runtime context
     const auto& primitive_emitter = m_external_function->get_primitive_emitter();
-    m_external_function->m_ctx->gpu_primitives = primitive_emitter->get_primitives().data();
-    m_external_function->m_ctx->gpu_memory_primitives =
+    m_external_function->ctx()->gpu_primitives = primitive_emitter->get_primitives().data();
+    m_external_function->ctx()->gpu_memory_primitives =
         primitive_emitter->get_memory_primitives().data();
 }
 
