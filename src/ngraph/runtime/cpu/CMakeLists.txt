@@ -48,7 +48,6 @@ set(SRC
     op/max_pool_with_indices.cpp
     op/rnn.cpp
     op/sigmoid_mul.cpp
-    op/sigmoid.cpp
     pass/cpu_assignment.cpp
     pass/cpu_concat_inputs.cpp
     pass/cpu_fusion.cpp
