@@ -55,18 +55,6 @@ namespace ngraph
                               size_t rank,
                               size_t count);
 
-            void emit_slice(const std::string& name,
-                            CUdeviceptr in,
-                            CUdeviceptr out,
-                            const std::array<std::string, 2>& data_types,
-                            GPURuntimeContext* ctx,
-                            CUdeviceptr input_strides,
-                            CUdeviceptr lower_bounds,
-                            CUdeviceptr slice_strides,
-                            CUdeviceptr output_strides,
-                            size_t rank,
-                            size_t count);
-
             void emit_reverse(const std::string& name,
                               CUdeviceptr in,
                               CUdeviceptr out,
