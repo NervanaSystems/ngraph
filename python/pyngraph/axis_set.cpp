@@ -44,6 +44,6 @@ void regclass_pyngraph_AxisSet(py::module m)
         std::stringstream data_ss;
         std::copy(self.begin(), self.end(), std::ostream_iterator<int>(data_ss, ", "));
         std::string data_str = data_ss.str();
-        return "{" + data_str.substr(0, data_str.size() - 2) + "}";
+        return "<AxisSet {" + data_str.substr(0, data_str.size() - 2) + "}>";
     });
 }
