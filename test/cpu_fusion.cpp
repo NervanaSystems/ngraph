@@ -46,6 +46,7 @@
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/op/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
+#include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
@@ -2684,4 +2685,41 @@ TEST(cpu_fusion, fuse_rnn_across_2layer_1timestep)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(1), int_results.at(1), 1.0e-4f, 1.0e-4f));
     }
+}
+
+static void check_bounded_relu(Shape param_shape, float constant_val)
+{
+    auto make_function = [](Shape input_shape, float alpha_val) {
+        auto relu_input = std::make_shared<op::Parameter>(element::f32, input_shape);
+        auto relu = std::make_shared<op::Relu>(relu_input);
+        auto alpha = op::Constant::create<float>(
+            element::f32, input_shape, std::vector<float>(1.0f, alpha_val));
+        auto min = std::make_shared<op::Minimum>(relu, alpha);
+        auto f = make_shared<Function>(NodeVector{min}, op::ParameterVector{relu_input});
+        return f;
+    };
+
+    auto cpu_f = make_function(param_shape, constant_val);
+    auto int_f = make_function(param_shape, constant_val);
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+
+    EXPECT_EQ(1, count_ops_of_type<op::BoundedRelu>(cpu_f));
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0), 1.0e-4f, 1.0e-4f));
+}
+
+TEST(cpu_fusion, fuse_bounded_relu_inter_vs_cpu)
+{
+    check_bounded_relu(Shape{4, 3, 2, 2}, 6.0f);
+    check_bounded_relu(Shape{4, 3}, 4.0f);
+    check_bounded_relu(Shape{4, 3, 2}, 2.0f);
 }
