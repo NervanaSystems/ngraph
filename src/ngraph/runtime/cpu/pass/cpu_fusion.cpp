@@ -785,7 +785,21 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
             {
                 if (std::dynamic_pointer_cast<op::Sum>(delta_user))
                 {
-                    auto bias_shape = delta_user->get_output_shape(0);
+                    auto bias = std::dynamic_pointer_cast<op::Sum>(delta_user);
+                    auto bias_shape = bias->get_shape();
+                    bool flag = false;
+                    if (bias_shape.size() > 1)
+                    {
+                        NGRAPH_DEBUG
+                            << "mpattern = " << m.get_match_root()->get_name()
+                            << "conv_bias bias shape != 1, requires reshape to match filter count.";
+                        ngraph::AxisVector order(bias_shape.size());
+                        std::iota(begin(order), end(order), 0);
+                        auto bias_reshape = std::make_shared<op::Reshape>(
+                            bias, order, Shape{conv_bprop->get_filters_shape()[0]});
+                        bias_shape = bias_reshape->get_shape();
+                        flag = true;
+                    }
                     auto conv_bias_bprop = std::make_shared<op::ConvolutionBiasBackpropFiltersBias>(
                         pattern_map[data_batch],
                         conv_bprop->get_filters_shape(),
@@ -803,7 +817,16 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
                     ngraph::replace_node(m.get_match_root(), goe1);
                     NGRAPH_DEBUG << "Replacing bias and adding it as a second o/p of "
                                     "ConvolutionBiasBackpropFiltersBias";
-                    ngraph::replace_node(delta_user, goe2);
+                    if (flag)
+                    {
+                        auto goe2_reshape = std::make_shared<op::Reshape>(
+                            goe2, AxisVector{0}, delta_user->get_shape());
+                        ngraph::replace_node(delta_user, goe2_reshape);
+                    }
+                    else
+                    {
+                        ngraph::replace_node(delta_user, goe2);
+                    }
                     return true;
                 }
             }
@@ -1011,7 +1034,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
     Shape shape{2, 2, 1, 1};
     auto data_batch = std::make_shared<pattern::op::Label>(element::f32, shape);
     auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
-    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{1});
+    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{shape[0]});
 
     auto conv_bias = std::make_shared<op::ConvolutionBias>(data_batch,
                                                            filters,
@@ -1079,7 +1102,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
     Shape shape{2, 2, 1, 1};
     auto data_batch = std::make_shared<pattern::op::Label>(element::f32, shape);
     auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
-    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{1});
+    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{shape[0]});
 
     auto pconv = std::make_shared<op::ConvolutionBias>(data_batch,
                                                        filters,
@@ -1182,7 +1205,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add_relu()
     Shape shape{2, 2, 1, 1};
     auto data_batch = std::make_shared<pattern::op::Label>(element::f32, shape);
     auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
-    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{1});
+    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{shape[0]});
     auto add_input = std::make_shared<pattern::op::Label>(element::f32, shape);
 
     auto pconv = std::make_shared<op::ConvolutionBiasAdd>(data_batch,
