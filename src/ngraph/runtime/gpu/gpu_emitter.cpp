@@ -466,45 +466,20 @@ namespace ngraph
                 // since we padded output with temp buffer, we need to copy back to real ouput
                 if (pad_required || is_deconvolution)
                 {
-                    const auto arg_rank = output_shape.size();
-                    const auto input_strides = row_major_strides(output_shape_padded);
-                    const auto output_strides = row_major_strides(output_shape);
-                    GPUAllocator allocator =
-                        external_function->get_primitive_emitter()->get_memory_allocator();
-                    size_t idx_input_strides = allocator.reserve_argspace(
-                        input_strides.data(), input_strides.size() * sizeof(size_t));
-                    size_t idx_output_strides = allocator.reserve_argspace(
-                        output_strides.data(), output_strides.size() * sizeof(size_t));
-                    size_t idx_lower_bounds = allocator.reserve_argspace(
-                        padding_below_back.data(), padding_below_back.size() * sizeof(size_t));
-                    size_t idx_slice_strides =
-                        allocator.reserve_argspace(padding_interior_back.data(),
-                                                   padding_interior_back.size() * sizeof(size_t));
+                    auto& cuda_emitter =
+                        external_function->get_primitive_emitter()->get_cuda_emitter();
+                    auto slice_index =
+                        cuda_emitter->build_slice(external_function->ctx().get(),
+                                                  {{args[0].get_type(), out[0].get_type()}},
+                                                  output_shape_padded,
+                                                  padding_below_back,
+                                                  padding_interior_back,
+                                                  output_shape);
 
-                    writer << "size_t rank = " << arg_rank << ";\n";
-                    writer << "void* input_strides_d = "
-                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_input_strides
-                           << ");\n";
-                    writer << "void* output_strides_d = "
-                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_output_strides
-                           << ");\n";
-                    writer << "void* slice_strides_d = "
-                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_slice_strides
-                           << ");\n";
-                    writer << "void* lower_bounds_d = "
-                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_lower_bounds
-                           << ");\n";
-
-                    writer << "runtime::gpu::emit_slice(\"" << node->description()
-                           << "\", CUdeviceptr(pad_buffer), CUdeviceptr(" << out[0].get_name()
-                           << ")"
-                           << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type()
-                           << "\"}"
-                           << ", "
-                           << "ctx, "
-                           << "CUdeviceptr(input_strides_d), CUdeviceptr(lower_bounds_d), "
-                              "CUdeviceptr(slice_strides_d), CUdeviceptr(output_strides_d)"
-                           << ", " << arg_rank << ", " << out[0].get_size() << ");\n";
+                    writer << "gpu::invoke_primitive(ctx, " << slice_index << ", ";
+                    writer << "std::vector<void*>{pad_buffer}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                    writer << ");\n";
                 }
                 writer.block_end();
             }
@@ -1075,12 +1050,9 @@ namespace ngraph
                 auto slice = static_cast<const op::Slice*>(node);
 
                 const auto arg_shape = args[0].get_shape();
-                const auto arg_rank = arg_shape.size();
                 const auto result_shape = out[0].get_shape();
                 const Coordinate& lower_bounds = slice->get_lower_bounds();
                 const Strides slice_strides = slice->get_strides();
-                const auto input_strides = row_major_strides(arg_shape);
-                const auto output_strides = row_major_strides(result_shape);
 
                 writer.block_begin();
                 if (args[0].get_size() == out[0].get_size())
@@ -1089,41 +1061,20 @@ namespace ngraph
                 }
                 else
                 {
-                    GPUAllocator allocator =
-                        external_function->get_primitive_emitter()->get_memory_allocator();
-                    size_t idx_input_strides = allocator.reserve_argspace(
-                        input_strides.data(), input_strides.size() * sizeof(size_t));
-                    size_t idx_output_strides = allocator.reserve_argspace(
-                        output_strides.data(), output_strides.size() * sizeof(size_t));
-                    size_t idx_lower_bounds = allocator.reserve_argspace(
-                        lower_bounds.data(), lower_bounds.size() * sizeof(size_t));
-                    size_t idx_slice_strides = allocator.reserve_argspace(
-                        slice_strides.data(), slice_strides.size() * sizeof(size_t));
+                    auto& cuda_emitter =
+                        external_function->get_primitive_emitter()->get_cuda_emitter();
+                    auto index =
+                        cuda_emitter->build_slice(external_function->ctx().get(),
+                                                  {{args[0].get_type(), out[0].get_type()}},
+                                                  arg_shape,
+                                                  lower_bounds,
+                                                  slice_strides,
+                                                  result_shape);
 
-                    writer << "size_t rank = " << arg_rank << ";\n";
-                    writer << "void* input_strides_d = "
-                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_input_strides
-                           << ");\n";
-                    writer << "void* output_strides_d = "
-                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_output_strides
-                           << ");\n";
-                    writer << "void* slice_strides_d = "
-                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_slice_strides
-                           << ");\n";
-                    writer << "void* lower_bounds_d = "
-                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_lower_bounds
-                           << ");\n";
-
-                    writer << "runtime::gpu::emit_slice(\"" << node->description()
-                           << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
-                           << out[0].get_name() << ")"
-                           << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type()
-                           << "\"}"
-                           << ", "
-                           << "ctx, "
-                           << "CUdeviceptr(input_strides_d), CUdeviceptr(lower_bounds_d), "
-                              "CUdeviceptr(slice_strides_d), CUdeviceptr(output_strides_d)"
-                           << ", " << arg_rank << ", " << out[0].get_size() << ");\n";
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
+                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                    writer << ");\n";
                 }
                 writer.block_end();
             }
