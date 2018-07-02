@@ -41,6 +41,7 @@
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
+#include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
@@ -288,6 +289,8 @@ namespace ngraph
                     if (use_bias)
                     {
                         auto arg2_shape = node->get_input_shape(2);
+                        ngraph::op::util::validate_convbias_shapes(
+                            arg0_shape, arg1_shape, arg2_shape);
                         memory::dims mkldnn_arg2_shape(arg2_shape.begin(), arg2_shape.end());
                         const memory::desc bias_desc(mkldnn_arg2_shape, et, memory::format::any);
                         try
@@ -611,6 +614,8 @@ namespace ngraph
                     if (use_bias)
                     {
                         auto bias_shape = node->get_output_shape(1);
+                        ngraph::op::util::validate_convbias_shapes(
+                            data_shape, filters_shape, bias_shape);
                         memory::dims mkldnn_bias_shape(bias_shape.begin(), bias_shape.end());
                         const memory::desc bias_desc(mkldnn_bias_shape, et, memory::format::any);
                         bwd_desc.reset(
@@ -1480,6 +1485,23 @@ namespace ngraph
                         set_default_layouts(external_function, node);
                     }
                 }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::BoundedRelu)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        auto input_layout =
+                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        vector<memory::format> prim_output_formats;
+                        prim_output_formats.push_back(input_layout);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
             }
         }
     }
@@ -1534,6 +1556,7 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::Lstm), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Lstm>},
     {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Rnn>},
     {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Softmax>},
+    {TI(ngraph::op::BoundedRelu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BoundedRelu>},
 };
 
 bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
