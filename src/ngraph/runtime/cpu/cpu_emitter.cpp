@@ -94,6 +94,7 @@
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
+#include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
@@ -4191,6 +4192,44 @@ namespace ngraph
                     writer.block_begin();
                     writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] > 0 ? "
                            << args[0].get_name() << "[i] : 0;\n";
+                    writer.block_end();
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BoundedRelu)
+            {
+                auto bounded_relu_node = static_cast<const ngraph::op::BoundedRelu*>(node);
+                float alpha = bounded_relu_node->get_alpha();
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
+
+                    size_t bounded_relu_index =
+                        mkldnn_emitter->build_bounded_relu(input_desc, result_desc, alpha);
+
+                    auto& deps = mkldnn_emitter->get_primitive_deps(bounded_relu_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(bounded_relu_index) << ");\n";
+                }
+                else
+                {
+                    writer << "#pragma omp parallel for\n";
+                    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                    writer.block_begin();
+                    writer << args[0].get_name() << "[i] = " << args[0].get_name() << "[i] > 0 ? "
+                           << args[0].get_name() << "[i] : 0;\n";
+                    writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] < "
+                           << alpha << " ? " << args[0].get_name() << "[i] : " << alpha << ";\n";
                     writer.block_end();
                 }
             }

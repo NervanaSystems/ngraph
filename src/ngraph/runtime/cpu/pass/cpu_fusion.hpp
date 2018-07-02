@@ -64,6 +64,7 @@ public:
             construct_conv_bias_relu();
             construct_conv_bias_add();
             construct_conv_bias_add_relu();
+            construct_bounded_relu();
         }
 
         if (fusions & DIFFERENTIABLE_FUSIONS)
@@ -89,4 +90,5 @@ private:
     void construct_conv_bias_relu();
     void construct_conv_bias_add();
     void construct_conv_bias_add_relu();
+    void construct_bounded_relu();
 };
