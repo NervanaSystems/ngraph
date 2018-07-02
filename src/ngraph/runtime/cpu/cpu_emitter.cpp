@@ -1651,7 +1651,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Reshape)
             {
                 auto reshape = static_cast<const ngraph::op::Reshape*>(node);
-                if (!reshape->get_is_transpose()) {
+                if (reshape->get_op_annotations()->get_in_place_oi_pairs().size() > 0) {
                     writer << "// Stride change only, skipping.\n";
                     return;
                 }

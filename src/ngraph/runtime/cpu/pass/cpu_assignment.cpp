@@ -557,7 +557,14 @@ namespace ngraph
                     // XXX lfeng9: check for cpu layout?
                     auto op_annotations =
                         std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                    if (!reshape->get_is_transpose()) {
+                    auto users = reshape->get_users();
+                    bool need_copy = reshape->get_is_transpose();
+                    for (auto n : users) {
+                        if (n->is_output()) {
+                            need_copy = true;
+                        }
+                    }
+                    if (!need_copy) {
                         std::map<size_t, size_t> oi_pairs = {{0, 0}};
                         op_annotations->set_in_place_oi_pairs(oi_pairs);
                     }
