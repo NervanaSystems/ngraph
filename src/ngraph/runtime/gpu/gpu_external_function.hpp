@@ -26,6 +26,11 @@
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/pass/assign_layout.hpp"
+#include "ngraph/pass/dump_sorted.hpp"
+#include "ngraph/pass/liveness.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
@@ -75,14 +80,14 @@ namespace ngraph
                 void emit_timer_functions();
                 void emit_constants();
 
-
                 void emit_debug_function_entry(Node* node,
                                                const std::vector<GPU_TensorViewWrapper>& in,
                                                const std::vector<GPU_TensorViewWrapper>& out);
                 void emit_debug_function_exit(Node* node,
                                               const std::vector<GPU_TensorViewWrapper>& in,
                                               const std::vector<GPU_TensorViewWrapper>& out);
-                void handle_output_alias(const Node&,
+                void handle_output_alias(
+                    const Node&,
                     const std::unordered_map<descriptor::TensorView*, std::vector<size_t>>&);
                 void release_function() { m_function = nullptr; }
                 std::string emit_op_as_function(const Node& node, const std::string& function_name);
@@ -96,6 +101,8 @@ namespace ngraph
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
                 bool m_emit_timing;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
+                std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>>
+                    m_function_ordered_ops;
                 std::map<std::string, size_t> m_name_index_map;
                 std::shared_ptr<ngraph::Function> m_function;
                 bool m_release_function;
@@ -104,7 +111,7 @@ namespace ngraph
                 codegen::CodeWriter m_writer;
                 pass::Manager m_pass_manager;
 
-                std::string pch_header_source;
+                std::string m_pch_header_source;
                 bool m_temporaries_used = false;
                 cublasHandle_t m_cublas_handle;
                 cudnnHandle_t m_cudnn_handle;
