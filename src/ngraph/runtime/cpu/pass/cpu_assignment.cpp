@@ -561,7 +561,7 @@ namespace ngraph
 
                     for (size_t i = 0; i < axis_order.size(); i++)
                     {
-                        if (arg0_shape[axis_order[i]] = result_shape[i])
+                        if (arg0_shape[axis_order[i]] == result_shape[i])
                             continue;
                         else
                         {
