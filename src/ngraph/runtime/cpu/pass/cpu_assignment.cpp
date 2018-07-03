@@ -559,25 +559,27 @@ namespace ngraph
                     auto axis_order = reshape->get_input_order();
                     bool flag = true;
 
-                    for (size_t i = 0; i < axis_order.size(); i++)
-                    {
-                        if (arg0_shape[axis_order[i]] == result_shape[i])
-                            continue;
-                        else
-                        {
-                            flag = false;
-                            break;
-                        }
-                    }
                     // Use Eigen for 3D
                     if (node->get_input_element_type(0) == element::f32 &&
-                        arg0_shape.size() < TENSOR_MAX_DIMS && arg0_shape.size() > 3 && flag &&
+                        arg0_shape.size() < TENSOR_MAX_DIMS && arg0_shape.size() > 3 &&
                         arg0_shape.size() == result_shape.size())
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        reshape->set_op_annotations(op_annotations);
+                        for (size_t i = 0; i < axis_order.size(); i++)
+                        {
+                            if (arg0_shape[axis_order[i]] != result_shape[i])
+                            {
+                                flag = false;
+                                break;
+                            }
+                        }
+
+                        if (flag)
+                        {
+                            auto op_annotations =
+                                std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                            op_annotations->set_mkldnn_op(true);
+                            reshape->set_op_annotations(op_annotations);
+                        }
                     }
                 }
 
