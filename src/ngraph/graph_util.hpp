@@ -130,10 +130,6 @@ namespace ngraph
 
     bool is_zero(std::shared_ptr<Node> reduce_constant);
 
-    NodeVector get_outputs_for_subgraph(const NodeVector& nodes,
-                                        NodeVector& exclusions,
-                                        bool ignore_unused = false);
-
     bool is_one(std::shared_ptr<Node> reduce_constant);
 
     bool is_used(std::shared_ptr<Node> node);
