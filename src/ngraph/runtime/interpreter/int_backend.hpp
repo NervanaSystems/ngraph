@@ -102,6 +102,7 @@
 #include "ngraph/runtime/reference/reverse_sequence.hpp"
 #include "ngraph/runtime/reference/select.hpp"
 #include "ngraph/runtime/reference/select_and_scatter.hpp"
+#include "ngraph/runtime/reference/sigmoid.hpp"
 #include "ngraph/runtime/reference/sign.hpp"
 #include "ngraph/runtime/reference/sin.hpp"
 #include "ngraph/runtime/reference/sinh.hpp"
@@ -866,6 +867,18 @@ private:
                                              f_scatter,
                                              select_and_scatter->get_window_shape(),
                                              select_and_scatter->get_window_movement_strides());
+        }
+        else if (node_op == "Sigmoid")
+        {
+            reference::sigmoid<T>(
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+        }
+        else if (node_op == "SigmoidBackprop")
+        {
+            reference::sigmoid_backprop<T>(args[0]->get_data_ptr<T>(),
+                                           args[1]->get_data_ptr<T>(),
+                                           out[0]->get_data_ptr<T>(),
+                                           out[0]->get_element_count());
         }
         else if (node_op == "Sign")
         {
