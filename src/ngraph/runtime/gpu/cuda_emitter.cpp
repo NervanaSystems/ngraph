@@ -515,26 +515,19 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
     auto input_width = input_shape.back();
     auto output_width = output_shape.back();
 
+
     std::string kernel_name = "maxpool_" + join(dtypes, "_") + "_iw" + std::to_string(input_width) +
                               "_ow" + std::to_string(output_width) + "_ww" +
                               std::to_string(window_width) + "_wst" + std::to_string(window_stride);
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
 
-    // primitive hash and kernel name are equivalent for maxpool_1d
-    auto hash = kernel_name;
-
+    std::string hash = kernel_name + "_nc" + std::to_string(output_shape[0] * output_shape[1]);
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash);
     if (primitive_index != std::numeric_limits<size_t>::max())
     {
         return primitive_index;
     }
-
-    size_t nthreads = shape_size(output_shape);
-    //TODO: currently we set it to 64, will add tuning method later
-    uint32_t block_size_x = 64;
-    uint32_t aligned_grid_size_x =
-        align_to_block_size(static_cast<uint32_t>(nthreads), block_size_x);
 
     // if the kernel has not been compiled, build it
     auto compiled_kernel = ctx->compiled_kernel_pool->get(hash);
@@ -543,8 +536,15 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
         codegen::CodeWriter writer;
         CudaKernelBuilder::get_max_pool_1d(
             writer, kernel_name, dtypes, input_width, output_width, window_width, window_stride);
-        compiled_kernel = ctx->compiled_kernel_pool->set(hash, writer.get_code());
+        compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
+
+    //TODO: currently we set it to 64, will add tuning method later
+    size_t nthreads = shape_size(output_shape);
+    uint32_t block_size_x = 64;
+    uint32_t aligned_grid_size_x =
+        align_to_block_size(static_cast<uint32_t>(nthreads), block_size_x);
+
 
     std::unique_ptr<gpu::primitive> pool(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
