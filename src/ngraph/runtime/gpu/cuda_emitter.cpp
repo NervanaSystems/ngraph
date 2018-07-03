@@ -848,13 +848,14 @@ size_t
     // kernel_name is used to check if the cuda kernel has been previously compiled
     std::stringstream kernel_name;
     kernel_name << "ew_collective"
-                << "_" << op << "_" << join(dtypes, "_") << "_" << reduce_op
+                << "_" << op << "_" << join(dtypes, "_") << "_" << reduce_op << "_r"
+                << tensor_shape.size() << "_rt" << join(reduced_tensors, "_")
                 // multi-output op
                 << "_mo" << int(save_elementwise);
 
     // hash is used to check if the emitted primitive already exists
     std::stringstream ss;
-    ss << kernel_name.str() << "_s" << join(tensor_shape, "_");
+    ss << kernel_name.str() << "_s" << join(tensor_shape, "_") << "_ra" << join(axes, "_");
     auto hash = ss.str();
 
     // if the primitive exists, we are done
