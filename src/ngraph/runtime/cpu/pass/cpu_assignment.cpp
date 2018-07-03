@@ -554,12 +554,25 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Reshape)
                 {
                     auto reshape = static_cast<op::Reshape*>(node);
+                    auto arg0_shape = node->get_input_shape(0);
+                    auto result_shape = node->get_output_shape(0);
+                    auto axis_order = reshape->get_input_order();
+                    bool flag = true;
 
+                    for (size_t i = 0; i < axis_order.size(); i++)
+                    {
+                        if (arg0_shape[axis_order[i]] = result_shape[i])
+                            continue;
+                        else
+                        {
+                            flag = false;
+                            break;
+                        }
+                    }
                     // Use Eigen for 3D
                     if (node->get_input_element_type(0) == element::f32 &&
-                        node->get_input_shape(0).size() < TENSOR_MAX_DIMS &&
-                        node->get_input_shape(0).size() > 3 &&
-                        node->get_input_shape(0).size() == node->get_output_shape(0).size())
+                        arg0_shape.size() < TENSOR_MAX_DIMS && arg0_shape.size() > 3 && flag &&
+                        arg0_shape.size() == result_shape.size())
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
