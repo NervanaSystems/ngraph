@@ -13,34 +13,24 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *******************************************************************************/
+#include "ngraph/runtime/cpu/op/bounded_relu.hpp"
+#include "ngraph/util.hpp"
 
-#pragma once
+using namespace std;
+using namespace ngraph;
 
-#include "ngraph/pass/graph_rewrite.hpp"
-
-namespace ngraph
+op::BoundedRelu::BoundedRelu(shared_ptr<Node> arg, float alpha)
+    : RequiresTensorViewArgs("BoundedRelu", {arg})
+    , m_alpha(alpha)
 {
-    namespace pass
-    {
-        class CoreFusion;
-    }
+    set_value_type_checked(arg->get_element_type(), arg->get_shape());
 }
 
-class ngraph::pass::CoreFusion : public ngraph::pass::GraphRewrite
+shared_ptr<Node> op::BoundedRelu::copy_with_new_args(const NodeVector& new_args) const
 {
-public:
-    CoreFusion()
-        : GraphRewrite()
+    if (new_args.size() != 1)
     {
-        construct_relu();
-        construct_folded_batch_norm();
-        construct_sigmoid();
-        construct_sigmoid_bprop();
-        construct_optimized_strided_conv();
+        throw ngraph_error("Incorrect number of new arguments");
     }
-    void construct_relu();
-    void construct_folded_batch_norm();
-    void construct_sigmoid();
-    void construct_sigmoid_bprop();
-    void construct_optimized_strided_conv();
-};
+    return make_shared<BoundedRelu>(new_args.at(0), m_alpha);
+}

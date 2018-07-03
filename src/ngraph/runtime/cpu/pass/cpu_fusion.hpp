@@ -57,8 +57,6 @@ public:
             construct_zero_padded_reshaped_conv();
             construct_zero_padded_conv();
             construct_zero_padded_conv_backprop_filters();
-            construct_sigmoid();
-            construct_sigmoid_bprop();
             construct_conv_bias_bprop();
             construct_batch_norm_relu();
             construct_batch_norm_relu_global_stats();
@@ -66,6 +64,7 @@ public:
             construct_conv_bias_relu();
             construct_conv_bias_add();
             construct_conv_bias_add_relu();
+            construct_bounded_relu();
         }
 
         if (fusions & DIFFERENTIABLE_FUSIONS)
@@ -81,8 +80,6 @@ private:
     void construct_conv_bias();
     void construct_conv_bias_bprop();
     void construct_fprop_bn();
-    void construct_sigmoid();
-    void construct_sigmoid_bprop();
     void construct_sigmoid_multiply();
     void construct_zero_padded_reshaped_conv();
     void construct_zero_padded_conv();
@@ -93,4 +90,5 @@ private:
     void construct_conv_bias_relu();
     void construct_conv_bias_add();
     void construct_conv_bias_add_relu();
+    void construct_bounded_relu();
 };
