@@ -18,7 +18,6 @@ set (SRC
     autodiff/backprop_function.cpp
     all_close_f.cpp
     test_tools.cpp
-    benchmark.cpp
     test_control.cpp
 )
 
@@ -32,6 +31,5 @@ include_directories(
 add_library(ngraph_test_util SHARED ${SRC})
 set_target_properties(ngraph_test_util PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
 target_link_libraries(ngraph_test_util ngraph libgtest)
-add_dependencies(ngraph_test_util ngraph libgtest)
 
 install(TARGETS ngraph_test_util DESTINATION ${NGRAPH_INSTALL_LIB})

@@ -2634,3 +2634,34 @@ TEST(cpu_fusion, fuse_bounded_relu_inter_vs_cpu)
     check_bounded_relu(Shape{4, 3}, 4.0f);
     check_bounded_relu(Shape{4, 3, 2}, 2.0f);
 }
+
+TEST(cpu_fusion, dot_batch_forward)
+{
+    const Shape shape_a{2, 3, 2};
+    const Shape shape_b{2, 3};
+
+    auto generate_func = [&shape_a, &shape_b]() -> shared_ptr<Function> {
+        auto a = make_shared<op::Parameter>(element::f32, shape_a);
+        auto b = make_shared<op::Parameter>(element::f32, shape_b);
+        auto dot = make_shared<op::Dot>(a, b);
+        return make_shared<Function>(dot, op::ParameterVector{a, b});
+    };
+    shared_ptr<Function> cpu_func = generate_func();
+    shared_ptr<Function> int_func = generate_func();
+
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : int_func->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto int_results = execute(int_func, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_func, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+}
