@@ -24,6 +24,7 @@ from ngraph.ops import atan
 from ngraph.ops import avg_pool
 from ngraph.ops import batch_norm
 from ngraph.ops import broadcast
+from ngraph.ops import broadcast_to
 from ngraph.ops import ceiling
 from ngraph.ops import ceiling as ceil
 from ngraph.ops import concat

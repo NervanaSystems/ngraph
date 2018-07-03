@@ -18,6 +18,7 @@
 
 #include <cstddef>
 #include <set>
+#include <vector>
 
 namespace ngraph
 {
@@ -33,6 +34,11 @@ namespace ngraph
 
         AxisSet(const std::set<size_t>& axes)
             : std::set<size_t>(axes)
+        {
+        }
+
+        AxisSet(const std::vector<size_t>& axes)
+            : std::set<size_t>(axes.begin(), axes.end())
         {
         }
 
