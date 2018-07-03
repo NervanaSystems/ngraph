@@ -44,6 +44,7 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/op/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
@@ -59,6 +60,7 @@
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_concat_inputs.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_loop_kernel_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
@@ -73,8 +75,6 @@
 #include "util/random.hpp"
 #include "util/random.hpp"
 #include "util/test_tools.hpp"
-
-#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -1981,205 +1981,152 @@ TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
     }
 }
 
-struct LKGraph
+TEST(cpu_fusion, loop_kernel_fusion_multiple_groups_pruned)
 {
-    LKGraph(const NodeVector& ns, const NodeVector& ins)
-        : m_inputs(ins)
-        , m_nodes(ns)
+    auto make_function = []() -> std::shared_ptr<Function> {
+        Shape shape{};
+        auto a = make_shared<op::Parameter>(element::f32, shape);
+        auto b = make_shared<op::Parameter>(element::f32, shape);
+        auto c = make_shared<op::Parameter>(element::f32, shape);
+        auto add_ab = a + b;
+        auto add_abs = std::make_shared<op::Abs>(add_ab);
+        auto abs_neg = std::make_shared<op::Negative>(add_abs);
+        auto sub_c_neg = c - abs_neg;
+
+        auto d = make_shared<op::Parameter>(element::f32, shape);
+        auto d_abs = std::make_shared<op::Abs>(d);
+        auto add_d = d_abs + add_ab;
+        auto neg_d = std::make_shared<op::Negative>(add_d);
+
+        auto mul_cd = neg_d * sub_c_neg;
+        auto f =
+            std::make_shared<Function>(ngraph::NodeVector{mul_cd}, op::ParameterVector{a, b, c, d});
+
+        return f;
+    };
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPULoopKernelFusion>(3);
+    auto cpu_f = make_function();
+    auto int_f = make_function();
+    pass_manager.run_passes(cpu_f);
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<vector<float>> args;
+
+    size_t lkn = count_ops_of_type<runtime::cpu::op::LoopKernel>(cpu_f);
+    ASSERT_GT(lkn, 0);
+
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
     {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
     }
-    NodeVector m_inputs;
-    NodeVector m_nodes;
-};
-
-class LoopKernelCollector
-{
-public:
-    LoopKernelCollector(std::shared_ptr<Function> f, size_t MIN_NODES_TO_FUSE)
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
     {
-        for (auto n : f->get_ordered_ops())
-        {
-            if (is_fusible(n))
-            {
-                auto arg_from_fusible_group = collect_fusible_args(n);
-                //create a new group
-                if (!arg_from_fusible_group)
-                {
-                    m_heads.insert(std::make_pair(n, n));
-                    m_graphs.insert(std::make_pair(n, LKGraph{{n}, n->get_arguments()}));
-                    NGRAPH_DEBUG << "Created a new group for " << n->get_name();
-                    log_group(n);
-                }
-                else
-                {
-                    auto smallest_head = m_heads.at(arg_from_fusible_group);
-                    auto& lkgraph = m_graphs.at(smallest_head);
-                    lkgraph.m_nodes.push_back(n);
-                    for (auto arg : n->get_arguments())
-                    {
-                        if (is_leaf(arg))
-                        {
-                            lkgraph.m_inputs.push_back(arg);
-                        }
-                    }
-                    m_heads.insert(std::make_pair(n, smallest_head));
-                    log_group(smallest_head);
-                }
-            }
-        }
-
-        prune_graphs(MIN_NODES_TO_FUSE);
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
-
-    const std::vector<std::shared_ptr<runtime::cpu::op::LoopKernel>> get_loop_kernels() const
-    {
-        std::vector<std::shared_ptr<runtime::cpu::op::LoopKernel>> lks;
-        for (auto e : m_graphs)
-        {
-            auto& lkg = e.second;
-            std::unordered_set<std::shared_ptr<Node>> graph_nodes{lkg.m_nodes.begin(),
-                                                                  lkg.m_nodes.end()};
-            NodeVector member_outputs;
-
-            auto has_external_user = [&graph_nodes](std::shared_ptr<Node> u) {
-                return graph_nodes.count(u) == 0;
-            };
-
-            for (auto member : lkg.m_nodes)
-            {
-                auto member_users = member->get_users();
-                if (std::any_of(member_users.cbegin(), member_users.cend(), has_external_user))
-                {
-                    member_outputs.push_back(member);
-                }
-            }
-            auto lk = make_shared<runtime::cpu::op::LoopKernel>(
-                lkg.m_nodes, member_outputs, lkg.m_inputs);
-            lks.push_back(lk);
-        }
-        return lks;
-    }
-
-private:
-    static bool is_fusible(std::shared_ptr<Node> n)
-    {
-        return (std::dynamic_pointer_cast<op::util::BinaryElementwiseArithmetic>(n) ||
-                std::dynamic_pointer_cast<op::util::UnaryElementwiseArithmetic>(n));
-    }
-
-    bool is_leaf(std::shared_ptr<Node> src) { return src->is_parameter() || src->is_constant(); }
-    void prune_graphs(size_t MIN_NODES_TO_FUSE)
-    {
-        for (auto it = m_graphs.begin(); it != m_graphs.end();)
-        {
-            if (it->second.m_nodes.size() < MIN_NODES_TO_FUSE)
-            {
-                it = m_graphs.erase(it);
-            }
-            else
-            {
-                it++;
-            }
-        }
-    }
-
-    void log_group(std::shared_ptr<Node> head) const
-    {
-        NGRAPH_DEBUG << "Group leader : " << head->get_name() << std::endl;
-        NGRAPH_DEBUG << "Group members : " << m_graphs.at(head).m_nodes << std::endl;
-        NGRAPH_DEBUG << "Inputs: " << m_graphs.at(head).m_inputs << std::endl;
-    }
-
-    std::shared_ptr<Node> collect_fusible_args(std::shared_ptr<Node> n)
-    {
-        std::shared_ptr<Node> arg_from_fusible_group;
-        for (auto arg : n->get_arguments())
-        {
-            //an argument is fusible and a part of some group
-            NGRAPH_DEBUG << "Considering " << arg->get_name();
-            if (m_heads.count(arg) != 0)
-            {
-                if (!arg_from_fusible_group)
-                {
-                    arg_from_fusible_group = arg;
-                }
-                else
-                {
-                    if (!is_leaf(arg) && m_heads.at(arg) != m_heads.at(arg_from_fusible_group))
-                    {
-                        return {nullptr};
-                    }
-                }
-            }
-        }
-        return arg_from_fusible_group;
-    }
-
-    std::unordered_map<std::shared_ptr<Node>, LKGraph> m_graphs;
-    std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>> m_heads;
-};
-
-TEST(cpu_fusion, graph_partition_multiple_groups_one_pruned)
-{
-    Shape shape{};
-    auto a = make_shared<op::Parameter>(element::i32, shape);
-    auto b = make_shared<op::Parameter>(element::i32, shape);
-    auto c = make_shared<op::Parameter>(element::i32, shape);
-    auto add_ab = a + b;
-    auto add_abs = std::make_shared<op::Abs>(add_ab);
-    auto abs_neg = std::make_shared<op::Negative>(add_abs);
-    auto sub_c_neg = c - abs_neg;
-
-    auto d = make_shared<op::Parameter>(element::i32, shape);
-    auto d_abs = std::make_shared<op::Abs>(d);
-    auto add_d = d_abs + add_ab;
-    auto neg_d = std::make_shared<op::Negative>(add_d);
-
-    auto mul_cd = neg_d * sub_c_neg;
-    auto f =
-        std::make_shared<Function>(ngraph::NodeVector{mul_cd}, op::ParameterVector{a, b, c, d});
-
-    const size_t MIN_NODES_TO_FUSE = 3;
-    LoopKernelCollector lkc(f, MIN_NODES_TO_FUSE);
-    const auto& kernels = lkc.get_loop_kernels();
-
-    ASSERT_EQ(kernels.size(), 1);
-    ASSERT_EQ(kernels.at(0)->get_arguments(), (NodeVector{a, b, c}));
-    ASSERT_EQ(kernels.at(0)->get_kernel_outputs(), (NodeVector{add_ab, sub_c_neg}));
-    ASSERT_EQ(kernels.at(0)->get_node_list(), (NodeVector{add_ab, add_abs, abs_neg, sub_c_neg}));
 }
 
-TEST(cpu_fusion, graph_partition_one_group)
+TEST(cpu_fusion, loop_kernel_fusion_multiple_groups)
 {
-    Shape shape{};
-    auto a = make_shared<op::Parameter>(element::i32, shape);
-    auto b = make_shared<op::Parameter>(element::i32, shape);
-    auto c = make_shared<op::Parameter>(element::i32, shape);
-    auto add_ab = a + b;
-    auto add_abs = std::make_shared<op::Abs>(add_ab);
-    auto abs_neg = std::make_shared<op::Negative>(add_abs);
-    auto sub_c_neg = c - abs_neg;
-    auto d = make_shared<op::Parameter>(element::i32, shape);
-    auto add_d = sub_c_neg + d;
-    auto abs_add_d = std::make_shared<op::Abs>(add_d);
-    auto e = make_shared<op::Parameter>(element::i32, shape);
-    auto add_e = e + abs_add_d;
-    auto neg_e = std::make_shared<op::Negative>(add_e);
+    auto make_function = []() -> std::shared_ptr<Function> {
+        Shape shape{};
+        auto a = make_shared<op::Parameter>(element::f32, shape);
+        auto b = make_shared<op::Parameter>(element::f32, shape);
+        auto c = make_shared<op::Parameter>(element::f32, shape);
+        auto add_ab = a + b;
+        auto add_abs = std::make_shared<op::Abs>(add_ab);
+        auto abs_neg = std::make_shared<op::Negative>(add_abs);
+        auto sub_c_neg = c - abs_neg;
 
-    auto f =
-        std::make_shared<Function>(ngraph::NodeVector{neg_e}, op::ParameterVector{a, b, c, d, e});
+        auto d = make_shared<op::Parameter>(element::f32, shape);
+        auto d_abs = std::make_shared<op::Abs>(d);
+        auto add_d = d_abs + add_ab;
+        auto neg_d = std::make_shared<op::Negative>(add_d);
+
+        auto mul_cd = neg_d * sub_c_neg;
+        auto f =
+            std::make_shared<Function>(ngraph::NodeVector{mul_cd}, op::ParameterVector{a, b, c, d});
+
+        return f;
+    };
+
     pass::Manager pass_manager;
-    pass_manager.run_passes(f);
+    pass_manager.register_pass<runtime::cpu::pass::CPULoopKernelFusion>(2);
+    auto cpu_f = make_function();
+    auto int_f = make_function();
+    pass_manager.run_passes(cpu_f);
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<vector<float>> args;
 
-    const size_t MIN_NODES_TO_FUSE = 3;
-    LoopKernelCollector lkc(f, MIN_NODES_TO_FUSE);
-    const auto& kernels = lkc.get_loop_kernels();
+    size_t lkn = count_ops_of_type<runtime::cpu::op::LoopKernel>(cpu_f);
+    ASSERT_GT(lkn, 0);
 
-    ASSERT_EQ(kernels.size(), 1);
-    ASSERT_EQ(kernels.at(0)->get_arguments(), (NodeVector{a, b, c, d, e}));
-    ASSERT_EQ(kernels.at(0)->get_kernel_outputs(), (NodeVector{neg_e}));
-    ASSERT_EQ(kernels.at(0)->get_node_list(),
-              (NodeVector{add_ab, add_abs, abs_neg, sub_c_neg, add_d, abs_add_d, add_e, neg_e}));
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+}
+
+TEST(cpu_fusion, loop_kernel_fusion_one_group)
+{
+    auto make_function = []() -> std::shared_ptr<Function> {
+        Shape shape{};
+        auto a = make_shared<op::Parameter>(element::f32, shape);
+        auto b = make_shared<op::Parameter>(element::f32, shape);
+        auto c = make_shared<op::Parameter>(element::f32, shape);
+        auto add_ab = a + b;
+        auto add_abs = std::make_shared<op::Abs>(add_ab);
+        auto abs_neg = std::make_shared<op::Negative>(add_abs);
+        auto sub_c_neg = c - abs_neg;
+        auto d = make_shared<op::Parameter>(element::f32, shape);
+        auto add_d = sub_c_neg + d;
+        auto abs_add_d = std::make_shared<op::Abs>(add_d);
+        auto e = make_shared<op::Parameter>(element::f32, shape);
+        auto add_e = e + abs_add_d;
+        auto neg_e = std::make_shared<op::Negative>(add_e);
+
+        auto f = std::make_shared<Function>(ngraph::NodeVector{neg_e},
+                                            op::ParameterVector{a, b, c, d, e});
+
+        return f;
+
+    };
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPULoopKernelFusion>(2);
+    auto cpu_f = make_function();
+    auto int_f = make_function();
+    pass_manager.run_passes(cpu_f);
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<vector<float>> args;
+
+    size_t lkn = count_ops_of_type<runtime::cpu::op::LoopKernel>(cpu_f);
+    ASSERT_GT(lkn, 0);
+
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
 }
 
 TEST(cpu_fusion, sigmoid_multiply_fusion)
