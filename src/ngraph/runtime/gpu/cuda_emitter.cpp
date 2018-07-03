@@ -1819,7 +1819,7 @@ uint32_t runtime::gpu::CUDAEmitter::align_to_block_size(uint32_t grid_size, uint
     {
         throw std::runtime_error("Cuda can't handle grid_size_x > 2^31 - 1.");
     }
-    uint32_t r = (grid_size + block_size - 1) / block_size * block_size;
+    uint32_t r = (grid_size + block_size - 1) / block_size;
     if (grid_size > (1u << 31) - 1)
     {
         throw std::runtime_error("Cuda can't handle grid_size_x > 2^31 - 1.");
