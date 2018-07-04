@@ -817,8 +817,6 @@ bool runtime::gpu::GPU_ExternalFunction::is_functionally_identical(
 string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
                                                                const string& function_name)
 {
-    std::cout << function_name << ": " << node.get_name() << std::endl;
-
     codegen::CodeWriter writer;
     writer << "static void " << function_name << "(";
     writer.indent++;

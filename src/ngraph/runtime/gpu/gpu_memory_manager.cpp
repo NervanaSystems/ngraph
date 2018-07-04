@@ -32,7 +32,6 @@ runtime::gpu::GPUMemoryManager::GPUMemoryManager(GPUPrimitiveEmitter* emitter)
     , m_argspace_mem(1, {nullptr, 0})
     , m_workspace_mem(1, {nullptr, 0})
 {
-    std::cout << "GPUMemoryManager::GPUMemoryManager()" << std::endl;
 }
 
 size_t runtime::gpu::GPUMemoryManager::get_allocation_size() const
@@ -65,7 +64,6 @@ void runtime::gpu::GPUMemoryManager::allocate()
 {
     if (m_buffer_offset)
     {
-        std::cout << "allocate argspace: " << m_argspace_mem.size()-1 << std::endl;
         m_buffer_offset = pass::MemoryManager::align(m_buffer_offset, alignment);
         // the back most node is always empty, fill it here
         m_argspace_mem.back().ptr = runtime::gpu::create_gpu_buffer(m_buffer_offset);
@@ -81,7 +79,6 @@ void runtime::gpu::GPUMemoryManager::allocate()
     auto workspace_size = m_workspace_manager.max_allocated();
     if (workspace_size)
     {
-        std::cout << "allocate workspace: " << m_workspace_mem.size()-1 << std::endl;
         m_workspace_mem.back().ptr = runtime::gpu::create_gpu_buffer(workspace_size);
         m_workspace_mem.back().size = workspace_size;
         m_workspace_mem.push_back({nullptr, 0});
@@ -119,7 +116,6 @@ size_t runtime::gpu::GPUAllocator::reserve_argspace(const void* data, size_t siz
     size = pass::MemoryManager::align(size, runtime::gpu::GPUMemoryManager::alignment);
     size_t offset = m_manager->queue_for_transfer(data, size);
     auto local = --m_manager->m_argspace_mem.end();
-    std::cout << "reserve_argspace: " << m_manager->m_argspace_mem.size()-1 << std::endl;
     // return a lambda that will yield the gpu memory address. this
     // should only be evaluated by the runtime invoked primitive
     gpu::memory_primitive mem_primitive = [=]() {
@@ -139,7 +135,6 @@ size_t runtime::gpu::GPUAllocator::reserve_workspace(size_t size, bool zero_init
     size_t offset = m_manager->m_workspace_manager.allocate(size);
     m_active.push(offset);
     auto local = --m_manager->m_workspace_mem.end();
-    std::cout << "reserve_workspace: " << m_manager->m_workspace_mem.size()-1 << std::endl;
     // return a lambda that will yield the gpu memory address. this
     // should only be evaluated by the runtime invoked primitive
     gpu::memory_primitive mem_primitive = [=]() {
