@@ -26,7 +26,7 @@ void regclass_pyngraph_op_And(py::module m)
     py::class_<ngraph::op::And,
                std::shared_ptr<ngraph::op::And>,
                ngraph::op::util::BinaryElementwiseLogical>
-        logical_add(m, "And");
-    logical_add.doc() = "ngraph.impl.op.And wraps ngraph::op::And";
-    logical_add.def(py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
+        logical_and(m, "And");
+    logical_and.doc() = "ngraph.impl.op.And wraps ngraph::op::And";
+    logical_and.def(py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
 }
