@@ -61,6 +61,7 @@ public:
     void set_debuginfo_enabled(bool state) { m_debuginfo_enabled = state; }
     bool is_debuginfo_enabled() { return m_debuginfo_enabled; }
     void set_precompiled_header_source(const std::string& source);
+    const std::string& get_precompiled_header_source() const;
     void add_header_search_path(const std::string& path);
 
     std::unique_ptr<ngraph::codegen::Module>
@@ -75,7 +76,7 @@ private:
     bool m_enable_pass_report;
     std::string m_source_name;
     std::vector<std::string> m_extra_search_path_list;
-    std::string m_precomiled_header_source;
+    std::string m_precompiled_header_source;
 
     bool is_version_number(const std::string& path);
     std::string find_header_version(const std::string& path);
@@ -95,4 +96,6 @@ public:
 private:
     std::unique_ptr<clang::CodeGenAction> m_compiler_action;
     std::shared_ptr<CompilerCore> m_compiler_core;
+    std::string m_precompiled_header_source;
+    std::vector<std::string> m_header_search_paths;
 };

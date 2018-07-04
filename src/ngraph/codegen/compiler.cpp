@@ -66,21 +66,31 @@
 
 #define USE_BUILTIN
 
+#define NGRAPH_INFO cout << __FILE__ << " " << __LINE__ << endl;
+
 using namespace clang;
 using namespace llvm;
 using namespace std;
 using namespace ngraph;
 
-static unordered_map<string, string> s_pch_files;
+class CompilerInfo
+{
+public:
+    string pch_file;
+    shared_ptr<codegen::CompilerCore> compiler;
+};
+
+static unordered_map<string, CompilerInfo> s_compiler_info;
+
 static class StaticHandler
 {
 public:
     StaticHandler() {}
     ~StaticHandler()
     {
-        for (const auto& p: s_pch_files)
+        for (const auto& p : s_compiler_info)
         {
-            file_util::remove_file(p.second);
+            file_util::remove_file(p.second.pch_file);
         }
     }
 } s_static_init;
@@ -100,7 +110,7 @@ std::unique_ptr<llvm::Module> codegen::Module::take_module()
 }
 
 codegen::Compiler::Compiler()
-    : m_compiler_core{new CompilerCore()}
+    : m_compiler_core{}
 {
 }
 
@@ -112,18 +122,29 @@ codegen::Compiler::~Compiler()
 
 void codegen::Compiler::set_precompiled_header_source(const std::string& source)
 {
-    m_compiler_core->set_precompiled_header_source(source);
+    m_precompiled_header_source = source;
 }
 
 void codegen::Compiler::add_header_search_path(const std::string& path)
 {
-    m_compiler_core->add_header_search_path(path);
+    m_header_search_paths.push_back(path);
 }
 
 std::unique_ptr<codegen::Module> codegen::Compiler::compile(const std::string& source)
 {
     // lock_guard<mutex> lock(m_mutex);
-    return m_compiler_core->compile(m_compiler_action, source);
+    CompilerInfo& compiler_info = s_compiler_info[m_precompiled_header_source];
+    if (!compiler_info.compiler)
+    {
+        compiler_info.compiler = make_shared<CompilerCore>();
+        for (const string& path : m_header_search_paths)
+        {
+            compiler_info.compiler->add_header_search_path(path);
+        }
+        compiler_info.compiler->set_precompiled_header_source(m_precompiled_header_source);
+    }
+    auto rc = compiler_info.compiler->compile(m_compiler_action, source);
+    return rc;
 }
 
 static std::string GetExecutablePath(const char* Argv0)
@@ -294,17 +315,17 @@ std::unique_ptr<codegen::Module>
 
     preprocessor_options.RetainRemappedFileBuffers = true;
 
-    string pch_path = s_pch_files[m_precomiled_header_source];
-    if (!m_precomiled_header_source.empty() && pch_path.empty())
+    CompilerInfo& compiler_info = s_compiler_info[m_precompiled_header_source];
+    if (!m_precompiled_header_source.empty() && compiler_info.pch_file.empty())
     {
         cout << "Generate PCH\n";
-        pch_path = generate_pch(m_precomiled_header_source);
-        cout << "new pch_path " << pch_path << endl;
+        compiler_info.pch_file = generate_pch(m_precompiled_header_source);
+        cout << "new pch_path " << compiler_info.pch_file << endl;
     }
-    if (!pch_path.empty())
+    if (!compiler_info.pch_file.empty())
     {
         // Preprocessor options
-        preprocessor_options.ImplicitPCHInclude = pch_path;
+        preprocessor_options.ImplicitPCHInclude = compiler_info.pch_file;
         preprocessor_options.DisablePCHValidation = 0;
     }
 
@@ -371,7 +392,7 @@ string codegen::CompilerCore::generate_pch(const string& source)
     }
     else
     {
-        s_pch_files[source] = pch_path;
+        s_compiler_info[source].pch_file = pch_path;
     }
 
     buffer.release();
@@ -463,7 +484,12 @@ void codegen::CompilerCore::load_headers_from_resource()
 
 void codegen::CompilerCore::set_precompiled_header_source(const std::string& source)
 {
-    m_precomiled_header_source = source;
+    m_precompiled_header_source = source;
+}
+
+const string& codegen::CompilerCore::get_precompiled_header_source() const
+{
+    return m_precompiled_header_source;
 }
 
 string codegen::CompilerCore::find_header_version(const string& path)
