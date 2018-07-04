@@ -515,7 +515,6 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
     auto input_width = input_shape.back();
     auto output_width = output_shape.back();
 
-
     std::string kernel_name = "maxpool_" + join(dtypes, "_") + "_iw" + std::to_string(input_width) +
                               "_ow" + std::to_string(output_width) + "_ww" +
                               std::to_string(window_width) + "_wst" + std::to_string(window_stride);
@@ -544,7 +543,6 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
     uint32_t block_size_x = 64;
     uint32_t aligned_grid_size_x =
         align_to_block_size(static_cast<uint32_t>(nthreads), block_size_x);
-
 
     std::unique_ptr<gpu::primitive> pool(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {

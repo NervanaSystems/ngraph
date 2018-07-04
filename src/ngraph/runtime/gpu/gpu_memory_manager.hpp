@@ -16,10 +16,10 @@
 
 #pragma once
 
+#include <list>
 #include <memory>
 #include <stack>
 #include <vector>
-#include <list>
 
 #include "ngraph/pass/memory_layout.hpp"
 
