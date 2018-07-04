@@ -14,6 +14,11 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <CPP/eltwise.hpp>
+#include <CPP/input_layout.hpp>
+#include <CPP/network.hpp>
+#include <CPP/topology.hpp>
+
 #include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
 
@@ -55,5 +60,43 @@ bool runtime::intelgpu::IntelGPUBackend::call(
     const vector<shared_ptr<runtime::TensorView>>& outputs,
     const vector<shared_ptr<runtime::TensorView>>& inputs)
 {
-    throw runtime_error("IntelGPUBackend::call: Not implemented yet");
+    validate_call(func, outputs, inputs);
+
+    FunctionInstance& instance = ocl_networks[func];
+    if (instance.ocl_network == nullptr)
+    {
+        if (!compile(func))
+        {
+            return false;
+        }
+    }
+
+    std::shared_ptr<cldnn::network> network = instance.ocl_network;
+
+    // Process input parameters. Correctness of parameters was validated by validate_call.
+    // Since we have no correlation between Function::m_parameters and inputs, there is
+    // we try to match them by index number in vectors.
+    for (size_t i = 0; i < inputs.size(); i++)
+    {
+        shared_ptr<runtime::intelgpu::IntelGPUTensorView> tv =
+            static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(inputs[i]);
+        const op::ParameterVector& input_params = func->get_parameters();
+        network->set_input_data(input_params[i]->get_output_tensor().get_name(),
+                                *tv->get_data_ptr());
+    }
+
+    // Execute network
+    std::map<cldnn::primitive_id, cldnn::network_output> result = network->execute();
+
+    // Process output parameters. Correctness of parameters was validated by validate_call.
+    // Since we have no correlation between Function::m_results and outputs, there is
+    // we try to match them by index number in vectors.
+    for (size_t i = 0; i < func->get_output_size(); i++)
+    {
+        shared_ptr<runtime::intelgpu::IntelGPUTensorView> ngraph_res =
+            static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(outputs[i]);
+        *(ngraph_res->get_data_ptr()) =
+            result.at(func->get_output_op(i)->get_output_tensor().get_name()).get_memory();
+    }
+    return true;
 }

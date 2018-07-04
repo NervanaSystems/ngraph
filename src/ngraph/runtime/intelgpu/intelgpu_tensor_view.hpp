@@ -54,6 +54,8 @@ public:
     /// @param n Number of bytes to read, must be integral number of elements.
     void read(void* p, size_t tensor_offset, size_t n) const override;
 
+    cldnn::memory* get_data_ptr() { return ocl_memory.get(); }
+
 private:
     cldnn::data_types get_cldnn_type(const ngraph::element::Type& element_type) const;
 
