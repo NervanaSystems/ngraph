@@ -28,15 +28,15 @@ runtime::gpu::GPUMemoryManager::GPUMemoryManager(GPUPrimitiveEmitter* emitter)
     : m_buffer_offset(0)
     , m_buffered_mem(initial_buffer_size)
     , m_workspace_manager(alignment)
-    , m_primitive_emitter(emitter)
     , m_argspace_mem(1, {nullptr, 0})
     , m_workspace_mem(1, {nullptr, 0})
+    , m_primitive_emitter(emitter)
 {
 }
 
 size_t runtime::gpu::GPUMemoryManager::get_allocation_size() const
 {
-    size_t allocation_size;
+    size_t allocation_size = 0;
     for (auto const& alloc : m_argspace_mem)
     {
         allocation_size += alloc.size;

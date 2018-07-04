@@ -82,9 +82,9 @@ namespace ngraph
                     void* ptr;
                     size_t size;
                 };
+
                 std::list<allocation> m_argspace_mem;
                 std::list<allocation> m_workspace_mem;
-
                 GPUPrimitiveEmitter* m_primitive_emitter;
             };
         }

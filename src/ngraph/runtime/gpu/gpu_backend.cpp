@@ -36,8 +36,8 @@ runtime::gpu::GPU_Backend::GPU_Backend()
 }
 
 runtime::gpu::GPU_Backend::BackendContext::BackendContext()
-    : m_ctx(new GPURuntimeContext)
-    , m_primitive_emitter(new GPUPrimitiveEmitter())
+    : m_primitive_emitter(new GPUPrimitiveEmitter())
+    , m_ctx(new GPURuntimeContext)
 {
     // Create context use driver API and make it current, the runtime call will pickup the context
     // http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html
