@@ -14,9 +14,9 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/op/and.hpp" // ngraph::op::And
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/op/and.hpp" // ngraph::op::And
 #include "pyngraph/ops/and.hpp"
 
 namespace py = pybind11;
@@ -28,5 +28,6 @@ void regclass_pyngraph_op_And(py::module m)
                ngraph::op::util::BinaryElementwiseLogical>
         logical_and(m, "And");
     logical_and.doc() = "ngraph.impl.op.And wraps ngraph::op::And";
-    logical_and.def(py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
+    logical_and.def(
+        py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
 }
