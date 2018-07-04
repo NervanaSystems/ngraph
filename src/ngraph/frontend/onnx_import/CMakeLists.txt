@@ -40,6 +40,7 @@ add_library(onnx_import STATIC
     node.cpp
     node.hpp
     op/add.hpp
+    op/constant.hpp
     ops_bridge.cpp
     ops_bridge.hpp
     tensor.hpp
