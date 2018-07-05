@@ -83,13 +83,8 @@ namespace ngraph
                 void collect_unique_functions();
                 void emit_functions();
                 void store_emitted_functions();
-
-                void emit_debug_function_entry(Node* node,
-                                               const std::vector<GPU_TensorViewWrapper>& in,
-                                               const std::vector<GPU_TensorViewWrapper>& out);
-                void emit_debug_function_exit(Node* node,
-                                              const std::vector<GPU_TensorViewWrapper>& in,
-                                              const std::vector<GPU_TensorViewWrapper>& out);
+                void emit_debug_function_entry(Node* node;
+                void emit_debug_function_exit(Node* node);
                 void handle_output_alias(
                     const Node&,
                     const std::unordered_map<descriptor::TensorView*, std::vector<size_t>>&);
@@ -105,8 +100,7 @@ namespace ngraph
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
                 bool m_emit_timing;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
-
-                unordered_map<const Node*, string> m_node_function_map;
+                unordered_map<const Node*, std::string> m_node_function_map;
                 std::map<std::string, size_t> m_name_index_map;
                 std::shared_ptr<ngraph::Function> m_function;
                 bool m_release_function;

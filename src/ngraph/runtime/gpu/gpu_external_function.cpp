@@ -327,7 +327,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
 {
     if (m_emit_timing)
     {
-        std::std::unordered_map<std::std::shared_ptr<Function>, std::std::list<std::std::shared_ptr<Node>>>
+        std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>>
             function_ordered_ops;
         for (std::shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
         {
@@ -493,7 +493,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                  << "gpu::GPURuntimeContext* ctx)\n";
         m_writer << "{\n";
         m_writer.indent++;
-
+        //set constant pointers during the first run
         m_writer << "if (is_constant_ptr_null)\n";
         m_writer.block_begin();
         for (std::shared_ptr<Node> node : current_function->get_ordered_ops())
@@ -819,16 +819,16 @@ std::shared_ptr<ngraph::runtime::gpu::GPU_CallFrame>
 
 void runtime::gpu::GPU_ExternalFunction::emit_debug_function_entry(
     Node* node,
-    const std::std::vector<GPU_TensorViewWrapper>& in,
-    const std::std::vector<GPU_TensorViewWrapper>& out)
+    const std::vector<GPU_TensorViewWrapper>& in,
+    const std::vector<GPU_TensorViewWrapper>& out)
 {
     m_writer << "timers[" << m_name_index_map[node->get_name()] << "].start();\n";
 }
 
 void runtime::gpu::GPU_ExternalFunction::emit_debug_function_exit(
     Node* node,
-    const std::std::vector<GPU_TensorViewWrapper>& in,
-    const std::std::vector<GPU_TensorViewWrapper>& out)
+    const std::vector<GPU_TensorViewWrapper>& in,
+    const std::vector<GPU_TensorViewWrapper>& out)
 {
     m_writer << "timers[" << m_name_index_map[node->get_name()] << "].stop();\n";
 }
