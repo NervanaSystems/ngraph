@@ -101,13 +101,13 @@ namespace ngraph
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
                 bool m_emit_timing;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
-                std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>>
-                    m_function_ordered_ops;
-                    unordered_map<const Node*, string> m_node_function_map;
+
+                unordered_map<const Node*, string> m_node_function_map;
                 std::map<std::string, size_t> m_name_index_map;
                 std::shared_ptr<ngraph::Function> m_function;
                 bool m_release_function;
                 bool m_is_compiled;
+                std::string m_function_name;
 
                 codegen::CodeWriter m_writer;
                 pass::Manager m_pass_manager;
