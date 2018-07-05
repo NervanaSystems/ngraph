@@ -4740,6 +4740,10 @@ namespace ngraph
             {
                 auto abse =
                     std::bind(emit_function_call, std::string("std::abs"), std::placeholders::_1);
+                auto mine =
+                    std::bind(emit_function_call, std::string("std::min"), std::placeholders::_1);
+                auto maxe =
+                    std::bind(emit_function_call, std::string("std::max"), std::placeholders::_1);
                 auto adde = std::bind(emit_infix_operator, std::string("+"), std::placeholders::_1);
                 auto nege =
                     std::bind(emit_prefix_operator, std::string("-"), std::placeholders::_1);
@@ -4749,6 +4753,9 @@ namespace ngraph
                     std::type_index,
                     std::function<std::string(const std::vector<std::string>&)>>{
                     {TI(ngraph::op::Abs), abse},
+                    {TI(ngraph::op::Minimum), mine},
+                    {TI(ngraph::op::Relu), maxe},
+                    {TI(ngraph::op::Maximum), maxe},
                     {TI(ngraph::op::Add), adde},
                     {TI(ngraph::op::Negative), nege},
                     {TI(ngraph::op::Subtract), sube},
@@ -4839,6 +4846,14 @@ namespace ngraph
                         //args are expected to be in a map already
                         sargs.push_back(
                             loop_symbol_table.at(get_goe_input_output(&input.get_output())));
+                    }
+
+                    if (std::dynamic_pointer_cast<ngraph::op::Relu>(op_node))
+                    {
+                        auto casted_zero = std::string("static_cast<") +
+                                           op->get_element_type().c_type_string() +
+                                           std::string(">(0)");
+                        sargs.push_back(casted_zero);
                     }
 
                     const Node& n = *op_node;

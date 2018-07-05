@@ -2030,6 +2030,50 @@ TEST(cpu_fusion, loop_kernel_fusion_multiple_groups_pruned)
     }
 }
 
+TEST(cpu_fusion, loop_kernel_fusion_bounded_relu)
+{
+    auto make_function = []() -> std::shared_ptr<Function> {
+        Shape shape{};
+        auto a = make_shared<op::Parameter>(element::f32, shape);
+        auto relu = make_shared<op::Relu>(a);
+        auto upper_bound =
+            op::Constant::create<float>(element::f32, shape, std::vector<float>{6.0f});
+        auto minn = make_shared<op::Minimum>(relu, upper_bound);
+        auto absn = make_shared<op::Abs>(minn);
+        auto negn = std::make_shared<op::Negative>(absn);
+
+        auto f = std::make_shared<Function>(ngraph::NodeVector{negn}, op::ParameterVector{a});
+
+        return f;
+    };
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("before_relu_fusion.pdf");
+    pass_manager.register_pass<runtime::cpu::pass::CPULoopKernelFusion>(3);
+    pass_manager.register_pass<pass::VisualizeTree>("after_relu_fusion.pdf");
+    auto cpu_f = make_function();
+    auto int_f = make_function();
+    pass_manager.run_passes(cpu_f);
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<vector<float>> args;
+
+    size_t lkn = count_ops_of_type<runtime::cpu::op::LoopKernel>(cpu_f);
+    ASSERT_GT(lkn, 0);
+
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+}
+
 TEST(cpu_fusion, loop_kernel_fusion_multiple_groups)
 {
     auto make_function = []() -> std::shared_ptr<Function> {

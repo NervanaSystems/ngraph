@@ -24,7 +24,10 @@
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/maximum.hpp"
+#include "ngraph/op/minimum.hpp"
 #include "ngraph/op/negative.hpp"
+#include "ngraph/op/relu.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
@@ -120,7 +123,10 @@ private:
         static const std::set<std::type_index> fusible_ops_set{TI(ngraph::op::Abs),
                                                                TI(ngraph::op::Add),
                                                                TI(ngraph::op::Negative),
-                                                               TI(ngraph::op::Subtract)};
+                                                               TI(ngraph::op::Subtract),
+                                                               TI(ngraph::op::Relu),
+                                                               TI(ngraph::op::Minimum),
+                                                               TI(ngraph::op::Maximum)};
 
         const Node& node = *n;
         return fusible_ops_set.count(TI(node)) != 0;
