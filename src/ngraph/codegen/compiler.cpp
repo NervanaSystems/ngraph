@@ -151,6 +151,7 @@ void codegen::StaticCompiler::initialize()
     {
         args.push_back("-Rpass-analysis=loop-vectorize");
         args.push_back("-Rpass=loop-vectorize");
+        args.push_back("-Rpass-missed=loop-vectorize");
     }
     // Prevent Eigen from using any LGPL3 code
     args.push_back("-DEIGEN_MPL2_ONLY");

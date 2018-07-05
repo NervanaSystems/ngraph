@@ -303,21 +303,21 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
     auto dest_nd_name = recast_tmp_var(writer, element_type, out, out_shape, "dest_nd");
 
     // zero the output to make sure we don't have randomly initialized data
-    if (out_shape.size() == 0)
-    {
-        writer << dest_nd_name << " = 0;\n";
-        writer << element_type << " residual = 0;\n";
-    }
-    else
-    {
-        writer << element_type << " residual" << emit_bracketed_string(out_shape) << ";\n";
-        auto output_vars = open_for_loops(writer, out_shape);
+//    if (out_shape.size() == 0)
+//    {
+//        writer << dest_nd_name << " = 0;\n";
+//        writer << element_type << " residual = 0;\n";
+//    }
+//    else
+//    {
+//        writer << element_type << " residual" << emit_bracketed_string(out_shape) << ";\n";
+//        auto output_vars = open_for_loops(writer, out_shape);
 
-        writer << dest_nd_name << emit_bracketed_string(output_vars) << " = 0;\n";
-        writer << "residual" << emit_bracketed_string(output_vars) << " = 0;\n";
+//        writer << dest_nd_name << emit_bracketed_string(output_vars) << " = 0;\n";
+//        writer << "residual" << emit_bracketed_string(output_vars) << " = 0;\n";
 
-        close_for_loops(writer, output_vars);
-    }
+//        close_for_loops(writer, output_vars);
+//    }
 
     // If we don't have a zero index in the input, perform the sum
     if (find(arg0_shape.begin(), arg0_shape.end(), 0) == arg0_shape.end())
@@ -356,7 +356,13 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
         // create the rest of the loops, don't parallelize.
         for (size_t i = 0; i < arg0_shape.size(); i++)
         {
-            if (i != outer_arg_index)
+            if (i == arg0_shape.size()-1)
+            {
+                string index_var = index_vars[i];
+                writer << start_index_loop(index_var, 0, arg0_shape[i], false, true);
+                writer.indent++;
+            }
+            else if (i != outer_arg_index)
             {
                 string index_var = index_vars[i];
                 writer << start_index_loop(index_var, 0, arg0_shape[i], false);
@@ -366,10 +372,12 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
         auto out_brackets = emit_bracketed_string(out_indexes);
         auto dst = dest_nd_name + out_brackets;
         auto src = source_nd_name + emit_bracketed_string(index_vars);
-        writer << element_type << " y = " << src << " - residual" << out_brackets << ";\n";
-        writer << element_type << " t = " << dst << " + y;\n";
-        writer << "residual" << out_brackets << " = (t - " << dst << ") - y;\n";
-        writer << dst << " = t;\n";
+//        writer << element_type << " y = " << src << " - residual" << out_brackets << ";\n";
+//        writer << element_type << " t = " << dst << " + y;\n";
+//        writer << "residual" << out_brackets << " = (t - " << dst << ") - y;\n";
+//        writer << dst << " = t;\n";
+//        writer << dst << " = t;\n";
+        writer << dst << " += " << src << ";\n";
         close_for_loops(writer, index_vars);
     }
 }

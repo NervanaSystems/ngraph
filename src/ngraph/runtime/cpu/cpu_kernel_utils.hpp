@@ -35,7 +35,8 @@ namespace ngraph
                 std::string start_index_loop(const std::string& index_var,
                                              size_t start,
                                              size_t end,
-                                             bool omp);
+                                             bool omp,
+                                             bool simd=false);
                 std::string end_index_loop(const std::string& index_var);
                 std::string emit_nd_sizes(CoordinateTransform& trans);
                 std::string emit_nd_index(CoordinateTransform& trans,
