@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <functional>
 
+#include "ngraph/frontend/onnx_import/op/add.hpp"
 #include "ops_bridge.hpp"
 
 namespace ngraph
@@ -37,6 +38,7 @@ namespace ngraph
 
             } // namespace error
 
+            NodeVector add(const Node& node) { return op::add(node); }
             class ops_bridge
             {
             public:
@@ -59,7 +61,7 @@ namespace ngraph
                     return instance;
                 }
 
-                ops_bridge() {}
+                ops_bridge() { m_map.emplace("Add", std::bind(add, std::placeholders::_1)); }
                 NodeVector operator()(const Node& node) const
                 {
                     try
