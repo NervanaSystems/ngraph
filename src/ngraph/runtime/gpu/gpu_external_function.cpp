@@ -315,18 +315,31 @@ using namespace ngraph;
 using namespace ngraph::runtime;
 using namespace std;
 )";
+
+    // The "dso_handle" symbol is required by __cxa_atexit()
+    // which is enabled because the JIT uses it as the default mechanism
+    // to register cleanup handlers. We use it, and not atexit(), because
+    // atexit() happens too late, when the JIT is no longer alive
+    m_writer << "void *__dso_handle = 0;\n\n";
 }
 
 void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
 {
     if (m_emit_timing)
     {
+        std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>>
+            function_ordered_ops;
+        for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
+        {
+            function_ordered_ops.insert({current_function, current_function->get_ordered_ops()});
+        }
+
         m_writer << "// Declare debug timers\n";
         vector<string> names;
         size_t index = 0;
         for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
         {
-            for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
+            for (shared_ptr<Node> node : function_ordered_ops.at(current_function))
             {
                 if (!node->is_parameter() && !node->is_constant())
                 {
@@ -368,7 +381,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
     }
 }
 
-void runtime::gpu::GPU_ExternalFunction::emit_constants()
+void runtime::gpu::GPU_ExternalFunction::emit_deeclare_constants()
 {
     m_writer << "// Declare all constants\n";
     m_writer << "static bool is_constant_ptr_null = true;\n";
@@ -395,45 +408,8 @@ void runtime::gpu::GPU_ExternalFunction::emit_constants()
     }
 }
 
-void runtime::gpu::GPU_ExternalFunction::compile()
+void runtime::gpu::GPU_ExternalFunction::emit_declare_functions()
 {
-    if (m_is_compiled)
-    {
-        return;
-    }
-
-    m_primitive_emitter.reset(new GPUPrimitiveEmitter());
-
-    string function_name = m_function->get_name();
-    string dump_filename = file_util::path_join(s_output_dir, function_name + "_ops.txt");
-
-    // m_pass_manager.register_pass<pass::TopologicalSort>();
-    // For now, just make everyone row-major.
-    m_pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
-    m_pass_manager.register_pass<pass::Liveness>();
-    m_pass_manager.register_pass<pass::MemoryLayout>(64);
-    m_pass_manager.register_pass<pass::DumpSorted>(dump_filename);
-    m_pass_manager.run_passes(m_function);
-
-    for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
-    {
-        m_function_ordered_ops.insert({current_function, current_function->get_ordered_ops()});
-    }
-
-    emit_header();
-    // The "dso_handle" symbol is required by __cxa_atexit()
-    // which is enabled because the JIT uses it as the default mechanism
-    // to register cleanup handlers. We use it, and not atexit(), because
-    // atexit() happens too late, when the JIT is no longer alive
-    m_writer << "void *__dso_handle = 0;\n\n";
-    emit_timer_functions();
-    emit_constants();
-
-    // Add cuDNN descriptor factory for descriptor management.
-    // After the cuDNN code emitted in gpu_emitter.cc is refactored
-    // into the CUDNNEmitter class, this can be removed.
-    m_writer << "static runtime::gpu::CUDNNDescriptors descriptors;\n\n";
-
     m_writer << "// Declare all functions\n";
     for (shared_ptr<Function> f : m_pass_manager.get_state().get_functions())
     {
@@ -441,12 +417,14 @@ void runtime::gpu::GPU_ExternalFunction::compile()
                  << "gpu::GPURuntimeContext* ctx);\n";
     }
     m_writer << "\n";
+}
 
+void runtime::gpu::GPU_ExternalFunction::collect_unique_functions()
+{
     // This for loop creates a collection of functions that are called more than once
     // and emitting them as globally callable functions.
     // ops implement the is_functionally_identical method
     unordered_map<string, string> match_function_map;
-    unordered_map<const Node*, string> node_function_map;
     for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
     {
         list<shared_ptr<Node>> tmp = current_function->get_ordered_ops();
@@ -485,10 +463,13 @@ void runtime::gpu::GPU_ExternalFunction::compile()
                 match_function_map.insert({match_function, match_function_name});
                 m_writer << emitted_function << "\n";
             }
-            node_function_map.insert({&node, match_function_name});
+            m_node_function_map.insert({&node, match_function_name});
         }
     }
+}
 
+void runtime::gpu::GPU_ExternalFunction::emit_functions()
+{
     for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
     {
         set<string> output_names;
@@ -689,7 +670,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 
             // Emit operation body
             string func_name;
-            func_name = node_function_map[node.get()];
+            func_name = m_node_function_map[node.get()];
             if (func_name.empty())
             {
                 //throw runtime_error("No matching function found for '" + node->get_name() + "'");
@@ -728,30 +709,66 @@ void runtime::gpu::GPU_ExternalFunction::compile()
         // End generated function
         m_writer += "}\n\n";
     }
+}
 
-    // allocate device buffers for primitive arguments and workspace
-    m_primitive_emitter->allocate_primitive_memory();
-
+void runtime::gpu::GPU_ExternalFunction::store_emitted_functions()
+{
     // TODO: Cleanup and make this a utility function
     string filename = file_util::path_join(s_output_dir, function_name + "_codegen.cpp");
     ofstream out(filename);
     string code = m_writer.get_code();
     out << code;
     out.close();
+}
+
+void runtime::gpu::GPU_ExternalFunction::compile()
+{
+    if (m_is_compiled)
+    {
+        return;
+    }
+
+    m_primitive_emitter.reset(new GPUPrimitiveEmitter());
+
+    string function_name = m_function->get_name();
+    string dump_filename = file_util::path_join(s_output_dir, function_name + "_ops.txt");
+
+    // m_pass_manager.register_pass<pass::TopologicalSort>();
+    // For now, just make everyone row-major.
+    m_pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
+    m_pass_manager.register_pass<pass::Liveness>();
+    m_pass_manager.register_pass<pass::MemoryLayout>(64);
+    m_pass_manager.register_pass<pass::DumpSorted>(dump_filename);
+    m_pass_manager.run_passes(m_function);
+
+    emit_header();
+
+    emit_timer_functions();
+    emit_declare_constants();
+    emit_declare_functions();
+
+
+
+    collect_unique_functions();
+    emit_functions();
+
+    // allocate device buffers for primitive arguments and workspace
+    m_primitive_emitter->allocate_primitive_memory();
+    store_emitted_functions();
 
     m_compiler.reset(new codegen::Compiler());
     m_execution_engine.reset(new codegen::ExecutionEngine());
-
     m_compiler->set_precompiled_header_source(m_pch_header_source);
 
     auto codegen_module = m_compiler->compile(code);
-
     if (codegen_module == nullptr)
     {
         throw runtime_error("Function failed to compile to bitcode");
     }
+
     m_execution_engine->add_module(codegen_module);
     m_execution_engine->finalize();
+
     m_compiled_function = m_execution_engine->find_function<EntryPoint_t>(function_name);
     if (!m_compiled_function)
     {
@@ -824,12 +841,6 @@ void runtime::gpu::GPU_ExternalFunction::emit_debug_function_exit(
 std::unique_ptr<runtime::gpu::GPURuntimeContext>& runtime::gpu::GPU_ExternalFunction::ctx()
 {
     return m_ctx;
-}
-
-bool runtime::gpu::GPU_ExternalFunction::is_functionally_identical(
-    const Node& n1, const Node& n2, const unordered_map<const Node*, string>& node_cache) const
-{
-    return node_cache.at(&n1) == node_cache.at(&n2);
 }
 
 string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
