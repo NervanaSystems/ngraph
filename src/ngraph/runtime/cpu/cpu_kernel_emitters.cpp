@@ -349,14 +349,20 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
         if (outer_arg_index != -1)
         {
             writer << start_index_loop(
-                index_vars[outer_arg_index], 0, arg0_shape[outer_arg_index], true);
+                index_vars[outer_arg_index], 0, arg0_shape[outer_arg_index], false);
             writer.indent++;
         }
 
         // create the rest of the loops, don't parallelize.
         for (size_t i = 0; i < arg0_shape.size(); i++)
         {
-            if (i == arg0_shape.size()-1)
+            if (i == arg0_shape.size()-2)
+            {
+                string index_var = index_vars[i];
+                writer << start_index_loop(index_var, 0, arg0_shape[i], true, false);
+                writer.indent++;
+            }
+            else if (i == arg0_shape.size()-1)
             {
                 string index_var = index_vars[i];
                 writer << start_index_loop(index_var, 0, arg0_shape[i], false, true);
