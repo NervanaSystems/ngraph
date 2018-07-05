@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <cmath>
 #include <cstddef>
 
 namespace ngraph
@@ -25,11 +26,26 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
-            void logical_or(const T* arg0, const T* arg1, T* out, size_t count)
+            void sigmoid(const T* arg, T* out, size_t count)
             {
+                T exp_value;
                 for (size_t i = 0; i < count; i++)
                 {
-                    out[i] = static_cast<T>(arg0[i] || arg1[i]);
+                    exp_value = std::exp(-arg[i]);
+                    out[i] = 1 / (1 + exp_value);
+                }
+            }
+
+            template <typename T>
+            void sigmoid_backprop(const T* arg, T* delta_arg, T* out, size_t count)
+            {
+                T exp_value;
+                T func_x;
+                for (size_t i = 0; i < count; i++)
+                {
+                    exp_value = std::exp(-arg[i]);
+                    func_x = 1 / (1 + exp_value);
+                    out[i] = delta_arg[i] * func_x * (1 - func_x);
                 }
             }
         }
