@@ -131,7 +131,7 @@ string ngraph::runtime::cpu::kernel::start_index_loop(const string& index_var,
 
     if (omp)
     {
-        ss << "#pragma omp parallel for\n";
+        ss << "#pragma omp parallel for simd\n";
     }
 
     ss << "for(size_t " << index_var << " = " << start << "; " << index_var << " < " << end << "; "
