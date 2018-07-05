@@ -192,3 +192,40 @@ uint32_t runtime::gpu::idiv_ceil(int n, int d)
     // compiler fused modulo and division
     return n / d + (n % d > 0);
 }
+
+
+size_t runtime::gpu::stopwatch::get_call_count() const
+{
+    return m_total_count;
+}
+
+size_t runtime::gpu::stopwatch::get_total_seconds() const
+{
+    return runtime::gpu::stopwatch::get_total_milliseconds() / 1000;
+}
+
+size_t runtime::gpu::stopwatch::get_total_milliseconds() const
+{
+
+    return runtime::gpu::stopwatch::get_total_microseconds() / 1000;
+}
+
+size_t runtime::gpu::stopwatch::get_total_microseconds() const
+{
+    return runtime::gpu::stopwatch::get_total_nanoseconds() / 1000;
+}
+
+size_t runtime::gpu::stopwatch::get_total_nanoseconds() const
+{
+    //only need to sync the last stop.
+    cudaEventSynchronize(stops.back());
+    float total_time = 0;
+    for(int i = 0; i < stops.size(); i++)
+    {
+        float milliseconds = 0;
+        cudaEventElapsedTime(&milliseconds, starts[i], stops[i]);
+        total_time += milliseconds;
+    }
+    m_total_time_in_ns = static_cast<size_t>(total_time * 1000000.0f)
+    return m_total_time_in_ns;
+}

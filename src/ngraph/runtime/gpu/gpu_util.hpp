@@ -113,6 +113,47 @@ namespace ngraph
                 cuda_memcpyDtH(local.data(), p, size_in_bytes);
                 std::cout << "{" << ngraph::join(local) << "}" << std::endl;
             }
+
+            class stopwatch
+                {
+                public:
+                    void start()
+                    {
+                        if (m_active == false)
+                        {
+                            m_total_count++;
+                            m_active = true;
+                            cudaEvent_t start;
+                            cudaEventCreate(&start);
+                            cudaEventRecord(start);
+                            starts.push_back(start);
+                        }
+                    }
+
+                    void stop()
+                    {
+                        if (m_active == true)
+                        {
+                            cudaEvent_t stop;
+                            cudaEventCreate(&stop);
+                            cudaEventRecord(stop);
+                            stops.push_back(stop)
+                            m_active = false;
+                        }
+                    }
+
+                    size_t get_total_seconds() const;
+                    size_t get_total_milliseconds() const;
+                    size_t get_total_microseconds() const;
+                    size_t get_total_nanoseconds() const;
+
+                private:
+                    std::vector<cudaEvent_t> starts;
+                    std::vector<cudaEvent_t> stops;
+                    size_t m_total_count = 0;
+                    size_t m_total_time_in_ns;
+                };
+
         }
     }
 }

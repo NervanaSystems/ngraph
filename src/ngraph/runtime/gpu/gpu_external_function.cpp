@@ -377,7 +377,7 @@ using namespace std;
                 }
             }
         }
-        writer << "ngraph::stopwatch timers[" << names.size() << "];\n";
+        writer << "runtime::gpu::stopwatch timers[" << names.size() << "];\n";
         writer << "extern \"C\" size_t get_debug_timer_count() { return " << names.size()
                << "; }\n";
         writer << "extern \"C\" const char* get_debug_timer_name(size_t index)\n";
