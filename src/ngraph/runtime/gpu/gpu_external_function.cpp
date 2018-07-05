@@ -742,16 +742,11 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     m_pass_manager.run_passes(m_function);
 
     emit_header();
-
     emit_timer_functions();
     emit_declare_constants();
     emit_declare_functions();
-
-
-
     collect_unique_functions();
     emit_functions();
-
     // allocate device buffers for primitive arguments and workspace
     m_primitive_emitter->allocate_primitive_memory();
     store_emitted_functions();

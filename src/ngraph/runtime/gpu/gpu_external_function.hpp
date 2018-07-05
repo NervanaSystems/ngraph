@@ -78,7 +78,11 @@ namespace ngraph
             private:
                 void emit_header();
                 void emit_timer_functions();
-                void emit_constants();
+                void emit_declare_constants();
+                void emit_declare_functions();
+                void collect_unique_functions();
+                void emit_functions();
+                void store_emitted_functions();
 
                 void emit_debug_function_entry(Node* node,
                                                const std::vector<GPU_TensorViewWrapper>& in,
