@@ -43,16 +43,7 @@ namespace ngraph
             NodeVector add(const Node& node) { return op::add(node); }
             NodeVector constant(const Node& node)
             {
-                NodeVector output_nodes;
-                for (const auto& attribute : node.attributes())
-                {
-                    if (!attribute.is_tensor())
-                    {
-                        throw onnx_import::error::attribute::invalid_data{attribute};
-                    }
-                    output_nodes.push_back(op::constant(attribute.get_tensor()));
-                }
-                return output_nodes;
+               return { op::constant(node.get_attribute_value<Tensor>("value")) };
             }
 
             class ops_bridge
