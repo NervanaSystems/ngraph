@@ -104,21 +104,21 @@ namespace ngraph
     ngraph::LogHelper(ngraph::LOG_TYPE::_LOG_TYPE_ERROR,                                           \
                       ngraph::get_file_name(__FILE__),                                             \
                       __LINE__,                                                                    \
-                      default_logger_handler_func)                                                 \
+                      ngraph::default_logger_handler_func)                                         \
         .stream()
 
 #define NGRAPH_WARN                                                                                \
     ngraph::LogHelper(ngraph::LOG_TYPE::_LOG_TYPE_WARNING,                                         \
                       ngraph::get_file_name(__FILE__),                                             \
                       __LINE__,                                                                    \
-                      default_logger_handler_func)                                                 \
+                      ngraph::default_logger_handler_func)                                         \
         .stream()
 
 #define NGRAPH_INFO                                                                                \
     ngraph::LogHelper(ngraph::LOG_TYPE::_LOG_TYPE_INFO,                                            \
                       ngraph::get_file_name(__FILE__),                                             \
                       __LINE__,                                                                    \
-                      default_logger_handler_func)                                                 \
+                      ngraph::default_logger_handler_func)                                         \
         .stream()
 
 #ifdef NGRAPH_DEBUG_ENABLE
@@ -126,7 +126,7 @@ namespace ngraph
     ngraph::LogHelper(ngraph::LOG_TYPE::_LOG_TYPE_DEBUG,                                           \
                       ngraph::get_file_name(__FILE__),                                             \
                       __LINE__,                                                                    \
-                      default_logger_handler_func)                                                 \
+                      ngraph::default_logger_handler_func)                                         \
         .stream()
 #else
 #define NGRAPH_DEBUG ngraph::get_nil_stream()
