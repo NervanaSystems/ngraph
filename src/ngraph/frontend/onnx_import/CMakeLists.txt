@@ -31,7 +31,19 @@ add_library(onnx_import_interface OBJECT
     onnx.proto)
 
 add_library(onnx_import STATIC
-    onnx.pb.cc)
+    onnx.pb.cc
+    attribute.cpp
+    attribute.hpp
+    graph.cpp
+    graph.hpp
+    model.hpp
+    node.cpp
+    node.hpp
+    op/add.hpp
+    ops_bridge.cpp
+    ops_bridge.hpp
+    tensor.hpp
+    value_info.hpp)
 
 add_dependencies(onnx_import onnx_import_interface)
 
@@ -44,6 +56,9 @@ target_include_directories(onnx_import_interface PRIVATE ${CMAKE_CURRENT_BINARY_
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(onnx_import PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
+        -Wno-extended-offsetof -Wno-zero-as-null-pointer-constant -Wno-shorten-64-to-32 -Wno-unused-macros
+        -Wno-missing-variable-declarations -Wno-unused-private-field)
+    target_compile_options(onnx_import_interface PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
         -Wno-extended-offsetof -Wno-zero-as-null-pointer-constant -Wno-shorten-64-to-32 -Wno-unused-macros
         -Wno-missing-variable-declarations -Wno-unused-private-field)
 endif()

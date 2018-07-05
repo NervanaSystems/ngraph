@@ -16,31 +16,29 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/op/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace op
     {
-        class CoreFusion;
+        /// \brief Elementwise Minimum(Relu(arg, 0), alpha) operation.
+        ///
+        class BoundedRelu : public util::RequiresTensorViewArgs
+        {
+        public:
+            /// \brief Constructs a BoundedRelu operation.
+            ///
+            /// \param arg Node input to the Relu.
+            BoundedRelu(std::shared_ptr<ngraph::Node> arg, float alpha);
+            float get_alpha() const { return m_alpha; }
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+        private:
+            float m_alpha;
+        };
     }
 }
-
-class ngraph::pass::CoreFusion : public ngraph::pass::GraphRewrite
-{
-public:
-    CoreFusion()
-        : GraphRewrite()
-    {
-        construct_relu();
-        construct_folded_batch_norm();
-        construct_sigmoid();
-        construct_sigmoid_bprop();
-        construct_optimized_strided_conv();
-    }
-    void construct_relu();
-    void construct_folded_batch_norm();
-    void construct_sigmoid();
-    void construct_sigmoid_bprop();
-    void construct_optimized_strided_conv();
-};

@@ -17,6 +17,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <ctime>
+#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <mutex>
@@ -25,107 +26,117 @@
 #include "ngraph/log.hpp"
 
 using namespace std;
+using namespace ngraph;
 
 namespace ngraph
 {
-    class thread_starter;
+    class ThreadStarter;
 }
 
-string ngraph::logger::log_path;
-deque<string> ngraph::logger::queue;
+string Logger::m_log_path;
+deque<string> Logger::m_queue;
 static mutex queue_mutex;
 static condition_variable queue_condition;
 static unique_ptr<thread> queue_thread;
 static bool active = false;
 
-std::ostream& ngraph::get_nil_stream()
+class ngraph::ThreadStarter
 {
-    static std::stringstream nil;
+public:
+    ThreadStarter() { Logger::start(); }
+    virtual ~ThreadStarter() { Logger::stop(); }
+};
+
+static ThreadStarter s_starter;
+
+ostream& ngraph::get_nil_stream()
+{
+    static stringstream nil;
     return nil;
 }
 
-class ngraph::thread_starter
+void Logger::set_log_path(const string& path)
 {
-public:
-    thread_starter() { ngraph::logger::start(); }
-    virtual ~thread_starter() { ngraph::logger::stop(); }
-};
-
-static ngraph::thread_starter _starter;
-
-void ngraph::logger::set_log_path(const string& path)
-{
-    log_path = path;
+    m_log_path = path;
 }
 
-void ngraph::logger::start()
+void Logger::start()
 {
     active = true;
     queue_thread = unique_ptr<thread>(new thread(&thread_entry, nullptr));
 }
 
-void ngraph::logger::stop()
+void Logger::stop()
 {
     {
-        unique_lock<std::mutex> lk(queue_mutex);
+        unique_lock<mutex> lk(queue_mutex);
         active = false;
         queue_condition.notify_one();
     }
     queue_thread->join();
 }
 
-void ngraph::logger::process_event(const string& s)
+void Logger::process_event(const string& s)
 {
     cout << s << "\n";
 }
 
-void ngraph::logger::thread_entry(void* param)
+void Logger::thread_entry(void* param)
 {
-    unique_lock<std::mutex> lk(queue_mutex);
+    unique_lock<mutex> lk(queue_mutex);
     while (active)
     {
         queue_condition.wait(lk);
-        while (!queue.empty())
+        while (!m_queue.empty())
         {
-            process_event(queue.front());
-            queue.pop_front();
+            process_event(m_queue.front());
+            m_queue.pop_front();
         }
     }
 }
 
-void ngraph::logger::log_item(const string& s)
+void Logger::log_item(const string& s)
 {
-    unique_lock<std::mutex> lk(queue_mutex);
-    queue.push_back(s);
+    unique_lock<mutex> lk(queue_mutex);
+    m_queue.push_back(s);
     queue_condition.notify_one();
 }
 
-ngraph::log_helper::log_helper(LOG_TYPE type, const char* file, int line, const char* func)
+void ngraph::default_logger_handler_func(const string& s)
+{
+    cout << s << endl;
+}
+
+LogHelper::LogHelper(LOG_TYPE type,
+                     const char* file,
+                     int line,
+                     function<void(const string&)> handler_func)
+    : m_handler_func(handler_func)
 {
     switch (type)
     {
-    case LOG_TYPE::_LOG_TYPE_ERROR: _stream << "[ERR ] "; break;
-    case LOG_TYPE::_LOG_TYPE_WARNING: _stream << "[WARN] "; break;
-    case LOG_TYPE::_LOG_TYPE_INFO: _stream << "[INFO] "; break;
-    case LOG_TYPE::_LOG_TYPE_DEBUG: _stream << "[DEBUG] "; break;
+    case LOG_TYPE::_LOG_TYPE_ERROR: m_stream << "[ERR] "; break;
+    case LOG_TYPE::_LOG_TYPE_WARNING: m_stream << "[WARN] "; break;
+    case LOG_TYPE::_LOG_TYPE_INFO: m_stream << "[INFO] "; break;
+    case LOG_TYPE::_LOG_TYPE_DEBUG: m_stream << "[DEBUG] "; break;
     }
 
-    std::time_t tt = chrono::system_clock::to_time_t(chrono::system_clock::now());
-    auto tm = std::gmtime(&tt);
+    time_t tt = chrono::system_clock::to_time_t(chrono::system_clock::now());
+    auto tm = gmtime(&tt);
     char buffer[256];
-    //    strftime(buffer,sizeof(buffer), "%d/%b/%Y:%H:%M:%S %z", tm);
-    //    strftime(buffer,sizeof(buffer), "%Y-%m-%d %H:%M:%S UTC", tm);
     strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%Sz", tm);
-    _stream << buffer << " ";
+    m_stream << buffer << " ";
 
-    _stream << file;
-    _stream << " " << line;
-    //    _stream << " " << func;
-    _stream << "\t";
+    m_stream << file;
+    m_stream << " " << line;
+    m_stream << "\t";
 }
 
-ngraph::log_helper::~log_helper()
+LogHelper::~LogHelper()
 {
-    cout << _stream.str() << endl;
-    // logger::log_item(_stream.str());
+    if (m_handler_func)
+    {
+        m_handler_func(m_stream.str());
+    }
+    // Logger::log_item(m_stream.str());
 }

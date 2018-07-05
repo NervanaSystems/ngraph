@@ -31,12 +31,15 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/maximum.hpp"
+#include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
@@ -45,10 +48,10 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
+#include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
-#include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 
 static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
@@ -600,101 +603,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv_backprop_
     this->add_matcher(std::make_shared<ngraph::pattern::Matcher>(conv_label, callback));
 }
 
-void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid()
-{
-    //construct variance
-    auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
-    auto neg_input = std::make_shared<op::Negative>(input);
-    auto exp_neg_input = std::make_shared<op::Exp>(neg_input);
-
-    // broadcast input
-    auto constant = std::make_shared<pattern::op::Label>(element::f32, Shape{});
-    auto broadcast_constant = std::make_shared<op::Broadcast>(constant, Shape{3, 4}, AxisSet{0, 1});
-
-    auto add_exp = std::make_shared<op::Add>(exp_neg_input, broadcast_constant);
-    auto divide_1_over_exp = std::make_shared<op::Divide>(broadcast_constant, add_exp);
-
-    //Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::graph_rewrite_callback callback = [input](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
-                     << m.get_match_root()->get_name();
-        auto pattern_map = m.get_pattern_map();
-
-        if (m.get_match_root()->get_element_type() != element::f32)
-        {
-            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
-                         << " type is not float!";
-            return false;
-        }
-
-        if (m.get_match_root()->get_outputs().size() != pattern_map[input]->get_outputs().size())
-        {
-            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
-                         << "input= " << pattern_map[input]->get_name() << "size dont match!";
-            return false;
-        }
-
-        auto sigmoid_node = std::make_shared<op::Sigmoid>(pattern_map[input]);
-        ngraph::replace_node(m.get_match_root(), sigmoid_node);
-        return true;
-    };
-
-    auto m = std::make_shared<ngraph::pattern::Matcher>(divide_1_over_exp, callback);
-    this->add_matcher(m);
-}
-
-void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_bprop()
-{
-    //construct variance
-    auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
-    auto neg_input = std::make_shared<op::Negative>(input);
-    auto exp_neg_input = std::make_shared<op::Exp>(neg_input);
-
-    // broadcast input
-    auto constant = std::make_shared<pattern::op::Label>(element::f32, Shape{});
-    auto broadcast_constant = std::make_shared<op::Broadcast>(constant, Shape{3, 4}, AxisSet{0, 1});
-
-    auto add_exp = std::make_shared<op::Add>(exp_neg_input, broadcast_constant);
-    // //auto divide_1_over_exp = std::make_shared<op::Divide>(broadcast_constant, add_exp);
-    auto sigmoid_fwd = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
-
-    auto delta = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
-    auto neg_delta = std::make_shared<op::Negative>(delta);
-
-    auto multiply_sigmoid_delta = std::make_shared<op::Multiply>(sigmoid_fwd, neg_delta);
-    auto divide_2 = std::make_shared<op::Divide>(multiply_sigmoid_delta, add_exp);
-
-    auto multiply_2 = std::make_shared<op::Multiply>(divide_2, exp_neg_input);
-    auto negtive_2 = std::make_shared<op::Negative>(multiply_2);
-
-    //Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::graph_rewrite_callback callback = [input, delta](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
-                     << m.get_match_root()->get_name();
-        auto pattern_map = m.get_pattern_map();
-        if (m.get_match_root()->get_element_type() != element::f32)
-        {
-            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
-                         << " type is not float!";
-            return false;
-        }
-
-        if (m.get_match_root()->get_shape().size() != pattern_map[input]->get_shape().size())
-        {
-            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
-                         << "input= " << pattern_map[input]->get_name() << "size dont match!";
-            return false;
-        }
-        auto dsigmoid =
-            std::make_shared<op::SigmoidBackprop>(pattern_map[input], pattern_map[delta]);
-        ngraph::replace_node(m.get_match_root(), dsigmoid);
-        return true;
-    };
-
-    auto m = std::make_shared<ngraph::pattern::Matcher>(negtive_2, callback);
-    this->add_matcher(m);
-}
-
 void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
 {
     Shape shape{2, 2, 1, 1};
@@ -1031,7 +939,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
     Shape shape{2, 2, 1, 1};
     auto data_batch = std::make_shared<pattern::op::Label>(element::f32, shape);
     auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
-    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{1});
+    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{shape[0]});
 
     auto conv_bias = std::make_shared<op::ConvolutionBias>(data_batch,
                                                            filters,
@@ -1099,7 +1007,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
     Shape shape{2, 2, 1, 1};
     auto data_batch = std::make_shared<pattern::op::Label>(element::f32, shape);
     auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
-    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{1});
+    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{shape[0]});
 
     auto pconv = std::make_shared<op::ConvolutionBias>(data_batch,
                                                        filters,
@@ -1202,7 +1110,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add_relu()
     Shape shape{2, 2, 1, 1};
     auto data_batch = std::make_shared<pattern::op::Label>(element::f32, shape);
     auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
-    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{1});
+    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{shape[0]});
     auto add_input = std::make_shared<pattern::op::Label>(element::f32, shape);
 
     auto pconv = std::make_shared<op::ConvolutionBiasAdd>(data_batch,
@@ -1320,5 +1228,53 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(elem_mul, callback);
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
+{
+    auto relu_input = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto relu = std::make_shared<op::Relu>(relu_input);
+    auto iconst1 = op::Constant::create(element::f32, Shape{}, {1});
+    auto alpha = std::make_shared<pattern::op::Label>(iconst1);
+    auto min = std::make_shared<op::Minimum>(relu, alpha);
+
+    pattern::graph_rewrite_callback callback = [relu_input, alpha](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_bounded_relu against "
+                     << m.get_match_root()->get_name();
+
+        if (m.get_match_root()->get_element_type() != element::f32)
+        {
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+                         << " type is not float!";
+            return false;
+        }
+        auto pattern_map = m.get_pattern_map();
+        if (!std::dynamic_pointer_cast<op::Constant>(pattern_map[alpha]))
+        {
+            throw ngraph_error("alpha must be constant for bounded relu");
+        }
+
+        //we wont fuse if the alpha and the Relu output element type are not same
+        if (pattern_map[alpha]->get_element_type() != pattern_map[relu_input]->get_element_type())
+        {
+            return false;
+        }
+        if (pattern_map[alpha]->get_shape() != pattern_map[relu_input]->get_shape())
+        {
+            return false;
+        }
+
+        auto alpha_const_op = std::dynamic_pointer_cast<op::Constant>(pattern_map[alpha]);
+        float alpha_val = *(static_cast<float const*>(alpha_const_op->get_data_ptr()));
+        NGRAPH_DEBUG << "relu_input: " << pattern_map[relu_input] << " min_val: "
+                     << *(static_cast<float const*>(alpha_const_op->get_data_ptr()));
+
+        auto cg = std::shared_ptr<Node>(new op::BoundedRelu(pattern_map[relu_input], alpha_val));
+        ngraph::replace_node(m.get_match_root(), cg);
+        return true;
+    };
+
+    auto m = std::make_shared<pattern::Matcher>(min, callback);
     this->add_matcher(m);
 }

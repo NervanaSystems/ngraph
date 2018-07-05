@@ -1815,16 +1815,12 @@ __device__ __forceinline__ int64_t  load(const int64_t*  __restrict__ in, int i=
     return ss.str();
 }
 
-uint32_t runtime::gpu::CUDAEmitter::align_to_block_size(uint32_t grid_size, uint32_t block_size)
+uint32_t runtime::gpu::CUDAEmitter::align_to_block_size(uint32_t threads, uint32_t block_size)
 {
-    if (grid_size > (1u << 31) - 1)
+    if (threads > (1u << 31) - 1)
     {
-        throw std::runtime_error("Cuda can't handle grid_size_x > 2^31 - 1.");
+        throw std::runtime_error("Cuda can't handle threads > 2^31 - 1.");
     }
-    uint32_t r = (grid_size + block_size - 1) / block_size * block_size;
-    if (grid_size > (1u << 31) - 1)
-    {
-        throw std::runtime_error("Cuda can't handle grid_size_x > 2^31 - 1.");
-    }
+    uint32_t r = (threads + block_size - 1) / block_size;
     return r;
 }
