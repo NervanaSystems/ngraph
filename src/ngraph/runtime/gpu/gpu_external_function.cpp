@@ -381,7 +381,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
     }
 }
 
-void runtime::gpu::GPU_ExternalFunction::emit_deeclare_constants()
+void runtime::gpu::GPU_ExternalFunction::emit_declare_constants()
 {
     m_writer << "// Declare all constants\n";
     m_writer << "static bool is_constant_ptr_null = true;\n";
@@ -664,7 +664,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
             {
                 if (m_emit_timing)
                 {
-                    emit_debug_function_entry(node.get(), in, out);
+                    emit_debug_function_entry(node.get());
                 }
             }
 
@@ -696,7 +696,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
             {
                 if (m_emit_timing)
                 {
-                    emit_debug_function_exit(node.get(), in, out);
+                    emit_debug_function_exit(node.get());
                 }
             }
         }
@@ -711,12 +711,11 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
     }
 }
 
-void runtime::gpu::GPU_ExternalFunction::store_emitted_functions()
+void runtime::gpu::GPU_ExternalFunction::store_emitted_functions(const std::string& code)
 {
     // TODO: Cleanup and make this a utility function
     std::string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");
     ofstream out(filename);
-    std::string code = m_writer.get_code();
     out << code;
     out.close();
 }
@@ -749,7 +748,9 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     emit_functions();
     // allocate device buffers for primitive arguments and workspace
     m_primitive_emitter->allocate_primitive_memory();
-    store_emitted_functions();
+
+    std::string code = m_writer.get_code();
+    store_emitted_functions(code);
 
     m_compiler.reset(new codegen::Compiler());
     m_execution_engine.reset(new codegen::ExecutionEngine());
@@ -817,18 +818,12 @@ std::shared_ptr<ngraph::runtime::gpu::GPU_CallFrame>
     return make_shared<GPU_CallFrame>(shared_from_this(), m_compiled_function);
 }
 
-void runtime::gpu::GPU_ExternalFunction::emit_debug_function_entry(
-    Node* node,
-    const std::vector<GPU_TensorViewWrapper>& in,
-    const std::vector<GPU_TensorViewWrapper>& out)
+void runtime::gpu::GPU_ExternalFunction::emit_debug_function_entry( Node* node)
 {
     m_writer << "timers[" << m_name_index_map[node->get_name()] << "].start();\n";
 }
 
-void runtime::gpu::GPU_ExternalFunction::emit_debug_function_exit(
-    Node* node,
-    const std::vector<GPU_TensorViewWrapper>& in,
-    const std::vector<GPU_TensorViewWrapper>& out)
+void runtime::gpu::GPU_ExternalFunction::emit_debug_function_exit( Node* node)
 {
     m_writer << "timers[" << m_name_index_map[node->get_name()] << "].stop();\n";
 }
@@ -839,10 +834,10 @@ std::unique_ptr<runtime::gpu::GPURuntimeContext>& runtime::gpu::GPU_ExternalFunc
 }
 
 std::string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
-                                                               const std::string& m_function_name)
+                                                               const std::string& function_name)
 {
     codegen::CodeWriter writer;
-    writer << "static void " << m_function_name << "(";
+    writer << "static void " << function_name << "(";
     writer.indent++;
     // Work around a compiler warning (*node inside typeid may have effects
     // with shared pointers, which is fine here but clang doesn't like it.)
@@ -899,7 +894,7 @@ std::string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& 
     }
 
     std::string rc = writer.get_code();
-    if (m_function_name == "f")
+    if (function_name == "f")
     {
         rc = strip_comments(rc);
     }
