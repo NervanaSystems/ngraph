@@ -2545,6 +2545,31 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_4d_transpose)
         read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, reshape_4d_no_transpose)
+{
+    vector<float> a_data(2 * 2 * 5 * 5);
+    for (int i = 0; i < 2 * 2 * 5 * 5; i++)
+    {
+        a_data[i] = float(i + 1);
+    }
+
+    Shape shape_a{2, 2, 5, 5};
+    Shape shape_r{2, 5, 5, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto r = make_shared<op::Reshape>(A, AxisVector{0, 1, 2, 3}, shape_r);
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, a_data);
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call(f, {result}, {a});
+    EXPECT_EQ(a_data, read_vector<float>(result));
+}
+
 //
 // Numpy:
 //
