@@ -188,4 +188,4 @@ system that already has an ``ngraph_dist`` installed.
 .. _neon docs: https://github.com/NervanaSystems/neon/tree/master/doc
 .. _being the fastest: https://github.com/soumith/convnet-benchmarks/
 .. _for training CNN-based models with GPUs: https://www.microway.com/hpc-tech-tips/deep-learning-frameworks-survey-tensorflow-torch-theano-caffe-neon-ibm-machine-learning-stack/
-.. _ngraph tensorflow bridge README: https://github.com/NervanaSystems/ngraph-tensorflow-bridge
+.. _ngraph tensorflow bridge README: https://github.com/NervanaSystems/ngraph-tf
