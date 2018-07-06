@@ -555,14 +555,35 @@ namespace ngraph
                 {
                     auto reshape = static_cast<op::Reshape*>(node);
 
+                    auto op_annotations =
+                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+
+                    auto users = reshape->get_users();
+                    auto arg = reshape->get_argument(0);
+                    // we need to copy input data if reshape modifies the data or inputs are
+                    // not in the memory pool, or has output users.
+                    bool need_copy =
+                        reshape->get_is_transpose() || arg->is_parameter() || arg->is_constant();
+                    for (auto n = users.begin(); !need_copy && n != users.end(); ++n)
+                    {
+                        if ((*n)->is_output())
+                        {
+                            need_copy = true;
+                        }
+                    }
+                    if (!need_copy)
+                    {
+                        // map output to the input memory
+                        std::map<size_t, size_t> oi_pairs = {{0, 0}};
+                        op_annotations->set_in_place_oi_pairs(oi_pairs);
+                        reshape->set_op_annotations(op_annotations);
+                    }
                     // Use Eigen for 3D
                     if (node->get_input_element_type(0) == element::f32 &&
                         node->get_input_shape(0).size() < TENSOR_MAX_DIMS &&
                         node->get_input_shape(0).size() > 3 &&
                         node->get_input_shape(0).size() == node->get_output_shape(0).size())
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
                         reshape->set_op_annotations(op_annotations);
                     }
