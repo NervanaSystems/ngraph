@@ -74,13 +74,6 @@ def test_reduce():
     result = run_op_node([input_data], ng.reduce, *reduction_function_args)
     assert np.allclose(result, expected)
 
-    reduction_axes = (0, )
-    input_data = np.random.randn(100).astype(np.float32)
-    expected = reduce(lambda x, y: x + y * y, input_data, np.float32(0.))
-    reduction_function_args = [init_val, lambda x, y: x + y * y, list(reduction_axes)]
-    result = run_op_node([input_data], ng.reduce, *reduction_function_args)
-    assert np.allclose(result, expected)
-
     def custom_reduction_function(a, b):
         return a + b * b
 
