@@ -104,12 +104,13 @@ namespace ngraph
                 std::map<std::string, size_t> m_name_index_map;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
                 std::unordered_map<const Node*, std::string> m_node_function_map;
-                std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>> m_function_ordered_ops;
+                std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>>
+                    m_function_ordered_ops;
 
-                bool m_emit_timing = false;
-                bool m_is_compiled = false;
-                bool m_release_function = false;
-                bool m_temporaries_used = false;
+                bool m_emit_timing;
+                bool m_is_compiled;
+                bool m_release_function;
+                bool m_temporaries_used;
 
                 std::string m_function_name;
                 std::string m_pch_header_source;
