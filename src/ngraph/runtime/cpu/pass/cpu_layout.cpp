@@ -36,6 +36,7 @@
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/result.hpp"
+#include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
@@ -49,7 +50,6 @@
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
-#include "ngraph/runtime/cpu/op/sigmoid.hpp"
 
 using namespace std;
 using namespace mkldnn;
