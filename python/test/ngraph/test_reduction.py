@@ -18,7 +18,6 @@ import pytest
 
 import ngraph as ng
 from test.ngraph.util import run_op_node
-from ngraph.utils.types import get_element_type
 
 
 @pytest.mark.parametrize('ng_api_helper, numpy_function, reduction_axes', [
