@@ -3,6 +3,22 @@
 Distributed Training in nGraph
 ==============================
 
+Why distributed training?
+-------------------------
+
+A tremendous amount of data is required to train deep neural networks in diverse 
+areas -- from computer vision to natural language processing. Meanwhile, 
+computation used in AI training has been increasing exponentially. And even 
+though significant improvements have been made in algorithms and hardware, 
+using one machine to train a very large neural network / model is usually not 
+optimal. The use of multiple nodes, then, becomes important for making deep 
+learning training feasible with a large datasets.   
+
+Data parallelism is the most popular parallel architecture to accelerate deep learning with large datasets. The algorithm we support is based on the synchronous SGD method, and partitions the dataset among workers where each worker executes the same neural network model. For every iteration, nGraph backend computes the gradients in back-propagation, aggregates the gradients across all workers, and then update the weights. 
+How?
+
+To synchronize gradients across all workers, the essential operation for data parallel training, due to its simplicity and scalability over parameter servers, is “allreduce”. The AllReduce op is one of the nGraph Library’s core ops. To enable gradient synchronization for a network, we simply inject the AllReduce op into the computation graph, connecting the graph for the autodiff computation and optimizer update (which then becomes part of the nGraph graph). The nGraph Backend will handle the rest. 
+
 Data scientists with locally-scalable rack or cloud-based resources will likely 
 find it worthwhile to experiment with different modes or variations of  
 distributed training. Deployments using nGraph Library with supported backends 
