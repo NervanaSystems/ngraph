@@ -106,7 +106,7 @@ namespace ngraph
                     {
                         throw error::attribute::InvalidData{attribute.type()};
                     }
-                    return attribute.f();
+                    return static_cast<double>(attribute.f());
                 }
 
                 template <>
@@ -114,7 +114,8 @@ namespace ngraph
                 {
                     switch (attribute.type())
                     {
-                    case onnx::AttributeProto_AttributeType_FLOAT: return {attribute.f()};
+                    case onnx::AttributeProto_AttributeType_FLOAT:
+                        return {static_cast<double>(attribute.f())};
                     case onnx::AttributeProto_AttributeType_FLOATS:
                         return {std::begin(attribute.floats()), std::end(attribute.floats())};
                     default: throw error::attribute::InvalidData{attribute.type()};
