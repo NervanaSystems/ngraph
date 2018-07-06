@@ -1,4 +1,4 @@
-.. distribute-train.rst 
+.. howto/distribute-train.rst 
 
 
 Train using multiple nGraph CPU backends with data parallel 

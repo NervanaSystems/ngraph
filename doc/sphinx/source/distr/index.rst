@@ -54,6 +54,8 @@ mini-batch training, `one could train ResNet-50 with Imagenet-1k data`_ to the
 
 
 
+
+
 MXNet
 -----
 
