@@ -96,6 +96,7 @@ namespace ngraph
                 bool m_emit_timing;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
                 std::unordered_map<const Node*, std::string> m_node_function_map;
+                std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>> m_function_ordered_ops;
                 std::map<std::string, size_t> m_name_index_map;
                 std::shared_ptr<ngraph::Function> m_function;
                 bool m_release_function;

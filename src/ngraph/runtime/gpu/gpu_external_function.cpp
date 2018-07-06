@@ -377,7 +377,6 @@ void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
 void runtime::gpu::GPU_ExternalFunction::emit_declare_constants()
 {
     m_writer << "// Declare all constants\n";
-    m_writer << "static bool is_constant_ptr_null = true;\n";
     for (std::shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
     {
         for (std::shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
@@ -399,6 +398,32 @@ void runtime::gpu::GPU_ExternalFunction::emit_declare_constants()
             }
         }
     }
+    m_writer << "\nstatic bool is_constant_mem_ptr_null = true;\n\n";
+    m_writer << "static void invoke_constant_mem_ptr()\n";
+    m_writer.block_begin();
+    {
+        m_writer << "if(is_constant_mem_ptr_null)\n";
+        m_writer.block_begin();
+        {
+        for (std::shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
+        {
+            for (std::shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
+            {
+                const op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
+                if (c)
+                {
+                    std::shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
+                    m_writer << tv->get_tensor().get_name() << " = reinterpret_cast<"
+                            << tv->get_tensor().get_element_type().c_type_string()
+                            << "*>(runtime::gpu::invoke_memory_primitive(ctx, "
+                            << tv->get_tensor().get_name() << "_idx));\n";
+                }
+            }
+        }
+        m_writer << "is_constant_mem_ptr_null = false;\n";
+        m_writer.blcok_end();
+    }
+    m_writer.block_end();
 }
 
 void runtime::gpu::GPU_ExternalFunction::emit_declare_functions()
@@ -532,22 +557,9 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
         block_begin();
         {
             //set constant pointers during the first run
-            m_writer << "if (is_constant_ptr_null)\n";
-            m_writer.block_begin();
-            for (std::shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
-            {
-                const op::Constant* c = dynamic_cast<op::Constant*>(node.get());
-                if (c)
-                {
-                    std::shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
-                    m_writer << tv->get_tensor().get_name() << " = reinterpret_cast<"
-                            << tv->get_tensor().get_element_type().c_type_string()
-                            << "*>(runtime::gpu::invoke_memory_primitive(ctx, "
-                            << tv->get_tensor().get_name() << "_idx));\n";
-                }
-            }
-            m_writer.block_end();
+            m_writer << "invoke_constant_mem_ptr();\n";
 
+            //alocate temp memory pool
             emit_allocate_temp_mem_pool(current_function);
 
             // Add inputs to the variable name map
@@ -566,65 +578,85 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 }
             }
 
-            // create output alias map
-            size_t output_index = 0;
-            std::unordered_map<descriptor::TensorView*, std::vector<size_t>> output_alias_map;
-            std::vector<size_t> aliases;
+            // Add outputs to the variable name map
             for (size_t i = 0; i < current_function->get_output_size(); ++i)
             {
-                std::shared_ptr<Node> op = current_function->get_output_op(i);
-                std::shared_ptr<descriptor::TensorView> otv = op->get_output_tensor_view();
-                std::vector<size_t>& al = output_alias_map[otv.get()];
-                al.push_back(output_index);
-                if (al.size() > 1)
+                shared_ptr<Node> op = current_function->get_output_op(i);
+                shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
+                string type = tv->get_tensor_view_type()->get_element_type().c_type_string();
+                stringstream ss;
+                ss << "((" << type << "*)(outputs[" << i << "]))";
+                m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
+
+                //it should be safe to assign both descriptors to one output*
+                //since needs_copy == false makes `op::Result` an nop
+                auto res = std::dynamic_pointer_cast<ngraph::op::Result>(op);
+                if (!res->needs_copy())
                 {
-                    aliases.push_back(output_index);
+                    shared_ptr<descriptor::TensorView> itv =
+                        res->get_inputs().at(0).get_output().get_tensor_view();
+                    m_variable_name_map[itv->get_tensor().get_name()] = ss.str();
                 }
-                output_index++;
             }
+            // // create output alias map
+            // size_t output_index = 0;
+            // std::unordered_map<descriptor::TensorView*, std::vector<size_t>> output_alias_map;
+            // std::vector<size_t> aliases;
+            // for (size_t i = 0; i < current_function->get_output_size(); ++i)
+            // {
+            //     std::shared_ptr<Node> op = current_function->get_output_op(i);
+            //     std::shared_ptr<descriptor::TensorView> otv = op->get_output_tensor_view();
+            //     std::vector<size_t>& al = output_alias_map[otv.get()];
+            //     al.push_back(output_index);
+            //     if (al.size() > 1)
+            //     {
+            //         aliases.push_back(output_index);
+            //     }
+            //     output_index++;
+            // }
 
             // Add outputs to the variable name map
-            output_index = 0;
-            for (size_t i = 0; i < current_function->get_output_size(); ++i)
-            {
-                std::shared_ptr<Node> op = current_function->get_output_op(i);
-                std::shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
-                const element::Type& et = tv->get_tensor_view_type()->get_element_type();
-                bool parameter_as_output = false;
-                for (std::shared_ptr<ngraph::op::Parameter> param : current_function->get_parameters())
-                {
-                    for (const descriptor::Output& pout : param->get_outputs())
-                    {
-                        std::shared_ptr<descriptor::TensorView> ptv = pout.get_tensor_view();
-                        if (tv == ptv)
-                        {
-                            parameter_as_output = true;
-                            m_writer << "ngraph::runtime::gpu::cuda_memcpyDtD(reinterpret_cast<"
-                                    << et.c_type_string() << "*>(outputs[" << output_index << "]), "
-                                    << m_variable_name_map[ptv->get_tensor().get_name()] << ", "
-                                    << ptv->get_tensor().size() << ");\n";
-                            break;
-                        }
-                    }
-                }
-                if (!parameter_as_output && !contains(aliases, output_index))
-                {
-                    if (contains(constants, tv.get()))
-                    {
-                        m_writer << "ngraph::runtime::gpu::cuda_memcpyHtD(outputs[" << output_index
-                                << "], " << tv->get_tensor().get_name() << ", "
-                                << tv->get_tensor().size() << ");\n";
-                    }
-                    else
-                    {
-                        std::string type = et.c_type_string();
-                        stringstream ss;
-                        ss << "((" << type << "*)(outputs[" << output_index << "]))";
-                        m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
-                    }
-                }
-                output_index++;
-            }
+            // output_index = 0;
+            // for (size_t i = 0; i < current_function->get_output_size(); ++i)
+            // {
+            //     std::shared_ptr<Node> op = current_function->get_output_op(i);
+            //     std::shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
+            //     const element::Type& et = tv->get_tensor_view_type()->get_element_type();
+            //     bool parameter_as_output = false;
+            //     for (std::shared_ptr<ngraph::op::Parameter> param : current_function->get_parameters())
+            //     {
+            //         for (const descriptor::Output& pout : param->get_outputs())
+            //         {
+            //             std::shared_ptr<descriptor::TensorView> ptv = pout.get_tensor_view();
+            //             if (tv == ptv)
+            //             {
+            //                 parameter_as_output = true;
+            //                 m_writer << "ngraph::runtime::gpu::cuda_memcpyDtD(reinterpret_cast<"
+            //                         << et.c_type_string() << "*>(outputs[" << output_index << "]), "
+            //                         << m_variable_name_map[ptv->get_tensor().get_name()] << ", "
+            //                         << ptv->get_tensor().size() << ");\n";
+            //                 break;
+            //             }
+            //         }
+            //     }
+            //     if (!parameter_as_output && !contains(aliases, output_index))
+            //     {
+            //         if (contains(constants, tv.get()))
+            //         {
+            //             m_writer << "ngraph::runtime::gpu::cuda_memcpyHtD(outputs[" << output_index
+            //                     << "], " << tv->get_tensor().get_name() << ", "
+            //                     << tv->get_tensor().size() << ");\n";
+            //         }
+            //         else
+            //         {
+            //             std::string type = et.c_type_string();
+            //             stringstream ss;
+            //             ss << "((" << type << "*)(outputs[" << output_index << "]))";
+            //             m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
+            //         }
+            //     }
+            //     output_index++;
+            // }
 
             for (std::shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
             {
