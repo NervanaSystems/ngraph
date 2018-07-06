@@ -399,7 +399,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_declare_constants()
         }
     }
     m_writer << "\nstatic bool is_constant_mem_ptr_null = true;\n\n";
-    m_writer << "static void invoke_constant_mem_ptr()\n";
+    m_writer << "static void invoke_constant_mem_ptr(gpu::GPURuntimeContext* ctx)\n";
     m_writer.block_begin();
     {
         m_writer << "if(is_constant_mem_ptr_null)\n";
@@ -558,7 +558,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
         m_writer.block_begin();
         {
             //set constant pointers during the first run
-            m_writer << "invoke_constant_mem_ptr();\n";
+            m_writer << "invoke_constant_mem_ptr(ctx);\n";
 
             //alocate temp memory pool
             emit_allocate_temp_mem_pool(current_function);
