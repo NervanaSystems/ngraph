@@ -16,11 +16,10 @@
 
 set (SRC
     nbench.cpp
-    ${PROJECT_SOURCE_DIR}/test/util/benchmark.cpp
+    benchmark.cpp
 )
 
 add_executable(nbench ${SRC})
-add_dependencies(nbench ngraph)
 
 target_link_libraries(nbench ngraph)
 if (NGRAPH_CPU_ENABLE)
@@ -35,7 +34,5 @@ endif()
 if (NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(nbench interpreter_backend)
 endif()
-
-include_directories("${PROJECT_SOURCE_DIR}/test")
 
 install(TARGETS nbench RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN})
