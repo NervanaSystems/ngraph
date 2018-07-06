@@ -124,12 +124,8 @@ namespace ngraph
             friend op::Label; //TODO: refine to match_class
 
         protected:
-            size_t add_node(std::shared_ptr<Node> node)
-            {
-                m_matched_list.push_back(node);
-                return m_matched_list.size() - 1;
-            }
-            bool adjust_list(size_t watermark, bool matched)
+            void add_node(std::shared_ptr<Node> node) { m_matched_list.push_back(node); }
+            bool abort_match(size_t watermark, bool matched)
             {
                 if (!matched)
                 {

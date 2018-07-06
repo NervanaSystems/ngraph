@@ -122,7 +122,8 @@ namespace ngraph
                 throw ngraph_error("pattern_node or graph_node shouldn't be nullptrs!");
             }
 
-            size_t watermark = add_node(graph_node);
+            add_node(graph_node);
+            size_t watermark = m_matched_list.size() - 1;
 
             NGRAPH_DEBUG << pad(2 * m_depth) << "[MATCHER] in match_node : "
                          << "pattern = " << pattern_node->get_name() << " matched "
@@ -130,18 +131,18 @@ namespace ngraph
 
             if (auto label_node = std::dynamic_pointer_cast<op::Label>(pattern_node))
             {
-                return adjust_list(watermark, match_pattern(label_node, graph_node, pattern_map));
+                return abort_match(watermark, match_pattern(label_node, graph_node, pattern_map));
             }
 
             if (auto skip_node = std::dynamic_pointer_cast<op::Skip>(
                     pattern_node)) //matches PatternSkipOp semantics
             {
-                return adjust_list(watermark, match_skip(skip_node, graph_node, pattern_map));
+                return abort_match(watermark, match_skip(skip_node, graph_node, pattern_map));
             }
 
             if (auto any_node = std::dynamic_pointer_cast<op::Any>(pattern_node))
             {
-                return adjust_list(watermark, match_any(any_node, graph_node, pattern_map));
+                return abort_match(watermark, match_any(any_node, graph_node, pattern_map));
             }
 
             auto p_pattern_node = pattern_node.get();
@@ -149,11 +150,11 @@ namespace ngraph
 
             if (std::type_index(typeid(*p_pattern_node)) == std::type_index(typeid(*p_graph_node)))
             {
-                return adjust_list(watermark,
+                return abort_match(watermark,
                                    match_arguments(pattern_node, graph_node, pattern_map));
             }
 
-            return adjust_list(watermark, false);
+            return abort_match(watermark, false);
         }
 
         bool Matcher::match_permutation(const NodeVector& pattern_args,
