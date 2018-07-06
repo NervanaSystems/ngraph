@@ -136,7 +136,7 @@ string ngraph::runtime::cpu::kernel::start_index_loop(const string& index_var,
     }
     if (simd)
     {
-        ss << "#pragma omp simd reduction(+: dest_nd1[i2][i3])\n";
+        ss << "#pragma omp simd private(i2,i3) reduction(+: dest_nd1[i2][i3])\n";
     }
 
     ss << "for(size_t " << index_var << " = " << start << "; " << index_var << " < " << end << "; "

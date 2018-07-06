@@ -359,7 +359,8 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
             if (i == arg0_shape.size()-2)
             {
                 string index_var = index_vars[i];
-                writer << start_index_loop(index_var, 0, arg0_shape[i], true, false);
+                writer << "#pragma omp parallel for private(i2)\n";
+                writer << start_index_loop(index_var, 0, arg0_shape[i], false, false);
                 writer.indent++;
             }
             else if (i == arg0_shape.size()-1)

@@ -162,7 +162,7 @@ void codegen::StaticCompiler::initialize()
     // Prepare DiagnosticEngine
     IntrusiveRefCntPtr<DiagnosticOptions> diag_options = new DiagnosticOptions();
     diag_options->ErrorLimit = 20;
-    diag_options->ShowCarets = false;
+    diag_options->ShowCarets = true;
     diag_options->ShowFixits = false;
     IntrusiveRefCntPtr<DiagnosticIDs> diag_id(new DiagnosticIDs());
     // create a diagnosetic buffer for errors caused by argument parsing
