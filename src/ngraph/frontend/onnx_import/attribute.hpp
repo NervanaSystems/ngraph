@@ -20,8 +20,8 @@
 #include "onnx.pb.h"
 #include "tensor.hpp"
 
-#define likely(__x)         __builtin_expect(!!(__x), 1)
-#define unlikely(__x)       __builtin_expect(!!(__x), 0)
+#define likely(__x) __builtin_expect(!!(__x), 1)
+#define unlikely(__x) __builtin_expect(!!(__x), 0)
 
 namespace ngraph
 {
@@ -50,7 +50,7 @@ namespace ngraph
                 struct InvalidData : detail::Attribute
                 {
                     explicit InvalidData(onnx::AttributeProto_AttributeType type)
-                        : Attribute{ "invalid attribute type", type }
+                        : Attribute{"invalid attribute type", type}
                     {
                     }
                 };
@@ -58,7 +58,7 @@ namespace ngraph
                 struct UnsupportedType : detail::Attribute
                 {
                     explicit UnsupportedType(onnx::AttributeProto_AttributeType type)
-                        : Attribute{ "unsupported attribute type", type }
+                        : Attribute{"unsupported attribute type", type}
                     {
                     }
                 };
@@ -74,7 +74,7 @@ namespace ngraph
                 template <typename T>
                 inline T get_value(const onnx::AttributeProto& attribute)
                 {
-                    throw error::attribute::UnsupportedType{ attribute.type() };
+                    throw error::attribute::UnsupportedType{attribute.type()};
                 }
 
                 template <>
@@ -82,7 +82,7 @@ namespace ngraph
                 {
                     if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_FLOAT))
                     {
-                        throw error::attribute::InvalidData{ attribute.type() };
+                        throw error::attribute::InvalidData{attribute.type()};
                     }
                     return attribute.f();
                 }
@@ -92,12 +92,10 @@ namespace ngraph
                 {
                     switch (attribute.type())
                     {
-                        case onnx::AttributeProto_AttributeType_FLOAT:
-                            return { attribute.f() };
-                        case onnx::AttributeProto_AttributeType_FLOATS:
-                            return { std::begin(attribute.floats()), std::end(attribute.floats()) };
-                        default:
-                            throw error::attribute::InvalidData{ attribute.type() };
+                    case onnx::AttributeProto_AttributeType_FLOAT: return {attribute.f()};
+                    case onnx::AttributeProto_AttributeType_FLOATS:
+                        return {std::begin(attribute.floats()), std::end(attribute.floats())};
+                    default: throw error::attribute::InvalidData{attribute.type()};
                     }
                 }
 
@@ -106,7 +104,7 @@ namespace ngraph
                 {
                     if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_FLOAT))
                     {
-                        throw error::attribute::InvalidData{ attribute.type() };
+                        throw error::attribute::InvalidData{attribute.type()};
                     }
                     return attribute.f();
                 }
@@ -116,12 +114,10 @@ namespace ngraph
                 {
                     switch (attribute.type())
                     {
-                        case onnx::AttributeProto_AttributeType_FLOAT:
-                            return { attribute.f() };
-                        case onnx::AttributeProto_AttributeType_FLOATS:
-                            return { std::begin(attribute.floats()), std::end(attribute.floats()) };
-                        default:
-                            throw error::attribute::InvalidData{ attribute.type() };
+                    case onnx::AttributeProto_AttributeType_FLOAT: return {attribute.f()};
+                    case onnx::AttributeProto_AttributeType_FLOATS:
+                        return {std::begin(attribute.floats()), std::end(attribute.floats())};
+                    default: throw error::attribute::InvalidData{attribute.type()};
                     }
                 }
 
@@ -130,7 +126,7 @@ namespace ngraph
                 {
                     if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_INT))
                     {
-                        throw error::attribute::InvalidData{ attribute.type() };
+                        throw error::attribute::InvalidData{attribute.type()};
                     }
                     return static_cast<std::size_t>(attribute.i());
                 }
@@ -140,12 +136,11 @@ namespace ngraph
                 {
                     switch (attribute.type())
                     {
-                        case onnx::AttributeProto_AttributeType_INT:
-                            return { static_cast<std::size_t>(attribute.i()) };
-                        case onnx::AttributeProto_AttributeType_INTS:
-                            return { std::begin(attribute.ints()), std::end(attribute.ints()) };
-                        default:
-                            throw error::attribute::InvalidData{ attribute.type() };
+                    case onnx::AttributeProto_AttributeType_INT:
+                        return {static_cast<std::size_t>(attribute.i())};
+                    case onnx::AttributeProto_AttributeType_INTS:
+                        return {std::begin(attribute.ints()), std::end(attribute.ints())};
+                    default: throw error::attribute::InvalidData{attribute.type()};
                     }
                 }
 
@@ -154,7 +149,7 @@ namespace ngraph
                 {
                     if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_INT))
                     {
-                        throw error::attribute::InvalidData{ attribute.type() };
+                        throw error::attribute::InvalidData{attribute.type()};
                     }
                     return attribute.i();
                 }
@@ -164,12 +159,10 @@ namespace ngraph
                 {
                     switch (attribute.type())
                     {
-                        case onnx::AttributeProto_AttributeType_INT:
-                            return { attribute.i() };
-                        case onnx::AttributeProto_AttributeType_INTS:
-                            return { std::begin(attribute.ints()), std::end(attribute.ints()) };
-                        default:
-                            throw error::attribute::InvalidData{ attribute.type() };
+                    case onnx::AttributeProto_AttributeType_INT: return {attribute.i()};
+                    case onnx::AttributeProto_AttributeType_INTS:
+                        return {std::begin(attribute.ints()), std::end(attribute.ints())};
+                    default: throw error::attribute::InvalidData{attribute.type()};
                     }
                 }
 
@@ -178,7 +171,7 @@ namespace ngraph
                 {
                     if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_STRING))
                     {
-                        throw error::attribute::InvalidData{ attribute.type() };
+                        throw error::attribute::InvalidData{attribute.type()};
                     }
                     return attribute.s();
                 }
@@ -188,12 +181,10 @@ namespace ngraph
                 {
                     switch (attribute.type())
                     {
-                        case onnx::AttributeProto_AttributeType_STRING:
-                            return { attribute.s() };
-                        case onnx::AttributeProto_AttributeType_STRINGS:
-                            return { std::begin(attribute.strings()), std::end(attribute.strings()) };
-                        default:
-                            throw error::attribute::InvalidData{ attribute.type() };
+                    case onnx::AttributeProto_AttributeType_STRING: return {attribute.s()};
+                    case onnx::AttributeProto_AttributeType_STRINGS:
+                        return {std::begin(attribute.strings()), std::end(attribute.strings())};
+                    default: throw error::attribute::InvalidData{attribute.type()};
                     }
                 }
 
@@ -202,9 +193,9 @@ namespace ngraph
                 {
                     if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_TENSOR))
                     {
-                        throw error::attribute::InvalidData{ attribute.type() };
+                        throw error::attribute::InvalidData{attribute.type()};
                     }
-                    return Tensor{ attribute.t() };
+                    return Tensor{attribute.t()};
                 }
 
                 template <>
@@ -212,12 +203,10 @@ namespace ngraph
                 {
                     switch (attribute.type())
                     {
-                        case onnx::AttributeProto_AttributeType_TENSOR:
-                            return { Tensor{ attribute.t() } };
-                        case onnx::AttributeProto_AttributeType_TENSORS:
-                            return { std::begin(attribute.tensors()), std::end(attribute.tensors()) };
-                        default:
-                            throw error::attribute::InvalidData{ attribute.type() };
+                    case onnx::AttributeProto_AttributeType_TENSOR: return {Tensor{attribute.t()}};
+                    case onnx::AttributeProto_AttributeType_TENSORS:
+                        return {std::begin(attribute.tensors()), std::end(attribute.tensors())};
+                    default: throw error::attribute::InvalidData{attribute.type()};
                     }
                 }
 

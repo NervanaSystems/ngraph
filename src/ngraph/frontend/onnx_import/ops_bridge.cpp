@@ -43,7 +43,7 @@ namespace ngraph
             NodeVector add(const Node& node) { return op::add(node); }
             NodeVector constant(const Node& node)
             {
-               return { op::constant(node.get_attribute_value<Tensor>("value")) };
+                return {op::constant(node.get_attribute_value<Tensor>("value"))};
             }
 
             class ops_bridge

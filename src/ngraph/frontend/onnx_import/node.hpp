@@ -35,11 +35,10 @@ namespace ngraph
         {
             namespace node
             {
-
                 struct UnknownAttribute : ngraph_error
                 {
                     explicit UnknownAttribute(const std::string& node, const std::string& name)
-                        : ngraph_error{ "Node (" + node + "): unknown attribute \'" + name + "\'" }
+                        : ngraph_error{"Node (" + node + "): unknown attribute \'" + name + "\'"}
                     {
                     }
                 };
@@ -56,9 +55,9 @@ namespace ngraph
         public:
             Node() = delete;
             Node(const onnx::NodeProto& node_proto, const Graph* graph)
-                : m_node_proto{ node_proto }
-                , m_graph{ graph }
-                , m_attributes{ std::begin(node_proto.attribute()), std::end(node_proto.attribute()) }
+                : m_node_proto{node_proto}
+                , m_graph{graph}
+                , m_attributes{std::begin(node_proto.attribute()), std::end(node_proto.attribute())}
             {
             }
 
@@ -75,14 +74,13 @@ namespace ngraph
             const std::string& op_type() const { return m_node_proto.op_type(); }
             const std::string& get_name() const { return m_node_proto.name(); }
             const std::string& output(int index) const { return m_node_proto.output(index); }
-
             template <typename T>
             T get_attribute_value(const std::string& name, T default_value) const
             {
-                auto it{ std::find_if(std::begin(m_attributes), std::end(m_attributes),
-                                      [&](const Attribute& attribute) {
-                                          return attribute.get_name() == name;
-                                      }) };
+                auto it{std::find_if(
+                    std::begin(m_attributes),
+                    std::end(m_attributes),
+                    [&](const Attribute& attribute) { return attribute.get_name() == name; })};
                 if (it == std::end(m_attributes))
                 {
                     return default_value;
@@ -93,13 +91,13 @@ namespace ngraph
             template <typename T>
             T get_attribute_value(const std::string& name) const
             {
-                auto it{ std::find_if(std::begin(m_attributes), std::end(m_attributes),
-                                      [&](const Attribute& attribute) {
-                                          return attribute.get_name() == name;
-                                      }) };
+                auto it{std::find_if(
+                    std::begin(m_attributes),
+                    std::end(m_attributes),
+                    [&](const Attribute& attribute) { return attribute.get_name() == name; })};
                 if (it == std::end(m_attributes))
                 {
-                    throw error::node::UnknownAttribute{ get_name(), name };
+                    throw error::node::UnknownAttribute{get_name(), name};
                 }
                 return it->template get_value<T>();
             }
