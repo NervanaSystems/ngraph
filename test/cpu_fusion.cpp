@@ -33,9 +33,11 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
+#include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
@@ -46,6 +48,7 @@
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/op/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
+#include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
@@ -54,7 +57,6 @@
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
-#include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_concat_inputs.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
@@ -678,8 +680,8 @@ TEST(cpu_fusion, conv_bias_bprop)
     auto data_batch = std::make_shared<op::Parameter>(element::f32, shape);
     auto filters = std::make_shared<op::Parameter>(element::f32, shape);
     auto delta = std::make_shared<op::Parameter>(element::f32, shape);
-    auto bias = make_shared<op::Parameter>(element::f32, Shape{});
-    auto pbroadcast = std::make_shared<op::Broadcast>(bias, shape, AxisSet{0, 1, 2, 3});
+    auto bias = make_shared<op::Parameter>(element::f32, Shape{shape[0]});
+    auto pbroadcast = std::make_shared<op::Broadcast>(bias, shape, AxisSet{1, 2, 3});
     auto conv = std::make_shared<op::Convolution>(data_batch, filters);
     auto conv_bias = std::make_shared<op::Add>(conv, pbroadcast);
 
@@ -700,97 +702,6 @@ TEST(cpu_fusion, conv_bias_bprop)
     pass_manager.run_passes(df);
     size_t ccg = count_ops_of_type<op::ConvolutionBiasBackpropFiltersBias>(df);
     ASSERT_EQ(ccg, 1);
-}
-
-TEST(cpu_fusion, sigmoid_fprop_fusion)
-{
-    pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
-        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Graph_fprop_sigmoid.json");
-    const string json_string = file_util::read_file_to_string(json_path);
-    stringstream ss(json_string);
-    shared_ptr<Function> func = ngraph::deserialize(ss);
-    pass_manager.run_passes(func);
-    size_t ccg = count_ops_of_type<op::Sigmoid>(func);
-    ASSERT_EQ(ccg, 1);
-}
-
-TEST(cpu_fusion, sigmoid_n1c1h2w2)
-{
-    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
-    auto sigmoid_node = make_shared<op::Sigmoid>(input);
-    auto func = make_shared<Function>(sigmoid_node, op::ParameterVector{input});
-
-    auto backend = runtime::Backend::create("CPU");
-
-    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, input->get_shape());
-    shared_ptr<runtime::TensorView> result =
-        backend->create_tensor(element::f32, input->get_shape());
-
-    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f};
-    copy_data(a, dataA);
-
-    backend->call(func, {result}, {a});
-    vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
-    ASSERT_TRUE(read_vector<float>(result) == expected);
-}
-
-TEST(cpu_fusion, sigmoid_n1c1h4)
-{
-    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
-    auto sigmoid_node = make_shared<op::Sigmoid>(input);
-    auto func = make_shared<Function>(sigmoid_node, op::ParameterVector{input});
-
-    auto backend = runtime::Backend::create("CPU");
-
-    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, input->get_shape());
-    shared_ptr<runtime::TensorView> result =
-        backend->create_tensor(element::f32, input->get_shape());
-
-    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f};
-    copy_data(a, dataA);
-
-    backend->call(func, {result}, {a});
-    vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
-    ASSERT_TRUE(read_vector<float>(result) == expected);
-}
-
-TEST(cpu_fusion, sigmoid_bprop_fusion)
-{
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Graph_fprop_sigmoid.json");
-    const string json_string = file_util::read_file_to_string(json_path);
-    stringstream ss(json_string);
-    shared_ptr<Function> func = ngraph::deserialize(ss);
-    auto df = autodiff::backprop_function(func);
-    auto backend = runtime::Backend::create("CPU");
-    backend->compile(df);
-    size_t ccg = count_ops_of_type<op::SigmoidBackprop>(df);
-    ASSERT_EQ(ccg, 1);
-}
-
-TEST(cpu_fusion, sigmoid_bprop_n1c1h4)
-{
-    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
-    auto delta = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
-    auto sigmoid_node = make_shared<op::SigmoidBackprop>(input, delta);
-    auto func = make_shared<Function>(sigmoid_node, op::ParameterVector{input, delta});
-    auto backend = runtime::Backend::create("CPU");
-
-    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, input->get_shape());
-    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, delta->get_shape());
-    shared_ptr<runtime::TensorView> result =
-        backend->create_tensor(element::f32, input->get_shape());
-
-    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f};
-    vector<float> dataB{1.0f, 1.0f, 1.0f, 1.0f};
-
-    copy_data(a, dataA);
-    copy_data(b, dataB);
-    backend->call(func, {result}, {a, b});
-
-    vector<float> expected{0.196612f, 0.0176627f, 0.196612f, 0.0176627f};
-    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }
 
 TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
@@ -1980,9 +1891,211 @@ TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
     }
 }
 
+struct LKGraph
+{
+    LKGraph(const NodeVector& ns, const NodeVector& ins)
+        : m_inputs(ins)
+        , m_nodes(ns)
+    {
+    }
+    NodeVector m_inputs;
+    NodeVector m_nodes;
+};
+
+class LoopKernelCollector
+{
+public:
+    LoopKernelCollector(std::shared_ptr<Function> f, size_t MIN_NODES_TO_FUSE)
+    {
+        for (auto n : f->get_ordered_ops())
+        {
+            if (is_fusible(n))
+            {
+                auto arg_from_fusible_group = collect_fusible_args(n);
+                //create a new group
+                if (!arg_from_fusible_group)
+                {
+                    m_heads.insert(std::make_pair(n, n));
+                    m_graphs.insert(std::make_pair(n, LKGraph{{n}, n->get_arguments()}));
+                    NGRAPH_DEBUG << "Created a new group for " << n->get_name();
+                    log_group(n);
+                }
+                else
+                {
+                    auto smallest_head = m_heads.at(arg_from_fusible_group);
+                    auto& lkgraph = m_graphs.at(smallest_head);
+                    lkgraph.m_nodes.push_back(n);
+                    for (auto arg : n->get_arguments())
+                    {
+                        if (is_leaf(arg))
+                        {
+                            lkgraph.m_inputs.push_back(arg);
+                        }
+                    }
+                    m_heads.insert(std::make_pair(n, smallest_head));
+                    log_group(smallest_head);
+                }
+            }
+        }
+
+        prune_graphs(MIN_NODES_TO_FUSE);
+    }
+
+    const std::vector<std::shared_ptr<runtime::cpu::op::LoopKernel>> get_loop_kernels() const
+    {
+        std::vector<std::shared_ptr<runtime::cpu::op::LoopKernel>> lks;
+        for (auto e : m_graphs)
+        {
+            auto& lkg = e.second;
+            std::unordered_set<std::shared_ptr<Node>> graph_nodes{lkg.m_nodes.begin(),
+                                                                  lkg.m_nodes.end()};
+            NodeVector member_outputs;
+
+            auto has_external_user = [&graph_nodes](std::shared_ptr<Node> u) {
+                return graph_nodes.count(u) == 0;
+            };
+
+            for (auto member : lkg.m_nodes)
+            {
+                auto member_users = member->get_users();
+                if (std::any_of(member_users.cbegin(), member_users.cend(), has_external_user))
+                {
+                    member_outputs.push_back(member);
+                }
+            }
+            auto lk = make_shared<runtime::cpu::op::LoopKernel>(
+                lkg.m_nodes, member_outputs, lkg.m_inputs);
+            lks.push_back(lk);
+        }
+        return lks;
+    }
+
+private:
+    static bool is_fusible(std::shared_ptr<Node> n)
+    {
+        return (std::dynamic_pointer_cast<op::util::BinaryElementwiseArithmetic>(n) ||
+                std::dynamic_pointer_cast<op::util::UnaryElementwiseArithmetic>(n));
+    }
+
+    bool is_leaf(std::shared_ptr<Node> src) { return src->is_parameter() || src->is_constant(); }
+    void prune_graphs(size_t MIN_NODES_TO_FUSE)
+    {
+        for (auto it = m_graphs.begin(); it != m_graphs.end();)
+        {
+            if (it->second.m_nodes.size() < MIN_NODES_TO_FUSE)
+            {
+                it = m_graphs.erase(it);
+            }
+            else
+            {
+                it++;
+            }
+        }
+    }
+
+    void log_group(std::shared_ptr<Node> head) const
+    {
+        NGRAPH_DEBUG << "Group leader : " << head->get_name() << std::endl;
+        NGRAPH_DEBUG << "Group members : " << m_graphs.at(head).m_nodes << std::endl;
+        NGRAPH_DEBUG << "Inputs: " << m_graphs.at(head).m_inputs << std::endl;
+    }
+
+    std::shared_ptr<Node> collect_fusible_args(std::shared_ptr<Node> n)
+    {
+        std::shared_ptr<Node> arg_from_fusible_group;
+        for (auto arg : n->get_arguments())
+        {
+            //an argument is fusible and a part of some group
+            NGRAPH_DEBUG << "Considering " << arg->get_name();
+            if (m_heads.count(arg) != 0)
+            {
+                if (!arg_from_fusible_group)
+                {
+                    arg_from_fusible_group = arg;
+                }
+                else
+                {
+                    if (!is_leaf(arg) && m_heads.at(arg) != m_heads.at(arg_from_fusible_group))
+                    {
+                        return {nullptr};
+                    }
+                }
+            }
+        }
+        return arg_from_fusible_group;
+    }
+
+    std::unordered_map<std::shared_ptr<Node>, LKGraph> m_graphs;
+    std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>> m_heads;
+};
+
+TEST(cpu_fusion, graph_partition_multiple_groups_one_pruned)
+{
+    Shape shape{};
+    auto a = make_shared<op::Parameter>(element::i32, shape);
+    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto c = make_shared<op::Parameter>(element::i32, shape);
+    auto add_ab = a + b;
+    auto add_abs = std::make_shared<op::Abs>(add_ab);
+    auto abs_neg = std::make_shared<op::Negative>(add_abs);
+    auto sub_c_neg = c - abs_neg;
+
+    auto d = make_shared<op::Parameter>(element::i32, shape);
+    auto d_abs = std::make_shared<op::Abs>(d);
+    auto add_d = d_abs + add_ab;
+    auto neg_d = std::make_shared<op::Negative>(add_d);
+
+    auto mul_cd = neg_d * sub_c_neg;
+    auto f =
+        std::make_shared<Function>(ngraph::NodeVector{mul_cd}, op::ParameterVector{a, b, c, d});
+
+    const size_t MIN_NODES_TO_FUSE = 3;
+    LoopKernelCollector lkc(f, MIN_NODES_TO_FUSE);
+    const auto& kernels = lkc.get_loop_kernels();
+
+    ASSERT_EQ(kernels.size(), 1);
+    ASSERT_EQ(kernels.at(0)->get_arguments(), (NodeVector{a, b, c}));
+    ASSERT_EQ(kernels.at(0)->get_kernel_outputs(), (NodeVector{add_ab, sub_c_neg}));
+    ASSERT_EQ(kernels.at(0)->get_node_list(), (NodeVector{add_ab, add_abs, abs_neg, sub_c_neg}));
+}
+
+TEST(cpu_fusion, graph_partition_one_group)
+{
+    Shape shape{};
+    auto a = make_shared<op::Parameter>(element::i32, shape);
+    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto c = make_shared<op::Parameter>(element::i32, shape);
+    auto add_ab = a + b;
+    auto add_abs = std::make_shared<op::Abs>(add_ab);
+    auto abs_neg = std::make_shared<op::Negative>(add_abs);
+    auto sub_c_neg = c - abs_neg;
+    auto d = make_shared<op::Parameter>(element::i32, shape);
+    auto add_d = sub_c_neg + d;
+    auto abs_add_d = std::make_shared<op::Abs>(add_d);
+    auto e = make_shared<op::Parameter>(element::i32, shape);
+    auto add_e = e + abs_add_d;
+    auto neg_e = std::make_shared<op::Negative>(add_e);
+
+    auto f =
+        std::make_shared<Function>(ngraph::NodeVector{neg_e}, op::ParameterVector{a, b, c, d, e});
+    pass::Manager pass_manager;
+    pass_manager.run_passes(f);
+
+    const size_t MIN_NODES_TO_FUSE = 3;
+    LoopKernelCollector lkc(f, MIN_NODES_TO_FUSE);
+    const auto& kernels = lkc.get_loop_kernels();
+
+    ASSERT_EQ(kernels.size(), 1);
+    ASSERT_EQ(kernels.at(0)->get_arguments(), (NodeVector{a, b, c, d, e}));
+    ASSERT_EQ(kernels.at(0)->get_kernel_outputs(), (NodeVector{neg_e}));
+    ASSERT_EQ(kernels.at(0)->get_node_list(),
+              (NodeVector{add_ab, add_abs, abs_neg, sub_c_neg, add_d, abs_add_d, add_e, neg_e}));
+}
+
 TEST(cpu_fusion, sigmoid_multiply_fusion)
 {
     pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/3_lstm_cell_forward.json");
     const string json_string = file_util::read_file_to_string(json_path);
@@ -2482,5 +2595,73 @@ TEST(cpu_fusion, fuse_rnn_across_2layer_1timestep)
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(1), int_results.at(1), 1.0e-4f, 1.0e-4f));
+    }
+}
+
+static void check_bounded_relu(Shape param_shape, float constant_val)
+{
+    auto make_function = [](Shape input_shape, float alpha_val) {
+        auto relu_input = std::make_shared<op::Parameter>(element::f32, input_shape);
+        auto relu = std::make_shared<op::Relu>(relu_input);
+        auto alpha = op::Constant::create<float>(
+            element::f32, input_shape, std::vector<float>(1.0f, alpha_val));
+        auto min = std::make_shared<op::Minimum>(relu, alpha);
+        auto f = make_shared<Function>(NodeVector{min}, op::ParameterVector{relu_input});
+        return f;
+    };
+
+    auto cpu_f = make_function(param_shape, constant_val);
+    auto int_f = make_function(param_shape, constant_val);
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+
+    EXPECT_EQ(1, count_ops_of_type<op::BoundedRelu>(cpu_f));
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0), 1.0e-4f, 1.0e-4f));
+}
+
+TEST(cpu_fusion, fuse_bounded_relu_inter_vs_cpu)
+{
+    check_bounded_relu(Shape{4, 3, 2, 2}, 6.0f);
+    check_bounded_relu(Shape{4, 3}, 4.0f);
+    check_bounded_relu(Shape{4, 3, 2}, 2.0f);
+}
+
+TEST(cpu_fusion, dot_batch_forward)
+{
+    const Shape shape_a{2, 3, 2};
+    const Shape shape_b{2, 3};
+
+    auto generate_func = [&shape_a, &shape_b]() -> shared_ptr<Function> {
+        auto a = make_shared<op::Parameter>(element::f32, shape_a);
+        auto b = make_shared<op::Parameter>(element::f32, shape_b);
+        auto dot = make_shared<op::Dot>(a, b);
+        return make_shared<Function>(dot, op::ParameterVector{a, b});
+    };
+    shared_ptr<Function> cpu_func = generate_func();
+    shared_ptr<Function> int_func = generate_func();
+
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : int_func->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto int_results = execute(int_func, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_func, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }

@@ -87,6 +87,7 @@ set (SRC
     op/reverse_sequence.cpp
     op/select_and_scatter.cpp
     op/select.cpp
+    op/sigmoid.cpp
     op/sign.cpp
     op/sin.cpp
     op/sinh.cpp
@@ -143,6 +144,8 @@ set (SRC
     cpio.cpp
     )
 
+add_subdirectory(frontend)
+
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/op)
 file(GLOB OPS "${CMAKE_CURRENT_SOURCE_DIR}/op/" "${CMAKE_CURRENT_SOURCE_DIR}/op/*.hpp")
 foreach(OP ${OPS})
@@ -180,6 +183,10 @@ add_definitions("-DLIBRARY_VERSION=\"${NGRAPH_VERSION}\"")
 set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
 target_link_libraries(ngraph PUBLIC libjson)
 
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    add_dependencies(ngraph onnx_import)
+endif()
+
 if (NOT APPLE)
     set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,$ORIGIN")
 
@@ -203,6 +210,11 @@ endif()
 # Defines macro in C++ to load backend plugin
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 target_link_libraries(ngraph PUBLIC dl pthread)
+
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    target_sources(ngraph PRIVATE $<TARGET_OBJECTS:onnx_import_interface>)
+    target_link_libraries(ngraph PRIVATE onnx_import)
+endif()
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
