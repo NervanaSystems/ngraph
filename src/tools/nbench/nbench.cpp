@@ -21,15 +21,14 @@
 // sample models are under ../../test/models
 
 #include <fstream>
-#include <ngraph/file_util.hpp>
-#include <ngraph/file_util.hpp>
-#include <ngraph/pass/manager.hpp>
-#include <ngraph/pass/visualize_tree.hpp>
-#include <ngraph/runtime/backend.hpp>
-#include <ngraph/util.hpp>
 
-#include "util/benchmark.hpp"
-#include "util/test_tools.hpp"
+#include "benchmark.hpp"
+#include "ngraph/file_util.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
+#include "ngraph/runtime/backend.hpp"
+#include "ngraph/serializer.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;

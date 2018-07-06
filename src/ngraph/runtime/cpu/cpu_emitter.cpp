@@ -94,6 +94,7 @@
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
+#include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
@@ -408,7 +409,7 @@ namespace ngraph
                     n = shape_b[1];
                     ldb = std::max(1UL, k);
                 }
-                size_t ldc = max(1UL, n);
+                size_t ldc = std::max(1UL, n);
                 const size_t offset_a = m * k;
                 const size_t offset_b = k * n;
                 const size_t offset_c = m * n;
@@ -422,14 +423,7 @@ namespace ngraph
                     [&writer](const std::string& var, size_t size, size_t offset) {
                         for (size_t i = 0; i < size; ++i)
                         {
-                            if (i < size - 1)
-                            {
-                                writer << var << "+" << i * offset << ", ";
-                            }
-                            else
-                            {
-                                writer << var << "+" << i * offset;
-                            }
+                            writer << var << "+" << i * offset << ((i < size - 1) ? ", " : "");
                         }
                     };
                 writer << "cblas::Transpose transa_array[] = {" << transpose_a << "};\n";
@@ -989,6 +983,69 @@ namespace ngraph
                                << ";\n";
                         writer.block_end();
                     }
+                }
+                // Specialized handling of rank 3 tensor multiply rank 2 tensor where
+                // each of the
+                else if ((arg0_shape.size() == 3) && (arg1_shape.size() == 2) &&
+                         dot->get_reduction_axes_count() == 1 &&
+                         args[0].get_element_type() == element::f32)
+                {
+                    auto mat_a = args[0];
+                    auto mat_b = args[1];
+                    auto mat_c = out[0];
+                    const Shape& shape_a = mat_a.get_shape();
+                    const Shape& shape_b = mat_b.get_shape();
+
+                    const size_t m = shape_a[1];
+                    const size_t k = shape_a[2];
+                    const size_t n = shape_b[1];
+
+                    // this also works when mat_a is shape (1, m, k)
+                    const size_t offset_a = m * k;
+                    // we do not offset mat_b
+                    const size_t offset_b = 0;
+                    const size_t offset_c = m * n;
+
+                    const size_t group_count = 1;
+                    const size_t group_size = shape_a[0];
+                    auto populate_array =
+                        [&writer](const std::string& var, size_t size, size_t offset) {
+                            for (size_t i = 0; i < size; ++i)
+                            {
+                                writer << var << "+" << i * offset << ((i < size - 1) ? ", " : "");
+                            }
+                        };
+
+                    writer.block_begin();
+                    writer << "cblas::Transpose transa_array[] = {cblas::Transpose::None};\n";
+                    writer << "cblas::Transpose transb_array[] = {cblas::Transpose::None};\n";
+                    writer << "int64_t m_array[] = {" << m << "};\n";
+                    writer << "int64_t n_array[] = {" << n << "};\n";
+                    writer << "int64_t k_array[] = {" << k << "};\n";
+                    writer << "float alpha_array[] = {1.0f};\n";
+                    writer << "std::vector<const float*> a{";
+                    populate_array(mat_a.get_name(), group_size, offset_a);
+                    writer << "};\n";
+                    writer << "const float** a_array = &a[0];\n";
+                    writer << "int64_t lda_array[] = {" << std::max(1UL, k) << "};\n";
+                    writer << "std::vector<const float*> b{";
+                    populate_array(mat_b.get_name(), group_size, offset_b);
+                    writer << "};\n";
+                    writer << "const float** b_array = &b[0];\n";
+                    writer << "int64_t ldb_array[] = {" << std::max(1UL, n) << "};\n";
+                    writer << "float beta_array[] = {0.0f};\n";
+                    writer << "std::vector<float*> c{";
+                    populate_array(mat_c.get_name(), group_size, offset_c);
+                    writer << "};\n";
+                    writer << "float** c_array = &c[0];\n";
+                    writer << "int64_t ldc_array[] = {" << std::max(1UL, n) << "};\n";
+                    writer << "int64_t group_size[] = {" << group_size << "};\n";
+
+                    writer << "cblas_sgemm_batch(cblas::Layout::RowMajor, ";
+                    writer << "transa_array, transb_array, m_array, n_array, k_array, \n";
+                    writer << "alpha_array, a_array, lda_array, b_array, ldb_array, beta_array, \n";
+                    writer << "c_array, ldc_array, " << group_count << ", group_size);\n";
+                    writer.block_end();
                 }
                 else
                 {
@@ -4191,6 +4248,44 @@ namespace ngraph
                     writer.block_begin();
                     writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] > 0 ? "
                            << args[0].get_name() << "[i] : 0;\n";
+                    writer.block_end();
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BoundedRelu)
+            {
+                auto bounded_relu_node = static_cast<const ngraph::op::BoundedRelu*>(node);
+                float alpha = bounded_relu_node->get_alpha();
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
+
+                    size_t bounded_relu_index =
+                        mkldnn_emitter->build_bounded_relu(input_desc, result_desc, alpha);
+
+                    auto& deps = mkldnn_emitter->get_primitive_deps(bounded_relu_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(bounded_relu_index) << ");\n";
+                }
+                else
+                {
+                    writer << "#pragma omp parallel for\n";
+                    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                    writer.block_begin();
+                    writer << args[0].get_name() << "[i] = " << args[0].get_name() << "[i] > 0 ? "
+                           << args[0].get_name() << "[i] : 0;\n";
+                    writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] < "
+                           << alpha << " ? " << args[0].get_name() << "[i] : " << alpha << ";\n";
                     writer.block_end();
                 }
             }

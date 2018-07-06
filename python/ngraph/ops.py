@@ -20,10 +20,10 @@ import numpy as np
 from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Function, Node, \
     NodeVector, Shape, Strides
 
-from ngraph.impl.op import Abs, Acos, Add, Asin, Atan, AvgPool, BatchNorm, Broadcast, Ceiling, \
-    Concat, Constant, Convert, Convolution, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, \
+from ngraph.impl.op import Abs, Acos, Add, And, Asin, Atan, AvgPool, BatchNorm, Broadcast, \
+    Ceiling, Concat, Constant, Convert, Convolution, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, \
     FunctionCall, GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, Max, Maximum, MaxPool, \
-    Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Pad, Parameter, Product, Power, \
+    Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, Power, \
     Reduce, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, Sqrt, \
     Subtract, Sum, Tan, Tanh
 
@@ -393,6 +393,30 @@ def less_eq(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, s
     return LessEq(left_node, right_node)
 
 
+@binary_op
+def logical_and(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+    """Return node which perform logical and operation on input nodes element-wise.
+
+    :param left_node: The first input node providing data.
+    :param right_node: The second input node providing data.
+    :param name: The optional new name for output node.
+    :return: The node performing logical and operation on input nodes corresponding elements.
+    """
+    return And(left_node, right_node)
+
+
+@binary_op
+def logical_or(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+    """Return node which performs logical or operation on input nodes element-wise.
+
+    :param left_node: The first input node providing data.
+    :param right_node: The second input node providing data.
+    :param name: The optional new name for output node.
+    :return: The node performing logical or operation on input nodes corresponding elements.
+    """
+    return Or(left_node, right_node)
+
+
 @unary_op
 def logical_not(node, name=None):  # type: (Node, str) -> Node
     """Return node which applies logical negation to the input node elementwise."""
@@ -420,14 +444,59 @@ Node.__ge__ = greater_eq
 
 # Custom ops
 @nameable_op
-def broadcast(node, new_shape, axis=None, name=None):  # type: (Node, TensorShape, int, str) -> Node
-    """Return node which broadcasts input node values to specified shape.
+def broadcast(node, new_shape, broadcast_axes, name=None):
+    # type: (Node, TensorShape, Iterable[int], str) -> Node
+    """Create a node which broadcasts the input node's values along specified axes to a desired shape.
+
+    :param node: The node with input tensor data.
+    :param new_shape: The new shape we want to broadcast tensor to.
+    :param broadcast_axes: The axis positions (0-based) in the result that are being broadcast.
+    :param name: Optional new name for output node.
+    :return: New node with broadcast shape.
+    """
+    return Broadcast(node, Shape(new_shape), AxisSet(broadcast_axes))
+
+
+@nameable_op
+def broadcast_to(node, new_shape, axis=None, name=None):
+    # type: (Node, TensorShape, int, str) -> Node
+    """Create a node which broadcasts the input node's values to a desired shape.
+
+    `broadcast_to` will attempt to automatically determine which axes need broadcasting.
+
+    The optional `axis` parameter specifies the starting axis position (0-based) in the output
+    shape from which the current shape of the tensor matches the desired new shape.
+
+    e.g. current_shape: [4, 5], new_shape: [2, 3, 4, 5, 6], axis: 2
+
+    By using the `axis` parameter you can control which output axis to broadcast along.
+
+    Example:
+
+    >>> input_node = ng.constant([1, 2, 3])
+    >>> current_shape = [3]
+    >>> new_shape = [3, 3]
+    >>> ng.broadcast_to(input_node, new_shape, axis=1)
+    array([[1, 2, 3],
+           [1, 2, 3],
+           [1, 2, 3]])
+
+    >>> ng.broadcast_to(input_node, new_shape, axis=0)
+    array([[1, 1, 1],
+           [2, 2, 2],
+           [3, 3, 3]])
+
+    If the `axis` parameter is not specified, `broadcast_to` will attempt to match shapes,
+    assuming the current shape matches the rightmost positions of the desired new shape.
+    This behaviour is similar to NumPy's broadcasting.
+
+    i.e. default `axis = len(new_shape) - len(current_shape)`
 
     :param node: The node with input tensor data.
     :param new_shape: The new shape we want to broadcast tensor to.
     :param axis: The axis along which we perform broadcasting.
     :param name: Optional new name for output node.
-    :return: New node with broadcasted shape.
+    :return: New node with broadcast shape.
     """
     return Broadcast(node, Shape(new_shape), get_broadcast_axes(new_shape, node.shape, axis))
 

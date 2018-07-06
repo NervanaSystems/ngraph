@@ -187,5 +187,12 @@ namespace ngraph
             Strides m_data_dilation_strides;
             bool m_with_relu;
         };
+
+        namespace util
+        {
+            void validate_convbias_shapes(const Shape& data_shape,
+                                          const Shape& filters_shape,
+                                          const Shape& bias_shape);
+        }
     }
 }
