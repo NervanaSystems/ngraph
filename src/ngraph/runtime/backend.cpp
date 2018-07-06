@@ -104,7 +104,7 @@ shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
         runtime::Backend* backend = new_backend(type.c_str());
         rc = shared_ptr<runtime::Backend>(backend, [=](runtime::Backend* b) {
             delete_backend(b);
-            dlclose(handle);
+            // dlclose(handle);
         });
     }
     return rc;
