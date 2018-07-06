@@ -121,15 +121,15 @@ public:
 
 static std::string emit_string_array(const std::vector<std::string>& s, size_t max_line_length)
 {
-    stringstream ss;
-    stringstream line;
+    std::stringstream ss;
+    std::stringstream line;
     for (size_t i = 0; i < s.size(); i++)
     {
         if (i != 0)
         {
             line << ",";
         }
-        stringstream value;
+        std::stringstream value;
         value << s[i];
         std::string value_string = value.str();
         if (static_cast<size_t>(line.tellp()) + value_string.size() + 1 <= max_line_length)
@@ -515,7 +515,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_allocate_temp_mem_pool(std::shared
         {
             for (descriptor::Tensor* tensor : node->liveness_new_list)
             {
-                stringstream ss;
+                std::stringstream ss;
                 ss << "((" << tensor->get_element_type().c_type_string()
                     << "*)((char *)pool_base_ptr + " << tensor->get_pool_offset() << "))";
                 m_variable_name_map[tensor->get_name()] = ss.str();
@@ -572,7 +572,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                     std::shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_view(i);
                     const element::Type& et = tv->get_tensor_view_type()->get_element_type();
                     std::string type = et.c_type_string();
-                    stringstream ss;
+                    std::stringstream ss;
                     ss << "((" << type << "*)(inputs[" << arg_index << "]))";
                     m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
                     arg_index++;
@@ -585,7 +585,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 shared_ptr<Node> op = current_function->get_output_op(i);
                 shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
                 string type = tv->get_tensor_view_type()->get_element_type().c_type_string();
-                stringstream ss;
+                std::stringstream ss;
                 ss << "((" << type << "*)(outputs[" << i << "]))";
                 m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
 
@@ -599,65 +599,6 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                     m_variable_name_map[itv->get_tensor().get_name()] = ss.str();
                 }
             }
-            // // create output alias map
-            // size_t output_index = 0;
-            // std::unordered_map<descriptor::TensorView*, std::vector<size_t>> output_alias_map;
-            // std::vector<size_t> aliases;
-            // for (size_t i = 0; i < current_function->get_output_size(); ++i)
-            // {
-            //     std::shared_ptr<Node> op = current_function->get_output_op(i);
-            //     std::shared_ptr<descriptor::TensorView> otv = op->get_output_tensor_view();
-            //     std::vector<size_t>& al = output_alias_map[otv.get()];
-            //     al.push_back(output_index);
-            //     if (al.size() > 1)
-            //     {
-            //         aliases.push_back(output_index);
-            //     }
-            //     output_index++;
-            // }
-
-            // Add outputs to the variable name map
-            // output_index = 0;
-            // for (size_t i = 0; i < current_function->get_output_size(); ++i)
-            // {
-            //     std::shared_ptr<Node> op = current_function->get_output_op(i);
-            //     std::shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
-            //     const element::Type& et = tv->get_tensor_view_type()->get_element_type();
-            //     bool parameter_as_output = false;
-            //     for (std::shared_ptr<ngraph::op::Parameter> param : current_function->get_parameters())
-            //     {
-            //         for (const descriptor::Output& pout : param->get_outputs())
-            //         {
-            //             std::shared_ptr<descriptor::TensorView> ptv = pout.get_tensor_view();
-            //             if (tv == ptv)
-            //             {
-            //                 parameter_as_output = true;
-            //                 m_writer << "ngraph::runtime::gpu::cuda_memcpyDtD(reinterpret_cast<"
-            //                         << et.c_type_string() << "*>(outputs[" << output_index << "]), "
-            //                         << m_variable_name_map[ptv->get_tensor().get_name()] << ", "
-            //                         << ptv->get_tensor().size() << ");\n";
-            //                 break;
-            //             }
-            //         }
-            //     }
-            //     if (!parameter_as_output && !contains(aliases, output_index))
-            //     {
-            //         if (contains(constants, tv.get()))
-            //         {
-            //             m_writer << "ngraph::runtime::gpu::cuda_memcpyHtD(outputs[" << output_index
-            //                     << "], " << tv->get_tensor().get_name() << ", "
-            //                     << tv->get_tensor().size() << ");\n";
-            //         }
-            //         else
-            //         {
-            //             std::string type = et.c_type_string();
-            //             stringstream ss;
-            //             ss << "((" << type << "*)(outputs[" << output_index << "]))";
-            //             m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
-            //         }
-            //     }
-            //     output_index++;
-            // }
 
             for (std::shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
             {
@@ -807,35 +748,6 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     }
 }
 
-void runtime::gpu::GPU_ExternalFunction::handle_output_alias(
-    const Node& node,
-    const std::unordered_map<descriptor::TensorView*, std::vector<size_t>>& output_alias_map)
-{
-    for (const descriptor::Output& output : node.get_outputs())
-    {
-        std::shared_ptr<descriptor::TensorView> otv = output.get_tensor_view();
-        auto it = output_alias_map.find(otv.get());
-        if (it != output_alias_map.end())
-        {
-            const std::vector<size_t>& outputs = it->second;
-            if (outputs.size() > 1)
-            {
-                m_writer << "{    // handle output alias for previous op\n";
-                m_writer.indent++;
-                for (size_t i = 1; i < outputs.size(); i++)
-                {
-                    m_writer << "ngraph::runtime::gpu::cuda_memcpyDtD(static_cast<void*>("
-                                "outputs["
-                             << outputs[i] << "]), static_cast<void*>(outputs[" << outputs[0]
-                             << "]), " << otv->get_tensor().size() << ");\n";
-                }
-                m_writer.indent--;
-                m_writer << "}\n";
-            }
-        }
-    }
-}
-
 std::shared_ptr<ngraph::runtime::gpu::GPU_CallFrame>
     runtime::gpu::GPU_ExternalFunction::make_call_frame()
 {
@@ -938,7 +850,7 @@ std::string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& 
 
 std::string runtime::gpu::GPU_ExternalFunction::strip_comments(const std::string& s) const
 {
-    stringstream out;
+    std::stringstream out;
     for (size_t i = 0; i < s.size(); i++)
     {
         if (i < s.size() - 2)

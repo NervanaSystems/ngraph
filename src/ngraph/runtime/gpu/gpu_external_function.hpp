@@ -63,6 +63,7 @@ namespace ngraph
                 GPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                      bool release_function = true);
                 ~GPU_ExternalFunction();
+
                 std::shared_ptr<ngraph::runtime::gpu::GPU_CallFrame> make_call_frame();
                 std::unique_ptr<runtime::gpu::GPURuntimeContext>& ctx();
                 const std::unique_ptr<GPUPrimitiveEmitter>& get_primitive_emitter() const
@@ -76,44 +77,45 @@ namespace ngraph
                 EntryPoint m_compiled_function;
 
             private:
+                void collect_unique_functions();
                 void emit_header();
                 void emit_timer_functions();
                 void emit_declare_constants();
                 void emit_declare_functions();
-                void collect_unique_functions();
                 void emit_functions();
-                void store_emitted_functions(const std::string& code);
                 void emit_debug_function_entry(Node* node);
                 void emit_debug_function_exit(Node* node);
                 void emit_allocate_temp_mem_pool(std::shared_ptr<Function> current_function);
                 void emit_release_temp_mem_pool();
-                void handle_output_alias(
-                    const Node&,
-                    const std::unordered_map<descriptor::TensorView*, std::vector<size_t>>&);
                 void release_function() { m_function = nullptr; }
+                void store_emitted_functions(const std::string& code);
                 std::string emit_op_as_function(const Node& node, const std::string& function_name);
                 std::string strip_comments(const std::string& s) const;
-                std::unique_ptr<codegen::Compiler> m_compiler;
-                std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
-                bool m_emit_timing;
-                std::unordered_map<std::string, std::string> m_variable_name_map;
-                std::unordered_map<const Node*, std::string> m_node_function_map;
-                std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>> m_function_ordered_ops;
-                std::map<std::string, size_t> m_name_index_map;
-                std::shared_ptr<ngraph::Function> m_function;
-                bool m_release_function;
-                bool m_is_compiled;
-                std::string m_function_name;
 
                 codegen::CodeWriter m_writer;
                 pass::Manager m_pass_manager;
 
-                std::string m_pch_header_source;
-                bool m_temporaries_used = false;
-                cublasHandle_t m_cublas_handle;
-                cudnnHandle_t m_cudnn_handle;
+                std::unique_ptr<codegen::Compiler> m_compiler;
+                std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
                 std::unique_ptr<GPUPrimitiveEmitter> m_primitive_emitter;
                 std::unique_ptr<GPURuntimeContext> m_ctx;
+                std::shared_ptr<ngraph::Function> m_function;
+
+                std::map<std::string, size_t> m_name_index_map;
+                std::unordered_map<std::string, std::string> m_variable_name_map;
+                std::unordered_map<const Node*, std::string> m_node_function_map;
+                std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>> m_function_ordered_ops;
+
+                bool m_emit_timing = false;
+                bool m_is_compiled = false;
+                bool m_release_function = false;
+                bool m_temporaries_used = false;
+
+                std::string m_function_name;
+                std::string m_pch_header_source;
+
+                cublasHandle_t m_cublas_handle;
+                cudnnHandle_t m_cudnn_handle;
             };
         }
     }
