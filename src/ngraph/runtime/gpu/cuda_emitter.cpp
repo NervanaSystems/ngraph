@@ -205,8 +205,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
                                           0,
                                           NULL, // shared mem and stream
                                           args_list,
-                                          0));  // arguments
-            CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+                                          0)); // arguments
         }});
     }
     else // pad value provided at compile time (static)
@@ -223,8 +222,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
                                           0,
                                           NULL, // shared mem and stream
                                           args_list,
-                                          0));  // arguments
-            CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+                                          0)); // arguments
         }});
     }
 
@@ -324,8 +322,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const runtime::gpu::GPURunti
                                       0,
                                       NULL, // shared mem and stream
                                       args_list.data(),
-                                      0));  // arguments
-        CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+                                      0)); // arguments
     }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(pad_dynamic));
@@ -413,8 +410,7 @@ size_t runtime::gpu::CUDAEmitter::build_slice(const runtime::gpu::GPURuntimeCont
                                       0,
                                       NULL, // shared mem and stream
                                       args_list.data(),
-                                      0));  // arguments
-        CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+                                      0)); // arguments
     }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(kernel_runner));
@@ -496,8 +492,7 @@ size_t runtime::gpu::CUDAEmitter::build_reverse_sequence(const runtime::gpu::GPU
                                       0,
                                       NULL, // shared mem and stream
                                       args_list.data(),
-                                      0));  // arguments
-        CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+                                      0)); // arguments
     }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(kernel_runner));
@@ -559,8 +554,7 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
                                           0,
                                           NULL, // shared mem and stream
                                           args_list,
-                                          0));  // arguments
-            CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+                                          0)); // arguments
         }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(pool));
@@ -749,8 +743,6 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const GPURuntimeContext* ctx,
                                           NULL,
                                           args_list,
                                           0));
-            CUDA_SAFE_CALL(cuCtxSynchronize());
-
         }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(pool));
@@ -825,8 +817,7 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeConte
                                           0,
                                           NULL, // shared mem and stream
                                           args_list.data(),
-                                          0));  // arguments
-            CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+                                          0)); // arguments
         }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(ew));
@@ -962,7 +953,6 @@ size_t
                                       NULL,
                                       args_list.data(),
                                       0));
-        CUDA_SAFE_CALL(cuCtxSynchronize());
     }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(ew_collective));
@@ -1078,7 +1068,6 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window(const GPURuntimeContext* c
                                       args_list.data(),
                                       0)); // arguments
 
-        CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
     }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(f));
@@ -1217,7 +1206,6 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const GPURuntimeContext* c
                                           NULL,
                                           args_list,
                                           0));
-            CUDA_SAFE_CALL(cuCtxSynchronize());
         }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(replace_slice));
@@ -1329,7 +1317,6 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const GPURuntimeContext* ctx,
                                       NULL,
                                       args_list,
                                       0));
-        CUDA_SAFE_CALL(cuCtxSynchronize());
     }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(broadcast));
@@ -1414,7 +1401,6 @@ size_t runtime::gpu::CUDAEmitter::build_reshape(const GPURuntimeContext* ctx,
                                       NULL,
                                       args_list,
                                       0));
-        CUDA_SAFE_CALL(cuCtxSynchronize());
     }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(reshape));
@@ -1667,7 +1653,6 @@ size_t runtime::gpu::CUDAEmitter::build_convolution(const GPURuntimeContext* ctx
                                       NULL,
                                       args_list,
                                       0));
-        CUDA_SAFE_CALL(cuCtxSynchronize());
     }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(conv));

@@ -115,45 +115,23 @@ namespace ngraph
             }
 
             class stopwatch
-                {
-                public:
-                    void start()
-                    {
-                        if (m_active == false)
-                        {
-                            m_total_count++;
-                            m_active = true;
-                            cudaEvent_t start;
-                            cudaEventCreate(&start);
-                            cudaEventRecord(start);
-                            starts.push_back(start);
-                        }
-                    }
+            {
+            public:
+                void start();
+                void stop();
+                size_t get_call_count();
+                size_t get_total_seconds();
+                size_t get_total_milliseconds();
+                size_t get_total_microseconds();
+                size_t get_total_nanoseconds();
 
-                    void stop()
-                    {
-                        if (m_active == true)
-                        {
-                            cudaEvent_t stop;
-                            cudaEventCreate(&stop);
-                            cudaEventRecord(stop);
-                            stops.push_back(stop)
-                            m_active = false;
-                        }
-                    }
-
-                    size_t get_total_seconds() const;
-                    size_t get_total_milliseconds() const;
-                    size_t get_total_microseconds() const;
-                    size_t get_total_nanoseconds() const;
-
-                private:
-                    std::vector<cudaEvent_t> starts;
-                    std::vector<cudaEvent_t> stops;
-                    size_t m_total_count = 0;
-                    size_t m_total_time_in_ns;
-                };
-
+            private:
+                std::vector<cudaEvent_t> starts;
+                std::vector<cudaEvent_t> stops;
+                size_t m_total_count = 0;
+                size_t m_total_time_in_ns;
+                bool m_active = false;
+            };
         }
     }
 }
