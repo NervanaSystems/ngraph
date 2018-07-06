@@ -75,10 +75,10 @@ def as_elementwise_compatible_nodes(*input_values):  # type: (*NodeInput) -> Lis
     output_nodes = []
     for input_value in input_values:
         if issubclass(type(input_value), Node):
-            input_value = ng.broadcast(input_value, broadcast_shape)
+            input_value = ng.broadcast_to(input_value, broadcast_shape)
             output_nodes.append(input_value)
         else:
             input_value = make_constant_node(input_value, dtype=broadcast_dtype)
-            output_nodes.append(ng.broadcast(input_value, broadcast_shape))
+            output_nodes.append(ng.broadcast_to(input_value, broadcast_shape))
 
     return output_nodes

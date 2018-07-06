@@ -42,6 +42,12 @@ namespace ngraph
                 GPUAllocator(const GPUAllocator& g);
 
                 ~GPUAllocator();
+                template <typename T>
+                size_t reserve_argspace(const T& container)
+                {
+                    return reserve_argspace(container.data(),
+                                            container.size() * sizeof(typename T::value_type));
+                }
                 size_t reserve_argspace(const void* data, size_t size);
                 size_t reserve_workspace(size_t size, bool zero_initialize = true);
 

@@ -30,6 +30,7 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Cos(m_op);
     regclass_pyngraph_op_Cosh(m_op);
     regclass_pyngraph_op_Add(m_op);
+    regclass_pyngraph_op_And(m_op);
     regclass_pyngraph_op_Broadcast(m_op);
     regclass_pyngraph_op_Ceiling(m_op);
     regclass_pyngraph_op_Concat(m_op);
@@ -62,6 +63,7 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Power(m_op);
     regclass_pyngraph_op_OneHot(m_op);
     // regclass_pyngraph_op_Op(m_op);
+    regclass_pyngraph_op_Or(m_op);
     regclass_pyngraph_op_Reduce(m_op);
     regclass_pyngraph_op_ReplaceSlice(m_op);
     regclass_pyngraph_op_Reshape(m_op);

@@ -25,6 +25,20 @@ namespace ngraph
             /// \brief Abstract base class for annotations added to graph ops
             class OpAnnotations
             {
+            public:
+                void set_in_place_oi_pairs(const std::map<size_t, size_t>& oi_pairs)
+                {
+                    m_in_place_oi_pairs = oi_pairs;
+                }
+
+                const std::map<size_t, size_t>& get_in_place_oi_pairs() const
+                {
+                    return m_in_place_oi_pairs;
+                }
+
+            private:
+                //map of output-input pairs for which in-place computation is valid
+                std::map<size_t, size_t> m_in_place_oi_pairs;
             };
         }
     }
