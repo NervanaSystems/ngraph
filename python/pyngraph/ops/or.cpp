@@ -14,21 +14,21 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "pyngraph/ops/util/regmodule_pyngraph_op_util.hpp"
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+#include "ngraph/op/or.hpp" // ngraph::op::Or
+#include "pyngraph/ops/or.hpp"
 
 namespace py = pybind11;
 
-void regmodule_pyngraph_op_util(py::module m)
+void regclass_pyngraph_op_Or(py::module m)
 {
-    py::module m_util = m.def_submodule("util", "module pyngraph.op.util");
-    regclass_pyngraph_op_util_RequiresTensorViewArgs(m_util);
-    regclass_pyngraph_op_util_OpAnnotations(m_util);
-    regclass_pyngraph_op_util_ArithmeticReduction(m_util);
-    regclass_pyngraph_op_util_BinaryElementwise(m_util);
-    regclass_pyngraph_op_util_BinaryElementwiseArithmetic(m_util);
-    regclass_pyngraph_op_util_BinaryElementwiseComparison(m_util);
-    regclass_pyngraph_op_util_BinaryElementwiseLogical(m_util);
-    regclass_pyngraph_op_util_UnaryElementwise(m_util);
-    regclass_pyngraph_op_util_UnaryElementwiseArithmetic(m_util);
+    py::class_<ngraph::op::Or,
+               std::shared_ptr<ngraph::op::Or>,
+               ngraph::op::util::BinaryElementwiseLogical>
+        logical_or(m, "Or");
+    logical_or.doc() = "ngraph.impl.op.Or wraps ngraph::op::Or";
+    logical_or.def(
+        py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
 }
