@@ -95,6 +95,7 @@ Not currently a comprehensive list.
    power.rst
    product.rst
    relu.rst
+   sigmoid.rst
    softmax.rst
 
    
