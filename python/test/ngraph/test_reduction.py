@@ -18,7 +18,6 @@ import pytest
 
 import ngraph as ng
 from test.ngraph.util import run_op_node
-from ngraph.impl import Function, NodeVector, Shape
 from ngraph.utils.types import get_element_type
 
 
