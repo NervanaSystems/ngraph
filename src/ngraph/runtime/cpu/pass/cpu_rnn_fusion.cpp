@@ -818,7 +818,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                     node_to_replace = rnn_ct->get_users()[0];
                 }
             }
-            if (ngraph::is_used(node_to_replace))
+            if (ngraph::is_used(node_to_replace.get()))
             {
                 ngraph::replace_node(node_to_replace, ct_slice);
             }

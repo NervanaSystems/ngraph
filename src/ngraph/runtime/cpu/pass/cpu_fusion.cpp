@@ -1157,8 +1157,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
 
         if (get_user_count(conv_m.get()) > 1)
         {
-            std::cout << "Convolution has more than one user: " << get_user_count(conv_m.get())
-                      << std::endl;
             NGRAPH_DEBUG << "Convolution has more than one user";
             return false;
         }

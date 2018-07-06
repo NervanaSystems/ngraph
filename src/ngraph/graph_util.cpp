@@ -194,7 +194,10 @@ bool ngraph::is_post_dominated(Node* X, Node* Y)
         {
             for (auto next : curr->get_users())
             {
-                stack.push_front(next.get());
+                if (visited.count(next.get()) == 0)
+                {
+                    stack.push_front(next.get());
+                }
             }
         }
     }
