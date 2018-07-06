@@ -11,8 +11,8 @@ How to
    operator.rst
    update.rst
    derive-for-training.rst
-   distribute-train.rst     
-   import.rst
+   distribute-train.rst
+   import.rst    
 
 The "How to" articles in this section explain how to do specific tasks with 
 nGraph components. The recipes are all framework agnostic; in other words, 
@@ -52,6 +52,7 @@ at a more granular level, we provide an example for how to :doc:`import` and
 run inference after it has been exported from a DL framework.    
 
 This section is under development; we'll continually populate it with more 
-articles geared toward data scientists, algorithm designers, framework 
-developers, backend engineers, and others. We welcome ideas and contributions from the community.  
+articles geared toward data scientists, algorithm designers, framework developers, 
+backend engineers, and others. We welcome ideas and contributions from the 
+community.  
 

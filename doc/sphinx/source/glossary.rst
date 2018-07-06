@@ -104,7 +104,7 @@ Glossary
       Tensors are maps from *coordinates* to scalar values, all of the
       same type, called the *element type* of the tensor.
 
-  
+   
    Tensorview 
 
       The interface backends implement for tensor use. When there are no more 
