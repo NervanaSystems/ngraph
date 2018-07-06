@@ -80,7 +80,7 @@ namespace ngraph
                     {
                         return m_map.at(node.op_type())(node);
                     }
-                    catch (const std::exception&)
+                    catch (const std::out_of_range&)
                     {
                         throw detail::error::unknown_operation{node.op_type()};
                     }
