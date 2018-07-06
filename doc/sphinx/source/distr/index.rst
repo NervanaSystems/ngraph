@@ -14,10 +14,23 @@ using one machine to train a very large neural network / model is usually not
 optimal. The use of multiple nodes, then, becomes important for making deep 
 learning training feasible with a large datasets.   
 
-Data parallelism is the most popular parallel architecture to accelerate deep learning with large datasets. The algorithm we support is based on the synchronous SGD method, and partitions the dataset among workers where each worker executes the same neural network model. For every iteration, nGraph backend computes the gradients in back-propagation, aggregates the gradients across all workers, and then update the weights. 
-How?
+Data parallelism is the most popular parallel architecture to accelerate deep 
+learning with large datasets. The algorithm we support is based on the 
+synchronous SGD method, and partitions the dataset among workers where each 
+worker executes the same neural network model. For every iteration, nGraph 
+backend computes the gradients in back-propagation, aggregates the gradients 
+across all workers, and then update the weights. 
 
-To synchronize gradients across all workers, the essential operation for data parallel training, due to its simplicity and scalability over parameter servers, is “allreduce”. The AllReduce op is one of the nGraph Library’s core ops. To enable gradient synchronization for a network, we simply inject the AllReduce op into the computation graph, connecting the graph for the autodiff computation and optimizer update (which then becomes part of the nGraph graph). The nGraph Backend will handle the rest. 
+How? (Generic frameworks)
+-------------------------
+
+To synchronize gradients across all workers, the essential operation for data 
+parallel training, due to its simplicity and scalability over parameter servers, 
+is “allreduce”. The AllReduce op is one of the nGraph Library’s core ops. To 
+enable gradient synchronization for a network, we simply inject the AllReduce op 
+into the computation graph, connecting the graph for the autodiff computation 
+and optimizer update (which then becomes part of the nGraph graph). The 
+nGraph Backend will handle the rest. 
 
 Data scientists with locally-scalable rack or cloud-based resources will likely 
 find it worthwhile to experiment with different modes or variations of  
@@ -37,6 +50,8 @@ Using multiple machines helps to scale and speed up deep learning. With large
 mini-batch training, `one could train ResNet-50 with Imagenet-1k data`_ to the 
 *Top 5* classifier in minutes using thousands of CPU nodes. See also: 
 `arxiv.org/pdf/1709.05011.pdf`_. 
+
+
 
 
 MXNet
