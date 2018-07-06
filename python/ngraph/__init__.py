@@ -45,6 +45,8 @@ from ngraph.ops import greater_eq
 from ngraph.ops import less
 from ngraph.ops import less_eq
 from ngraph.ops import log
+from ngraph.ops import logical_and
+from ngraph.ops import logical_or
 from ngraph.ops import logical_not
 from ngraph.ops import max
 from ngraph.ops import max_pool
