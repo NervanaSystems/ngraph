@@ -421,7 +421,8 @@ void runtime::gpu::GPU_ExternalFunction::emit_declare_constants()
             }
         }
         m_writer << "is_constant_mem_ptr_null = false;\n";
-        m_writer.blcok_end();
+        }
+        m_writer.block_end();
     }
     m_writer.block_end();
 }
@@ -554,7 +555,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
         m_writer << "extern \"C\" void " << current_function->get_name();
         m_writer << "(void** inputs, void** outputs, "
                  << "gpu::GPURuntimeContext* ctx)\n";
-        block_begin();
+        m_writer.block_begin();
         {
             //set constant pointers during the first run
             m_writer << "invoke_constant_mem_ptr();\n";
@@ -730,7 +731,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
             }
             emit_release_temp_mem_pool();
         }
-        block_end();// End generated function
+        m_writer.block_end();// End generated function
     }
 }
 

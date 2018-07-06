@@ -85,6 +85,8 @@ namespace ngraph
                 void store_emitted_functions(const std::string& code);
                 void emit_debug_function_entry(Node* node);
                 void emit_debug_function_exit(Node* node);
+                void emit_allocate_temp_mem_pool(std::shared_ptr<Function> current_function);
+                void emit_release_temp_mem_pool();
                 void handle_output_alias(
                     const Node&,
                     const std::unordered_map<descriptor::TensorView*, std::vector<size_t>>&);
