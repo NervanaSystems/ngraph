@@ -45,7 +45,6 @@ public:
 
     void set_cldnn_layout(const cldnn::layout& layout) { cldnn_layout = layout; }
     cldnn::layout get_cldnn_layout() const { return cldnn_layout; }
-
     static cldnn::data_types get_cldnn_type(const ngraph::element::Type& element_type);
     static cldnn::layout create_cldnn_layout(const ngraph::element::Type& element_type,
                                              const Shape& element_shape);
