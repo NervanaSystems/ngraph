@@ -1081,6 +1081,34 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_select_nested)
     }
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, backwards_sigmoid)
+{
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    test::Uniform<float> rng_neg(-1.0f, -0.01f);
+    test::Uniform<float> rng_pos(0.01f, 1.0f);
+    Shape shape{2, 3};
+    auto x0 = rng_neg.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng_pos.initialize(backend->create_tensor<float>(shape));
+
+    auto make_graph = [shape]() {
+        auto X = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Sigmoid>(X),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+    };
+
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
+    {
+        auto x_neg = rng_neg.initialize(backend->create_tensor<float>(shape));
+
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x_neg}, .01f, .01f));
+
+        auto x_pos = rng_pos.initialize(backend->create_tensor<float>(shape));
+
+        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {x_pos}, .01f, .01f));
+    }
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, backwards_sign)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");

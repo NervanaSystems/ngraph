@@ -97,7 +97,10 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
         return primitive_index;
     }
 
-    size_t nthreads = shape_size(output_shape);
+    uint32_t nthreads = static_cast<uint32_t>(shape_size(output_shape));
+    //TODO: currently we set it to 64, will add tuning method later
+    uint32_t block_size_x = 64;
+    uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
 
     // if the kernel has not been compiled, build it
     auto compiled_kernel = ctx->compiled_kernel_pool->get(hash);
@@ -193,10 +196,10 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
         pad.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
             void* args_list[] = {&inputs[1], &inputs[0], &outputs[0]};
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          static_cast<uint32_t>(nthreads),
+                                          aligned_grid_size_x,
                                           1,
                                           1, // grid dim
-                                          1,
+                                          block_size_x,
                                           1,
                                           1, // block dim
                                           0,
@@ -211,10 +214,10 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const runtime::gpu::GPURuntimeContex
         pad.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
             void* args_list[] = {&inputs[0], &outputs[0]};
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          static_cast<uint32_t>(nthreads),
+                                          aligned_grid_size_x,
                                           1,
                                           1, // grid dim
-                                          1,
+                                          block_size_x,
                                           1,
                                           1, // block dim
                                           0,
@@ -330,6 +333,95 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const runtime::gpu::GPURunti
     return primitive_index;
 }
 
+size_t runtime::gpu::CUDAEmitter::build_slice(const runtime::gpu::GPURuntimeContext* ctx,
+                                              const std::array<std::string, 2>& dtypes,
+                                              GPUShape input_shape,
+                                              GPUShape lower_bounds,
+                                              GPUShape slice_strides,
+                                              GPUShape output_shape)
+{
+    std::stringstream kernel_name;
+    kernel_name << "slice_" << join(dtypes, "_") << "_r_" << output_shape.size();
+
+    std::string hash = kernel_name.str() + "_i_" + join(input_shape, "_") + "_o_" +
+                       join(output_shape, "_") + "_lb_" + join(lower_bounds, "_") + "_ss_" +
+                       join(slice_strides, "_");
+    // For backwards compatability we currently use two unordered maps
+    // 1. one looks up the compiled cuda kernel (CudaFunctionPool)
+    // 2. the other looks to see if this kernel is already in the primitive list
+
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    // check if the kernel has already been compiled. if so, create
+    // a launch primitive for it based on the input tensor shape
+    // but do not recompile the kernel. otherwise, do it all:
+    // recompile the kernel and then create the primitive
+    auto compiled_kernel = ctx->compiled_kernel_pool->get(kernel_name.str());
+    if (compiled_kernel == nullptr)
+    {
+        codegen::CodeWriter writer;
+        CudaKernelBuilder::add_pod_typedefs(writer);
+        CudaKernelBuilder::get_slice_op(writer, kernel_name.str(), dtypes, output_shape.size());
+        compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
+    }
+
+    uint32_t nthreads = static_cast<uint32_t>(shape_size(output_shape));
+    //TODO: currently we set it to 64, will add tuning method later
+    uint32_t block_size_x = 64;
+    uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
+    GPUShape output_strides = row_major_strides(output_shape);
+    GPUShape input_strides = row_major_strides(input_shape);
+
+    // get an allocator for transient per kernel gpu memory
+    GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+    size_t idx_input_strides =
+        allocator.reserve_argspace(input_strides.data(), input_strides.size() * sizeof(uint32_t));
+    size_t idx_output_strides =
+        allocator.reserve_argspace(output_strides.data(), output_strides.size() * sizeof(uint32_t));
+    size_t idx_lower_bounds =
+        allocator.reserve_argspace(lower_bounds.data(), lower_bounds.size() * sizeof(uint32_t));
+    size_t idx_slice_strides =
+        allocator.reserve_argspace(slice_strides.data(), slice_strides.size() * sizeof(uint32_t));
+
+    // create the launch primitive
+    std::unique_ptr<gpu::primitive> kernel_runner(new gpu::primitive{[=](void** inputs,
+                                                                         void** outputs) mutable {
+        void* param_input_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_input_strides);
+        void* param_output_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_output_strides);
+        void* param_lower_bounds = runtime::gpu::invoke_memory_primitive(ctx, idx_lower_bounds);
+        void* param_slice_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_slice_strides);
+        std::vector<void*> args_list{&inputs[0],
+                                     &outputs[0],
+                                     &param_input_strides,
+                                     &param_lower_bounds,
+                                     &param_slice_strides,
+                                     &param_output_strides,
+                                     &nthreads};
+
+        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                      aligned_grid_size_x,
+                                      1,
+                                      1, // grid dim
+                                      block_size_x,
+                                      1,
+                                      1, // block dim
+                                      0,
+                                      NULL, // shared mem and stream
+                                      args_list.data(),
+                                      0));  // arguments
+        CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+    }});
+
+    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_runner));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
+
 size_t runtime::gpu::CUDAEmitter::build_reverse_sequence(const runtime::gpu::GPURuntimeContext* ctx,
                                                          const std::array<std::string, 3>& dtypes,
                                                          GPUShape input_shape0,
@@ -370,6 +462,9 @@ size_t runtime::gpu::CUDAEmitter::build_reverse_sequence(const runtime::gpu::GPU
     }
 
     uint32_t nthreads = static_cast<uint32_t>(shape_size(output_shape));
+    //TODO: currently we set it to 64, will add tuning method later
+    uint32_t block_size_x = 64;
+    uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
     GPUShape output_strides = row_major_strides(output_shape);
 
     // get an allocator for transient per kernel gpu memory
@@ -380,33 +475,32 @@ size_t runtime::gpu::CUDAEmitter::build_reverse_sequence(const runtime::gpu::GPU
         allocator.reserve_argspace(output_strides.data(), output_strides.size() * sizeof(uint32_t));
 
     // create the launch primitive
-    std::unique_ptr<gpu::primitive> reserve_sequence(
-        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-            void* param_output_shape = runtime::gpu::invoke_memory_primitive(ctx, idx_output_shape);
-            void* param_output_strides =
-                runtime::gpu::invoke_memory_primitive(ctx, idx_output_strides);
-            std::vector<void*> args_list{&inputs[0],
-                                         &inputs[1],
-                                         &outputs[0],
-                                         &param_output_shape,
-                                         &param_output_strides,
-                                         &nthreads};
+    std::unique_ptr<gpu::primitive> kernel_runner(new gpu::primitive{[=](void** inputs,
+                                                                         void** outputs) mutable {
+        void* param_output_shape = runtime::gpu::invoke_memory_primitive(ctx, idx_output_shape);
+        void* param_output_strides = runtime::gpu::invoke_memory_primitive(ctx, idx_output_strides);
+        std::vector<void*> args_list{&inputs[0],
+                                     &inputs[1],
+                                     &outputs[0],
+                                     &param_output_shape,
+                                     &param_output_strides,
+                                     &nthreads};
 
-            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          static_cast<uint32_t>(nthreads),
-                                          1,
-                                          1, // grid dim
-                                          1,
-                                          1,
-                                          1, // block dim
-                                          0,
-                                          NULL, // shared mem and stream
-                                          args_list.data(),
-                                          0));  // arguments
-            CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
-        }});
+        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                      aligned_grid_size_x,
+                                      1,
+                                      1, // grid dim
+                                      block_size_x,
+                                      1,
+                                      1, // block dim
+                                      0,
+                                      NULL, // shared mem and stream
+                                      args_list.data(),
+                                      0));  // arguments
+        CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output.
+    }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(reserve_sequence));
+    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_runner));
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }
@@ -436,6 +530,12 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
         return primitive_index;
     }
 
+    size_t nthreads = shape_size(output_shape);
+    //TODO: currently we set it to 64, will add tuning method later
+    uint32_t block_size_x = 64;
+    uint32_t aligned_grid_size_x =
+        align_to_block_size(static_cast<uint32_t>(nthreads), block_size_x);
+
     // if the kernel has not been compiled, build it
     auto compiled_kernel = ctx->compiled_kernel_pool->get(hash);
     if (compiled_kernel == nullptr)
@@ -446,16 +546,14 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
         compiled_kernel = ctx->compiled_kernel_pool->set(hash, writer.get_code());
     }
 
-    size_t nthreads = shape_size(output_shape);
-
     std::unique_ptr<gpu::primitive> pool(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
             void* args_list[] = {&inputs[0], &outputs[0], &nthreads};
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          static_cast<uint32_t>(nthreads),
+                                          aligned_grid_size_x,
                                           1,
                                           1, // grid dim
-                                          1,
+                                          block_size_x,
                                           1,
                                           1, // block dim
                                           0,
@@ -702,6 +800,10 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeConte
         compiled_kernel = ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
     size_t nthreads = shape_size(tensor_shape);
+    //TODO: currently we set it to 64, will add tuning method later
+    uint32_t block_size_x = 64;
+    uint32_t aligned_grid_size_x =
+        align_to_block_size(static_cast<uint32_t>(nthreads), block_size_x);
 
     // create the launch primitive
     std::unique_ptr<gpu::primitive> ew(
@@ -714,10 +816,10 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const GPURuntimeConte
             args_list.push_back(&outputs[0]);
             args_list.push_back(&nthreads);
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          static_cast<uint32_t>(nthreads),
+                                          aligned_grid_size_x,
                                           1,
                                           1, // grid dim
-                                          1,
+                                          block_size_x,
                                           1,
                                           1, // block dim
                                           0,
@@ -1194,6 +1296,10 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const GPURuntimeContext* ctx,
     float beta = 0.0f;
 
     int nthreads = static_cast<int>(shape_size(result_shape));
+    //TODO: currently we set it to 64, will add tuning method later
+    uint32_t block_size_x = 64;
+    uint32_t aligned_grid_size_x =
+        align_to_block_size(static_cast<uint32_t>(shape_size(result_shape)), block_size_x);
 
     std::unique_ptr<gpu::primitive> broadcast(new gpu::primitive{[=](void** inputs,
                                                                      void** outputs) mutable {
@@ -1212,8 +1318,17 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const GPURuntimeContext* ctx,
                              &beta,
                              &nthreads};
 
-        CUDA_SAFE_CALL(
-            cuLaunchKernel(*compiled_kernel.get(), nthreads, 1, 1, 1, 1, 1, 0, NULL, args_list, 0));
+        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                      aligned_grid_size_x,
+                                      1,
+                                      1,
+                                      block_size_x,
+                                      1,
+                                      1,
+                                      0,
+                                      NULL,
+                                      args_list,
+                                      0));
         CUDA_SAFE_CALL(cuCtxSynchronize());
     }});
 
@@ -1696,4 +1811,14 @@ __device__ __forceinline__ int64_t  load(const int64_t*  __restrict__ in, int i=
 }
 )";
     return ss.str();
+}
+
+uint32_t runtime::gpu::CUDAEmitter::align_to_block_size(uint32_t threads, uint32_t block_size)
+{
+    if (threads > (1u << 31) - 1)
+    {
+        throw std::runtime_error("Cuda can't handle threads > 2^31 - 1.");
+    }
+    uint32_t r = (threads + block_size - 1) / block_size;
+    return r;
 }

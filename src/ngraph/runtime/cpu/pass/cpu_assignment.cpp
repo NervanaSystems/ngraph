@@ -37,6 +37,7 @@
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
+#include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
@@ -498,8 +499,12 @@ namespace ngraph
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
-                        std::map<size_t, size_t> oi_pairs = {{0, 0}};
-                        op_annotations->set_in_place_oi_pairs(oi_pairs);
+                        if (get_user_count(node->get_argument(0).get()) == 1)
+                        {
+                            // Safe to overwrite input
+                            std::map<size_t, size_t> oi_pairs = {{0, 0}};
+                            op_annotations->set_in_place_oi_pairs(oi_pairs);
+                        }
                         relu->set_op_annotations(op_annotations);
                     }
                 }
@@ -553,17 +558,32 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Reshape)
                 {
                     auto reshape = static_cast<op::Reshape*>(node);
+                    auto arg0_shape = node->get_input_shape(0);
+                    auto result_shape = node->get_output_shape(0);
+                    auto axis_order = reshape->get_input_order();
+                    bool flag = true;
 
                     // Use Eigen for 3D
                     if (node->get_input_element_type(0) == element::f32 &&
-                        node->get_input_shape(0).size() < TENSOR_MAX_DIMS &&
-                        node->get_input_shape(0).size() > 3 &&
-                        node->get_input_shape(0).size() == node->get_output_shape(0).size())
+                        arg0_shape.size() < TENSOR_MAX_DIMS && arg0_shape.size() > 3 &&
+                        arg0_shape.size() == result_shape.size())
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        reshape->set_op_annotations(op_annotations);
+                        for (size_t i = 0; i < axis_order.size(); i++)
+                        {
+                            if (arg0_shape[axis_order[i]] != result_shape[i])
+                            {
+                                flag = false;
+                                break;
+                            }
+                        }
+
+                        if (flag)
+                        {
+                            auto op_annotations =
+                                std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                            op_annotations->set_mkldnn_op(true);
+                            reshape->set_op_annotations(op_annotations);
+                        }
                     }
                 }
 
@@ -662,6 +682,25 @@ namespace ngraph
                         softmax->set_op_annotations(op_annotations);
                     }
                 }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::BoundedRelu)
+                {
+                    auto bounded_relu = static_cast<op::BoundedRelu*>(node);
+
+                    auto arg0_shape = node->get_input_shape(0);
+                    auto arg0_rank = arg0_shape.size();
+                    auto result_shape = node->get_output_shape(0);
+
+                    if ((arg0_rank == 4 || arg0_rank == 2) &&
+                        node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        bounded_relu->set_op_annotations(op_annotations);
+                    }
+                }
             }
         }
     }
@@ -676,6 +715,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::AvgPoolBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::AvgPoolBackprop>},
     {TI(ngraph::op::BatchNorm), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::BatchNorm>},
+    {TI(ngraph::op::BoundedRelu),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::BoundedRelu>},
     {TI(ngraph::op::BatchNormBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::BatchNormBackprop>},
     {TI(ngraph::op::Convolution),

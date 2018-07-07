@@ -254,6 +254,8 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
     auto concat = std::dynamic_pointer_cast<op::Concat>(n);
     std::shared_ptr<op::Convolution> sconv;
 
+    NodeVector slices;
+
     const size_t CHANNEL = 1;
     if (concat->get_concatenation_axis() != CHANNEL)
     {
@@ -296,9 +298,21 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
         auto slice = pattern_map[slice_weights_label];
         if (weights->get_shape().at(IC) != slice->get_shape().at(IC))
         {
-            NGRAPH_DEBUG << "slices are done on the wrong axis (IC)";
-            return {nullptr};
+            slices.push_back(slice);
         }
+    }
+
+    //TF-flavoured group convolution needs channels re-arranged
+    //MKLDNN requires group slicing to be done on OC
+    //MKLDNN [4,2,-]
+    //ordering w00 w01 w10 w11 w20 w21 w30 w31 produces g00 g01 g10 g11
+    //whereas
+    //TF    [2,4,-]
+    //ordering w00 w01 w02 w03 w10 w11 w12 w13 produces g00 g10 g01 g11
+    const size_t CONCAT_AXIS_OC = 0;
+    if (!slices.empty())
+    {
+        weights = std::make_shared<op::Concat>(slices, CONCAT_AXIS_OC);
     }
 
     auto new_conv = std::make_shared<op::GroupConvolution>(data,
