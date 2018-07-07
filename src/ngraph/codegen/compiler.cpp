@@ -66,8 +66,6 @@
 
 #define USE_BUILTIN
 
-#define NGRAPH_INFO cout << __FILE__ << " " << __LINE__ << endl;
-
 using namespace clang;
 using namespace llvm;
 using namespace std;
@@ -318,9 +316,7 @@ std::unique_ptr<codegen::Module>
     CompilerInfo& compiler_info = s_compiler_info[m_precompiled_header_source];
     if (!m_precompiled_header_source.empty() && compiler_info.pch_file.empty())
     {
-        cout << "Generate PCH\n";
         compiler_info.pch_file = generate_pch(m_precompiled_header_source);
-        cout << "new pch_path " << compiler_info.pch_file << endl;
     }
     if (!compiler_info.pch_file.empty())
     {

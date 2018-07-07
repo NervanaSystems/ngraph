@@ -52,6 +52,22 @@ private:
     std::unique_ptr<llvm::Module> m_module;
 };
 
+class ngraph::codegen::Compiler
+{
+public:
+    Compiler();
+    ~Compiler();
+    void set_precompiled_header_source(const std::string& source);
+    void add_header_search_path(const std::string& path);
+    std::unique_ptr<ngraph::codegen::Module> compile(const std::string& source);
+    std::unique_ptr<clang::CodeGenAction>& get_compiler_action() { return m_compiler_action; }
+private:
+    std::unique_ptr<clang::CodeGenAction> m_compiler_action;
+    std::shared_ptr<CompilerCore> m_compiler_core;
+    std::string m_precompiled_header_source;
+    std::vector<std::string> m_header_search_paths;
+};
+
 class ngraph::codegen::CompilerCore
 {
 public:
@@ -82,20 +98,4 @@ private:
     std::string find_header_version(const std::string& path);
     void configure_search_path();
     void load_headers_from_resource();
-};
-
-class ngraph::codegen::Compiler
-{
-public:
-    Compiler();
-    ~Compiler();
-    void set_precompiled_header_source(const std::string& source);
-    void add_header_search_path(const std::string& path);
-    std::unique_ptr<ngraph::codegen::Module> compile(const std::string& source);
-    std::unique_ptr<clang::CodeGenAction>& get_compiler_action() { return m_compiler_action; }
-private:
-    std::unique_ptr<clang::CodeGenAction> m_compiler_action;
-    std::shared_ptr<CompilerCore> m_compiler_core;
-    std::string m_precompiled_header_source;
-    std::vector<std::string> m_header_search_paths;
 };
