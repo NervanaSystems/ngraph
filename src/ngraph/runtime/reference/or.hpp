@@ -24,12 +24,12 @@ namespace ngraph
     {
         namespace reference
         {
-            static inline void
-                logical_or(const char* arg0, const char* arg1, char* out, size_t count)
+            template <typename T>
+            void logical_or(const T* arg0, const T* arg1, T* out, size_t count)
             {
                 for (size_t i = 0; i < count; i++)
                 {
-                    out[i] = arg0[i] || arg1[i];
+                    out[i] = static_cast<T>(arg0[i] || arg1[i]);
                 }
             }
         }
