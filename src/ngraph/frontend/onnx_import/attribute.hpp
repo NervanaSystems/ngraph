@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <onnx.pb.h>
 #include "ngraph/except.hpp"
 #include "onnx.pb.h"
 #include "tensor.hpp"
