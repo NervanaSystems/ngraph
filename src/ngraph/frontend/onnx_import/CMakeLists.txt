@@ -27,6 +27,8 @@ add_custom_command(OUTPUT onnx.pb.cc onnx.pb.h
     DEPENDS onnx.proto)
 
 add_library(onnx_import_interface OBJECT
+    onnx.cpp
+    onnx.hpp
     onnx.pb.h
     onnx.proto)
 
