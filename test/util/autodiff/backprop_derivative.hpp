@@ -34,6 +34,7 @@ namespace ngraph
 
     static std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Function>> s_df_map;
     static std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Function>> s_clone_fwd_map;
+    static std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Function>> s_clone_bwd_map;
 
     namespace runtime
     {
@@ -200,7 +201,11 @@ namespace ngraph
             backend->call(clone_fwd, mod_f_output_args, f_input_args);
 
             // call modfied f'(c, cached) to get df/dX*
-            auto clone_bwd = clone_function(*fprop_cache.bprop);
+            if (!s_clone_bwd_map[f])
+            {
+                s_clone_bwd_map[f] = clone_function(*fprop_cache.bprop);
+            }
+            auto clone_bwd = s_clone_bwd_map[f];
             auto cache_dfdx = get_autodiff<T>(backend, clone_bwd, mod_df_input_args, indep_params);
 
             const auto numpy_atol = 1e-5f;

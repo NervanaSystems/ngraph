@@ -1063,6 +1063,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_select)
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
 
+    auto f = make_graph();
+    auto g = make_graph();
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x0 = backend->create_tensor(element::boolean, shape);
@@ -1071,7 +1073,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_select)
         auto x2 = rng.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(autodiff_numeric_compare_selective<float>(
-            backend, make_graph, {x0, x1, x2}, .01f, .01f, std::vector<bool>{false, true, true}));
+            backend, f, g, {x0, x1, x2}, .01f, .01f, std::vector<bool>{false, true, true}));
     }
 }
 
@@ -1089,6 +1091,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_select_nested)
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
 
+    auto f = make_graph();
+    auto g = make_graph();
     for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x0 = backend->create_tensor(element::boolean, shape);
@@ -1097,7 +1101,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_select_nested)
         auto x2 = rng.initialize(backend->create_tensor<float>(shape));
 
         EXPECT_TRUE(autodiff_numeric_compare_selective<float>(
-            backend, make_graph, {x0, x1, x2}, .01f, .01f, std::vector<bool>{false, true, true}));
+            backend, f, g, {x0, x1, x2}, .01f, .01f, std::vector<bool>{false, true, true}));
     }
 }
 
