@@ -737,6 +737,23 @@ def test_concat():
 
 
 @pytest.config.gpu_skip(reason="Not implemented")
+def test_axisset():
+
+    set_axisset = AxisSet({1, 2, 3})
+    list_axisset = AxisSet([1, 2, 3])
+    tuple_axisset = AxisSet((1, 2, 3))
+
+    assert len(set_axisset) == 3
+    assert set(set_axisset) == {1, 2, 3}
+
+    assert len(list_axisset) == 3
+    assert set(list_axisset) == set(set_axisset)
+
+    assert len(tuple_axisset) == 3
+    assert set(tuple_axisset) == set(set_axisset)
+
+
+@pytest.config.gpu_skip(reason="Not implemented")
 def test_select():
 
     element_type = Type.f32

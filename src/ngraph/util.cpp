@@ -369,3 +369,14 @@ namespace ngraph
         return result;
     }
 }
+
+std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv)
+{
+    std::vector<std::string> names;
+    for (auto n : nv)
+    {
+        names.push_back(n->get_name());
+    }
+    os << vector_to_string(names);
+    return os;
+}

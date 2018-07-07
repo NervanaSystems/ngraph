@@ -25,20 +25,6 @@
 using namespace std;
 using namespace ngraph;
 
-std::unordered_map<string, void*> runtime::Backend::s_open_backends;
-
-bool runtime::Backend::register_backend(const string& name, shared_ptr<Backend> backend)
-{
-    get_backend_map().insert({name, backend});
-    return true;
-}
-
-unordered_map<string, shared_ptr<runtime::Backend>>& runtime::Backend::get_backend_map()
-{
-    static unordered_map<string, shared_ptr<Backend>> backend_map;
-    return backend_map;
-}
-
 runtime::Backend::~Backend()
 {
 }
@@ -79,25 +65,8 @@ void* runtime::Backend::open_shared_library(string type)
     string lib_name = "lib" + to_lower(type) + "_backend" + ext;
     string my_directory = file_util::get_directory(find_my_file());
     string full_path = file_util::path_join(my_directory, lib_name);
-    NGRAPH_INFO << full_path;
     handle = dlopen(full_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
-    if (handle)
-    {
-        function<void()> create_backend =
-            reinterpret_cast<void (*)()>(dlsym(handle, "create_backend"));
-        if (create_backend)
-        {
-            create_backend();
-        }
-        else
-        {
-            dlclose(handle);
-            throw runtime_error("Failed to find create_backend function in library '" + lib_name +
-                                "'");
-        }
-        s_open_backends.insert({lib_name, handle});
-    }
-    else
+    if (!handle)
     {
         string err = dlerror();
         throw runtime_error("Library open for Backend '" + lib_name + "' failed with error:\n" +
@@ -108,27 +77,42 @@ void* runtime::Backend::open_shared_library(string type)
 
 shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
 {
-    auto it = get_backend_map().find(type);
-    if (it == get_backend_map().end())
+    shared_ptr<runtime::Backend> rc;
+    void* handle = open_shared_library(type);
+    if (!handle)
     {
-        open_shared_library(type);
-        it = get_backend_map().find(type);
-        if (it == get_backend_map().end())
-        {
-            throw runtime_error("Backend '" + type + "' not found in registered backends.");
-        }
+        throw runtime_error("Backend '" + type + "' not found");
     }
-    return it->second;
+    else
+    {
+        function<runtime::Backend*(const char*)> new_backend =
+            reinterpret_cast<runtime::Backend* (*)(const char*)>(dlsym(handle, "new_backend"));
+        if (!new_backend)
+        {
+            dlclose(handle);
+            throw runtime_error("Backend '" + type + "' does not implement new_backend");
+        }
+
+        function<void(runtime::Backend*)> delete_backend =
+            reinterpret_cast<void (*)(runtime::Backend*)>(dlsym(handle, "delete_backend"));
+        if (!delete_backend)
+        {
+            dlclose(handle);
+            throw runtime_error("Backend '" + type + "' does not implement delete_backend");
+        }
+
+        runtime::Backend* backend = new_backend(type.c_str());
+        rc = shared_ptr<runtime::Backend>(backend, [=](runtime::Backend* b) {
+            delete_backend(b);
+            // dlclose(handle);
+        });
+    }
+    return rc;
 }
 
 vector<string> runtime::Backend::get_registered_devices()
 {
-    vector<string> rc;
-    for (const auto& p : get_backend_map())
-    {
-        rc.push_back(p.first);
-    }
-    return rc;
+    return vector<string>();
 }
 
 void runtime::Backend::remove_compiled_function(shared_ptr<Function> func)

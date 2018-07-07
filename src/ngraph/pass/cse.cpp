@@ -47,6 +47,7 @@
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/remainder.hpp"
+#include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
 #include "ngraph/op/sinh.hpp"
@@ -106,6 +107,7 @@ static std::unordered_map<std::type_index,
         {TI(op::Log), cse_unarywise},
         {TI(op::Negative), cse_unarywise},
         {TI(op::Relu), cse_unarywise},
+        {TI(op::Sigmoid), cse_unarywise},
         {TI(op::Sign), cse_unarywise},
         {TI(op::Sin), cse_unarywise},
         {TI(op::Sinh), cse_unarywise},
