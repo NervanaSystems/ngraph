@@ -18,6 +18,7 @@
 
 #include <ostream>
 #include "onnx.pb.h"
+#include "onnx-operators.pb.h"
 
 namespace ngraph
 {

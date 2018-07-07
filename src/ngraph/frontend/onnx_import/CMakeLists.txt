@@ -14,26 +14,39 @@
 # limitations under the License.
 # ******************************************************************************
 
-set(ONNX_SOURCE_URL "https://raw.githubusercontent.com/onnx/onnx/v1.1.2/onnx/onnx.proto")
+set(SOURCE_URL "https://raw.githubusercontent.com/onnx/onnx/v1.1.2/onnx")
+set(ONNX_URL "${SOURCE_URL}/onnx.proto")
+set(OPERATORS_URL "${SOURCE_URL}/onnx-operators.proto")
 
-set_source_files_properties(onnx.pb.h onnx.pb.cc PROPERTIES GENERATED TRUE)
+set_source_files_properties(onnx.pb.h onnx.pb.cc onnx-operators.pb.h onnx-operators.pb.cc PROPERTIES GENERATED TRUE)
 
 if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/onnx.proto")
-    file(DOWNLOAD ${ONNX_SOURCE_URL} ${CMAKE_CURRENT_BINARY_DIR}/onnx.proto)
+    file(DOWNLOAD ${ONNX_URL} ${CMAKE_CURRENT_BINARY_DIR}/onnx.proto)
+endif()
+
+if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/onnx-operators.poto")
+    file(DOWNLOAD ${OPERATORS_URL} ${CMAKE_CURRENT_BINARY_DIR}/onnx-operators.proto)
 endif()
 
 add_custom_command(OUTPUT onnx.pb.cc onnx.pb.h
     COMMAND ${PROTOBUF_PROTOC_EXECUTABLE} --cpp_out ${CMAKE_CURRENT_BINARY_DIR} --proto_path ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/onnx.proto
     DEPENDS onnx.proto)
 
+add_custom_command(OUTPUT onnx-operators.pb.cc onnx-operators.pb.h
+    COMMAND ${PROTOBUF_PROTOC_EXECUTABLE} --cpp_out ${CMAKE_CURRENT_BINARY_DIR} --proto_path ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/onnx-operators.proto
+    DEPENDS onnx-operators.proto)
+
 add_library(onnx_import_interface OBJECT
     onnx.cpp
     onnx.hpp
     onnx.pb.h
-    onnx.proto)
+    onnx-operators.pb.h
+    onnx.proto
+    onnx-operators.proto)
 
 add_library(onnx_import STATIC
     onnx.pb.cc
+    onnx-operators.pb.cc
     attribute.cpp
     attribute.hpp
     graph.cpp
