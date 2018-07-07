@@ -8,6 +8,8 @@ RUN apt-get update && apt-get install -y \
   clang-format-3.9 \
   git \
   curl \
+  protobuf-compiler \
+  libprotoc-dev \
   zlib1g \
   zlib1g-dev \
   libtinfo-dev && \
@@ -28,7 +30,7 @@ RUN pip install tox
 COPY . /root/ngraph
 RUN mkdir /root/ngraph/build
 WORKDIR /root/ngraph/build
-RUN cmake ../ -DNGRAPH_USE_PREBUILT_LLVM=TRUE
+RUN cmake .. -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE
 RUN make style-check
 RUN make -j 8
 RUN make install

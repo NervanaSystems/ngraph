@@ -46,6 +46,10 @@ set(SRC
     zero_dim_tensor_elimination.cpp
 )
 
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    list(APPEND SRC onnx_import.cpp)
+endif()
+
 if (NGRAPH_INTERPRETER_ENABLE)
     set(SRC ${SRC} backend_debug_api.cpp builder.cpp backend_api.cpp)
 endif()
@@ -116,6 +120,10 @@ add_executable(unit-test ${SRC})
 target_link_libraries(unit-test ngraph_test_util)
 target_link_libraries(unit-test ngraph libgtest libjson pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
+
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
+    target_compile_options(unit-test PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-zero-as-null-pointer-constant)
+endif()
 
 if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for graph_partition, convolution, and backwards unit tests
