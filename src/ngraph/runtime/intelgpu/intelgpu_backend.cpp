@@ -14,10 +14,12 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <CPP/concatenation.hpp>
 #include <CPP/eltwise.hpp>
 #include <CPP/input_layout.hpp>
 #include <CPP/layout.hpp>
 #include <CPP/network.hpp>
+#include <CPP/reorder.hpp>
 #include <CPP/scale.hpp>
 
 #include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
@@ -27,16 +29,23 @@
 using namespace std;
 using namespace ngraph;
 
+void arguments_check(const shared_ptr<Node>& op, size_t input, size_t output)
+{
+    if (op->get_input_size() != input || op->get_output_size() != output)
+    {
+        ostringstream os;
+        os << "Operation \"" << op->description() << "\" input and output sizes mismatch.\n"
+           << "Expected input size=" << op->get_input_size() << ", provided=" << input << "\n"
+           << "Expected output size=" << op->get_output_size() << ", provided=" << output;
+        throw std::invalid_argument(os.str());
+    }
+}
+
 void do_eltwise_operation(cldnn::topology& topology,
                           const shared_ptr<Node>& op,
                           cldnn::eltwise_mode mode)
 {
-    if (op->get_output_size() != 1 || op->get_input_size() != 2)
-    {
-        ostringstream os;
-        os << "eltwise operation \"" << op->description() << "\" input and output sizes mismatch.";
-        throw std::invalid_argument(os.str());
-    }
+    arguments_check(op, 2, 1);
 
     std::vector<cldnn::primitive_id> op_add_inputs;
     for (const descriptor::Input& op_input : op->get_inputs())
@@ -47,7 +56,7 @@ void do_eltwise_operation(cldnn::topology& topology,
 
     const std::string& output_name = op->get_outputs().begin()->get_tensor().get_name();
 
-    cldnn::eltwise op_add(output_name, op_add_inputs, mode);
+    const cldnn::eltwise op_add(output_name, op_add_inputs, mode);
     topology.add(op_add);
 }
 
@@ -94,16 +103,28 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
     {
         if ("Parameter" == op->description())
         {
-            if (op->get_output_size() != 1 || op->get_input_size() != 0)
-            {
-                throw ngraph_error("Parameter input and output sizes mismatch.");
-            }
+            arguments_check(op, 0, 1);
+
             const std::string& element_name = op->get_output_tensor_view()->get_tensor().get_name();
-            cldnn::layout element_layout =
+            const cldnn::layout element_layout =
                 IntelGPULayout::create_cldnn_layout(op->get_element_type(), op->get_shape());
 
-            cldnn::input_layout op_layout(element_name, element_layout);
+            const cldnn::input_layout op_layout(element_name, element_layout);
             topology.add(op_layout);
+        }
+        else if ("Result" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const descriptor::Tensor& input_tensor = op->get_inputs().begin()->get_tensor();
+            const descriptor::Tensor& output_tensor = op->get_outputs().begin()->get_tensor();
+            const std::string& input_name = input_tensor.get_name();
+            const std::string& output_name = output_tensor.get_name();
+            const cldnn::layout input_layout = IntelGPULayout::create_cldnn_layout(
+                input_tensor.get_element_type(), op->get_inputs().begin()->get_shape());
+
+            const cldnn::reorder op_reorder(output_name, input_name, input_layout);
+            topology.add(op_reorder);
         }
         else if ("Add" == op->description())
         {
