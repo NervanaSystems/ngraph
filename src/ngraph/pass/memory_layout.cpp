@@ -35,7 +35,7 @@ pass::MemoryLayout::MemoryLayout(size_t alignment, bool disable_memory_sharing)
 
 bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
 {
-    MemoryManager mm(m_alignment);
+    MemoryManager mm(m_alignment, m_disable_memory_sharing);
     for (shared_ptr<Node> node : function->get_ordered_ops())
     {
         std::map<descriptor::Tensor*, descriptor::Tensor*> in_place_outputs;
@@ -53,8 +53,6 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
                     if (node->liveness_free_list.count(input) != 0 &&
                         node->liveness_new_list.count(output) != 0)
                     {
-                        NGRAPH_DEBUG << input->get_name() << " will be reused for "
-                                     << output->get_name();
                         in_place_outputs.insert({output, input});
                         reused_inputs.insert(input);
                     }
@@ -93,9 +91,9 @@ pass::MemoryManager::node::node(size_t size, block_state state)
 {
 }
 
-pass::MemoryManager::MemoryManager(size_t alignment)
+pass::MemoryManager::MemoryManager(size_t alignment, bool disable_memory_reuse)
     : m_alignment{alignment}
-    , m_scheme{allocation_scheme::BEST_FIT}
+    , m_scheme{disable_memory_reuse ? allocation_scheme::SIMPLE : allocation_scheme::FIRST_FIT}
     , m_max_allocated{0}
 {
     // assert(m_base_offset % m_alignment == 0);
@@ -109,8 +107,16 @@ size_t pass::MemoryManager::allocate(size_t size)
     {
     case allocation_scheme::FIRST_FIT: rc = first_fit(size); break;
     case allocation_scheme::BEST_FIT: rc = best_fit(size); break;
+    case allocation_scheme::SIMPLE: rc = no_reuse_allocator(size); break;
     }
     return rc;
+}
+
+size_t pass::MemoryManager::no_reuse_allocator(size_t size)
+{
+    size_t offset = m_max_allocated;
+    m_max_allocated += align(size, m_alignment);
+    return offset;
 }
 
 size_t pass::MemoryManager::best_fit(size_t size)
