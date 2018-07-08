@@ -56,7 +56,7 @@ public:
     {
         FIRST_FIT,
         BEST_FIT,
-        SIMPLE
+        NO_REUSE
     };
 
     class node

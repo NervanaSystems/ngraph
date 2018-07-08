@@ -93,7 +93,7 @@ pass::MemoryManager::node::node(size_t size, block_state state)
 
 pass::MemoryManager::MemoryManager(size_t alignment, bool disable_memory_reuse)
     : m_alignment{alignment}
-    , m_scheme{disable_memory_reuse ? allocation_scheme::SIMPLE : allocation_scheme::FIRST_FIT}
+    , m_scheme{disable_memory_reuse ? allocation_scheme::NO_REUSE : allocation_scheme::FIRST_FIT}
     , m_max_allocated{0}
 {
     // assert(m_base_offset % m_alignment == 0);
@@ -107,7 +107,7 @@ size_t pass::MemoryManager::allocate(size_t size)
     {
     case allocation_scheme::FIRST_FIT: rc = first_fit(size); break;
     case allocation_scheme::BEST_FIT: rc = best_fit(size); break;
-    case allocation_scheme::SIMPLE: rc = no_reuse_allocator(size); break;
+    case allocation_scheme::NO_REUSE: rc = no_reuse_allocator(size); break;
     }
     return rc;
 }
