@@ -15,8 +15,6 @@
 *******************************************************************************/
 
 #include <algorithm>
-#include <cxxabi.h>
-#include <iomanip>
 #include <iostream>
 #include <memory>
 
@@ -29,7 +27,6 @@
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/pass/serialize.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
-#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -58,8 +55,6 @@ void ngraph::pass::Manager::initialize_default_passes()
 
 void ngraph::pass::Manager::run_passes(shared_ptr<Function> func)
 {
-    bool profile_enabled = getenv("NGRAPH_PROFILE_PASS_ENABLE") != nullptr;
-
     // find all functions
     vector<shared_ptr<Function>> fs;
     traverse_functions(func, [&](shared_ptr<Function> f) { fs.push_back(f); });
@@ -68,12 +63,8 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func)
     get_state().set_functions(tfs);
 
     size_t index = 0;
-    stopwatch pass_timer;
-    stopwatch overall_timer;
-    overall_timer.start();
     for (shared_ptr<PassBase> pass : m_pass_list)
     {
-        pass_timer.start();
         pass->set_state(get_state());
         auto module_pass = dynamic_pointer_cast<ModulePass>(pass);
         auto function_pass = dynamic_pointer_cast<FunctionPass>(pass);
@@ -131,19 +122,6 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func)
             }
         }
         index++;
-        pass_timer.stop();
-        if (profile_enabled)
-        {
-            PassBase* p = pass.get();
-            string name = typeid(*p).name();
-            int status;
-            name = abi::__cxa_demangle(name.c_str(), 0, 0, &status);
-            cout << setw(7) << pass_timer.get_milliseconds() << "ms " << name << "\n";
-        }
-    }
-    if (profile_enabled)
-    {
-        cout << "passes done in " << overall_timer.get_milliseconds() << "ms\n";
     }
 }
 
