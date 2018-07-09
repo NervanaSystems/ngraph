@@ -50,7 +50,7 @@ py::buffer_info _get_buffer_info(const ngraph::op::Constant& c)
         static_cast<ssize_t>(shape.size()),                /* Number of dimensions */
         std::vector<ssize_t>{shape.begin(), shape.end()},  /* Buffer dimensions */
         _get_byte_strides<T>(shape)                        /* Strides (in bytes) for each index */
-    );
+        );
 }
 
 void regclass_pyngraph_op_Constant(py::module m)
