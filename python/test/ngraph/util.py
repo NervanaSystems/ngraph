@@ -34,7 +34,7 @@ def get_runtime():
 def run_op_node(input_data, op_fun, *args):
     """Run computation on node performing `op_fun`.
 
-    `op_fun` have to needs to accept a node as an argument.
+    `op_fun` have to accept a node as an argument.
 
     :param input_data: The input data for performed computation.
     :param op_fun: The function handler for operation we want to carry out.

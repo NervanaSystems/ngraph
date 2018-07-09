@@ -171,3 +171,34 @@ def test_bad_data_shape():
     value_b = np.array([[5, 6], [7, 8]], dtype=np.float32)
     with pytest.raises(UserInputError):
         computation(value_a, value_b)
+
+
+@pytest.mark.parametrize('data_type', [
+    np.float32,
+    np.float64,
+    np.int64,
+    np.int32,
+    np.int16,
+    np.int8,
+    np.bool,
+])
+def test_constant_get_data_signed(data_type):
+    np.random.seed(133391)
+    input_data = np.random.randn(2, 3, 4).astype(data_type)
+    node = ng.constant(input_data, dtype=data_type)
+    retrieved_data = node.get_data()
+    assert np.allclose(input_data, retrieved_data)
+
+
+@pytest.mark.parametrize('data_type', [
+    np.uint64,
+    np.uint32,
+    np.uint16,
+    np.uint8,
+])
+def test_constant_get_data_unsigned(data_type):
+    np.random.seed(133391)
+    input_data = np.random.randint(0, 10, [2, 3, 4]).astype(data_type)
+    node = ng.constant(input_data, dtype=data_type)
+    retrieved_data = node.get_data()
+    assert np.allclose(input_data, retrieved_data)

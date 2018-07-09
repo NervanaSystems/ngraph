@@ -23,6 +23,8 @@ Low level wrappers for the nGraph c++ api in ngraph::op.
 import sys
 import six
 
+import numpy as np
+
 # workaround to load the libngraph.so with RTLD_GLOBAL
 if six.PY3:
     import os
@@ -46,6 +48,15 @@ from _pyngraph.op import Broadcast
 from _pyngraph.op import Ceiling
 from _pyngraph.op import Concat
 from _pyngraph.op import Constant
+
+""" Retrieve Constant inner data.
+
+    Internally uses PyBind11 Numpy's buffer protocol.
+    
+    :return Numpy array containing internally stored constant data.
+"""
+Constant.get_data = lambda self: np.array(self, copy=True)
+
 from _pyngraph.op import Convert
 from _pyngraph.op import Convolution
 from _pyngraph.op import ConvolutionBackpropData
