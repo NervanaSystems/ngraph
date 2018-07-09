@@ -30,7 +30,7 @@ Glossary
 
    function graph
 
-      The Intel nGraph library uses a function graph to represent an
+      The Intel nGraph Library uses a function graph to represent an
       ``op``'s parameters and results.
 
    fusion
@@ -120,5 +120,42 @@ Glossary
    export
    
       The serialized version of a trained model that can be passed to
-      one of the nGraph backends for computation.      
+      one of the nGraph backends for computation.
 
+   NN
+
+      See :term:`ANN`.
+
+   ANN
+
+      :abbr:`ANN (Artificial Neural Network)` is an acronym for "Artificial 
+      Neural Network". ANN models are used to simulate possible combinations of 
+      binary logic processing and multi-layer (multi-dimensional) paths through 
+      which a :term:`data-flow graph` may be mapped or computed. An ANN does not 
+      have centralized storage; rather, an ANN manifests as information stored 
+      as patterns throughout the network structure. ANNs may be **Recurrent** 
+      (with feedback) or **Nonrecurrent** (feed-forward) with regard to the 
+      network structure. 
+
+   RNN 
+
+      See :term:`RANN`.
+
+
+   RANN 
+    
+      A :abbr:`Recurrent Artificial Neural Network (RANN)` is a variety of *ANN* 
+      where output nodes from a layer on a data-flow graph have loopback to 
+      nodes that created an earlier layer. Since the RANN has no "centralized" 
+      storage, this loopback is the means by which the ANN can "learn" or be 
+      trained.  There are several sub-categories of RANNs. An :term:`LSTM`, for 
+      example, is a specific kind of "recurrent" ANN with a particular way of 
+      implementing long/short-term memory. For brevity, the RANN acronym is 
+      often abbreviated as `RNN`.
+
+
+   LSTM
+
+      :abbr:`LSTM (Long Short-Term Memory)` is an acronym for "Long Short-Term 
+      Memory".  LSTM implements memory distribution of the :term:`RANN` through
+      cells, input gates, and output gates.        
