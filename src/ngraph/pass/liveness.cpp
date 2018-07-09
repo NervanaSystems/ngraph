@@ -106,7 +106,7 @@ bool pass::Liveness::run_on_function(shared_ptr<ngraph::Function> function)
                 // this is the last node that value is seen in
                 // delete it at the end of the op
                 currently_live.insert(tensor_decl);
-                if (output_tensors.count(tensor_decl) == 0)
+                if (output_tensors.find(tensor_decl) == output_tensors.end())
                 {
                     // Don't free output tensors
                     free_tensor_decls.insert(tensor_decl);
