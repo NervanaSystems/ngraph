@@ -104,9 +104,10 @@
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 
+using namespace std;
 using namespace ngraph;
 
-static const std::string s_output_dir = "gpu_codegen";
+static const string s_output_dir = "gpu_codegen";
 
 class StaticInitializers
 {
@@ -118,19 +119,19 @@ public:
     }
 };
 
-static std::string emit_string_array(const std::vector<std::string>& s, size_t max_line_length)
+static string emit_string_array(const vector<string>& s, size_t max_line_length)
 {
-    std::stringstream ss;
-    std::stringstream line;
+    stringstream ss;
+    stringstream line;
     for (size_t i = 0; i < s.size(); i++)
     {
         if (i != 0)
         {
             line << ",";
         }
-        std::stringstream value;
+        stringstream value;
         value << s[i];
-        std::string value_string = value.str();
+        string value_string = value.str();
         if (static_cast<size_t>(line.tellp()) + value_string.size() + 1 <= max_line_length)
         {
             if (i > 0)
@@ -152,7 +153,7 @@ static std::string emit_string_array(const std::vector<std::string>& s, size_t m
 
 static StaticInitializers s_static_initializers;
 
-#define TI(x) std::type_index(typeid(x))
+#define TI(x) type_index(typeid(x))
 
 static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::Add), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Add>},
@@ -236,7 +237,7 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::Or), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Or>}};
 
 runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
-    const std::shared_ptr<ngraph::Function>& function, bool release_function)
+    const shared_ptr<ngraph::Function>& function, bool release_function)
     : m_compiled_function(nullptr)
     , m_ctx(new GPURuntimeContext)
     , m_function(function)
@@ -253,12 +254,12 @@ runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     cublasStatus_t cublasStatus = cublasCreate(&m_cublas_handle);
     if (cublasStatus != CUBLAS_STATUS_SUCCESS)
     {
-        throw std::runtime_error("cuBLAS create handle failed");
+        throw runtime_error("cuBLAS create handle failed");
     }
     cudnnStatus_t cudnnStatus = cudnnCreate(&m_cudnn_handle);
     if (cudnnStatus != CUDNN_STATUS_SUCCESS)
     {
-        throw std::runtime_error("cuDNN create handle failed");
+        throw runtime_error("cuDNN create handle failed");
     }
     // Pass scalars as reference on the Device
     cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_DEVICE);
@@ -328,12 +329,12 @@ void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
     if (m_emit_timing)
     {
         m_writer << "// Declare debug timers\n";
-        std::vector<std::string> names;
+        vector<string> names;
         size_t index = 0;
-        for (std::shared_ptr<Function> current_function :
+        for (shared_ptr<Function> current_function :
              m_pass_manager.get_state().get_functions())
         {
-            for (std::shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
+            for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
             {
                 if (!node->is_parameter() && !node->is_constant())
                 {
@@ -349,8 +350,8 @@ void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
         m_writer.block_begin();
         m_writer << "static const char* timer_names[" << names.size() << "] =\n";
         m_writer.block_begin();
-        std::vector<std::string> quoted_names;
-        for (const std::string& name : names)
+        vector<string> quoted_names;
+        for (const string& name : names)
         {
             quoted_names.push_back("\"" + name + "\"");
         }
@@ -378,14 +379,14 @@ void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
 void runtime::gpu::GPU_ExternalFunction::emit_declare_constants()
 {
     m_writer << "// Declare all constants\n";
-    for (std::shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
+    for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
     {
-        for (std::shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
+        for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
         {
             const op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
             if (c)
             {
-                std::shared_ptr<descriptor::TensorView> tv =
+                shared_ptr<descriptor::TensorView> tv =
                     node->get_outputs()[0].get_tensor_view();
                 // get an allocator for transient per kernel gpu memory
                 GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
@@ -407,15 +408,15 @@ void runtime::gpu::GPU_ExternalFunction::emit_declare_constants()
         m_writer << "if(is_constant_mem_ptr_null)\n";
         m_writer.block_begin();
         {
-            for (std::shared_ptr<Function> current_function :
+            for (shared_ptr<Function> current_function :
                  m_pass_manager.get_state().get_functions())
             {
-                for (std::shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
+                for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
                 {
                     const op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
                     if (c)
                     {
-                        std::shared_ptr<descriptor::TensorView> tv =
+                        shared_ptr<descriptor::TensorView> tv =
                             node->get_outputs()[0].get_tensor_view();
                         m_writer << tv->get_tensor().get_name() << " = reinterpret_cast<"
                                  << tv->get_tensor().get_element_type().c_type_string()
@@ -434,7 +435,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_declare_constants()
 void runtime::gpu::GPU_ExternalFunction::emit_declare_functions()
 {
     m_writer << "// Declare all functions\n";
-    for (std::shared_ptr<Function> f : m_pass_manager.get_state().get_functions())
+    for (shared_ptr<Function> f : m_pass_manager.get_state().get_functions())
     {
         m_writer << "extern \"C\" void " << f->get_name() << "(void** inputs, void** outputs, "
                  << "gpu::GPURuntimeContext* ctx);\n";
@@ -447,16 +448,16 @@ void runtime::gpu::GPU_ExternalFunction::collect_unique_functions()
     // This for loop creates a collection of functions that are called more than once
     // and emitting them as globally callable functions.
     // ops implement the is_functionally_identical method
-    std::unordered_map<std::string, std::string> match_function_map;
-    for (std::shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
+    unordered_map<string, string> match_function_map;
+    for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
     {
-        std::list<std::shared_ptr<Node>> tmp = m_function_ordered_ops.at(current_function);
+        list<shared_ptr<Node>> tmp = m_function_ordered_ops.at(current_function);
         if (tmp.size() < 2)
         {
             // Since we are comparing ops there must be at least two ops to proceed.
             continue;
         }
-        std::vector<std::shared_ptr<Node>> op_list{tmp.begin(), tmp.end()};
+        vector<shared_ptr<Node>> op_list{tmp.begin(), tmp.end()};
         for (size_t i = 0; i < op_list.size(); i++)
         {
             if (op_list[i]->is_constant() || op_list[i]->is_parameter())
@@ -465,14 +466,14 @@ void runtime::gpu::GPU_ExternalFunction::collect_unique_functions()
             }
 
             Node& node = *op_list[i];
-            auto handler = dispatcher.find(std::type_index(typeid(node)));
+            auto handler = dispatcher.find(type_index(typeid(node)));
             if (handler == dispatcher.end())
             {
                 throw ngraph_error("Unhandled op during code generation : " + node.description());
             }
 
-            std::string match_function = emit_op_as_function(node, "__f__");
-            std::string match_function_name;
+            string match_function = emit_op_as_function(node, "__f__");
+            string match_function_name;
             if (contains_key(match_function_map, match_function))
             {
                 match_function_name = match_function_map[match_function];
@@ -480,7 +481,7 @@ void runtime::gpu::GPU_ExternalFunction::collect_unique_functions()
             else
             {
                 auto offset = match_function.find("__f__");
-                std::string emitted_function = match_function;
+                string emitted_function = match_function;
                 match_function_name = "func_" + node.get_name();
                 emitted_function.replace(offset, 5, match_function_name);
                 match_function_map.insert({match_function, match_function_name});
@@ -492,11 +493,11 @@ void runtime::gpu::GPU_ExternalFunction::collect_unique_functions()
 }
 
 void runtime::gpu::GPU_ExternalFunction::emit_allocate_temp_mem_pool(
-    std::shared_ptr<Function> current_function)
+    shared_ptr<Function> current_function)
 {
     m_temporaries_used = false;
     size_t worst_case_tmp_size = 0;
-    for (std::shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
+    for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
     {
         if (node->liveness_new_list.size() > 0)
         {
@@ -516,11 +517,11 @@ void runtime::gpu::GPU_ExternalFunction::emit_allocate_temp_mem_pool(
                  << temp_pool_size << ");\n";
 
         // Add temporaries to the variable name map
-        for (std::shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
+        for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
         {
             for (descriptor::Tensor* tensor : node->liveness_new_list)
             {
-                std::stringstream ss;
+                stringstream ss;
                 ss << "((" << tensor->get_element_type().c_type_string()
                    << "*)((char *)pool_base_ptr + " << tensor->get_pool_offset() << "))";
                 m_variable_name_map[tensor->get_name()] = ss.str();
@@ -539,20 +540,20 @@ void runtime::gpu::GPU_ExternalFunction::emit_release_temp_mem_pool()
 
 void runtime::gpu::GPU_ExternalFunction::emit_functions()
 {
-    for (std::shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
+    for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
     {
-        std::set<std::string> output_names;
-        for (std::shared_ptr<Node> op : current_function->get_results())
+        set<string> output_names;
+        for (shared_ptr<Node> op : current_function->get_results())
         {
-            std::shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
+            shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
             output_names.insert(tv->get_tensor().get_name());
         }
-        std::set<descriptor::TensorView*> constants;
-        for (std::shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
+        set<descriptor::TensorView*> constants;
+        for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
         {
             if (dynamic_cast<ngraph::op::Constant*>(node.get()))
             {
-                std::shared_ptr<descriptor::TensorView> tv =
+                shared_ptr<descriptor::TensorView> tv =
                     node->get_outputs()[0].get_tensor_view();
                 constants.insert(tv.get());
             }
@@ -571,14 +572,14 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
 
             // Add inputs to the variable name map
             size_t arg_index = 0;
-            for (std::shared_ptr<ngraph::op::Parameter> param : current_function->get_parameters())
+            for (shared_ptr<ngraph::op::Parameter> param : current_function->get_parameters())
             {
                 for (size_t i = 0; i < param->get_output_size(); ++i)
                 {
-                    std::shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_view(i);
+                    shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_view(i);
                     const element::Type& et = tv->get_tensor_view_type()->get_element_type();
-                    std::string type = et.c_type_string();
-                    std::stringstream ss;
+                    string type = et.c_type_string();
+                    stringstream ss;
                     ss << "((" << type << "*)(inputs[" << arg_index << "]))";
                     m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
                     arg_index++;
@@ -588,50 +589,50 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
             // Add outputs to the variable name map
             for (size_t i = 0; i < current_function->get_output_size(); ++i)
             {
-                std::shared_ptr<Node> op = current_function->get_output_op(i);
-                std::shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
-                std::string type = tv->get_tensor_view_type()->get_element_type().c_type_string();
-                std::stringstream ss;
+                shared_ptr<Node> op = current_function->get_output_op(i);
+                shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
+                string type = tv->get_tensor_view_type()->get_element_type().c_type_string();
+                stringstream ss;
                 ss << "((" << type << "*)(outputs[" << i << "]))";
                 m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
 
                 //it should be safe to assign both descriptors to one output*
                 //since needs_copy == false makes `op::Result` an nop
-                auto res = std::dynamic_pointer_cast<ngraph::op::Result>(op);
+                auto res = dynamic_pointer_cast<ngraph::op::Result>(op);
                 if (!res->needs_copy())
                 {
-                    std::shared_ptr<descriptor::TensorView> itv =
+                    shared_ptr<descriptor::TensorView> itv =
                         res->get_inputs().at(0).get_output().get_tensor_view();
                     m_variable_name_map[itv->get_tensor().get_name()] = ss.str();
                 }
             }
 
-            for (std::shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
+            for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
             {
                 auto& n =
                     *node; // Work around a compiler warning (*node inside typeid may have effects
                 // with shared pointers, which is fine here but clang doesn't like it.)
-                auto handler = dispatcher.find(std::type_index(typeid(n)));
+                auto handler = dispatcher.find(type_index(typeid(n)));
                 if (handler == dispatcher.end())
                 {
                     throw ngraph_error("Unhandled op during code generation : " +
                                        node->description());
                 }
-                std::vector<GPU_TensorViewWrapper> in;
-                std::vector<std::string> node_input_names;
-                std::vector<std::string> node_output_names;
+                vector<GPU_TensorViewWrapper> in;
+                vector<string> node_input_names;
+                vector<string> node_output_names;
                 for (const descriptor::Input& input : node->get_inputs())
                 {
                     const descriptor::Output& output = input.get_output();
-                    std::shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+                    shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
                     in.push_back(GPU_TensorViewWrapper(
                         tv, m_variable_name_map[tv->get_tensor().get_name()]));
                     node_input_names.emplace_back(tv->get_tensor().get_name());
                 }
-                std::vector<GPU_TensorViewWrapper> out;
+                vector<GPU_TensorViewWrapper> out;
                 for (const descriptor::Output& output : node->get_outputs())
                 {
-                    std::shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+                    shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
                     out.push_back(GPU_TensorViewWrapper(
                         tv, m_variable_name_map[tv->get_tensor().get_name()]));
                     node_output_names.emplace_back(tv->get_tensor().get_name());
@@ -641,7 +642,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 if (!node->is_parameter() && !node->is_constant())
                 {
                     m_writer << "\n// " << node->get_name() << "(";
-                    std::vector<std::string> parameter_nodes = node_input_names;
+                    vector<string> parameter_nodes = node_input_names;
                     parameter_nodes.insert(
                         parameter_nodes.end(), node_output_names.begin(), node_output_names.end());
                     m_writer << join(parameter_nodes);
@@ -650,16 +651,16 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 }
 
                 // Emit operation body
-                std::string func_name;
+                string func_name;
                 func_name = m_node_function_map[node.get()];
                 if (func_name.empty())
                 {
-                    //throw std::runtime_error("No matching function found for '" + node->get_name() + "'");
+                    //throw runtime_error("No matching function found for '" + node->get_name() + "'");
                     handler->second(this, m_writer, node.get(), in, out);
                 }
                 else
                 {
-                    std::vector<std::string> names;
+                    vector<string> names;
                     for (const GPU_TensorViewWrapper& tv : in)
                     {
                         names.push_back(tv.get_name());
@@ -684,11 +685,11 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
     }
 }
 
-void runtime::gpu::GPU_ExternalFunction::store_emitted_functions(const std::string& code)
+void runtime::gpu::GPU_ExternalFunction::store_emitted_functions(const string& code)
 {
     // TODO: Cleanup and make this a utility function
-    std::string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");
-    std::ofstream out(filename);
+    string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");
+    ofstream out(filename);
     out << code;
     out.close();
 }
@@ -703,7 +704,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     m_primitive_emitter.reset(new GPUPrimitiveEmitter());
 
     m_function_name = m_function->get_name();
-    std::string dump_filename = file_util::path_join(s_output_dir, m_function_name + "_ops.txt");
+    string dump_filename = file_util::path_join(s_output_dir, m_function_name + "_ops.txt");
 
     // m_pass_manager.register_pass<pass::TopologicalSort>();
     // For now, just make everyone row-major.
@@ -713,7 +714,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     m_pass_manager.register_pass<pass::DumpSorted>(dump_filename);
     m_pass_manager.run_passes(m_function);
 
-    for (std::shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
+    for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
     {
         m_function_ordered_ops.insert({current_function, current_function->get_ordered_ops()});
     }
@@ -727,7 +728,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     // allocate device buffers for primitive arguments and workspace
     m_primitive_emitter->allocate_primitive_memory();
 
-    std::string code = m_writer.get_code();
+    string code = m_writer.get_code();
     store_emitted_functions(code);
 
     m_compiler.reset(new codegen::Compiler());
@@ -737,7 +738,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     auto codegen_module = m_compiler->compile(code);
     if (codegen_module == nullptr)
     {
-        throw std::runtime_error("Function failed to compile to bitcode");
+        throw runtime_error("Function failed to compile to bitcode");
     }
 
     m_execution_engine->add_module(codegen_module);
@@ -746,7 +747,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     m_compiled_function = m_execution_engine->find_function<EntryPoint_t>(m_function_name);
     if (!m_compiled_function)
     {
-        throw std::runtime_error("Function failed to compile");
+        throw runtime_error("Function failed to compile");
     }
 
     m_is_compiled = true;
@@ -756,7 +757,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     }
 }
 
-std::shared_ptr<ngraph::runtime::gpu::GPU_CallFrame>
+shared_ptr<ngraph::runtime::gpu::GPU_CallFrame>
     runtime::gpu::GPU_ExternalFunction::make_call_frame()
 {
     if (!m_is_compiled)
@@ -764,7 +765,7 @@ std::shared_ptr<ngraph::runtime::gpu::GPU_CallFrame>
         compile();
     }
 
-    return std::make_shared<GPU_CallFrame>(shared_from_this(), m_compiled_function);
+    return make_shared<GPU_CallFrame>(shared_from_this(), m_compiled_function);
 }
 
 void runtime::gpu::GPU_ExternalFunction::emit_debug_function_entry(Node* node)
@@ -783,29 +784,29 @@ void runtime::gpu::GPU_ExternalFunction::emit_debug_function_exit(Node* node)
     }
 }
 
-std::unique_ptr<runtime::gpu::GPURuntimeContext>& runtime::gpu::GPU_ExternalFunction::ctx()
+unique_ptr<runtime::gpu::GPURuntimeContext>& runtime::gpu::GPU_ExternalFunction::ctx()
 {
     return m_ctx;
 }
 
-std::string
+string
     runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
-                                                            const std::string& function_name)
+                                                            const string& function_name)
 {
     codegen::CodeWriter writer;
     writer << "static void " << function_name << "(";
     writer.indent++;
     // Work around a compiler warning (*node inside typeid may have effects
     // with shared pointers, which is fine here but clang doesn't like it.)
-    auto handler = dispatcher.find(std::type_index(typeid(node)));
-    std::vector<GPU_TensorViewWrapper> in;
+    auto handler = dispatcher.find(type_index(typeid(node)));
+    vector<GPU_TensorViewWrapper> in;
     size_t arg_index = 0;
-    std::set<std::string> arg_names;
+    set<string> arg_names;
     for (const descriptor::Input& input : node.get_inputs())
     {
         const descriptor::Output& output = input.get_output();
-        std::shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-        GPU_TensorViewWrapper tvw{tv, "_arg" + std::to_string(arg_index)};
+        shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+        GPU_TensorViewWrapper tvw{tv, "_arg" + to_string(arg_index)};
         if (!contains(arg_names, tvw.get_name()))
         {
             arg_names.insert(tvw.get_name());
@@ -818,11 +819,11 @@ std::string
         }
         in.push_back(tvw);
     }
-    std::vector<GPU_TensorViewWrapper> out;
+    vector<GPU_TensorViewWrapper> out;
     for (const descriptor::Output& output : node.get_outputs())
     {
-        std::shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-        GPU_TensorViewWrapper tvw{tv, "_out" + std::to_string(arg_index)};
+        shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+        GPU_TensorViewWrapper tvw{tv, "_out" + to_string(arg_index)};
         if (arg_index++ > 0)
         {
             writer << ",";
@@ -836,7 +837,7 @@ std::string
     writer << "\n)\n";
     codegen::CodeWriter tmp_writer;
     handler->second(this, tmp_writer, &node, in, out);
-    std::string body = tmp_writer.get_code();
+    string body = tmp_writer.get_code();
     if (body.size() > 0 && body[0] == '{')
     {
         // Body already surrounded by curly braces so don't add more
@@ -849,7 +850,7 @@ std::string
         writer.block_end();
     }
 
-    std::string rc = writer.get_code();
+    string rc = writer.get_code();
     if (function_name == "f")
     {
         rc = strip_comments(rc);
@@ -857,9 +858,9 @@ std::string
     return rc;
 }
 
-std::string runtime::gpu::GPU_ExternalFunction::strip_comments(const std::string& s) const
+string runtime::gpu::GPU_ExternalFunction::strip_comments(const string& s) const
 {
-    std::stringstream out;
+    stringstream out;
     for (size_t i = 0; i < s.size(); i++)
     {
         if (i < s.size() - 2)
