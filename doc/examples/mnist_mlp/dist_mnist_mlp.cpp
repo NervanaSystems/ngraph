@@ -20,11 +20,11 @@
 #include <list>
 #include <math.h>
 #include <memory>
+#include <mpi.h>
 #include <random>
 #include <set>
 #include <stdexcept>
 #include <string>
-#include <mpi.h>
 
 #include <ngraph/autodiff/adjoints.hpp>
 #include <ngraph/graph_util.hpp>
@@ -291,7 +291,7 @@ int main(int argc, const char* argv[])
                       << std::endl;
         }
     }
-    
+
     MPI::Finalize();
 
     return 0;
