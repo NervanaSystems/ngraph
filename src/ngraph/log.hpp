@@ -17,43 +17,45 @@
 #pragma once
 
 #include <deque>
+#include <functional>
 #include <sstream>
 #include <stdexcept>
 
 namespace ngraph
 {
-    class conststring
+    class ConstString
     {
     public:
         template <size_t SIZE>
-        constexpr conststring(const char (&p)[SIZE])
-            : _string(p)
-            , _size(SIZE)
+        constexpr ConstString(const char (&p)[SIZE])
+            : m_string(p)
+            , m_size(SIZE)
         {
         }
 
         constexpr char operator[](size_t i) const
         {
-            return i < _size ? _string[i] : throw std::out_of_range("");
+            return i < m_size ? m_string[i] : throw std::out_of_range("");
         }
-        constexpr const char* get_ptr(size_t offset) const { return &_string[offset]; }
-        constexpr size_t size() const { return _size; }
+        constexpr const char* get_ptr(size_t offset) const { return &m_string[offset]; }
+        constexpr size_t size() const { return m_size; }
     private:
-        const char* _string;
-        size_t _size;
+        const char* m_string;
+        size_t m_size;
     };
 
-    constexpr const char* find_last(conststring s, size_t offset, char ch)
+    constexpr const char* find_last(ConstString s, size_t offset, char ch)
     {
         return offset == 0 ? s.get_ptr(0) : (s[offset] == ch ? s.get_ptr(offset + 1)
                                                              : find_last(s, offset - 1, ch));
     }
 
-    constexpr const char* find_last(conststring s, char ch)
+    constexpr const char* find_last(ConstString s, char ch)
     {
         return find_last(s, s.size() - 1, ch);
     }
-    constexpr const char* get_file_name(conststring s) { return find_last(s, '/'); }
+
+    constexpr const char* get_file_name(ConstString s) { return find_last(s, '/'); }
     enum class LOG_TYPE
     {
         _LOG_TYPE_ERROR,
@@ -62,20 +64,24 @@ namespace ngraph
         _LOG_TYPE_DEBUG,
     };
 
-    class log_helper
+    class LogHelper
     {
     public:
-        log_helper(LOG_TYPE, const char* file, int line, const char* func);
-        ~log_helper();
+        LogHelper(LOG_TYPE,
+                  const char* file,
+                  int line,
+                  std::function<void(const std::string&)> m_handler_func);
+        ~LogHelper();
 
-        std::ostream& stream() { return _stream; }
+        std::ostream& stream() { return m_stream; }
     private:
-        std::stringstream _stream;
+        std::function<void(const std::string&)> m_handler_func;
+        std::stringstream m_stream;
     };
 
-    class logger
+    class Logger
     {
-        friend class log_helper;
+        friend class LogHelper;
 
     public:
         static void set_log_path(const std::string& path);
@@ -86,37 +92,41 @@ namespace ngraph
         static void log_item(const std::string& s);
         static void process_event(const std::string& s);
         static void thread_entry(void* param);
-        static std::string log_path;
-        static std::deque<std::string> queue;
+        static std::string m_log_path;
+        static std::deque<std::string> m_queue;
     };
 
     extern std::ostream& get_nil_stream();
 
+    void default_logger_handler_func(const std::string& s);
+
 #define NGRAPH_ERR                                                                                 \
-    ngraph::log_helper(ngraph::LOG_TYPE::_LOG_TYPE_ERROR,                                          \
-                       ngraph::get_file_name(__FILE__),                                            \
-                       __LINE__,                                                                   \
-                       __PRETTY_FUNCTION__)                                                        \
+    ngraph::LogHelper(ngraph::LOG_TYPE::_LOG_TYPE_ERROR,                                           \
+                      ngraph::get_file_name(__FILE__),                                             \
+                      __LINE__,                                                                    \
+                      ngraph::default_logger_handler_func)                                         \
         .stream()
+
 #define NGRAPH_WARN                                                                                \
-    ngraph::log_helper(ngraph::LOG_TYPE::_LOG_TYPE_WARNING,                                        \
-                       ngraph::get_file_name(__FILE__),                                            \
-                       __LINE__,                                                                   \
-                       __PRETTY_FUNCTION__)                                                        \
+    ngraph::LogHelper(ngraph::LOG_TYPE::_LOG_TYPE_WARNING,                                         \
+                      ngraph::get_file_name(__FILE__),                                             \
+                      __LINE__,                                                                    \
+                      ngraph::default_logger_handler_func)                                         \
         .stream()
+
 #define NGRAPH_INFO                                                                                \
-    ngraph::log_helper(ngraph::LOG_TYPE::_LOG_TYPE_INFO,                                           \
-                       ngraph::get_file_name(__FILE__),                                            \
-                       __LINE__,                                                                   \
-                       __PRETTY_FUNCTION__)                                                        \
+    ngraph::LogHelper(ngraph::LOG_TYPE::_LOG_TYPE_INFO,                                            \
+                      ngraph::get_file_name(__FILE__),                                             \
+                      __LINE__,                                                                    \
+                      ngraph::default_logger_handler_func)                                         \
         .stream()
 
 #ifdef NGRAPH_DEBUG_ENABLE
 #define NGRAPH_DEBUG                                                                               \
-    ngraph::log_helper(ngraph::LOG_TYPE::_LOG_TYPE_DEBUG,                                          \
-                       ngraph::get_file_name(__FILE__),                                            \
-                       __LINE__,                                                                   \
-                       __PRETTY_FUNCTION__)                                                        \
+    ngraph::LogHelper(ngraph::LOG_TYPE::_LOG_TYPE_DEBUG,                                           \
+                      ngraph::get_file_name(__FILE__),                                             \
+                      __LINE__,                                                                    \
+                      ngraph::default_logger_handler_func)                                         \
         .stream()
 #else
 #define NGRAPH_DEBUG ngraph::get_nil_stream()

@@ -37,6 +37,7 @@ set(SRC
     mkldnn_utils.cpp
     op/batch_dot.cpp
     op/batch_norm_relu.cpp
+    op/bounded_relu.cpp
     op/group_conv.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
@@ -47,7 +48,6 @@ set(SRC
     op/max_pool_with_indices.cpp
     op/rnn.cpp
     op/sigmoid_mul.cpp
-    op/sigmoid.cpp
     pass/cpu_assignment.cpp
     pass/cpu_concat_inputs.cpp
     pass/cpu_fusion.cpp
