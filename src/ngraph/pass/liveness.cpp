@@ -14,7 +14,10 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <algorithm>
+#include <cassert>
 #include <exception>
+#include <map>
 #include <sstream>
 #include <unordered_set>
 
@@ -33,98 +36,136 @@
 using namespace std;
 using namespace ngraph;
 
-bool pass::Liveness::run_on_function(shared_ptr<ngraph::Function> function)
+static void get_constant_tensors(const vector<Node*>& ops,
+                                 unordered_set<descriptor::Tensor*>& tensors)
 {
-    list<shared_ptr<Node>> ops = function->get_ordered_ops();
-
-    unordered_set<descriptor::Tensor*> persistent_tensors;
-    unordered_set<descriptor::Tensor*> output_tensors;
-    for (shared_ptr<op::Parameter> node : function->get_parameters())
+    for (const Node* n : ops)
     {
-        for (size_t i = 0; i < node->get_output_size(); ++i)
-        {
-            descriptor::Tensor& tensor = node->get_output_tensor(i);
-            persistent_tensors.insert(&tensor);
-        }
-    }
-    for (shared_ptr<op::Result> node : function->get_results())
-    {
-        for (size_t i = 0; i < node->get_output_size(); ++i)
-        {
-            descriptor::Tensor& tensor = node->get_output_tensor(i);
-            persistent_tensors.insert(&tensor);
-            output_tensors.insert(&tensor);
-        }
-    }
-    for (shared_ptr<Node> node : function->get_ordered_ops())
-    {
-        if (auto constant_node = dynamic_pointer_cast<op::Constant>(node))
+        if (auto constant_node = dynamic_cast<const op::Constant*>(n))
         {
             for (size_t i = 0; i < constant_node->get_output_size(); ++i)
             {
-                descriptor::Tensor& tensor = constant_node->get_output_tensor(i);
-                persistent_tensors.insert(&tensor);
+                descriptor::Tensor& t = constant_node->get_output_tensor(i);
+                tensors.insert(&t);
             }
         }
     }
+}
 
-    unordered_set<descriptor::Tensor*> currently_live;
-    for (auto it = ops.rbegin(); it != ops.rend(); it++)
+static void get_parameter_tensors(const ngraph::Function& f,
+                                  unordered_set<descriptor::Tensor*>& tensors)
+{
+    for (const shared_ptr<op::Parameter>& n : f.get_parameters())
     {
-        shared_ptr<Node> node = *it;
-        node->liveness_new_list.clear();
-        node->liveness_free_list.clear();
-        unordered_set<descriptor::Tensor*> input_tensor_decls;
-        for (descriptor::Input& input_decl : node->get_inputs())
+        for (size_t i = 0; i < n->get_output_size(); ++i)
         {
-            descriptor::Tensor& tensor = input_decl.get_tensor();
-            if (persistent_tensors.find(&tensor) == persistent_tensors.end())
+            descriptor::Tensor& t = n->get_output_tensor(i);
+            tensors.insert(&t);
+        }
+    }
+}
+
+static void get_result_tensors(const ngraph::Function& f,
+                               unordered_set<descriptor::Tensor*>& tensors)
+{
+    for (const shared_ptr<op::Result>& n : f.get_results())
+    {
+        for (size_t i = 0; i < n->get_output_size(); ++i)
+        {
+            descriptor::Tensor& t = n->get_output_tensor(i);
+            tensors.insert(&t);
+        }
+    }
+}
+
+using OpsSchedule = vector<Node*>;
+
+static OpsSchedule get_ops_schedule(ngraph::Function& f)
+{
+    OpsSchedule ops_schedule;
+
+    const list<shared_ptr<Node>> ops = f.get_ordered_ops();
+    ops_schedule.reserve(ops.size());
+    for (const shared_ptr<Node>& n : ops)
+    {
+        ops_schedule.push_back(n.get());
+    }
+
+    return ops_schedule;
+}
+
+bool pass::Liveness::run_on_function(shared_ptr<ngraph::Function> function)
+{
+    assert(function);
+    ngraph::Function& f = *(function.get());
+
+    // TODO: this should be computed just once and passed in to the function...
+    const OpsSchedule ops_schedule = get_ops_schedule(f);
+
+    unordered_set<descriptor::Tensor*> persistent_tensors;
+    get_parameter_tensors(f, persistent_tensors);
+    get_result_tensors(f, persistent_tensors);
+    get_constant_tensors(ops_schedule, persistent_tensors);
+
+    // For each tensor, this gives the number of uses associated with ops that have not yet been
+    // visited during our chronological-order traversal of the schedule.
+    map<descriptor::Tensor*, size_t> tensor_refcounts;
+
+    for (Node* n : ops_schedule)
+    {
+        //----------------------------------------------------------------------------------------------
+        // Identify and handle tensors that are no longer live...
+        //----------------------------------------------------------------------------------------------
+        n->liveness_free_list.clear();
+
+        for (descriptor::Input& input_decl : n->get_inputs())
+        {
+            descriptor::Tensor* t = &(input_decl.get_tensor());
+
+            if (persistent_tensors.find(t) != persistent_tensors.end())
             {
-                input_tensor_decls.insert(&tensor);
+                continue;
+            }
+
+            const auto iter = tensor_refcounts.find(t);
+            assert(iter != tensor_refcounts.end());
+
+            size_t& refcount = iter->second;
+            assert(refcount > 0);
+            --refcount;
+
+            if (refcount == 0)
+            {
+                n->liveness_free_list.insert(t);
+                tensor_refcounts.erase(iter);
             }
         }
 
-        unordered_set<descriptor::Tensor*> output_tensor_decls;
-        for (size_t i = 0; i < node->get_output_size(); ++i)
+        //----------------------------------------------------------------------------------------------
+        // Identify and handle newly created tensors...
+        //----------------------------------------------------------------------------------------------
+        n->liveness_new_list.clear();
+
+        for (size_t i = 0; i < n->get_output_size(); ++i)
         {
-            descriptor::Tensor& tensor = node->get_output_tensor(i);
-            if (persistent_tensors.find(&tensor) == persistent_tensors.end())
+            descriptor::Tensor* t = &(n->get_output_tensor(i));
+
+            if (persistent_tensors.find(t) != persistent_tensors.end())
             {
-                output_tensor_decls.insert(&tensor);
+                continue;
+            }
+
+            const size_t num_uses = n->get_output_inputs(i).size();
+            tensor_refcounts[t] = num_uses;
+            n->liveness_new_list.insert(t);
+
+            if (num_uses == 0)
+            {
+                // A tensor with no uses is (apparently) supposed to appear in bot the 'liveness_new_list'
+                // *and* the 'liveness_free_list' of the node that creates it.
+                n->liveness_free_list.insert(t);
             }
         }
-
-        unordered_set<descriptor::Tensor*> free_tensor_decls;
-        unordered_set<descriptor::Tensor*> new_tensor_decls;
-        unordered_set<descriptor::Tensor*> all_tensor_decls = input_tensor_decls;
-        all_tensor_decls.insert(output_tensor_decls.begin(), output_tensor_decls.end());
-
-        for (descriptor::Tensor* tensor_decl : all_tensor_decls)
-        {
-            if (currently_live.find(tensor_decl) == currently_live.end())
-            {
-                // this is the last node that value is seen in
-                // delete it at the end of the op
-                currently_live.insert(tensor_decl);
-                if (output_tensors.find(tensor_decl) == output_tensors.end())
-                {
-                    // Don't free output tensors
-                    free_tensor_decls.insert(tensor_decl);
-                }
-            }
-        }
-
-        for (descriptor::Tensor* output_decl : output_tensor_decls)
-        {
-            auto currently_live_it = currently_live.find(output_decl);
-            if (currently_live_it != currently_live.end())
-            {
-                new_tensor_decls.insert(output_decl);
-                currently_live.erase(currently_live_it);
-            }
-        }
-        node->liveness_free_list = free_tensor_decls;
-        node->liveness_new_list = new_tensor_decls;
     }
 
     return false;
