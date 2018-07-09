@@ -809,7 +809,7 @@ using namespace ngraph::runtime;
                 }
 
                 auto computes_output = [&]() {
-                    if (std::dynamic_pointer_cast<ngraph::op::Result>(node))
+                    if (node->is_output())
                     {
                         return true;
                     }
@@ -828,8 +828,33 @@ using namespace ngraph::runtime;
                     }
                     return false;
                 };
-                // Always enable nodes computing output tensors
-                if (computes_output())
+
+                auto possibly_overwritten = [&]() {
+                    for (const descriptor::Output& output : node->get_outputs())
+                    {
+                        for (const descriptor::Input* input : output.get_inputs())
+                        {
+                            if (auto op =
+                                    std::dynamic_pointer_cast<ngraph::op::Op>(input->get_node()))
+                            {
+                                if (auto op_annotations = op->get_op_annotations())
+                                {
+                                    for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
+                                    {
+                                        if (input->get_index() == oi_pair.second)
+                                        {
+                                            return true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return false;
+                };
+                // Always enable nodes computing output tensors or nodes whose outputs might get
+                // overwritten due to inplace kernels
+                if (computes_output() || possibly_overwritten())
                 {
                     writer << " || 1";
                 }
