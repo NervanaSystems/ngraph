@@ -95,7 +95,7 @@ bool runtime::intelgpu::IntelGPUBackend::call(
     {
         shared_ptr<runtime::intelgpu::IntelGPUTensorView> ngraph_res =
             static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(outputs[i]);
-        const std::string &tensor_name = func->get_output_op(i)->get_output_tensor().get_name();
+        const std::string& tensor_name = func->get_output_op(i)->get_output_tensor().get_name();
 
         auto result_memory = result.at(tensor_name).get_memory().pointer<char>();
         ngraph_res->write(result_memory.data(), 0, result_memory.size());
