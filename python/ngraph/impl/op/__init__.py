@@ -38,6 +38,7 @@ from _pyngraph.op import Abs
 from _pyngraph.op import Acos
 from _pyngraph.op import Add
 from _pyngraph.op import AllReduce
+from _pyngraph.op import And
 from _pyngraph.op import Asin
 from _pyngraph.op import Atan
 from _pyngraph.op import AvgPool
@@ -87,6 +88,7 @@ from _pyngraph.op import Not
 from _pyngraph.op import NotEqual
 from _pyngraph.op import OneHot
 from _pyngraph.op import Op
+from _pyngraph.op import Or
 from _pyngraph.op import Pad
 from _pyngraph.op import Parameter
 from _pyngraph.op import ParameterVector

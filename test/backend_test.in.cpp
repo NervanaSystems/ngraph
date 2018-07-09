@@ -2545,6 +2545,31 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_4d_transpose)
         read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, reshape_4d_no_transpose)
+{
+    vector<float> a_data(2 * 2 * 5 * 5);
+    for (int i = 0; i < 2 * 2 * 5 * 5; i++)
+    {
+        a_data[i] = float(i + 1);
+    }
+
+    Shape shape_a{2, 2, 5, 5};
+    Shape shape_r{2, 5, 5, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto r = make_shared<op::Reshape>(A, AxisVector{0, 1, 2, 3}, shape_r);
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, a_data);
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call(f, {result}, {a});
+    EXPECT_EQ(a_data, read_vector<float>(result));
+}
+
 //
 // Numpy:
 //
@@ -7673,6 +7698,70 @@ NGRAPH_TEST(${BACKEND_NAME}, min_3d_eliminate_zero_dim)
 
     backend->call(f, {result}, {a});
     EXPECT_EQ((vector<float>{inf, inf, inf, inf, inf, inf}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, sigmoid_n1c1h2w2)
+{
+    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+    auto sigmoid_node = make_shared<op::Sigmoid>(input);
+    auto func = make_shared<Function>(sigmoid_node, op::ParameterVector{input});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, input->get_shape());
+    shared_ptr<runtime::TensorView> result =
+        backend->create_tensor(element::f32, input->get_shape());
+
+    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f};
+    copy_data(a, dataA);
+
+    backend->call(func, {result}, {a});
+    vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
+    ASSERT_TRUE(read_vector<float>(result) == expected);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, sigmoid_n1c1h4)
+{
+    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
+    auto sigmoid_node = make_shared<op::Sigmoid>(input);
+    auto func = make_shared<Function>(sigmoid_node, op::ParameterVector{input});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, input->get_shape());
+    shared_ptr<runtime::TensorView> result =
+        backend->create_tensor(element::f32, input->get_shape());
+
+    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f};
+    copy_data(a, dataA);
+
+    backend->call(func, {result}, {a});
+    vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
+    ASSERT_TRUE(read_vector<float>(result) == expected);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, sigmoid_bprop_n1c1h4)
+{
+    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
+    auto delta = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
+    auto sigmoid_node = make_shared<op::SigmoidBackprop>(input, delta);
+    auto func = make_shared<Function>(sigmoid_node, op::ParameterVector{input, delta});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, input->get_shape());
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, delta->get_shape());
+    shared_ptr<runtime::TensorView> result =
+        backend->create_tensor(element::f32, input->get_shape());
+
+    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f};
+    vector<float> dataB{1.0f, 1.0f, 1.0f, 1.0f};
+
+    copy_data(a, dataA);
+    copy_data(b, dataB);
+    backend->call(func, {result}, {a, b});
+
+    vector<float> expected{0.196612f, 0.0176627f, 0.196612f, 0.0176627f};
+    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, relu_2Dfprop)

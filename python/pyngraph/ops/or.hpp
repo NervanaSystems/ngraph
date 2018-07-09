@@ -16,23 +16,8 @@
 
 #pragma once
 
-#include <map>
+#include <pybind11/pybind11.h>
 
-#include <ngraph/function.hpp>
+namespace py = pybind11;
 
-#include "ngraph/runtime/performance_counter.hpp"
-#include "test_tools.hpp"
-
-/// performance test utilities
-std::multimap<size_t, std::string>
-    aggregate_timing(const std::vector<ngraph::runtime::PerformanceCounter>& perf_data);
-
-void run_benchmark(std::shared_ptr<ngraph::Function> f,
-                   const std::string& backend_name,
-                   size_t iterations,
-                   bool timing_detail);
-
-void run_benchmark(const std::string& json_path,
-                   const std::string& backend_name,
-                   size_t iterations,
-                   bool timing_detail = false);
+void regclass_pyngraph_op_Or(py::module m);

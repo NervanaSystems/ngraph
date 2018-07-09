@@ -93,7 +93,7 @@ def test_serialization():
     expected = [[1, 2, 3],
                 [1, 2, 3],
                 [1, 2, 3]]
-    result = run_op_node([input_data], ng.broadcast, new_shape)
+    result = run_op_node([input_data], ng.broadcast_to, new_shape)
     assert np.allclose(result, expected)
 
     axis = 0
@@ -101,13 +101,13 @@ def test_serialization():
                 [2, 2, 2],
                 [3, 3, 3]]
 
-    result = run_op_node([input_data], ng.broadcast, new_shape, axis)
+    result = run_op_node([input_data], ng.broadcast_to, new_shape, axis)
     assert np.allclose(result, expected)
 
     input_data = np.arange(4)
     new_shape = [3, 4, 2, 4]
     expected = np.broadcast_to(input_data, new_shape)
-    result = run_op_node([input_data], ng.broadcast, new_shape)
+    result = run_op_node([input_data], ng.broadcast_to, new_shape)
     assert np.allclose(result, expected)
 
 
