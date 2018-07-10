@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include <dlfcn.h>
+#include <regex>
 #include <sstream>
 
 #include "ngraph/file_util.hpp"
@@ -37,26 +38,18 @@ static string find_my_file()
     return dl_info.dli_fname;
 }
 
-static bool is_backend(const string& path)
-{
-    bool rc = false;
-    const string prefix = "lib";
-    const string suffix = "_backend";
-    string name = file_util::get_file_name(path);
-    if (name.size() > prefix.size() && name.size() > suffix.size())
-    {
-        if (name.compare(0, prefix.size(), prefix) == 0)
-        {
-            auto pos = name.find(suffix, prefix.size());
-            if (pos != string::npos)
-            {
-                // string backend_name = name.substr(prefix.size(), pos - prefix.size());
-                rc = true;
-            }
-        }
-    }
-    return rc;
-}
+// static bool is_backend(const string& path)
+// {
+//     bool rc = false;
+//     string name = file_util::get_file_name(path);
+//     regex reg("^lib(.+)_backend.*");
+//     smatch result;
+//     if (regex_match(name, result, reg))
+//     {
+//         rc = true;
+//     }
+//     return rc;
+// }
 
 void* runtime::Backend::open_shared_library(string type)
 {
@@ -94,6 +87,14 @@ shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
     }
     else
     {
+        function<const char*()> get_version_string =
+            reinterpret_cast<const char* (*)()>(dlsym(handle, "get_version_string"));
+        if (!get_version_string)
+        {
+            dlclose(handle);
+            throw runtime_error("Backend '" + type + "' does not implement get_version_string");
+        }
+
         function<runtime::Backend*(const char*)> new_backend =
             reinterpret_cast<runtime::Backend* (*)(const char*)>(dlsym(handle, "new_backend"));
         if (!new_backend)
@@ -121,18 +122,36 @@ shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
 
 vector<string> runtime::Backend::get_registered_devices()
 {
+    vector<string> rc;
     string my_directory = file_util::get_directory(find_my_file());
     vector<string> backend_list;
-    file_util::iterate_files(my_directory,
-                             [&](const string& file, bool is_dir) {
-                                 if (is_backend(file))
-                                 {
-                                     NGRAPH_INFO << file;
-                                 }
-                             },
-                             false,
-                             true);
-    return vector<string>();
+    string version = NGRAPH_VERSION;
+    version = regex_replace(version, regex("\\."), "\\.");
+    version = regex_replace(version, regex("\\+"), "\\+");
+    regex reg("^lib(.+)_backend.*" + version + ".*");
+    smatch result;
+
+    auto f = [&](const string& file, bool is_dir) {
+        string name = file_util::get_file_name(file);
+        if (regex_match(name, result, reg))
+        {
+            auto handle = dlopen(file.c_str(), RTLD_NOW | RTLD_GLOBAL);
+            if (handle)
+            {
+                if (dlsym(handle, "new_backend") && dlsym(handle, "delete_backend"))
+                {
+                    string backend_name = result[1];
+                    transform(
+                        backend_name.begin(), backend_name.end(), backend_name.begin(), ::toupper);
+                    rc.push_back(backend_name);
+                }
+
+                dlclose(handle);
+            }
+        }
+    };
+    file_util::iterate_files(my_directory, f, false, true);
+    return rc;
 }
 
 void runtime::Backend::remove_compiled_function(shared_ptr<Function> func)
