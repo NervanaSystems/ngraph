@@ -16,18 +16,8 @@
 
 #pragma once
 
-#include "ngraph/node_vector.hpp"
-#include "node.hpp"
+#include <pybind11/pybind11.h>
 
-namespace ngraph
-{
-    namespace onnx_import
-    {
-        namespace ops_bridge
-        {
-            NodeVector make_ng_nodes(const onnx_import::Node&);
-        }
+namespace py = pybind11;
 
-    } // namespace onnx_import
-
-} // namespace ngraph
+void regclass_pyngraph_op_util_BinaryElementwiseLogical(py::module m);
