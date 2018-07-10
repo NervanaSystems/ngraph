@@ -401,6 +401,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_declare_constants()
             }
         }
     }
+
     m_writer << "\nstatic bool is_constant_mem_ptr_null = true;\n\n";
     m_writer << "static void invoke_constant_mem_ptr(gpu::GPURuntimeContext* ctx)\n";
     m_writer.block_begin();
