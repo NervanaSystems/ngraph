@@ -95,7 +95,7 @@ namespace ngraph
                 // Temporary Memory Pool alignment
                 static const size_t s_memory_pool_alignment;
 
-                std::list<std::function<void(CPURuntimeContext*)>>& get_functors()
+                std::vector<std::function<void(CPURuntimeContext*)>>& get_functors()
                 {
                     return functors;
                 }
@@ -157,10 +157,12 @@ namespace ngraph
 
                 std::string m_function_name;
 
-                std::list<std::function<void(CPURuntimeContext*)>> functors;
+                std::vector<std::function<void(CPURuntimeContext*)>> functors;
+                std::vector<std::pair<std::function<bool(CPURuntimeContext*)>, size_t>> enables;
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>
                     executor;
                 std::unordered_map<std::string, void*> tensor_data;
+                std::unordered_map<std::string, bool> tensor_stale;
                 std::unordered_map<std::string, size_t> intermediates_offsets;
                 std::unordered_map<std::string, size_t> function_input_index, function_output_index;
                 bool m_is_built;
