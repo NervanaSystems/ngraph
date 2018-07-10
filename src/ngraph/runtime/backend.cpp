@@ -38,19 +38,6 @@ static string find_my_file()
     return dl_info.dli_fname;
 }
 
-// static bool is_backend(const string& path)
-// {
-//     bool rc = false;
-//     string name = file_util::get_file_name(path);
-//     regex reg("^lib(.+)_backend.*");
-//     smatch result;
-//     if (regex_match(name, result, reg))
-//     {
-//         rc = true;
-//     }
-//     return rc;
-// }
-
 void* runtime::Backend::open_shared_library(string type)
 {
     string ext = SHARED_LIB_EXT;
@@ -87,14 +74,6 @@ shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
     }
     else
     {
-        function<const char*()> get_version_string =
-            reinterpret_cast<const char* (*)()>(dlsym(handle, "get_version_string"));
-        if (!get_version_string)
-        {
-            dlclose(handle);
-            throw runtime_error("Backend '" + type + "' does not implement get_version_string");
-        }
-
         function<runtime::Backend*(const char*)> new_backend =
             reinterpret_cast<runtime::Backend* (*)(const char*)>(dlsym(handle, "new_backend"));
         if (!new_backend)
