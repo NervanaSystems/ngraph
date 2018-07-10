@@ -58,10 +58,6 @@ bool pass::DumpSorted::run_on_module(vector<shared_ptr<Function>>& functions)
                 out << join(outputs);
                 out << "\n";
 
-                for (const descriptor::Tensor* tensor : node->liveness_live_list)
-                {
-                    out << "    L " << tensor->get_name() << "\n";
-                }
                 for (const descriptor::Tensor* tensor : node->liveness_new_list)
                 {
                     out << "    N " << tensor->get_name() << "\n";

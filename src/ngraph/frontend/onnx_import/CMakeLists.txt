@@ -33,16 +33,12 @@ add_library(onnx_import_interface OBJECT
 add_library(onnx_import STATIC
     onnx.pb.cc
     attribute.cpp
-    attribute.hpp
     graph.cpp
-    graph.hpp
     model.hpp
     node.cpp
-    node.hpp
     op/add.hpp
     op/constant.hpp
     ops_bridge.cpp
-    ops_bridge.hpp
     tensor.hpp
     value_info.hpp)
 
