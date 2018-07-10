@@ -124,34 +124,33 @@ Glossary
 
    NN
 
-      See :term:`ANN`.
+      :abbr:`NN (Neural Network)` is an acronym for "Neural Network". NN models 
+      are used to simulate possible combinations of binary logic processing 
+      and multi-layer (multi-dimensional) paths through which a :term:`data-flow graph` 
+      may be mapped or computed. A NN does not have centralized storage; rather, 
+      a NN manifests as information stored as patterns throughout the network 
+      structure. NNs may be **Recurrent** (feedback loop) or **Nonrecurrent** 
+      (feed-forward) with regard to the network vector.
 
    ANN
 
-      :abbr:`ANN (Artificial Neural Network)` is an acronym for "Artificial 
-      Neural Network". ANN models are used to simulate possible combinations of 
-      binary logic processing and multi-layer (multi-dimensional) paths through 
-      which a :term:`data-flow graph` may be mapped or computed. An ANN does not 
-      have centralized storage; rather, an ANN manifests as information stored 
-      as patterns throughout the network structure. ANNs may be **Recurrent** 
-      (with feedback) or **Nonrecurrent** (feed-forward) with regard to the 
-      network structure. 
-
-   RNN 
-
-      See :term:`RANN`.
-
+      :abbr:`Artificial Neural Network (ANN)`, often abbreviated as :term:`NN`. 
 
    RANN 
+
+      :abbr:`Recurrent Artificial Neural Network (RANN)`, often abbreviated as 
+      :term:`RNN`.
+
+
+   RNN 
     
-      A :abbr:`Recurrent Artificial Neural Network (RANN)` is a variety of *ANN* 
-      where output nodes from a layer on a data-flow graph have loopback to 
-      nodes that created an earlier layer. Since the RANN has no "centralized" 
-      storage, this loopback is the means by which the ANN can "learn" or be 
-      trained.  There are several sub-categories of RANNs. An :term:`LSTM`, for 
-      example, is a specific kind of "recurrent" ANN with a particular way of 
-      implementing long/short-term memory. For brevity, the RANN acronym is 
-      often abbreviated as `RNN`.
+      A :abbr:`Recurrent Neural Network (RNN)` is a variety of :term:`NN` where 
+      output nodes from a layer on a data-flow graph have loopback to nodes that 
+      created an earlier layer. Since the RNN has no "centralized" storage, this 
+      loopback is the means by which the ANN can "learn" or be trained. There are 
+      several sub-categories of RNNs. An :term:`LSTM`, for example, is a 
+      specific kind of "recurrent" ANN with a particular way of implementing 
+      long/short-term memory. 
 
 
    LSTM
