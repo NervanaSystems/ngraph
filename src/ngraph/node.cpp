@@ -337,7 +337,7 @@ Node::ConstructionAssertLogger Node::construction_assert(bool assertion_true)
 
 Node::ConstructionAssertLogger::~ConstructionAssertLogger() noexcept(false)
 {
-    if (!m_assertion_true)
+    if (!m_assertion_true && !std::uncaught_exception())
     {
         std::stringstream ss;
         ss << "While constructing node '" << m_node->get_name() << "' with operation '"
