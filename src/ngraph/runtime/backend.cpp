@@ -150,7 +150,7 @@ vector<string> runtime::Backend::get_registered_devices()
             }
         }
     };
-    file_util::iterate_files(my_directory, f, false, true);
+    file_util::iterate_files(my_directory, f);
     return rc;
 }
 
