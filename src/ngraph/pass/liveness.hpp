@@ -27,6 +27,26 @@ namespace ngraph
     }
 }
 
+/**
+ * \brief Determine the first and last operations in the specified function that require each
+ * tensor.
+ *
+ * This pass assumes that the function's 'get_ordered_ops()' method describes the execution order
+ * for the functions ops.
+ *
+ * This pass updates each of those ops as follows (except as described further down):
+ * - The op's 'liveness_new_list' contains pointers to all tensors that are created by the
+ *   execution of this op.
+ * - The op's 'liveness_free_list' contains pointers to all tensors for which this op is their final
+ *   use.
+ * - If an op outputs a tensor that has no users, a pointer to that tensor appears in both the
+ *   'liveness_new_list' *and* 'liveness_free_list' of that op.
+ *
+ * The following tensors will not be added to any of the function's ops' liveness-new/free lists:
+ * - Tensors that are populated by ngraph Constant ops.
+ * - Tensors that provide the function's input parameter values.
+ * - Tensors that store the function's result values.
+ */
 class ngraph::pass::Liveness : public FunctionPass
 {
 public:
