@@ -153,10 +153,10 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias()
         auto mmb = std::make_shared<op::MatmulBias>(pattern_map[W],
                                                     pattern_map[x],
                                                     m_bias,
-                                                    m_matmul->get_arg0_shape(),
-                                                    m_matmul->get_arg1_shape(),
-                                                    m_matmul->get_is_arg0_transposed(),
-                                                    m_matmul->get_is_arg1_transposed(),
+                                                    m_matmul->get_a_shape(),
+                                                    m_matmul->get_b_shape(),
+                                                    m_matmul->get_is_a_transposed(),
+                                                    m_matmul->get_is_b_transposed(),
                                                     m_broadcast->get_broadcast_axes());
 
         ngraph::replace_node(m.get_match_root(), mmb);
