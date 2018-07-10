@@ -51,16 +51,24 @@ void* runtime::Backend::open_shared_library(string type)
     {
         type = type.substr(0, colon);
     }
-    string lib_name = "lib" + to_lower(type) + "_backend" + ext;
+
+    vector<string> backend_list;
+    string version = NGRAPH_VERSION;
+    version = regex_replace(version, regex("\\."), "\\.");
+    version = regex_replace(version, regex("\\+"), "\\+");
+    regex reg("lib" + to_lower(type) + "_backend.*" + version);
+    smatch result;
+
+    auto f = [&](const string& file, bool is_dir) {
+        string name = file_util::get_file_name(file);
+        if (regex_match(name, result, reg))
+        {
+            handle = dlopen(file.c_str(), RTLD_NOW | RTLD_GLOBAL);
+        }
+    };
     string my_directory = file_util::get_directory(find_my_file());
-    string full_path = file_util::path_join(my_directory, lib_name);
-    handle = dlopen(full_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
-    if (!handle)
-    {
-        string err = dlerror();
-        throw runtime_error("Library open for Backend '" + lib_name + "' failed with error:\n" +
-                            err);
-    }
+    file_util::iterate_files(my_directory, f);
+
     return handle;
 }
 
