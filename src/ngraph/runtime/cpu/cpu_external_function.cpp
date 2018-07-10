@@ -1207,19 +1207,20 @@ void runtime::cpu::CPU_ExternalFunction::build()
             tensor_data[p.first] = outputs[p.second];
         }
 
-        size_t i = 0;
+        auto functor = functors.begin();
         for (const auto& p : enables)
         {
             if (p.first(ctx) || first_iteration)
             {
-                for (size_t j = 0; j < p.second; j++, i++)
+                for (size_t j = 0; j < p.second; j++)
                 {
-                    functors[i](ctx);
+                    (*functor)(ctx);
+                    std::advance(functor, 1);
                 }
             }
             else
             {
-                i += p.second;
+                std::advance(functor, p.second);
             }
         }
         first_iteration = false;
