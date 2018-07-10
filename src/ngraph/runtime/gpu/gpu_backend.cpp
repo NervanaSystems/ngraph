@@ -23,6 +23,11 @@
 using namespace ngraph;
 using namespace std;
 
+extern "C" const char* get_version_string()
+{
+    return NGRAPH_VERSION;
+}
+
 extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
     return new runtime::gpu::GPU_Backend();

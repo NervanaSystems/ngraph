@@ -37,17 +37,26 @@ static string find_my_file()
     return dl_info.dli_fname;
 }
 
-// This will be uncommented when we add support for listing all known backends
-// static bool is_backend(const string& path)
-// {
-//     bool rc = false;
-//     string name = file_util::get_file_name(path);
-//     if (name.find("_backend.") != string::npos)
-//     {
-//         NGRAPH_INFO << name;
-//     }
-//     return rc;
-// }
+static bool is_backend(const string& path)
+{
+    bool rc = false;
+    const string prefix = "lib";
+    const string suffix = "_backend";
+    string name = file_util::get_file_name(path);
+    if (name.size() > prefix.size() && name.size() > suffix.size())
+    {
+        if (name.compare(0, prefix.size(), prefix) == 0)
+        {
+            auto pos = name.find(suffix, prefix.size());
+            if (pos != string::npos)
+            {
+                // string backend_name = name.substr(prefix.size(), pos - prefix.size());
+                rc = true;
+            }
+        }
+    }
+    return rc;
+}
 
 void* runtime::Backend::open_shared_library(string type)
 {
@@ -112,6 +121,17 @@ shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
 
 vector<string> runtime::Backend::get_registered_devices()
 {
+    string my_directory = file_util::get_directory(find_my_file());
+    vector<string> backend_list;
+    file_util::iterate_files(my_directory,
+                             [&](const string& file, bool is_dir) {
+                                 if (is_backend(file))
+                                 {
+                                     NGRAPH_INFO << file;
+                                 }
+                             },
+                             false,
+                             true);
     return vector<string>();
 }
 
