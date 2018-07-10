@@ -24,6 +24,9 @@
 using namespace std;
 using namespace ngraph;
 
+#define EXPECT_HAS_SUBSTRING(haystack, needle)                                                     \
+    EXPECT_PRED_FORMAT2(testing::IsSubstring, needle, haystack)
+
 //
 // Tests for broadcast.
 //
@@ -5881,10 +5884,7 @@ TEST(type_prop, avg_pool_invalid_0d_input)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool data batch input must have rank of at "
-                              "least 3 (one batch axis, one channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(), "Data input shape does not have rank of at least 3");
     }
     catch (...)
     {
@@ -5906,10 +5906,7 @@ TEST(type_prop, avg_pool_invalid_1d_input)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool data batch input must have rank of at "
-                              "least 3 (one batch axis, one channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(), "Data input shape does not have rank of at least 3");
     }
     catch (...)
     {
@@ -5931,10 +5928,7 @@ TEST(type_prop, avg_pool_invalid_2d_input)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool data batch input must have rank of at "
-                              "least 3 (one batch axis, one channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(), "Data input shape does not have rank of at least 3");
     }
     catch (...)
     {
@@ -5956,7 +5950,7 @@ TEST(type_prop, avg_pool_invalid_0_batch_size)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Average-pool data batch size is zero."));
+        EXPECT_HAS_SUBSTRING(error.what(), "Data batch size is zero");
     }
     catch (...)
     {
@@ -5978,7 +5972,7 @@ TEST(type_prop, avg_pool_invalid_0_channels)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Average-pool requires at least one feature channel."));
+        EXPECT_HAS_SUBSTRING(error.what(), "Channel count is zero");
     }
     catch (...)
     {
@@ -6000,10 +5994,8 @@ TEST(type_prop, avg_pool_invalid_wrong_number_of_window_dimensions_too_many)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Average-pool window shape rank does not match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Window shape rank does not match number of spatial dimensions");
     }
     catch (...)
     {
@@ -6025,10 +6017,8 @@ TEST(type_prop, avg_pool_invalid_wrong_number_of_window_dimensions_too_few)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Average-pool window shape rank does not match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Window shape rank does not match number of spatial dimensions");
     }
     catch (...)
     {
@@ -6051,9 +6041,9 @@ TEST(type_prop, avg_pool_invalid_movement_stride_rank)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool window movement stride rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Window movement stride rank does not match number of spatial dimensions");
     }
     catch (...)
     {
@@ -6079,9 +6069,8 @@ TEST(type_prop, avg_pool_invalid_padding_below_rank)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool below-padding rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Below-padding rank does not match number of spatial dimensions");
     }
     catch (...)
     {
@@ -6107,9 +6096,8 @@ TEST(type_prop, avg_pool_invalid_padding_above_rank)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool above-padding rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Above-padding rank does not match number of spatial dimensions");
     }
     catch (...)
     {
@@ -6131,8 +6119,8 @@ TEST(type_prop, avg_pool_invalid_input_item_size_0)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool input spatial dimension is zero even after padding."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Data input spatial dimension 0 has zero length even after padding");
     }
     catch (...)
     {
@@ -6154,7 +6142,7 @@ TEST(type_prop, avg_pool_invalid_window_size_0)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Average-pool window shape has a zero-length axis."));
+        EXPECT_HAS_SUBSTRING(error.what(), "Window shape dimension 1 has zero length");
     }
     catch (...)
     {
@@ -6176,9 +6164,8 @@ TEST(type_prop, avg_pool_invalid_dilated_too_large)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool window shape is larger than the spatial "
-                              "dimensions even after padding."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Window shape after padding is larger than the spatial dimensions");
     }
     catch (...)
     {
@@ -6201,7 +6188,7 @@ TEST(type_prop, avg_pool_invalid_movement_stride_0)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Average-pool window axis movement stride is zero."));
+        EXPECT_HAS_SUBSTRING(error.what(), "Window movement strides dimension 0 has zero length");
     }
     catch (...)
     {

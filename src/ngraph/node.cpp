@@ -329,3 +329,19 @@ NodeVector Node::get_users() const
 
     return result;
 }
+
+Node::ConstructionAssertLogger Node::construction_assert(bool assertion_true)
+{
+    return ConstructionAssertLogger(this, assertion_true);
+}
+
+Node::ConstructionAssertLogger::~ConstructionAssertLogger() noexcept(false)
+{
+    if (!m_assertion_true)
+    {
+        std::stringstream ss;
+        ss << "While constructing node '" << m_node->get_name() << "' with operation '"
+           << m_node->description() << "': " << m_stream.str();
+        throw ngraph_error(ss.str());
+    }
+}

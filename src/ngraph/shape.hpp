@@ -105,4 +105,6 @@ namespace ngraph
     {
         return 1 == shape.size();
     }
+
+    std::ostream& operator<<(std::ostream& s, const Shape& shape);
 }

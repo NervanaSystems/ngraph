@@ -77,9 +77,33 @@ namespace ngraph
 
         friend class ngraph::pass::GetOutputElementElimination;
 
+    public:
+        class ConstructionAssertLogger
+        {
+        public:
+            ConstructionAssertLogger(Node* node, bool assertion_true)
+                : m_node(node)
+                , m_assertion_true(assertion_true)
+            {
+            }
+            ConstructionAssertLogger(ConstructionAssertLogger&& other)
+                : ConstructionAssertLogger(other.m_node, other.m_assertion_true)
+            {
+                m_stream = std::move(other.m_stream);
+            }
+            ~ConstructionAssertLogger() noexcept(false);
+            std::stringstream& stream() { return m_stream; }
+        private:
+            Node* m_node;
+            bool m_assertion_true;
+            std::stringstream m_stream;
+        };
+
     protected:
         Node(const std::string& node_type, const NodeVector& arguments);
         virtual ~Node();
+
+        ConstructionAssertLogger construction_assert(bool assertion_true);
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
     public:

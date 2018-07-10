@@ -63,4 +63,6 @@ namespace ngraph
             return *this;
         }
     };
+
+    std::ostream& operator<<(std::ostream& s, const Strides& strides);
 }
