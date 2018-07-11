@@ -52,22 +52,10 @@ void* runtime::Backend::open_shared_library(string type)
         type = type.substr(0, colon);
     }
 
-    vector<string> backend_list;
-    string version = NGRAPH_VERSION;
-    version = regex_replace(version, regex("\\."), "\\.");
-    version = regex_replace(version, regex("\\+"), "\\+");
-    regex reg("lib" + to_lower(type) + "_backend.*" + version);
-    smatch result;
-
-    auto f = [&](const string& file, bool is_dir) {
-        string name = file_util::get_file_name(file);
-        if (handle == nullptr && regex_match(name, result, reg))
-        {
-            handle = dlopen(file.c_str(), RTLD_NOW | RTLD_GLOBAL);
-        }
-    };
+    string library_name = "lib" + to_lower(type) + "_backend" + string(SHARED_LIB_EXT);
     string my_directory = file_util::get_directory(find_my_file());
-    file_util::iterate_files(my_directory, f);
+    string library_path = file_util::path_join(my_directory, library_name);
+    handle = dlopen(library_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
 
     return handle;
 }
@@ -121,49 +109,29 @@ map<string, string> runtime::Backend::get_registered_device_map()
     map<string, string> rc;
     string my_directory = file_util::get_directory(find_my_file());
     vector<string> backend_list;
-    string version = NGRAPH_VERSION;
-    version = regex_replace(version, regex("\\."), "\\.");
-    version = regex_replace(version, regex("\\+"), "\\+");
-    // regex reg("^lib(.+)_backend.*" + version + ".*");
-    NGRAPH_INFO << "^lib(.+)_backend" + string(SHARED_LIB_EXT);
     regex reg("^lib(.+)_backend" + string(SHARED_LIB_EXT));
     smatch result;
 
-    NGRAPH_INFO << NGRAPH_VERSION;
-    NGRAPH_INFO << my_directory;
     auto f = [&](const string& file, bool is_dir) {
         string name = file_util::get_file_name(file);
-        NGRAPH_INFO << name;
         if (regex_match(name, result, reg))
         {
-            NGRAPH_INFO << name;
-            try
+            auto handle = dlopen(file.c_str(), RTLD_LAZY | RTLD_LOCAL);
+            if (handle)
             {
-                auto handle = dlopen(file.c_str(), RTLD_LAZY | RTLD_LOCAL);
-                if (handle)
+                if (dlsym(handle, "new_backend") && dlsym(handle, "delete_backend"))
                 {
-                    NGRAPH_INFO;
-                    if (dlsym(handle, "new_backend") && dlsym(handle, "delete_backend"))
+                    function<const char*()> get_ngraph_version_string =
+                        reinterpret_cast<const char* (*)()>(
+                            dlsym(handle, "get_ngraph_version_string"));
+                    if (get_ngraph_version_string &&
+                        get_ngraph_version_string() == string(NGRAPH_VERSION))
                     {
-                        NGRAPH_INFO;
-                        function<const char*()> get_ngraph_version_string =
-                            reinterpret_cast<const char* (*)()>(
-                                dlsym(handle, "get_ngraph_version_string"));
-                        NGRAPH_INFO << get_ngraph_version_string();
-                        if (get_ngraph_version_string &&
-                            get_ngraph_version_string() == string(NGRAPH_VERSION))
-                        {
-                            NGRAPH_INFO;
-                            rc.insert({to_upper(result[1]), file});
-                        }
+                        rc.insert({to_upper(result[1]), file});
                     }
-
-                    dlclose(handle);
                 }
-            }
-            catch (...)
-            {
-                NGRAPH_INFO;
+
+                dlclose(handle);
             }
         }
     };
