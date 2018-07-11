@@ -148,16 +148,19 @@ Glossary
       output nodes from a layer on a data-flow graph have loopback to nodes that 
       comprise an earlier layer. Since the RNN has no "centralized" storage, this 
       loopback is the means by which the ANN can "learn" or be trained. There are 
-      several sub-categories of RNNs. An :term:`LSTM`, for example, is a 
-      specific kind of "recurrent" ANN with a particular way of implementing 
-      long/short-term memory. 
+      several sub-categories of RNNs. The traditional RNN looks like: 
+
+      :math:`s_t = tanh(dot(W,x_{t-1}) + dot(U, s_{t-1})`
+
+
+      where :math:`x` is the input data and :math:`s` is the output/memory.
 
 
    LSTM
 
       :abbr:`LSTM (Long Short-Term Memory)` is an acronym for "Long Short-Term 
-      Memory".  LSTM implements memory distribution of a :term:`RANN` through
-      cells, input gates, and output gates. LSTMs add-in mechanisms to keep 
-      chains of backprops from either blowing up or going to 0, as they tend to 
-      do when using only cells without gates.
+      Memory". LSTMs extend on the traditional RNN by providing a number of ways 
+      to "forget" the memory of the previous time step via a set of learnable 
+      gates. These gates help avoid the problem of exploding or vanishing 
+      gradients that occur in the traditional RNN.
 
