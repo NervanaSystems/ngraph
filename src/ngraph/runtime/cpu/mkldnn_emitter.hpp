@@ -24,6 +24,7 @@
 #include <mkldnn.hpp>
 
 #include "ngraph/coordinate_diff.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -93,6 +94,22 @@ namespace ngraph
                                                  const ngraph::CoordinateDiff& padding_below,
                                                  const ngraph::CoordinateDiff& padding_above,
                                                  const mkldnn::post_ops& pops = mkldnn::post_ops());
+
+                size_t build_convolution(const ngraph::Node* node,
+                                         const std::vector<TensorViewWrapper>& args,
+                                         const std::vector<TensorViewWrapper>& out);
+
+                size_t build_convolution_relu(const ngraph::Node* node,
+                                              const std::vector<TensorViewWrapper>& args,
+                                              const std::vector<TensorViewWrapper>& out);
+
+                size_t build_convolution_bias(const ngraph::Node* node,
+                                              const std::vector<TensorViewWrapper>& args,
+                                              const std::vector<TensorViewWrapper>& out);
+
+                size_t build_convolution_bias_add(const ngraph::Node* node,
+                                                  const std::vector<TensorViewWrapper>& args,
+                                                  const std::vector<TensorViewWrapper>& out);
 
                 mkldnn::memory::format query_convolution_forward_weight_format(
                     const mkldnn::memory::desc& input_data_desc,

@@ -2854,45 +2854,10 @@ namespace ngraph
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    // For dilation, MKLDNN wants to know how many elements to insert between, not how far
-                    // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
-                    Strides window_dilation_strides_adjusted;
-                    for (size_t s : convolution->get_window_dilation_strides())
-                    {
-                        window_dilation_strides_adjusted.push_back(s - 1);
-                    }
-
-                    auto input_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
-                    auto weights_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
-                    // HACK to help MKLDNN pick the right implementation
-                    if (weights_format == mkldnn::memory::format::nchw)
-                    {
-                        weights_format = mkldnn::memory::format::oihw;
-                    }
-                    auto output_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
-
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_data_desc =
-                        mkldnn_emitter->build_memory_descriptor(args[0], input_format);
-                    auto weights_desc =
-                        mkldnn_emitter->build_memory_descriptor(args[1], weights_format);
-                    auto result_desc =
-                        mkldnn_emitter->build_memory_descriptor(out[0], output_format);
-                    size_t conv_index = 0;
-
-                    conv_index = mkldnn_emitter->build_convolution_forward(
-                        input_data_desc,
-                        weights_desc,
-                        result_desc,
-                        convolution->get_window_movement_strides(),
-                        window_dilation_strides_adjusted,
-                        convolution->get_padding_below(),
-                        convolution->get_padding_above());
-
+                    auto conv_index = mkldnn_emitter->build_convolution(node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
@@ -3076,135 +3041,12 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::ConvolutionBias)
             {
-                auto convolution = static_cast<const ngraph::op::ConvolutionBias*>(node);
-
-                const TensorViewWrapper& data = args[0];
-                const TensorViewWrapper& weights = args[1];
-                const TensorViewWrapper& bias = args[2];
-                const TensorViewWrapper& result = out[0];
-
-                using namespace runtime::cpu::mkldnn_utils;
-
-                if (mkldnn_utils::use_mkldnn_kernel(node))
-                {
-                    auto data_format = mkldnn_utils::get_input_mkldnn_format(node, 0);
-                    auto weights_format = mkldnn_utils::get_input_mkldnn_format(node, 1);
-                    auto bias_format = mkldnn_utils::get_input_mkldnn_format(node, 2);
-                    // HACK to help MKLDNN pick the right implementation
-                    if (weights_format == mkldnn::memory::format::nchw)
-                    {
-                        weights_format = mkldnn::memory::format::oihw;
-                    }
-                    auto result_format = mkldnn_utils::get_output_mkldnn_format(node, 0);
-
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto data_desc = mkldnn_emitter->build_memory_descriptor(data, data_format);
-                    auto weights_desc =
-                        mkldnn_emitter->build_memory_descriptor(weights, weights_format);
-                    auto bias_desc = mkldnn_emitter->build_memory_descriptor(bias, bias_format);
-                    auto result_desc =
-                        mkldnn_emitter->build_memory_descriptor(result, result_format);
-
-                    // For dilation, MKLDNN wants to know how many elements to insert between, not how far
-                    // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
-                    Strides window_dilation_strides_adjusted;
-
-                    for (size_t s : convolution->get_window_dilation_strides())
-                    {
-                        window_dilation_strides_adjusted.push_back(s - 1);
-                    }
-
-                    size_t conv_index = mkldnn_emitter->build_convolution_forward(
-                        data_desc,
-                        weights_desc,
-                        bias_desc,
-                        result_desc,
-                        convolution->get_window_movement_strides(),
-                        window_dilation_strides_adjusted,
-                        convolution->get_padding_below(),
-                        convolution->get_padding_above());
-
-                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << data.get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << weights.get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
-                           << ", " << bias.get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
-                           << ", " << result.get_name() << ");\n";
-
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(conv_index) << ");\n";
-                }
-                else
-                {
-                    throw ngraph_error("ConvolutionBias is only supported with MKLDNN kernel.");
-                }
-            }
-
-            template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::ConvolutionBiasRelu)
-            {
-                auto convolution = static_cast<const ngraph::op::ConvolutionBiasRelu*>(node);
-
-                auto arg0_shape = args[0].get_shape();
-                auto arg1_shape = args[1].get_shape();
-                auto result_shape = out[0].get_shape();
-
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    // For dilation, MKLDNN wants to know how many elements to insert between, not how far
-                    // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
-                    Strides window_dilation_strides_adjusted;
-                    for (size_t s : convolution->get_window_dilation_strides())
-                    {
-                        window_dilation_strides_adjusted.push_back(s - 1);
-                    }
-
-                    auto input_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
-                    auto weights_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
-                    auto bias_format = mkldnn_utils::get_input_mkldnn_format(node, 2);
-                    // HACK to help MKLDNN pick the right implementation
-                    if (weights_format == mkldnn::memory::format::nchw)
-                    {
-                        weights_format = mkldnn::memory::format::oihw;
-                    }
-                    auto output_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
-
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_data_desc =
-                        mkldnn_emitter->build_memory_descriptor(args[0], input_format);
-                    auto weights_desc =
-                        mkldnn_emitter->build_memory_descriptor(args[1], weights_format);
-                    auto bias_desc = mkldnn_emitter->build_memory_descriptor(args[2], bias_format);
-                    auto result_desc =
-                        mkldnn_emitter->build_memory_descriptor(out[0], output_format);
-                    size_t conv_index = 0;
-
-                    const float ops_scale = 1.f;
-                    const float ops_alpha = -0.f; // relu negative slope
-                    const float ops_beta = 0.f;
-
-                    mkldnn::post_ops ops;
-                    ops.append_eltwise(
-                        ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
-
-                    conv_index = mkldnn_emitter->build_convolution_forward(
-                        input_data_desc,
-                        weights_desc,
-                        bias_desc,
-                        result_desc,
-                        convolution->get_window_movement_strides(),
-                        window_dilation_strides_adjusted,
-                        convolution->get_padding_below(),
-                        convolution->get_padding_above(),
-                        ops);
-
+                    auto conv_index = mkldnn_emitter->build_convolution_bias(node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
@@ -3216,6 +3058,10 @@ namespace ngraph
 
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(conv_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("ConvolutionBias is only supported with MKLDNN kernel.");
                 }
             }
 
