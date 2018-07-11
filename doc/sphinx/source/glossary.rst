@@ -152,8 +152,9 @@ Glossary
 
       :math:`s_t = tanh(dot(W,x_{t-1}) + dot(U, s_{t-1})`
 
-
-      where :math:`x` is the input data and :math:`s` is the output/memory.
+      where :math:`x` is the input data, :math:`s` is the memory, and output is
+      :math:`o_t = softmax(dot(V, s_t))`.  :doc:`ops/tanh`, :doc:`ops/dot`, and 
+      :doc:`ops/softmax` are all nGraph :doc:`core Ops <ops/index>`.
 
 
    LSTM

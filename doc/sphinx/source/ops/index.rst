@@ -97,5 +97,6 @@ Not currently a comprehensive list.
    relu.rst
    sigmoid.rst
    softmax.rst
+   tanh.rst
 
    

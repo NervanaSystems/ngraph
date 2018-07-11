@@ -11,7 +11,7 @@ Install
 Build Environments
 ==================
 
-The |release| version of |project| supports Linux\*-based systems  
+The |release| of |project| supports Linux\*-based systems  
 with the following packages and prerequisites: 
 
 .. csv-table::
@@ -20,7 +20,7 @@ with the following packages and prerequisites:
    :escape: ~
 
    CentOS 7.4 64-bit, GCC 4.8, CMake 3.4.3, supported, ``wget zlib-devel ncurses-libs ncurses-devel patch diffutils gcc-c++ make git perl-Data-Dumper`` 
-   Ubuntu 16.04 (LTS) 64-bit, Clang 3.9, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-3.9 clang-format-3.9 git curl zlib1g zlib1g-dev libtinfo-dev``
+   Ubuntu 16.04 or 18.04 (LTS) 64-bit, Clang 3.9, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-3.9 clang-format-3.9 git curl zlib1g zlib1g-dev libtinfo-dev``
    Clear Linux\* OS for Intel Architecture, Clang 5.0.1, CMake 3.10.2, experimental, bundles ``machine-learning-basic dev-utils python3-basic python-basic-dev``
 
 Other configurations may work, but should be considered experimental with
@@ -49,7 +49,8 @@ details about how to change or customize the install location.
 Ubuntu 16.04
 -------------
 
-The process documented here will work on Ubuntu\* 16.04 (LTS)
+The process documented here will work on Ubuntu\* 16.04 (LTS) or on Ubuntu 
+18.04 (LTS).
 
 #. (Optional) Create something like ``/opt/libraries`` and (with sudo), 
    give ownership of that directory to your user. Creating such a placeholder 
