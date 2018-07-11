@@ -66,7 +66,7 @@ using namespace ngraph;
 
 static bool cse_reshape(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
 {
-    NGRAPH_DEBUG << "In cse_unarywise for " << a->get_name() << " and " << b->get_name();
+    NGRAPH_DEBUG << "In cse_reshape for " << a->get_name() << " and " << b->get_name();
 
     auto reshape_a = std::dynamic_pointer_cast<ngraph::op::Reshape>(a);
     auto reshape_b = std::dynamic_pointer_cast<ngraph::op::Reshape>(b);
@@ -77,7 +77,7 @@ static bool cse_reshape(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
 }
 static bool cse_broadcast(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
 {
-    NGRAPH_DEBUG << "In cse_unarywise for " << a->get_name() << " and " << b->get_name();
+    NGRAPH_DEBUG << "In cse_broadcast for " << a->get_name() << " and " << b->get_name();
 
     auto broadcast_a = std::dynamic_pointer_cast<ngraph::op::Broadcast>(a);
     auto broadcast_b = std::dynamic_pointer_cast<ngraph::op::Broadcast>(b);
