@@ -2635,7 +2635,6 @@ TEST(cpu_fusion, fuse_bounded_relu_inter_vs_cpu)
     check_bounded_relu(Shape{4, 3, 2}, 2.0f);
 }
 
-
 TEST(cpu_fusion, dot_batch_forward)
 {
     const Shape shape_a{2, 3, 2};
@@ -2666,4 +2665,3 @@ TEST(cpu_fusion, dot_batch_forward)
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }
-

@@ -26,12 +26,17 @@
 using namespace ngraph;
 using namespace std;
 
-extern "C" void create_backend()
+extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
     // Force TBB to link to the backend
     tbb::TBB_runtime_interface_version();
-    runtime::Backend::register_backend("CPU", make_shared<runtime::cpu::CPU_Backend>());
-};
+    return new runtime::cpu::CPU_Backend();
+}
+
+extern "C" void delete_backend(runtime::Backend* backend)
+{
+    delete backend;
+}
 
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
     const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function)
@@ -60,6 +65,7 @@ bool runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func)
         instance.m_external_function->m_emit_timing = instance.m_performance_counters_enabled;
         auto cf = instance.m_external_function->make_call_frame();
         instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
+        m_function_map[func] = instance;
     }
     return true;
 }
