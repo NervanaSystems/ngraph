@@ -2221,16 +2221,16 @@ namespace ngraph
                            << "{" << join(sum->get_reduction_axes()) << "}"
                            << ");\n";
                 }
-                else if ((args[0].get_element_type() == element::f32) &&
-                         (args[0].get_shape().size() == 3) && (sum->get_reduction_axes().size() == 1))
-                {
-                    writer << "cpu::kernel::reduce_sum_3d_1rd_float32(" << args[0].get_name()
-                           << ", " << out[0].get_name() << ", "
-                           << "{" << join(args[0].get_shape()) << "}, "
-                           << "{" << join(out[0].get_shape()) << "}, "
-                           << "{" << join(sum->get_reduction_axes()) << "}"
-                           << ");\n";
-                }
+//                else if ((args[0].get_element_type() == element::f32) &&
+//                         (args[0].get_shape().size() == 3) && (sum->get_reduction_axes().size() == 1))
+//                {
+//                    writer << "cpu::kernel::reduce_sum_3d_1rd_float32(" << args[0].get_name()
+//                           << ", " << out[0].get_name() << ", "
+//                           << "{" << join(args[0].get_shape()) << "}, "
+//                           << "{" << join(out[0].get_shape()) << "}, "
+//                           << "{" << join(sum->get_reduction_axes()) << "}"
+//                           << ");\n";
+//                }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 4 && sum->get_reduction_axes().size() == 2)
                 {
