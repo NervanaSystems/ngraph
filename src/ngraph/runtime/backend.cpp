@@ -41,7 +41,7 @@ static string find_my_file()
 void* runtime::Backend::open_shared_library(string type)
 {
     string ext = SHARED_LIB_EXT;
-    string ver = LIBRARY_VERSION;
+    // string ver = LIBRARY_VERSION;
 
     void* handle = nullptr;
 
@@ -61,7 +61,7 @@ void* runtime::Backend::open_shared_library(string type)
 
     auto f = [&](const string& file, bool is_dir) {
         string name = file_util::get_file_name(file);
-        if (regex_match(name, result, reg))
+        if (handle == nullptr && regex_match(name, result, reg))
         {
             handle = dlopen(file.c_str(), RTLD_NOW | RTLD_GLOBAL);
         }
@@ -82,6 +82,15 @@ shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
     }
     else
     {
+        function<const char*()> get_ngraph_version_string =
+            reinterpret_cast<const char* (*)()>(dlsym(handle, "get_ngraph_version_string"));
+        if (!get_ngraph_version_string)
+        {
+            dlclose(handle);
+            throw runtime_error("Backend '" + type +
+                                "' does not implement get_ngraph_version_string");
+        }
+
         function<runtime::Backend*(const char*)> new_backend =
             reinterpret_cast<runtime::Backend* (*)(const char*)>(dlsym(handle, "new_backend"));
         if (!new_backend)
@@ -107,37 +116,69 @@ shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
     return rc;
 }
 
-vector<string> runtime::Backend::get_registered_devices()
+map<string, string> runtime::Backend::get_registered_device_map()
 {
-    vector<string> rc;
+    map<string, string> rc;
     string my_directory = file_util::get_directory(find_my_file());
     vector<string> backend_list;
     string version = NGRAPH_VERSION;
     version = regex_replace(version, regex("\\."), "\\.");
     version = regex_replace(version, regex("\\+"), "\\+");
-    regex reg("^lib(.+)_backend.*" + version + ".*");
+    // regex reg("^lib(.+)_backend.*" + version + ".*");
+    NGRAPH_INFO << "^lib(.+)_backend" + string(SHARED_LIB_EXT);
+    regex reg("^lib(.+)_backend" + string(SHARED_LIB_EXT));
     smatch result;
 
+    NGRAPH_INFO << NGRAPH_VERSION;
+    NGRAPH_INFO << my_directory;
     auto f = [&](const string& file, bool is_dir) {
         string name = file_util::get_file_name(file);
+        NGRAPH_INFO << name;
         if (regex_match(name, result, reg))
         {
-            auto handle = dlopen(file.c_str(), RTLD_NOW | RTLD_GLOBAL);
-            if (handle)
+            NGRAPH_INFO << name;
+            try
             {
-                if (dlsym(handle, "new_backend") && dlsym(handle, "delete_backend"))
+                auto handle = dlopen(file.c_str(), RTLD_LAZY | RTLD_LOCAL);
+                if (handle)
                 {
-                    string backend_name = result[1];
-                    transform(
-                        backend_name.begin(), backend_name.end(), backend_name.begin(), ::toupper);
-                    rc.push_back(backend_name);
-                }
+                    NGRAPH_INFO;
+                    if (dlsym(handle, "new_backend") && dlsym(handle, "delete_backend"))
+                    {
+                        NGRAPH_INFO;
+                        function<const char*()> get_ngraph_version_string =
+                            reinterpret_cast<const char* (*)()>(
+                                dlsym(handle, "get_ngraph_version_string"));
+                        NGRAPH_INFO << get_ngraph_version_string();
+                        if (get_ngraph_version_string &&
+                            get_ngraph_version_string() == string(NGRAPH_VERSION))
+                        {
+                            NGRAPH_INFO;
+                            rc.insert({to_upper(result[1]), file});
+                        }
+                    }
 
-                dlclose(handle);
+                    dlclose(handle);
+                }
+            }
+            catch (...)
+            {
+                NGRAPH_INFO;
             }
         }
     };
-    file_util::iterate_files(my_directory, f);
+    file_util::iterate_files(my_directory, f, false, true);
+    return rc;
+}
+
+vector<string> runtime::Backend::get_registered_devices()
+{
+    map<string, string> m = get_registered_device_map();
+    vector<string> rc;
+    for (const pair<string, string>& p : m)
+    {
+        rc.push_back(p.first);
+    }
     return rc;
 }
 
