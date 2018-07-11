@@ -146,7 +146,7 @@ Glossary
     
       A :abbr:`Recurrent Neural Network (RNN)` is a variety of :term:`NN` where 
       output nodes from a layer on a data-flow graph have loopback to nodes that 
-      created an earlier layer. Since the RNN has no "centralized" storage, this 
+      comprise an earlier layer. Since the RNN has no "centralized" storage, this 
       loopback is the means by which the ANN can "learn" or be trained. There are 
       several sub-categories of RNNs. An :term:`LSTM`, for example, is a 
       specific kind of "recurrent" ANN with a particular way of implementing 
