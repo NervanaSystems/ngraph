@@ -59,7 +59,10 @@ runtime::gpu::GPU_TensorView::~GPU_TensorView()
 {
     if (!m_custom_memory)
     {
-        CUDA_RT_SAFE_CALL(cudaFree(m_allocated_buffer_pool));
+        if(m_allocated_buffer_pool != nullptr)
+        {
+            CUDA_RT_SAFE_CALL(cudaFree(m_allocated_buffer_pool));
+        }
     }
 }
 
