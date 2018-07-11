@@ -156,5 +156,8 @@ Glossary
    LSTM
 
       :abbr:`LSTM (Long Short-Term Memory)` is an acronym for "Long Short-Term 
-      Memory".  LSTM implements memory distribution of the :term:`RANN` through
-      cells, input gates, and output gates.        
+      Memory".  LSTM implements memory distribution of a :term:`RANN` through
+      cells, input gates, and output gates. LSTMs add-in mechanisms to keep 
+      chains of backprops from either blowing up or going to 0, as they tend to 
+      do when using only cells without gates.
+
