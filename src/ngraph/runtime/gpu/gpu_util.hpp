@@ -64,7 +64,8 @@
     do                                                                                             \
     {                                                                                              \
         cudaError_t err = x;                                                                       \
-        if (cudaSuccess != err) {                                                                  \
+        if (cudaSuccess != err)                                                                    \
+        {                                                                                          \
             std::stringstream safe_call_ss;                                                        \
             safe_call_ss << "\nerror: " #x " failed with error"                                    \
                          << "\nfile: " << __FILE__ << "\nline: " << __LINE__                       \
