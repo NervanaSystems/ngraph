@@ -34,7 +34,7 @@ void runtime::gpu::print_gpu_f32_tensor(const void* p, size_t element_count, siz
 {
     std::vector<float> local(element_count);
     size_t size_in_bytes = element_size * element_count;
-    CUDA_SAFE_CALL(cudaMemcpy(local.data(), p, size_in_bytes, cudaMemcpyDeviceToHost));
+    CUDA_RT_SAFE_CALL(cudaMemcpy(local.data(), p, size_in_bytes, cudaMemcpyDeviceToHost));
     std::cout << "{" << join(local) << "}" << std::endl;
 }
 
@@ -46,7 +46,7 @@ void runtime::gpu::check_cuda_errors(CUresult err)
 void* runtime::gpu::create_gpu_buffer(size_t buffer_size, const void* data)
 {
     void* allocated_buffer_pool;
-    CUDA_SAFE_CALL(cudaMalloc(static_cast<void**>(&allocated_buffer_pool), buffer_size));
+    CUDA_RT_SAFE_CALL(cudaMalloc(static_cast<void**>(&allocated_buffer_pool), buffer_size));
     if (data)
     {
         runtime::gpu::cuda_memcpyHtD(allocated_buffer_pool, data, buffer_size);
@@ -58,28 +58,28 @@ void runtime::gpu::free_gpu_buffer(void* buffer)
 {
     if (buffer)
     {
-        CUDA_SAFE_CALL(cudaFree(buffer));
+        CUDA_RT_SAFE_CALL(cudaFree(buffer));
     }
 }
 
 void runtime::gpu::cuda_memcpyDtD(void* dst, const void* src, size_t buffer_size)
 {
-    CUDA_SAFE_CALL(cudaMemcpy(dst, src, buffer_size, cudaMemcpyDeviceToDevice));
+    CUDA_RT_SAFE_CALL(cudaMemcpy(dst, src, buffer_size, cudaMemcpyDeviceToDevice));
 }
 
 void runtime::gpu::cuda_memcpyHtD(void* dst, const void* src, size_t buffer_size)
 {
-    CUDA_SAFE_CALLcudaMemcpy(dst, src, buffer_size, cudaMemcpyHostToDevice));
+    CUDA_RT_SAFE_CALL(cudaMemcpy(dst, src, buffer_size, cudaMemcpyHostToDevice));
 }
 
 void runtime::gpu::cuda_memcpyDtH(void* dst, const void* src, size_t buffer_size)
 {
-    CUDA_SAFE_CALLcudaMemcpy(dst, src, buffer_size, cudaMemcpyDeviceToHost));
+    CUDA_RT_SAFE_CALL(cudaMemcpy(dst, src, buffer_size, cudaMemcpyDeviceToHost));
 }
 
 void runtime::gpu::cuda_memset(void* dst, int value, size_t buffer_size)
 {
-    CUDA_SAFE_CALLcudaMemset(dst, value, buffer_size));
+    CUDA_RT_SAFE_CALL(cudaMemset(dst, value, buffer_size));
 }
 
 namespace
