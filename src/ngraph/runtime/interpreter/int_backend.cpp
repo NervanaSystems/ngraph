@@ -29,6 +29,11 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorViewLayout;
 
+extern "C" const char* get_ngraph_version_string()
+{
+    return NGRAPH_VERSION;
+}
+
 extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
     return new runtime::interpreter::INTBackend();

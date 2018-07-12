@@ -84,6 +84,7 @@ namespace ngraph
 
         private:
             static void* open_shared_library(std::string type);
+            static std::map<std::string, std::string> get_registered_device_map();
         };
     }
 }
