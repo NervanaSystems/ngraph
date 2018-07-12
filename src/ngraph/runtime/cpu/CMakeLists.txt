@@ -29,6 +29,7 @@ set(SRC
     cpu_tracing.cpp
     builder/convert_layout.cpp
     builder/convolution.cpp
+    builder/reshape.cpp
     kernel/eigen_thread_pool.cpp
     kernel/pad.cpp
     kernel/reduce_max.cpp
