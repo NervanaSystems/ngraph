@@ -61,7 +61,6 @@ namespace ngraph
                                      bool release_function = true);
                 ~GPU_ExternalFunction();
                 std::shared_ptr<ngraph::runtime::gpu::GPU_CallFrame> make_call_frame();
-                std::unique_ptr<runtime::gpu::GPURuntimeContext>& ctx();
                 const std::unique_ptr<GPUPrimitiveEmitter>& get_primitive_emitter() const
                 {
                     return m_shared_context->m_primitive_emitter;

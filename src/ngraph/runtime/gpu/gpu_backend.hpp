@@ -67,8 +67,10 @@ namespace ngraph
                 public:
                     BackendContext();
                     ~BackendContext();
+                    void prepare_runtime_context();
+
+                    std::unique_ptr<GPURuntimeContext> m_runtime_context;
                     std::unique_ptr<GPUPrimitiveEmitter> m_primitive_emitter;
-                    std::unique_ptr<GPURuntimeContext> m_ctx;
                 };
 
             private:

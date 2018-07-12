@@ -799,11 +799,6 @@ void runtime::gpu::GPU_ExternalFunction::emit_debug_function_exit(
     writer << "timers[" << m_name_index_map[node->get_name()] << "].stop();\n";
 }
 
-std::unique_ptr<runtime::gpu::GPURuntimeContext>& runtime::gpu::GPU_ExternalFunction::ctx()
-{
-    return m_shared_context->m_ctx;
-}
-
 bool runtime::gpu::GPU_ExternalFunction::is_functionally_identical(
     const Node& n1, const Node& n2, const unordered_map<const Node*, string>& node_cache) const
 {

@@ -32,17 +32,16 @@ runtime::gpu::GPU_CallFrame::GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction>
     : m_external_function(external_function)
     , m_compiled_function(compiled_function)
 {
-    setup_runtime_context();
 }
 
 runtime::gpu::GPU_CallFrame::~GPU_CallFrame()
 {
-    cleanup_runtime_context();
 }
 
 void runtime::gpu::GPU_CallFrame::call(
     const std::vector<std::shared_ptr<runtime::TensorView>>& output_tvs,
-    const std::vector<std::shared_ptr<runtime::TensorView>>& input_tvs)
+    const std::vector<std::shared_ptr<runtime::TensorView>>& input_tvs,
+    GPURuntimeContext* ctx)
 {
     //Device tensors
     vector<void*> inputs;
@@ -61,18 +60,5 @@ void runtime::gpu::GPU_CallFrame::call(
         outputs.push_back(tv->m_allocated_buffer_pool);
     }
 
-    m_compiled_function(inputs.data(), outputs.data(), m_external_function->ctx().get());
-}
-
-void runtime::gpu::GPU_CallFrame::setup_runtime_context()
-{
-    // add pointers to gpu primitives into the gpu runtime context
-    const auto& primitive_emitter = m_external_function->get_primitive_emitter();
-    m_external_function->ctx()->gpu_primitives = primitive_emitter->get_primitives().data();
-    m_external_function->ctx()->gpu_memory_primitives =
-        primitive_emitter->get_memory_primitives().data();
-}
-
-void runtime::gpu::GPU_CallFrame::cleanup_runtime_context()
-{
+    m_compiled_function(inputs.data(), outputs.data(), ctx);
 }

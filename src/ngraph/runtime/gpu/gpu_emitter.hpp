@@ -86,7 +86,7 @@ namespace ngraph
                         }
                         dtypes.push_back(out[0].get_type());
                         auto ew_index = cuda_emitter->build_elementwise<T>(
-                            external_function->ctx().get(), dtypes, out[0].get_shape());
+                            dtypes, out[0].get_shape());
                         writer << "gpu::invoke_primitive(ctx, " << ew_index << ", ";
                         writer << "std::vector<void*>{" << args.front().get_name();
                         for (size_t i = 1; i < args.size(); i++)
