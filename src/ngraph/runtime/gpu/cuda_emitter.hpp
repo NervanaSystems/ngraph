@@ -149,6 +149,9 @@ namespace ngraph
                                          GPUShape filter_dilation,
                                          GPUShape output_shape);
 
+                void debug_sync();
+                void sync();
+
             private:
                 CUDAEmitter(GPUPrimitiveEmitter* emitter);
                 uint32_t align_to_block_size(uint32_t threads, uint32_t block_size);
