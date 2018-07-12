@@ -301,27 +301,29 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
     // create input and output arrays
     auto source_nd_name = recast_tmp_var(writer, element_type, arg0, arg0_shape, "source_nd");
     auto dest_nd_name = recast_tmp_var(writer, element_type, out, out_shape, "dest_nd");
-
-    // zero the output to make sure we don't have randomly initialized data
-//    if (out_shape.size() == 0)
-//    {
-//        writer << dest_nd_name << " = 0;\n";
-//        writer << element_type << " residual = 0;\n";
-//    }
-//    else
-//    {
-//        writer << element_type << " residual" << emit_bracketed_string(out_shape) << ";\n";
-//        auto output_vars = open_for_loops(writer, out_shape);
-
-//        writer << dest_nd_name << emit_bracketed_string(output_vars) << " = 0;\n";
-//        writer << "residual" << emit_bracketed_string(output_vars) << " = 0;\n";
-
-//        close_for_loops(writer, output_vars);
-//    }
+    if (out_shape.size() == 0)
+    {
+        writer << dest_nd_name << " = 0;\n";
+    }
+    else
+    {
+//        writer << "#pragma omp parallel for simd\n";
+//        size_t s = shape_size(out_shape);
+//        string index_var = writer.generate_temporary_name("i");
+//        writer << "for(size_t " << index_var << " = 0; " << index_var << " < " << s << "; "
+//           << index_var << "++)\n";
+//        writer.block_begin();
+//        writer << out << "[" << index_var << "] = 0;\n";
+//        writer.block_end();
+          auto output_vars = open_for_loops(writer, out_shape);
+          writer << dest_nd_name << emit_bracketed_string(output_vars) << " = 0;\n";
+          close_for_loops(writer, output_vars);
+    }
 
     // If we don't have a zero index in the input, perform the sum
     if (find(arg0_shape.begin(), arg0_shape.end(), 0) == arg0_shape.end())
     {
+
         // create the the interation variables without writing the for loops
         vector<string> index_vars;
         for (size_t i = 0; i < arg0_shape.size(); i++)
@@ -332,58 +334,55 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
 
         // calculate the output indexes based on what's being reduced
         vector<string> out_indexes;
-        size_t outer_arg_index = -1;
         for (size_t i = 0; i < index_vars.size(); ++i)
         {
-            if (reduction_axes.count(i) == 0)
-            {
-                if (out_indexes.size() == 0)
-                {
-                    outer_arg_index = i;
-                }
+            if (reduction_axes.count(i) == 0) {
                 out_indexes.push_back(index_vars[i]);
             }
         }
 
-        // make the first output shape our outer loop, optimize with openmp
-        if (outer_arg_index != -1)
-        {
-            writer << start_index_loop(
-                index_vars[outer_arg_index], 0, arg0_shape[outer_arg_index], false);
-            writer.indent++;
-        }
-
-        // create the rest of the loops, don't parallelize.
-        for (size_t i = 0; i < arg0_shape.size(); i++)
-        {
-            if (i == arg0_shape.size()-2)
-            {
-                string index_var = index_vars[i];
-                writer << "#pragma omp parallel for private(i2)\n";
-                writer << start_index_loop(index_var, 0, arg0_shape[i], false, false);
-                writer.indent++;
-            }
-            else if (i == arg0_shape.size()-1)
-            {
-                string index_var = index_vars[i];
-                writer << start_index_loop(index_var, 0, arg0_shape[i], false, true);
-                writer.indent++;
-            }
-            else if (i != outer_arg_index)
-            {
-                string index_var = index_vars[i];
-                writer << start_index_loop(index_var, 0, arg0_shape[i], false);
-                writer.indent++;
-            }
-        }
         auto out_brackets = emit_bracketed_string(out_indexes);
         auto dst = dest_nd_name + out_brackets;
         auto src = source_nd_name + emit_bracketed_string(index_vars);
-//        writer << element_type << " y = " << src << " - residual" << out_brackets << ";\n";
-//        writer << element_type << " t = " << dst << " + y;\n";
-//        writer << "residual" << out_brackets << " = (t - " << dst << ") - y;\n";
-//        writer << dst << " = t;\n";
-//        writer << dst << " = t;\n";
+
+        // for single loop, use both threading and simd
+        std::string pragma_omp_parallel = "#pragma omp parallel for";
+        std::string pragma_omp_simd = "#pragma omp simd";
+        if (reduction_axes.count(arg0_shape.size()-1) != 0) {
+           pragma_omp_parallel += " reduction(+:" + dst + ")";
+           pragma_omp_simd += " reduction(+:" + dst + ")";
+        }
+        if (arg0_shape.size() == 1) {
+            ;
+            writer << "#pragma omp parallel for simd reduction(+: " + dst + ")\n";
+            writer << start_index_loop(index_vars[0], 0, arg0_shape[0], false);
+            writer.indent++;
+        }
+        else {
+            // nested loops
+            bool emit_parallel = true;
+            for (size_t i = 0; i < arg0_shape.size(); i++)
+            {
+                // inner most loop
+                if (i == arg0_shape.size()-1)
+                {
+                    string index_var = index_vars[i];
+                    writer << pragma_omp_simd << "\n";
+                    writer << start_index_loop(index_var, 0, arg0_shape[i], false);
+                    writer.indent++;
+                }
+                // first loop with more than 1 trip count
+                else                {
+                    if (arg0_shape[i] > 1 && emit_parallel) {
+                        writer << pragma_omp_parallel << "\n";
+                    }
+                    string index_var = index_vars[i];
+                    writer << start_index_loop(index_var, 0, arg0_shape[i], false);
+                    writer.indent++;
+                    emit_parallel = false;
+                }
+            }
+        }
         writer << dst << " += " << src << ";\n";
         close_for_loops(writer, index_vars);
     }

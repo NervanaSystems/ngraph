@@ -2192,7 +2192,7 @@ namespace ngraph
                            << "});\n";
                 }
 #else
-                std::cout << args[0].get_shape().size() << " " << sum->get_reduction_axes().size() << std::endl;
+#if 0
                 if (args[0].get_element_type() == element::f32 && args[0].get_shape().size() == 1 &&
                     sum->get_reduction_axes().size() == 1)
                 {
@@ -2251,6 +2251,7 @@ namespace ngraph
                            << ");\n";
                 }
                 else
+#endif
                 {
                     kernel::emit_sum(writer,
                                      args[0].get_element_type().c_type_string(),

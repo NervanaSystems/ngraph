@@ -125,18 +125,13 @@ string ngraph::runtime::cpu::kernel::emit_linear_index(CoordinateTransform& tran
 string ngraph::runtime::cpu::kernel::start_index_loop(const string& index_var,
                                                       size_t start,
                                                       size_t end,
-                                                      bool omp,
-                                                      bool simd)
+                                                      bool omp)
 {
     stringstream ss;
 
     if (omp)
     {
         ss << "#pragma omp parallel for\n";
-    }
-    if (simd)
-    {
-        ss << "#pragma omp simd reduction(+: dest_nd1[i2][i3])\n";
     }
 
     ss << "for(size_t " << index_var << " = " << start << "; " << index_var << " < " << end << "; "
