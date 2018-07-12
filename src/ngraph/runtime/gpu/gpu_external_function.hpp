@@ -102,10 +102,6 @@ namespace ngraph
                 bool m_release_function;
                 bool m_is_compiled;
 
-                // cublasHandle_t m_cublas_handle;
-                // cudnnHandle_t m_cudnn_handle;
-                // std::unique_ptr<GPUPrimitiveEmitter> m_primitive_emitter;
-                // std::unique_ptr<GPURuntimeContext> m_ctx;
                 std::shared_ptr<GPU_Backend::BackendContext> m_shared_context;
             };
         }

@@ -19,11 +19,6 @@
 #include <map>
 #include <memory>
 
-#include <cublas_v2.h>
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <cudnn.h>
-
 #include "ngraph/runtime/backend.hpp"
 
 namespace ngraph
@@ -72,8 +67,6 @@ namespace ngraph
                 public:
                     BackendContext();
                     ~BackendContext();
-                    cublasHandle_t m_cublas_handle;
-                    cudnnHandle_t m_cudnn_handle;
                     std::unique_ptr<GPUPrimitiveEmitter> m_primitive_emitter;
                     std::unique_ptr<GPURuntimeContext> m_ctx;
                 };

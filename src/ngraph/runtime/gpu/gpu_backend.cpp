@@ -14,8 +14,13 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/runtime/gpu/gpu_backend.hpp"
+#include <cublas_v2.h>
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <cudnn.h>
+
 #include "ngraph/graph_util.hpp"
+#include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
@@ -54,29 +59,32 @@ runtime::gpu::GPU_Backend::BackendContext::BackendContext()
     // #interoperability-between-runtime-and-driver-apis
     ngraph::runtime::gpu::CudaContextManager::Instance().SetContextCurrent();
 
-    cublasStatus_t cublasStatus = cublasCreate(&m_cublas_handle);
+    m_ctx->cublas_handle = new cublasHandle_t;
+    cublasStatus_t cublasStatus = cublasCreate(m_ctx->cublas_handle);
     if (cublasStatus != CUBLAS_STATUS_SUCCESS)
     {
         throw runtime_error("cuBLAS create handle failed");
     }
-    cudnnStatus_t cudnnStatus = cudnnCreate(&m_cudnn_handle);
+    // Pass scalars as reference on the Device
+    cublasSetPointerMode(*m_ctx->cublas_handle, CUBLAS_POINTER_MODE_DEVICE);
+
+    m_ctx->cudnn_handle = new cudnnHandle_t;
+    cudnnStatus_t cudnnStatus = cudnnCreate(m_ctx->cudnn_handle);
     if (cudnnStatus != CUDNN_STATUS_SUCCESS)
     {
         throw runtime_error("cuDNN create handle failed");
     }
-    // Pass scalars as reference on the Device
-    cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_DEVICE);
 
     // register with c-api runtime context
-    m_ctx->cublas_handle = &m_cublas_handle;
-    m_ctx->cudnn_handle = &m_cudnn_handle;
     m_ctx->compiled_kernel_pool = new CudaFunctionPool;
 }
 
 runtime::gpu::GPU_Backend::BackendContext::~BackendContext()
 {
-    cublasDestroy(m_cublas_handle);
-    cudnnDestroy(m_cudnn_handle);
+    cublasDestroy(*m_ctx->cublas_handle);
+    delete m_ctx->cublas_handle;
+    cudnnDestroy(*m_ctx->cudnn_handle);
+    delete m_ctx->cudnn_handle;
     delete m_ctx->compiled_kernel_pool;
 }
 
