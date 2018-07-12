@@ -16,6 +16,7 @@
 
 #include "ngraph/node.hpp"
 #include <memory>
+#include <sstream>
 #include <typeindex>
 #include <typeinfo>
 
@@ -330,18 +331,10 @@ NodeVector Node::get_users() const
     return result;
 }
 
-Node::ConstructionAssertLogger Node::construction_assert(bool assertion_true)
+std::string ngraph::node_assert_string(const Node* node)
 {
-    return ConstructionAssertLogger(this, assertion_true);
-}
-
-Node::ConstructionAssertLogger::~ConstructionAssertLogger() noexcept(false)
-{
-    if (!m_assertion_true && !std::uncaught_exception())
-    {
-        std::stringstream ss;
-        ss << "While constructing node '" << m_node->get_name() << "' with operation '"
-           << m_node->description() << "': " << m_stream.str();
-        throw ngraph_error(ss.str());
-    }
+    std::stringstream ss;
+    ss << "While constructing node '" << node->get_name() << "' of type '" << node->description()
+       << "'";
+    return ss.str();
 }

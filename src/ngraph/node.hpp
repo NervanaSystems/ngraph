@@ -58,6 +58,8 @@ namespace ngraph
                                  const std::shared_ptr<Node>& dst_node,
                                  const std::shared_ptr<Node>& new_node);
 
+    std::string node_assert_string(const Node* node);
+
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// view or a (possibly empty) tuple of values.
@@ -77,33 +79,9 @@ namespace ngraph
 
         friend class ngraph::pass::GetOutputElementElimination;
 
-    public:
-        class ConstructionAssertLogger
-        {
-        public:
-            ConstructionAssertLogger(Node* node, bool assertion_true)
-                : m_node(node)
-                , m_assertion_true(assertion_true)
-            {
-            }
-            ConstructionAssertLogger(ConstructionAssertLogger&& other)
-                : ConstructionAssertLogger(other.m_node, other.m_assertion_true)
-            {
-                m_stream = std::move(other.m_stream);
-            }
-            ~ConstructionAssertLogger() noexcept(false);
-            std::stringstream& stream() { return m_stream; }
-        private:
-            Node* m_node;
-            bool m_assertion_true;
-            std::stringstream m_stream;
-        };
-
     protected:
         Node(const std::string& node_type, const NodeVector& arguments);
         virtual ~Node();
-
-        ConstructionAssertLogger construction_assert(bool assertion_true);
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
     public:
@@ -229,3 +207,6 @@ namespace ngraph
         Placement m_placement = Placement::DEFAULT;
     };
 }
+
+#define NODE_ASSERT(node, cond)                                                                    \
+    NGRAPH_ASSERT_WITH_LOC(cond, std::vector<std::string>{::ngraph::node_assert_string(node)})

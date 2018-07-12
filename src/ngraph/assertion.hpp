@@ -17,35 +17,49 @@
 #pragma once
 
 #include <sstream>
+#include <vector>
 
 #include "ngraph/except.hpp"
 
 namespace ngraph
 {
-    /// Error for ngraph assertion.
+    /// Error for ngraph assertion failure.
     class AssertionFailure : public ngraph_error
     {
     public:
         AssertionFailure(const std::string& what_arg)
             : ngraph_error(what_arg)
+            , m_what(what_arg)
         {
         }
 
         AssertionFailure(const char* what_arg)
             : ngraph_error(what_arg)
+            , m_what(what_arg)
         {
         }
+
+        const char* what() const noexcept override { return m_what.c_str(); }
+    private:
+        std::string m_what;
     };
 
     class AssertionHelper
     {
     public:
-        AssertionHelper(bool assertion_true)
+        AssertionHelper(bool assertion_true,
+                        std::string file,
+                        int line,
+                        std::vector<std::string> location_info = {})
             : m_assertion_true(assertion_true)
+            , m_file(file)
+            , m_line(line)
+            , m_location_info(location_info)
         {
         }
         AssertionHelper(AssertionHelper&& other)
-            : AssertionHelper(other.m_assertion_true)
+            : AssertionHelper(
+                  other.m_assertion_true, other.m_file, other.m_line, other.m_location_info)
         {
             m_stream = std::move(other.m_stream);
         }
@@ -54,7 +68,12 @@ namespace ngraph
     private:
         bool m_assertion_true;
         std::stringstream m_stream;
+        std::string m_file;
+        int m_line;
+        std::vector<std::string> m_location_info;
     };
 }
 
-#define NGRAPH_ASSERT(cond) ::ngraph::AssertionHelper(cond).get_stream()
+#define NGRAPH_ASSERT_WITH_LOC(cond, loc)                                                          \
+    ::ngraph::AssertionHelper(cond, __FILE__, __LINE__, loc).get_stream()
+#define NGRAPH_ASSERT(cond) ::ngraph::AssertionHelper(cond, __FILE__, __LINE__).get_stream()
