@@ -110,6 +110,7 @@ namespace ngraph
     void dump(std::ostream& out, const void*, size_t);
 
     std::string to_lower(const std::string& s);
+    std::string to_upper(const std::string& s);
     std::string trim(const std::string& s);
     std::vector<std::string> split(const std::string& s, char delimiter, bool trim = false);
 
