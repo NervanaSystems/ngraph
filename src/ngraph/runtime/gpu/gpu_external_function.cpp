@@ -331,8 +331,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
         m_writer << "// Declare debug timers\n";
         vector<string> names;
         size_t index = 0;
-        for (shared_ptr<Function> current_function :
-             m_pass_manager.get_state().get_functions())
+        for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
         {
             for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
             {
@@ -376,7 +375,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
     }
 }
 
-void runtime::gpu::GPU_ExternalFunction::emit_declare_constants()
+void runtime::gpu::GPU_ExternalFunction::emit_constant_declarations()
 {
     m_writer << "// Declare all constants\n";
     for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
@@ -386,8 +385,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_declare_constants()
             const op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
             if (c)
             {
-                shared_ptr<descriptor::TensorView> tv =
-                    node->get_outputs()[0].get_tensor_view();
+                shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
                 // get an allocator for transient per kernel gpu memory
                 GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
                 size_t idx = allocator.reserve_argspace(
@@ -409,8 +407,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_declare_constants()
         m_writer << "if(is_constant_mem_ptr_null)\n";
         m_writer.block_begin();
         {
-            for (shared_ptr<Function> current_function :
-                 m_pass_manager.get_state().get_functions())
+            for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
             {
                 for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
                 {
@@ -433,7 +430,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_declare_constants()
     m_writer.block_end();
 }
 
-void runtime::gpu::GPU_ExternalFunction::emit_declare_functions()
+void runtime::gpu::GPU_ExternalFunction::emit_function_declarations()
 {
     m_writer << "// Declare all functions\n";
     for (shared_ptr<Function> f : m_pass_manager.get_state().get_functions())
@@ -493,7 +490,7 @@ void runtime::gpu::GPU_ExternalFunction::collect_unique_functions()
     }
 }
 
-void runtime::gpu::GPU_ExternalFunction::emit_allocate_temp_mem_pool(
+void runtime::gpu::GPU_ExternalFunction::emit_temp_mem_pool_allocation(
     shared_ptr<Function> current_function)
 {
     m_temporaries_used = false;
@@ -531,7 +528,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_allocate_temp_mem_pool(
     }
 }
 
-void runtime::gpu::GPU_ExternalFunction::emit_release_temp_mem_pool()
+void runtime::gpu::GPU_ExternalFunction::emit_temp_mem_pool_release()
 {
     if (m_temporaries_used)
     {
@@ -554,8 +551,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
         {
             if (dynamic_cast<ngraph::op::Constant*>(node.get()))
             {
-                shared_ptr<descriptor::TensorView> tv =
-                    node->get_outputs()[0].get_tensor_view();
+                shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
                 constants.insert(tv.get());
             }
         }
@@ -569,7 +565,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
             m_writer << "invoke_constant_mem_ptr(ctx);\n";
 
             //alocate temp memory pool
-            emit_allocate_temp_mem_pool(current_function);
+            emit_temp_mem_pool_allocation(current_function);
 
             // Add inputs to the variable name map
             size_t arg_index = 0;
@@ -680,7 +676,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                     emit_debug_function_exit(node.get());
                 }
             }
-            emit_release_temp_mem_pool();
+            emit_temp_mem_pool_release();
         }
         m_writer.block_end(); // End generated function
     }
@@ -722,8 +718,8 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 
     emit_header();
     emit_timer_functions();
-    emit_declare_constants();
-    emit_declare_functions();
+    emit_constant_declarations();
+    emit_function_declarations();
     collect_unique_functions();
     emit_functions();
     // allocate device buffers for primitive arguments and workspace
@@ -790,9 +786,8 @@ unique_ptr<runtime::gpu::GPURuntimeContext>& runtime::gpu::GPU_ExternalFunction:
     return m_ctx;
 }
 
-string
-    runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
-                                                            const string& function_name)
+string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
+                                                               const string& function_name)
 {
     codegen::CodeWriter writer;
     writer << "static void " << function_name << "(";

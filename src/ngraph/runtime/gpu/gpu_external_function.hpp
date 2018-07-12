@@ -80,13 +80,13 @@ namespace ngraph
                 void collect_unique_functions();
                 void emit_header();
                 void emit_timer_functions();
-                void emit_declare_constants();
-                void emit_declare_functions();
+                void emit_constant_declarations();
+                void emit_function_declarations();
                 void emit_functions();
                 void emit_debug_function_entry(Node* node);
                 void emit_debug_function_exit(Node* node);
-                void emit_allocate_temp_mem_pool(std::shared_ptr<Function> current_function);
-                void emit_release_temp_mem_pool();
+                void emit_temp_mem_pool_allocation(std::shared_ptr<Function> current_function);
+                void emit_temp_mem_pool_release();
                 void release_function() { m_function = nullptr; }
                 void store_emitted_functions(const std::string& code);
                 std::string emit_op_as_function(const Node& node, const std::string& function_name);
