@@ -703,8 +703,8 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     m_function_name = m_function->get_name();
     string dump_filename = file_util::path_join(s_output_dir, m_function_name + "_ops.txt");
 
-    // m_pass_manager.register_pass<pass::TopologicalSort>();
     // For now, just make everyone row-major.
+    m_pass_manager.register_pass<pass::ResultCopyElimination>();
     m_pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
     m_pass_manager.register_pass<pass::Liveness>();
     m_pass_manager.register_pass<pass::MemoryLayout>(64);
