@@ -202,9 +202,9 @@ private:
 #endif
         else if (node_op == "And")
         {
-            reference::logical_and(args[0]->get_data_ptr<char>(),
-                                   args[1]->get_data_ptr<char>(),
-                                   out[0]->get_data_ptr<char>(),
+            reference::logical_and(args[0]->get_data_ptr<T>(),
+                                   args[1]->get_data_ptr<T>(),
+                                   out[0]->get_data_ptr<T>(),
                                    out[0]->get_element_count());
         }
         else if (node_op == "Asin")
@@ -633,9 +633,8 @@ private:
         }
         else if (node_op == "Not")
         {
-            reference::logical_not(args[0]->get_data_ptr<char>(),
-                                   out[0]->get_data_ptr<char>(),
-                                   out[0]->get_element_count());
+            reference::logical_not(
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
         }
         else if (node_op == "NotEqual")
         {
@@ -655,9 +654,9 @@ private:
         }
         else if (node_op == "Or")
         {
-            reference::logical_or(args[0]->get_data_ptr<char>(),
-                                  args[1]->get_data_ptr<char>(),
-                                  out[0]->get_data_ptr<char>(),
+            reference::logical_or(args[0]->get_data_ptr<T>(),
+                                  args[1]->get_data_ptr<T>(),
+                                  out[0]->get_data_ptr<T>(),
                                   out[0]->get_element_count());
         }
         else if (node_op == "Parameter")

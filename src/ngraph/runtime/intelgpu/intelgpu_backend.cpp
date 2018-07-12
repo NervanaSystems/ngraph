@@ -25,11 +25,15 @@
 using namespace std;
 using namespace ngraph;
 
-extern "C" void create_backend(void)
+extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
-    runtime::Backend::register_backend("INTELGPU",
-                                       make_shared<runtime::intelgpu::IntelGPUBackend>());
-};
+    return new runtime::intelgpu::IntelGPUBackend();
+}
+
+extern "C" void delete_backend(runtime::Backend* backend)
+{
+    delete backend;
+}
 
 runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()
 {
