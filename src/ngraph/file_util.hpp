@@ -79,7 +79,8 @@ namespace ngraph
         // @param recurse Optional parameter to enable recursing through path
         void iterate_files(const std::string& path,
                            std::function<void(const std::string& file, bool is_dir)> func,
-                           bool recurse = false);
+                           bool recurse = false,
+                           bool include_links = false);
 
         // @brief Create a temporary file
         // @param extension Optional extension for the temporary file

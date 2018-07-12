@@ -60,6 +60,20 @@
         }                                                                                          \
     } while (0)
 
+#define CUDA_RT_SAFE_CALL(x)                                                                       \
+    do                                                                                             \
+    {                                                                                              \
+        cudaError_t err = x;                                                                       \
+        if (cudaSuccess != err)                                                                    \
+        {                                                                                          \
+            std::stringstream safe_call_ss;                                                        \
+            safe_call_ss << "\nerror: " #x " failed with error"                                    \
+                         << "\nfile: " << __FILE__ << "\nline: " << __LINE__                       \
+                         << "\nmsg: " << cudaGetErrorString(err);                                  \
+            throw std::runtime_error(safe_call_ss.str());                                          \
+        }                                                                                          \
+    } while (0)
+
 #define CUDNN_SAFE_CALL(func)                                                                      \
     do                                                                                             \
     {                                                                                              \
