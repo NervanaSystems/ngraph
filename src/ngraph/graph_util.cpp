@@ -549,4 +549,3 @@ bool ngraph::possibly_overwritten(Node* node)
     }
     return false;
 }
-
