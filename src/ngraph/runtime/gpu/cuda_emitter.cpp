@@ -62,7 +62,8 @@ std::ostream& operator<<(std::ostream& os, pooling_op_shape& shape)
               << shape.PAD_D << "_" << shape.PAD_H << "_" << shape.PAD_W;
 }
 
-runtime::gpu::CUDAEmitter::CUDAEmitter(runtime::gpu::GPUPrimitiveEmitter* emitter, runtime::gpu::GPURuntimeContext* ctx)
+runtime::gpu::CUDAEmitter::CUDAEmitter(runtime::gpu::GPUPrimitiveEmitter* emitter,
+                                       runtime::gpu::GPURuntimeContext* ctx)
     : m_primitive_emitter(emitter)
 {
     m_ctx = ctx;
@@ -300,7 +301,8 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string
     std::unique_ptr<gpu::primitive> pad_dynamic(new gpu::primitive{[=](void** inputs,
                                                                        void** outputs) mutable {
         void* param_input_strides = runtime::gpu::invoke_memory_primitive(m_ctx, idx_input_strides);
-        void* param_output_strides = runtime::gpu::invoke_memory_primitive(m_ctx, idx_output_strides);
+        void* param_output_strides =
+            runtime::gpu::invoke_memory_primitive(m_ctx, idx_output_strides);
         void* param_padding_below = runtime::gpu::invoke_memory_primitive(m_ctx, idx_padding_below);
         void* param_padding_interior =
             runtime::gpu::invoke_memory_primitive(m_ctx, idx_padding_interior);
@@ -390,7 +392,8 @@ size_t runtime::gpu::CUDAEmitter::build_slice(const std::array<std::string, 2>& 
     std::unique_ptr<gpu::primitive> kernel_runner(new gpu::primitive{[=](void** inputs,
                                                                          void** outputs) mutable {
         void* param_input_strides = runtime::gpu::invoke_memory_primitive(m_ctx, idx_input_strides);
-        void* param_output_strides = runtime::gpu::invoke_memory_primitive(m_ctx, idx_output_strides);
+        void* param_output_strides =
+            runtime::gpu::invoke_memory_primitive(m_ctx, idx_output_strides);
         void* param_lower_bounds = runtime::gpu::invoke_memory_primitive(m_ctx, idx_lower_bounds);
         void* param_slice_strides = runtime::gpu::invoke_memory_primitive(m_ctx, idx_slice_strides);
         std::vector<void*> args_list{&inputs[0],
@@ -475,7 +478,8 @@ size_t runtime::gpu::CUDAEmitter::build_reverse_sequence(const std::array<std::s
     std::unique_ptr<gpu::primitive> kernel_runner(new gpu::primitive{[=](void** inputs,
                                                                          void** outputs) mutable {
         void* param_output_shape = runtime::gpu::invoke_memory_primitive(m_ctx, idx_output_shape);
-        void* param_output_strides = runtime::gpu::invoke_memory_primitive(m_ctx, idx_output_strides);
+        void* param_output_strides =
+            runtime::gpu::invoke_memory_primitive(m_ctx, idx_output_strides);
         std::vector<void*> args_list{&inputs[0],
                                      &inputs[1],
                                      &outputs[0],
@@ -1165,50 +1169,50 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const std::array<std::stri
     float alpha = 1.0f;
     float beta = 0.0f;
 
-    std::unique_ptr<gpu::primitive> replace_slice(
-        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-            void* param_dstr = runtime::gpu::invoke_memory_primitive(m_ctx, idx_input_strides);
-            void* param_dmagic = runtime::gpu::invoke_memory_primitive(m_ctx, idx_dmagics);
-            void* param_dshift = runtime::gpu::invoke_memory_primitive(m_ctx, idx_dshifts);
-            void* param_lbound = runtime::gpu::invoke_memory_primitive(m_ctx, idx_lower_bounds);
-            void* param_ubound = runtime::gpu::invoke_memory_primitive(m_ctx, idx_upper_bounds);
-            void* param_slice_str = runtime::gpu::invoke_memory_primitive(m_ctx, idx_slice_strides);
-            void* param_slice_magic = runtime::gpu::invoke_memory_primitive(m_ctx, idx_smagics);
-            void* param_slice_shift = runtime::gpu::invoke_memory_primitive(m_ctx, idx_sshifts);
-            void* param_dsource = runtime::gpu::invoke_memory_primitive(m_ctx, idx_source_shape);
-            void* param_sourcestr = runtime::gpu::invoke_memory_primitive(m_ctx, idx_source_strides);
+    std::unique_ptr<gpu::primitive> replace_slice(new gpu::primitive{[=](void** inputs,
+                                                                         void** outputs) mutable {
+        void* param_dstr = runtime::gpu::invoke_memory_primitive(m_ctx, idx_input_strides);
+        void* param_dmagic = runtime::gpu::invoke_memory_primitive(m_ctx, idx_dmagics);
+        void* param_dshift = runtime::gpu::invoke_memory_primitive(m_ctx, idx_dshifts);
+        void* param_lbound = runtime::gpu::invoke_memory_primitive(m_ctx, idx_lower_bounds);
+        void* param_ubound = runtime::gpu::invoke_memory_primitive(m_ctx, idx_upper_bounds);
+        void* param_slice_str = runtime::gpu::invoke_memory_primitive(m_ctx, idx_slice_strides);
+        void* param_slice_magic = runtime::gpu::invoke_memory_primitive(m_ctx, idx_smagics);
+        void* param_slice_shift = runtime::gpu::invoke_memory_primitive(m_ctx, idx_sshifts);
+        void* param_dsource = runtime::gpu::invoke_memory_primitive(m_ctx, idx_source_shape);
+        void* param_sourcestr = runtime::gpu::invoke_memory_primitive(m_ctx, idx_source_strides);
 
-            void* args_list[] = {&inputs[0],
-                                 &inputs[1],
-                                 &outputs[0],
-                                 &alpha,
-                                 &beta,
-                                 &param_dstr,
-                                 &param_dmagic,
-                                 &param_dshift,
-                                 &param_lbound,
-                                 &param_ubound,
-                                 &param_slice_str,
-                                 &param_slice_magic,
-                                 &param_slice_shift,
-                                 &param_dsource,
-                                 &param_sourcestr,
-                                 &rank,
-                                 &nthreads};
+        void* args_list[] = {&inputs[0],
+                             &inputs[1],
+                             &outputs[0],
+                             &alpha,
+                             &beta,
+                             &param_dstr,
+                             &param_dmagic,
+                             &param_dshift,
+                             &param_lbound,
+                             &param_ubound,
+                             &param_slice_str,
+                             &param_slice_magic,
+                             &param_slice_shift,
+                             &param_dsource,
+                             &param_sourcestr,
+                             &rank,
+                             &nthreads};
 
-            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          nblocks,
-                                          1,
-                                          1,
-                                          nthreads_per_block,
-                                          1,
-                                          1,
-                                          rank * nthreads_per_block * sizeof(int),
-                                          NULL,
-                                          args_list,
-                                          0));
-            CUDA_SAFE_CALL(cuCtxSynchronize());
-        }});
+        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                      nblocks,
+                                      1,
+                                      1,
+                                      nthreads_per_block,
+                                      1,
+                                      1,
+                                      rank * nthreads_per_block * sizeof(int),
+                                      NULL,
+                                      args_list,
+                                      0));
+        CUDA_SAFE_CALL(cuCtxSynchronize());
+    }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(replace_slice));
     m_primitive_emitter->cache(hash, primitive_index);
@@ -1607,12 +1611,16 @@ size_t runtime::gpu::CUDAEmitter::build_convolution(const std::array<std::string
         void* input_shape_str_d = runtime::gpu::invoke_memory_primitive(m_ctx, idx_input_shape_str);
         void* output_dim_strides_d =
             runtime::gpu::invoke_memory_primitive(m_ctx, idx_output_dim_strides);
-        void* output_str_magic_d = runtime::gpu::invoke_memory_primitive(m_ctx, idx_output_str_magic);
-        void* output_str_shift_d = runtime::gpu::invoke_memory_primitive(m_ctx, idx_output_str_shift);
+        void* output_str_magic_d =
+            runtime::gpu::invoke_memory_primitive(m_ctx, idx_output_str_magic);
+        void* output_str_shift_d =
+            runtime::gpu::invoke_memory_primitive(m_ctx, idx_output_str_shift);
         void* filter_dim_strides_d =
             runtime::gpu::invoke_memory_primitive(m_ctx, idx_filter_dim_strides);
-        void* filter_str_magic_d = runtime::gpu::invoke_memory_primitive(m_ctx, idx_filter_str_magic);
-        void* filter_str_shift_d = runtime::gpu::invoke_memory_primitive(m_ctx, idx_filter_str_shift);
+        void* filter_str_magic_d =
+            runtime::gpu::invoke_memory_primitive(m_ctx, idx_filter_str_magic);
+        void* filter_str_shift_d =
+            runtime::gpu::invoke_memory_primitive(m_ctx, idx_filter_str_shift);
 
         void* args_list[] = {&inputs[0],
                              &inputs[1],

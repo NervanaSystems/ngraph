@@ -401,7 +401,8 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const std::string& dtype,
     return primitive_index;
 }
 
-size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(const std::string& dtype,
+size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
+    const std::string& dtype,
     const Shape& input_filter_shape,
     const Shape& input_tensor_shape,
     const Shape& output_tensor_shape,
@@ -476,7 +477,8 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(const std::st
     return primitive_index;
 }
 
-size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(const std::string& dtype,
+size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(
+    const std::string& dtype,
     const Shape& input_tensor_shape_0,
     const Shape& input_tensor_shape_1,
     const Shape& output_filter_shape,
