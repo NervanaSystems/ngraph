@@ -1,8 +1,8 @@
 .. sigmoid.rst:
 
-####
+#######
 Sigmoid
-####
+#######
 
 .. code-block:: cpp
 

@@ -14,20 +14,18 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-#include "ngraph/node_vector.hpp"
-#include "node.hpp"
+#include "ngraph/op/util/binary_elementwise_logical.hpp"
+#include "pyngraph/ops/util/binary_elementwise_logical.hpp"
 
-namespace ngraph
+namespace py = pybind11;
+
+void regclass_pyngraph_op_util_BinaryElementwiseLogical(py::module m)
 {
-    namespace onnx_import
-    {
-        namespace ops_bridge
-        {
-            NodeVector make_ng_nodes(const onnx_import::Node&);
-        }
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    py::class_<ngraph::op::util::BinaryElementwiseLogical,
+               std::shared_ptr<ngraph::op::util::BinaryElementwiseLogical>,
+               ngraph::op::util::BinaryElementwise>
+        binaryElementwiseLogical(m, "BinaryElementwiseLogical");
+}

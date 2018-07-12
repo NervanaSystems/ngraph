@@ -402,10 +402,6 @@ using namespace std;
             }
         }
     }
-    // Add cuDNN descriptor factory for descriptor management.
-    // After the cuDNN code emitted in gpu_emitter.cc is refactored
-    // into the CUDNNEmitter class, this can be removed.
-    writer << "static runtime::gpu::CUDNNDescriptors descriptors;\n\n";
 
     writer << "// Declare all functions\n";
     for (shared_ptr<Function> f : pass_manager.get_state().get_functions())
