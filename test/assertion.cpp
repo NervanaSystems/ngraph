@@ -62,8 +62,8 @@ TEST(assertion, assertion_what_string)
 // is false.
 TEST(assertion, throw_in_stream)
 {
-    // The choice of exception class here is arbitrary.
     auto f = []() -> std::string {
+        // The choice of exception class here is arbitrary.
         throw std::domain_error("this should throw std::domain_error");
     };
 
