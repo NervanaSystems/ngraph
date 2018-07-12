@@ -1653,7 +1653,8 @@ namespace ngraph
             {
                 auto reshape = static_cast<const ngraph::op::Reshape*>(node);
                 auto annotation = reshape->get_op_annotations();
-                if (annotation && annotation->get_in_place_oi_pairs().size() > 0)
+                if (annotation && annotation->get_in_place_oi_pairs().size() > 0 &&
+                    out[0].get_name() == args[0].get_name())
                 {
                     writer.block_begin();
                     writer << "// Stride change only, skipping.\n";
