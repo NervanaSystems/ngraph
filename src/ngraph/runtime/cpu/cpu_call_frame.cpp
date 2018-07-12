@@ -120,6 +120,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
     const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
     ctx->mkldnn_primitives = mkldnn_emitter->get_mkldnn_primitives().data();
     ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces().data();
+    ctx->G = new tbb::flow::graph;
 }
 
 void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
@@ -129,6 +130,16 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
     for (auto buffer : ctx->memory_buffers)
     {
         delete buffer;
+    }
+    // delete graph G and nodes in G
+    ctx->G->wait_for_all();
+    std::vector<tbb::flow::graph_node*> to_be_deleted;
+    for (auto it = ctx->G->begin(); it != ctx->G->end(); it++) {
+        to_be_deleted.push_back(&(*it));
+    }
+    delete ctx->G;
+    for (auto node : to_be_deleted) {
+        delete node;
     }
     delete ctx;
 }

@@ -428,6 +428,10 @@ using namespace ngraph::runtime;
 
     if (m_use_tbb)
     {
+        writer << "#define TBB_PREVIEW_GLOBAL_CONTROL 1\n";
+        writer << "#define __TBB_PREVIEW_LIGHTWEIGHT_POLICY 1\n";
+        writer << "#include <tbb/global_control.h>\n";
+        writer << "#include <tbb/task_scheduler_init.h>\n";
         writer << "#include <tbb/flow_graph.h>\n";
     }
 
@@ -650,11 +654,6 @@ using namespace ngraph::runtime;
         writer << "{\n";
         writer.indent++;
 
-        if (m_use_tbb)
-        {
-            // TODO: This should be static but we don't codegen statics correctly yet
-            writer << "tbb::flow::graph G;\n\n";
-        }
 
         // Execution tracing support
         if (runtime::cpu::IsTracingEnabled() && current_function->get_name() == m_function_name)
@@ -683,6 +682,20 @@ using namespace ngraph::runtime;
         }
 
         writer << "bool* t_en = (bool*)" << current_function->get_name() << "_t_en;\n";
+
+        if (m_use_tbb)
+        {
+            // TODO: This should be static but we don't codegen statics correctly yet
+            writer << "\n";
+            writer << "if (" << current_function->get_name() << "_init) {\n";
+            writer.indent++;
+            writer << "tbb::global_control c(tbb::global_control::max_allowed_parallelism, 1);\n";
+            writer << "tbb::task_scheduler_init init(1);\n";
+            writer << "tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>* "
+                      "flowgraph_node_start"
+                   << " = new tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>"
+					   "(*(ctx->G), [&](const tbb::flow::continue_msg &msg)\n{});\n";
+        }
 
         // Add inputs to the variable name map
         size_t arg_index = 0;
@@ -761,10 +774,11 @@ using namespace ngraph::runtime;
                 }
                 if (m_use_tbb)
                 {
-                    writer << "tbb::flow::continue_node<tbb::flow::continue_msg> "
+                    writer << "tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>* "
                               "flowgraph_node_"
                            << node->get_name()
-                           << "(G, [&](const tbb::flow::continue_msg &msg)\n{\n";
+                           << " = new tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>"
+						      "(*(ctx->G), [&](const tbb::flow::continue_msg &msg)\n{\n";
                     writer.indent++;
                 }
                 if (runtime::cpu::IsTracingEnabled() &&
@@ -955,8 +969,8 @@ using namespace ngraph::runtime;
                             if (!arg->is_parameter() && !arg->is_constant())
                             {
                                 is_head = false;
-                                writer << "tbb::flow::make_edge(flowgraph_node_" << arg->get_name()
-                                       << ", flowgraph_node_" << n->get_name() << ");\n";
+                                writer << "tbb::flow::make_edge(*flowgraph_node_" << arg->get_name()
+                                       << ", *flowgraph_node_" << n->get_name() << ");\n";
                             }
                         }
                         if (is_head)
@@ -967,17 +981,25 @@ using namespace ngraph::runtime;
                 });
 
             writer << "\n";
-
-            // Execute the flow graph
             if (!dependence_graph_heads.empty())
             {
                 for (Node* n : dependence_graph_heads)
                 {
-                    writer << "flowgraph_node_" << n->get_name()
-                           << ".try_put(tbb::flow::continue_msg());\n";
+                    writer << "tbb::flow::make_edge(*flowgraph_node_start"
+                                       << ", *flowgraph_node_" << n->get_name() << ");\n";
                 }
-                writer << "try { G.wait_for_all(); } catch(...) { throw; }\n";
+
             }
+
+            writer.indent--;
+            writer<< "}\n";
+
+            // Execute the flow graph
+            writer << "auto start = &(*(ctx->G->begin()));\n";
+            writer << "((tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>*)(&(*(ctx->G->begin()))))"
+                           << "->try_put(tbb::flow::continue_msg());\n";
+            writer << "try { ctx->G->wait_for_all(); } catch(...) { throw; }\n";
+
         }
         writer << current_function->get_name() << "_init = false;\n";
 

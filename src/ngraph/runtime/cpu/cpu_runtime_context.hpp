@@ -18,6 +18,9 @@
 
 #include <chrono>
 #include <cstdint>
+#define __TBB_PREVIEW_LIGHTWEIGHT_POLICY 1
+#include <tbb/flow_graph.h>
+
 
 namespace mkldnn
 {
@@ -50,6 +53,7 @@ namespace ngraph
                 mkldnn::primitive* const* mkldnn_primitives;
                 std::vector<AlignedBuffer*> memory_buffers;
                 char* const* mkldnn_workspaces;
+                tbb::flow::graph* G;
             };
             }
         }
