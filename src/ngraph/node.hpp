@@ -185,7 +185,6 @@ namespace ngraph
         /// Returns the shape of input i
         const Shape& get_input_shape(size_t i) const;
 
-        std::unordered_set<descriptor::Tensor*> liveness_live_list;
         std::unordered_set<descriptor::Tensor*> liveness_new_list;
         std::unordered_set<descriptor::Tensor*> liveness_free_list;
 
