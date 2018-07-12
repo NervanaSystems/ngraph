@@ -179,8 +179,6 @@ add_subdirectory(runtime)
 
 add_library(ngraph SHARED ${SRC})
 target_compile_definitions(ngraph PRIVATE SHARED_LIB_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}")
-# add_definitions("-DSHARED_LIB_EXT=\"${CMAKE_SHARED_LIBRARY_SUFFIX}\"")
-# add_definitions("-DLIBRARY_VERSION=\"${NGRAPH_VERSION}\"")
 set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
 target_link_libraries(ngraph PUBLIC libjson)
 target_compile_definitions(ngraph PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")

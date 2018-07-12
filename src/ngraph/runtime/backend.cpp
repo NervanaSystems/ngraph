@@ -41,7 +41,6 @@ static string find_my_file()
 void* runtime::Backend::open_shared_library(string type)
 {
     string ext = SHARED_LIB_EXT;
-    // string ver = LIBRARY_VERSION;
 
     void* handle = nullptr;
 
