@@ -24,10 +24,20 @@
 using namespace ngraph;
 using namespace std;
 
-extern "C" void create_backend()
+extern "C" const char* get_ngraph_version_string()
 {
-    runtime::Backend::register_backend("GPU", make_shared<runtime::gpu::GPU_Backend>());
-};
+    return NGRAPH_VERSION;
+}
+
+extern "C" runtime::Backend* new_backend(const char* configuration_string)
+{
+    return new runtime::gpu::GPU_Backend();
+}
+
+extern "C" void delete_backend(runtime::Backend* backend)
+{
+    delete backend;
+}
 
 runtime::gpu::GPU_Backend::GPU_Backend()
     : runtime::Backend()

@@ -520,7 +520,8 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
                               std::to_string(window_width) + "_wst" + std::to_string(window_stride);
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
 
-    std::string hash = kernel_name + "_nc" + std::to_string(output_shape[0] * output_shape[1]);
+    size_t nthreads = shape_size(output_shape);
+    std::string hash = kernel_name + "_n" + std::to_string(nthreads);
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash);
     if (primitive_index != std::numeric_limits<size_t>::max())
@@ -539,7 +540,6 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const GPURuntimeContext* ctx
     }
 
     //TODO: currently we set it to 64, will add tuning method later
-    size_t nthreads = shape_size(output_shape);
     uint32_t block_size_x = 64;
     uint32_t aligned_grid_size_x =
         align_to_block_size(static_cast<uint32_t>(nthreads), block_size_x);
