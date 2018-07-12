@@ -40,9 +40,11 @@ compatible with a gcc 4.8-based build.)
 Installation Steps
 ==================
 
-The CMake procedure installs ``ngraph_dist`` to the installing user's ``$HOME`` 
-directory as the default location. See the :file:`CMakeLists.txt` file for 
-details about how to change or customize the install location.
+.. important:: The default cmake procedure will the install ``ngraph_dist`` to 
+   a system install location like ``/usr/bin/ngraph_dist``.  If you instead want 
+   to install it to a user's ``$HOME`` directory, you can run the cmake command  
+   with ``-DCMAKE_INSTALL_PREFIX=$HOME`` See the :file:`CMakeLists.txt` file for 
+   details about how to change or customize the location.
 
 .. _ubuntu:
 
