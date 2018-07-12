@@ -453,7 +453,7 @@ NodeVector ngraph::get_subgraph_outputs(const NodeVector& nodes,
 
         for (auto u : n->get_users())
         {
-            if (nodes_set.count(u) == 0 && (!ignore_unused || (ignore_unused && is_used(u))))
+            if (nodes_set.count(u) == 0 && (!ignore_unused || is_used(u)))
             {
                 outputs.push_back(n);
             }
