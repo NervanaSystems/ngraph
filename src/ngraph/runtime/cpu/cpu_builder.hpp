@@ -191,12 +191,6 @@ namespace ngraph
                                 const std::vector<TensorViewWrapper>& out)
                 {
                 }
-
-                static void buildBatchNorm(CPU_ExternalFunction* external_function,
-                                           const ngraph::Node* node,
-                                           const std::vector<TensorViewWrapper>& args,
-                                           const std::vector<TensorViewWrapper>& out,
-                                           bool append_relu = false);
             };
         }
     }
