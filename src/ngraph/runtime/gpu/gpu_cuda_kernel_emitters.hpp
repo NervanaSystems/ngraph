@@ -45,16 +45,6 @@ namespace ngraph
                              size_t repeat_times,
                              size_t count);
 
-            void emit_reshape(const std::string& name,
-                              const std::array<std::string, 2>& data_types,
-                              GPURuntimeContext* ctx,
-                              CUdeviceptr in,
-                              CUdeviceptr out,
-                              CUdeviceptr input_strides,
-                              CUdeviceptr trans_strides,
-                              size_t rank,
-                              size_t count);
-
             void emit_reverse(const std::string& name,
                               CUdeviceptr in,
                               CUdeviceptr out,
