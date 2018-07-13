@@ -387,6 +387,15 @@ void pass::CoreFusion::construct_optimized_strided_conv()
             return false;
         }
 
+        for (auto sc : strided_convs)
+        {
+            if (std::dynamic_pointer_cast<op::Convolution>(sc) == nullptr)
+            {
+                NGRAPH_DEBUG << "Not all users of element wise operation are Convolution";
+                return false;
+            }
+        }
+
         Shape supported_shapes[] = {Shape{56, 56}, Shape{28, 28}, Shape{14, 14}, Shape{7, 7}};
         Shape shape_1{1, 1};
         Shape shape_3{3, 3};
