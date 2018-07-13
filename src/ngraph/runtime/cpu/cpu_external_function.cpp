@@ -810,53 +810,9 @@ using namespace ngraph::runtime;
                     }
                 }
 
-                auto computes_output = [&]() {
-                    if (node->is_output())
-                    {
-                        return true;
-                    }
-                    // Check if node feeds a result node that has been copy eliminated
-                    for (const descriptor::Output& output : node->get_outputs())
-                    {
-                        for (const descriptor::Input* input : output.get_inputs())
-                        {
-                            auto res =
-                                std::dynamic_pointer_cast<ngraph::op::Result>(input->get_node());
-                            if (res && !res->needs_copy())
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                    return false;
-                };
-
-                auto possibly_overwritten = [&]() {
-                    for (const descriptor::Output& output : node->get_outputs())
-                    {
-                        for (const descriptor::Input* input : output.get_inputs())
-                        {
-                            if (auto op =
-                                    std::dynamic_pointer_cast<ngraph::op::Op>(input->get_node()))
-                            {
-                                if (auto op_annotations = op->get_op_annotations())
-                                {
-                                    for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
-                                    {
-                                        if (input->get_index() == oi_pair.second)
-                                        {
-                                            return true;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    return false;
-                };
                 // Always enable nodes computing output tensors or nodes whose outputs might get
                 // overwritten due to inplace kernels
-                if (computes_output() || possibly_overwritten())
+                if (computes_result(node.get()) || possibly_overwritten(node.get()))
                 {
                     writer << " || 1";
                 }
@@ -1182,6 +1138,10 @@ void runtime::cpu::CPU_ExternalFunction::build()
 
     for (shared_ptr<Node> node : m_function->get_ordered_ops())
     {
+        if (node->is_parameter() || node->is_constant())
+        {
+            continue;
+        }
         auto& n = *node; // Work around a compiler warning (*node inside typeid may have effects
         // with shared pointers, which is fine here but clang doesn't like it.)
         auto handler = build_dispatcher.find(type_index(typeid(n)));
@@ -1190,23 +1150,48 @@ void runtime::cpu::CPU_ExternalFunction::build()
             throw ngraph_error("Unhandled op during code generation : " + node->description());
         }
         vector<TensorViewWrapper> in;
+        vector<string> in_names;
         for (const descriptor::Input& input : node->get_inputs())
         {
             const descriptor::Output& output = input.get_output();
             shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
             in.push_back(TensorViewWrapper(tv, tv->get_tensor().get_name()));
+            in_names.push_back(tv->get_tensor().get_name());
         }
         vector<TensorViewWrapper> out;
+        vector<string> out_names;
         for (const descriptor::Output& output : node->get_outputs())
         {
             shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
             out.push_back(TensorViewWrapper(tv, tv->get_tensor().get_name()));
+            out_names.push_back(tv->get_tensor().get_name());
         }
 
+        size_t functor_count = functors.size();
         handler->second(this, node.get(), in, out);
+
+        bool disable_caching = computes_result(node.get()) || possibly_overwritten(node.get());
+        auto enable = [&, in_names, out_names, disable_caching](CPURuntimeContext* ctx) -> bool {
+            bool en = false;
+            for (const auto& name : in_names)
+            {
+                if (tensor_stale[name] || disable_caching)
+                {
+                    en = true;
+                }
+            }
+            for (const auto& name : out_names)
+            {
+                tensor_stale[name] = en;
+            }
+            return en;
+        };
+
+        enables.emplace_back(make_pair(enable, functors.size() - functor_count));
     }
 
     executor = [&](CPURuntimeContext* ctx, vector<void*>& inputs, vector<void*>& outputs) {
+        static bool first_iteration = true;
         for (auto& p : intermediates_offsets)
         {
             tensor_data[p.first] =
@@ -1216,6 +1201,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         for (const auto& p : function_input_index)
         {
             tensor_data[p.first] = inputs[p.second];
+            tensor_stale[p.first] = ctx->p_en[p.second];
         }
 
         for (const auto& p : function_output_index)
@@ -1223,10 +1209,23 @@ void runtime::cpu::CPU_ExternalFunction::build()
             tensor_data[p.first] = outputs[p.second];
         }
 
-        for (const auto& functor : functors)
+        auto functor = functors.begin();
+        for (const auto& p : enables)
         {
-            functor(ctx);
+            if (p.first(ctx) || first_iteration)
+            {
+                for (size_t j = 0; j < p.second; j++)
+                {
+                    (*functor)(ctx);
+                    std::advance(functor, 1);
+                }
+            }
+            else
+            {
+                std::advance(functor, p.second);
+            }
         }
+        first_iteration = false;
     };
 
     m_is_built = true;
