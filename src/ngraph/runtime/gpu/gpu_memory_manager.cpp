@@ -134,7 +134,7 @@ size_t runtime::gpu::GPUAllocator::reserve_workspace(size_t size, bool zero_init
 {
     size_t offset = m_manager->m_workspace_manager.allocate(size);
     m_active.push(offset);
-    auto local = std::prev(m_manager->m_argspace_mem.end());
+    auto local = std::prev(m_manager->m_workspace_mem.end());
     // return a lambda that will yield the gpu memory address. this
     // should only be evaluated by the runtime invoked primitive
     gpu::memory_primitive mem_primitive = [=]() {
