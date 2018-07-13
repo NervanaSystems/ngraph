@@ -919,10 +919,8 @@ namespace ngraph
                 {
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
-                    auto index =
-                        cuda_emitter->build_reshape({{args[0].get_type(), out[0].get_type()}},
-                                                    arg_shape,
-                                                    input_order);
+                    auto index = cuda_emitter->build_reshape(
+                        {{args[0].get_type(), out[0].get_type()}}, arg_shape, input_order);
 
                     writer << "gpu::invoke_primitive(ctx, " << index << ", ";
                     writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";

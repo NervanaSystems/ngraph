@@ -364,7 +364,8 @@ void runtime::gpu::GPU_ExternalFunction::emit_constant_declarations()
             {
                 shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
                 // get an allocator for transient per kernel gpu memory
-                GPUAllocator allocator = m_shared_context->m_primitive_emitter->get_memory_allocator();
+                GPUAllocator allocator =
+                    m_shared_context->m_primitive_emitter->get_memory_allocator();
                 size_t idx = allocator.reserve_argspace(
                     c->get_data_ptr(),
                     tv->get_tensor().size() * tv->get_tensor().get_element_type().size());
@@ -756,8 +757,6 @@ void runtime::gpu::GPU_ExternalFunction::emit_debug_function_exit(Node* node)
         m_writer << "timers[" << m_name_index_map[node->get_name()] << "].stop();\n";
     }
 }
-
-
 
 string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
                                                                const string& function_name)
