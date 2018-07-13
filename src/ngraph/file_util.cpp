@@ -213,7 +213,8 @@ string file_util::read_file_to_string(const string& path)
 
 static void iterate_files_worker(const string& path,
                                  function<void(const string& file, bool is_dir)> func,
-                                 bool recurse)
+                                 bool recurse,
+                                 bool include_links)
 {
     DIR* dir;
     struct dirent* ent;
@@ -224,26 +225,26 @@ static void iterate_files_worker(const string& path,
             while ((ent = readdir(dir)) != nullptr)
             {
                 string name = ent->d_name;
+                string path_name = file_util::path_join(path, name);
                 switch (ent->d_type)
                 {
                 case DT_DIR:
                     if (name != "." && name != "..")
                     {
-                        string dir_path = file_util::path_join(path, name);
                         if (recurse)
                         {
-                            file_util::iterate_files(dir_path, func, recurse);
+                            file_util::iterate_files(path_name, func, recurse);
                         }
-                        func(dir_path, true);
+                        func(path_name, true);
                     }
                     break;
-                case DT_LNK: break;
-                case DT_REG:
-                {
-                    string file_name = file_util::path_join(path, name);
-                    func(file_name, false);
+                case DT_LNK:
+                    if (include_links)
+                    {
+                        func(path_name, false);
+                    }
                     break;
-                }
+                case DT_REG: func(path_name, false); break;
                 default: break;
                 }
             }
@@ -264,7 +265,8 @@ static void iterate_files_worker(const string& path,
 
 void file_util::iterate_files(const string& path,
                               function<void(const string& file, bool is_dir)> func,
-                              bool recurse)
+                              bool recurse,
+                              bool include_links)
 {
     vector<string> files;
     vector<string> dirs;
@@ -279,7 +281,8 @@ void file_util::iterate_files(const string& path,
                                  files.push_back(file);
                              }
                          },
-                         recurse);
+                         recurse,
+                         include_links);
 
     for (auto f : files)
     {
