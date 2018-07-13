@@ -30,6 +30,7 @@ set(SRC
     builder/avg_pool.cpp
     builder/convert_layout.cpp
     builder/convolution.cpp
+    builder/reshape.cpp
     kernel/eigen_thread_pool.cpp
     kernel/pad.cpp
     kernel/reduce_max.cpp
