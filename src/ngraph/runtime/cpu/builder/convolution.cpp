@@ -19,6 +19,7 @@
 #include "ngraph/runtime/cpu/kernel/convolution.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -138,6 +139,83 @@ namespace ngraph
                                false);
                     };
                     functors.emplace_back(functor);
+                }
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::ConvolutionBias)
+            {
+                auto convolution = static_cast<const ngraph::op::ConvolutionBias*>(node);
+
+                auto& functors = external_function->get_functors();
+                auto& tensor_data = external_function->get_tensor_data();
+
+                auto arg0_shape = args[0].get_shape();
+                auto arg1_shape = args[1].get_shape();
+                auto result_shape = out[0].get_shape();
+
+                auto& arg0_tensor = tensor_data[args[0].get_name()];
+                auto& arg1_tensor = tensor_data[args[1].get_name()];
+                auto& arg2_tensor = tensor_data[args[2].get_name()];
+                auto& out_tensor = tensor_data[out[0].get_name()];
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    // For dilation, MKLDNN wants to know how many elements to insert between, not how far
+                    // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
+                    Strides window_dilation_strides_adjusted;
+                    for (size_t s : convolution->get_window_dilation_strides())
+                    {
+                        window_dilation_strides_adjusted.push_back(s - 1);
+                    }
+
+                    auto input_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
+                    auto weights_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
+                    // HACK to help MKLDNN pick the right implementation
+                    if (weights_format == mkldnn::memory::format::nchw)
+                    {
+                        weights_format = mkldnn::memory::format::oihw;
+                    }
+                    auto bias_format = mkldnn_utils::get_input_mkldnn_format(node, 2);
+                    auto output_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_data_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[0], input_format);
+                    auto weights_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[1], weights_format);
+                    auto bias_desc = mkldnn_emitter->build_memory_descriptor(args[2], bias_format);
+                    auto result_desc =
+                        mkldnn_emitter->build_memory_descriptor(out[0], output_format);
+                    size_t conv_index = 0;
+
+                    conv_index = mkldnn_emitter->build_convolution_forward(
+                        input_data_desc,
+                        weights_desc,
+                        bias_desc,
+                        result_desc,
+                        convolution->get_window_movement_strides(),
+                        window_dilation_strides_adjusted,
+                        convolution->get_padding_below(),
+                        convolution->get_padding_above());
+
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+
+                    auto functor = [&, conv_index](CPURuntimeContext* ctx) {
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out_tensor);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                    };
+                    functors.emplace_back(functor);
+                }
+                else
+                {
+                    throw ngraph_error("ConvolutionBias is only supported with MKLDNN kernel.");
                 }
             }
 
