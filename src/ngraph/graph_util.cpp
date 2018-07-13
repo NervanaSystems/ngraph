@@ -465,6 +465,33 @@ bool ngraph::is_one(std::shared_ptr<Node> reduce_constant)
     return result_bool;
 }
 
+NodeVector ngraph::get_subgraph_outputs(const NodeVector& nodes,
+                                        const NodeVector& exclusions,
+                                        bool ignore_unused)
+{
+    std::set<shared_ptr<Node>> exclusions_set(exclusions.begin(), exclusions.end());
+    std::set<shared_ptr<Node>> nodes_set(nodes.begin(), nodes.end());
+
+    NodeVector outputs;
+
+    for (auto n : nodes)
+    {
+        if (exclusions_set.count(n) != 0)
+        {
+            continue;
+        }
+
+        for (auto u : n->get_users())
+        {
+            if (nodes_set.count(u) == 0 && (!ignore_unused || is_used(u.get())))
+            {
+                outputs.push_back(n);
+            }
+        }
+    }
+    return outputs;
+}
+
 bool ngraph::is_used(Node* node)
 {
     std::unordered_set<Node*> instances_seen;

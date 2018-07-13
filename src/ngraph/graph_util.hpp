@@ -133,6 +133,10 @@ namespace ngraph
 
     bool is_zero(std::shared_ptr<Node> reduce_constant);
 
+    NodeVector get_subgraph_outputs(const NodeVector& nodes,
+                                    const NodeVector& exclusions,
+                                    bool ignore_unused = false);
+
     bool is_one(std::shared_ptr<Node> reduce_constant);
 
     // Returns true if `node` is live in the graph i.e. a result op
