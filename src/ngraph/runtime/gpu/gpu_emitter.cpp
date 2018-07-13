@@ -921,12 +921,8 @@ namespace ngraph
                 auto result_shape = out[0].get_shape();
                 auto input_order = reshape->get_input_order();
                 bool same_layout = is_sorted(input_order.begin(), input_order.end());
-                size_t result_shape_product = 1;
+                size_t result_shape_product = shape_size(result_shape);
 
-                for (auto i : result_shape)
-                {
-                    result_shape_product *= i;
-                }
                 // If there is no layout change or we are just going from 1^n to 1^m or a zero-size tensor,
                 // we can just copy.
                 if (same_layout || result_shape_product < 2)
@@ -956,47 +952,18 @@ namespace ngraph
                 // Other cases (reordering of axes for tensors with rank>2).
                 else
                 {
-                    std::vector<size_t> input_strides(arg_rank);
-                    std::vector<size_t> output_strides(arg_rank);
-                    std::vector<size_t> trans_strides(arg_rank);
-                    size_t stride = 1;
-                    for (int i = static_cast<int>(arg_rank) - 1; i >= 0; i--)
-                    {
-                        input_strides[i] = stride;
-                        stride *= arg_shape[i];
-                    }
-                    stride = 1;
-                    for (int i = static_cast<int>(arg_rank) - 1; i >= 0; i--)
-                    {
-                        output_strides[i] = stride;
-                        stride *= arg_shape[input_order[i]];
-                    }
-                    for (int i = 0; i < arg_rank; i++)
-                    {
-                        trans_strides[input_order[i]] = output_strides[i];
-                    }
+                    auto& cuda_emitter =
+                        external_function->get_primitive_emitter()->get_cuda_emitter();
+                    auto index =
+                        cuda_emitter->build_reshape(external_function->ctx().get(),
+                                                    {{args[0].get_type(), out[0].get_type()}},
+                                                    arg_shape,
+                                                    input_order);
 
-                    GPUAllocator allocator =
-                        external_function->get_primitive_emitter()->get_memory_allocator();
-                    size_t idx_input_strides = allocator.reserve_argspace(
-                        input_strides.data(), input_strides.size() * sizeof(size_t));
-                    size_t idx_trans_strides = allocator.reserve_argspace(
-                        trans_strides.data(), trans_strides.size() * sizeof(size_t));
-
-                    writer << "void* input_strides_d = "
-                              "runtime::gpu::invoke_memory_primitive(ctx, "
-                           << idx_input_strides << ");\n";
-                    writer << "void* trans_strides_d = "
-                              "runtime::gpu::invoke_memory_primitive(ctx, "
-                           << idx_trans_strides << ");\n";
-                    writer << "runtime::gpu::emit_reshape(\"" << node->description() << "\", {\""
-                           << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
-                           << ", ctx"
-                           << ", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
-                           << out[0].get_name() << ")"
-                           << ", "
-                           << "CUdeviceptr(input_strides_d), CUdeviceptr(trans_strides_d)"
-                           << ", " << arg_rank << ", " << args[0].get_size() << ");\n";
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
+                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                    writer << ");\n";
                 }
                 writer.block_end();
             }
