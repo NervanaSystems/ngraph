@@ -80,6 +80,7 @@ namespace ngraph
                 EntryPoint m_compiled_function;
 
             private:
+                void assemble_and_reserve();
                 void collect_unique_functions();
                 void emit_header();
                 void emit_timer_functions();
@@ -89,7 +90,6 @@ namespace ngraph
                 void emit_debug_function_entry(Node* node);
                 void emit_debug_function_exit(Node* node);
                 void emit_temp_mem_pool_allocation(std::shared_ptr<Function> current_function);
-                void emit_temp_mem_pool_release();
                 void release_function() { m_function = nullptr; }
                 void store_emitted_functions(const std::string& code);
                 std::string emit_op_as_function(const Node& node, const std::string& function_name);
@@ -116,6 +116,7 @@ namespace ngraph
                 std::string m_function_name;
                 std::string m_pch_header_source;
 
+                std::unordered_map<std::string, size_t> m_memory_buffers;
                 std::shared_ptr<GPU_Backend::BackendContext> m_shared_context;
             };
         }

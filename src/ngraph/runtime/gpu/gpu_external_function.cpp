@@ -254,6 +254,32 @@ runtime::gpu::GPU_ExternalFunction::~GPU_ExternalFunction()
 {
 }
 
+void runtime::gpu::GPU_ExternalFunction::assemble_and_reserve()
+{
+    GPUAllocator allocator =
+        m_shared_context->m_primitive_emitter->get_memory_allocator();
+
+    for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
+    {
+        // cache list of ordered ops
+        m_function_ordered_ops.insert({current_function, current_function->get_ordered_ops()});
+
+        // reserve memory buffers for intermediate results
+        size_t temp_pool_size = current_function->get_temporary_pool_size();
+        if (temp_pool_size)
+        {
+            size_t pool_idx = allocator.reserve_workspace(temp_pool_size, false);
+            m_memory_buffers[current_function->get_name()] = pool_idx;
+        }
+    }
+
+    emit_header();
+    emit_timer_functions();
+    emit_constant_declarations();
+    emit_function_declarations();
+    collect_unique_functions();
+    emit_functions();
+}
 void runtime::gpu::GPU_ExternalFunction::emit_header()
 {
     m_writer += R"(
@@ -486,11 +512,9 @@ void runtime::gpu::GPU_ExternalFunction::emit_temp_mem_pool_allocation(
     }
     if (m_temporaries_used)
     {
-        size_t temp_pool_size = current_function->get_temporary_pool_size();
         m_writer << "// Allocate the memory pool\n";
-        // TODO memory pool malloc.
-        m_writer << "void* pool_base_ptr = ngraph::runtime::gpu::create_gpu_buffer("
-                 << temp_pool_size << ");\n";
+        m_writer << "void* pool_base_ptr = ngraph::runtime::gpu::invoke_memory_primitive(ctx, " << m_memory_buffers.at(current_function->get_name()) << ");\n";
+
 
         // Add temporaries to the variable name map
         for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
@@ -503,14 +527,6 @@ void runtime::gpu::GPU_ExternalFunction::emit_temp_mem_pool_allocation(
                 m_variable_name_map[tensor->get_name()] = ss.str();
             }
         }
-    }
-}
-
-void runtime::gpu::GPU_ExternalFunction::emit_temp_mem_pool_release()
-{
-    if (m_temporaries_used)
-    {
-        m_writer << "ngraph::runtime::gpu::free_gpu_buffer(pool_base_ptr);\n";
     }
 }
 
@@ -654,7 +670,6 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                     emit_debug_function_exit(node.get());
                 }
             }
-            emit_temp_mem_pool_release();
         }
         m_writer.block_end(); // End generated function
     }
@@ -687,19 +702,9 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     m_pass_manager.register_pass<pass::DumpSorted>(dump_filename);
     m_pass_manager.run_passes(m_function);
 
-    for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
-    {
-        m_function_ordered_ops.insert({current_function, current_function->get_ordered_ops()});
-    }
+    assemble_and_reserve();
 
-    emit_header();
-    emit_timer_functions();
-    emit_constant_declarations();
-    emit_function_declarations();
-    collect_unique_functions();
-    emit_functions();
-
-    // allocate device buffers for primitive arguments and workspace
+    // allocate device buffers for tensors, primitive arguments and workspaces
     m_shared_context->m_primitive_emitter->allocate_primitive_memory();
 
     string code = m_writer.get_code();
