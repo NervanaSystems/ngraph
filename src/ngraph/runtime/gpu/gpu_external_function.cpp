@@ -256,8 +256,7 @@ runtime::gpu::GPU_ExternalFunction::~GPU_ExternalFunction()
 
 void runtime::gpu::GPU_ExternalFunction::assemble_and_reserve()
 {
-    GPUAllocator allocator =
-        m_shared_context->m_primitive_emitter->get_memory_allocator();
+    GPUAllocator allocator = m_shared_context->m_primitive_emitter->get_memory_allocator();
 
     for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
     {
@@ -513,8 +512,8 @@ void runtime::gpu::GPU_ExternalFunction::emit_temp_mem_pool_allocation(
     if (m_temporaries_used)
     {
         m_writer << "// Allocate the memory pool\n";
-        m_writer << "void* pool_base_ptr = ngraph::runtime::gpu::invoke_memory_primitive(ctx, " << m_memory_buffers.at(current_function->get_name()) << ");\n";
-
+        m_writer << "void* pool_base_ptr = ngraph::runtime::gpu::invoke_memory_primitive(ctx, "
+                 << m_memory_buffers.at(current_function->get_name()) << ");\n";
 
         // Add temporaries to the variable name map
         for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
