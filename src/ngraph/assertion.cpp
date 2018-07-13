@@ -22,14 +22,15 @@ using namespace ngraph;
 
 AssertionHelper::~AssertionHelper() noexcept(false)
 {
-    if (!m_assertion_true && !std::uncaught_exception())
+    if (!std::uncaught_exception())
     {
         std::stringstream ss;
         for (auto it = m_location_info.rbegin(); it != m_location_info.rend(); it++)
         {
             ss << *it << ":" << std::endl;
         }
-        ss << "Assertion failure at " << m_file << ":" << m_line << ":" << std::endl;
+        ss << "Assertion '" << m_assertion_expression << "' failed at " << m_file << ":" << m_line
+           << ":" << std::endl;
         ss << m_stream.str();
         throw AssertionFailure(ss.str());
     }

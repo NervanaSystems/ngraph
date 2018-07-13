@@ -41,7 +41,8 @@ op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
     // dimension (in other words, that arg has shape NCDi for some Di of rank>0, N != 0, C != 0).
     //
     NODE_ASSERT(this, arg_shape.size() >= 3)
-        << "Data input shape does not have rank of at least 3 (shape: " << arg_shape << ").";
+        << "Data input shape does not have rank of at least 3 (data input shape: " << arg_shape
+        << ").";
 
     size_t batch_size = arg_shape[0];
     NODE_ASSERT(this, batch_size != 0) << "Data batch size is zero (data input shape: " << arg_shape

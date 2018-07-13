@@ -47,33 +47,44 @@ namespace ngraph
     class AssertionHelper
     {
     public:
-        AssertionHelper(bool assertion_true,
-                        std::string file,
+        AssertionHelper(std::string file,
                         int line,
+                        std::string assertion_expression,
                         std::vector<std::string> location_info = {})
-            : m_assertion_true(assertion_true)
-            , m_file(file)
+            : m_file(file)
             , m_line(line)
+            , m_assertion_expression(assertion_expression)
             , m_location_info(location_info)
         {
         }
         AssertionHelper(AssertionHelper&& other)
             : AssertionHelper(
-                  other.m_assertion_true, other.m_file, other.m_line, other.m_location_info)
+                  other.m_file, other.m_line, other.m_assertion_expression, other.m_location_info)
         {
             m_stream = std::move(other.m_stream);
         }
         ~AssertionHelper() noexcept(false);
-        std::stringstream& get_stream() { return m_stream; }
+        std::ostream& get_stream() { return m_stream; }
     private:
-        bool m_assertion_true;
         std::stringstream m_stream;
         std::string m_file;
         int m_line;
+        std::string m_assertion_expression;
         std::vector<std::string> m_location_info;
+    };
+
+    class DummyAssertionHelper
+    {
+    public:
+        std::ostream& get_stream() { return m_stream; }
+    private:
+        std::stringstream m_stream;
     };
 }
 
 #define NGRAPH_ASSERT_WITH_LOC(cond, loc)                                                          \
-    ::ngraph::AssertionHelper(cond, __FILE__, __LINE__, loc).get_stream()
-#define NGRAPH_ASSERT(cond) ::ngraph::AssertionHelper(cond, __FILE__, __LINE__).get_stream()
+    (cond ? ::ngraph::DummyAssertionHelper().get_stream()                                          \
+          : ::ngraph::AssertionHelper(__FILE__, __LINE__, #cond, loc).get_stream())
+#define NGRAPH_ASSERT(cond)                                                                        \
+    (cond ? ::ngraph::DummyAssertionHelper().get_stream()                                          \
+          : ::ngraph::AssertionHelper(__FILE__, __LINE__, #cond).get_stream())

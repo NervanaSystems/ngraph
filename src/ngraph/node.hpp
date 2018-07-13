@@ -27,6 +27,7 @@
 #include <unordered_set>
 #include <vector>
 
+// #include "ngraph/assert.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
