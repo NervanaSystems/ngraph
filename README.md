@@ -11,7 +11,7 @@ backends, and it will be able to run on any backends we support in the future
 with minimal disruption to your model. With nGraph, you can co-evolve your 
 software and hardware's capabilities to stay at the forefront of your industry. 
 
-The nGraph Compiler is Intel's graph compiler for Artifical Neural Networks. 
+The nGraph Compiler is Intel's graph compiler for Artificial Neural Networks. 
 Documentation in this repo describes how you can program any framework 
 to run training and inference computations on a variety of Backends including 
 Intel® Architecture Processors (CPUs), Intel® Nervana™ Neural Network Processors 
