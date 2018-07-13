@@ -24,7 +24,7 @@ whatever scenario you need.
 nGraph provides both  a C++ API for framework developers and a Python API which 
 can run inference on models imported from ONNX. 
 
-![avoid lockin][develop-without-lockin]
+![nGraph ecosystem][ngraph-ecosystem]
 
 
 |Framework   | bridge available? | ONNX support?  |
