@@ -342,13 +342,13 @@ void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
                 }
             }
         }
-        writer << "runtime::gpu::stopwatch timers[" << names.size() << "];\n";
-        writer << "extern \"C\" size_t get_debug_timer_count() { return " << names.size()
-               << "; }\n";
-        writer << "extern \"C\" const char* get_debug_timer_name(size_t index)\n";
-        writer.block_begin();
-        writer << "static const char* timer_names[" << names.size() << "] =\n";
-        writer.block_begin();
+        m_writer << "runtime::gpu::stopwatch timers[" << names.size() << "];\n";
+        m_writer << "extern \"C\" size_t get_debug_timer_count() { return " << names.size()
+                 << "; }\n";
+        m_writer << "extern \"C\" const char* get_debug_timer_name(size_t index)\n";
+        m_writer.block_begin();
+        m_writer << "static const char* timer_names[" << names.size() << "] =\n";
+        m_writer.block_begin();
         vector<string> quoted_names;
         for (const string& name : names)
         {
