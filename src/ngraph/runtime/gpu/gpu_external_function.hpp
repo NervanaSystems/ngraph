@@ -32,6 +32,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/result_copy_elimination.hpp"
+#include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
@@ -62,6 +63,7 @@ namespace ngraph
 
             public:
                 GPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
+                                     std::shared_ptr<GPU_Backend::BackendContext>& shared_context,
                                      bool release_function = true);
                 ~GPU_ExternalFunction();
 
@@ -69,7 +71,7 @@ namespace ngraph
                 std::unique_ptr<runtime::gpu::GPURuntimeContext>& ctx();
                 const std::unique_ptr<GPUPrimitiveEmitter>& get_primitive_emitter() const
                 {
-                    return m_primitive_emitter;
+                    return m_shared_context->m_primitive_emitter;
                 }
 
             protected:
@@ -98,8 +100,6 @@ namespace ngraph
 
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
-                std::unique_ptr<GPUPrimitiveEmitter> m_primitive_emitter;
-                std::unique_ptr<GPURuntimeContext> m_ctx;
                 std::shared_ptr<ngraph::Function> m_function;
 
                 std::map<std::string, size_t> m_name_index_map;
@@ -116,8 +116,7 @@ namespace ngraph
                 std::string m_function_name;
                 std::string m_pch_header_source;
 
-                cublasHandle_t m_cublas_handle;
-                cudnnHandle_t m_cudnn_handle;
+                std::shared_ptr<GPU_Backend::BackendContext> m_shared_context;
             };
         }
     }
