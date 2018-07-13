@@ -342,7 +342,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
                 }
             }
         }
-        m_writer << "runtime::gpu::stopwatch timers[" << names.size() << "];\n";
+        m_writer << "static runtime::gpu::stopwatch timers[" << names.size() << "];\n";
         m_writer << "extern \"C\" size_t get_debug_timer_count() { return " << names.size()
                  << "; }\n";
         m_writer << "extern \"C\" const char* get_debug_timer_name(size_t index)\n";

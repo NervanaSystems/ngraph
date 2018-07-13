@@ -224,17 +224,17 @@ size_t runtime::gpu::stopwatch::get_call_count()
 
 size_t runtime::gpu::stopwatch::get_total_seconds()
 {
-    return runtime::gpu::stopwatch::get_total_milliseconds() / 1000;
+    return runtime::gpu::stopwatch::get_total_nanoseconds() / 1e9;
 }
 
 size_t runtime::gpu::stopwatch::get_total_milliseconds()
 {
-    return runtime::gpu::stopwatch::get_total_microseconds() / 1000;
+    return runtime::gpu::stopwatch::get_total_nanoseconds() / 1e6;
 }
 
 size_t runtime::gpu::stopwatch::get_total_microseconds()
 {
-    return runtime::gpu::stopwatch::get_total_nanoseconds() / 1000;
+    return runtime::gpu::stopwatch::get_total_nanoseconds() / 1e3;
 }
 
 size_t runtime::gpu::stopwatch::get_total_nanoseconds()
