@@ -53,5 +53,12 @@ public:
               const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
 
 private:
+    class FunctionInstance
+    {
+    public:
+        std::shared_ptr<cldnn::network> ocl_network = nullptr;
+    };
+
+    std::map<std::shared_ptr<Function>, FunctionInstance> ocl_networks;
     std::shared_ptr<cldnn::engine> ocl_engine;
 };
