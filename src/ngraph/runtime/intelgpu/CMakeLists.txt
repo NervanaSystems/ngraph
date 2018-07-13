@@ -17,6 +17,7 @@
 set(SRC
     intelgpu_backend.cpp
     intelgpu_tensor_view.cpp
+    intelgpu_layout.cpp
 )
 
 if (NGRAPH_INTELGPU_ENABLE)
