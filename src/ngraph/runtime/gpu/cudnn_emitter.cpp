@@ -107,9 +107,10 @@ std::vector<int>
     return low_vec;
 }
 
-runtime::gpu::CUDNNEmitter::CUDNNEmitter(GPUPrimitiveEmitter* emitter)
+runtime::gpu::CUDNNEmitter::CUDNNEmitter(GPUPrimitiveEmitter* emitter, GPURuntimeContext* ctx)
     : m_primitive_emitter(emitter)
 {
+    m_ctx = ctx;
 }
 
 cudnnDataType_t runtime::gpu::CUDNNEmitter::get_cudnn_datatype(std::string dtype)
@@ -128,8 +129,7 @@ cudnnDataType_t runtime::gpu::CUDNNEmitter::get_cudnn_datatype(std::string dtype
     return p->second;
 }
 
-size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPURuntimeContext* ctx,
-                                                        const cudnnReduceTensorOp_t& reduce_op,
+size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorOp_t& reduce_op,
                                                         const std::string& dtype,
                                                         const Shape& input_shape,
                                                         const AxisSet& reduction_axes)
@@ -162,7 +162,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
     size_t workspace_size = 0;
     CUDNN_SAFE_CALL(cudnnGetReductionWorkspaceSize(
-        *ctx->cudnn_handle, desc, input_desc, output_desc, &workspace_size));
+        *m_ctx->cudnn_handle, desc, input_desc, output_desc, &workspace_size));
     size_t workspace_idx = allocator.reserve_workspace(workspace_size);
     void* alpha = m_host_parameters.allocate_by_datatype(data_type, 1.0);
     void* beta = m_host_parameters.allocate_by_datatype(data_type, 0);
@@ -177,8 +177,8 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
                                                            CUDNN_REDUCE_TENSOR_NO_INDICES,
                                                            CUDNN_32BIT_INDICES));
 
-            void* workspace_ptr = runtime::gpu::invoke_memory_primitive(ctx, workspace_idx);
-            CUDNN_SAFE_CALL(cudnnReduceTensor(*ctx->cudnn_handle,
+            void* workspace_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
+            CUDNN_SAFE_CALL(cudnnReduceTensor(*m_ctx->cudnn_handle,
                                               desc,
                                               nullptr,
                                               0,
@@ -197,8 +197,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const runtime::gpu::GPUR
     return primitive_index;
 }
 
-size_t runtime::gpu::CUDNNEmitter::build_tensor_op(const GPURuntimeContext* ctx,
-                                                   const cudnnOpTensorOp_t& tensor_op,
+size_t runtime::gpu::CUDNNEmitter::build_tensor_op(const cudnnOpTensorOp_t& tensor_op,
                                                    const std::string& dtype,
                                                    const Shape& input_shape,
                                                    const double alpha0,
@@ -231,7 +230,7 @@ size_t runtime::gpu::CUDNNEmitter::build_tensor_op(const GPURuntimeContext* ctx,
             CUDNN_SAFE_CALL(cudnnSetOpTensorDescriptor(
                 opTensorDesc, tensor_op, data_type, CUDNN_NOT_PROPAGATE_NAN));
 
-            CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,
+            CUDNN_SAFE_CALL(cudnnOpTensor(*m_ctx->cudnn_handle,
                                           opTensorDesc,
                                           alpha_dt0,
                                           descriptor,
@@ -326,8 +325,7 @@ cudnnConvolutionDescriptor_t& runtime::gpu::CUDNNEmitter::get_cudnn_convolution_
     return conv_descriptor;
 }
 
-size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURuntimeContext* ctx,
-                                                     const std::string& dtype,
+size_t runtime::gpu::CUDNNEmitter::build_convolution(const std::string& dtype,
                                                      const Shape& input_tensor_shape,
                                                      const Shape& input_filter_shape,
                                                      const Shape& output_tensor_shape,
@@ -366,7 +364,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURunt
     void* beta = m_host_parameters.allocate_by_datatype(data_type, 0);
 
     size_t workspace_size_in_bytes = 0;
-    CUDNN_SAFE_CALL(cudnnGetConvolutionForwardWorkspaceSize(*ctx->cudnn_handle,
+    CUDNN_SAFE_CALL(cudnnGetConvolutionForwardWorkspaceSize(*m_ctx->cudnn_handle,
                                                             tensor_desc_0,
                                                             filter_desc,
                                                             conv_desc,
@@ -382,8 +380,8 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURunt
     std::unique_ptr<gpu::primitive> conv;
     conv.reset(new gpu::primitive{[=, &conv_desc, &tensor_desc_0, &filter_desc, &tensor_desc_1](
         void** inputs, void** outputs) {
-        void* workspace_ptr = runtime::gpu::invoke_memory_primitive(ctx, workspace_idx);
-        CUDNN_SAFE_CALL(cudnnConvolutionForward(*ctx->cudnn_handle,
+        void* workspace_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
+        CUDNN_SAFE_CALL(cudnnConvolutionForward(*m_ctx->cudnn_handle,
                                                 alpha,
                                                 tensor_desc_0,
                                                 inputs[0],
@@ -404,7 +402,6 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const runtime::gpu::GPURunt
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
-    const runtime::gpu::GPURuntimeContext* ctx,
     const std::string& dtype,
     const Shape& input_filter_shape,
     const Shape& input_tensor_shape,
@@ -443,7 +440,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
     void* beta = m_host_parameters.allocate_by_datatype(data_type, 0);
 
     size_t workspace_size_in_bytes = 0;
-    CUDNN_SAFE_CALL(cudnnGetConvolutionBackwardDataWorkspaceSize(*ctx->cudnn_handle,
+    CUDNN_SAFE_CALL(cudnnGetConvolutionBackwardDataWorkspaceSize(*m_ctx->cudnn_handle,
                                                                  filter_desc,
                                                                  tensor_desc_0,
                                                                  conv_desc,
@@ -459,8 +456,8 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
     std::unique_ptr<gpu::primitive> conv;
     conv.reset(new gpu::primitive{[=, &conv_desc, &tensor_desc_0, &filter_desc, &tensor_desc_1](
         void** inputs, void** outputs) {
-        void* workspace_ptr = runtime::gpu::invoke_memory_primitive(ctx, workspace_idx);
-        CUDNN_SAFE_CALL(cudnnConvolutionBackwardData(*ctx->cudnn_handle,
+        void* workspace_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
+        CUDNN_SAFE_CALL(cudnnConvolutionBackwardData(*m_ctx->cudnn_handle,
                                                      alpha,
                                                      filter_desc,
                                                      inputs[0],
@@ -481,7 +478,6 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(
-    const runtime::gpu::GPURuntimeContext* ctx,
     const std::string& dtype,
     const Shape& input_tensor_shape_0,
     const Shape& input_tensor_shape_1,
@@ -520,7 +516,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(
         CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0;
 
     size_t workspace_size_in_bytes = 0;
-    CUDNN_SAFE_CALL(cudnnGetConvolutionBackwardFilterWorkspaceSize(*ctx->cudnn_handle,
+    CUDNN_SAFE_CALL(cudnnGetConvolutionBackwardFilterWorkspaceSize(*m_ctx->cudnn_handle,
                                                                    tensor_desc_0,
                                                                    tensor_desc_1,
                                                                    conv_desc,
@@ -538,8 +534,8 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(
     std::unique_ptr<gpu::primitive> conv;
     conv.reset(new gpu::primitive{[=, &conv_desc, &tensor_desc_0, &filter_desc, &tensor_desc_1](
         void** inputs, void** outputs) {
-        void* workspace_ptr = runtime::gpu::invoke_memory_primitive(ctx, workspace_idx);
-        CUDNN_SAFE_CALL(cudnnConvolutionBackwardFilter(*ctx->cudnn_handle,
+        void* workspace_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
+        CUDNN_SAFE_CALL(cudnnConvolutionBackwardFilter(*m_ctx->cudnn_handle,
                                                        alpha,
                                                        tensor_desc_0,
                                                        inputs[0],
@@ -558,8 +554,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(
     return primitive_index;
 }
 
-size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeContext* ctx,
-                                                 const cudnnPoolingMode_t& pool_op,
+size_t runtime::gpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t& pool_op,
                                                  const std::string& dtype,
                                                  const Prop& direction,
                                                  const Shape& input_shape,
@@ -638,7 +633,7 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeC
     {
         pool.reset(new gpu::primitive{
             [=, &desc, &input_desc, &output_desc](void** inputs, void** outputs) {
-                CUDNN_SAFE_CALL(cudnnPoolingForward(*ctx->cudnn_handle,
+                CUDNN_SAFE_CALL(cudnnPoolingForward(*m_ctx->cudnn_handle,
                                                     desc,
                                                     alpha,
                                                     input_desc,
@@ -660,7 +655,7 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeC
                 // cuDNN requires the output tensor of the maxpool fprop to be passed even though
                 // it is not mathematically necessary. It appears, however, that it is not actually
                 // used as the adjoints are passed in place and the correct result is achieved.
-                CUDNN_SAFE_CALL(cudnnPoolingBackward(*ctx->cudnn_handle,
+                CUDNN_SAFE_CALL(cudnnPoolingBackward(*m_ctx->cudnn_handle,
                                                      desc,
                                                      alpha,
                                                      // output (wrt maxpool) tensor
@@ -686,8 +681,7 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const runtime::gpu::GPURuntimeC
     return primitive_index;
 }
 
-size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntimeContext* ctx,
-                                                   const cudnnBatchNormMode_t& bn_op,
+size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& bn_op,
                                                    const std::string& dtype,
                                                    const Prop& direction,
                                                    const Shape& tensor_shape,
@@ -728,7 +722,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
     {
         batchnorm.reset(new gpu::primitive{
             [=, &tensor_desc, &derived_param_desc](void** inputs, void** outputs) {
-                CUDNN_SAFE_CALL(cudnnBatchNormalizationForwardInference(*ctx->cudnn_handle,
+                CUDNN_SAFE_CALL(cudnnBatchNormalizationForwardInference(*m_ctx->cudnn_handle,
                                                                         bn_op,
                                                                         alpha,
                                                                         beta,
@@ -762,7 +756,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
         void* bias_factor = m_host_parameters.allocate_by_datatype(data_type, (m - 1) / m);
         batchnorm.reset(new gpu::primitive{
             [=, &op_desc, &tensor_desc, &derived_param_desc](void** inputs, void** outputs) {
-                CUDNN_SAFE_CALL(cudnnBatchNormalizationForwardTraining(*ctx->cudnn_handle,
+                CUDNN_SAFE_CALL(cudnnBatchNormalizationForwardTraining(*m_ctx->cudnn_handle,
                                                                        bn_op,
                                                                        alpha,
                                                                        beta,
@@ -781,7 +775,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
                                                                        NULL));
 
                 // convert to biased variance
-                CUDNN_SAFE_CALL(cudnnOpTensor(*ctx->cudnn_handle,
+                CUDNN_SAFE_CALL(cudnnOpTensor(*m_ctx->cudnn_handle,
                                               op_desc,
                                               beta,
                                               derived_param_desc,
@@ -800,7 +794,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
         batchnorm.reset(new gpu::primitive{
             [=, &tensor_desc, &derived_param_desc](void** inputs, void** outputs) {
                 CUDNN_SAFE_CALL(cudnnBatchNormalizationBackward(
-                    *ctx->cudnn_handle,
+                    *m_ctx->cudnn_handle,
                     bn_op,
                     alpha,
                     beta,
@@ -829,8 +823,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const runtime::gpu::GPURuntim
     return primitive_index;
 }
 
-size_t runtime::gpu::CUDNNEmitter::build_softmax(const runtime::gpu::GPURuntimeContext* ctx,
-                                                 const cudnnSoftmaxAlgorithm_t& algorithm,
+size_t runtime::gpu::CUDNNEmitter::build_softmax(const cudnnSoftmaxAlgorithm_t& algorithm,
                                                  const cudnnSoftmaxMode_t& mode,
                                                  const std::string& dtype,
                                                  const Prop& direction,
@@ -862,7 +855,7 @@ size_t runtime::gpu::CUDNNEmitter::build_softmax(const runtime::gpu::GPURuntimeC
     case Prop::Inference:
     {
         softmax.reset(new gpu::primitive{[=, &tensor_desc](void** inputs, void** outputs) {
-            CUDNN_SAFE_CALL(cudnnSoftmaxForward(*ctx->cudnn_handle,
+            CUDNN_SAFE_CALL(cudnnSoftmaxForward(*m_ctx->cudnn_handle,
                                                 algorithm,
                                                 mode,
                                                 alpha,
@@ -877,7 +870,7 @@ size_t runtime::gpu::CUDNNEmitter::build_softmax(const runtime::gpu::GPURuntimeC
     case Prop::Backward:
     {
         softmax.reset(new gpu::primitive{[=, &tensor_desc](void** inputs, void** outputs) {
-            CUDNN_SAFE_CALL(cudnnSoftmaxBackward(*ctx->cudnn_handle,
+            CUDNN_SAFE_CALL(cudnnSoftmaxBackward(*m_ctx->cudnn_handle,
                                                  algorithm,
                                                  mode,
                                                  alpha,
