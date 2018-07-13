@@ -42,7 +42,8 @@ TEST(assertion, assertion_what_string)
     catch (const AssertionFailure& e)
     {
         assertion_failure_thrown = true;
-        EXPECT_STREQ(e.what(), "testing the contents of the 'what()' string");
+        EXPECT_PRED_FORMAT2(
+            testing::IsSubstring, "testing the contents of the 'what()' string", e.what());
     }
 
     EXPECT_TRUE(assertion_failure_thrown);

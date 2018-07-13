@@ -65,12 +65,6 @@ namespace ngraph
                   file, line, assertion_expression, std::vector<std::string>{location_info})
         {
         }
-        AssertionHelper(AssertionHelper&& other)
-            : AssertionHelper(
-                  other.m_file, other.m_line, other.m_assertion_expression, other.m_location_info)
-        {
-            m_stream = std::move(other.m_stream);
-        }
         ~AssertionHelper() noexcept(false);
         std::ostream& get_stream() { return m_stream; }
     private:
