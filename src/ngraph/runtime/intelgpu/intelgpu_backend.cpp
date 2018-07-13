@@ -60,6 +60,11 @@ void do_eltwise_operation(cldnn::topology& topology,
     topology.add(op_add);
 }
 
+extern "C" const char* get_ngraph_version_string()
+{
+    return NGRAPH_VERSION;
+}
+
 extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
     return new runtime::intelgpu::IntelGPUBackend();

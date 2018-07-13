@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include <dlfcn.h>
+#include <regex>
 #include <sstream>
 
 #include "ngraph/file_util.hpp"
@@ -37,22 +38,9 @@ static string find_my_file()
     return dl_info.dli_fname;
 }
 
-// This will be uncommented when we add support for listing all known backends
-// static bool is_backend(const string& path)
-// {
-//     bool rc = false;
-//     string name = file_util::get_file_name(path);
-//     if (name.find("_backend.") != string::npos)
-//     {
-//         NGRAPH_INFO << name;
-//     }
-//     return rc;
-// }
-
 void* runtime::Backend::open_shared_library(string type)
 {
     string ext = SHARED_LIB_EXT;
-    string ver = LIBRARY_VERSION;
 
     void* handle = nullptr;
 
@@ -62,16 +50,12 @@ void* runtime::Backend::open_shared_library(string type)
     {
         type = type.substr(0, colon);
     }
-    string lib_name = "lib" + to_lower(type) + "_backend" + ext;
+
+    string library_name = "lib" + to_lower(type) + "_backend" + string(SHARED_LIB_EXT);
     string my_directory = file_util::get_directory(find_my_file());
-    string full_path = file_util::path_join(my_directory, lib_name);
-    handle = dlopen(full_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
-    if (!handle)
-    {
-        string err = dlerror();
-        throw runtime_error("Library open for Backend '" + lib_name + "' failed with error:\n" +
-                            err);
-    }
+    string library_path = file_util::path_join(my_directory, library_name);
+    handle = dlopen(library_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
+
     return handle;
 }
 
@@ -85,6 +69,15 @@ shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
     }
     else
     {
+        function<const char*()> get_ngraph_version_string =
+            reinterpret_cast<const char* (*)()>(dlsym(handle, "get_ngraph_version_string"));
+        if (!get_ngraph_version_string)
+        {
+            dlclose(handle);
+            throw runtime_error("Backend '" + type +
+                                "' does not implement get_ngraph_version_string");
+        }
+
         function<runtime::Backend*(const char*)> new_backend =
             reinterpret_cast<runtime::Backend* (*)(const char*)>(dlsym(handle, "new_backend"));
         if (!new_backend)
@@ -110,9 +103,50 @@ shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
     return rc;
 }
 
+map<string, string> runtime::Backend::get_registered_device_map()
+{
+    map<string, string> rc;
+    string my_directory = file_util::get_directory(find_my_file());
+    vector<string> backend_list;
+    regex reg("^lib(.+)_backend" + string(SHARED_LIB_EXT));
+    smatch result;
+
+    auto f = [&](const string& file, bool is_dir) {
+        string name = file_util::get_file_name(file);
+        if (regex_match(name, result, reg))
+        {
+            auto handle = dlopen(file.c_str(), RTLD_LAZY | RTLD_LOCAL);
+            if (handle)
+            {
+                if (dlsym(handle, "new_backend") && dlsym(handle, "delete_backend"))
+                {
+                    function<const char*()> get_ngraph_version_string =
+                        reinterpret_cast<const char* (*)()>(
+                            dlsym(handle, "get_ngraph_version_string"));
+                    if (get_ngraph_version_string &&
+                        get_ngraph_version_string() == string(NGRAPH_VERSION))
+                    {
+                        rc.insert({to_upper(result[1]), file});
+                    }
+                }
+
+                dlclose(handle);
+            }
+        }
+    };
+    file_util::iterate_files(my_directory, f, false, true);
+    return rc;
+}
+
 vector<string> runtime::Backend::get_registered_devices()
 {
-    return vector<string>();
+    map<string, string> m = get_registered_device_map();
+    vector<string> rc;
+    for (const pair<string, string>& p : m)
+    {
+        rc.push_back(p.first);
+    }
+    return rc;
 }
 
 void runtime::Backend::remove_compiled_function(shared_ptr<Function> func)
