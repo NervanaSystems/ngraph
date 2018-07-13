@@ -209,5 +209,4 @@ namespace ngraph
     };
 }
 
-#define NODE_ASSERT(node, cond)                                                                    \
-    NGRAPH_ASSERT_WITH_LOC(cond, std::vector<std::string>{::ngraph::node_assert_string(node)})
+#define NODE_ASSERT(node, cond) NGRAPH_ASSERT_WITH_LOC(cond, ::ngraph::node_assert_string(node))

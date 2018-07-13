@@ -47,14 +47,22 @@ namespace ngraph
     class AssertionHelper
     {
     public:
-        AssertionHelper(std::string file,
+        AssertionHelper(const std::string& file,
                         int line,
-                        std::string assertion_expression,
-                        std::vector<std::string> location_info = {})
+                        const std::string& assertion_expression,
+                        const std::vector<std::string>& location_info = {})
             : m_file(file)
             , m_line(line)
             , m_assertion_expression(assertion_expression)
             , m_location_info(location_info)
+        {
+        }
+        AssertionHelper(const std::string& file,
+                        int line,
+                        const std::string& assertion_expression,
+                        const std::string& location_info)
+            : AssertionHelper(
+                  file, line, assertion_expression, std::vector<std::string>{location_info})
         {
         }
         AssertionHelper(AssertionHelper&& other)
