@@ -18,9 +18,12 @@
 
 #include <chrono>
 #include <cstdint>
+
+#define TBB_PREVIEW_GLOBAL_CONTROL 1
 #define __TBB_PREVIEW_LIGHTWEIGHT_POLICY 1
 #include <tbb/flow_graph.h>
-
+#include <tbb/global_control.h>
+#include <tbb/task_scheduler_init.h>
 
 namespace mkldnn
 {
@@ -54,6 +57,8 @@ namespace ngraph
                 std::vector<AlignedBuffer*> memory_buffers;
                 char* const* mkldnn_workspaces;
                 tbb::flow::graph* G;
+                tbb::global_control* c;
+                tbb::task_scheduler_init* init;
             };
             }
         }
