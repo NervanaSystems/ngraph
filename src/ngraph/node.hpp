@@ -59,7 +59,7 @@ namespace ngraph
                                  const std::shared_ptr<Node>& dst_node,
                                  const std::shared_ptr<Node>& new_node);
 
-    std::string node_assert_string(const Node* node);
+    std::string type_check_assert_string(const Node* node);
 
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
@@ -224,6 +224,6 @@ namespace ngraph
 
 #define TYPE_CHECK_ASSERT(node, cond)                                                              \
     NGRAPH_ASSERT_STREAM_WITH_LOC(                                                                 \
-        ::ngraph::TypeCheckError, cond, ::ngraph::node_assert_string(node))
+        ::ngraph::TypeCheckError, cond, ::ngraph::type_check_assert_string(node))
 #define TYPE_CHECK_FAIL(node)                                                                      \
-    NGRAPH_FAIL_STREAM_WITH_LOC(::ngraph::TypeCheckError, ::ngraph::node_assert_string(node))
+    NGRAPH_FAIL_STREAM_WITH_LOC(::ngraph::TypeCheckError, ::ngraph::type_check_assert_string(node))

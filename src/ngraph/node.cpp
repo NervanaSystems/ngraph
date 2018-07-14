@@ -331,10 +331,10 @@ NodeVector Node::get_users() const
     return result;
 }
 
-std::string ngraph::node_assert_string(const Node* node)
+std::string ngraph::type_check_assert_string(const Node* node)
 {
     std::stringstream ss;
-    ss << "While constructing node '" << node->get_name() << "' of type '" << node->description()
+    ss << "While type-checking node '" << node->get_name() << "' of type '" << node->description()
        << "'";
     return ss.str();
 }
