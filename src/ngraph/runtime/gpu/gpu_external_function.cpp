@@ -237,44 +237,21 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::Or), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Or>}};
 
 runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
-    const shared_ptr<ngraph::Function>& function, bool release_function)
+    const shared_ptr<ngraph::Function>& function,
+    std::shared_ptr<GPU_Backend::BackendContext>& shared_context,
+    bool release_function)
     : m_compiled_function(nullptr)
-    , m_ctx(new GPURuntimeContext)
     , m_function(function)
     , m_emit_timing(false)
     , m_is_compiled(false)
     , m_release_function(release_function)
     , m_temporaries_used(false)
+    , m_shared_context(shared_context)
 {
-    // Create context use driver API and make it current, the runtime call will pickup the context
-    // http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html
-    // #interoperability-between-runtime-and-driver-apis
-    ngraph::runtime::gpu::CudaContextManager::Instance().SetContextCurrent();
-
-    cublasStatus_t cublasStatus = cublasCreate(&m_cublas_handle);
-    if (cublasStatus != CUBLAS_STATUS_SUCCESS)
-    {
-        throw runtime_error("cuBLAS create handle failed");
-    }
-    cudnnStatus_t cudnnStatus = cudnnCreate(&m_cudnn_handle);
-    if (cudnnStatus != CUDNN_STATUS_SUCCESS)
-    {
-        throw runtime_error("cuDNN create handle failed");
-    }
-    // Pass scalars as reference on the Device
-    cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_DEVICE);
-
-    // register with c-api runtime context
-    m_ctx->cublas_handle = &m_cublas_handle;
-    m_ctx->cudnn_handle = &m_cudnn_handle;
-    m_ctx->compiled_kernel_pool = new CudaFunctionPool;
 }
 
 runtime::gpu::GPU_ExternalFunction::~GPU_ExternalFunction()
 {
-    cublasDestroy(m_cublas_handle);
-    cudnnDestroy(m_cudnn_handle);
-    delete m_ctx->compiled_kernel_pool;
 }
 
 void runtime::gpu::GPU_ExternalFunction::emit_header()
@@ -322,6 +299,7 @@ using namespace std;
     // to register cleanup handlers. We use it, and not atexit(), because
     // atexit() happens too late, when the JIT is no longer alive
     m_writer << "void *__dso_handle = 0;\n\n";
+    m_writer << "static gpu::GPURuntimeContext* m_runtime_context = nullptr;\n";
 }
 
 void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
@@ -342,7 +320,13 @@ void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
                 }
             }
         }
-        m_writer << "ngraph::stopwatch timers[" << names.size() << "];\n";
+
+        if (m_shared_context->m_runtime_context->stopwatch_pool == nullptr)
+        {
+            m_shared_context->m_runtime_context->stopwatch_pool = new StopWatchPool;
+        }
+        m_offset = m_shared_context->m_runtime_context->stopwatch_pool->size();
+        m_shared_context->m_runtime_context->stopwatch_pool->allocate(names.size());
         m_writer << "extern \"C\" size_t get_debug_timer_count() { return " << names.size()
                  << "; }\n";
         m_writer << "extern \"C\" const char* get_debug_timer_name(size_t index)\n";
@@ -363,13 +347,15 @@ void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
         m_writer << "extern \"C\" const size_t get_debug_timer_microseconds(size_t index)\n";
         m_writer.block_begin();
         m_writer << "return (index < " << names.size()
-                 << " ? timers[index].get_total_microseconds() : 0);\n";
+                 << " ? runtime::gpu::us_stopwatch(m_runtime_context, index + " << m_offset
+                 << ") : 0);\n";
         m_writer.block_end();
 
         m_writer << "extern \"C\" const size_t get_debug_timer_call_count(size_t index)\n";
         m_writer.block_begin();
         m_writer << "return (index < " << names.size()
-                 << " ? timers[index].get_call_count() : 0);\n";
+                 << " ? runtime::gpu::count_stopwatch(m_runtime_context, index + " << m_offset
+                 << ") : 0);\n";
         m_writer.block_end();
         m_writer << "\n";
     }
@@ -387,7 +373,8 @@ void runtime::gpu::GPU_ExternalFunction::emit_constant_declarations()
             {
                 shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
                 // get an allocator for transient per kernel gpu memory
-                GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+                GPUAllocator allocator =
+                    m_shared_context->m_primitive_emitter->get_memory_allocator();
                 size_t idx = allocator.reserve_argspace(
                     c->get_data_ptr(),
                     tv->get_tensor().size() * tv->get_tensor().get_element_type().size());
@@ -401,7 +388,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_constant_declarations()
     }
 
     m_writer << "\nstatic bool is_constant_mem_ptr_null = true;\n\n";
-    m_writer << "static void invoke_constant_mem_ptr(gpu::GPURuntimeContext* ctx)\n";
+    m_writer << "static void invoke_constant_mem_ptr()\n";
     m_writer.block_begin();
     {
         m_writer << "if(is_constant_mem_ptr_null)\n";
@@ -418,7 +405,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_constant_declarations()
                             node->get_outputs()[0].get_tensor_view();
                         m_writer << tv->get_tensor().get_name() << " = reinterpret_cast<"
                                  << tv->get_tensor().get_element_type().c_type_string()
-                                 << "*>(runtime::gpu::invoke_memory_primitive(ctx, "
+                                 << "*>(runtime::gpu::invoke_memory_primitive(m_runtime_context, "
                                  << tv->get_tensor().get_name() << "_idx));\n";
                     }
                 }
@@ -561,8 +548,9 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                  << "gpu::GPURuntimeContext* ctx)\n";
         m_writer.block_begin();
         {
+            m_writer << "m_runtime_context = ctx;\n";
             //set constant pointers during the first run
-            m_writer << "invoke_constant_mem_ptr(ctx);\n";
+            m_writer << "invoke_constant_mem_ptr();\n";
 
             //alocate temp memory pool
             emit_temp_mem_pool_allocation(current_function);
@@ -698,8 +686,6 @@ void runtime::gpu::GPU_ExternalFunction::compile()
         return;
     }
 
-    m_primitive_emitter.reset(new GPUPrimitiveEmitter());
-
     m_function_name = m_function->get_name();
     string dump_filename = file_util::path_join(s_output_dir, m_function_name + "_ops.txt");
 
@@ -722,8 +708,9 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     emit_function_declarations();
     collect_unique_functions();
     emit_functions();
+
     // allocate device buffers for primitive arguments and workspace
-    m_primitive_emitter->allocate_primitive_memory();
+    m_shared_context->m_primitive_emitter->allocate_primitive_memory();
 
     string code = m_writer.get_code();
     store_emitted_functions(code);
@@ -769,7 +756,8 @@ void runtime::gpu::GPU_ExternalFunction::emit_debug_function_entry(Node* node)
 {
     if (m_emit_timing)
     {
-        m_writer << "timers[" << m_name_index_map[node->get_name()] << "].start();\n";
+        m_writer << "runtime::gpu::start_stopwatch(ctx, "
+                 << m_name_index_map[node->get_name()] + m_offset << ");\n";
     }
 }
 
@@ -777,13 +765,9 @@ void runtime::gpu::GPU_ExternalFunction::emit_debug_function_exit(Node* node)
 {
     if (m_emit_timing)
     {
-        m_writer << "timers[" << m_name_index_map[node->get_name()] << "].stop();\n";
+        m_writer << "runtime::gpu::stop_stopwatch(ctx, "
+                 << m_name_index_map[node->get_name()] + m_offset << ");\n";
     }
-}
-
-unique_ptr<runtime::gpu::GPURuntimeContext>& runtime::gpu::GPU_ExternalFunction::ctx()
-{
-    return m_ctx;
 }
 
 string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
