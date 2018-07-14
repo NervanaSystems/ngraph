@@ -190,6 +190,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
                                               beta,
                                               output_desc,
                                               outputs[0]));
+            debug_sync();
         }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(reduce));
@@ -241,6 +242,7 @@ size_t runtime::gpu::CUDNNEmitter::build_tensor_op(const cudnnOpTensorOp_t& tens
                                           beta_dt,
                                           descriptor,
                                           outputs[0]));
+            debug_sync();
         }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(tensor));
@@ -394,6 +396,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const std::string& dtype,
                                                 beta,
                                                 tensor_desc_1,
                                                 outputs[0]));
+        debug_sync();
     }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(conv));
@@ -470,6 +473,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
                                                      beta,
                                                      tensor_desc_1,
                                                      outputs[0]));
+        debug_sync();
     }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(conv));
@@ -548,6 +552,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(
                                                        beta,
                                                        filter_desc,
                                                        outputs[0]));
+        debug_sync();
     }});
     primitive_index = this->m_primitive_emitter->insert(std::move(conv));
     m_primitive_emitter->cache(hash, primitive_index);
@@ -641,6 +646,7 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t& pool_
                                                     beta,
                                                     output_desc,
                                                     outputs[0]));
+                debug_sync();
             }});
         break;
     }
@@ -671,6 +677,7 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t& pool_
                                                      // adjoint of input
                                                      input_desc,
                                                      outputs[0]));
+                debug_sync();
             }});
         break;
     }
@@ -736,6 +743,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
                                                                         inputs[3], // mean
                                                                         inputs[4], // variance
                                                                         epsilon));
+                debug_sync();
             }});
         break;
     }
@@ -773,6 +781,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
                                                                        epsilon,
                                                                        NULL,
                                                                        NULL));
+                debug_sync();
 
                 // convert to biased variance
                 CUDNN_SAFE_CALL(cudnnOpTensor(*m_ctx->cudnn_handle,
@@ -786,6 +795,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
                                               bias_factor,
                                               derived_param_desc,
                                               outputs[2]));
+                debug_sync();
             }});
         break;
     }
@@ -813,6 +823,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
                     epsilon,
                     NULL,   // inputs[3 /* mu batch mean*/],
                     NULL)); // inputs[4 /* 1/sig**2 batch inverse variance*/]);
+                debug_sync();
             }});
         break;
     }
@@ -864,6 +875,7 @@ size_t runtime::gpu::CUDNNEmitter::build_softmax(const cudnnSoftmaxAlgorithm_t& 
                                                 beta,
                                                 tensor_desc,
                                                 outputs[0]));
+            debug_sync();
         }});
         break;
     }
@@ -881,6 +893,7 @@ size_t runtime::gpu::CUDNNEmitter::build_softmax(const cudnnSoftmaxAlgorithm_t& 
                                                  beta,
                                                  tensor_desc,
                                                  outputs[0]));
+            debug_sync();
         }});
         break;
     }
@@ -889,4 +902,18 @@ size_t runtime::gpu::CUDNNEmitter::build_softmax(const cudnnSoftmaxAlgorithm_t& 
     primitive_index = this->m_primitive_emitter->insert(std::move(softmax));
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
+}
+
+void runtime::gpu::CUDNNEmitter::sync()
+{
+    CUDA_RT_SAFE_CALL(cudaDeviceSynchronize());
+    return;
+}
+
+void runtime::gpu::CUDNNEmitter::debug_sync()
+{
+#ifdef NGRAPH_DEBUG_ENABLE
+    CUDA_RT_SAFE_CALL(cudaDeviceSynchronize());
+#endif
+    return;
 }
