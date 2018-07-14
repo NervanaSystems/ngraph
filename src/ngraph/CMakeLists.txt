@@ -15,7 +15,6 @@
 # ******************************************************************************
 
 set (SRC
-    assertion.cpp
     axis_set.cpp
     axis_vector.cpp
     autodiff/adjoints.cpp

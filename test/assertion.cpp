@@ -31,19 +31,37 @@ TEST(assertion, assertion_false)
     EXPECT_THROW({ NGRAPH_ASSERT(false) << "this should throw"; }, AssertionFailure);
 }
 
-TEST(assertion, assertion_what_string)
+TEST(assertion, assertion_with_explanation)
 {
     bool assertion_failure_thrown = false;
 
     try
     {
-        NGRAPH_ASSERT(false) << "testing the contents of the 'what()' string";
+        NGRAPH_ASSERT(false) << "xyzzyxyzzy";
     }
     catch (const AssertionFailure& e)
     {
         assertion_failure_thrown = true;
-        EXPECT_PRED_FORMAT2(
-            testing::IsSubstring, "testing the contents of the 'what()' string", e.what());
+        EXPECT_PRED_FORMAT2(testing::IsSubstring, "Assertion 'false' failed", e.what());
+        EXPECT_PRED_FORMAT2(testing::IsSubstring, "xyzzyxyzzy", e.what());
+    }
+
+    EXPECT_TRUE(assertion_failure_thrown);
+}
+
+TEST(assertion, assertion_no_explanation)
+{
+    bool assertion_failure_thrown = false;
+
+    try
+    {
+        NGRAPH_ASSERT(false);
+    }
+    catch (const AssertionFailure& e)
+    {
+        assertion_failure_thrown = true;
+        EXPECT_PRED_FORMAT2(testing::IsSubstring, "Assertion 'false' failed", e.what());
+        EXPECT_PRED_FORMAT2(testing::IsSubstring, "(no explanation given)", e.what());
     }
 
     EXPECT_TRUE(assertion_failure_thrown);
@@ -69,4 +87,40 @@ TEST(assertion, throw_in_stream)
     };
 
     EXPECT_THROW({ NGRAPH_ASSERT(false) << f(); }, std::domain_error);
+}
+
+TEST(assertion, fail_with_explanation)
+{
+    bool assertion_failure_thrown = false;
+
+    try
+    {
+        NGRAPH_FAIL() << "xyzzyxyzzy";
+    }
+    catch (const AssertionFailure& e)
+    {
+        assertion_failure_thrown = true;
+        EXPECT_PRED_FORMAT2(testing::IsSubstring, "Failure", e.what());
+        EXPECT_PRED_FORMAT2(testing::IsSubstring, "xyzzyxyzzy", e.what());
+    }
+
+    EXPECT_TRUE(assertion_failure_thrown);
+}
+
+TEST(assertion, fail_no_explanation)
+{
+    bool assertion_failure_thrown = false;
+
+    try
+    {
+        NGRAPH_FAIL();
+    }
+    catch (const AssertionFailure& e)
+    {
+        assertion_failure_thrown = true;
+        EXPECT_PRED_FORMAT2(testing::IsSubstring, "Failure", e.what());
+        EXPECT_PRED_FORMAT2(testing::IsSubstring, "(no explanation given)", e.what());
+    }
+
+    EXPECT_TRUE(assertion_failure_thrown);
 }

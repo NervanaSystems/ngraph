@@ -5882,7 +5882,7 @@ TEST(type_prop, avg_pool_invalid_0d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 0D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Data input shape does not have rank of at least 3");
     }
@@ -5904,7 +5904,7 @@ TEST(type_prop, avg_pool_invalid_1d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 1D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Data input shape does not have rank of at least 3");
     }
@@ -5926,7 +5926,7 @@ TEST(type_prop, avg_pool_invalid_2d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 2D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Data input shape does not have rank of at least 3");
     }
@@ -5948,7 +5948,7 @@ TEST(type_prop, avg_pool_invalid_0_batch_size)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 batch size not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Data batch size is zero");
     }
@@ -5970,7 +5970,7 @@ TEST(type_prop, avg_pool_invalid_0_channels)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 channels not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Channel count is zero");
     }
@@ -5992,7 +5992,7 @@ TEST(type_prop, avg_pool_invalid_wrong_number_of_window_dimensions_too_many)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too many window dimensions not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              "Window shape rank does not match number of spatial dimensions");
@@ -6015,7 +6015,7 @@ TEST(type_prop, avg_pool_invalid_wrong_number_of_window_dimensions_too_few)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too few window dimensions not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              "Window shape rank does not match number of spatial dimensions");
@@ -6039,7 +6039,7 @@ TEST(type_prop, avg_pool_invalid_movement_stride_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong movement stride rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -6067,7 +6067,7 @@ TEST(type_prop, avg_pool_invalid_padding_below_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong below-padding rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              "Below-padding rank does not match number of spatial dimensions");
@@ -6094,7 +6094,7 @@ TEST(type_prop, avg_pool_invalid_padding_above_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong above-padding rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              "Above-padding rank does not match number of spatial dimensions");
@@ -6117,7 +6117,7 @@ TEST(type_prop, avg_pool_invalid_input_item_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length spatial axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              "Data input spatial dimension 0 has zero length even after padding");
@@ -6140,7 +6140,7 @@ TEST(type_prop, avg_pool_invalid_window_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length window axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Window shape dimension 1 has zero length");
     }
@@ -6162,7 +6162,7 @@ TEST(type_prop, avg_pool_invalid_dilated_too_large)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with oversized window not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              "Window shape after padding is larger than the spatial dimensions");
@@ -6186,7 +6186,7 @@ TEST(type_prop, avg_pool_invalid_movement_stride_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0-length movement stride axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Window movement strides dimension 0 has zero length");
     }

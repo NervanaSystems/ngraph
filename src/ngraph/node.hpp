@@ -27,7 +27,7 @@
 #include <unordered_set>
 #include <vector>
 
-// #include "ngraph/assert.hpp"
+#include "ngraph/assertion.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
@@ -207,6 +207,23 @@ namespace ngraph
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
     };
+
+    class TypeCheckError : public AssertionFailure
+    {
+    public:
+        TypeCheckError(std::string what)
+            : AssertionFailure(what)
+        {
+        }
+        TypeCheckError(const char* what)
+            : AssertionFailure(what)
+        {
+        }
+    };
 }
 
-#define NODE_ASSERT(node, cond) NGRAPH_ASSERT_WITH_LOC(cond, ::ngraph::node_assert_string(node))
+#define TYPE_CHECK_ASSERT(node, cond)                                                              \
+    NGRAPH_ASSERT_STREAM_WITH_LOC(                                                                 \
+        ::ngraph::TypeCheckError, cond, ::ngraph::node_assert_string(node))
+#define TYPE_CHECK_FAIL(node)                                                                      \
+    NGRAPH_FAIL_STREAM_WITH_LOC(::ngraph::TypeCheckError, ::ngraph::node_assert_string(node))

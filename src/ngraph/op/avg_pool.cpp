@@ -40,16 +40,16 @@ op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
     // Make sure batch size and channel count are not zero, and that we have at least one spatial
     // dimension (in other words, that arg has shape NCDi for some Di of rank>0, N != 0, C != 0).
     //
-    NODE_ASSERT(this, arg_shape.size() >= 3)
+    TYPE_CHECK_ASSERT(this, arg_shape.size() >= 3)
         << "Data input shape does not have rank of at least 3 (data input shape: " << arg_shape
         << ").";
 
     size_t batch_size = arg_shape[0];
-    NODE_ASSERT(this, batch_size != 0) << "Data batch size is zero (data input shape: " << arg_shape
-                                       << ").";
+    TYPE_CHECK_ASSERT(this, batch_size != 0)
+        << "Data batch size is zero (data input shape: " << arg_shape << ").";
 
     size_t channel_count = arg_shape[1];
-    NODE_ASSERT(this, channel_count != 0)
+    TYPE_CHECK_ASSERT(this, channel_count != 0)
         << "Channel count is zero (data input shape: " << arg_shape << ").";
 
     size_t spatial_dimension_count = arg_shape.size() - 2;
@@ -57,17 +57,17 @@ op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
     //
     // Make sure window shape, window movement strides, and padding have same rank as Di.
     //
-    NODE_ASSERT(this, window_shape.size() == spatial_dimension_count)
+    TYPE_CHECK_ASSERT(this, window_shape.size() == spatial_dimension_count)
         << "Window shape rank does not match number of spatial dimensions (window shape: "
         << window_shape << ", data input shape: " << arg_shape << ").";
-    NODE_ASSERT(this, window_movement_strides.size() == spatial_dimension_count)
+    TYPE_CHECK_ASSERT(this, window_movement_strides.size() == spatial_dimension_count)
         << "Window movement stride rank does not match number of spatial dimensions (window "
            "movement strides: "
         << window_movement_strides << ", data input shape: " << arg_shape << ").";
-    NODE_ASSERT(this, padding_below.size() == spatial_dimension_count)
+    TYPE_CHECK_ASSERT(this, padding_below.size() == spatial_dimension_count)
         << "Below-padding rank does not match number of spatial dimensions (padding below: "
         << padding_below << ", data input shape: " << arg_shape << ").";
-    NODE_ASSERT(this, padding_above.size() == spatial_dimension_count)
+    TYPE_CHECK_ASSERT(this, padding_above.size() == spatial_dimension_count)
         << "Above-padding rank does not match number of spatial dimensions (padding above: "
         << padding_above << ", data input shape: " << arg_shape << ").";
 
@@ -85,7 +85,7 @@ op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
 
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        NODE_ASSERT(this, input_item_virtual_shape[i] != 0)
+        TYPE_CHECK_ASSERT(this, input_item_virtual_shape[i] != 0)
             << "Data input spatial dimension " << i
             << " has zero length even after padding (virtual shape of input item: "
             << input_item_virtual_shape << ").";
@@ -96,7 +96,7 @@ op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
     //
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        NODE_ASSERT(this, window_shape[i] != 0)
+        TYPE_CHECK_ASSERT(this, window_shape[i] != 0)
             << "Window shape dimension " << i << " has zero length (window shape: " << window_shape
             << ").";
     }
@@ -106,7 +106,7 @@ op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
     //
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        NODE_ASSERT(this, window_shape[i] <= input_item_virtual_shape[i])
+        TYPE_CHECK_ASSERT(this, window_shape[i] <= input_item_virtual_shape[i])
             << "Window shape after padding is larger than the spatial dimensions (window shape: "
             << window_shape << ", virtual shape of input item: " << input_item_virtual_shape
             << ").";
@@ -119,7 +119,7 @@ op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
 
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        NODE_ASSERT(this, window_movement_strides[i] != 0)
+        TYPE_CHECK_ASSERT(this, window_movement_strides[i] != 0)
             << "Window movement strides dimension " << i
             << " has zero length (window movement strides: " << window_movement_strides << ").";
         output_item_shape.push_back(ceil_div(input_item_virtual_shape[i] - window_shape[i] + 1,
@@ -143,7 +143,7 @@ op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
 
             // Checking the lower edge of each dimension is easy, because there's no mystery
             // regarding the window's lower-edge placement...
-            NODE_ASSERT(this, dim_padding_below == 0 || dim_window_size > dim_padding_below)
+            TYPE_CHECK_ASSERT(this, dim_padding_below == 0 || dim_window_size > dim_padding_below)
                 << "Window will sometimes reside entirely within the below-padding region, but"
                 << " include_padding_in_avg_computation was not set (padding below: "
                 << padding_below << ", window shape: " << window_shape << ").";
@@ -154,9 +154,9 @@ op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
                 const size_t dim_window_max_lower_offset = dim_num_strides * dim_stride;
                 const size_t dim_padding_above_start_offset = dim_virtual_size - dim_padding_above;
 
-                NODE_ASSERT(this,
-                            dim_padding_above == 0 ||
-                                dim_window_max_lower_offset < dim_padding_above_start_offset)
+                TYPE_CHECK_ASSERT(this,
+                                  dim_padding_above == 0 ||
+                                      dim_window_max_lower_offset < dim_padding_above_start_offset)
                     << "Window will sometimes reside entirely within the above-padding region, but"
                     << " include_padding_in_avg_computation was not set (padding above: "
                     << padding_above << ", window shape: " << window_shape << ").";
