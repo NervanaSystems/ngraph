@@ -1,28 +1,37 @@
+Contributor Guidelines
+======================
 
-Core Contributor Guidelines
-===========================
+http://ngraph.nervanasys.com/docs/latest/project/code-contributor-README.html
+
+
+License
+-------
+
+All contributed code must be compatible with the [Apache
+2](https://www.apache.org/licenses/LICENSE-2.0) license, preferably by
+being contributed under the Apache 2 license. Code contributed with
+another license will need the license reviewed by Intel before it can be
+accepted.
 
 Code formatting
 ---------------
 
-For [code contributions], all C/C++ source code in the repository, 
-including the test code, must adhere to the source-code formatting 
-and style guidelines described here.
-
-For [doc contributions], we use restructured text, not markdown. 
+All C/C++ source code in the repository, including the test code, must
+adhere to the source-code formatting and style guidelines described
+here. The coding style described here applies to the nGraph repository.
+Related repositories may make adjustements to better match the coding
+styles of libraries they are using.
 
 ### Adding ops to nGraph Core
 
 Our design philosophy is that the graph is not a script for running
-kernels; rather, the graph is a snapshot of the computation's building
-blocks which we call `ops`. Compilation should match `ops` to
-appropriate kernels for the backend(s) in use. Thus, we expect that
-adding of new Core ops should be infrequent and that most functionality
-instead gets added with new functions that build sub-graphs from
-existing core ops.
-
-The coding style described here should apply to both Core `ops`, and to
-any functions that build out (upon) sub-graphs from the core.
+optimized kernels; rather, the graph is a specification for a
+computation composed of basic building blocks which we call `ops`.
+Compilation should match groups of `ops` to appropriate optimal and
+semantically-equivalent groups of kernels for the backend(s) in use.
+Thus, we expect that adding of new Core ops should be infrequent and
+that most functionality instead gets added with new functions that build
+sub-graphs from existing core ops.
 
 ### Coding style
 
@@ -32,7 +41,7 @@ it. To this end, we employ coding standards that facilitate
 understanding of *what nGraph components are doing*. Programs are
 easiest to understand when they can be understood locally; if most local
 changes have local impact, you do not need to dig through multiple files
-to understand what something does.
+to understand what something does and if it is safe to modify.
 
 #### Names
 
@@ -41,15 +50,16 @@ casing standards:
 
 -   Define C++ class or type names with `CamelCase`.
 -   Assign template parameters with `UPPER_SNAKE_CASE`.
--   Case variable and function names with `snake_case`.
+-   Case variable and function names with `lower_snake_case`.
 
-Method names for basic accessors are prefixed by `get_` or `set_` and
-should have simple $\mathcal{O}(1)$ implementations:
+Method names for basic accessors are prefixed by `get_`, `is_`, or
+`set_` and should have simple $\mathcal{O}(1)$ implementations:
 
 -   A `get_` method should be externally idempotent. It may perform some
-    simple initialization and cache the result for later use.
+    simple initialization and cache the result for later use. Trivial
+    `get_` methods can be defined in a header file. If a method is
+    non-trivial, that is often a sign that it is not a basic accessor.
 -   An `is_` may be used instead of `get_` for boolean accessors.
-    Trivial `get_` methods can be defined in a header file.
 -   A `set_` method should change the value returned by the
     corresponding `get_` method.
     -   Use `set_is_` if using `is_` to get a value.
@@ -79,8 +89,8 @@ should have simple $\mathcal{O}(1)$ implementations:
         -   Doing so leaks the alias into users of the header, including
             headers that follow.
 
-        - It is okay to use `using` with local scope, such as inside 
-          a class definiton.
+        - It is okay to use `using` with local scope, such as inside a class 
+          definiton.
 
     -   Be careful of C++'s implicit namespace inclusions. For example,
         if a parameter's type is from another namespace, that namespace
@@ -96,10 +106,10 @@ should have simple $\mathcal{O}(1)$ implementations:
 -   Use `.hpp` for headers and `.cpp` for implementation.
 -   Reflect the namespace nesting in the directory hierarchy.
 -   Unit test files are in the `tests` directory.
-    -   Tranformer-dependent tests are tests running on the default
+    -   Transformer-dependent tests are tests running on the default
         transformer or specifying a transformer. For these, use the form
 
-        ```
+        ``` 
         TEST(file_name, test_name)
         ```
 
@@ -111,7 +121,7 @@ should have simple $\mathcal{O}(1)$ implementations:
             of the file.
         -   Use
 
-            ```
+            ``` 
             NGRAPH_TEST(${BACKEND_NAME}, test_name)
             ```
 
@@ -143,35 +153,48 @@ merge conflicts.
         the groups downward from system-level to 3rd-party to `ngraph`.
     -   Formatting will keep the files in each group in
         alphabetic order.
-    -   Use this syntax for files that **do not change during
+    -   Use this syntax for files that **do not change during nGraph
         development**; they will not be checked for changes
         during builds. Normally this will be everything but the ngraph
         files:
 
-        `#include <file>`
+        ``` 
+        #include <file>
+        ```
 
-    -   Use this syntax for files that **are changing during
+    -   Use this syntax for files that **are changing during nGraph
         development**; they will be checked for changes during builds.
         Normally this will be ngraph headers:
 
-        `#include "file"`
+        ``` 
+        #include "file"
+        ```
 
     -   Use this syntax for system C headers with C++ wrappers:
 
-        ` #include <c...>`
+        ``` 
+        #include <c...>
+        ```
 
--   To guard against multiple inclusion, avoid using the `#define X_H`
-    style. Use this syntax instead:
+-   To guard against multiple inclusion, use:
 
-    `#pragma once`
+    ``` 
+    #pragma once
+    ```
 
+    -   The syntax is a compiler extension that has been adopted by all
+        supported compilers.
 -   The initialization
 
-    `Foo x{4, 5};`
+    ``` 
+    Foo x{4, 5};
+    ```
 
     is preferred over
 
-    `Foo x(4, 5);`
+    ``` 
+    Foo x(4, 5);
+    ```
 
 -   Indentation should be accompanied by braces; this includes
     single-line bodies for conditionals and loops.
@@ -189,29 +212,31 @@ merge conflicts.
     reference, `auto` will strip the reference unless you use `auto&`:
     -   Don't do things like
 
-            auto s = Shape{2,3};
+        ``` 
+        auto s = Shape{2,3};
+        ```
 
         Instead, use
 
-            Shape s{2, 3};
-
+        ``` 
+        Shape s{2, 3};
+        ```
 
     -   Indicate the type in the variable name.
 
 -   One variable declaration/definition per line
     -   Don't use the C-style
 
-        ```
+        ``` 
         int x, y, *z;
         ```
 
         Instead, use:
 
-            int x;
-            int y;
-            int* z;
-       
+        ``` 
+        int x;
+        int y;
+        int* z;
+        ```
 
 
-[code contributions]:http://ngraph.nervanasys.com/docs/latest/project/code-contributor-README.html
-[doc contributions]:http://ngraph.nervanasys.com/docs/latest/project/doc-contributor-README.html
