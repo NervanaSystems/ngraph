@@ -193,7 +193,7 @@ uint32_t runtime::gpu::idiv_ceil(int n, int d)
     return n / d + (n % d > 0);
 }
 
-void runtime::gpu::stopwatch::start()
+void runtime::gpu::StopWatch::start()
 {
     if (m_active == false)
     {
@@ -206,7 +206,7 @@ void runtime::gpu::stopwatch::start()
     }
 }
 
-void runtime::gpu::stopwatch::stop()
+void runtime::gpu::StopWatch::stop()
 {
     if (m_active == true)
     {
@@ -217,27 +217,27 @@ void runtime::gpu::stopwatch::stop()
         m_active = false;
     }
 }
-size_t runtime::gpu::stopwatch::get_call_count()
+size_t runtime::gpu::StopWatch::get_call_count()
 {
     return m_total_count;
 }
 
-size_t runtime::gpu::stopwatch::get_total_seconds()
+size_t runtime::gpu::StopWatch::get_total_seconds()
 {
-    return runtime::gpu::stopwatch::get_total_nanoseconds() / 1e9;
+    return runtime::gpu::StopWatch::get_total_nanoseconds() / 1e9;
 }
 
-size_t runtime::gpu::stopwatch::get_total_milliseconds()
+size_t runtime::gpu::StopWatch::get_total_milliseconds()
 {
-    return runtime::gpu::stopwatch::get_total_nanoseconds() / 1e6;
+    return runtime::gpu::StopWatch::get_total_nanoseconds() / 1e6;
 }
 
-size_t runtime::gpu::stopwatch::get_total_microseconds()
+size_t runtime::gpu::StopWatch::get_total_microseconds()
 {
-    return runtime::gpu::stopwatch::get_total_nanoseconds() / 1e3;
+    return runtime::gpu::StopWatch::get_total_nanoseconds() / 1e3;
 }
 
-size_t runtime::gpu::stopwatch::get_total_nanoseconds()
+size_t runtime::gpu::StopWatch::get_total_nanoseconds()
 {
     //only need to sync the last stop.
     cudaEventSynchronize(stops.back());

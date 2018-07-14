@@ -128,7 +128,7 @@ namespace ngraph
                 std::cout << "{" << ngraph::join(local) << "}" << std::endl;
             }
 
-            class stopwatch
+            class StopWatch
             {
             public:
                 void start();
@@ -143,8 +143,24 @@ namespace ngraph
                 std::vector<cudaEvent_t> starts;
                 std::vector<cudaEvent_t> stops;
                 size_t m_total_count = 0;
-                size_t m_total_time_in_ns;
+                size_t m_total_time_in_ns = 0;
                 bool m_active = false;
+            };
+
+            class StopWatchPool
+            {
+            public:
+                void allocate(size_t num)
+                {
+                    for (size_t i = 0; i < num; i++)
+                    {
+                        pool.push_back(StopWatch());
+                    }
+                }
+                StopWatch& get(size_t idx) { return pool[idx]; }
+                size_t size() { return pool.size(); }
+            private:
+                std::vector<StopWatch> pool;
             };
         }
     }
