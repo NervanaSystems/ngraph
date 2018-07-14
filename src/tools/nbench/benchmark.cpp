@@ -125,7 +125,7 @@ void init_int_tv(shared_ptr<runtime::TensorView> tv, T min, T max)
     {
         element = dist(s_random_engine);
     }
-    tv->write(vec.data(), 0, vec.size());
+    tv->write(vec.data(), 0, vec.size() * sizeof(T));
 }
 
 template <typename T>
@@ -138,7 +138,7 @@ void init_real_tv(shared_ptr<runtime::TensorView> tv, T min, T max)
     {
         element = dist(s_random_engine);
     }
-    tv->write(vec.data(), 0, vec.size());
+    tv->write(vec.data(), 0, vec.size() * sizeof(T));
 }
 
 static void random_init(shared_ptr<runtime::TensorView> tv)
