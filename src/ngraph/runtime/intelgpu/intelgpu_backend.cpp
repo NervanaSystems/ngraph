@@ -14,18 +14,32 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <CPP/batch_norm.hpp>
 #include <CPP/concatenation.hpp>
+#include <CPP/convolution.hpp>
+#include <CPP/data.hpp>
 #include <CPP/eltwise.hpp>
 #include <CPP/input_layout.hpp>
 #include <CPP/layout.hpp>
 #include <CPP/network.hpp>
+#include <CPP/permute.hpp>
+#include <CPP/pooling.hpp>
 #include <CPP/reorder.hpp>
+#include <CPP/reshape.hpp>
 #include <CPP/scale.hpp>
 #include <CPP/topology.hpp>
 
 #include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
+
+#include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/convolution.hpp"
+#include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/reshape.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -140,6 +154,91 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             do_eltwise_operation(topology, op, cldnn::eltwise_mode::prod);
         }
+        else if ("Divide" == op->description())
+        {
+            do_eltwise_operation(topology, op, cldnn::eltwise_mode::div);
+        }
+        else if ("Maximum" == op->description())
+        {
+            do_eltwise_operation(topology, op, cldnn::eltwise_mode::max);
+        }
+        else if ("Constant" == op->description())
+        {
+            arguments_check(op, 0, 1);
+
+            auto input_it = op->get_outputs().cbegin();
+            const descriptor::Tensor& output_tensor = input_it->get_tensor();
+            const std::string& output_name = output_tensor.get_name();
+            const shared_ptr<op::Constant> constant_inst = static_pointer_cast<op::Constant>(op);
+            void* memory_pointer = const_cast<void*>(constant_inst->get_data_ptr());
+
+            const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(
+                output_tensor.get_element_type(), input_it->get_shape());
+            const cldnn::memory mem(
+                cldnn::memory::attach<void>(layout, memory_pointer, layout.bytes_count()));
+
+            const cldnn::data op_const(output_name, mem);
+            topology.add(op_const);
+        }
+        else if ("MaxPool" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const std::string& input_name = op->get_inputs().begin()->get_tensor().get_name();
+            const std::string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+
+            const shared_ptr<op::MaxPool> max_pool = static_pointer_cast<op::MaxPool>(op);
+            const Shape& pool_shape = max_pool->get_window_shape();
+            const Strides& pool_strides = max_pool->get_window_movement_strides();
+            const Shape& pool_pad_above = max_pool->get_padding_above();
+            const Shape& pool_pad_below = max_pool->get_padding_below();
+
+            const cldnn::tensor size =
+                runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(pool_shape);
+            const cldnn::tensor strides =
+                runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(pool_strides);
+            const vector<cldnn::tensor::value_type> lower_sizes(pool_pad_below.begin(),
+                                                                pool_pad_below.end());
+            const vector<cldnn::tensor::value_type> upper_sizes(pool_pad_above.begin(),
+                                                                pool_pad_above.end());
+            const cldnn::padding padding(lower_sizes, upper_sizes);
+
+            const cldnn::pooling cldd_pooling(output_name,
+                                              input_name,
+                                              cldnn::pooling_mode::max,
+                                              size,
+                                              strides,
+                                              {0, 0, 0, 0},
+                                              padding);
+            topology.add(cldd_pooling);
+        }
+        else if ("Reshape" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const std::string& input_name = op->get_inputs().begin()->get_tensor().get_name();
+            const std::string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+            const shared_ptr<op::Reshape> op_broadcast = static_pointer_cast<op::Reshape>(op);
+            const AxisVector& broadcast_axes = op_broadcast->get_input_order();
+
+            vector<uint16_t> permute_order({0, 1, 2, 3}); // No action by default
+            const size_t max_dim = 4;
+            const size_t scale =
+                broadcast_axes.size() < max_dim ? max_dim - broadcast_axes.size() : 0;
+
+            // Need to scale indexes up according on array rank.
+            // For example, in 2D array, indexes are 0,1 but in 4D array it should be 2,3
+            // because cldnn::tensor is always 4D assuming cldnn::bfyx model
+            size_t rindex = max_dim;
+            for (auto i = broadcast_axes.rbegin(); i != broadcast_axes.rend() && rindex > 0;
+                 ++i, --rindex)
+            {
+                permute_order.at(rindex - 1) = *i + scale;
+            }
+
+            const cldnn::permute cldnn_permute(output_name, input_name, permute_order);
+            topology.add(cldnn_permute);
+        }
         else
         {
             ostringstream os;
@@ -179,8 +278,8 @@ bool runtime::intelgpu::IntelGPUBackend::call(
         shared_ptr<runtime::intelgpu::IntelGPUTensorView> tv =
             static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(inputs[i]);
         const op::ParameterVector& input_params = func->get_parameters();
-        network->set_input_data(input_params[i]->get_output_tensor().get_name(),
-                                *tv->get_data_ptr());
+        const std::string& tensor_name = input_params[i]->get_output_tensor().get_name();
+        network->set_input_data(tensor_name, *tv->get_data_ptr());
     }
 
     // Execute network

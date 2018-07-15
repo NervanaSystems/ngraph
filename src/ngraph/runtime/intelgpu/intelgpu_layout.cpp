@@ -78,13 +78,34 @@ cldnn::data_types
     }
 }
 
+cldnn::tensor runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(const Shape& element_shape)
+{
+    std::vector<size_t> idx(4, 1);
+    size_t index = 0;
+
+    for (auto i = element_shape.rbegin(); i != element_shape.rend() && index < 3; ++i, ++index)
+    {
+        idx.at(index) = *i;
+    }
+
+    if (element_shape.size() > 3)
+    {
+        idx.at(3) =
+            accumulate(element_shape.rbegin() + 3, element_shape.rend(), 1, multiplies<size_t>());
+    }
+
+    //Parameters for this ctor: batch, feature, spatial_x, spatial_y
+    const cldnn::tensor tns(idx.at(3), idx.at(2), idx.at(0), idx.at(1));
+
+    return tns;
+}
+
 cldnn::layout runtime::intelgpu::IntelGPULayout::create_cldnn_layout(
     const ngraph::element::Type& element_type, const Shape& element_shape)
 {
-    const size_t mem_size = shape_size(element_shape);
     const cldnn::data_types data_type = get_cldnn_type(element_type);
-    const cldnn::tensor tensor(1, mem_size, 1, 1);
-    const cldnn::format::type format = cldnn::format::yxfb;
+    const cldnn::format::type format = cldnn::format::bfyx;
+    const cldnn::tensor tensor = create_cldnn_tensor(element_shape);
 
     return cldnn::layout(data_type, format, tensor);
 }
