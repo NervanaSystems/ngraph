@@ -335,6 +335,7 @@ runtime::cpu::CPU_ExternalFunction::~CPU_ExternalFunction()
 
 void runtime::cpu::CPU_ExternalFunction::compile()
 {
+    NGRAPH_INFO;
     if (m_is_compiled)
     {
         return;
@@ -523,7 +524,13 @@ using namespace ngraph::runtime;
     // This for loop creates a collection of functions that are called more than once
     // and emitting them as globally callable functions.
     // ops implement the is_functionally_identical method
-    unordered_map<Node*, string> match_functions;
+    NGRAPH_INFO;
+
+    // This for loop creates a collection of functions that are called more than once
+    // and emitting them as globally callable functions.
+    // ops implement the is_functionally_identical method
+    std::unordered_map<const Node*, std::string> m_node_function_map;
+    unordered_map<string, string> match_function_map;
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
         list<shared_ptr<Node>> tmp = function_ordered_ops.at(current_function);
@@ -533,10 +540,8 @@ using namespace ngraph::runtime;
             continue;
         }
         vector<shared_ptr<Node>> op_list{tmp.begin(), tmp.end()};
-        unordered_map<const Node*, string> node_cache;
         for (size_t i = 0; i < op_list.size(); i++)
         {
-            // constants and parameters cannot be outlined
             if (op_list[i]->is_constant() || op_list[i]->is_parameter())
             {
                 continue;
@@ -549,45 +554,26 @@ using namespace ngraph::runtime;
                 throw ngraph_error("Unhandled op during code generation : " + node.description());
             }
 
-            string s = emit_op_as_function(node, "f");
-            node_cache.insert({&node, s});
-        }
-        for (size_t i = 0; i < op_list.size() - 1; i++)
-        {
-            if (op_list[i]->is_constant() || op_list[i]->is_parameter())
-            {
-                continue;
-            }
-            if (contains_key(match_functions, op_list[i].get()))
-            {
-                continue;
-            }
+            string match_function = emit_op_as_function(node, "__f__");
             string match_function_name;
-            for (size_t j = i + 1; j < op_list.size(); j++)
+            if (contains_key(match_function_map, match_function))
             {
-                if (op_list[j]->is_constant() || op_list[j]->is_parameter())
-                {
-                    continue;
-                }
-                Node* op1 = op_list[i].get();
-                Node* op2 = op_list[j].get();
-                if (is_functionally_identical(*op1, *op2, node_cache))
-                {
-                    if (match_function_name.empty())
-                    {
-                        match_function_name = "func_" + op1->get_name();
-                        match_functions.insert({op1, match_function_name});
-                    }
-                    match_functions.insert({op2, match_function_name});
-                }
+                match_function_name = match_function_map[match_function];
             }
-            if (!match_function_name.empty())
+            else
             {
-                writer << emit_op_as_function(*op_list[i], match_function_name);
+                auto offset = match_function.find("__f__");
+                string emitted_function = match_function;
+                match_function_name = "func_" + node.get_name();
+                emitted_function.replace(offset, 5, match_function_name);
+                match_function_map.insert({match_function, match_function_name});
+                writer << emitted_function << "\n";
             }
+            m_node_function_map.insert({&node, match_function_name});
         }
     }
 
+    NGRAPH_INFO;
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
         auto ordered_ops = function_ordered_ops.at(current_function);
@@ -821,8 +807,8 @@ using namespace ngraph::runtime;
             }
 
             string func_name;
-            auto it = match_functions.find(node.get());
-            if (it == match_functions.end())
+            auto it = m_node_function_map.find(node.get());
+            if (it == m_node_function_map.end())
             {
                 handler->second(this, writer, node.get(), in, out);
             }
@@ -941,21 +927,25 @@ using namespace ngraph::runtime;
         // End generated function
         writer += "}\n\n";
     }
+    NGRAPH_INFO;
 
     // TODO: Cleanup and make this a utility function
     file_util::make_directory(s_output_dir);
     string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");
+    NGRAPH_INFO << filename;
     ofstream out(filename);
     string code = writer.get_code();
     out << code;
     out.close();
 
+    NGRAPH_INFO;
     m_compiler.reset(new codegen::Compiler());
     m_execution_engine.reset(new codegen::ExecutionEngine());
 
     m_compiler->set_precompiled_header_source(pch_header_source);
 
     auto codegen_module = m_compiler->compile(code);
+    NGRAPH_INFO;
 
     if (codegen_module == nullptr)
     {
@@ -964,6 +954,7 @@ using namespace ngraph::runtime;
     m_execution_engine->add_module(codegen_module);
     m_execution_engine->finalize();
     m_compiled_function = m_execution_engine->find_function<EntryPoint_t>(m_function_name);
+    NGRAPH_INFO;
 
     if (m_compiled_function == nullptr)
     {
@@ -986,6 +977,7 @@ using namespace ngraph::runtime;
         }
     }
 
+    NGRAPH_INFO;
     // Store layouts assigned for results
     if (!result_layout_descriptors.empty())
     {
@@ -1006,6 +998,7 @@ using namespace ngraph::runtime;
         }
     }
 
+    NGRAPH_INFO;
     m_is_compiled = true;
     if (m_release_function)
     {
