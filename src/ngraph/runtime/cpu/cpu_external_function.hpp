@@ -128,7 +128,8 @@ namespace ngraph
                     const Node&,
                     const Node&,
                     const std::unordered_map<const Node*, std::string>& node_cache);
-                std::string emit_op_as_function(const Node&, const std::string& function_name);
+                std::string emit_op_as_function(const Node&,
+                                                       const std::string& function_name);
                 std::string strip_comments(const std::string&);
                 void release_function() { m_function = nullptr; }
                 std::shared_ptr<ngraph::Function> m_function;

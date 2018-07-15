@@ -434,23 +434,22 @@ void runtime::gpu::GPU_ExternalFunction::collect_unique_functions()
     // and emitting them as globally callable functions.
     // ops implement the is_functionally_identical method
     unordered_map<string, string> match_function_map;
-    for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
+    for (const shared_ptr<Function>& current_function : m_pass_manager.get_state().get_functions())
     {
-        list<shared_ptr<Node>> tmp = m_function_ordered_ops.at(current_function);
-        if (tmp.size() < 2)
+        list<shared_ptr<Node>> op_list = m_function_ordered_ops.at(current_function);
+        if (op_list.size() < 2)
         {
             // Since we are comparing ops there must be at least two ops to proceed.
             continue;
         }
-        vector<shared_ptr<Node>> op_list{tmp.begin(), tmp.end()};
-        for (size_t i = 0; i < op_list.size(); i++)
+        for (const shared_ptr<Node>& op : op_list)
         {
-            if (op_list[i]->is_constant() || op_list[i]->is_parameter())
+            if (op->is_constant() || op->is_parameter())
             {
                 continue;
             }
 
-            Node& node = *op_list[i];
+            Node& node = *op;
             auto handler = dispatcher.find(type_index(typeid(node)));
             if (handler == dispatcher.end())
             {
@@ -459,9 +458,10 @@ void runtime::gpu::GPU_ExternalFunction::collect_unique_functions()
 
             string match_function = emit_op_as_function(node, "__f__");
             string match_function_name;
-            if (contains_key(match_function_map, match_function))
+            auto it = match_function_map.find(match_function);
+            if (it != match_function_map.end())
             {
-                match_function_name = match_function_map[match_function];
+                match_function_name = it->second;
             }
             else
             {
