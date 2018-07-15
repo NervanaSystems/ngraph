@@ -15,7 +15,6 @@
 *******************************************************************************/
 
 #include "common_function_collection.hpp"
-#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -33,7 +32,6 @@ pass::CommonFunctionCollection::~CommonFunctionCollection()
 
 bool pass::CommonFunctionCollection::run_on_module(vector<shared_ptr<Function>>& functions)
 {
-    NGRAPH_INFO;
     // This for loop creates a collection of functions that are called more than once
     // and emitting them as globally callable functions.
     unordered_map<string, Node*> match_function_map;
@@ -63,12 +61,6 @@ bool pass::CommonFunctionCollection::run_on_module(vector<shared_ptr<Function>>&
             else
             {
                 match_function_map.insert({match_function, &node});
-
-                // string emitted_function = match_function;
-                // match_function_name = "func_" + node.get_name();
-                // auto offset = emitted_function.find("__f__");
-                // emitted_function.replace(offset, 5, match_function_name);
-                // writer << emitted_function << "\n";
             }
         }
     }
@@ -84,7 +76,7 @@ void pass::CommonFunctionCollection::emit_function(
     for (const pair<Node*, Node*> nodes : node_function_map)
     {
         Node& node = *(nodes.second);
-        string function_name = "func_" + node.get_name();
+        string function_name = create_function_name(node);
         if (emitted_functions.find(&node) == emitted_functions.end())
         {
             emitted_functions.insert(&node);
@@ -94,4 +86,9 @@ void pass::CommonFunctionCollection::emit_function(
             writer << emitted_function << "\n";
         }
     }
+}
+
+string pass::CommonFunctionCollection::create_function_name(const Node& node)
+{
+    return "func_" + node.get_name();
 }

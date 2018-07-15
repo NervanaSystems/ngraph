@@ -336,7 +336,6 @@ runtime::cpu::CPU_ExternalFunction::~CPU_ExternalFunction()
 
 void runtime::cpu::CPU_ExternalFunction::compile()
 {
-    NGRAPH_INFO;
     if (m_is_compiled)
     {
         return;
@@ -528,10 +527,8 @@ using namespace ngraph::runtime;
     }
     writer << "\n";
 
-    NGRAPH_INFO;
     ngraph::pass::CommonFunctionCollection::emit_function(writer, node_function_map, femitter);
 
-    NGRAPH_INFO;
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
         auto ordered_ops = function_ordered_ops.at(current_function);
@@ -771,7 +768,8 @@ using namespace ngraph::runtime;
             }
             else
             {
-                string func_name = "func_" + it->second->get_name();
+                string func_name =
+                    ngraph::pass::CommonFunctionCollection::create_function_name(*it->second);
                 vector<string> names;
                 for (const TensorViewWrapper& tv : in)
                 {
@@ -884,25 +882,21 @@ using namespace ngraph::runtime;
         // End generated function
         writer += "}\n\n";
     }
-    NGRAPH_INFO;
 
     // TODO: Cleanup and make this a utility function
     file_util::make_directory(s_output_dir);
     string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");
-    NGRAPH_INFO << filename;
     ofstream out(filename);
     string code = writer.get_code();
     out << code;
     out.close();
 
-    NGRAPH_INFO;
     m_compiler.reset(new codegen::Compiler());
     m_execution_engine.reset(new codegen::ExecutionEngine());
 
     m_compiler->set_precompiled_header_source(pch_header_source);
 
     auto codegen_module = m_compiler->compile(code);
-    NGRAPH_INFO;
 
     if (codegen_module == nullptr)
     {
@@ -911,7 +905,6 @@ using namespace ngraph::runtime;
     m_execution_engine->add_module(codegen_module);
     m_execution_engine->finalize();
     m_compiled_function = m_execution_engine->find_function<EntryPoint_t>(m_function_name);
-    NGRAPH_INFO;
 
     if (m_compiled_function == nullptr)
     {
@@ -934,7 +927,6 @@ using namespace ngraph::runtime;
         }
     }
 
-    NGRAPH_INFO;
     // Store layouts assigned for results
     if (!result_layout_descriptors.empty())
     {
@@ -955,7 +947,6 @@ using namespace ngraph::runtime;
         }
     }
 
-    NGRAPH_INFO;
     m_is_compiled = true;
     if (m_release_function)
     {
@@ -1254,6 +1245,10 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
     // Work around a compiler warning (*node inside typeid may have effects
     // with shared pointers, which is fine here but clang doesn't like it.)
     auto handler = dispatcher.find(type_index(typeid(node)));
+    if (handler == dispatcher.end())
+    {
+        throw ngraph_error("Unhandled op during function emit : " + node.description());
+    }
     vector<TensorViewWrapper> in;
     size_t arg_index = 0;
     set<string> arg_names;

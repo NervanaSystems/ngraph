@@ -41,6 +41,7 @@ public:
     static void emit_function(codegen::CodeWriter&,
                               const std::unordered_map<Node*, Node*>& node_function_map,
                               std::function<std::string(Node&, std::string)> emitter);
+    static std::string create_function_name(const Node&);
 
 private:
     std::function<std::string(Node&, std::string)> m_emit_op_as_function;
