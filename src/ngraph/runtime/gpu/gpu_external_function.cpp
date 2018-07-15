@@ -588,15 +588,15 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 }
 
                 // Emit operation body
-                string func_name;
-                func_name = m_node_function_map[node.get()];
-                if (func_name.empty())
+                auto it = m_node_function_map.find(node.get());
+                if (it == m_node_function_map.end())
                 {
-                    //throw runtime_error("No matching function found for '" + node->get_name() + "'");
                     handler->second(this, m_writer, node.get(), in, out);
                 }
                 else
                 {
+                    string func_name =
+                        ngraph::pass::CommonFunctionCollection::create_function_name(*it->second);
                     vector<string> names;
                     for (const GPU_TensorViewWrapper& tv : in)
                     {
@@ -644,13 +644,12 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     // For now, just make everyone row-major.
     m_pass_manager.register_pass<pass::ResultCopyElimination>();
     m_pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
-    unordered_map<Node*, Node*> node_function_map;
     auto femitter = bind(&ngraph::runtime::gpu::GPU_ExternalFunction::emit_op_as_function,
                          this,
                          placeholders::_1,
                          placeholders::_2);
     m_pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(femitter,
-                                                                         node_function_map);
+                                                                         m_node_function_map);
     m_pass_manager.register_pass<pass::Liveness>();
     m_pass_manager.register_pass<pass::MemoryLayout>(64);
     m_pass_manager.register_pass<pass::DumpSorted>(dump_filename);
@@ -665,7 +664,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     emit_timer_functions();
     emit_constant_declarations();
     emit_function_declarations();
-    ngraph::pass::CommonFunctionCollection::emit_function(writer, node_function_map, femitter);
+    ngraph::pass::CommonFunctionCollection::emit_function(m_writer, m_node_function_map, femitter);
     emit_functions();
 
     // allocate device buffers for primitive arguments and workspace
