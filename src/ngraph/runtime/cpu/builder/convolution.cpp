@@ -110,8 +110,6 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::ConvolutionRelu)
             {
-                auto convolution = static_cast<const ngraph::op::ConvolutionRelu*>(node);
-
                 auto& functors = external_function->get_functors();
                 auto& tensor_data = external_function->get_tensor_data();
 
@@ -142,8 +140,6 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::ConvolutionBias)
             {
-                auto convolution = static_cast<const ngraph::op::ConvolutionBias*>(node);
-
                 auto& functors = external_function->get_functors();
                 auto& tensor_data = external_function->get_tensor_data();
 
@@ -176,8 +172,6 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::ConvolutionBiasAdd)
             {
-                auto convolution = static_cast<const ngraph::op::ConvolutionBiasAdd*>(node);
-
                 auto& functors = external_function->get_functors();
                 auto& tensor_data = external_function->get_tensor_data();
 
