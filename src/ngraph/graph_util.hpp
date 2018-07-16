@@ -133,6 +133,10 @@ namespace ngraph
 
     bool is_zero(std::shared_ptr<Node> reduce_constant);
 
+    NodeVector get_subgraph_outputs(const NodeVector& nodes,
+                                    const NodeVector& exclusions,
+                                    bool ignore_unused = false);
+
     bool is_one(std::shared_ptr<Node> reduce_constant);
 
     // Returns true if `node` is live in the graph i.e. a result op
@@ -141,4 +145,11 @@ namespace ngraph
 
     // Returns count of `node` users that are still live in the graph
     size_t get_user_count(Node* node);
+
+    // Returns true if `node` computes an output tensor
+    bool computes_result(Node* node);
+
+    // Return true if a node's user could potentially overwrite
+    // the output of this node with in-place kernels
+    bool possibly_overwritten(Node* node);
 }

@@ -15,7 +15,6 @@
 *******************************************************************************/
 
 #include <dlfcn.h>
-#include <regex>
 #include <sstream>
 
 #include "ngraph/file_util.hpp"
@@ -108,12 +107,11 @@ map<string, string> runtime::Backend::get_registered_device_map()
     map<string, string> rc;
     string my_directory = file_util::get_directory(find_my_file());
     vector<string> backend_list;
-    regex reg("^lib(.+)_backend" + string(SHARED_LIB_EXT));
-    smatch result;
 
     auto f = [&](const string& file, bool is_dir) {
         string name = file_util::get_file_name(file);
-        if (regex_match(name, result, reg))
+        string backend_name;
+        if (is_backend_name(name, backend_name))
         {
             auto handle = dlopen(file.c_str(), RTLD_LAZY | RTLD_LOCAL);
             if (handle)
@@ -126,7 +124,7 @@ map<string, string> runtime::Backend::get_registered_device_map()
                     if (get_ngraph_version_string &&
                         get_ngraph_version_string() == string(NGRAPH_VERSION))
                     {
-                        rc.insert({to_upper(result[1]), file});
+                        rc.insert({to_upper(backend_name), file});
                     }
                 }
 
@@ -218,4 +216,24 @@ void runtime::Backend::validate_call(shared_ptr<const Function> function,
             throw runtime_error(ss.str());
         }
     }
+}
+
+bool runtime::Backend::is_backend_name(const string& file, string& backend_name)
+{
+    string name = file_util::get_file_name(file);
+    string ext = SHARED_LIB_EXT;
+    bool rc = false;
+    if (!name.compare(0, 3, "lib"))
+    {
+        if (!name.compare(name.size() - ext.size(), ext.size(), ext))
+        {
+            auto pos = name.find("_backend");
+            if (pos != name.npos)
+            {
+                backend_name = name.substr(3, pos - 3);
+                rc = true;
+            }
+        }
+    }
+    return rc;
 }
