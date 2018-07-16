@@ -98,7 +98,6 @@
 #include "ngraph/runtime/cpu/kernel/multiply.hpp"
 #include "ngraph/runtime/cpu/kernel/relu.hpp"
 #include "ngraph/runtime/cpu/kernel/result.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
@@ -118,53 +117,6 @@
 
 using namespace std;
 using namespace ngraph;
-
-// Per-type kernel macro
-#define SELECT_KERNEL(KV, ET, K)                                                                   \
-    if (ET == element::boolean)                                                                    \
-    {                                                                                              \
-        KV = K<char>;                                                                              \
-    }                                                                                              \
-    else if (ET == element::f32)                                                                   \
-    {                                                                                              \
-        KV = K<float>;                                                                             \
-    }                                                                                              \
-    else if (ET == element::f64)                                                                   \
-    {                                                                                              \
-        KV = K<double>;                                                                            \
-    }                                                                                              \
-    else if (ET == element::i8)                                                                    \
-    {                                                                                              \
-        KV = K<int8_t>;                                                                            \
-    }                                                                                              \
-    else if (ET == element::i16)                                                                   \
-    {                                                                                              \
-        KV = K<int16_t>;                                                                           \
-    }                                                                                              \
-    else if (ET == element::i32)                                                                   \
-    {                                                                                              \
-        KV = K<int32_t>;                                                                           \
-    }                                                                                              \
-    else if (ET == element::i64)                                                                   \
-    {                                                                                              \
-        KV = K<int64_t>;                                                                           \
-    }                                                                                              \
-    else if (ET == element::u8)                                                                    \
-    {                                                                                              \
-        KV = K<uint8_t>;                                                                           \
-    }                                                                                              \
-    else if (ET == element::u16)                                                                   \
-    {                                                                                              \
-        KV = K<uint16_t>;                                                                          \
-    }                                                                                              \
-    else if (ET == element::u32)                                                                   \
-    {                                                                                              \
-        KV = K<uint32_t>;                                                                          \
-    }                                                                                              \
-    else if (ET == element::u64)                                                                   \
-    {                                                                                              \
-        KV = K<uint64_t>;                                                                          \
-    }
 
 #define BUILD_UNARY_ELEMWISE_FUNCTOR(OP)                                                           \
     auto& functors = external_function->get_functors();                                            \
@@ -419,6 +371,14 @@ namespace ngraph
                 {TI(ngraph::op::Parameter), &runtime::cpu::Builder::nop},
                 {TI(ngraph::op::Abs), &runtime::cpu::Builder::build<ngraph::op::Abs>},
                 {TI(ngraph::op::Ceiling), &runtime::cpu::Builder::build<ngraph::op::Ceiling>},
+                {TI(ngraph::runtime::cpu::op::ConvertLayout),
+                 &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::ConvertLayout>},
+                {TI(ngraph::op::Convolution),
+                 &runtime::cpu::Builder::build<ngraph::op::Convolution>},
+                {TI(ngraph::op::ConvolutionBackpropData),
+                 &runtime::cpu::Builder::build<ngraph::op::ConvolutionBackpropData>},
+                {TI(ngraph::op::ConvolutionBackpropFilters),
+                 &runtime::cpu::Builder::build<ngraph::op::ConvolutionBackpropFilters>},
                 {TI(ngraph::op::Relu), &runtime::cpu::Builder::build<ngraph::op::Relu>},
                 {TI(ngraph::op::Result), &runtime::cpu::Builder::build<ngraph::op::Result>},
                 {TI(ngraph::op::MatmulBias), &runtime::cpu::Builder::build<ngraph::op::MatmulBias>},
