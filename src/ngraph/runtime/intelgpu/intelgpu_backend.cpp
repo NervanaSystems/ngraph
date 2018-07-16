@@ -14,6 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <CPP/activation.hpp>
 #include <CPP/batch_norm.hpp>
 #include <CPP/concatenation.hpp>
 #include <CPP/convolution.hpp>
@@ -73,6 +74,20 @@ void do_eltwise_operation(cldnn::topology& topology,
 
     const cldnn::eltwise op_add(output_name, op_add_inputs, mode);
     topology.add(op_add);
+}
+
+void do_unary_operation(cldnn::topology& topology,
+                        const shared_ptr<Node>& op,
+                        cldnn_activation_func mode,
+                        const cldnn_activation_additional_params& param = {0.f, 0.f})
+{
+    arguments_check(op, 1, 1);
+
+    const std::string& input_name = op->get_inputs().begin()->get_tensor().get_name();
+    const std::string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+
+    const cldnn::activation cldnn_unary(output_name, input_name, mode, param);
+    topology.add(cldnn_unary);
 }
 
 extern "C" const char* get_ngraph_version_string()
@@ -186,30 +201,36 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
             const std::string& input_name = op->get_inputs().begin()->get_tensor().get_name();
             const std::string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+            const Shape& out_shape = op->get_outputs().begin()->get_shape();
+            const cldnn::tensor output_size =
+                runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(out_shape);
 
             const shared_ptr<op::MaxPool> max_pool = static_pointer_cast<op::MaxPool>(op);
             const Shape& pool_shape = max_pool->get_window_shape();
             const Strides& pool_strides = max_pool->get_window_movement_strides();
-            const Shape& pool_pad_above = max_pool->get_padding_above();
-            const Shape& pool_pad_below = max_pool->get_padding_below();
+            const Shape& pad = max_pool->get_padding_below();
 
+            vector<cldnn::tensor::value_type> offset({0, 0, 0, 0}); // No action by default
+            size_t ridx = 4;
+            for (auto i = pad.rbegin(); i != pad.rend() && ridx > 0; ++i, --ridx)
+            {
+                offset.at(ridx - 1) = -(*i);
+            }
+
+            const cldnn::tensor input_offset(
+                offset.at(0), offset.at(1), offset.at(3), offset.at(2));
             const cldnn::tensor size =
                 runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(pool_shape);
             const cldnn::tensor strides =
                 runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(pool_strides);
-            const vector<cldnn::tensor::value_type> lower_sizes(pool_pad_below.begin(),
-                                                                pool_pad_below.end());
-            const vector<cldnn::tensor::value_type> upper_sizes(pool_pad_above.begin(),
-                                                                pool_pad_above.end());
-            const cldnn::padding padding(lower_sizes, upper_sizes);
 
             const cldnn::pooling cldd_pooling(output_name,
                                               input_name,
                                               cldnn::pooling_mode::max,
                                               size,
                                               strides,
-                                              {0, 0, 0, 0},
-                                              padding);
+                                              input_offset,
+                                              output_size);
             topology.add(cldd_pooling);
         }
         else if ("Reshape" == op->description())
@@ -238,6 +259,31 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
             const cldnn::permute cldnn_permute(output_name, input_name, permute_order);
             topology.add(cldnn_permute);
+        }
+        else if ("Negative" == op->description())
+        {
+            const cldnn_activation_additional_params param = {-1.f, 0.f};
+            do_unary_operation(topology, op, activation_linear, param);
+        }
+        else if ("Relu" == op->description())
+        {
+            do_unary_operation(topology, op, activation_relu);
+        }
+        else if ("Abs" == op->description())
+        {
+            do_unary_operation(topology, op, activation_abs);
+        }
+        else if ("Sqrt" == op->description())
+        {
+            do_unary_operation(topology, op, activation_sqrt);
+        }
+        else if ("Tanh" == op->description())
+        {
+            do_unary_operation(topology, op, activation_hyperbolic_tan);
+        }
+        else if ("Subtract" == op->description())
+        {
+            do_eltwise_operation(topology, op, cldnn::eltwise_mode::sub);
         }
         else
         {

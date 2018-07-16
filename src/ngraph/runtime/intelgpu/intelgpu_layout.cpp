@@ -73,7 +73,7 @@ cldnn::data_types
     else
     {
         ostringstream os;
-        os << "IntelGPUTensorView::get_cldnn_type: Unknown type " << element_type;
+        os << "IntelGPULayout::get_cldnn_type: Unknown type " << element_type;
         throw std::invalid_argument(os.str());
     }
 }
