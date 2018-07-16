@@ -14,15 +14,19 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <sstream>
+
 #include "common_function_collection.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 pass::CommonFunctionCollection::CommonFunctionCollection(function<string(Node&, string)> emitter,
-                                                         unordered_map<Node*, Node*>& result_map)
+                                                         unordered_map<Node*, Node*>& result_map,
+                                                         string& emitted_functions)
     : m_emit_op_as_function(emitter)
     , m_node_function_map(result_map)
+    , m_emitted_functions(emitted_functions)
 {
 }
 
@@ -35,6 +39,8 @@ bool pass::CommonFunctionCollection::run_on_module(vector<shared_ptr<Function>>&
     // This for loop creates a collection of functions that are called more than once
     // and emitting them as globally callable functions.
     unordered_map<string, Node*> match_function_map;
+    stringstream ss;
+    const string function_name = "__f__";
     for (const shared_ptr<Function>& current_function : functions)
     {
         list<shared_ptr<Node>> op_list = current_function->get_ordered_ops();
@@ -51,7 +57,7 @@ bool pass::CommonFunctionCollection::run_on_module(vector<shared_ptr<Function>>&
             }
 
             Node& node = *op;
-            string match_function = m_emit_op_as_function(node, "__f__");
+            string match_function = m_emit_op_as_function(node, function_name);
             auto it = match_function_map.find(match_function);
             if (it != match_function_map.end())
             {
@@ -61,31 +67,17 @@ bool pass::CommonFunctionCollection::run_on_module(vector<shared_ptr<Function>>&
             else
             {
                 match_function_map.insert({match_function, &node});
+
+                auto offset = match_function.find(function_name);
+                string emitted_function = match_function;
+                string match_function_name = create_function_name(node);
+                emitted_function.replace(offset, 5, match_function_name);
+                ss << emitted_function << "\n";
             }
         }
     }
+    m_emitted_functions = ss.str();
     return false;
-}
-
-void pass::CommonFunctionCollection::emit_function(
-    codegen::CodeWriter& writer,
-    const unordered_map<Node*, Node*>& node_function_map,
-    function<string(Node&, string)> emitter)
-{
-    unordered_set<const Node*> emitted_functions;
-    for (const pair<Node*, Node*> nodes : node_function_map)
-    {
-        Node& node = *(nodes.second);
-        string function_name = create_function_name(node);
-        if (emitted_functions.find(&node) == emitted_functions.end())
-        {
-            emitted_functions.insert(&node);
-            string emitted_function = emitter(node, "__f__");
-            auto offset = emitted_function.find("__f__");
-            emitted_function.replace(offset, 5, function_name);
-            writer << emitted_function << "\n";
-        }
-    }
 }
 
 string pass::CommonFunctionCollection::create_function_name(const Node& node)

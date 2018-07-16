@@ -33,17 +33,16 @@ class ngraph::pass::CommonFunctionCollection : public ModulePass
 {
 public:
     CommonFunctionCollection(std::function<std::string(Node&, std::string)> function_emitter,
-                             std::unordered_map<Node*, Node*>& result_map);
+                             std::unordered_map<Node*, Node*>& result_map,
+                             std::string& emitted_functions);
     virtual ~CommonFunctionCollection();
 
     bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) override;
 
-    static void emit_function(codegen::CodeWriter&,
-                              const std::unordered_map<Node*, Node*>& node_function_map,
-                              std::function<std::string(Node&, std::string)> emitter);
     static std::string create_function_name(const Node&);
 
 private:
     std::function<std::string(Node&, std::string)> m_emit_op_as_function;
     std::unordered_map<Node*, Node*>& m_node_function_map;
+    std::string& m_emitted_functions;
 };

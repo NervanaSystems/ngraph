@@ -368,11 +368,13 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     unordered_map<Node*, Node*> node_function_map;
+    string common_function_string;
     auto femitter = bind(&ngraph::runtime::cpu::CPU_ExternalFunction::emit_op_as_function,
                          this,
                          placeholders::_1,
                          placeholders::_2);
-    pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(femitter, node_function_map);
+    pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
+        femitter, node_function_map, common_function_string);
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment, true);
     pass_manager.run_passes(m_function);
@@ -527,7 +529,7 @@ using namespace ngraph::runtime;
     }
     writer << "\n";
 
-    ngraph::pass::CommonFunctionCollection::emit_function(writer, node_function_map, femitter);
+    writer << common_function_string << "\n";
 
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {

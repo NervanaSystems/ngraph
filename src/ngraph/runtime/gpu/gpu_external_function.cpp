@@ -644,12 +644,13 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     // For now, just make everyone row-major.
     m_pass_manager.register_pass<pass::ResultCopyElimination>();
     m_pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
+    string common_function_string;
     auto femitter = bind(&ngraph::runtime::gpu::GPU_ExternalFunction::emit_op_as_function,
                          this,
                          placeholders::_1,
                          placeholders::_2);
-    m_pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(femitter,
-                                                                         m_node_function_map);
+    m_pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
+        femitter, m_node_function_map, common_function_string);
     m_pass_manager.register_pass<pass::Liveness>();
     m_pass_manager.register_pass<pass::MemoryLayout>(64);
     m_pass_manager.register_pass<pass::DumpSorted>(dump_filename);
@@ -664,7 +665,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     emit_timer_functions();
     emit_constant_declarations();
     emit_function_declarations();
-    ngraph::pass::CommonFunctionCollection::emit_function(m_writer, m_node_function_map, femitter);
+    m_writer << common_function_string << "\n";
     emit_functions();
 
     // allocate device buffers for primitive arguments and workspace
