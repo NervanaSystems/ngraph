@@ -38,17 +38,15 @@ bool pass::CommonFunctionCollection::run_on_module(vector<shared_ptr<Function>>&
 {
     // This for loop creates a collection of functions that are called more than once
     // and emitting them as globally callable functions.
+
+    // match_function_map `key` contains the entire string of the function emitted for the
+    // `value` Node*
     unordered_map<string, Node*> match_function_map;
     stringstream ss;
     const string function_name = "__f__";
     for (const shared_ptr<Function>& current_function : functions)
     {
         list<shared_ptr<Node>> op_list = current_function->get_ordered_ops();
-        if (op_list.size() < 2)
-        {
-            // Since we are comparing ops there must be at least two ops to proceed.
-            continue;
-        }
         for (const shared_ptr<Node>& op : op_list)
         {
             if (op->is_constant() || op->is_parameter())
@@ -57,22 +55,37 @@ bool pass::CommonFunctionCollection::run_on_module(vector<shared_ptr<Function>>&
             }
 
             Node& node = *op;
+
+            // First emit the op as a function, something like this:
+            // static void __f__(float* _arg0, float *_out1)
+            // {
+            //     op specific code here
+            // }
+            //
+            // Then do a simple string compare in match_function_map to see if there is
+            // another op that emits the exact same code.
+            // If a match is found then the current node is mapped to call the original node's
+            // function and the original node is *also* mapped to call the original node's function.
+            // We also emit the static function declaration to m_emitted_functions when the match
+            // is found the first time.
             string match_function = m_emit_op_as_function(node, function_name);
             auto it = match_function_map.find(match_function);
             if (it != match_function_map.end())
             {
                 m_node_function_map.insert({&node, it->second});
-                m_node_function_map.insert({it->second, it->second});
+                if (m_node_function_map.find(it->second) == m_node_function_map.end())
+                {
+                    m_node_function_map.insert({it->second, it->second});
+                    auto offset = match_function.find(function_name);
+                    string emitted_function = match_function;
+                    string match_function_name = create_function_name(*it->second);
+                    emitted_function.replace(offset, 5, match_function_name);
+                    ss << emitted_function << "\n";
+                }
             }
             else
             {
                 match_function_map.insert({match_function, &node});
-
-                auto offset = match_function.find(function_name);
-                string emitted_function = match_function;
-                string match_function_name = create_function_name(node);
-                emitted_function.replace(offset, 5, match_function_name);
-                ss << emitted_function << "\n";
             }
         }
     }
