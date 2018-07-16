@@ -24,7 +24,7 @@
 
 namespace ngraph
 {
-    /// Base class for ngraph assertion failures.
+    /// Base class for ngraph assertion failure exceptions.
     class AssertionFailure : public ngraph_error
     {
     public:
@@ -45,6 +45,51 @@ namespace ngraph
         std::string m_what;
     };
 
+    ///
+    /// Helper class for failed assertions. Callers should not instantiate this class directly.
+    /// This class is meant to be wrapped with a macro like NGRAPH_ASSERT. This class provides
+    /// two main facilities: (1) an ostream accessible via get_stream(), to which a detailed
+    /// error explanation can be written; and (2) throws an exception of type T when the
+    /// AssertionHelper is destructed.
+    ///
+    ///
+    /// Typical usage is via a wrapper around the NGRAPH_ASSERT_STREAM macro:
+    ///
+    ///    class MyException : public AssertionFailure;
+    ///
+    ///    #define MY_ASSERT(cond) NGRAPH_ASSERT_STREAM(::ngraph::MyException, cond)
+    ///
+    ///    ...
+    ///
+    ///    MY_ASSERT(42 != 43) << "Uh-oh. " << 42 << " is not " << 43 << ".";
+    ///
+    /// If the assertion fails, it will throw a CompileError exception with a what() string of:
+    ///
+    ///   Assertion '42 != 43' failed at foo.cpp:123:
+    ///   Uh-oh. 42 is not 43.
+    ///
+    ///
+    /// AssertionHelper also provides support for tagging the exception with a "location" string,
+    /// reflecting things like the op that was being processed when the error occurred. For
+    /// example:
+    ///
+    ///   class CompileError : public AssertionFailure;
+    ///
+    ///   #define COMPILE_ASSERT(node,cond)                                                  \
+    ///      NGRAPH_ASSERT_STREAM_WITH_LOC(::ngraph::CompileError, cond,                     \
+    ///                                    "While compiling node " + node->name())
+    ///
+    ///   ...
+    ///
+    ///   COMPILE_ASSERT(node, node->get_users().size != 0) << "Node has no users";
+    ///
+    /// If the assertion fails, it will throw a CompileError exception with a what() string
+    /// similar to:
+    ///
+    ///   While compiling node Add_123:
+    ///   Assertion 'node->get_users().size != 0' failed at foo.cpp:123:
+    ///   Node has no users
+    ///
     template <class T>
     class AssertionHelper
     {
@@ -61,6 +106,7 @@ namespace ngraph
         }
         ~AssertionHelper() noexcept(false)
         {
+            // If stack unwinding is already in progress, do not double-throw.
             if (!std::uncaught_exception())
             {
                 std::stringstream ss;
@@ -90,6 +136,8 @@ namespace ngraph
                 throw T(ss.str());
             }
         }
+        /// Returns an ostream to which additional error details can be written. The returned
+        /// stream has the lifetime of the AssertionHelper.
         std::ostream& get_stream() { return m_stream; }
     private:
         std::stringstream m_stream;
@@ -99,27 +147,36 @@ namespace ngraph
         std::string m_location_info;
     };
 
+    ///
+    /// Class that returns a dummy ostream to absorb error strings for non-failed assertions.
+    /// This is cheaper to construct than AssertionHelper, so the macros will produce a
+    /// DummyAssertionHelper in lieu of an AssertionHelper if the condition is true.
+    ///
     class DummyAssertionHelper
     {
     public:
+        /// Returns an ostream to which additional error details can be written. Anything written
+        /// to this stream will be ignored. The returned stream has the lifetime of the
+        /// DummyAssertionHelper.
         std::ostream& get_stream() { return m_stream; }
     private:
         std::stringstream m_stream;
     };
 }
 
+/// Asserts condition "cond" with an exception class of "T", at location "loc".
 #define NGRAPH_ASSERT_STREAM_WITH_LOC(T, cond, loc)                                                \
     (cond ? ::ngraph::DummyAssertionHelper().get_stream()                                          \
           : ::ngraph::AssertionHelper<T>(__FILE__, __LINE__, #cond, loc).get_stream())
+/// Asserts condition "cond" with an exception class of "T", and no location specified.
 #define NGRAPH_ASSERT_STREAM(T, cond)                                                              \
     (cond ? ::ngraph::DummyAssertionHelper().get_stream()                                          \
           : ::ngraph::AssertionHelper<T>(__FILE__, __LINE__, #cond).get_stream())
+/// Fails unconditionally with an exception class of "T", at location "loc".
 #define NGRAPH_FAIL_STREAM_WITH_LOC(T, loc)                                                        \
     ::ngraph::AssertionHelper<T>(__FILE__, __LINE__, "", loc).get_stream()
+/// Fails unconditionally with an exception class of "T", and no location specified.
 #define NGRAPH_FAIL_STREAM(T) ::ngraph::AssertionHelper<T>(__FILE__, __LINE__).get_stream()
 
-#define NGRAPH_ASSERT_WITH_LOC(cond, loc)                                                          \
-    NGRAPH_ASSERT_STREAM_WITH_LOC(::ngraph::AssertionFailure, cond, loc)
 #define NGRAPH_ASSERT(cond) NGRAPH_ASSERT_STREAM(::ngraph::AssertionFailure, cond)
-#define NGRAPH_FAIL_WITH_LOC(loc) NGRAPH_FAIL_STREAM_WITH_LOC(::ngraph::AssertionFailure, loc)
 #define NGRAPH_FAIL() NGRAPH_FAIL_STREAM(::ngraph::AssertionFailure)
