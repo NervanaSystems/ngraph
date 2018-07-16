@@ -112,6 +112,7 @@ namespace ngraph
                 bool m_is_compiled;
                 bool m_release_function;
                 bool m_temporaries_used;
+                size_t m_offset;
 
                 std::string m_function_name;
                 std::string m_pch_header_source;

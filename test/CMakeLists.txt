@@ -71,11 +71,11 @@ foreach(TEST_CONFIG ${UNIT_TEST_CONFIG_LIST})
 
     configure_file(backend_test.in.cpp backend_test_${BACKEND_NAME}.cpp)
     configure_file(convolution_test.in.cpp convolution_test_${BACKEND_NAME}.cpp)
-    set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/backend_test_${BACKEND_NAME}.cpp)
-    set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/convolution_test_${BACKEND_NAME}.cpp)
+    set(SRC ${CMAKE_CURRENT_BINARY_DIR}/backend_test_${BACKEND_NAME}.cpp ${SRC})
+    set(SRC ${CMAKE_CURRENT_BINARY_DIR}/convolution_test_${BACKEND_NAME}.cpp ${SRC})
     if(NGRAPH_DISTRIBUTED_ENABLE)
         configure_file(distributed.cpp distributed_${BACKEND_NAME}.cpp)
-        set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/distributed_${BACKEND_NAME}.cpp)
+        set(SRC ${CMAKE_CURRENT_BINARY_DIR}/distributed_${BACKEND_NAME}.cpp  ${SRC})
     endif()
 
     # Some---but not all---autodiff tests go through multiple iterations with
@@ -90,7 +90,7 @@ foreach(TEST_CONFIG ${UNIT_TEST_CONFIG_LIST})
     endif()
 
     configure_file(autodiff.in.cpp autodiff_${BACKEND_NAME}.cpp)
-    set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/autodiff_${BACKEND_NAME}.cpp)
+    set(SRC ${CMAKE_CURRENT_BINARY_DIR}/autodiff_${BACKEND_NAME}.cpp ${SRC})
 
     message(STATUS "Adding unit test for backend ${BACKEND_NAME}")
 endforeach()

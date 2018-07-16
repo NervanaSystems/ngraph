@@ -115,6 +115,9 @@ namespace ngraph
                                      const Prop& direction,
                                      const Shape& tensor_shape);
 
+                void debug_sync();
+                void sync();
+
             private:
                 CUDNNEmitter(GPUPrimitiveEmitter* emitter, GPURuntimeContext* ctx);
 
