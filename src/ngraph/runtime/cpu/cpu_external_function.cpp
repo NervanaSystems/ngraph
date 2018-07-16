@@ -428,10 +428,7 @@ using namespace ngraph::runtime;
 
     if (m_use_tbb)
     {
-        writer << "#define TBB_PREVIEW_GLOBAL_CONTROL 1\n";
         writer << "#define __TBB_PREVIEW_LIGHTWEIGHT_POLICY 1\n";
-        writer << "#include <tbb/global_control.h>\n";
-        writer << "#include <tbb/task_scheduler_init.h>\n";
         writer << "#include <tbb/flow_graph.h>\n";
     }
 
@@ -684,7 +681,6 @@ using namespace ngraph::runtime;
 
         if (m_use_tbb)
         {
-            // TODO: This should be static but we don't codegen statics correctly yet
             writer << "\n";
             writer << "if (" << current_function->get_name() << "_init) {\n";
             writer.indent++;
