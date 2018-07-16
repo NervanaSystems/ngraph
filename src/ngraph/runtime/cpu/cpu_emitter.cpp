@@ -4839,8 +4839,6 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::runtime::cpu::op::LoopKernel)
             {
-                using namespace ngraph;
-
                 std::unordered_map<const ngraph::descriptor::Output*, std::string>
                     loop_symbol_table;
                 //pre-fill symbol table with inputs

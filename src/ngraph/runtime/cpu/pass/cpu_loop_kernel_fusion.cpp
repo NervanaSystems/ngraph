@@ -52,7 +52,7 @@ struct LKGraph
 class LoopKernelCollector
 {
 public:
-    LoopKernelCollector(std::shared_ptr<Function> f, size_t MIN_NODES_TO_FUSE)
+    LoopKernelCollector(std::shared_ptr<Function> f, size_t min_nodes_to_fuse)
     {
         for (auto n : f->get_ordered_ops())
         {
@@ -85,7 +85,7 @@ public:
             }
         }
 
-        prune_graphs(MIN_NODES_TO_FUSE);
+        prune_graphs(min_nodes_to_fuse);
     }
 
     const std::vector<std::shared_ptr<runtime::cpu::op::LoopKernel>> get_loop_kernels() const
@@ -136,11 +136,11 @@ private:
     }
 
     bool is_leaf(std::shared_ptr<Node> src) { return src->is_parameter() || src->is_constant(); }
-    void prune_graphs(size_t MIN_NODES_TO_FUSE)
+    void prune_graphs(size_t min_nodes_to_fuse)
     {
         for (auto it = m_graphs.begin(); it != m_graphs.end();)
         {
-            if (it->second.m_nodes.size() < MIN_NODES_TO_FUSE)
+            if (it->second.m_nodes.size() < min_nodes_to_fuse)
             {
                 it = m_graphs.erase(it);
             }
