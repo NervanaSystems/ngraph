@@ -299,6 +299,7 @@ using namespace std;
     // to register cleanup handlers. We use it, and not atexit(), because
     // atexit() happens too late, when the JIT is no longer alive
     m_writer << "void *__dso_handle = 0;\n\n";
+    m_writer << "static gpu::GPURuntimeContext* m_runtime_context = nullptr;\n";
 }
 
 void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
@@ -319,7 +320,13 @@ void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
                 }
             }
         }
-        m_writer << "ngraph::stopwatch timers[" << names.size() << "];\n";
+
+        if (m_shared_context->m_runtime_context->stopwatch_pool == nullptr)
+        {
+            m_shared_context->m_runtime_context->stopwatch_pool = new StopWatchPool;
+        }
+        m_offset = m_shared_context->m_runtime_context->stopwatch_pool->size();
+        m_shared_context->m_runtime_context->stopwatch_pool->allocate(names.size());
         m_writer << "extern \"C\" size_t get_debug_timer_count() { return " << names.size()
                  << "; }\n";
         m_writer << "extern \"C\" const char* get_debug_timer_name(size_t index)\n";
@@ -340,13 +347,15 @@ void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
         m_writer << "extern \"C\" const size_t get_debug_timer_microseconds(size_t index)\n";
         m_writer.block_begin();
         m_writer << "return (index < " << names.size()
-                 << " ? timers[index].get_total_microseconds() : 0);\n";
+                 << " ? runtime::gpu::us_stopwatch(m_runtime_context, index + " << m_offset
+                 << ") : 0);\n";
         m_writer.block_end();
 
         m_writer << "extern \"C\" const size_t get_debug_timer_call_count(size_t index)\n";
         m_writer.block_begin();
         m_writer << "return (index < " << names.size()
-                 << " ? timers[index].get_call_count() : 0);\n";
+                 << " ? runtime::gpu::count_stopwatch(m_runtime_context, index + " << m_offset
+                 << ") : 0);\n";
         m_writer.block_end();
         m_writer << "\n";
     }
@@ -379,7 +388,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_constant_declarations()
     }
 
     m_writer << "\nstatic bool is_constant_mem_ptr_null = true;\n\n";
-    m_writer << "static void invoke_constant_mem_ptr(gpu::GPURuntimeContext* ctx)\n";
+    m_writer << "static void invoke_constant_mem_ptr()\n";
     m_writer.block_begin();
     {
         m_writer << "if(is_constant_mem_ptr_null)\n";
@@ -396,7 +405,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_constant_declarations()
                             node->get_outputs()[0].get_tensor_view();
                         m_writer << tv->get_tensor().get_name() << " = reinterpret_cast<"
                                  << tv->get_tensor().get_element_type().c_type_string()
-                                 << "*>(runtime::gpu::invoke_memory_primitive(ctx, "
+                                 << "*>(runtime::gpu::invoke_memory_primitive(m_runtime_context, "
                                  << tv->get_tensor().get_name() << "_idx));\n";
                     }
                 }
@@ -539,8 +548,9 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                  << "gpu::GPURuntimeContext* ctx)\n";
         m_writer.block_begin();
         {
+            m_writer << "m_runtime_context = ctx;\n";
             //set constant pointers during the first run
-            m_writer << "invoke_constant_mem_ptr(ctx);\n";
+            m_writer << "invoke_constant_mem_ptr();\n";
 
             //alocate temp memory pool
             emit_temp_mem_pool_allocation(current_function);
@@ -746,7 +756,8 @@ void runtime::gpu::GPU_ExternalFunction::emit_debug_function_entry(Node* node)
 {
     if (m_emit_timing)
     {
-        m_writer << "timers[" << m_name_index_map[node->get_name()] << "].start();\n";
+        m_writer << "runtime::gpu::start_stopwatch(ctx, "
+                 << m_name_index_map[node->get_name()] + m_offset << ");\n";
     }
 }
 
@@ -754,7 +765,8 @@ void runtime::gpu::GPU_ExternalFunction::emit_debug_function_exit(Node* node)
 {
     if (m_emit_timing)
     {
-        m_writer << "timers[" << m_name_index_map[node->get_name()] << "].stop();\n";
+        m_writer << "runtime::gpu::stop_stopwatch(ctx, "
+                 << m_name_index_map[node->get_name()] + m_offset << ");\n";
     }
 }
 

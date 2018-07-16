@@ -45,18 +45,20 @@ multimap<size_t, string>
     }
 
     unordered_map<string, size_t> timing;
+    unordered_map<string, size_t> count;
     for (const runtime::PerformanceCounter& p : perf_data)
     {
         shared_ptr<Node> node = node_map.at(p.name());
         string op = p.name().substr(0, p.name().find('_'));
-        string shape_name = "{" + join(node->get_outputs()[0].get_shape()) + "}";
+        string shape_name = " {" + join(node->get_outputs()[0].get_shape()) + "} ";
         timing[op + shape_name] += p.microseconds();
+        count[op + shape_name] += 1;
     }
 
     multimap<size_t, string> rc;
     for (const pair<string, size_t>& t : timing)
     {
-        rc.insert({t.second, t.first});
+        rc.insert({t.second, t.first + to_string(count[t.first])});
     }
     return rc;
 }
@@ -253,6 +255,6 @@ void run_benchmark(shared_ptr<Function> f,
     cout << "\n---- Aggregate times per op type ----\n";
     print_times(timing);
 
-    cout << "\n---- Aggregate times per op type/shape ----\n";
+    cout << "\n---- Aggregate times per op type/shape/count ----\n";
     print_times(timing_details);
 }
