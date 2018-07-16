@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <list>
 #include <memory>
 #include <stack>
 #include <vector>
@@ -65,7 +66,7 @@ namespace ngraph
                 ~GPUMemoryManager();
 
                 void allocate();
-                size_t get_allocation_size() { return m_allocation_size; }
+                size_t get_allocation_size() const;
                 GPUAllocator build_allocator() { return GPUAllocator(this); }
             private:
                 GPUMemoryManager(GPUPrimitiveEmitter* emitter);
@@ -75,10 +76,15 @@ namespace ngraph
                 std::vector<uint8_t> m_buffered_mem;
                 pass::MemoryManager m_workspace_manager;
                 static constexpr const uint16_t alignment = 8;
-                void* m_argspace;
-                void* m_workspace;
-                size_t m_allocation_size;
 
+                struct allocation
+                {
+                    void* ptr;
+                    size_t size;
+                };
+
+                std::list<allocation> m_argspace_mem;
+                std::list<allocation> m_workspace_mem;
                 GPUPrimitiveEmitter* m_primitive_emitter;
             };
         }

@@ -93,6 +93,13 @@ std::string ngraph::to_lower(const std::string& s)
     return rc;
 }
 
+std::string ngraph::to_upper(const std::string& s)
+{
+    std::string rc = s;
+    std::transform(rc.begin(), rc.end(), rc.begin(), ::toupper);
+    return rc;
+}
+
 string ngraph::trim(const string& s)
 {
     string rc = s;
