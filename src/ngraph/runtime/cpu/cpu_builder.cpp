@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -94,6 +94,7 @@
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/kernel/abs.hpp"
 #include "ngraph/runtime/cpu/kernel/add.hpp"
+#include "ngraph/runtime/cpu/kernel/broadcast.hpp"
 #include "ngraph/runtime/cpu/kernel/ceil.hpp"
 #include "ngraph/runtime/cpu/kernel/multiply.hpp"
 #include "ngraph/runtime/cpu/kernel/relu.hpp"
@@ -173,6 +174,33 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::Abs)
             {
                 BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::abs);
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Broadcast)
+            {
+                std::function<void(void*, void*, const Shape&, const Shape&, const AxisSet&)>
+                    kernel;
+
+                SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::broadcast);
+
+                auto& functors = external_function->get_functors();
+                auto& tensor_data = external_function->get_tensor_data();
+
+                auto arg0_shape = args[0].get_shape();
+                auto result_shape = out[0].get_shape();
+
+                auto& arg0_tensor = tensor_data[args[0].get_name()];
+                auto& out_tensor = tensor_data[out[0].get_name()];
+
+                auto broadcast = static_cast<const ngraph::op::Broadcast*>(node);
+                auto broadcast_axes = broadcast->get_broadcast_axes();
+
+                auto functor =
+                    [&, kernel, arg0_shape, result_shape, broadcast_axes](CPURuntimeContext* ctx) {
+                        kernel(arg0_tensor, out_tensor, arg0_shape, result_shape, broadcast_axes);
+                    };
+                functors.emplace_back(functor);
             }
 
             template <>
@@ -370,16 +398,21 @@ namespace ngraph
                 {TI(ngraph::op::Multiply), &runtime::cpu::Builder::build<ngraph::op::Multiply>},
                 {TI(ngraph::op::Parameter), &runtime::cpu::Builder::nop},
                 {TI(ngraph::op::Abs), &runtime::cpu::Builder::build<ngraph::op::Abs>},
+                {TI(ngraph::op::AvgPool), &runtime::cpu::Builder::build<ngraph::op::AvgPool>},
+                {TI(ngraph::op::Broadcast), &runtime::cpu::Builder::build<ngraph::op::Broadcast>},
                 {TI(ngraph::op::Ceiling), &runtime::cpu::Builder::build<ngraph::op::Ceiling>},
                 {TI(ngraph::runtime::cpu::op::ConvertLayout),
                  &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::ConvertLayout>},
                 {TI(ngraph::op::Convolution),
                  &runtime::cpu::Builder::build<ngraph::op::Convolution>},
+                {TI(ngraph::op::ConvolutionBias),
+                 &runtime::cpu::Builder::build<ngraph::op::ConvolutionBias>},
                 {TI(ngraph::op::ConvolutionBackpropData),
                  &runtime::cpu::Builder::build<ngraph::op::ConvolutionBackpropData>},
                 {TI(ngraph::op::ConvolutionBackpropFilters),
                  &runtime::cpu::Builder::build<ngraph::op::ConvolutionBackpropFilters>},
                 {TI(ngraph::op::Relu), &runtime::cpu::Builder::build<ngraph::op::Relu>},
+                {TI(ngraph::op::Reshape), &runtime::cpu::Builder::build<ngraph::op::Reshape>},
                 {TI(ngraph::op::Result), &runtime::cpu::Builder::build<ngraph::op::Result>},
                 {TI(ngraph::op::MatmulBias), &runtime::cpu::Builder::build<ngraph::op::MatmulBias>},
                 {TI(ngraph::op::Constant), &runtime::cpu::Builder::build<ngraph::op::Constant>}};
