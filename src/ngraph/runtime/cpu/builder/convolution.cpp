@@ -373,9 +373,6 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::ConvolutionBiasBackpropFiltersBias)
             {
-                auto convolution =
-                    static_cast<const ngraph::op::ConvolutionBiasBackpropFiltersBias*>(node);
-
                 auto& functors = external_function->get_functors();
                 auto& tensor_data = external_function->get_tensor_data();
 
