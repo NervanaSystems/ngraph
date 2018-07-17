@@ -50,7 +50,8 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index = mkldnn_emitter->build_convolution(node, args, out);
+                    auto conv_index =
+                        mkldnn_emitter->build_convolution<ngraph::op::Convolution>(node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     auto functor = [&, conv_index](CPURuntimeContext* ctx) {
@@ -120,7 +121,9 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index = mkldnn_emitter->build_convolution_relu(node, args, out);
+                    auto conv_index =
+                        mkldnn_emitter->build_convolution<ngraph::op::ConvolutionRelu>(
+                            node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     auto functor = [&, conv_index](CPURuntimeContext* ctx) {
@@ -133,7 +136,7 @@ namespace ngraph
                 }
                 else
                 {
-                    throw ngraph_error("ConvolutionBias is only supported with MKLDNN kernel.");
+                    throw ngraph_error("ConvolutionRelu is only supported with MKLDNN kernel.");
                 }
             }
 
@@ -151,7 +154,9 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index = mkldnn_emitter->build_convolution_bias(node, args, out);
+                    auto conv_index =
+                        mkldnn_emitter->build_convolution<ngraph::op::ConvolutionBias>(
+                            node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     auto functor = [&, conv_index](CPURuntimeContext* ctx) {
@@ -183,7 +188,9 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index = mkldnn_emitter->build_convolution_bias_add(node, args, out);
+                    auto conv_index =
+                        mkldnn_emitter->build_convolution<ngraph::op::ConvolutionBiasAdd>(
+                            node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     auto functor = [&, conv_index](CPURuntimeContext* ctx) {
