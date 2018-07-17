@@ -49,6 +49,27 @@ TEST(assertion, assertion_with_explanation)
     EXPECT_TRUE(assertion_failure_thrown);
 }
 
+TEST(assertion, assertion_throws_at_semicolon)
+{
+    bool assertion_failure_thrown = false;
+    bool got_past_semicolon = false;
+
+    try
+    {
+        NGRAPH_ASSERT(false) << "first assert";
+        got_past_semicolon = true;
+        NGRAPH_ASSERT(false) << "second assert";
+    }
+    catch (const AssertionFailure& e)
+    {
+        assertion_failure_thrown = true;
+        EXPECT_PRED_FORMAT2(testing::IsSubstring, "first assert", e.what());
+    }
+
+    EXPECT_FALSE(got_past_semicolon);
+    EXPECT_TRUE(assertion_failure_thrown);
+}
+
 TEST(assertion, assertion_no_explanation)
 {
     bool assertion_failure_thrown = false;
