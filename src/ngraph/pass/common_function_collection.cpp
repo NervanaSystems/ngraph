@@ -76,10 +76,13 @@ bool pass::CommonFunctionCollection::run_on_module(vector<shared_ptr<Function>>&
                 if (m_node_function_map.find(it->second) == m_node_function_map.end())
                 {
                     m_node_function_map.insert({it->second, it->second});
+
+                    // All of the functions are created with the same name `__f__` so here
+                    // we rename it to something unique so we can compile everything when done.
                     auto offset = match_function.find(function_name);
                     string emitted_function = match_function;
                     string match_function_name = create_function_name(*it->second);
-                    emitted_function.replace(offset, 5, match_function_name);
+                    emitted_function.replace(offset, function_name.size(), match_function_name);
                     ss << emitted_function << "\n";
                 }
             }
