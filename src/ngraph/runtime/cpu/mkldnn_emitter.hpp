@@ -239,6 +239,73 @@ namespace ngraph
                     const ngraph::Strides& ng_dilation_strides,
                     const ngraph::CoordinateDiff& ng_padding_below,
                     const ngraph::CoordinateDiff& ng_padding_above);
+
+                template <typename OP>
+                size_t build_convolution_backward(const ngraph::Node* node,
+                                                  const std::vector<TensorViewWrapper>& args,
+                                                  const std::vector<TensorViewWrapper>& out)
+                {
+                    auto convolution = static_cast<const OP*>(node);
+
+                    Strides window_dilation_strides_adjusted;
+
+                    for (size_t s : convolution->get_window_dilation_strides_forward())
+                    {
+                        window_dilation_strides_adjusted.push_back(s - 1);
+                    }
+
+                    auto arg0_format = mkldnn_utils::get_input_mkldnn_format(node, 0);
+                    if (std::is_same<OP, ngraph::op::ConvolutionBackpropData>())
+                    {
+                        // HACK to help MKLDNN pick the right implementation
+                        arg0_format = (arg0_format == mkldnn::memory::format::nchw)
+                                          ? mkldnn::memory::format::oihw
+                                          : arg0_format;
+                    }
+                    auto arg0_desc = build_memory_descriptor(args[0], arg0_format);
+                    auto arg1_format = mkldnn_utils::get_input_mkldnn_format(node, 1);
+                    auto arg1_desc = build_memory_descriptor(args[1], arg1_format);
+                    auto out0_format = mkldnn_utils::get_output_mkldnn_format(node, 0);
+                    auto out0_desc = build_memory_descriptor(out[0], out0_format);
+
+                    if (std::is_same<OP, ngraph::op::ConvolutionBackpropData>())
+                    {
+                        return build_convolution_backward_data(
+                            arg0_desc,
+                            arg1_desc,
+                            out0_desc,
+                            convolution->get_window_movement_strides_forward(),
+                            window_dilation_strides_adjusted,
+                            convolution->get_padding_below_forward(),
+                            convolution->get_padding_above_forward());
+                    }
+                    if (std::is_same<OP, ngraph::op::ConvolutionBackpropFilters>())
+                    {
+                        return build_convolution_backward_weights(
+                            arg0_desc,
+                            arg1_desc,
+                            out0_desc,
+                            convolution->get_window_movement_strides_forward(),
+                            window_dilation_strides_adjusted,
+                            convolution->get_padding_below_forward(),
+                            convolution->get_padding_above_forward());
+                    }
+                    if (std::is_same<OP, ngraph::op::ConvolutionBiasBackpropFiltersBias>())
+                    {
+                        auto out1_format = mkldnn_utils::get_output_mkldnn_format(node, 1);
+                        auto out1_desc = build_memory_descriptor(out[1], out1_format);
+                        return build_convolution_backward_weights_bias(
+                            arg0_desc,
+                            arg1_desc,
+                            out0_desc,
+                            out1_desc,
+                            convolution->get_window_movement_strides_forward(),
+                            window_dilation_strides_adjusted,
+                            convolution->get_padding_below_forward(),
+                            convolution->get_padding_above_forward());
+                    }
+                }
+
                 size_t build_pooling_forward(mkldnn::algorithm pooling_algorithm,
                                              const mkldnn::memory::desc& input_desc,
                                              const mkldnn::memory::desc& result_desc,

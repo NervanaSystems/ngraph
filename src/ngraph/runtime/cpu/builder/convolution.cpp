@@ -226,44 +226,18 @@ namespace ngraph
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    Strides window_dilation_strides_adjusted;
-
-                    for (size_t s : convolution->get_window_dilation_strides_forward())
-                    {
-                        window_dilation_strides_adjusted.push_back(s - 1);
-                    }
-
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    // HACK to help MKLDNN pick the right implementation
-                    auto weights_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
-                    if (weights_format == mkldnn::memory::format::nchw)
-                    {
-                        weights_format = mkldnn::memory::format::oihw;
-                    }
-                    auto weights_desc =
-                        mkldnn_emitter->build_memory_descriptor(args[0], weights_format);
-                    auto delta_desc = mkldnn_emitter->build_memory_descriptor(
-                        args[1], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1));
-                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
-                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
+                    auto conv_index =
+                        mkldnn_emitter
+                            ->build_convolution_backward<ngraph::op::ConvolutionBackpropData>(
+                                node, args, out);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    size_t conv_bwd_data_index = mkldnn_emitter->build_convolution_backward_data(
-                        weights_desc,
-                        delta_desc,
-                        result_desc,
-                        convolution->get_window_movement_strides_forward(),
-                        window_dilation_strides_adjusted,
-                        convolution->get_padding_below_forward(),
-                        convolution->get_padding_above_forward());
-
-                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_bwd_data_index);
-
-                    auto functor = [&, conv_bwd_data_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, conv_index](CPURuntimeContext* ctx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_bwd_data_index);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
                     };
                     functors.emplace_back(functor);
                 }
@@ -333,38 +307,18 @@ namespace ngraph
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    Strides window_dilation_strides_adjusted;
-
-                    for (size_t s : convolution->get_window_dilation_strides_forward())
-                    {
-                        window_dilation_strides_adjusted.push_back(s - 1);
-                    }
-
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
-                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
-                    auto delta_desc = mkldnn_emitter->build_memory_descriptor(
-                        args[1], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1));
-                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
-                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
+                    auto conv_index =
+                        mkldnn_emitter
+                            ->build_convolution_backward<ngraph::op::ConvolutionBackpropFilters>(
+                                node, args, out);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    size_t conv_bwd_weights_index =
-                        mkldnn_emitter->build_convolution_backward_weights(
-                            input_desc,
-                            delta_desc,
-                            result_desc,
-                            convolution->get_window_movement_strides_forward(),
-                            window_dilation_strides_adjusted,
-                            convolution->get_padding_below_forward(),
-                            convolution->get_padding_above_forward());
-
-                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_bwd_weights_index);
-
-                    auto functor = [&, conv_bwd_weights_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, conv_index](CPURuntimeContext* ctx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_bwd_weights_index);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
                     };
                     functors.emplace_back(functor);
                 }
@@ -413,6 +367,43 @@ namespace ngraph
                                false);
                     };
                     functors.emplace_back(functor);
+                }
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::ConvolutionBiasBackpropFiltersBias)
+            {
+                auto convolution =
+                    static_cast<const ngraph::op::ConvolutionBiasBackpropFiltersBias*>(node);
+
+                auto& functors = external_function->get_functors();
+                auto& tensor_data = external_function->get_tensor_data();
+
+                auto& arg0_tensor = tensor_data[args[0].get_name()];
+                auto& arg1_tensor = tensor_data[args[1].get_name()];
+                auto& out0_tensor = tensor_data[out[0].get_name()];
+                auto& out1_tensor = tensor_data[out[1].get_name()];
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto conv_index = mkldnn_emitter->build_convolution_backward<
+                        ngraph::op::ConvolutionBiasBackpropFiltersBias>(node, args, out);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+
+                    auto functor = [&, conv_index](CPURuntimeContext* ctx) {
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out0_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out1_tensor);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                    };
+                    functors.emplace_back(functor);
+                }
+                else
+                {
+                    throw ngraph_error(
+                        "ConvolutionBiasBackpropFiltersBias is only supported with MKLDNN kernel.");
                 }
             }
         }

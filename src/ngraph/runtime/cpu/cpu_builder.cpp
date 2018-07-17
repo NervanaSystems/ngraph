@@ -415,6 +415,8 @@ namespace ngraph
                  &runtime::cpu::Builder::build<ngraph::op::ConvolutionBackpropData>},
                 {TI(ngraph::op::ConvolutionBackpropFilters),
                  &runtime::cpu::Builder::build<ngraph::op::ConvolutionBackpropFilters>},
+                {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
+                 &runtime::cpu::Builder::build<ngraph::op::ConvolutionBiasBackpropFiltersBias>},
                 {TI(ngraph::op::Relu), &runtime::cpu::Builder::build<ngraph::op::Relu>},
                 {TI(ngraph::op::Result), &runtime::cpu::Builder::build<ngraph::op::Result>},
                 {TI(ngraph::op::MatmulBias), &runtime::cpu::Builder::build<ngraph::op::MatmulBias>},
