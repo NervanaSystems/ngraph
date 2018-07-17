@@ -74,7 +74,7 @@ void ngraph::pass::ReshapeElimination::construct_identity_reshape_pattern()
         }
 
         Shape do_r1(r1->get_shape().size());
-        std::iota(begin(do_r1), end(do_r1), 0);
+        std::iota(do_r1.begin(), do_r1.end(), 0);
 
         if (do_r1 != r1->get_input_order())
         {
@@ -120,9 +120,9 @@ void ngraph::pass::ReshapeElimination::construct_reshapex2_pattern()
         auto r1 = std::dynamic_pointer_cast<op::Reshape>(r2->get_argument(0));
 
         Shape do_r2(r1->get_shape().size());
-        std::iota(begin(do_r2), end(do_r2), 0);
+        std::iota(do_r2.begin(), do_r2.end(), 0);
         Shape do_r1(gop->get_shape().size());
-        std::iota(begin(do_r1), end(do_r1), 0);
+        std::iota(do_r1.begin(), do_r1.end(), 0);
 
         NGRAPH_DEBUG << "r1's i/o = " << vector_to_string(r1->get_input_order())
                      << "do_r1 = " << vector_to_string(do_r1);
