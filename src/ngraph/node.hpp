@@ -195,9 +195,9 @@ namespace ngraph
     protected:
         void add_output(const element::Type& element_type, const Shape& shape);
         virtual std::string emit_op(const std::vector<runtime::TensorView>& args,
-                                    const std::vector<runtime::TensorView>& out);
+                                    const std::vector<runtime::TensorView>& out) const;
         virtual size_t get_workspace_size(const std::vector<runtime::TensorView>& args,
-                                          const std::vector<runtime::TensorView>& out);
+                                          const std::vector<runtime::TensorView>& out) const;
 
         std::string m_node_type;
         size_t m_instance_id;
