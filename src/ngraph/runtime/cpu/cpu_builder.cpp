@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -418,6 +418,7 @@ namespace ngraph
                 {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
                  &runtime::cpu::Builder::build<ngraph::op::ConvolutionBiasBackpropFiltersBias>},
                 {TI(ngraph::op::Relu), &runtime::cpu::Builder::build<ngraph::op::Relu>},
+                {TI(ngraph::op::Reshape), &runtime::cpu::Builder::build<ngraph::op::Reshape>},
                 {TI(ngraph::op::Result), &runtime::cpu::Builder::build<ngraph::op::Result>},
                 {TI(ngraph::op::MatmulBias), &runtime::cpu::Builder::build<ngraph::op::MatmulBias>},
                 {TI(ngraph::op::Constant), &runtime::cpu::Builder::build<ngraph::op::Constant>}};
