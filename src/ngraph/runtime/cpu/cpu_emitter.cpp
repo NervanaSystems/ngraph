@@ -400,6 +400,26 @@ namespace ngraph
                 }
                 auto mat_c = args[2];
 
+                //the bias argument of add(dot(A,B), broadcast(C)) is typically C
+                //In order to broadcast C to the same shape as dot(A,B)
+                //we use cblas_gemm_batch(ones, C) or cblas_gemm_batch(C, ones)
+                //where ones is a tensor of appropriate shape
+                //consisting of the identity element
+
+                // Consider an example of broadcasing a tensor of Shape{1,3}
+                // to Shape {4,3}
+                //
+                // [1    [1 2 3]  [1 2 3
+                //  1             1 2 3
+                //  1   *         1 2 3
+                //  1]            1 2 3]
+
+                //The next example is broadcasting a tensor of Shape{3,1} to Shape {3,4}
+                //
+                // [1  [1 1 1 1]  [1 1 1 1
+                // 2  *           2 2 2 2
+                // 3]             3 3 3 3]
+
                 writer << "float alpha_beta_array[] = {1.0f};\n";
 
                 const size_t group_size = 1;
