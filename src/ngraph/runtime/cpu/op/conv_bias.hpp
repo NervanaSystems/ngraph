@@ -28,7 +28,8 @@ namespace ngraph
         {
         public:
             ConvolutionBias(const std::shared_ptr<op::Convolution>& conv,
-                            const std::shared_ptr<Node>& bias);
+                            const std::shared_ptr<Node>& bias,
+                            const bool with_relu = false);
 
             ConvolutionBias(const std::shared_ptr<Node>& data_batch,
                             const std::shared_ptr<Node>& filters,
@@ -37,7 +38,8 @@ namespace ngraph
                             const Strides& window_dilation_strides,
                             const CoordinateDiff& padding_below,
                             const CoordinateDiff& padding_above,
-                            const Strides& data_dilation_strides);
+                            const Strides& data_dilation_strides,
+                            const bool with_relu = false);
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
@@ -47,6 +49,7 @@ namespace ngraph
             std::shared_ptr<Node> get_bias() { return get_argument(2); }
             std::shared_ptr<Node> get_filters() { return get_argument(1); }
             std::shared_ptr<Node> get_data_batch() { return get_argument(0); }
+            bool with_relu() const { return m_with_relu; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -58,6 +61,7 @@ namespace ngraph
             CoordinateDiff m_padding_below;
             CoordinateDiff m_padding_above;
             Strides m_data_dilation_strides;
+            bool m_with_relu;
         };
 
         /// \brief Filters and bias backprop for batched convolution operation. Data backprop is
