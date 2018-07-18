@@ -27,7 +27,7 @@ using namespace std;
 using namespace ngraph;
 
 // This function converts Shape dimension id into cldnn::concatenation id
-cldnn::concatenation::concatenation_axis get_cldnn_axis(size_t tensor_channel)
+static cldnn::concatenation::concatenation_axis get_cldnn_axis(size_t tensor_channel)
 {
     switch (tensor_channel)
     {
@@ -39,27 +39,26 @@ cldnn::concatenation::concatenation_axis get_cldnn_axis(size_t tensor_channel)
     }
 }
 
-string do_matrix_split(cldnn::topology& topology,
-                       const string& name,
-                       const vector<pair<cldnn::primitive_id, cldnn::tensor>>& offsets)
+static string do_matrix_split(cldnn::topology& topology,
+                              const string& name,
+                              const vector<pair<cldnn::primitive_id, cldnn::tensor>>& offsets)
 {
-    const string result = name + "_splitted";
+    const string result = name + "_split";
 
-    const cldnn::split op_splitted(result, name, offsets);
-    topology.add(op_splitted);
-
+    const cldnn::split op_split(result, name, offsets);
+    topology.add(op_split);
     return result;
 }
 
-string get_batch_norm_mean(cldnn::topology& topology, const string& input_name)
+static string get_batch_norm_mean(cldnn::topology& topology, const string& input_name)
 {
     throw invalid_argument(
         "intelgpu::get_batch_norm_mean() Calculation matrix mean is not yet supported.");
 }
 
-string get_batch_norm_variance(cldnn::topology& topology,
-                               const string& input_name,
-                               const string& mean_name)
+static string get_batch_norm_variance(cldnn::topology& topology,
+                                      const string& input_name,
+                                      const string& mean_name)
 {
     throw invalid_argument(
         "intelgpu::get_batch_norm_variance() Calculation matrix variance is not yet supported.");
@@ -90,8 +89,8 @@ void runtime::intelgpu::do_batch_norm_operation(cldnn::topology& topology,
     const size_t shape_channel = 1;
     const size_t cldnn_channel = 4 - input_shape.size() + shape_channel;
 
-    const size_t splitted_arr_count = input_shape.at(shape_channel);
-    for (size_t i = 0; i < splitted_arr_count; ++i)
+    const size_t split_arr_count = input_shape.at(shape_channel);
+    for (size_t i = 0; i < split_arr_count; ++i)
     {
         const string str_i = to_string(i);
         const cldnn::tensor vec_offset(0, 0, i, 0);
@@ -117,28 +116,26 @@ void runtime::intelgpu::do_batch_norm_operation(cldnn::topology& topology,
         variance_name = get_batch_norm_variance(topology, input_name, mean_name);
     }
 
-    const string input_splitted_name = do_matrix_split(topology, input_name, split_offsets);
-    const string mean_splitted_name = do_matrix_split(topology, mean_name, vec_offsets);
-    const string variance_splitted_name = do_matrix_split(topology, variance_name, vec_offsets);
-    const string gamma_splitted_name = do_matrix_split(topology, gamma_name, vec_offsets);
-    const string beta_splitted_name = do_matrix_split(topology, beta_name, vec_offsets);
+    const string input_split_name = do_matrix_split(topology, input_name, split_offsets);
+    const string mean_split_name = do_matrix_split(topology, mean_name, vec_offsets);
+    const string variance_split_name = do_matrix_split(topology, variance_name, vec_offsets);
+    const string gamma_split_name = do_matrix_split(topology, gamma_name, vec_offsets);
+    const string beta_split_name = do_matrix_split(topology, beta_name, vec_offsets);
 
-    for (size_t i = 0; i < splitted_arr_count; ++i)
+    for (size_t i = 0; i < split_arr_count; ++i)
     {
         const string suf = ':' + to_string(i);
         const string out_bn_name = output_name + "_out_bn";
 
         const cldnn::batch_norm cldd_batchnorm(out_bn_name + suf,
-                                               input_splitted_name + suf,
-                                               mean_splitted_name + suf,
-                                               variance_splitted_name + suf,
+                                               input_split_name + suf,
+                                               mean_split_name + suf,
+                                               variance_split_name + suf,
                                                eps);
         topology.add(cldd_batchnorm);
 
-        const cldnn::scale op_scale(output_name + suf,
-                                    out_bn_name + suf,
-                                    gamma_splitted_name + suf,
-                                    beta_splitted_name + suf);
+        const cldnn::scale op_scale(
+            output_name + suf, out_bn_name + suf, gamma_split_name + suf, beta_split_name + suf);
         topology.add(op_scale);
 
         dim_set.push_back(output_name + suf);
