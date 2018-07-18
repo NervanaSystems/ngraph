@@ -871,7 +871,25 @@ NGRAPH_TEST(${BACKEND_NAME}, divide_by_zero_int32)
     copy_data(b, vector<int>{0, 0, 0, 0});
     auto result = backend->create_tensor(element::i32, shape);
 
-    EXPECT_ANY_THROW({ backend->call(f, {result}, {a, b}); });
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wused-but-marked-unused"
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
+
+    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+    EXPECT_DEATH_IF_SUPPORTED(
+        {
+            try
+            {
+                backend->call(f, {result}, {a, b});
+            }
+            catch (...)
+            {
+                abort();
+            }
+        },
+        "");
+
+#pragma clang diagnostic pop
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, equal)
