@@ -100,6 +100,7 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
+#include "ngraph/pass/common_function_collection.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
@@ -364,6 +365,14 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<runtime::cpu::pass::CPUShuffleFolding>();
     pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
+    unordered_map<Node*, Node*> node_function_map;
+    string common_function_string;
+    auto femitter = bind(&ngraph::runtime::cpu::CPU_ExternalFunction::emit_op_as_function,
+                         this,
+                         placeholders::_1,
+                         placeholders::_2);
+    pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
+        femitter, node_function_map, common_function_string);
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment, true);
     pass_manager.run_passes(m_function);
@@ -520,73 +529,7 @@ using namespace ngraph::runtime;
     }
     writer << "\n";
 
-    // This for loop creates a collection of functions that are called more than once
-    // and emitting them as globally callable functions.
-    // ops implement the is_functionally_identical method
-    unordered_map<Node*, string> match_functions;
-    for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
-    {
-        list<shared_ptr<Node>> tmp = function_ordered_ops.at(current_function);
-        if (tmp.size() < 2)
-        {
-            // Since we are comparing ops there must be at least two ops to proceed.
-            continue;
-        }
-        vector<shared_ptr<Node>> op_list{tmp.begin(), tmp.end()};
-        unordered_map<const Node*, string> node_cache;
-        for (size_t i = 0; i < op_list.size(); i++)
-        {
-            // constants and parameters cannot be outlined
-            if (op_list[i]->is_constant() || op_list[i]->is_parameter())
-            {
-                continue;
-            }
-
-            Node& node = *op_list[i];
-            auto handler = dispatcher.find(type_index(typeid(node)));
-            if (handler == dispatcher.end())
-            {
-                throw ngraph_error("Unhandled op during code generation : " + node.description());
-            }
-
-            string s = emit_op_as_function(node, "f");
-            node_cache.insert({&node, s});
-        }
-        for (size_t i = 0; i < op_list.size() - 1; i++)
-        {
-            if (op_list[i]->is_constant() || op_list[i]->is_parameter())
-            {
-                continue;
-            }
-            if (contains_key(match_functions, op_list[i].get()))
-            {
-                continue;
-            }
-            string match_function_name;
-            for (size_t j = i + 1; j < op_list.size(); j++)
-            {
-                if (op_list[j]->is_constant() || op_list[j]->is_parameter())
-                {
-                    continue;
-                }
-                Node* op1 = op_list[i].get();
-                Node* op2 = op_list[j].get();
-                if (is_functionally_identical(*op1, *op2, node_cache))
-                {
-                    if (match_function_name.empty())
-                    {
-                        match_function_name = "func_" + op1->get_name();
-                        match_functions.insert({op1, match_function_name});
-                    }
-                    match_functions.insert({op2, match_function_name});
-                }
-            }
-            if (!match_function_name.empty())
-            {
-                writer << emit_op_as_function(*op_list[i], match_function_name);
-            }
-        }
-    }
+    writer << common_function_string << "\n";
 
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
@@ -724,7 +667,10 @@ using namespace ngraph::runtime;
             {
                 shared_ptr<descriptor::TensorView> itv =
                     res->get_inputs().at(0).get_output().get_tensor_view();
+
+                auto output_name = ss.str();
                 m_variable_name_map[itv->get_tensor().get_name()] = ss.str();
+                propagate_in_place_output(&(res->get_inputs().at(0).get_output()), output_name);
             }
         }
 
@@ -829,15 +775,15 @@ using namespace ngraph::runtime;
                 writer.indent++;
             }
 
-            string func_name;
-            auto it = match_functions.find(node.get());
-            if (it == match_functions.end())
+            auto it = node_function_map.find(node.get());
+            if (it == node_function_map.end())
             {
                 handler->second(this, writer, node.get(), in, out);
             }
             else
             {
-                func_name = it->second;
+                string func_name =
+                    ngraph::pass::CommonFunctionCollection::create_function_name(*it->second);
                 vector<string> names;
                 for (const TensorViewWrapper& tv : in)
                 {
@@ -1027,6 +973,43 @@ using namespace ngraph::runtime;
     {
         release_function();
     }
+}
+
+void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
+    ngraph::descriptor::Output* res_src_output, std::string output_name)
+{
+    //we start with a particular output
+    //which is an argument to a given op::Result
+    size_t offset = res_src_output->get_tensor().get_pool_offset();
+    auto it = res_src_output;
+
+    bool propagate_further = false;
+    do
+    {
+        propagate_further = false;
+        auto arg = std::dynamic_pointer_cast<ngraph::op::Op>(it->get_node());
+        if (!arg)
+        {
+            break;
+        }
+        if (auto op_annotations = arg->get_op_annotations())
+        {
+            auto oi_pairs = op_annotations->get_in_place_oi_pairs();
+            if (oi_pairs.count(it->get_index()) != 0)
+            {
+                size_t input_index = oi_pairs.at(it->get_index());
+                auto& input_tensor = arg->get_inputs().at(input_index).get_tensor();
+                if (input_tensor.get_pool_offset() == offset &&
+                    !arg->get_inputs().at(input_index).get_output().get_node()->is_parameter())
+                {
+                    NGRAPH_DEBUG << "Reusing " << output_name << " for " << input_tensor.get_name();
+                    m_variable_name_map[input_tensor.get_name()] = output_name;
+                    it = &arg->get_inputs().at(input_index).get_output();
+                    propagate_further = true;
+                }
+            }
+        }
+    } while (propagate_further);
 }
 
 void runtime::cpu::CPU_ExternalFunction::build()
@@ -1320,6 +1303,10 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
     // Work around a compiler warning (*node inside typeid may have effects
     // with shared pointers, which is fine here but clang doesn't like it.)
     auto handler = dispatcher.find(type_index(typeid(node)));
+    if (handler == dispatcher.end())
+    {
+        throw ngraph_error("Unhandled op during function emit : " + node.description());
+    }
     vector<TensorViewWrapper> in;
     size_t arg_index = 0;
     set<string> arg_names;
