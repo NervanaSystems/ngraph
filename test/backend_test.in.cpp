@@ -4686,7 +4686,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_3d)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    auto cpu_results = execute(cpu_f, args, "${BACKEND_NAME}");
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
@@ -5836,52 +5836,6 @@ NGRAPH_TEST(${BACKEND_NAME}, convolution_outlining)
     EXPECT_EQ(vector<float>{expected_result}, read_vector<float>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, mkldnn_layouts)
-{
-    Shape shape_a{1, 16, 2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    Shape shape_b{32, 16, 1, 1};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    Shape shape_r{1, 32, 2, 2};
-    auto conv1 = make_shared<op::Convolution>(A,
-                                              B,
-                                              Strides{1, 1},
-                                              Strides{1, 1},
-                                              CoordinateDiff{0, 0},
-                                              CoordinateDiff{0, 0},
-                                              Strides{1, 1});
-    Shape pool_shape{1, 1};
-    auto pool1 = make_shared<op::AvgPool>(conv1, pool_shape);
-    auto pool1_result = make_shared<op::Result>(pool1);
-    // Request result in default layout
-    pool1_result->set_needs_default_layout(true);
-    auto f = make_shared<Function>(ResultVector{pool1_result}, op::ParameterVector{A, B});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    vector<float> input(64, 1.0f);
-    vector<float> weights;
-    vector<float> rv(128);
-    for (int i = 0; i < 128; i++)
-        weights.push_back(0.0f);
-    for (int i = 0; i < 384; i++)
-        weights.push_back(1.0f);
-
-    auto a = backend->create_tensor(element::f32, shape_a, input.data());
-    auto b = backend->create_tensor(element::f32, shape_b, weights.data());
-    auto result = backend->create_tensor(element::f32, shape_r, rv.data());
-
-    vector<float> expected_result;
-    for (int i = 0; i < 32; i++)
-        expected_result.push_back(0.0f);
-    for (int i = 0; i < 96; i++)
-        expected_result.push_back(16.0f);
-
-    backend->call(f, {result}, {a, b});
-
-    EXPECT_EQ(vector<float>{expected_result}, rv);
-}
-
 NGRAPH_TEST(${BACKEND_NAME}, computation_reuse)
 {
     Shape shape_a{1, 16, 2, 2};
@@ -6463,7 +6417,7 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_3d)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    auto cpu_results = execute(cpu_f, args, "${BACKEND_NAME}");
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
