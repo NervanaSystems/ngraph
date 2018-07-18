@@ -28,6 +28,7 @@ namespace ngraph
     class Shape
     {
     public:
+        using value_type = size_t;
         Shape(const std::initializer_list<size_t>& axis_lengths)
             : m_data(axis_lengths)
         {
@@ -60,11 +61,6 @@ namespace ngraph
             m_data = v.m_data;
             return *this;
         }
-        // Shape& operator=(Shape&& v)
-        // {
-        //     static_cast<std::vector<size_t>*>(this)->operator=(v);
-        //     return *this;
-        // }
 
         size_t size() const { return m_data.size(); }
         operator std::vector<size_t>() const { return m_data; }
@@ -86,18 +82,19 @@ namespace ngraph
         {
             return m_data.insert(pos, value);
         }
-        std::vector<size_t>::iterator insert(std::vector<size_t>::iterator pos,
-                                             std::vector<size_t>::iterator first,
-                                             std::vector<size_t>::iterator last)
+        void insert(std::vector<size_t>::iterator pos,
+                    std::vector<size_t>::iterator first,
+                    std::vector<size_t>::iterator last)
         {
-            return m_data.insert(pos, first, last);
+            m_data.insert(pos, first, last);
         }
         void push_back(size_t value) { m_data.push_back(value); }
         std::vector<size_t>::iterator erase(std::vector<size_t>::iterator pos)
         {
             return m_data.erase(pos);
         }
-
+        bool empty() const { return m_data.empty(); }
+        const std::vector<size_t>& get_value() const { return m_data; }
     private:
         std::vector<size_t> m_data;
     };

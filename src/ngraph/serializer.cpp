@@ -454,7 +454,7 @@ static shared_ptr<ngraph::Function>
             }
             else if (node_op == "Broadcast")
             {
-                auto shape = node_js.at("shape").get<vector<size_t>>();
+                Shape shape = node_js.at("shape").get<vector<size_t>>();
                 auto axes = node_js.at("axes").get<set<size_t>>();
                 node = make_shared<op::Broadcast>(args[0], shape, axes);
             }
@@ -472,7 +472,7 @@ static shared_ptr<ngraph::Function>
                 auto type_node_js =
                     node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
                 auto element_type = read_element_type(type_node_js.at("element_type"));
-                auto shape = type_node_js.at("shape");
+                Shape shape = type_node_js.at("shape").get<vector<size_t>>();
                 try
                 {
                     auto value = node_js.at("value").get<vector<string>>();
@@ -722,7 +722,7 @@ static shared_ptr<ngraph::Function>
             }
             else if (node_op == "OneHot")
             {
-                auto shape = node_js.at("shape").get<vector<size_t>>();
+                Shape shape = node_js.at("shape").get<vector<size_t>>();
                 auto one_hot_axis = node_js.at("one_hot_axis").get<size_t>();
                 node = make_shared<op::OneHot>(args[0], shape, one_hot_axis);
             }
@@ -743,7 +743,7 @@ static shared_ptr<ngraph::Function>
                 auto type_node_js =
                     node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
                 auto element_type = read_element_type(type_node_js.at("element_type"));
-                auto shape = type_node_js.at("shape");
+                Shape shape = type_node_js.at("shape").get<vector<size_t>>();
                 auto cacheable = get_or_default<bool>(node_js, "cacheable", false);
                 node = make_shared<op::Parameter>(element_type, shape, cacheable);
             }
@@ -982,7 +982,7 @@ static json write(const Node& n, bool binary_constant_data)
         json output_shapes = json::array();
         for (size_t i = 0; i < n.get_output_size(); ++i)
         {
-            output_shapes.push_back(n.get_output_shape(i));
+            output_shapes.push_back(vector<size_t>(n.get_output_shape(i)));
         }
         node["output_shapes"] = output_shapes;
     }
@@ -1009,20 +1009,20 @@ static json write(const Node& n, bool binary_constant_data)
     else if (node_op == "AvgPool")
     {
         auto tmp = dynamic_cast<const op::AvgPool*>(&n);
-        node["window_shape"] = tmp->get_window_shape();
+        node["window_shape"] = tmp->get_window_shape().get_value();
         node["window_movement_strides"] = tmp->get_window_movement_strides();
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
+        node["padding_below"] = tmp->get_padding_below().get_value();
+        node["padding_above"] = tmp->get_padding_above().get_value();
         node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
     }
     else if (node_op == "AvgPoolBackprop")
     {
         auto tmp = dynamic_cast<const op::AvgPoolBackprop*>(&n);
-        node["forward_arg_shape"] = tmp->get_forward_arg_shape();
-        node["window_shape"] = tmp->get_window_shape();
+        node["forward_arg_shape"] = tmp->get_forward_arg_shape().get_value();
+        node["window_shape"] = tmp->get_window_shape().get_value();
         node["window_movement_strides"] = tmp->get_window_movement_strides();
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
+        node["padding_below"] = tmp->get_padding_below().get_value();
+        node["padding_above"] = tmp->get_padding_above().get_value();
         node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
     }
     else if (node_op == "BatchNorm")
@@ -1040,7 +1040,7 @@ static json write(const Node& n, bool binary_constant_data)
     {
         auto tmp = dynamic_cast<const op::Broadcast*>(&n);
         node["axes"] = tmp->get_broadcast_axes();
-        node["shape"] = tmp->get_broadcast_shape();
+        node["shape"] = tmp->get_broadcast_shape().get_value();
     }
     else if (node_op == "Ceiling")
     {
@@ -1057,7 +1057,7 @@ static json write(const Node& n, bool binary_constant_data)
         {
             node["value"] = tmp->get_value_strings();
         }
-        node["shape"] = tmp->get_shape();
+        node["shape"] = tmp->get_shape().get_value();
         node["element_type"] = write_element_type(tmp->get_element_type());
     }
     else if (node_op == "Convert")
@@ -1077,7 +1077,7 @@ static json write(const Node& n, bool binary_constant_data)
     else if (node_op == "ConvolutionBackpropData")
     {
         auto tmp = dynamic_cast<const op::ConvolutionBackpropData*>(&n);
-        node["data_batch_shape"] = tmp->get_data_batch_shape();
+        node["data_batch_shape"] = tmp->get_data_batch_shape().get_value();
         node["window_movement_strides_forward"] = tmp->get_window_movement_strides_forward();
         node["window_dilation_strides_forward"] = tmp->get_window_dilation_strides_forward();
         node["padding_below_forward"] = tmp->get_padding_below_forward();
@@ -1087,7 +1087,7 @@ static json write(const Node& n, bool binary_constant_data)
     else if (node_op == "ConvolutionBackpropFilters")
     {
         auto tmp = dynamic_cast<const op::ConvolutionBackpropFilters*>(&n);
-        node["filters_shape"] = tmp->get_filters_shape();
+        node["filters_shape"] = tmp->get_filters_shape().get_value();
         node["window_movement_strides_forward"] = tmp->get_window_movement_strides_forward();
         node["window_dilation_strides_forward"] = tmp->get_window_dilation_strides_forward();
         node["padding_below_forward"] = tmp->get_padding_below_forward();
@@ -1149,18 +1149,18 @@ static json write(const Node& n, bool binary_constant_data)
     else if (node_op == "MaxPool")
     {
         auto tmp = dynamic_cast<const op::MaxPool*>(&n);
-        node["window_shape"] = tmp->get_window_shape();
+        node["window_shape"] = tmp->get_window_shape().get_value();
         node["window_movement_strides"] = tmp->get_window_movement_strides();
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
+        node["padding_below"] = tmp->get_padding_below().get_value();
+        node["padding_above"] = tmp->get_padding_above().get_value();
     }
     else if (node_op == "MaxPoolBackprop")
     {
         auto tmp = dynamic_cast<const op::MaxPoolBackprop*>(&n);
-        node["window_shape"] = tmp->get_window_shape();
+        node["window_shape"] = tmp->get_window_shape().get_value();
         node["window_movement_strides"] = tmp->get_window_movement_strides();
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
+        node["padding_below"] = tmp->get_padding_below().get_value();
+        node["padding_above"] = tmp->get_padding_above().get_value();
     }
     else if (node_op == "Maximum")
     {
@@ -1188,15 +1188,15 @@ static json write(const Node& n, bool binary_constant_data)
     else if (node_op == "OneHot")
     {
         auto tmp = dynamic_cast<const op::OneHot*>(&n);
-        node["shape"] = tmp->get_shape();
+        node["shape"] = tmp->get_shape().get_value();
         node["one_hot_axis"] = tmp->get_one_hot_axis();
     }
     else if (node_op == "Pad")
     {
         auto tmp = dynamic_cast<const op::Pad*>(&n);
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
-        node["padding_interior"] = tmp->get_padding_interior();
+        node["padding_below"] = tmp->get_padding_below().get_value();
+        node["padding_above"] = tmp->get_padding_above().get_value();
+        node["padding_interior"] = tmp->get_padding_interior().get_value();
     }
     else if (node_op == "Parameter")
     {
@@ -1223,7 +1223,7 @@ static json write(const Node& n, bool binary_constant_data)
     {
         auto tmp = dynamic_cast<const op::ReduceWindow*>(&n);
         node["function"] = tmp->get_functions()[0]->get_name();
-        node["window_shape"] = tmp->get_window_shape();
+        node["window_shape"] = tmp->get_window_shape().get_value();
         node["window_movement_strides"] = tmp->get_window_movement_strides();
     }
     else if (node_op == "Relu")
@@ -1246,7 +1246,7 @@ static json write(const Node& n, bool binary_constant_data)
     {
         auto tmp = dynamic_cast<const op::Reshape*>(&n);
         node["input_order"] = tmp->get_input_order();
-        node["output_shape"] = tmp->get_output_shape();
+        node["output_shape"] = tmp->get_output_shape().get_value();
     }
     else if (node_op == "Result")
     {
@@ -1270,7 +1270,7 @@ static json write(const Node& n, bool binary_constant_data)
         auto tmp = dynamic_cast<const op::SelectAndScatter*>(&n);
         node["selection_function"] = tmp->get_functions()[0]->get_name();
         node["scatter_function"] = tmp->get_functions()[1]->get_name();
-        node["window_shape"] = tmp->get_window_shape();
+        node["window_shape"] = tmp->get_window_shape().get_value();
         node["window_movement_strides"] = tmp->get_window_movement_strides();
     }
     else if (node_op == "Sigmoid")
