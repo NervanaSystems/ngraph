@@ -97,6 +97,7 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/pass/common_function_collection.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
@@ -428,55 +429,6 @@ void runtime::gpu::GPU_ExternalFunction::emit_function_declarations()
     m_writer << "\n";
 }
 
-void runtime::gpu::GPU_ExternalFunction::collect_unique_functions()
-{
-    // This for loop creates a collection of functions that are called more than once
-    // and emitting them as globally callable functions.
-    // ops implement the is_functionally_identical method
-    unordered_map<string, string> match_function_map;
-    for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
-    {
-        list<shared_ptr<Node>> tmp = m_function_ordered_ops.at(current_function);
-        if (tmp.size() < 2)
-        {
-            // Since we are comparing ops there must be at least two ops to proceed.
-            continue;
-        }
-        vector<shared_ptr<Node>> op_list{tmp.begin(), tmp.end()};
-        for (size_t i = 0; i < op_list.size(); i++)
-        {
-            if (op_list[i]->is_constant() || op_list[i]->is_parameter())
-            {
-                continue;
-            }
-
-            Node& node = *op_list[i];
-            auto handler = dispatcher.find(type_index(typeid(node)));
-            if (handler == dispatcher.end())
-            {
-                throw ngraph_error("Unhandled op during code generation : " + node.description());
-            }
-
-            string match_function = emit_op_as_function(node, "__f__");
-            string match_function_name;
-            if (contains_key(match_function_map, match_function))
-            {
-                match_function_name = match_function_map[match_function];
-            }
-            else
-            {
-                auto offset = match_function.find("__f__");
-                string emitted_function = match_function;
-                match_function_name = "func_" + node.get_name();
-                emitted_function.replace(offset, 5, match_function_name);
-                match_function_map.insert({match_function, match_function_name});
-                m_writer << emitted_function << "\n";
-            }
-            m_node_function_map.insert({&node, match_function_name});
-        }
-    }
-}
-
 void runtime::gpu::GPU_ExternalFunction::emit_temp_mem_pool_allocation(
     shared_ptr<Function> current_function)
 {
@@ -636,15 +588,15 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 }
 
                 // Emit operation body
-                string func_name;
-                func_name = m_node_function_map[node.get()];
-                if (func_name.empty())
+                auto it = m_node_function_map.find(node.get());
+                if (it == m_node_function_map.end())
                 {
-                    //throw runtime_error("No matching function found for '" + node->get_name() + "'");
                     handler->second(this, m_writer, node.get(), in, out);
                 }
                 else
                 {
+                    string func_name =
+                        ngraph::pass::CommonFunctionCollection::create_function_name(*it->second);
                     vector<string> names;
                     for (const GPU_TensorViewWrapper& tv : in)
                     {
@@ -692,6 +644,13 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     // For now, just make everyone row-major.
     m_pass_manager.register_pass<pass::ResultCopyElimination>();
     m_pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
+    string common_function_string;
+    auto femitter = bind(&ngraph::runtime::gpu::GPU_ExternalFunction::emit_op_as_function,
+                         this,
+                         placeholders::_1,
+                         placeholders::_2);
+    m_pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
+        femitter, m_node_function_map, common_function_string);
     m_pass_manager.register_pass<pass::Liveness>();
     m_pass_manager.register_pass<pass::MemoryLayout>(64);
     m_pass_manager.register_pass<pass::DumpSorted>(dump_filename);
@@ -706,7 +665,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     emit_timer_functions();
     emit_constant_declarations();
     emit_function_declarations();
-    collect_unique_functions();
+    m_writer << common_function_string << "\n";
     emit_functions();
 
     // allocate device buffers for primitive arguments and workspace
