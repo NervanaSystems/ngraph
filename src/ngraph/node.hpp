@@ -33,6 +33,7 @@
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/placement.hpp"
+#include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/type/type.hpp"
 
 namespace ngraph
@@ -193,6 +194,10 @@ namespace ngraph
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
     protected:
         void add_output(const element::Type& element_type, const Shape& shape);
+        virtual std::string emit_op(const std::vector<runtime::TensorView>& args,
+                                    const std::vector<runtime::TensorView>& out) const;
+        virtual size_t get_workspace_size(const std::vector<runtime::TensorView>& args,
+                                          const std::vector<runtime::TensorView>& out) const;
 
         std::string m_node_type;
         size_t m_instance_id;

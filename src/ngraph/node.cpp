@@ -329,3 +329,15 @@ NodeVector Node::get_users() const
 
     return result;
 }
+
+string Node::emit_op(const vector<runtime::TensorView>& args,
+                     const vector<runtime::TensorView>& out) const
+{
+    return "";
+}
+
+size_t Node::get_workspace_size(const vector<runtime::TensorView>& args,
+                                const vector<runtime::TensorView>& out) const
+{
+    return 0;
+}
