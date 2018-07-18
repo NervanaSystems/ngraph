@@ -47,7 +47,7 @@ string do_matrix_split(cldnn::topology& topology,
 
     const cldnn::split op_splitted(result, name, offsets);
     topology.add(op_splitted);
-    
+
     return result;
 }
 
