@@ -4668,7 +4668,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_3d)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    auto cpu_results = execute(cpu_f, args, "${BACKEND_NAME}");
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
@@ -6445,7 +6445,7 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_3d)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    auto cpu_results = execute(cpu_f, args, "${BACKEND_NAME}");
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
