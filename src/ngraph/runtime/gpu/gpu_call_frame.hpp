@@ -53,10 +53,8 @@ namespace ngraph
                 ///
                 /// Tuples will be expanded into their tensor views to build the call frame.
                 void call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
-                          const std::vector<std::shared_ptr<runtime::TensorView>>& inputs);
-
-                void setup_runtime_context();
-                void cleanup_runtime_context();
+                          const std::vector<std::shared_ptr<runtime::TensorView>>& inputs,
+                          GPURuntimeContext* ctx);
 
             protected:
                 std::shared_ptr<GPU_ExternalFunction> m_external_function;

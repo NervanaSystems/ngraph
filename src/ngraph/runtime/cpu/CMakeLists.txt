@@ -27,6 +27,10 @@ set(SRC
     cpu_tensor_view_wrapper.cpp
     cpu_tensor_view.cpp
     cpu_tracing.cpp
+    builder/avg_pool.cpp
+    builder/convert_layout.cpp
+    builder/convolution.cpp
+    builder/reshape.cpp
     kernel/eigen_thread_pool.cpp
     kernel/pad.cpp
     kernel/reduce_max.cpp
@@ -55,6 +59,7 @@ set(SRC
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
     pass/cpu_mat_fusion.cpp
+    pass/cpu_loop_kernel_fusion.cpp
     pass/cpu_shuffle_folding.cpp
     pass/cpu_workspace_insertion.cpp
 )

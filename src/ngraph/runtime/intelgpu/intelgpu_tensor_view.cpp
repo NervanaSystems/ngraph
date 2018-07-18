@@ -20,8 +20,8 @@
 
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
-#include "ngraph/shape.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -33,15 +33,10 @@ runtime::intelgpu::IntelGPUTensorView::IntelGPUTensorView(const ngraph::element:
     : runtime::TensorView(std::make_shared<ngraph::descriptor::PrimaryTensorView>(
           std::make_shared<ngraph::TensorViewType>(element_type, shape), "external"))
 {
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(element_type, shape);
+
     m_descriptor->set_tensor_view_layout(
-        std::make_shared<ngraph::descriptor::layout::DenseTensorViewLayout>(*m_descriptor));
-
-    size_t mem_size = shape_size(shape);
-    cldnn::data_types data_type = get_cldnn_type(element_type);
-    cldnn::tensor tensor(1, mem_size, 1, 1);
-    cldnn::format::type format = cldnn::format::yxfb;
-
-    cldnn::layout layout(data_type, format, tensor);
+        std::make_shared<runtime::intelgpu::IntelGPULayout>(*m_descriptor, layout));
 
     if (nullptr != memory_pointer)
     {
@@ -78,27 +73,4 @@ void runtime::intelgpu::IntelGPUTensorView::read(void* target, size_t tensor_off
     const auto ptr = ocl_memory->pointer<char>();
     const char* source = ptr.data();
     memcpy(target, &source[tensor_offset], n);
-}
-
-cldnn::data_types runtime::intelgpu::IntelGPUTensorView::get_cldnn_type(
-    const ngraph::element::Type& element_type) const
-{
-    if (element_type == ngraph::element::i8)
-    {
-        return cldnn::data_types::i8;
-    }
-    else if (element_type == ngraph::element::u8)
-    {
-        return cldnn::data_types::u8;
-    }
-    else if (element_type == ngraph::element::f32)
-    {
-        return cldnn::data_types::f32;
-    }
-    else
-    {
-        ostringstream os;
-        os << "IntelGPUTensorView::get_cldnn_type: Unknown type " << element_type;
-        throw std::invalid_argument(os.str());
-    }
 }

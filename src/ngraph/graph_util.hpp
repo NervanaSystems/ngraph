@@ -52,6 +52,9 @@ namespace ngraph
     std::list<std::shared_ptr<Node>>
         topological_sort(const std::list<std::shared_ptr<Node>>& nodes);
 
+    // Check if all paths from X to a result go through Y
+    bool is_post_dominated(Node* X, Node* Y);
+
     bool is_equal_to_const_value(std::string const_value, std::shared_ptr<Node> reduce_constant);
 
     // maps original to replacement nodes e.g. for clone utilities
@@ -130,7 +133,23 @@ namespace ngraph
 
     bool is_zero(std::shared_ptr<Node> reduce_constant);
 
+    NodeVector get_subgraph_outputs(const NodeVector& nodes,
+                                    const NodeVector& exclusions,
+                                    bool ignore_unused = false);
+
     bool is_one(std::shared_ptr<Node> reduce_constant);
 
-    bool is_used(std::shared_ptr<Node> node);
+    // Returns true if `node` is live in the graph i.e. a result op
+    // transitively uses this `node`
+    bool is_used(Node* node);
+
+    // Returns count of `node` users that are still live in the graph
+    size_t get_user_count(Node* node);
+
+    // Returns true if `node` computes an output tensor
+    bool computes_result(Node* node);
+
+    // Return true if a node's user could potentially overwrite
+    // the output of this node with in-place kernels
+    bool possibly_overwritten(Node* node);
 }

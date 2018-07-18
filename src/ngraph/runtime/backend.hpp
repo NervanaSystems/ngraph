@@ -84,8 +84,8 @@ namespace ngraph
 
         private:
             static void* open_shared_library(std::string type);
-            static std::unordered_map<std::string, std::shared_ptr<Backend>>& get_backend_map();
-            static std::unordered_map<std::string, void*> s_open_backends;
+            static std::map<std::string, std::string> get_registered_device_map();
+            static bool is_backend_name(const std::string& file, std::string& backend_name);
         };
     }
 }
