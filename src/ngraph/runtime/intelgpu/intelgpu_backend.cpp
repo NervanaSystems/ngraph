@@ -35,10 +35,10 @@ void arguments_check(const shared_ptr<Node>& op, size_t input, size_t output)
     if (op->get_input_size() != input || op->get_output_size() != output)
     {
         ostringstream os;
-        os << "Operation \"" << op->description() << "\" input and output sizes mismatch.\n"
-           << "Expected input size=" << op->get_input_size() << ", provided=" << input << "\n"
-           << "Expected output size=" << op->get_output_size() << ", provided=" << output;
-        throw std::invalid_argument(os.str());
+        os << "Operation \"" << op->description() << "\" input and output sizes mismatch."
+           << " Expected input size=" << op->get_input_size() << ", provided=" << input
+           << ". Expected output size=" << op->get_output_size() << ", provided=" << output;
+        throw invalid_argument(os.str());
     }
 }
 
@@ -139,6 +139,51 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         else if ("Multiply" == op->description())
         {
             do_eltwise_operation(topology, op, cldnn::eltwise_mode::prod);
+        }
+        else if ("BatchNorm" == op->description())
+        {
+            const shared_ptr<op::BatchNorm> batch_norm = static_pointer_cast<op::BatchNorm>(op);
+            const double eps = batch_norm->get_eps_value();
+
+            if (op->get_inputs().size() < 3 || op->get_outputs().empty())
+            {
+                arguments_check(op, 3, 1); // throw exception in this case
+            }
+
+            const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+            const string& gamma_name = op->get_inputs().at(0).get_tensor().get_name();
+            const string& beta_name = op->get_inputs().at(1).get_tensor().get_name();
+            const string& input_name = op->get_inputs().at(2).get_tensor().get_name();
+            const Shape& input_shape = op->get_inputs().at(2).get_shape();
+
+            if (op->get_outputs().size() == 1)
+            {
+                arguments_check(op, 5, 1);
+
+                const string& mean_name = op->get_inputs().at(3).get_tensor().get_name();
+                const string& variance_name = op->get_inputs().at(4).get_tensor().get_name();
+
+                do_batch_norm_operation(topology,
+                                        output_name,
+                                        eps,
+                                        input_name,
+                                        input_shape,
+                                        gamma_name,
+                                        beta_name,
+                                        mean_name,
+                                        variance_name);
+            }
+            else if (op->get_outputs().size() == 3)
+            {
+                arguments_check(op, 3, 3);
+
+                do_batch_norm_operation(
+                    topology, output_name, eps, input_name, input_shape, gamma_name, beta_name);
+            }
+            else
+            {
+                arguments_check(op, 5, 1); // throw exception in this case
+            }
         }
         else
         {
