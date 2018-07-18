@@ -27,8 +27,8 @@ systems, that command tends to looks something like:
 
 .. code-block:: console
 
-   export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist/
-   export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib/
+   export NGRAPH_CPP_BUILD_PATH=path/to/ngraph_dist/
+   export LD_LIBRARY_PATH=path/to/ngraph_dist/lib/
 
 
 Training Deep Neural Networks
@@ -132,10 +132,12 @@ Intra-op and inter-op parallelism
 * ``inter_op_parallelism_threads``
 
 Some frameworks, like TensorFlow\*, use these settings to improve performance; 
-however, they are often not sufficient for optimal performance. Framework-based adjustments cannot access the underlying  NUMA configuration in multi-socket 
-Intel Xeon processor-based platforms, which is a key requirement for many kinds 
-of inference-engine computations.  See the next section on NUMA performance to 
-learn more about this performance feature available to systems utilizing nGraph. 
+however, they are often not sufficient for optimal performance. Framework-based 
+adjustments cannot access the underlying NUMA configuration in multi-socket 
+Intel® Xeon® processor-based platforms, which is a key requirement for 
+many kinds of inference-engine computations. See the next section on NUMA 
+performance to learn more about this performance feature available to systems 
+utilizing nGraph. 
 
 
 NUMA performance 

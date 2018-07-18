@@ -17,11 +17,11 @@ MXNet\*
 Compile MXNet with nGraph
 --------------------------
 
-.. important:: These instructions pick up from where the :doc:`install`
-   installation instructions left off, so they presume that your system already
-   has the library installed at ``$HOME/ngraph_dist`` as the default location.
-   If the |nGl| code has not yet been installed to your system, please go back
-   and return here to finish compiling MXNet with ``libngraph``.
+.. important:: As of version |version|, these instructions presume that your 
+   system already has the Library installed to the default location, as outlined 
+   in our :doc:`install` documentation. If the |nGl| code has not yet been 
+   installed to your system, please go back and return here to finish compiling 
+   MXNet with ``libngraph``.
 
 
 #. Set the ``LD_LIBRARY_PATH`` path to the location where we built the nGraph 
@@ -29,7 +29,7 @@ Compile MXNet with nGraph
 
    .. code-block:: bash
 
-      export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib/
+      export LD_LIBRARY_PATH=path/to/ngraph_dist/lib/
 
 
 #. Add the `MXNet`_ prerequisites to your system, if the system doesn't have them
@@ -49,14 +49,14 @@ Compile MXNet with nGraph
       $ git clone --recursive git@github.com:NervanaSystems/ngraph-mxnet.git
 
 #. Edit the ``make/config.mk`` file from the repo we just checked out to set
-   the ``USE_NGRAPH`` option (line ``100``) to true with `1` and set the :envvar:`NGRAPH_DIR`
-   (line ``101``) to point to the installation location target where the |nGl|
-   was installed:
+   the ``USE_NGRAPH`` option (line ``100``) to true with `1` and set the 
+   :envvar:`NGRAPH_DIR` (line ``101``) to point to the installation location 
+   of ``ngraph_dist``:
 
    .. code-block:: bash
 
       USE_NGRAPH = 1
-      NGRAPH_DIR = $(HOME)/ngraph_dist
+      NGRAPH_DIR = path/to/ngraph_dist
 
 #. Ensure that settings on the config file are disabled for ``USE_MKL2017``
    (line ``113``) and ``USE_NNPACK`` (line ``120``).
@@ -100,7 +100,7 @@ Compile MXNet with nGraph
 TensorFlow\* 
 =============
 
-See the `ngraph tensorflow bridge README`_ for how to install the 
+See the `ngraph tensorflow bridge README`_ for how to install the `DSO`_ for the 
 nGraph-TensorFlow bridge.
 
 
@@ -119,22 +119,19 @@ Detailed info about neon's features and functionality can be found in the
 `neon docs`_. This section covers installing neon on an existing 
 system that already has an ``ngraph_dist`` installed. 
 
-.. important:: The numbered instructions below pick up from where 
-   the :doc:`install` instructions left off, and they presume that your system 
-   already has the ngraph library installed installed at ``$HOME/ngraph_dist`` 
-   as the default location. If the |nGl| code has not yet been installed to 
-   your system, you can follow the instructions on the `ngraph-neon python README`_ 
-   to install everything at once.  
+.. important:: As of version |version|, these instructions presume that your 
+   system already has the library installed to the default location, as outlined 
+   in our :doc:`install` documentation. 
 
 
-#. Set the ``NGRAPH_CPP_BUILD_PATH`` and the ``LD_LIBRARY_PATH`` path to the 
-   location where you built the nGraph libraries. (This example shows the default 
-   location):
+#. Set the ``NGRAPH_CPP_BUILD_PATH`` and the ``LD_LIBRARY_PATH``. You can use 
+   the ``env`` command to see if these paths have been set already and if they 
+   have not, they can be set with something like: 
 
    .. code-block:: bash
 
-      export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist/
-      export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib/       
+      export NGRAPH_CPP_BUILD=path/to/ngraph_dist
+      export LD_LIBRARY_PATH=path/to/ngraph_dist/lib
 
       
 #. The neon framework uses the :command:`pip` package manager during installation; 
