@@ -31,11 +31,11 @@ namespace ngraph
         {
             class CUDAEmitter;
             class CUDNNEmitter;
-
             class GPUPrimitiveEmitter
             {
             public:
                 GPUPrimitiveEmitter();
+                GPUPrimitiveEmitter(const std::unique_ptr<GPURuntimeContext>& ctx);
                 std::unique_ptr<CUDAEmitter>& get_cuda_emitter();
                 std::unique_ptr<CUDNNEmitter>& get_cudnn_emitter();
                 std::vector<gpu::primitive*>& get_primitives() { return m_gpu_primitives; }
