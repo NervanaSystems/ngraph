@@ -22,7 +22,6 @@
 #include <CPP/eltwise.hpp>
 #include <CPP/input_layout.hpp>
 #include <CPP/layout.hpp>
-#include <CPP/network.hpp>
 #include <CPP/permute.hpp>
 #include <CPP/pooling.hpp>
 #include <CPP/reorder.hpp>
@@ -32,20 +31,22 @@
 
 #include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
 
+#include "ngraph/node.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-void arguments_check(const shared_ptr<Node>& op, size_t input, size_t output)
+static void arguments_check(const shared_ptr<Node>& op, size_t input, size_t output)
 {
     if (op->get_input_size() != input || op->get_output_size() != output)
     {
@@ -57,34 +58,34 @@ void arguments_check(const shared_ptr<Node>& op, size_t input, size_t output)
     }
 }
 
-void do_eltwise_operation(cldnn::topology& topology,
-                          const shared_ptr<Node>& op,
-                          cldnn::eltwise_mode mode)
+static void do_eltwise_operation(cldnn::topology& topology,
+                                 const shared_ptr<Node>& op,
+                                 cldnn::eltwise_mode mode)
 {
     arguments_check(op, 2, 1);
 
-    std::vector<cldnn::primitive_id> op_add_inputs;
+    vector<cldnn::primitive_id> op_add_inputs;
     for (const descriptor::Input& op_input : op->get_inputs())
     {
-        const std::string& element_name = op_input.get_tensor().get_name();
+        const string& element_name = op_input.get_tensor().get_name();
         op_add_inputs.push_back(element_name);
     }
 
-    const std::string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+    const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
 
     const cldnn::eltwise op_add(output_name, op_add_inputs, mode);
     topology.add(op_add);
 }
 
-void do_unary_operation(cldnn::topology& topology,
-                        const shared_ptr<Node>& op,
-                        cldnn_activation_func mode,
-                        const cldnn_activation_additional_params& param = {0.f, 0.f})
+static void do_unary_operation(cldnn::topology& topology,
+                               const shared_ptr<Node>& op,
+                               cldnn_activation_func mode,
+                               const cldnn_activation_additional_params& param = {0.f, 0.f})
 {
     arguments_check(op, 1, 1);
 
-    const std::string& input_name = op->get_inputs().begin()->get_tensor().get_name();
-    const std::string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+    const string& input_name = op->get_inputs().begin()->get_tensor().get_name();
+    const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
 
     const cldnn::activation cldnn_unary(output_name, input_name, mode, param);
     topology.add(cldnn_unary);
@@ -107,7 +108,7 @@ extern "C" void delete_backend(runtime::Backend* backend)
 
 runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()
 {
-    ocl_engine = std::make_shared<cldnn::engine>();
+    ocl_engine = make_shared<cldnn::engine>();
 }
 
 shared_ptr<runtime::TensorView>
@@ -140,7 +141,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             arguments_check(op, 0, 1);
 
-            const std::string& element_name = op->get_output_tensor_view()->get_tensor().get_name();
+            const string& element_name = op->get_output_tensor_view()->get_tensor().get_name();
             const cldnn::layout element_layout =
                 IntelGPULayout::create_cldnn_layout(op->get_element_type(), op->get_shape());
 
@@ -153,8 +154,8 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
             const descriptor::Tensor& input_tensor = op->get_inputs().begin()->get_tensor();
             const descriptor::Tensor& output_tensor = op->get_outputs().begin()->get_tensor();
-            const std::string& input_name = input_tensor.get_name();
-            const std::string& output_name = output_tensor.get_name();
+            const string& input_name = input_tensor.get_name();
+            const string& output_name = output_tensor.get_name();
             const cldnn::layout input_layout = IntelGPULayout::create_cldnn_layout(
                 input_tensor.get_element_type(), op->get_inputs().begin()->get_shape());
 
@@ -183,7 +184,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
             auto input_it = op->get_outputs().cbegin();
             const descriptor::Tensor& output_tensor = input_it->get_tensor();
-            const std::string& output_name = output_tensor.get_name();
+            const string& output_name = output_tensor.get_name();
             const shared_ptr<op::Constant> constant_inst = static_pointer_cast<op::Constant>(op);
             void* memory_pointer = const_cast<void*>(constant_inst->get_data_ptr());
 
@@ -199,8 +200,8 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             arguments_check(op, 1, 1);
 
-            const std::string& input_name = op->get_inputs().begin()->get_tensor().get_name();
-            const std::string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+            const string& input_name = op->get_inputs().begin()->get_tensor().get_name();
+            const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
             const Shape& out_shape = op->get_outputs().begin()->get_shape();
             const cldnn::tensor output_size =
                 runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(out_shape);
@@ -237,8 +238,8 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             arguments_check(op, 1, 1);
 
-            const std::string& input_name = op->get_inputs().begin()->get_tensor().get_name();
-            const std::string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+            const string& input_name = op->get_inputs().begin()->get_tensor().get_name();
+            const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
             const shared_ptr<op::Reshape> op_broadcast = static_pointer_cast<op::Reshape>(op);
             const AxisVector& broadcast_axes = op_broadcast->get_input_order();
 
@@ -334,11 +335,11 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             ostringstream os;
             os << "Unsupported operation \"" << op->description() << '\"';
-            throw std::invalid_argument(os.str());
+            throw invalid_argument(os.str());
         }
     }
 
-    instance.ocl_network = std::make_shared<cldnn::network>(*ocl_engine, topology);
+    instance.ocl_network = make_shared<cldnn::network>(*ocl_engine, topology);
 
     return true;
 }
@@ -359,7 +360,7 @@ bool runtime::intelgpu::IntelGPUBackend::call(
         }
     }
 
-    std::shared_ptr<cldnn::network> network = instance.ocl_network;
+    shared_ptr<cldnn::network> network = instance.ocl_network;
 
     // Process input parameters. Correctness of parameters was validated by validate_call.
     // Since we have no correlation between Function::m_parameters and inputs, there is
@@ -369,12 +370,12 @@ bool runtime::intelgpu::IntelGPUBackend::call(
         shared_ptr<runtime::intelgpu::IntelGPUTensorView> tv =
             static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(inputs[i]);
         const op::ParameterVector& input_params = func->get_parameters();
-        const std::string& tensor_name = input_params[i]->get_output_tensor().get_name();
+        const string& tensor_name = input_params[i]->get_output_tensor().get_name();
         network->set_input_data(tensor_name, *tv->get_data_ptr());
     }
 
     // Execute network
-    std::map<cldnn::primitive_id, cldnn::network_output> result = network->execute();
+    map<cldnn::primitive_id, cldnn::network_output> result = network->execute();
 
     // Process output parameters. Correctness of parameters was validated by validate_call.
     // Since we have no correlation between Function::m_results and outputs, there is
@@ -383,7 +384,7 @@ bool runtime::intelgpu::IntelGPUBackend::call(
     {
         shared_ptr<runtime::intelgpu::IntelGPUTensorView> ngraph_res =
             static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(outputs[i]);
-        const std::string& tensor_name = func->get_output_op(i)->get_output_tensor().get_name();
+        const string& tensor_name = func->get_output_op(i)->get_output_tensor().get_name();
 
         auto result_memory = result.at(tensor_name).get_memory().pointer<char>();
         ngraph_res->write(result_memory.data(), 0, result_memory.size());
