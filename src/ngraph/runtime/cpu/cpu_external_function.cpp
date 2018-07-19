@@ -23,6 +23,8 @@
 #include <typeinfo>
 #include <unordered_map>
 
+#define __TBB_PREVIEW_LIGHTWEIGHT_POLICY 1
+#include <tbb/flow_graph.h>
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
@@ -891,7 +893,6 @@ using namespace ngraph::runtime;
             writer << "}\n";
 
             // Execute the flow graph
-            writer << "auto start = &(*(ctx->G->begin()));\n";
             writer << "((tbb::flow::continue_node<tbb::flow::continue_msg, "
                       "tbb::flow::lightweight>*)(&(*(ctx->G->begin()))))"
                    << "->try_put(tbb::flow::continue_msg());\n";
@@ -1187,6 +1188,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         };
 
         enables.emplace_back(make_pair(enable, functors.size() - functor_count));
+        enable_nodename_list.emplace_back(make_pair(enable, node->get_name()));
     }
 
     executor = [&](CPURuntimeContext* ctx, vector<void*>& inputs, vector<void*>& outputs) {
@@ -1209,19 +1211,109 @@ void runtime::cpu::CPU_ExternalFunction::build()
         }
 
         auto functor = functors.begin();
-        for (const auto& p : enables)
+        if (m_use_tbb)
         {
-            if (p.first(ctx) || first_iteration)
+            // Build the flow graph
+            if (first_iteration)
             {
-                for (size_t j = 0; j < p.second; j++)
+                std::unordered_map<
+                    std::string,
+                    tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>*>
+                    nodename_tbbnode_map;
+                tbb::flow::continue_node<tbb::flow::continue_msg,
+                                         tbb::flow::lightweight>* flowgraph_node_start =
+                    new tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>(
+                        *(ctx->G), [&](const tbb::flow::continue_msg& msg) {});
+                auto it = enable_nodename_list.begin();
+                for (const auto& p : enables)
                 {
-                    (*functor)(ctx);
-                    std::advance(functor, 1);
+                    tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>*
+                        flowgraph_node = new tbb::flow::continue_node<tbb::flow::continue_msg,
+                                                                      tbb::flow::lightweight>(
+                            *(ctx->G), [&](const tbb::flow::continue_msg& msg) {
+                                if (p.first(ctx) || first_iteration)
+                                {
+                                    for (size_t j = 0; j < p.second; j++)
+                                    {
+                                        (*functor)(ctx);
+                                        std::advance(functor, 1);
+                                    }
+                                }
+                                else
+                                {
+                                    std::advance(functor, p.second);
+                                }
+                            });
+                    nodename_tbbnode_map.insert({it->second, flowgraph_node});
+                    it++;
+                }
+
+                vector<Node*> dependence_graph_heads;
+
+                traverse_nodes(
+                    m_function,
+                    [&dependence_graph_heads, &nodename_tbbnode_map](shared_ptr<Node> n) {
+                        if (!n->is_parameter() && !n->is_constant())
+                        {
+                            bool is_head = true;
+                            for (auto arg : n->get_arguments())
+                            {
+                                if (!arg->is_parameter() && !arg->is_constant())
+                                {
+                                    is_head = false;
+                                    tbb::flow::make_edge(*(nodename_tbbnode_map[arg->get_name()]),
+                                                         *(nodename_tbbnode_map[n->get_name()]));
+                                }
+                            }
+                            if (is_head)
+                            {
+                                dependence_graph_heads.emplace_back(n.get());
+                            }
+                        }
+                    });
+
+                if (!dependence_graph_heads.empty())
+                {
+                    for (Node* n : dependence_graph_heads)
+                    {
+                        tbb::flow::make_edge(*flowgraph_node_start,
+                                             *(nodename_tbbnode_map[n->get_name()]));
+                    }
+                }
+                if (m_release_function)
+                {
+                    release_function();
                 }
             }
-            else
+            // Execute the flow graph
+            ((tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>*)(&(
+                 *(ctx->G->begin()))))
+                ->try_put(tbb::flow::continue_msg());
+            try
             {
-                std::advance(functor, p.second);
+                ctx->G->wait_for_all();
+            }
+            catch (...)
+            {
+                throw;
+            }
+        }
+        else
+        {
+            for (const auto& p : enables)
+            {
+                if (p.first(ctx) || first_iteration)
+                {
+                    for (size_t j = 0; j < p.second; j++)
+                    {
+                        (*functor)(ctx);
+                        std::advance(functor, 1);
+                    }
+                }
+                else
+                {
+                    std::advance(functor, p.second);
+                }
             }
         }
         first_iteration = false;
@@ -1229,7 +1321,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
 
     m_is_built = true;
 
-    if (m_release_function)
+    if (m_release_function && !m_use_tbb)
     {
         release_function();
     }
