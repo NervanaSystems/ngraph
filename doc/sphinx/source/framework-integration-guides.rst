@@ -29,7 +29,7 @@ Compile MXNet with nGraph
 
    .. code-block:: bash
 
-      export LD_LIBRARY_PATH=path/to/ngraph_dist/lib/
+      export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib/
 
 
 #. Add the `MXNet`_ prerequisites to your system, if the system doesn't have them
@@ -56,7 +56,7 @@ Compile MXNet with nGraph
    .. code-block:: bash
 
       USE_NGRAPH = 1
-      NGRAPH_DIR = path/to/ngraph_dist
+      NGRAPH_DIR =  $(HOME)/ngraph_dist
 
 #. Ensure that settings on the config file are disabled for ``USE_MKL2017``
    (line ``113``) and ``USE_NNPACK`` (line ``120``).
@@ -130,9 +130,8 @@ system that already has an ``ngraph_dist`` installed.
 
    .. code-block:: bash
 
-      export NGRAPH_CPP_BUILD=path/to/ngraph_dist
-      export LD_LIBRARY_PATH=path/to/ngraph_dist/lib
-
+      export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist/
+      export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib/
       
 #. The neon framework uses the :command:`pip` package manager during installation; 
    install it with Python version 3.5 or higher:
@@ -140,34 +139,34 @@ system that already has an ``ngraph_dist`` installed.
    .. code-block:: console
 
       $ sudo apt-get install python3-pip python3-venv
-      $ python3 -m venv frameworks
-      $ cd frameworks 
+      $ python3 -m venv neon_venv
+      $ cd neon_venv 
       $ . bin/activate
-      (frameworks) ~/frameworks$ 
+      (neon_venv) ~/frameworks$ 
 
 #. Go to the "python" subdirectory of the ``ngraph`` repo we cloned during the 
    previous :doc:`install`, and complete these actions: 
 
    .. code-block:: console
 
-      (frameworks)$ cd /opt/libraries/ngraph/python
-      (frameworks)$ git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
-      (frameworks)$ export PYBIND_HEADERS_PATH=/opt/libraries/ngraph/python/pybind11
-      (frameworks)$ pip install -U . 
+      (neon_venv)$ cd /opt/libraries/ngraph/python
+      (neon_venv)$ git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
+      (neon_venv)$ export PYBIND_HEADERS_PATH=/opt/libraries/ngraph/python/pybind11
+      (neon_venv)$ pip install -U . 
 
 #. Finally we're ready to install the `neon` integration: 
 
    .. code-block:: console
 
-      (frameworks)$ git clone git@github.com:NervanaSystems/ngraph-neon
-      (frameworks)$ cd ngraph-neon
-      (frameworks)$ make install
+      (neon_venv)$ git clone git@github.com:NervanaSystems/ngraph-neon
+      (neon_venv)$ cd ngraph-neon
+      (neon_venv)$ make install
 
 #. To test a training example, you can run the following from ``ngraph-neon/examples/cifar10``
    
    .. code-block:: console
 
-      (frameworks)$ python cifar10_conv.py
+      (neon_venv)$ python cifar10_conv.py
 
 
 

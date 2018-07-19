@@ -11,7 +11,7 @@ Install
 Build Environments
 ==================
 
-The |release| of |project| supports Linux\*-based systems  
+Release |release| of |project| supports Linux\*-based systems  
 with the following packages and prerequisites: 
 
 .. csv-table::
@@ -40,11 +40,14 @@ compatible with a gcc 4.8-based build.)
 Installation Steps
 ==================
 
-.. important:: The default cmake procedure will the install ``ngraph_dist`` to 
-   a system install location like ``/usr/bin/ngraph_dist``.  If you instead want 
-   to install it to a user's ``$HOME`` directory, you can run the cmake command  
-   with ``-DCMAKE_INSTALL_PREFIX=$HOME`` See the :file:`CMakeLists.txt` file for 
-   details about how to change or customize the location.
+.. important:: The default :program:`cmake` procedure (no build flags) will  
+   install ``ngraph_dist`` to an OS-level location like ``/usr/bin/ngraph_dist``
+   or ``/usr/lib/ngraph_dist``. Here we specify how to build locally to the
+   location of ``~/ngraph_dist`` with the cmake target ``-DCMAKE_INSTALL_PREFIX=~/ngraph_dist``. 
+   All of the nGraph Library documentation presumes that ``ngraph_dist`` 
+   gets installed locally. The system location can be used just as easily by 
+   customizing paths on that system. See the :file:`ngraph/CMakeLists.txt` 
+   file to change or customize the default CMake procedure.
 
 .. _ubuntu:
 
@@ -82,19 +85,26 @@ The process documented here will work on Ubuntu\* 16.04 (LTS) or on Ubuntu
       $ mkdir build && cd build
 
 #. Generate the GNU Makefiles in the customary manner (from within the 
-   ``build`` directory). If running ``gcc-5.4.0`` or ``clang-3.9``, remember 
-   that you can also append ``cmake`` with the prebuilt LLVM option to 
-   speed-up the build. Another option if your deployment system has Intel®
-   Advanced Vector Extensions (Intel® AVX) is to target the accelerations 
-   available directly by compiling the build as follows during the cmake 
-   step: ``-DNGRAPH_TARGET_ARCH=skylake-avx512``.
+   ``build`` directory). This command sets the target build location to
+   be ``~/ngraph_dist``, where it can be easily located.  
 
    .. code-block:: console
 
-      $ cmake ../ [-DNGRAPH_USE_PREBUILT_LLVM=TRUE] [-DNGRAPH_TARGET_ARCH=skylake-avx512]
+      $ cmake ../ -DCMAKE_INSTALL_PREFIX=~/ngraph_dist  
+
+   **Other optional build flags** -- If running ``gcc-5.4.0`` or ``clang-3.9``, 
+   remember that you can also append ``cmake`` with the prebuilt LLVM option 
+   to speed-up the build.  Another option if your deployment system has Intel® 
+   Advanced Vector Extensions (Intel® AVX) is to target the accelerations 
+   available directly by compiling the build as follows during the cmake 
+   step: ``-DNGRAPH_TARGET_ARCH=skylake-avx512``.  
+   
+   .. code-block:: console
+
+      $ cmake .. [-DNGRAPH_USE_PREBUILT_LLVM=TRUE] [-DNGRAPH_TARGET_ARCH=skylake-avx512]   
 
 #. Run ``$ make`` and ``make install`` to install ``libngraph.so`` and the 
-   header files to ``$HOME/ngraph_dist``:
+   header files to ``~/ngraph_dist``:
 
    .. code-block:: console
       
@@ -147,13 +157,14 @@ The process documented here will work on CentOS 7.4.
       $ make && sudo make install  
 
 #. Clone the `NervanaSystems` ``ngraph`` repo via HTTPS and use Cmake 3.4.3 to 
-   install the nGraph libraries to ``$HOME/ngraph_dist``. 
+   build nGraph Libraries to ``~/ngraph_dist``. 
+
    .. code-block:: console
 
       $ cd /opt/libraries 
       $ git clone https://github.com/NervanaSystems/ngraph.git
       $ cd ngraph && mkdir build && cd build
-      $ cmake ../
+      $ cmake ../ -DCMAKE_INSTALL_PREFIX=~/ngraph_dist  
       $ make && sudo make install 
 
 
