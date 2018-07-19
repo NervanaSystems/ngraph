@@ -17,6 +17,7 @@
 #pragma once
 
 #include <CPP/layout.hpp>
+#include <CPP/tensor.hpp>
 
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 
@@ -48,6 +49,7 @@ public:
     static cldnn::data_types get_cldnn_type(const ngraph::element::Type& element_type);
     static cldnn::layout create_cldnn_layout(const ngraph::element::Type& element_type,
                                              const Shape& element_shape);
+    static cldnn::tensor create_cldnn_tensor(const Shape& element_shape);
 
 private:
     Strides strides;
