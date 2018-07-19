@@ -17,6 +17,7 @@
 #include "cpu_layout_descriptor.hpp"
 #include <algorithm>
 #include <numeric>
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
 namespace ngraph
 {
@@ -40,7 +41,7 @@ namespace ngraph
                 : TensorViewLayout(tv)
                 , axis_order(tv_axis_order)
                 , offset(0)
-                , size(ngraph::shape_size(tv.get_tensor_view_type()->get_shape()))
+                , m_size(ngraph::shape_size(tv.get_tensor_view_type()->get_shape()))
                 , mkldnn_format(mkldnn::memory::format::format_undef)
             {
                 auto shape = get_shape();
@@ -104,6 +105,41 @@ namespace ngraph
                 }
 
                 return true;
+            }
+
+            void LayoutDescriptor::compute_mkldnn_memory_size(
+                std::shared_ptr<const ngraph::TensorViewType> tvt,
+                const mkldnn::memory::format& fmt,
+                bool is_mkldnn)
+            {
+                try
+                {
+                    if (is_mkldnn)
+                    {
+                        auto mem_desc = mkldnn::memory::desc(
+                            mkldnn::memory::dims(tvt->get_shape().begin(), tvt->get_shape().end()),
+                            mkldnn_utils::get_mkldnn_data_type(tvt->get_element_type()),
+                            fmt);
+                        auto mem_prim_desc = mkldnn::memory::primitive_desc(
+                            mem_desc, mkldnn_utils::global_cpu_engine);
+                        mkldnn_memory_size = mem_prim_desc.get_size();
+                    }
+                    else
+                    {
+                        size_t size = 1;
+                        for (size_t s : tvt->get_shape())
+                        {
+                            size *= s;
+                        }
+                        mkldnn_memory_size = size * tvt->get_element_type().size();
+                    }
+                }
+                catch (const mkldnn::error& e)
+                {
+                    throw ngraph_error(
+                        "error in computing mkldnn memory size from memory primitive desc: " +
+                        e.message);
+                }
             }
         }
     }

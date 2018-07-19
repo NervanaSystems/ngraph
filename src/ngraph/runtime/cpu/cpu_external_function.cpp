@@ -616,7 +616,8 @@ using namespace ngraph::runtime;
                 temporaries_used = true;
                 for (descriptor::Tensor* tensor : node->liveness_new_list)
                 {
-                    worst_case_tmp_size += tensor->size();
+                    worst_case_tmp_size +=
+                        tensor->get_primary_tensor_view()->get_tensor_view_layout()->size();
                 }
             }
         }

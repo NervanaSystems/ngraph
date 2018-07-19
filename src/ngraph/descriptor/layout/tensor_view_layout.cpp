@@ -35,3 +35,15 @@ const Shape& descriptor::layout::TensorViewLayout::get_shape() const
 {
     return m_tensor_view_type->get_shape();
 }
+
+size_t descriptor::layout::TensorViewLayout::size()
+{
+    size_t size = 1;
+    for (size_t s : m_tensor_view_type->get_shape())
+    {
+        size *= s;
+    }
+    m_size = size * m_tensor_view_type->get_element_type().size();
+    std::cout << " Tensor_size: " << m_size << std::endl;
+    return m_size;
+}

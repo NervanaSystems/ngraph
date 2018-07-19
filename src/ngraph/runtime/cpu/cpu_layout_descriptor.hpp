@@ -40,10 +40,17 @@ namespace ngraph
                 LayoutDescriptor(const ngraph::descriptor::TensorView& tv,
                                  const AxisVector& tv_axis_order);
                 ~LayoutDescriptor() override {}
-                size_t get_size() override { return size; }
+                size_t get_size() override { return m_size; }
                 size_t get_offset() const { return offset; }
                 size_t get_index_offset(const std::vector<size_t>& indices) override;
-
+                virtual size_t size() override
+                {
+                    //                std::cout << "layout desc size called " << std::endl;
+                    return mkldnn_memory_size;
+                }
+                void compute_mkldnn_memory_size(std::shared_ptr<const ngraph::TensorViewType> tvt,
+                                                const mkldnn::memory::format& fmt,
+                                                bool is_mkldnn = false);
                 const Strides& get_strides() const override { return strides; }
                 bool operator==(const TensorViewLayout& other) const override;
 
@@ -63,7 +70,8 @@ namespace ngraph
                 AxisVector axis_order;
                 Strides strides;
                 size_t offset;
-                size_t size;
+                size_t m_size;
+                size_t mkldnn_memory_size;
 
                 // Numeric backend-specific fields
                 mkldnn::memory::format mkldnn_format;

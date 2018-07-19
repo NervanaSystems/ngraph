@@ -17,6 +17,8 @@
 #include <exception>
 #include <sstream>
 
+#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/pass/liveness.hpp"
@@ -62,9 +64,12 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
 
         for (descriptor::Tensor* tensor : node->liveness_new_list)
         {
+            // get the primary tennsor view descriptors from the Tensor
+            auto tv_desc = tensor->get_primary_tensor_view();
+            auto tv_layout = tv_desc->get_tensor_view_layout();
             size_t offset = in_place_outputs.count(tensor)
                                 ? in_place_outputs.at(tensor)->get_pool_offset()
-                                : mm.allocate(tensor->size());
+                                : mm.allocate(tv_layout->size());
 
             tensor->set_pool_offset(offset);
         }
