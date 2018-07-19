@@ -103,6 +103,9 @@
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
+#include "ngraph/runtime/gpu/emitters/softmax.hpp"
+#include "ngraph/runtime/gpu/pass/kernel_memory_allocation.hpp"
+#include "ngraph/runtime/gpu/wrapped_node.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -232,7 +235,8 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::Relu), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Relu>},
     {TI(ngraph::op::ReluBackprop),
      &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::ReluBackprop>},
-    {TI(ngraph::op::Softmax), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Softmax>},
+    {TI(ngraph::op::Softmax), &runtime::gpu::Emitter<ngraph::op::Softmax>::emit},
+    {TI(ngraph::op::gpu::MemoryWrappedNode<ngraph::op::Softmax>), &runtime::gpu::Emitter<ngraph::op::Softmax>::emit},
     {TI(ngraph::op::And), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::And>},
     {TI(ngraph::op::Or), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Or>}};
 
@@ -689,12 +693,12 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     m_function_name = m_function->get_name();
     string dump_filename = file_util::path_join(s_output_dir, m_function_name + "_ops.txt");
 
-    // For now, just make everyone row-major.
-    m_pass_manager.register_pass<pass::ResultCopyElimination>();
-    m_pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
-    m_pass_manager.register_pass<pass::Liveness>();
-    m_pass_manager.register_pass<pass::MemoryLayout>(64);
-    m_pass_manager.register_pass<pass::DumpSorted>(dump_filename);
+    m_pass_manager.register_pass<ngraph::runtime::gpu::pass::KernelMemoryAllocation>();
+    m_pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
+    m_pass_manager.register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
+    m_pass_manager.register_pass<ngraph::pass::Liveness>();
+    m_pass_manager.register_pass<ngraph::pass::MemoryLayout>(64);
+    m_pass_manager.register_pass<ngraph::pass::DumpSorted>(dump_filename);
     m_pass_manager.run_passes(m_function);
 
     for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())

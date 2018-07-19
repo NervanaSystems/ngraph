@@ -39,6 +39,8 @@ set(SRC
     gpu_tensor_view.cpp
     gpu_util.cpp
     type_info.cpp
+    emitters/softmax.cpp
+    pass/kernel_memory_allocation.cpp
     )
 
 if (NGRAPH_GPU_ENABLE)

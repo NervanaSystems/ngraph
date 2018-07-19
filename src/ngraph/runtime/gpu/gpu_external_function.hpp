@@ -96,7 +96,7 @@ namespace ngraph
                 std::string strip_comments(const std::string& s) const;
 
                 codegen::CodeWriter m_writer;
-                pass::Manager m_pass_manager;
+                ngraph::pass::Manager m_pass_manager;
 
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;

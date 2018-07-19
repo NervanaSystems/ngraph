@@ -969,81 +969,47 @@ size_t
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
 
-    // calculate strides
-    GPUShape strides = row_major_strides(tensor_shape);
-    // precacluate invariants for integer division via multiplication
-    std::vector<int> stride_magic;
-    std::vector<int> stride_shift;
-    for (int i = 0; i < strides.size(); i++)
-    {
-        int magic;
-        int shift;
-        std::tie(magic, shift) = idiv_magic_u64(strides[i]);
-        stride_magic.push_back(magic);
-        stride_shift.push_back(shift);
-    }
-    // calculate reduced tensor strides with 0s inserted for reduced axes
-    GPUShape reduced_shape = tensor_shape;
-    for (auto const& axis : axes)
-    {
-        reduced_shape[axis] = 1;
-    }
-    GPUShape reduced_strides = row_major_strides(reduced_shape);
-    for (auto const& axis : axes)
-    {
-        reduced_strides[axis] = 0;
-    }
-
-    GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
-    size_t idx_strides = allocator.reserve_argspace(strides.data(), strides.size() * sizeof(int));
-    size_t idx_stride_magic =
-        allocator.reserve_argspace(stride_magic.data(), stride_magic.size() * sizeof(int));
-    size_t idx_stride_shift =
-        allocator.reserve_argspace(stride_shift.data(), stride_shift.size() * sizeof(int));
-    size_t idx_reduced_strides =
-        allocator.reserve_argspace(reduced_strides.data(), reduced_strides.size() * sizeof(int));
-
     size_t nthreads = shape_size(tensor_shape);
     constexpr const int nthreads_per_block = 32;
     int nblocks = 1 + ((static_cast<int>(nthreads) - 1) / nthreads_per_block);
 
     // TODO: check if mutable is necessary
-    std::unique_ptr<gpu::primitive> ew_collective(new gpu::primitive{[=](void** inputs,
-                                                                         void** outputs) mutable {
-        void* strides_d = runtime::gpu::invoke_memory_primitive(m_ctx, idx_strides);
-        void* stride_magic_d = runtime::gpu::invoke_memory_primitive(m_ctx, idx_stride_magic);
-        void* stride_shift_d = runtime::gpu::invoke_memory_primitive(m_ctx, idx_stride_shift);
-        void* reduced_strides_d = runtime::gpu::invoke_memory_primitive(m_ctx, idx_reduced_strides);
+    std::unique_ptr<gpu::primitive> ew_collective(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            std::vector<void*> args_list;
+            size_t i;
+            // add input tensors
+            for (i = 0; i < dtypes.size() - 1; i++)
+            {
+                args_list.push_back(&inputs[i]);
+            }
+            // add output tensors
+            args_list.push_back(&outputs[0]);
+            if (save_elementwise)
+            {
+                args_list.push_back(&outputs[1]);
+            }
+            // add constant inputs
+            for (auto k = 0u; k < 4; k++)
+            {
+                args_list.push_back(&inputs[i++]);
+            }
+            // add thread count
+            args_list.push_back(&nthreads);
 
-        std::vector<void*> args_list;
-        for (auto i = 0u; i < dtypes.size() - 1; i++)
-        {
-            args_list.push_back(&inputs[i]);
-        }
-        args_list.push_back(&outputs[0]);
-        if (save_elementwise)
-        {
-            args_list.push_back(&outputs[1]);
-        }
-        args_list.push_back(&strides_d);
-        args_list.push_back(&stride_magic_d);
-        args_list.push_back(&stride_shift_d);
-        args_list.push_back(&reduced_strides_d);
-        args_list.push_back(&nthreads);
-
-        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                      nblocks,
-                                      1,
-                                      1,
-                                      nthreads_per_block,
-                                      1,
-                                      1,
-                                      0,
-                                      NULL,
-                                      args_list.data(),
-                                      0));
-        debug_sync();
-    }});
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          nblocks,
+                                          1,
+                                          1,
+                                          nthreads_per_block,
+                                          1,
+                                          1,
+                                          0,
+                                          NULL,
+                                          args_list.data(),
+                                          0));
+            debug_sync();
+        }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(ew_collective));
     m_primitive_emitter->cache(hash, primitive_index);

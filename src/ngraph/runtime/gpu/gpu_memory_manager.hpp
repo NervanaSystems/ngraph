@@ -74,7 +74,7 @@ namespace ngraph
 
                 size_t m_buffer_offset;
                 std::vector<uint8_t> m_buffered_mem;
-                pass::MemoryManager m_workspace_manager;
+                ngraph::pass::MemoryManager m_workspace_manager;
                 static constexpr const uint16_t alignment = 8;
 
                 struct allocation
