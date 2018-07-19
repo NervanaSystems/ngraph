@@ -67,8 +67,10 @@ namespace ngraph
         bool operator==(const Shape& other) const { return m_data == other.m_data; }
         bool operator!=(const Shape& other) const { return m_data != other.m_data; }
         std::vector<size_t>::iterator begin() { return m_data.begin(); }
+        std::vector<size_t>::reference back() { return m_data.back(); }
         std::vector<size_t>::iterator end() { return m_data.end(); }
         std::vector<size_t>::const_iterator begin() const { return m_data.begin(); }
+        std::vector<size_t>::const_reference back() const { return m_data.back(); }
         std::vector<size_t>::const_iterator end() const { return m_data.end(); }
         std::vector<size_t>::reverse_iterator rbegin() { return m_data.rbegin(); }
         std::vector<size_t>::reverse_iterator rend() { return m_data.rend(); }
