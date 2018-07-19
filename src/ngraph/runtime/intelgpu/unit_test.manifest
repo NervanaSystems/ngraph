@@ -215,6 +215,8 @@ min_trivial
 min_trivial_5d
 min_vector_zero
 mkldnn_layouts
+multiple_backends
+multiple_result
 negative
 not
 notequal
