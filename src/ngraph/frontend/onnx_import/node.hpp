@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <ostream>
 #include <string>
 
@@ -30,6 +31,23 @@ namespace ngraph
 {
     namespace onnx_import
     {
+        namespace error
+        {
+            namespace node
+            {
+                struct UnknownAttribute : ngraph_error
+                {
+                    explicit UnknownAttribute(const std::string& node, const std::string& name)
+                        : ngraph_error{"Node (" + node + "): unknown attribute \'" + name + "\'"}
+                    {
+                    }
+                };
+
+            } // namespace node
+
+        } // namespace error
+
+        // forward declaration
         class Graph;
 
         class Node
@@ -56,6 +74,34 @@ namespace ngraph
             const std::string& op_type() const { return m_node_proto.op_type(); }
             const std::string& get_name() const { return m_node_proto.name(); }
             const std::string& output(int index) const { return m_node_proto.output(index); }
+            template <typename T>
+            T get_attribute_value(const std::string& name, T default_value) const
+            {
+                auto it{std::find_if(
+                    std::begin(m_attributes),
+                    std::end(m_attributes),
+                    [&](const Attribute& attribute) { return attribute.get_name() == name; })};
+                if (it == std::end(m_attributes))
+                {
+                    return default_value;
+                }
+                return it->template get_value<T>();
+            }
+
+            template <typename T>
+            T get_attribute_value(const std::string& name) const
+            {
+                auto it{std::find_if(
+                    std::begin(m_attributes),
+                    std::end(m_attributes),
+                    [&](const Attribute& attribute) { return attribute.get_name() == name; })};
+                if (it == std::end(m_attributes))
+                {
+                    throw error::node::UnknownAttribute{get_name(), name};
+                }
+                return it->template get_value<T>();
+            }
+
         private:
             const onnx::NodeProto& m_node_proto;
             const Graph* m_graph;
