@@ -80,8 +80,7 @@ namespace ngraph
                 EntryPoint m_compiled_function;
 
             private:
-                void assemble_and_reserve();
-                void collect_unique_functions();
+                void assemble_and_reserve(const std::string& common_functions);
                 void emit_header();
                 void emit_timer_functions();
                 void emit_constant_declarations();
@@ -104,7 +103,7 @@ namespace ngraph
 
                 std::map<std::string, size_t> m_name_index_map;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
-                std::unordered_map<const Node*, std::string> m_node_function_map;
+                std::unordered_map<Node*, Node*> m_node_function_map;
                 std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>>
                     m_function_ordered_ops;
 
@@ -112,6 +111,7 @@ namespace ngraph
                 bool m_is_compiled;
                 bool m_release_function;
                 bool m_temporaries_used;
+                size_t m_offset;
 
                 std::string m_function_name;
                 std::string m_pch_header_source;

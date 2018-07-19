@@ -41,7 +41,7 @@ runtime::intelgpu::IntelGPUTensorView::IntelGPUTensorView(const ngraph::element:
     if (nullptr != memory_pointer)
     {
         ocl_memory = make_shared<cldnn::memory>(
-            cldnn::memory::attach<void>(layout, memory_pointer, layout.get_linear_size()));
+            cldnn::memory::attach<void>(layout, memory_pointer, layout.bytes_count()));
     }
     else
     {

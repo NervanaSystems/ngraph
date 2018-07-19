@@ -97,6 +97,7 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/pass/common_function_collection.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
@@ -254,7 +255,7 @@ runtime::gpu::GPU_ExternalFunction::~GPU_ExternalFunction()
 {
 }
 
-void runtime::gpu::GPU_ExternalFunction::assemble_and_reserve()
+void runtime::gpu::GPU_ExternalFunction::assemble_and_reserve(const std::string& common_functions)
 {
     GPUAllocator allocator = m_shared_context->m_primitive_emitter->get_memory_allocator();
 
@@ -276,9 +277,10 @@ void runtime::gpu::GPU_ExternalFunction::assemble_and_reserve()
     emit_timer_functions();
     emit_constant_declarations();
     emit_function_declarations();
-    collect_unique_functions();
+    m_writer << common_functions << "\n";
     emit_functions();
 }
+
 void runtime::gpu::GPU_ExternalFunction::emit_header()
 {
     m_writer += R"(
@@ -324,6 +326,7 @@ using namespace std;
     // to register cleanup handlers. We use it, and not atexit(), because
     // atexit() happens too late, when the JIT is no longer alive
     m_writer << "void *__dso_handle = 0;\n\n";
+    m_writer << "static gpu::GPURuntimeContext* m_runtime_context = nullptr;\n";
 }
 
 void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
@@ -344,7 +347,13 @@ void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
                 }
             }
         }
-        m_writer << "ngraph::stopwatch timers[" << names.size() << "];\n";
+
+        if (m_shared_context->m_runtime_context->stopwatch_pool == nullptr)
+        {
+            m_shared_context->m_runtime_context->stopwatch_pool = new StopWatchPool;
+        }
+        m_offset = m_shared_context->m_runtime_context->stopwatch_pool->size();
+        m_shared_context->m_runtime_context->stopwatch_pool->allocate(names.size());
         m_writer << "extern \"C\" size_t get_debug_timer_count() { return " << names.size()
                  << "; }\n";
         m_writer << "extern \"C\" const char* get_debug_timer_name(size_t index)\n";
@@ -365,13 +374,15 @@ void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
         m_writer << "extern \"C\" const size_t get_debug_timer_microseconds(size_t index)\n";
         m_writer.block_begin();
         m_writer << "return (index < " << names.size()
-                 << " ? timers[index].get_total_microseconds() : 0);\n";
+                 << " ? runtime::gpu::us_stopwatch(m_runtime_context, index + " << m_offset
+                 << ") : 0);\n";
         m_writer.block_end();
 
         m_writer << "extern \"C\" const size_t get_debug_timer_call_count(size_t index)\n";
         m_writer.block_begin();
         m_writer << "return (index < " << names.size()
-                 << " ? timers[index].get_call_count() : 0);\n";
+                 << " ? runtime::gpu::count_stopwatch(m_runtime_context, index + " << m_offset
+                 << ") : 0);\n";
         m_writer.block_end();
         m_writer << "\n";
     }
@@ -404,7 +415,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_constant_declarations()
     }
 
     m_writer << "\nstatic bool is_constant_mem_ptr_null = true;\n\n";
-    m_writer << "static void invoke_constant_mem_ptr(gpu::GPURuntimeContext* ctx)\n";
+    m_writer << "static void invoke_constant_mem_ptr()\n";
     m_writer.block_begin();
     {
         m_writer << "if(is_constant_mem_ptr_null)\n";
@@ -421,7 +432,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_constant_declarations()
                             node->get_outputs()[0].get_tensor_view();
                         m_writer << tv->get_tensor().get_name() << " = reinterpret_cast<"
                                  << tv->get_tensor().get_element_type().c_type_string()
-                                 << "*>(runtime::gpu::invoke_memory_primitive(ctx, "
+                                 << "*>(runtime::gpu::invoke_memory_primitive(m_runtime_context, "
                                  << tv->get_tensor().get_name() << "_idx));\n";
                     }
                 }
@@ -442,55 +453,6 @@ void runtime::gpu::GPU_ExternalFunction::emit_function_declarations()
                  << "gpu::GPURuntimeContext* ctx);\n";
     }
     m_writer << "\n";
-}
-
-void runtime::gpu::GPU_ExternalFunction::collect_unique_functions()
-{
-    // This for loop creates a collection of functions that are called more than once
-    // and emitting them as globally callable functions.
-    // ops implement the is_functionally_identical method
-    unordered_map<string, string> match_function_map;
-    for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
-    {
-        list<shared_ptr<Node>> tmp = m_function_ordered_ops.at(current_function);
-        if (tmp.size() < 2)
-        {
-            // Since we are comparing ops there must be at least two ops to proceed.
-            continue;
-        }
-        vector<shared_ptr<Node>> op_list{tmp.begin(), tmp.end()};
-        for (size_t i = 0; i < op_list.size(); i++)
-        {
-            if (op_list[i]->is_constant() || op_list[i]->is_parameter())
-            {
-                continue;
-            }
-
-            Node& node = *op_list[i];
-            auto handler = dispatcher.find(type_index(typeid(node)));
-            if (handler == dispatcher.end())
-            {
-                throw ngraph_error("Unhandled op during code generation : " + node.description());
-            }
-
-            string match_function = emit_op_as_function(node, "__f__");
-            string match_function_name;
-            if (contains_key(match_function_map, match_function))
-            {
-                match_function_name = match_function_map[match_function];
-            }
-            else
-            {
-                auto offset = match_function.find("__f__");
-                string emitted_function = match_function;
-                match_function_name = "func_" + node.get_name();
-                emitted_function.replace(offset, 5, match_function_name);
-                match_function_map.insert({match_function, match_function_name});
-                m_writer << emitted_function << "\n";
-            }
-            m_node_function_map.insert({&node, match_function_name});
-        }
-    }
 }
 
 void runtime::gpu::GPU_ExternalFunction::emit_temp_mem_pool_allocation(
@@ -554,8 +516,9 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                  << "gpu::GPURuntimeContext* ctx)\n";
         m_writer.block_begin();
         {
+            m_writer << "m_runtime_context = ctx;\n";
             //set constant pointers during the first run
-            m_writer << "invoke_constant_mem_ptr(ctx);\n";
+            m_writer << "invoke_constant_mem_ptr();\n";
 
             //alocate temp memory pool
             emit_temp_mem_pool_allocation(current_function);
@@ -641,15 +604,15 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 }
 
                 // Emit operation body
-                string func_name;
-                func_name = m_node_function_map[node.get()];
-                if (func_name.empty())
+                auto it = m_node_function_map.find(node.get());
+                if (it == m_node_function_map.end())
                 {
-                    //throw runtime_error("No matching function found for '" + node->get_name() + "'");
                     handler->second(this, m_writer, node.get(), in, out);
                 }
                 else
                 {
+                    string func_name =
+                        ngraph::pass::CommonFunctionCollection::create_function_name(*it->second);
                     vector<string> names;
                     for (const GPU_TensorViewWrapper& tv : in)
                     {
@@ -696,14 +659,21 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     // For now, just make everyone row-major.
     m_pass_manager.register_pass<pass::ResultCopyElimination>();
     m_pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
+    string common_function_string;
+    auto femitter = bind(&ngraph::runtime::gpu::GPU_ExternalFunction::emit_op_as_function,
+                         this,
+                         placeholders::_1,
+                         placeholders::_2);
+    m_pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
+        femitter, m_node_function_map, common_function_string);
     m_pass_manager.register_pass<pass::Liveness>();
     m_pass_manager.register_pass<pass::MemoryLayout>(64);
     m_pass_manager.register_pass<pass::DumpSorted>(dump_filename);
     m_pass_manager.run_passes(m_function);
 
-    assemble_and_reserve();
+    assemble_and_reserve(common_function_string);
 
-    // allocate device buffers for tensors, primitive arguments and workspaces
+    // allocate device buffers for primitive arguments and workspace
     m_shared_context->m_primitive_emitter->allocate_primitive_memory();
 
     string code = m_writer.get_code();
@@ -750,7 +720,8 @@ void runtime::gpu::GPU_ExternalFunction::emit_debug_function_entry(Node* node)
 {
     if (m_emit_timing)
     {
-        m_writer << "timers[" << m_name_index_map[node->get_name()] << "].start();\n";
+        m_writer << "runtime::gpu::start_stopwatch(ctx, "
+                 << m_name_index_map[node->get_name()] + m_offset << ");\n";
     }
 }
 
@@ -758,7 +729,8 @@ void runtime::gpu::GPU_ExternalFunction::emit_debug_function_exit(Node* node)
 {
     if (m_emit_timing)
     {
-        m_writer << "timers[" << m_name_index_map[node->get_name()] << "].stop();\n";
+        m_writer << "runtime::gpu::stop_stopwatch(ctx, "
+                 << m_name_index_map[node->get_name()] + m_offset << ");\n";
     }
 }
 
