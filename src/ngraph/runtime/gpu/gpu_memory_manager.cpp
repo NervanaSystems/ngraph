@@ -65,7 +65,9 @@ void runtime::gpu::GPUMemoryManager::allocate()
 {
     if (m_open_allocators)
     {
-        throw std::runtime_error("Attempt to allocate memory while reservations are inprogress. Ensure all GPUAllocators are closed before allocating.");
+        throw std::runtime_error(
+            "Attempt to allocate memory while reservations are inprogress. Ensure all "
+            "GPUAllocators are closed before allocating.");
     }
     if (m_buffer_offset)
     {
@@ -113,7 +115,6 @@ runtime::gpu::GPUAllocator::GPUAllocator(GPUMemoryManager* mgr)
     : m_manager(mgr)
 {
     m_manager->m_open_allocators++;
-
 }
 
 runtime::gpu::GPUAllocator::GPUAllocator(const GPUAllocator& g)

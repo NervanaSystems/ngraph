@@ -259,18 +259,20 @@ runtime::gpu::GPU_ExternalFunction::~GPU_ExternalFunction()
 
 void runtime::gpu::GPU_ExternalFunction::optimize_and_assemble()
 {
-    auto allocator =
-        std::make_shared<runtime::gpu::GPUAllocator>(m_shared_context->m_primitive_emitter->get_memory_allocator());
+    auto allocator = std::make_shared<runtime::gpu::GPUAllocator>(
+        m_shared_context->m_primitive_emitter->get_memory_allocator());
 
     m_pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
 
-    m_pass_manager.register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
+    m_pass_manager
+        .register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
 
     m_pass_manager.register_pass<ngraph::pass::Liveness>();
 
     m_pass_manager.register_pass<ngraph::pass::MemoryLayout>(64);
 
-    m_pass_manager.register_pass<runtime::gpu::pass::FunctionMemoryReservation>(allocator, m_memory_buffers);
+    m_pass_manager.register_pass<runtime::gpu::pass::FunctionMemoryReservation>(allocator,
+                                                                                m_memory_buffers);
 
     std::string common_function_string;
     auto femitter = bind(&ngraph::runtime::gpu::GPU_ExternalFunction::emit_op_as_function,
@@ -672,7 +674,6 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     }
 
     m_function_name = m_function->get_name();
-
 
     optimize_and_assemble();
 
