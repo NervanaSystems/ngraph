@@ -1043,7 +1043,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment, true);
-    pass_manager.run_passes(m_function);
+    pass_manager.run_passes(m_function, false);
 
     // Store layouts assigned for arguments
     for (const auto& parameter : m_function->get_parameters())
