@@ -856,38 +856,27 @@ using namespace ngraph::runtime;
         {
             writer << "\n";
             // Build the flow graph
-            vector<Node*> dependence_graph_heads;
 
-            traverse_nodes(
-                current_function, [&writer, &dependence_graph_heads](shared_ptr<Node> n) {
-                    if (!n->is_parameter() && !n->is_constant())
+            traverse_nodes(current_function, [&writer](shared_ptr<Node> n) {
+                if (!n->is_parameter() && !n->is_constant())
+                {
+                    bool is_head = true;
+                    for (auto arg : n->get_arguments())
                     {
-                        bool is_head = true;
-                        for (auto arg : n->get_arguments())
+                        if (!arg->is_parameter() && !arg->is_constant())
                         {
-                            if (!arg->is_parameter() && !arg->is_constant())
-                            {
-                                is_head = false;
-                                writer << "tbb::flow::make_edge(*flowgraph_node_" << arg->get_name()
-                                       << ", *flowgraph_node_" << n->get_name() << ");\n";
-                            }
-                        }
-                        if (is_head)
-                        {
-                            dependence_graph_heads.emplace_back(n.get());
+                            is_head = false;
+                            writer << "tbb::flow::make_edge(*flowgraph_node_" << arg->get_name()
+                                   << ", *flowgraph_node_" << n->get_name() << ");\n";
                         }
                     }
-                });
-
-            writer << "\n";
-            if (!dependence_graph_heads.empty())
-            {
-                for (Node* n : dependence_graph_heads)
-                {
-                    writer << "tbb::flow::make_edge(*flowgraph_node_start"
-                           << ", *flowgraph_node_" << n->get_name() << ");\n";
+                    if (is_head)
+                    {
+                        writer << "tbb::flow::make_edge(*flowgraph_node_start"
+                               << ", *flowgraph_node_" << n->get_name() << ");\n";
+                    }
                 }
-            }
+            });
 
             writer.indent--;
             writer << "}\n";
@@ -1248,11 +1237,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
                     it++;
                 }
 
-                vector<Node*> dependence_graph_heads;
-
                 traverse_nodes(
-                    m_function,
-                    [&dependence_graph_heads, &nodename_tbbnode_map](shared_ptr<Node> n) {
+                    m_function, [&flowgraph_node_start, &nodename_tbbnode_map](shared_ptr<Node> n) {
                         if (!n->is_parameter() && !n->is_constant())
                         {
                             bool is_head = true;
@@ -1267,19 +1253,12 @@ void runtime::cpu::CPU_ExternalFunction::build()
                             }
                             if (is_head)
                             {
-                                dependence_graph_heads.emplace_back(n.get());
+                                tbb::flow::make_edge(*flowgraph_node_start,
+                                                     *(nodename_tbbnode_map[n->get_name()]));
                             }
                         }
                     });
 
-                if (!dependence_graph_heads.empty())
-                {
-                    for (Node* n : dependence_graph_heads)
-                    {
-                        tbb::flow::make_edge(*flowgraph_node_start,
-                                             *(nodename_tbbnode_map[n->get_name()]));
-                    }
-                }
                 if (m_release_function)
                 {
                     release_function();
