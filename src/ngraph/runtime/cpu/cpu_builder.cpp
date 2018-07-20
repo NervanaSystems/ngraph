@@ -127,6 +127,12 @@ namespace ngraph
             }
 
             template <>
+            void Builder::BUILDER_DECL(ngraph::op::Subtract)
+            {
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::subtract);
+            }
+
+            template <>
             void Builder::BUILDER_DECL(ngraph::op::Multiply)
             {
                 BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::multiply);
