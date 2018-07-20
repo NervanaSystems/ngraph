@@ -100,6 +100,7 @@
 #include "ngraph/runtime/cpu/kernel/not_equal.hpp"
 #include "ngraph/runtime/cpu/kernel/relu.hpp"
 #include "ngraph/runtime/cpu/kernel/result.hpp"
+#include "ngraph/runtime/cpu/kernel/sign.hpp"
 #include "ngraph/runtime/cpu/kernel/sqrt.hpp"
 #include "ngraph/runtime/cpu/kernel/subtract.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
@@ -258,6 +259,12 @@ namespace ngraph
             }
 
             template <>
+            void Builder::BUILDER_DECL(ngraph::op::Sign)
+            {
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::sign);
+            }
+
+            template <>
             void Builder::BUILDER_DECL(ngraph::op::Constant)
             {
                 auto& functors = external_function->get_functors();
@@ -304,6 +311,7 @@ namespace ngraph
             REGISTER_OP_BUILDER(Exp);
             REGISTER_OP_BUILDER(Log);
             REGISTER_OP_BUILDER(Sqrt);
+            REGISTER_OP_BUILDER(Sign);
 
             REGISTER_OP_BUILDER(Not);
             REGISTER_OP_BUILDER(Equal);
