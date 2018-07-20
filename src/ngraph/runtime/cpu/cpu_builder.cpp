@@ -210,9 +210,27 @@ namespace ngraph
             }
 
             template <>
+            void Builder::BUILDER_DECL(ngraph::op::Floor)
+            {
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::floor);
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Negative)
+            {
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::negative);
+            }
+
+            template <>
             void Builder::BUILDER_DECL(ngraph::op::Relu)
             {
                 BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::relu);
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Sqrt)
+            {
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::sqrt);
             }
 
             template <>
