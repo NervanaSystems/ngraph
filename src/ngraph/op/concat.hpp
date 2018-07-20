@@ -34,6 +34,8 @@ namespace ngraph
             /// \param concatenation_axis The axis along which to concatenate the input tensors.
             Concat(const NodeVector& args, size_t concatenation_axis);
 
+            void validate_and_infer_types() override;
+
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 

@@ -83,6 +83,8 @@ namespace ngraph
         // updates graph and m_results list
         void replace_node(std::shared_ptr<Node> old, std::shared_ptr<Node> repl);
 
+        void validate_nodes_and_infer_types();
+
     protected:
         ResultVector m_results;
         op::ParameterVector m_parameters;

@@ -20,9 +20,15 @@ using namespace ngraph;
 
 op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::string& node_type,
                                                                  const std::shared_ptr<Node>& arg)
-    : UnaryElementwise(node_type, arg->get_element_type(), arg)
+    : UnaryElementwise(node_type, arg)
 {
-    if (arg->get_element_type() == element::boolean)
+}
+
+void op::util::UnaryElementwiseArithmetic::validate_and_infer_types()
+{
+    UnaryElementwise::validate_and_infer_types();
+
+    if (get_input_element_type(0) == element::boolean)
     {
         throw ngraph_error("Operands for arithmetic operators must have numeric element type");
     }

@@ -22,6 +22,7 @@
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/nop_elimination.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -63,6 +64,7 @@ bool runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
     {
         instance.m_is_compiled = true;
         pass::Manager pass_manager;
+        pass_manager.register_pass<pass::NopElimination>();
         pass_manager.register_pass<pass::AssignLayout<DenseTensorViewLayout>>();
         pass_manager.register_pass<pass::Liveness>();
         pass_manager.run_passes(function);

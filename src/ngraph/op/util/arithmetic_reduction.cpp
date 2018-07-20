@@ -25,8 +25,13 @@ op::util::ArithmeticReduction::ArithmeticReduction(const std::string& node_type,
     : RequiresTensorViewArgs(node_type, {arg})
     , m_reduction_axes(reduction_axes)
 {
-    auto& input = get_inputs().at(0);
-    auto input_shape = input.get_shape();
+}
+
+void op::util::ArithmeticReduction::validate_and_infer_types()
+{
+    RequiresTensorViewArgs::validate_and_infer_types();
+
+    auto input_shape = get_input_shape(0);
 
     for (auto axis : m_reduction_axes)
     {
@@ -46,5 +51,5 @@ op::util::ArithmeticReduction::ArithmeticReduction(const std::string& node_type,
         }
     }
 
-    set_value_type_checked(input.get_element_type(), result_shape);
+    set_output_type(0, get_input_element_type(0), result_shape);
 }

@@ -27,6 +27,8 @@ ngraph::op::BatchNormRelu::BatchNormRelu(double eps,
     , m_epsilon(eps)
     , m_training(true)
 {
+    constructor_validate_and_infer_types();
+
     if (m_bn_input_shape.size() != 4)
     {
         throw ngraph_error("input tensor to batchnorm must have rank 4");
@@ -71,9 +73,10 @@ ngraph::op::BatchNormRelu::BatchNormRelu(double eps,
         throw ngraph_error("gamma and beta element type does not match");
     }
 
-    add_output(input->get_element_type(), m_bn_input_shape);
-    add_output(input->get_element_type(), m_bn_mean_shape);
-    add_output(input->get_element_type(), m_bn_variance_shape);
+    set_output_size(3);
+    set_output_type(0, input->get_element_type(), m_bn_input_shape);
+    set_output_type(1, input->get_element_type(), m_bn_mean_shape);
+    set_output_type(2, input->get_element_type(), m_bn_variance_shape);
 }
 
 ngraph::op::BatchNormRelu::BatchNormRelu(double eps,
@@ -90,6 +93,8 @@ ngraph::op::BatchNormRelu::BatchNormRelu(double eps,
     , m_epsilon(eps)
     , m_training(training)
 {
+    constructor_validate_and_infer_types();
+
     if (m_bn_input_shape.size() != 4)
     {
         throw ngraph_error("input tensor to batchnorm must have rank 4");
@@ -134,7 +139,7 @@ ngraph::op::BatchNormRelu::BatchNormRelu(double eps,
         throw ngraph_error("gamma and beta element type does not match");
     }
 
-    add_output(input->get_element_type(), m_bn_input_shape);
+    set_output_type(0, input->get_element_type(), m_bn_input_shape);
 }
 
 std::shared_ptr<ngraph::Node>

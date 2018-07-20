@@ -41,28 +41,6 @@ TEST(type_prop, broadcast_deduce)
     ASSERT_EQ(bc->get_shape(), bc_shape);
 }
 
-TEST(type_prop, broadcast_deduce_incorrect)
-{
-    // Check deduced type against incorrectly specified type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    try
-    {
-        auto bc = make_shared<op::Broadcast>(param, Shape{2, 4, 3}, AxisSet{1});
-        bc->set_value_type_checked(element::f32, Shape{2, 3, 4});
-
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Deduced type should disagree with specified type";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_EQ(error.what(), std::string("Broadcast arg, shape, and axes are incompatible"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
 TEST(type_prop, batchnorm_rank_less_than_2)
 {
     auto dummy = make_shared<op::Parameter>(element::f32, Shape{1});
@@ -92,9 +70,9 @@ TEST(type_prop, batchnorm_zero_channel_check)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string(
-                      "input tensor must have at least one channel axis for batch normalization"));
+        EXPECT_EQ(
+            error.what(),
+            std::string("input tensor must have at least one channel for batch normalization"));
     }
     catch (...)
     {
@@ -116,7 +94,8 @@ TEST(type_prop, batchnorm_et_check)
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(error.what(),
-                  std::string("The element type of beta isn't equal to input data's type"));
+                  std::string("The element type element::Type{64, 1, 1,double} of input beta isn't "
+                              "equal to the input data's type element::Type{32, 1, 1,float}"));
     }
     catch (...)
     {
@@ -138,7 +117,8 @@ TEST(type_prop, batchnorm_shape_check)
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(error.what(),
-                  std::string("The shape of gamma isn't equal to input channel's shape"));
+                  std::string(
+                      "The shape Shape{4} of gamma isn't equal to input channel's shape Shape{3}"));
     }
     catch (...)
     {
@@ -247,77 +227,6 @@ TEST(type_prop, concat_deduce)
     ASSERT_EQ(c->get_shape(), (Shape{2, 12, 4}));
 }
 
-TEST(type_prop, concat_deduce_incorrect)
-{
-    // Check deduced type against incorrectly specified type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 7, 4});
-    auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 2, 4});
-    try
-    {
-        auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 1);
-        c->set_value_type_checked(element::f32, (Shape{2, 14, 4}));
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Deduced type should disagree with specified type";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_EQ(error.what(), std::string("Setting value type to a different ValueType"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
-TEST(type_prop, concat_deduce_wrong_rank)
-{
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 7, 4});
-    auto param2 = make_shared<op::Parameter>(element::f32,
-                                             Shape{
-                                                 2, 2,
-                                             });
-    try
-    {
-        auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 1);
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Deduced type should disagree with specified type";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_EQ(error.what(), std::string("Arguments to concat do not have same rank"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
-TEST(type_prop, concat_deduce_wrong_shape)
-{
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 7, 4});
-    auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 2, 5});
-    try
-    {
-        auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 1);
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Deduced type should disagree with specified type";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Arguments to concat do not have same dimension on a non-concatenation axis"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
 TEST(type_prop, concat_deduce_axis_oob)
 {
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
@@ -378,27 +287,6 @@ TEST(type_prop, convert_deduce)
     auto c = make_shared<op::Convert>(param, element::i32);
     ASSERT_EQ(c->get_element_type(), element::i32);
     ASSERT_EQ(c->get_shape(), (Shape{2, 3, 4}));
-}
-
-TEST(type_prop, convert_deduce_incorrect)
-{
-    // Check deduced type against incorrectly specified type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
-    try
-    {
-        auto c = make_shared<op::Convert>(param, element::i32);
-        c->set_value_type_checked(element::i32, Shape{2, 14, 4});
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Deduced type should disagree with specified type";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_EQ(error.what(), std::string("Setting value type to a different ValueType"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
 }
 
 TEST(type_prop, dot_deduce_scalar_2d)

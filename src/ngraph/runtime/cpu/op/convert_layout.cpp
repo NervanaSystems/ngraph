@@ -44,6 +44,13 @@ runtime::cpu::op::ConvertLayout::ConvertLayout(
     , arg_output_index(output_index)
     , output_layout(layout)
 {
+    constructor_validate_and_infer_types();
+}
+
+void runtime::cpu::op::ConvertLayout::validate_and_infer_types()
+{
+    const auto& arg = get_argument(0);
+
     const auto& arg_tensor_view = arg->get_output_tensor_view(arg_output_index);
     const auto& arg_layout = arg_tensor_view->get_tensor_view_layout();
 
@@ -52,6 +59,6 @@ runtime::cpu::op::ConvertLayout::ConvertLayout(
         //throw ngraph_error("Layout conversion input tensor is missing layout information");
     }
 
-    add_output(layout->get_element_type(), layout->get_shape());
-    get_output_tensor_view()->set_tensor_view_layout(layout);
+    set_output_type(0, output_layout->get_element_type(), output_layout->get_shape());
+    get_output_tensor_view()->set_tensor_view_layout(output_layout);
 }

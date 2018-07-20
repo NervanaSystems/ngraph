@@ -22,6 +22,7 @@ using namespace ngraph;
 op::Equal::Equal(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
     : BinaryElementwiseComparison("Equal", arg0, arg1)
 {
+    constructor_validate_and_infer_types();
 }
 
 shared_ptr<Node> op::Equal::copy_with_new_args(const NodeVector& new_args) const

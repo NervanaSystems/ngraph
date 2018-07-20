@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cstdio>
+#include <iostream>
 #include <vector>
 
 #include "ngraph/axis_set.hpp"

@@ -28,6 +28,7 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/strides.hpp"
@@ -35,27 +36,27 @@
 
 using namespace ngraph;
 
-std::shared_ptr<Node> make_zero(const element::Type& element_type, const Shape& shape)
+std::shared_ptr<Node> make_zero(const std::shared_ptr<Node>& node)
 {
-    std::shared_ptr<Node> zero = op::Constant::create(element_type, Shape{}, {0.0});
-    if (shape.size() > 0)
-    {
-        AxisSet axes;
-        for (size_t i = 0; i < shape.size(); i++)
-        {
-            axes.insert(i);
-        }
-        zero = std::make_shared<op::Broadcast>(zero, shape, axes);
-    }
-    return zero;
+    std::shared_ptr<Node> zero = std::make_shared<op::ScalarConstantLike<double>>(node, 0.0);
+    std::shared_ptr<Node> bzero = std::make_shared<op::BroadcastLike>(zero, node, AxisSet{});
+    return bzero;
 }
 
 NodeVector make_zeros(std::shared_ptr<Node> x)
 {
     NodeVector zeros;
-    for (auto& output : x->get_outputs())
+    auto& outputs = x->get_outputs();
+    if (1 == outputs.size())
     {
-        zeros.push_back(make_zero(output.get_element_type(), output.get_shape()));
+        zeros.push_back(make_zero(x));
+    }
+    else
+    {
+        for (size_t i = 0; i < outputs.size(); ++i)
+        {
+            zeros.push_back(make_zero(std::make_shared<op::GetOutputElement>(x, i)));
+        }
     }
     return zeros;
 }
@@ -74,12 +75,6 @@ autodiff::Adjoints::Adjoints(const NodeVector& ys, const NodeVector& cs)
             throw ngraph_error(
                 "Adjoints for multi-output ops aren't supported directly.\nProvide deltas for "
                 "corresponding GetOutputElements instead");
-        }
-
-        if (ys.at(i)->get_shape() != cs.at(i)->get_shape() ||
-            ys.at(i)->get_element_type() != cs.at(i)->get_element_type())
-        {
-            throw ngraph_error("delta and node shape or element type must match");
         }
     }
 
@@ -161,11 +156,13 @@ void autodiff::Adjoints::add_delta(const std::shared_ptr<Node>& x,
                                    const std::shared_ptr<Node>& delta,
                                    size_t output_index)
 {
+#if 0
     if (x->get_outputs().at(output_index).get_element_type() != delta->get_element_type() ||
         x->get_outputs().at(output_index).get_shape() != delta->get_shape())
     {
         throw ngraph_error("Autodiff internal error: Mismatch on backprop and op in add_delta.");
     }
+#endif
     auto adjoint_it = m_adjoint_map.find(x.get());
     if (m_adjoint_map.end() == adjoint_it)
     {
@@ -198,8 +195,7 @@ void autodiff::Adjoints::add_delta_to_slice(const std::shared_ptr<Node>& x,
     auto adjoint_it = m_adjoint_map.find(x.get());
     if (m_adjoint_map.end() == adjoint_it)
     {
-        auto& output = x->get_outputs().at(0);
-        auto zero = make_zero(output.get_element_type(), output.get_shape());
+        auto zero = make_zero(x);
         NodeVector zeros{
             std::make_shared<op::ReplaceSlice>(zero, delta, lower_bounds, upper_bounds, strides)};
         m_adjoint_map.insert({x.get(), zeros});

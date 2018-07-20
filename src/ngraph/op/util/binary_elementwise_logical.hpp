@@ -53,6 +53,8 @@ namespace ngraph
                 BinaryElementwiseLogical(const std::string& node_type,
                                          const std::shared_ptr<Node>& arg0,
                                          const std::shared_ptr<Node>& arg1);
+
+                void validate_and_infer_types() override;
             };
         }
     }

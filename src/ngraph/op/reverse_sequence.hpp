@@ -35,6 +35,8 @@ namespace ngraph
                             size_t batch_axis,
                             size_t seq_axis);
 
+            void validate_and_infer_types() override;
+
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 

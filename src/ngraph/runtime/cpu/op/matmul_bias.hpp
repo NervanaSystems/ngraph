@@ -35,6 +35,8 @@ namespace ngraph
                        bool transpose_x,
                        AxisSet axes = AxisSet{});
 
+            void validate_and_infer_types() override;
+
             bool get_is_a_transposed() const { return m_transpose_w; }
             bool get_is_b_transposed() const { return m_transpose_x; }
             Shape get_a_shape() const { return m_shape_w; }

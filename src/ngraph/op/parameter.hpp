@@ -45,12 +45,16 @@ namespace ngraph
                       const Shape& shape,
                       const bool cacheable = false);
 
+            void validate_and_infer_types() override;
+
             bool get_cacheable() const { return m_cacheable; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
             bool m_cacheable;
+            Shape m_shape;
+            element::Type m_element_type;
         };
     }
 }

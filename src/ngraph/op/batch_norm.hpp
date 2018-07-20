@@ -80,6 +80,8 @@ namespace ngraph
                       std::shared_ptr<ngraph::Node> variance,
                       bool training = false);
 
+            void validate_and_infer_types() override;
+
             const Shape& get_inputs_shape() const { return m_bn_input_shape; }
             const Shape& get_variance_shape() const { return m_bn_variance_shape; }
             const Shape& get_mean_shape() const { return m_bn_mean_shape; }
@@ -93,6 +95,16 @@ namespace ngraph
                                            const NodeVector& deltas) override;
 
         private:
+            enum
+            {
+                GAMMA,
+                BETA,
+                INPUT,
+                MEAN,
+                VARIANCE,
+                DELTA
+            };
+
             Shape m_bn_input_shape;
             Shape m_bn_variance_shape;
             Shape m_bn_mean_shape;
@@ -111,11 +123,23 @@ namespace ngraph
                               std::shared_ptr<Node> variance,
                               std::shared_ptr<Node> delta);
 
+            void validate_and_infer_types() override;
+
             double get_eps_value() const { return epsilon; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         private:
+            enum
+            {
+                GAMMA,
+                BETA,
+                INPUT,
+                MEAN,
+                VARIANCE,
+                DELTA
+            };
+
             double epsilon;
         };
     }

@@ -40,6 +40,8 @@ namespace ngraph
                     const Shape& padding_below,
                     const Shape& padding_above);
 
+            void validate_and_infer_types() override;
+
             /// \brief Constructs a batched, unpadded max pooling operation (i.e., all padding shapes are set to 0).
             ///
             /// \param arg The node producing the input data batch tensor.
@@ -95,6 +97,8 @@ namespace ngraph
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+
+            void validate_and_infer_types() override;
 
             const Shape& get_window_shape() const { return m_window_shape; }
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }

@@ -81,11 +81,20 @@ namespace ngraph
         friend class ngraph::pass::GetOutputElementElimination;
 
     protected:
-        Node(const std::string& node_type, const NodeVector& arguments);
+        /// Throws if the node is invalid.
+        virtual void validate_and_infer_types();
+
+        // Called in constructors during transition
+        void constructor_validate_and_infer_types();
+
+        Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
         virtual ~Node();
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
     public:
+        // Called after transition
+        void delayed_validate_and_infer_types();
+
         /// The class name, must not contain spaces
         std::string description() const { return m_node_type; }
         const std::string& get_friendly_name() const;
@@ -100,12 +109,7 @@ namespace ngraph
             return std::type_index(typeid(*this)) == std::type_index(typeid(*n));
         }
 
-        // Set the value type if it has not already been set; otherwise, ensure that
-        // value_type agrees with the value type that was set.
-        // This is used when the framework specifies a value type for the value, and we
-        // independently compute what we thing the value type should be from the arguments.
-        void set_value_type_checked(const std::shared_ptr<const TensorViewType>& value_type);
-        void set_value_type_checked(const element::Type& element_type, const Shape& shape);
+        void set_output_type(size_t i, const element::Type& element_type, const Shape& shape);
 
         bool is_parameter() const;
         virtual bool is_output() const;
@@ -195,7 +199,7 @@ namespace ngraph
 
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
     protected:
-        void add_output(const element::Type& element_type, const Shape& shape);
+        void set_output_size(size_t n);
 
         std::string m_node_type;
         size_t m_instance_id;

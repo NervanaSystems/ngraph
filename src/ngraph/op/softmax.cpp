@@ -33,6 +33,8 @@ op::Softmax::Softmax(const shared_ptr<Node>& arg, const AxisSet& axes)
     : UnaryElementwiseArithmetic("Softmax", arg)
     , m_axes(axes)
 {
+    constructor_validate_and_infer_types();
+
     for (auto axis : m_axes)
     {
         if (axis >= get_shape().size())

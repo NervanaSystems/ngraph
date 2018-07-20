@@ -70,10 +70,18 @@ Function::Function(const std::shared_ptr<Node>& result,
                    const std::string& name)
     : Function(NodeVector{result}, parameters, name)
 {
+    validate_nodes_and_infer_types();
+}
+
+void Function::validate_nodes_and_infer_types()
+{
+    ngraph::validate_nodes_and_infer_types(get_ops());
 }
 
 void Function::init()
 {
+    validate_nodes_and_infer_types();
+
     traverse_nodes(this, [&](shared_ptr<Node> node) {
         std::shared_ptr<op::Parameter> p = std::dynamic_pointer_cast<op::Parameter>(node);
         if (nullptr != p)

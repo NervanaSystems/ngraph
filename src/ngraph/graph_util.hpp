@@ -16,11 +16,13 @@
 
 #pragma once
 
+#include <deque>
 #include <functional>
 #include <list>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "ngraph/function.hpp"
@@ -51,8 +53,53 @@ namespace ngraph
 
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
-    std::list<std::shared_ptr<Node>>
-        topological_sort(const std::list<std::shared_ptr<Node>>& nodes);
+    template <typename T>
+    std::list<std::shared_ptr<Node>> topological_sort(const T& nodes)
+    {
+        std::deque<ngraph::Node*> independent_nodes;
+        std::unordered_map<const ngraph::Node*, size_t> node_dependency_count;
+        std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>> node_map;
+
+        for (auto node : nodes)
+        {
+            node_map[node.get()] = node;
+            node_dependency_count[node.get()] = node->get_arguments().size();
+            if (node->get_arguments().size() == 0)
+            {
+                independent_nodes.push_back(node.get());
+            }
+        }
+
+        std::list<std::shared_ptr<ngraph::Node>> result_list;
+        while (independent_nodes.size() > 0)
+        {
+            auto independent_node = independent_nodes.front();
+            result_list.push_back(node_map[independent_node]);
+            independent_nodes.pop_front();
+
+            for (auto user_sp : independent_node->get_users())
+            {
+                Node* user = user_sp.get();
+                node_dependency_count[user] -= 1;
+                size_t count = node_dependency_count[user];
+                if (count == 0)
+                {
+                    independent_nodes.push_back(user);
+                }
+            }
+        }
+
+        return result_list;
+    }
+
+    template <typename T>
+    void validate_nodes_and_infer_types(const T& nodes)
+    {
+        for (auto node : topological_sort(nodes))
+        {
+            node->delayed_validate_and_infer_types();
+        }
+    }
 
     // Check if all paths from X to a result go through Y
     bool is_post_dominated(Node* X, Node* Y);

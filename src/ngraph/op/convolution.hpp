@@ -125,6 +125,8 @@ namespace ngraph
             Convolution(const std::shared_ptr<Node>& data_batch,
                         const std::shared_ptr<Node>& filters);
 
+            void validate_and_infer_types() override;
+
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
             void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
@@ -153,8 +155,8 @@ namespace ngraph
             Strides m_data_dilation_strides;
 
         private:
-            static Strides default_strides(const std::shared_ptr<Node>& data_batch);
-            static CoordinateDiff default_padding(const std::shared_ptr<Node>& data_batch);
+            static Strides default_strides(const Shape& data_batch_shape);
+            static CoordinateDiff default_padding(const Shape& data_batch_shape);
         };
 
         /// \brief Data batch backprop for batched convolution operation.
@@ -179,6 +181,8 @@ namespace ngraph
                                     const CoordinateDiff& padding_below_forward,
                                     const CoordinateDiff& padding_above_forward,
                                     const Strides& data_dilation_strides_forward);
+
+            void validate_and_infer_types() override;
 
             void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
             virtual std::shared_ptr<Node>
@@ -275,6 +279,8 @@ namespace ngraph
                                        const CoordinateDiff& padding_below_forward,
                                        const CoordinateDiff& padding_above_forward,
                                        const Strides& data_dilation_strides_forward);
+
+            void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

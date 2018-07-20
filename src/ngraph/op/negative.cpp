@@ -22,6 +22,7 @@ using namespace ngraph;
 op::Negative::Negative(const shared_ptr<Node>& arg)
     : UnaryElementwiseArithmetic("Negative", arg)
 {
+    constructor_validate_and_infer_types();
 }
 
 shared_ptr<Node> op::Negative::copy_with_new_args(const NodeVector& new_args) const

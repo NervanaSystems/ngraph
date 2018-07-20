@@ -151,45 +151,6 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     }
 }
 
-std::list<std::shared_ptr<ngraph::Node>>
-    ngraph::topological_sort(const std::list<std::shared_ptr<Node>>& nodes)
-{
-    deque<ngraph::Node*> independent_nodes;
-    unordered_map<const ngraph::Node*, size_t> node_dependency_count;
-    unordered_map<ngraph::Node*, shared_ptr<ngraph::Node>> node_map;
-
-    for (auto node : nodes)
-    {
-        node_map[node.get()] = node;
-        node_dependency_count[node.get()] = node->get_arguments().size();
-        if (node->get_arguments().size() == 0)
-        {
-            independent_nodes.push_back(node.get());
-        }
-    }
-
-    list<shared_ptr<ngraph::Node>> result_list;
-    while (independent_nodes.size() > 0)
-    {
-        auto independent_node = independent_nodes.front();
-        result_list.push_back(node_map[independent_node]);
-        independent_nodes.pop_front();
-
-        for (auto user_sp : independent_node->get_users())
-        {
-            Node* user = user_sp.get();
-            node_dependency_count[user] -= 1;
-            size_t count = node_dependency_count[user];
-            if (count == 0)
-            {
-                independent_nodes.push_back(user);
-            }
-        }
-    }
-
-    return result_list;
-}
-
 // Check if all paths from X to a result go through Y
 bool ngraph::is_post_dominated(Node* X, Node* Y)
 {

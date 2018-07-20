@@ -70,6 +70,8 @@ namespace ngraph
             /// `[n]`
             AvgPool(const std::shared_ptr<Node>& arg, const Shape& window_shape);
 
+            void validate_and_infer_types() override;
+
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -112,6 +114,8 @@ namespace ngraph
                             const Shape& padding_below,
                             const Shape& padding_above,
                             bool include_padding_in_avg_computation);
+
+            void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

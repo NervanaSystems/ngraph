@@ -28,6 +28,7 @@ op::util::IndexReduction::IndexReduction(const std::string& node_type,
     : RequiresTensorViewArgs(node_type, {arg})
     , m_axis(axis)
 {
+    constructor_validate_and_infer_types();
     auto rank = arg->get_shape().size();
 
     TYPE_CHECK_ASSERT(this, rank >= 1) << "Tensor's rank must be at least 1";
@@ -39,7 +40,7 @@ op::util::IndexReduction::IndexReduction(const std::string& node_type,
     Shape output_shape = arg->get_shape();
     output_shape.erase(output_shape.begin() + axis);
 
-    set_value_type_checked(index_element_type, output_shape);
+    set_output_type(0, index_element_type, output_shape);
 }
 
 void op::util::IndexReduction::generate_adjoints(autodiff::Adjoints& adjoints,

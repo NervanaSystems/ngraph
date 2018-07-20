@@ -33,6 +33,8 @@ namespace ngraph
                 ///
                 /// \param args The nodes producing this node's input tensors.
                 RequiresTensorViewArgs(const std::string& node_type, const NodeVector& args);
+
+                void validate_and_infer_types() override;
             };
         }
     }

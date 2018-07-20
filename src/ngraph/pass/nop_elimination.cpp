@@ -21,6 +21,7 @@
 #include <unordered_map>
 
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/slice.hpp"
@@ -77,6 +78,18 @@ HANDLER_DECL(eliminate_slice)
     return false;
 }
 
+HANDLER_DECL(replace_broadcast_like)
+{
+    // Replace a broadcast like with the broadcast to eliminate the pseudo-dependency on the "like" argument
+    auto broadcast_like = std::dynamic_pointer_cast<ngraph::op::BroadcastLike>(node);
+    ngraph::replace_node(
+        node,
+        std::make_shared<ngraph::op::Broadcast>(broadcast_like->get_argument(0),
+                                                broadcast_like->get_broadcast_shape(),
+                                                broadcast_like->get_broadcast_axes()));
+    return true;
+}
+
 HANDLER_DECL(eliminate_broadcast)
 {
     auto broadcast = std::dynamic_pointer_cast<ngraph::op::Broadcast>(node);
@@ -101,6 +114,7 @@ static const std::unordered_map<std::type_index,
                {TI(ngraph::op::Convert), &eliminate_convert},
                {TI(ngraph::op::Slice), &eliminate_slice},
                {TI(ngraph::op::StopGradient), &eliminate_stop_gradient},
+               {TI(ngraph::op::BroadcastLike), &replace_broadcast_like},
                {TI(ngraph::op::Broadcast), &eliminate_broadcast}};
 
 bool ngraph::pass::NopElimination::run_on_function(std::shared_ptr<ngraph::Function> function)
@@ -115,6 +129,15 @@ bool ngraph::pass::NopElimination::run_on_function(std::shared_ptr<ngraph::Funct
         if (handler != dispatcher.end())
         {
             clobbered = handler->second(n) || clobbered;
+        }
+
+        // Here we're checking on a common base class of a family of template classes,
+        // which is more than type info can handle.
+        auto sclb = std::dynamic_pointer_cast<ngraph::op::ScalarConstantLikeBase>(n);
+        if (sclb != nullptr)
+        {
+            ngraph::replace_node(sclb, sclb->as_constant());
+            clobbered = true;
         }
     }
 

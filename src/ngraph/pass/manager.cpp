@@ -117,6 +117,12 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func, bool transitiv
             }
         }
 
+        // Better to do this in node replacement but this will do for now
+        for (auto f : fs)
+        {
+            f->validate_nodes_and_infer_types();
+        }
+
         if (m_visualize || m_serialize)
         {
             //visualizations and serializations will be named after the outermost function

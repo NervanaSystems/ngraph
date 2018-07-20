@@ -27,6 +27,7 @@ op::LRN::LRN(const std::shared_ptr<Node>& arg, double alpha, double beta, double
     , m_bias(bias)
     , m_size(nsize)
 {
+    constructor_validate_and_infer_types();
     if (arg->get_shape().size() < 3)
     {
         throw ngraph_error("LRN expects a tensor at least of rank of 3");

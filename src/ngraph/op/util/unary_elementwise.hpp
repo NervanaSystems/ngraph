@@ -47,9 +47,9 @@ namespace ngraph
                 /// \brief Constructs a unary elementwise tensor operation.
                 ///
                 /// \param arg Node that produces the input tensor.
-                UnaryElementwise(const std::string& node_type,
-                                 const element::Type& result_element_type,
-                                 const std::shared_ptr<Node>& arg);
+                UnaryElementwise(const std::string& node_type, const std::shared_ptr<Node>& arg);
+
+                void validate_and_infer_types() override;
             };
         }
     }

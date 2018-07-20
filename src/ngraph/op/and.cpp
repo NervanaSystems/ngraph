@@ -22,6 +22,7 @@ using namespace ngraph;
 op::And::And(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
     : BinaryElementwiseLogical("And", arg0, arg1)
 {
+    constructor_validate_and_infer_types();
 }
 
 shared_ptr<Node> op::And::copy_with_new_args(const NodeVector& new_args) const

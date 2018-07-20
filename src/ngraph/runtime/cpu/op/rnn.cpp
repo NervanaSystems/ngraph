@@ -65,6 +65,8 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
     , m_direction(direction)
     , m_num_fused_layers(num_fused_layers)
 {
+    constructor_validate_and_infer_types();
+
     if (src_layer->get_shape().size() != weights_layer->get_shape().size())
     {
         throw ngraph_error("src_layer and i2h weights size dont match");
@@ -105,11 +107,14 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
         }
     }
 
-    add_output(src_layer->get_element_type(),
-               Shape{static_cast<unsigned long>(m_direction * m_num_timesteps * m_batch_size),
-                     static_cast<unsigned long>(m_src_iter_feature_size)});
-    add_output(src_layer->get_element_type(),
-               Shape{static_cast<unsigned long>(m_num_cell_states * m_direction *
-                                                m_num_fused_layers * m_batch_size),
-                     static_cast<unsigned long>(m_src_iter_feature_size)});
+    set_output_size(2);
+    set_output_type(0,
+                    src_layer->get_element_type(),
+                    Shape{static_cast<unsigned long>(m_direction * m_num_timesteps * m_batch_size),
+                          static_cast<unsigned long>(m_src_iter_feature_size)});
+    set_output_type(1,
+                    src_layer->get_element_type(),
+                    Shape{static_cast<unsigned long>(m_num_cell_states * m_direction *
+                                                     m_num_fused_layers * m_batch_size),
+                          static_cast<unsigned long>(m_src_iter_feature_size)});
 }

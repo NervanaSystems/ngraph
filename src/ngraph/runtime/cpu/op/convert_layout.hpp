@@ -43,6 +43,8 @@ namespace ngraph
                         size_t output_index,
                         const std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>& layout);
 
+                    virtual void validate_and_infer_types() override;
+
                     virtual std::shared_ptr<Node>
                         copy_with_new_args(const NodeVector& new_args) const override;
 

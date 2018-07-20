@@ -21,8 +21,9 @@ using namespace ngraph;
 using namespace std;
 
 op::Not::Not(const shared_ptr<Node>& arg)
-    : UnaryElementwise("Not", arg->get_element_type(), arg)
+    : UnaryElementwise("Not", arg)
 {
+    constructor_validate_and_infer_types();
 }
 
 shared_ptr<Node> op::Not::copy_with_new_args(const NodeVector& new_args) const

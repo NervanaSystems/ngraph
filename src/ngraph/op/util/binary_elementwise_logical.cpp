@@ -22,11 +22,18 @@ using namespace ngraph;
 op::util::BinaryElementwiseLogical::BinaryElementwiseLogical(const string& node_type,
                                                              const shared_ptr<Node>& arg0,
                                                              const shared_ptr<Node>& arg1)
-    : BinaryElementwise(node_type, element::boolean, arg0, arg1)
+    : BinaryElementwise(node_type, arg0, arg1)
 {
-    if (arg0->get_element_type() != element::boolean ||
-        arg1->get_element_type() != element::boolean)
+}
+
+void op::util::BinaryElementwiseLogical::validate_and_infer_types()
+{
+    BinaryElementwise::validate_and_infer_types();
+
+    if (get_input_element_type(0) != element::boolean ||
+        get_input_element_type(1) != element::boolean)
     {
         throw ngraph_error("Arguments must have boolean element type");
     }
+    set_output_type(0, element::boolean, get_input_shape(0));
 }

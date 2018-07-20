@@ -61,6 +61,8 @@ op::ConvolutionBias::ConvolutionBias(const shared_ptr<op::Convolution>& conv,
     , m_data_dilation_strides(conv->get_data_dilation_strides())
     , m_with_relu(with_relu)
 {
+    constructor_validate_and_infer_types();
+
     if (conv->get_element_type() != bias->get_element_type())
     {
         throw ngraph_error("Convolution's element type isn't equal to bias!");
@@ -69,7 +71,7 @@ op::ConvolutionBias::ConvolutionBias(const shared_ptr<op::Convolution>& conv,
     util::validate_convbias_shapes(
         conv->get_argument(0)->get_shape(), conv->get_argument(1)->get_shape(), bias->get_shape());
 
-    set_value_type_checked(conv->get_element_type(), conv->get_shape());
+    set_output_type(0, conv->get_element_type(), conv->get_shape());
 }
 
 op::ConvolutionBias::ConvolutionBias(const shared_ptr<Node>& data_batch,
@@ -89,6 +91,8 @@ op::ConvolutionBias::ConvolutionBias(const shared_ptr<Node>& data_batch,
     , m_data_dilation_strides(data_dilation_strides)
     , m_with_relu(with_relu)
 {
+    constructor_validate_and_infer_types();
+
     auto& data_batch_shape = data_batch->get_shape();
     auto& data_batch_et = data_batch->get_element_type();
     auto& filters_shape = filters->get_shape();
@@ -103,22 +107,22 @@ op::ConvolutionBias::ConvolutionBias(const shared_ptr<Node>& data_batch,
     }
     util::validate_convbias_shapes(data_batch_shape, filters_shape, bias->get_shape());
 
-    set_value_type_checked(
-        data_batch_et,
-        util::infer_convolution_output_shape(data_batch_shape,
-                                             filters_shape,
-                                             window_movement_strides,
-                                             window_dilation_strides,
-                                             padding_below,
-                                             padding_above,
-                                             data_dilation_strides,
-                                             0, /* batch_axis_data,              */
-                                             1, /* input_channel_axis_data,      */
-                                             1, /* input_channel_axis_filters,   */
-                                             0, /* output_channel_axis_filters,  */
-                                             0, /* batch_axis_result,            */
-                                             1, /* output_channel_axis_result,   */
-                                             ""));
+    set_output_type(0,
+                    data_batch_et,
+                    util::infer_convolution_output_shape(data_batch_shape,
+                                                         filters_shape,
+                                                         window_movement_strides,
+                                                         window_dilation_strides,
+                                                         padding_below,
+                                                         padding_above,
+                                                         data_dilation_strides,
+                                                         0, /* batch_axis_data,              */
+                                                         1, /* input_channel_axis_data,      */
+                                                         1, /* input_channel_axis_filters,   */
+                                                         0, /* output_channel_axis_filters,  */
+                                                         0, /* batch_axis_result,            */
+                                                         1, /* output_channel_axis_result,   */
+                                                         ""));
 }
 
 shared_ptr<Node> op::ConvolutionBias::copy_with_new_args(const NodeVector& new_args) const
@@ -199,6 +203,8 @@ op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
     , m_padding_above_forward(padding_above_forward)
     , m_data_dilation_strides_forward(data_dilation_strides_forward)
 {
+    constructor_validate_and_infer_types();
+
     auto& data_batch_shape = get_input_shape(0);
     auto& data_batch_et = get_input_element_type(0);
     auto& output_delta_et = get_input_element_type(1);
@@ -236,8 +242,9 @@ op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
         m_data_dilation_strides_backward.push_back(data_dilation_strides_forward[i]);
     }
 
-    add_output(data_batch_et, filters_shape);
-    add_output(data_batch_et, bias_shape);
+    set_output_size(2);
+    set_output_type(0, data_batch_et, filters_shape);
+    set_output_type(1, data_batch_et, bias_shape);
 }
 
 shared_ptr<Node>
@@ -271,10 +278,12 @@ op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<op::Convolution
     , m_data_dilation_strides(conv->get_data_dilation_strides())
     , m_with_relu(with_relu)
 {
+    constructor_validate_and_infer_types();
+
     util::validate_convbias_shapes(conv->get_argument(0)->get_shape(),
                                    conv->get_argument(1)->get_shape(),
                                    conv->get_argument(2)->get_shape());
-    set_value_type_checked(conv->get_element_type(), conv->get_shape());
+    set_output_type(0, conv->get_element_type(), conv->get_shape());
 }
 
 op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<Node>& data_batch,
@@ -295,6 +304,8 @@ op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<Node>& data_bat
     , m_data_dilation_strides(data_dilation_strides)
     , m_with_relu(with_relu)
 {
+    constructor_validate_and_infer_types();
+
     auto& data_batch_shape = data_batch->get_shape();
     auto& data_batch_et = data_batch->get_element_type();
     auto& filters_shape = filters->get_shape();
@@ -309,22 +320,22 @@ op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<Node>& data_bat
     }
 
     util::validate_convbias_shapes(data_batch_shape, filters_shape, bias->get_shape());
-    set_value_type_checked(
-        data_batch_et,
-        util::infer_convolution_output_shape(data_batch_shape,
-                                             filters_shape,
-                                             window_movement_strides,
-                                             window_dilation_strides,
-                                             padding_below,
-                                             padding_above,
-                                             data_dilation_strides,
-                                             0, /* batch_axis_data,              */
-                                             1, /* input_channel_axis_data,      */
-                                             1, /* input_channel_axis_filters,   */
-                                             0, /* output_channel_axis_filters,  */
-                                             0, /* batch_axis_result,            */
-                                             1, /* output_channel_axis_result,   */
-                                             ""));
+    set_output_type(0,
+                    data_batch_et,
+                    util::infer_convolution_output_shape(data_batch_shape,
+                                                         filters_shape,
+                                                         window_movement_strides,
+                                                         window_dilation_strides,
+                                                         padding_below,
+                                                         padding_above,
+                                                         data_dilation_strides,
+                                                         0, /* batch_axis_data,              */
+                                                         1, /* input_channel_axis_data,      */
+                                                         1, /* input_channel_axis_filters,   */
+                                                         0, /* output_channel_axis_filters,  */
+                                                         0, /* batch_axis_result,            */
+                                                         1, /* output_channel_axis_result,   */
+                                                         ""));
 }
 
 std::shared_ptr<Node> op::ConvolutionBiasAdd::copy_with_new_args(const NodeVector& new_args) const

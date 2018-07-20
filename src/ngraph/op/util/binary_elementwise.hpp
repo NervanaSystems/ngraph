@@ -51,9 +51,10 @@ namespace ngraph
                 /// \param arg0 Node that produces the first input tensor.
                 /// \param arg1 Node that produces the second input tensor.
                 BinaryElementwise(const std::string& node_type,
-                                  const element::Type& result_element_type,
                                   const std::shared_ptr<Node>& arg0,
                                   const std::shared_ptr<Node>& arg1);
+
+                void validate_and_infer_types() override;
             };
         }
     }

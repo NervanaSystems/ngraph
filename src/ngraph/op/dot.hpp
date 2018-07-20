@@ -35,7 +35,8 @@ namespace ngraph
             /// \param reduction_axes_count The number of axes to dot.
             Dot(const std::shared_ptr<Node>& arg0,
                 const std::shared_ptr<Node>& arg1,
-                size_t reduction_axes_count);
+                size_t reduction_axes_count,
+                bool has_reduction_axes_count = true);
 
             /// \brief Constructs a dot product operation with default dot-axis selection depending on the inputs.
             ///
@@ -48,6 +49,8 @@ namespace ngraph
             /// \param arg0 The node producing the first argument.
             /// \param arg1 The node producing the second argument.
             Dot(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+
+            void validate_and_infer_types() override;
 
             size_t get_reduction_axes_count() const { return m_reduction_axes_count; }
             virtual std::shared_ptr<Node>
@@ -63,6 +66,7 @@ namespace ngraph
 
         protected:
             size_t m_reduction_axes_count;
+            bool m_has_reduction_axes_count;
 
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;

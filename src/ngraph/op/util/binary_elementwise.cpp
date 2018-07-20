@@ -23,17 +23,19 @@ using namespace std;
 using namespace ngraph;
 
 op::util::BinaryElementwise::BinaryElementwise(const std::string& node_type,
-                                               const element::Type& result_element_type,
                                                const std::shared_ptr<Node>& arg0,
                                                const std::shared_ptr<Node>& arg1)
     : RequiresTensorViewArgs(node_type, NodeVector{arg0, arg1})
 {
-    auto& input_0 = get_inputs().at(0);
-    auto& input_1 = get_inputs().at(1);
-    if (input_0.get_shape() != input_1.get_shape())
+}
+
+void op::util::BinaryElementwise::validate_and_infer_types()
+{
+    RequiresTensorViewArgs::validate_and_infer_types();
+
+    if (get_input_shape(0) != get_input_shape(1))
     {
         throw ngraph_error("Arguments must have the same tensor view shape");
     }
-
-    set_value_type_checked(make_shared<TensorViewType>(result_element_type, input_0.get_shape()));
+    set_output_type(0, get_input_element_type(0), get_input_shape(0));
 }
