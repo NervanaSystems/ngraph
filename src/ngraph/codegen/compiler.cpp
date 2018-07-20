@@ -181,9 +181,6 @@ void codegen::CompilerCore::initialize()
     args.push_back("-inline-threshold=1000000");
     if (m_enable_pass_report)
     {
-        //        args.push_back("-Rpass-analysis=loop-vectorize");
-        //        args.push_back("-Rpass=loop-vectorize");
-        //        args.push_back("-Rpass-missed=loop-vectorize");
         args.push_back("-Rpass-analysis=.*");
         args.push_back("-Rpass=.*");
         args.push_back("-Rpass-missed=.*");
@@ -194,7 +191,7 @@ void codegen::CompilerCore::initialize()
     // Prepare DiagnosticEngine
     IntrusiveRefCntPtr<DiagnosticOptions> diag_options = new DiagnosticOptions();
     diag_options->ErrorLimit = 20;
-    diag_options->ShowCarets = true;
+    diag_options->ShowCarets = false;
     diag_options->ShowFixits = false;
     IntrusiveRefCntPtr<DiagnosticIDs> diag_id(new DiagnosticIDs());
     // create a diagnosetic buffer for errors caused by argument parsing

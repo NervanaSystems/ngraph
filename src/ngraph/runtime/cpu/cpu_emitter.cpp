@@ -1652,8 +1652,9 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Reshape)
             {
                 auto reshape = static_cast<const ngraph::op::Reshape*>(node);
-                if (reshape->get_op_annotations() &&
-                    reshape->get_op_annotations()->get_in_place_oi_pairs().size() > 0)
+                auto annotation = reshape->get_op_annotations();
+                if (annotation && annotation->get_in_place_oi_pairs().size() > 0 &&
+                    out[0].get_name() == args[0].get_name())
                 {
                     writer.block_begin();
                     writer << "// Stride change only, skipping.\n";
@@ -2194,7 +2195,6 @@ namespace ngraph
                            << "});\n";
                 }
 #else
-#if 0
                 if (args[0].get_element_type() == element::f32 && args[0].get_shape().size() == 1 &&
                     sum->get_reduction_axes().size() == 1)
                 {
@@ -2213,8 +2213,8 @@ namespace ngraph
                            << "{" << join(out[0].get_shape()) << "}"
                            << ");\n";
                 }
-                else if ((args[0].get_element_type() == element::f32) &&
-                         (args[0].get_shape().size() == 2) && (sum->get_reduction_axes().size() == 1))
+                else if (args[0].get_element_type() == element::f32 &&
+                         args[0].get_shape().size() == 2 && sum->get_reduction_axes().size() == 1)
                 {
                     writer << "cpu::kernel::reduce_sum_2d_1rd_float32(" << args[0].get_name()
                            << ", " << out[0].get_name() << ", "
@@ -2223,16 +2223,6 @@ namespace ngraph
                            << "{" << join(sum->get_reduction_axes()) << "}"
                            << ");\n";
                 }
-//                else if ((args[0].get_element_type() == element::f32) &&
-//                         (args[0].get_shape().size() == 3) && (sum->get_reduction_axes().size() == 1))
-//                {
-//                    writer << "cpu::kernel::reduce_sum_3d_1rd_float32(" << args[0].get_name()
-//                           << ", " << out[0].get_name() << ", "
-//                           << "{" << join(args[0].get_shape()) << "}, "
-//                           << "{" << join(out[0].get_shape()) << "}, "
-//                           << "{" << join(sum->get_reduction_axes()) << "}"
-//                           << ");\n";
-//                }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 4 && sum->get_reduction_axes().size() == 2)
                 {
@@ -2253,7 +2243,6 @@ namespace ngraph
                            << ");\n";
                 }
                 else
-#endif
                 {
                     kernel::emit_sum(writer,
                                      args[0].get_element_type().c_type_string(),

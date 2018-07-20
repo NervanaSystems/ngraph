@@ -474,8 +474,8 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
     // create input and output arrays
     auto source_nd_name = recast_tmp_var(writer, element_type, arg0, arg0_shape, "source_nd");
     auto dest_nd_name = recast_tmp_var(writer, element_type, out, out_shape, "dest_nd");
-    string omp_max_threads = writer.generate_temporary_name("omp_threads");
-    writer << "int " << omp_max_threads << " = omp_get_max_threads();\n";
+
+    // zero the output to make sure we don't have randomly initialized data
     if (out_shape.size() == 0)
     {
         writer << dest_nd_name << " = 0;\n";
