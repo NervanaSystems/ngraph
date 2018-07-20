@@ -139,36 +139,68 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Abs)
+            void Builder::BUILDER_DECL(ngraph::op::Divide)
             {
-                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::abs);
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::divide);
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Broadcast)
+            void Builder::BUILDER_DECL(ngraph::op::Equal)
             {
-                std::function<void(void*, void*, const Shape&, const Shape&, const AxisSet&)>
-                    kernel;
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::equal);
+            }
 
-                SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::broadcast);
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::NotEqual)
+            {
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::not_equal);
+            }
 
-                auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Greater)
+            {
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::greater);
+            }
 
-                auto arg0_shape = args[0].get_shape();
-                auto result_shape = out[0].get_shape();
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::GreaterEq)
+            {
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::greater_eq);
+            }
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Less)
+            {
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::less);
+            }
 
-                auto broadcast = static_cast<const ngraph::op::Broadcast*>(node);
-                auto broadcast_axes = broadcast->get_broadcast_axes();
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::LessEq)
+            {
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::less_eq);
+            }
 
-                auto functor =
-                    [&, kernel, arg0_shape, result_shape, broadcast_axes](CPURuntimeContext* ctx) {
-                        kernel(arg0_tensor, out_tensor, arg0_shape, result_shape, broadcast_axes);
-                    };
-                functors.emplace_back(functor);
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Maximum)
+            {
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::maximum);
+            }
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Minimum)
+            {
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::minimum);
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Power)
+            {
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::cwise_pow);
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Abs)
+            {
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::abs);
             }
 
             template <>
