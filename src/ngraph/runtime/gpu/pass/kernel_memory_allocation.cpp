@@ -36,8 +36,7 @@ static bool replace_softmax(std::shared_ptr<Node> node)
             return false;
         }
 
-        auto wrapped = op::gpu::make_wrapped_node<ngraph::op::Softmax>(softmax->get_argument(0), softmax->get_axes());
-        //auto wrapped = op::gpu::make_wrapped_node(*softmax.get());
+        auto wrapped = std::make_shared<ngraph::op::gpu::MemoryWrappedNode<ngraph::op::Softmax>>(softmax);
         auto softmax_output = std::make_shared<op::GetOutputElement>(wrapped, 0);
         for (auto& user : node->get_users())
         {

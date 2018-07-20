@@ -32,16 +32,23 @@ namespace ngraph
         namespace gpu
         {
             template <typename NODE_TYPE>
-            class MemoryWrappedNode : public NODE_TYPE
+            class MemoryWrappedNode : public Node
             {
             public:
-                template <typename... Args>
-                MemoryWrappedNode(Args&&... args)
-                    : NODE_TYPE(std::forward<Args>(args)...)
-                    , m_emitter(this)
+                MemoryWrappedNode(const std::shared_ptr<NODE_TYPE>& node)
+                    : Node(node->description(), node->get_arguments())
+                    , m_node(node)
+                    , m_emitter(node.get())
                 {
+                    // add node's outputs to wrapped node
+                    size_t i = 0;
+                    for (auto& output : node->get_outputs())
+                    {
+                        this->m_outputs.emplace_back(this, i, output.get_tensor_view());
+                    }
+
                     // add constant memory input
-                    size_t i = this->m_inputs.size();
+                    i = this->m_inputs.size();
                     for (auto& data : m_emitter.get_constants())
                     {
                         auto constant = std::make_shared<op::Constant>(
@@ -54,47 +61,25 @@ namespace ngraph
                     // add worskapce output
                     for (auto& workspace : m_emitter.get_workspaces())
                     {
-                        this->add_output(this->get_element_type(), workspace);
+                         this->add_output(m_node->get_element_type(), workspace);
                     }
                 }
 
-                MemoryWrappedNode(const NODE_TYPE& node)
-                    : NODE_TYPE(node)
-                    , m_emitter(this)
+                std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override
                 {
-                    // add constant memory input
-                    size_t i = this->m_inputs.size();
-                    for (auto& data : m_emitter.get_constants())
-                    {
-                        auto constant = std::make_shared<op::Constant>(
-                            ngraph::element::from<typename std::remove_reference<decltype(data[0])>::type>(),
-                            Shape{data.size()}, data);
-                        this->m_inputs.emplace_back(
-                            this, i++, constant->get_outputs().at(0));
-                    }
-
-                    // add worskapce output
-                    for (auto& workspace : m_emitter.get_workspaces())
-                    {
-                        this->add_output(this->get_element_type(), workspace);
-                    }
+                    auto new_node = std::dynamic_pointer_cast<NODE_TYPE>(m_node->copy_with_new_args(new_args));
+                    return std::make_shared<MemoryWrappedNode<NODE_TYPE>>(new_node);
                 }
 
-            private:
+                const std::shared_ptr<NODE_TYPE> get() const { return m_node; }
+
+                private:
+                std::shared_ptr<NODE_TYPE> m_node;
                 runtime::gpu::Emitter<NODE_TYPE> m_emitter;
             };
 
-            template <typename NODE_TYPE, typename... Args>
-            std::shared_ptr<Node> make_wrapped_node(Args&&... args)
-            {
-                return std::make_shared<MemoryWrappedNode<NODE_TYPE>>(std::forward<Args>(args)...);
-            }
 
-            template <typename NODE_TYPE>
-            std::shared_ptr<Node> make_wrapped_node(const NODE_TYPE& node)
-            {
-                return std::make_shared<MemoryWrappedNode<NODE_TYPE>>(node);
-            }
+
         }
     }
 }

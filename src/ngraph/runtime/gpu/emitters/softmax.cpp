@@ -19,6 +19,7 @@
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_shape.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/runtime/gpu/wrapped_node.hpp"
 
 using namespace ngraph;
 
@@ -99,9 +100,9 @@ void runtime::gpu::Emitter<op::Softmax>::emit(GPU_ExternalFunction* external_fun
 {
     writer.block_begin();
     {
-        auto softmax = static_cast<const ngraph::op::Softmax*>(node);
+        auto softmax = static_cast<const op::gpu::MemoryWrappedNode<ngraph::op::Softmax>*>(node);
         auto tensor_shape = args[0].get_shape();
-        auto axes = softmax->get_axes();
+        auto axes = softmax->get()->get_axes();
 
         auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
 
