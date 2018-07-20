@@ -1166,6 +1166,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
             out_names.push_back(tv->get_tensor().get_name());
         }
 
+        m_op_attrs.emplace_back(node->description(), out_names, in_names);
+
         size_t functor_count = functors.size();
         handler->second(this, node.get(), in, out);
 
@@ -1191,6 +1193,9 @@ void runtime::cpu::CPU_ExternalFunction::build()
 
     executor = [&](CPURuntimeContext* ctx, vector<void*>& inputs, vector<void*>& outputs) {
         static bool first_iteration = true;
+        cpu::Timestamp start_ts;
+        int profiler_count = 0;
+
         for (auto& p : intermediates_offsets)
         {
             tensor_data[p.first] =
@@ -1215,16 +1220,40 @@ void runtime::cpu::CPU_ExternalFunction::build()
             {
                 for (size_t j = 0; j < p.second; j++)
                 {
+                    if (runtime::cpu::IsTracingEnabled())
+                    {
+                        start_ts = cpu::Clock::now();
+                    }
                     (*functor)(ctx);
+                    if (runtime::cpu::IsTracingEnabled())
+                    {
+                        ctx->op_durations[profiler_count++] =
+                            (std::chrono::duration_cast<cpu::Timescale>(cpu::Clock::now() -
+                                                                        start_ts))
+                                .count();
+                    }
+
                     std::advance(functor, 1);
                 }
             }
             else
             {
+                if (runtime::cpu::IsTracingEnabled())
+                {
+                    for (size_t j = 0; j < p.second; j++)
+                    {
+                        ctx->op_durations[profiler_count++] = 0;
+                    }
+                }
                 std::advance(functor, p.second);
             }
         }
         first_iteration = false;
+
+        if (runtime::cpu::IsTracingEnabled())
+        {
+            assert(m_op_attrs.size() == profiler_count);
+        }
     };
 
     m_is_built = true;
