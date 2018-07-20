@@ -291,6 +291,170 @@ void ngraph::runtime::cpu::kernel::emit_reshape(codegen::CodeWriter& writer,
     close_for_loops(writer, index_vars);
 }
 
+struct SumHeuristic
+{
+    SumHeuristic(const Shape& in_shape, const AxisSet& reduction_axes, const string& output_var)
+        : m_in_shape(in_shape)
+        , m_reduction_axes(reduction_axes)
+        , m_output_var(output_var)
+    {
+        analyze();
+    }
+    // use simd for the inner most loop
+    int simd_index{0};
+    // set parallel for to inner loop unless we find something better below
+    int parallel_for_index{simd_index};
+    // Optimization heuristics
+    // parallel for and simd for the same loop
+    bool fused_parallel_simd{false};
+    // global sum is thread safe in parallel for
+    bool thread_safe{false};
+    // global sum can use parallel for reduction clause
+    bool loop_reduction{false};
+    bool simd_reduction{false};
+    string omp_parallel_for{"#pragma omp parallel for"};
+    string omp_simd{"#pragma omp simd"};
+    string thread_safe_dest;
+
+    string get_thread_safe_dest() const {
+      return thread_safe_dest;
+    }
+    void emit_omp(codegen::CodeWriter& writer, const size_t loop_index) const
+    {
+        if (loop_index == parallel_for_index)
+        {
+            writer << omp_parallel_for;
+            if (loop_reduction)
+            {
+                writer << " reduction(+:" + thread_safe_dest + ")";
+            }
+            writer << "\n";
+        }
+        else if (loop_index == simd_index && !fused_parallel_simd)
+        {
+            writer << omp_simd;
+            if (simd_reduction)
+            {
+                writer << " reduction(+:" + thread_safe_dest + ")";
+            }
+            writer << "\n";
+        }
+    }
+    void emit_thread_local_begin(codegen::CodeWriter& writer,
+                                 const size_t loop_index,
+                                 const vector<string>& out_indexes,
+                                 const Shape& out_shape,
+                                 const std::string& element_type)
+    {
+        if (!thread_safe && loop_index == parallel_for_index)
+        {
+            string thread_local_buff = writer.generate_temporary_name("thread_local_buff");
+            thread_safe_dest = writer.generate_temporary_name("thread_safe_dest");
+            // generate thread local buffer
+            writer << "std::vector<" << element_type << "> " << thread_local_buff << "("
+                   << shape_size(out_shape) << ", 0);\n";
+            string bracketed_shape = emit_bracketed_string(out_shape);
+            writer << element_type << "(&" << thread_safe_dest << ")" << bracketed_shape
+                   << " = *reinterpret_cast<" << element_type << "(*)" << bracketed_shape << ">(&"
+                   << thread_local_buff << "[0]);\n";
+            thread_safe_dest += emit_bracketed_string(out_indexes);
+        }
+    }
+    void emit_thread_local_end(codegen::CodeWriter& writer,
+                               const size_t loop_index,
+                               const vector<string>& index_vars,
+                               const vector<string>& out_indexes,
+                               const Shape& out_shape)
+    {
+        // generate global reduction loop inside the parallel for
+        if (!thread_safe && loop_index == parallel_for_index)
+        {
+            auto out_brackets = emit_bracketed_string(out_indexes);
+            // iterate from parallel_for_index to remaining indexes
+            // emit loops in out_indexs
+            size_t j = 0;
+            size_t emit_count = 0;
+            for (size_t k = 0; k < m_in_shape.size() && j < out_shape.size(); ++k)
+            {
+                // found a match
+                if (index_vars[k] == out_indexes[j])
+                {
+                    // emit loop
+                    if (k > parallel_for_index)
+                    {
+                        string index_var = out_indexes[j];
+                        writer <<  ngraph::runtime::cpu::kernel::start_index_loop(index_var, 0, out_shape[j], false);
+                        writer.indent++;
+                        emit_count++;
+                    }
+                    // move to next out index
+                    ++j;
+                }
+            }
+            writer << "#pragma omp atomic\n";
+            writer << m_output_var << " += " << thread_safe_dest << ";\n";
+            for (size_t k = 0; k < emit_count; k++)
+            {
+                writer.indent--;
+                writer << "}\n";
+            }
+        }
+    }
+
+private:
+    Shape m_in_shape;
+    AxisSet m_reduction_axes;
+    string m_output_var;
+    void analyze()
+    {
+        // Heuristics
+        // set simd_index to inner most loop
+        simd_index = m_in_shape.size() - 1;
+
+        // for inference we may have batch size 1 in the outer
+        // loop, skip those to get better thread level parallelism
+        for (size_t i = 0; i < m_in_shape.size(); i++)
+        {
+            if (m_in_shape[i] > 1)
+            {
+                parallel_for_index = i;
+                break;
+            }
+        }
+        // check if there's any varying (non-reduction) indexes starting from
+        // parallel_for_index, if not, we can do reduction for parallel for
+        loop_reduction = true;
+        for (size_t i = parallel_for_index; i < m_in_shape.size(); ++i)
+        {
+            if (m_reduction_axes.count(i) == 0)
+            {
+                loop_reduction = false;
+                break;
+            }
+        }
+        // use simd reduction if simd_index is a reduction axis assuming
+        // it's the inner most loop
+        simd_reduction = (m_reduction_axes.count(simd_index) != 0);
+        // if output var has parallel_for_index, it's thread safe
+        // due to parallel for partition or loop_reduction is true
+        thread_safe = (m_reduction_axes.count(parallel_for_index) == 0) || loop_reduction;
+
+        // use output variable directly if thread safe, otherwise a thread safe
+        // temp output will be generated in emit_thread_local()
+        if (thread_safe)
+        {
+            thread_safe_dest = m_output_var;
+        }
+
+        // parallel_for_index matches simd_index so fuse them
+        if (simd_index == parallel_for_index)
+        {
+            fused_parallel_simd = true;
+            omp_parallel_for = "#pragma omp parallel for simd";
+        }
+    }
+};
+
 void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
                                             const string& element_type,
                                             const string& arg0, // replacement context
@@ -310,26 +474,25 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
     }
     else
     {
-//        writer << "#pragma omp parallel for simd\n";
-//        size_t s = shape_size(out_shape);
-//        string index_var = writer.generate_temporary_name("i");
-//        writer << "for(size_t " << index_var << " = 0; " << index_var << " < " << s << "; "
-//           << index_var << "++)\n";
-//        writer.block_begin();
-//        writer << out << "[" << index_var << "] = 0;\n";
-//        writer.block_end();
-          auto output_vars = open_for_loops(writer, out_shape);
-          writer << dest_nd_name << emit_bracketed_string(output_vars) << " = 0;\n";
-          close_for_loops(writer, output_vars);
-
+        //        writer << "#pragma omp parallel for simd\n";
+        //        size_t s = shape_size(out_shape);
+        //        string index_var = writer.generate_temporary_name("i");
+        //        writer << "for(size_t " << index_var << " = 0; " << index_var << " < " << s << "; "
+        //           << index_var << "++)\n";
+        //        writer.block_begin();
+        //        writer << out << "[" << index_var << "] = 0;\n";
+        //        writer.block_end();
+        auto output_vars = open_for_loops(writer, out_shape);
+        writer << dest_nd_name << emit_bracketed_string(output_vars) << " = 0;\n";
+        close_for_loops(writer, output_vars);
     }
 
     // If we don't have a zero index in the input, perform the sum
     if (find(arg0_shape.begin(), arg0_shape.end(), 0) == arg0_shape.end())
     {
-
         // create the the interation variables without writing the for loops
         vector<string> index_vars;
+
         for (size_t i = 0; i < arg0_shape.size(); i++)
         {
             string index_var = writer.generate_temporary_name("i");
@@ -340,7 +503,8 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
         vector<string> out_indexes;
         for (size_t i = 0; i < index_vars.size(); ++i)
         {
-            if (reduction_axes.count(i) == 0) {
+            if (reduction_axes.count(i) == 0)
+            {
                 out_indexes.push_back(index_vars[i]);
             }
         }
@@ -349,124 +513,25 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
         auto dst = dest_nd_name + out_brackets;
         auto src = source_nd_name + emit_bracketed_string(index_vars);
 
-        // for single loop, use both threading and simd
-        std::string pragma_omp_parallel = "#pragma omp parallel for";
-        std::string pragma_omp_simd = "#pragma omp simd";
-        if (arg0_shape.size() == 1) {
-            writer << "#pragma omp parallel for simd reduction(+: " + dst + ")\n";
-            writer << start_index_loop(index_vars[0], 0, arg0_shape[0], false);
+        SumHeuristic heuristic(arg0_shape, reduction_axes, dst);
+
+        // emit the for loops
+        for (size_t i = 0; i < arg0_shape.size(); i++)
+        {
+            string index_var = index_vars[i];
+            heuristic.emit_omp(writer, i);
+            writer << start_index_loop(index_var, 0, arg0_shape[i], false);
             writer.indent++;
-            writer << dst << " += " << src << ";\n";
-            close_for_loops(writer, index_vars);
+            heuristic.emit_thread_local_begin(writer, i, out_indexes, out_shape, element_type);
         }
-        else {
-            // nested loops
-            int parallel_for_index = 0;
-            // inner most loop
-            const int simd_index = arg0_shape.size() - 1;
-            bool fused_parallel_simd = false;
-            bool thread_safe = false;
-            bool loop_reduction = true;
-            // find the best index for parallel for
-            for (size_t i = 0; i < arg0_shape.size(); i++)
-            {
-                if (arg0_shape[i] > 1) {
-                    parallel_for_index = i;
-                    // check if there's any varying (non-reduction) indexes beyond parallel_for_index
-                    // if not, we can do reduction
-                    for (size_t j = parallel_for_index; j < arg0_shape.size(); ++j) {
-                      if (reduction_axes.count(j) == 0) {
-                        loop_reduction = false;
-                        break;
-                      }
-                    }
-                    // if output var has parallel_for_index, it's thread safe
-                    // due to parallel for partition or loop_reduction is true;
-                    thread_safe = (reduction_axes.count(parallel_for_index) == 0) || loop_reduction;
-                    break;
-                }
-            }
-            // parallel for matches simd index so fuse them
-            if (simd_index == parallel_for_index) {
-                fused_parallel_simd = true;
-                pragma_omp_parallel = "#pragma omp parallel for simd";
-            }
-
-            string thread_local_buff = writer.generate_temporary_name("thread_local_buff");
-            string thread_local_dest = "";
-            // emit the for loops
-            for (size_t i = 0; i < arg0_shape.size(); i++) {
-                string index_var = index_vars[i];
-                if (i == parallel_for_index) {
-                    writer << pragma_omp_parallel;
-                    if (loop_reduction) {
-                      writer << " reduction(+:" << dst << ")";
-                    }
-                    writer << "\n";
-                }
-
-                if (i == simd_index && !fused_parallel_simd) {
-                    writer << pragma_omp_simd;
-                    if (out_indexes.empty() || (!out_indexes.empty() && out_indexes.back() != index_var)) {
-                        writer << " reduction(+:" << thread_local_dest << ")";
-                    }
-                    writer << "\n";
-                }
-                writer << start_index_loop(index_var, 0, arg0_shape[i], false);
-                writer.indent++;
-
-                if (i == parallel_for_index) {
-                  if (thread_safe) {
-                    thread_local_dest = dst;
-                  }
-                  else {
-                    // generate thread local buffer
-                    writer << "std::vector<" << element_type << "> " << thread_local_buff << "(" << shape_size(out_shape) << ", 0);\n";
-                    thread_local_dest = recast_tmp_var(writer, element_type, "&"+thread_local_buff+"[0]", out_shape, "thread_local_dest") + out_brackets;
-                  }
-                }
-
-                // inner most loop
-                if (i == arg0_shape.size() - 1) {
-                    // thread local reduction
-                    writer << thread_local_dest << " += " << src << ";\n";
-                }
-            }
-            // close the loops
-            for (size_t i = arg0_shape.size(); i > 0; i--) {
-                if (!thread_safe) {
-                  // generate global reduction loop inside the parallel for
-                  if ((i-1) == parallel_for_index) {
-                    // iterate from parallel_for_index to remaining indexes
-                    // emit loops in out_indexs
-                    size_t j = 0;
-                    size_t emit_count = 0;
-                    for (size_t k = 0; k < arg0_shape.size() &&
-                         j < out_shape.size(); ++k) {
-                      // found a match
-                      if (index_vars[k] == out_indexes[j]) {
-                        // emit loop
-                        if (k > parallel_for_index) {
-                          string index_var = out_indexes[j];
-                          writer << start_index_loop(index_var, 0, out_shape[j], false);
-                          writer.indent++;
-                          emit_count++;
-                        }
-                        // move to next out index
-                        ++j;
-                      }
-                    }
-                    writer << "#pragma omp atomic\n";
-                    writer << dst << " += " << thread_local_dest << ";\n";
-                    for (size_t k = 0; k < emit_count; k++) {
-                      writer.indent--;
-                      writer << "}\n";
-                    }
-                  }
-                }
-                writer.indent--;
-                writer << "}\n";
-            }
+        // thread local reduction
+        writer << heuristic.get_thread_safe_dest() << " += " << src << ";\n";
+        // close the loops
+        for (size_t i = arg0_shape.size(); i > 0; i--)
+        {
+            heuristic.emit_thread_local_end(writer, i - 1, index_vars, out_indexes, out_shape);
+            writer.indent--;
+            writer << "}\n";
         }
     }
 }

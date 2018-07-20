@@ -181,9 +181,9 @@ void codegen::CompilerCore::initialize()
     args.push_back("-inline-threshold=1000000");
     if (m_enable_pass_report)
     {
-//        args.push_back("-Rpass-analysis=loop-vectorize");
-//        args.push_back("-Rpass=loop-vectorize");
-//        args.push_back("-Rpass-missed=loop-vectorize");
+        //        args.push_back("-Rpass-analysis=loop-vectorize");
+        //        args.push_back("-Rpass=loop-vectorize");
+        //        args.push_back("-Rpass-missed=loop-vectorize");
         args.push_back("-Rpass-analysis=.*");
         args.push_back("-Rpass=.*");
         args.push_back("-Rpass-missed=.*");

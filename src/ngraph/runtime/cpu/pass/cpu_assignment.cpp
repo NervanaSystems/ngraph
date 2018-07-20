@@ -567,17 +567,20 @@ namespace ngraph
                         std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                     auto users = reshape->get_users();
                     bool need_copy = reshape->get_is_transpose();
-                    for (auto n : users) {
-                        if (n->is_output()) {
+                    for (auto n : users)
+                    {
+                        if (n->is_output())
+                        {
                             need_copy = true;
                         }
                     }
-                    if (!need_copy) {
+                    if (!need_copy)
+                    {
                         std::map<size_t, size_t> oi_pairs = {{0, 0}};
                         op_annotations->set_in_place_oi_pairs(oi_pairs);
                         reshape->set_op_annotations(op_annotations);
                     }
-					
+
                     // Use Eigen for 3D
                     if (node->get_input_element_type(0) == element::f32 &&
                         arg0_shape.size() < TENSOR_MAX_DIMS && arg0_shape.size() > 3 &&

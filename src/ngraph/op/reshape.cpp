@@ -67,7 +67,8 @@ op::Reshape::Reshape(const shared_ptr<Node>& arg,
             "dimensions for reshape");
     }
 
-    if (!std::is_sorted(m_input_order.begin(), m_input_order.end())) {
+    if (!std::is_sorted(m_input_order.begin(), m_input_order.end()))
+    {
         m_is_transpose = true;
     }
 
