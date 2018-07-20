@@ -17,11 +17,9 @@
 #pragma once
 
 #include <CPP/engine.hpp>
-#include <CPP/layout.hpp>
 #include <CPP/memory.hpp>
 
 #include "ngraph/runtime/tensor_view.hpp"
-#include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
@@ -54,8 +52,7 @@ public:
     /// @param n Number of bytes to read, must be integral number of elements.
     void read(void* p, size_t tensor_offset, size_t n) const override;
 
+    cldnn::memory* get_data_ptr() { return ocl_memory.get(); }
 private:
-    cldnn::data_types get_cldnn_type(const ngraph::element::Type& element_type) const;
-
     std::shared_ptr<cldnn::memory> ocl_memory;
 };

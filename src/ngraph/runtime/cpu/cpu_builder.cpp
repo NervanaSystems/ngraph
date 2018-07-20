@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -94,11 +94,11 @@
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/kernel/abs.hpp"
 #include "ngraph/runtime/cpu/kernel/add.hpp"
+#include "ngraph/runtime/cpu/kernel/broadcast.hpp"
 #include "ngraph/runtime/cpu/kernel/ceil.hpp"
 #include "ngraph/runtime/cpu/kernel/multiply.hpp"
 #include "ngraph/runtime/cpu/kernel/relu.hpp"
 #include "ngraph/runtime/cpu/kernel/result.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
@@ -118,53 +118,6 @@
 
 using namespace std;
 using namespace ngraph;
-
-// Per-type kernel macro
-#define SELECT_KERNEL(KV, ET, K)                                                                   \
-    if (ET == element::boolean)                                                                    \
-    {                                                                                              \
-        KV = K<char>;                                                                              \
-    }                                                                                              \
-    else if (ET == element::f32)                                                                   \
-    {                                                                                              \
-        KV = K<float>;                                                                             \
-    }                                                                                              \
-    else if (ET == element::f64)                                                                   \
-    {                                                                                              \
-        KV = K<double>;                                                                            \
-    }                                                                                              \
-    else if (ET == element::i8)                                                                    \
-    {                                                                                              \
-        KV = K<int8_t>;                                                                            \
-    }                                                                                              \
-    else if (ET == element::i16)                                                                   \
-    {                                                                                              \
-        KV = K<int16_t>;                                                                           \
-    }                                                                                              \
-    else if (ET == element::i32)                                                                   \
-    {                                                                                              \
-        KV = K<int32_t>;                                                                           \
-    }                                                                                              \
-    else if (ET == element::i64)                                                                   \
-    {                                                                                              \
-        KV = K<int64_t>;                                                                           \
-    }                                                                                              \
-    else if (ET == element::u8)                                                                    \
-    {                                                                                              \
-        KV = K<uint8_t>;                                                                           \
-    }                                                                                              \
-    else if (ET == element::u16)                                                                   \
-    {                                                                                              \
-        KV = K<uint16_t>;                                                                          \
-    }                                                                                              \
-    else if (ET == element::u32)                                                                   \
-    {                                                                                              \
-        KV = K<uint32_t>;                                                                          \
-    }                                                                                              \
-    else if (ET == element::u64)                                                                   \
-    {                                                                                              \
-        KV = K<uint64_t>;                                                                          \
-    }
 
 #define BUILD_UNARY_ELEMWISE_FUNCTOR(OP)                                                           \
     auto& functors = external_function->get_functors();                                            \
@@ -221,6 +174,33 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::Abs)
             {
                 BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::abs);
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Broadcast)
+            {
+                std::function<void(void*, void*, const Shape&, const Shape&, const AxisSet&)>
+                    kernel;
+
+                SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::broadcast);
+
+                auto& functors = external_function->get_functors();
+                auto& tensor_data = external_function->get_tensor_data();
+
+                auto arg0_shape = args[0].get_shape();
+                auto result_shape = out[0].get_shape();
+
+                auto& arg0_tensor = tensor_data[args[0].get_name()];
+                auto& out_tensor = tensor_data[out[0].get_name()];
+
+                auto broadcast = static_cast<const ngraph::op::Broadcast*>(node);
+                auto broadcast_axes = broadcast->get_broadcast_axes();
+
+                auto functor =
+                    [&, kernel, arg0_shape, result_shape, broadcast_axes](CPURuntimeContext* ctx) {
+                        kernel(arg0_tensor, out_tensor, arg0_shape, result_shape, broadcast_axes);
+                    };
+                functors.emplace_back(functor);
             }
 
             template <>
@@ -418,8 +398,27 @@ namespace ngraph
                 {TI(ngraph::op::Multiply), &runtime::cpu::Builder::build<ngraph::op::Multiply>},
                 {TI(ngraph::op::Parameter), &runtime::cpu::Builder::nop},
                 {TI(ngraph::op::Abs), &runtime::cpu::Builder::build<ngraph::op::Abs>},
+                {TI(ngraph::op::AvgPool), &runtime::cpu::Builder::build<ngraph::op::AvgPool>},
+                {TI(ngraph::op::Broadcast), &runtime::cpu::Builder::build<ngraph::op::Broadcast>},
                 {TI(ngraph::op::Ceiling), &runtime::cpu::Builder::build<ngraph::op::Ceiling>},
+                {TI(ngraph::runtime::cpu::op::ConvertLayout),
+                 &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::ConvertLayout>},
+                {TI(ngraph::op::Convolution),
+                 &runtime::cpu::Builder::build<ngraph::op::Convolution>},
+                {TI(ngraph::op::ConvolutionRelu),
+                 &runtime::cpu::Builder::build<ngraph::op::ConvolutionRelu>},
+                {TI(ngraph::op::ConvolutionBias),
+                 &runtime::cpu::Builder::build<ngraph::op::ConvolutionBias>},
+                {TI(ngraph::op::ConvolutionBiasAdd),
+                 &runtime::cpu::Builder::build<ngraph::op::ConvolutionBiasAdd>},
+                {TI(ngraph::op::ConvolutionBackpropData),
+                 &runtime::cpu::Builder::build<ngraph::op::ConvolutionBackpropData>},
+                {TI(ngraph::op::ConvolutionBackpropFilters),
+                 &runtime::cpu::Builder::build<ngraph::op::ConvolutionBackpropFilters>},
+                {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
+                 &runtime::cpu::Builder::build<ngraph::op::ConvolutionBiasBackpropFiltersBias>},
                 {TI(ngraph::op::Relu), &runtime::cpu::Builder::build<ngraph::op::Relu>},
+                {TI(ngraph::op::Reshape), &runtime::cpu::Builder::build<ngraph::op::Reshape>},
                 {TI(ngraph::op::Result), &runtime::cpu::Builder::build<ngraph::op::Result>},
                 {TI(ngraph::op::MatmulBias), &runtime::cpu::Builder::build<ngraph::op::MatmulBias>},
                 {TI(ngraph::op::Constant), &runtime::cpu::Builder::build<ngraph::op::Constant>}};

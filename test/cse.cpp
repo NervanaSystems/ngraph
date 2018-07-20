@@ -134,6 +134,57 @@ TEST(CSE, abs_add)
     ASSERT_EQ(f->get_results().at(0)->get_argument(0), f->get_results().at(1)->get_argument(0));
 }
 
+TEST(CSE, abs_add_reshape_broadcast)
+{
+    Shape zero_shape{1};
+    auto A = std::make_shared<op::Parameter>(element::i32, zero_shape);
+    auto B = std::make_shared<op::Parameter>(element::i32, zero_shape);
+    auto abs_a1 = std::make_shared<op::Abs>(A);
+    auto abs_b1 = std::make_shared<op::Abs>(B);
+    auto abs_a2 = std::make_shared<op::Abs>(A);
+    auto abs_b2 = std::make_shared<op::Abs>(B);
+    auto add1 = std::make_shared<op::Add>(abs_a1, abs_b1);
+    auto add2 = std::make_shared<op::Add>(abs_a2, abs_b2);
+    {
+        // success case
+        auto reshape1 = std::make_shared<op::Reshape>(add1, AxisVector{0}, Shape{1, 1});
+        auto reshape2 = std::make_shared<op::Reshape>(add2, AxisVector{0}, Shape{1, 1});
+        auto broadcast1 = std::make_shared<op::Broadcast>(reshape1, Shape{1, 1, 3}, AxisSet{2});
+        auto broadcast2 = std::make_shared<op::Broadcast>(reshape2, Shape{1, 1, 3}, AxisSet{2});
+        auto f = std::make_shared<Function>(NodeVector{broadcast1, broadcast2},
+                                            op::ParameterVector{A, B});
+        pass::Manager pass_manager;
+
+        pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+        pass_manager.run_passes(f);
+        ASSERT_EQ(f->get_results().at(0)->get_argument(0), f->get_results().at(1)->get_argument(0));
+    }
+    {
+        // fail case
+        auto reshape1 = std::make_shared<op::Reshape>(add1, AxisVector{0}, Shape{1});
+        auto reshape2 = std::make_shared<op::Reshape>(add2, AxisVector{0}, Shape{1, 1});
+        auto f =
+            std::make_shared<Function>(NodeVector{reshape1, reshape2}, op::ParameterVector{A, B});
+        pass::Manager pass_manager;
+
+        pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+        pass_manager.run_passes(f);
+        ASSERT_NE(f->get_results().at(0)->get_argument(0), f->get_results().at(1)->get_argument(0));
+    }
+    {
+        // fail case
+        auto broadcast1 = std::make_shared<op::Broadcast>(add1, Shape{1, 2}, AxisSet{1});
+        auto broadcast2 = std::make_shared<op::Broadcast>(add2, Shape{1, 1, 2}, AxisSet{1, 2});
+        auto f = std::make_shared<Function>(NodeVector{broadcast1, broadcast2},
+                                            op::ParameterVector{A, B});
+        pass::Manager pass_manager;
+
+        pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+        pass_manager.run_passes(f);
+        ASSERT_NE(f->get_results().at(0)->get_argument(0), f->get_results().at(1)->get_argument(0));
+    }
+}
+
 TEST(CSE, abs_add_abs_add)
 {
     Shape zero_shape{0};

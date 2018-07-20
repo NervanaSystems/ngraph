@@ -20,6 +20,9 @@
 #include "onnx.pb.h"
 #include "tensor.hpp"
 
+#define likely(__x) __builtin_expect(!!(__x), 1)
+#define unlikely(__x) __builtin_expect(!!(__x), 0)
+
 namespace ngraph
 {
     namespace onnx_import
@@ -33,9 +36,9 @@ namespace ngraph
             {
                 namespace detail
                 {
-                    struct attribute : ngraph_error
+                    struct Attribute : ngraph_error
                     {
-                        attribute(std::string msg, onnx::AttributeProto_AttributeType type)
+                        Attribute(std::string msg, onnx::AttributeProto_AttributeType type)
                             : ngraph_error{std::move(msg) + ": " +
                                            onnx::AttributeProto_AttributeType_Name(type)}
                         {
@@ -44,18 +47,18 @@ namespace ngraph
 
                 } // namespace detail
 
-                struct invalid_data : detail::attribute
+                struct InvalidData : detail::Attribute
                 {
-                    explicit invalid_data(onnx::AttributeProto_AttributeType type)
-                        : attribute{"invalid attribute type", type}
+                    explicit InvalidData(onnx::AttributeProto_AttributeType type)
+                        : Attribute{"invalid attribute type", type}
                     {
                     }
                 };
 
-                struct unsupported_type : detail::attribute
+                struct UnsupportedType : detail::Attribute
                 {
-                    explicit unsupported_type(onnx::AttributeProto_AttributeType type)
-                        : attribute("unsupported attribute type", type)
+                    explicit UnsupportedType(onnx::AttributeProto_AttributeType type)
+                        : Attribute{"unsupported attribute type", type}
                     {
                     }
                 };
@@ -63,6 +66,154 @@ namespace ngraph
             } // namespace attribute
 
         } // namespace error
+
+        namespace detail
+        {
+            namespace attribute
+            {
+                template <typename T>
+                inline T get_value(const onnx::AttributeProto& attribute)
+                {
+                    throw error::attribute::UnsupportedType{attribute.type()};
+                }
+
+                template <>
+                inline float get_value(const onnx::AttributeProto& attribute)
+                {
+                    if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_FLOAT))
+                    {
+                        throw error::attribute::InvalidData{attribute.type()};
+                    }
+                    return attribute.f();
+                }
+
+                template <>
+                inline std::vector<float> get_value(const onnx::AttributeProto& attribute)
+                {
+                    switch (attribute.type())
+                    {
+                    case onnx::AttributeProto_AttributeType_FLOAT: return {attribute.f()};
+                    case onnx::AttributeProto_AttributeType_FLOATS:
+                        return {std::begin(attribute.floats()), std::end(attribute.floats())};
+                    default: throw error::attribute::InvalidData{attribute.type()};
+                    }
+                }
+
+                template <>
+                inline double get_value(const onnx::AttributeProto& attribute)
+                {
+                    if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_FLOAT))
+                    {
+                        throw error::attribute::InvalidData{attribute.type()};
+                    }
+                    return static_cast<double>(attribute.f());
+                }
+
+                template <>
+                inline std::vector<double> get_value(const onnx::AttributeProto& attribute)
+                {
+                    switch (attribute.type())
+                    {
+                    case onnx::AttributeProto_AttributeType_FLOAT:
+                        return {static_cast<double>(attribute.f())};
+                    case onnx::AttributeProto_AttributeType_FLOATS:
+                        return {std::begin(attribute.floats()), std::end(attribute.floats())};
+                    default: throw error::attribute::InvalidData{attribute.type()};
+                    }
+                }
+
+                template <>
+                inline std::size_t get_value(const onnx::AttributeProto& attribute)
+                {
+                    if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_INT))
+                    {
+                        throw error::attribute::InvalidData{attribute.type()};
+                    }
+                    return static_cast<std::size_t>(attribute.i());
+                }
+
+                template <>
+                inline std::vector<std::size_t> get_value(const onnx::AttributeProto& attribute)
+                {
+                    switch (attribute.type())
+                    {
+                    case onnx::AttributeProto_AttributeType_INT:
+                        return {static_cast<std::size_t>(attribute.i())};
+                    case onnx::AttributeProto_AttributeType_INTS:
+                        return {std::begin(attribute.ints()), std::end(attribute.ints())};
+                    default: throw error::attribute::InvalidData{attribute.type()};
+                    }
+                }
+
+                template <>
+                inline int64_t get_value(const onnx::AttributeProto& attribute)
+                {
+                    if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_INT))
+                    {
+                        throw error::attribute::InvalidData{attribute.type()};
+                    }
+                    return attribute.i();
+                }
+
+                template <>
+                inline std::vector<int64_t> get_value(const onnx::AttributeProto& attribute)
+                {
+                    switch (attribute.type())
+                    {
+                    case onnx::AttributeProto_AttributeType_INT: return {attribute.i()};
+                    case onnx::AttributeProto_AttributeType_INTS:
+                        return {std::begin(attribute.ints()), std::end(attribute.ints())};
+                    default: throw error::attribute::InvalidData{attribute.type()};
+                    }
+                }
+
+                template <>
+                inline const std::string& get_value(const onnx::AttributeProto& attribute)
+                {
+                    if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_STRING))
+                    {
+                        throw error::attribute::InvalidData{attribute.type()};
+                    }
+                    return attribute.s();
+                }
+
+                template <>
+                inline std::vector<std::string> get_value(const onnx::AttributeProto& attribute)
+                {
+                    switch (attribute.type())
+                    {
+                    case onnx::AttributeProto_AttributeType_STRING: return {attribute.s()};
+                    case onnx::AttributeProto_AttributeType_STRINGS:
+                        return {std::begin(attribute.strings()), std::end(attribute.strings())};
+                    default: throw error::attribute::InvalidData{attribute.type()};
+                    }
+                }
+
+                template <>
+                inline Tensor get_value(const onnx::AttributeProto& attribute)
+                {
+                    if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_TENSOR))
+                    {
+                        throw error::attribute::InvalidData{attribute.type()};
+                    }
+                    return Tensor{attribute.t()};
+                }
+
+                template <>
+                inline std::vector<Tensor> get_value(const onnx::AttributeProto& attribute)
+                {
+                    switch (attribute.type())
+                    {
+                    case onnx::AttributeProto_AttributeType_TENSOR: return {Tensor{attribute.t()}};
+                    case onnx::AttributeProto_AttributeType_TENSORS:
+                        return {std::begin(attribute.tensors()), std::end(attribute.tensors())};
+                    default: throw error::attribute::InvalidData{attribute.type()};
+                    }
+                }
+
+            } // namespace attribute
+
+        } // namespace detail
 
         class Attribute
         {
@@ -140,6 +291,12 @@ namespace ngraph
             /* explicit */ operator onnx::AttributeProto_AttributeType() const
             {
                 return m_attribute_proto.type();
+            }
+
+            template <typename T>
+            T get_value() const
+            {
+                return detail::attribute::get_value<T>(m_attribute_proto);
             }
 
         private:

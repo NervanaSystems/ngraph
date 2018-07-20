@@ -111,6 +111,8 @@ namespace ngraph
                 void compile();
 
             private:
+                void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
+                                               std::string output_name);
                 void emit_debug_function_entry(codegen::CodeWriter& writer,
                                                Node* node,
                                                const std::vector<TensorViewWrapper>& in,
@@ -158,9 +160,11 @@ namespace ngraph
                 std::string m_function_name;
 
                 std::list<std::function<void(CPURuntimeContext*)>> functors;
+                std::list<std::pair<std::function<bool(CPURuntimeContext*)>, size_t>> enables;
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>
                     executor;
                 std::unordered_map<std::string, void*> tensor_data;
+                std::unordered_map<std::string, bool> tensor_stale;
                 std::unordered_map<std::string, size_t> intermediates_offsets;
                 std::unordered_map<std::string, size_t> function_input_index, function_output_index;
                 bool m_is_built;
