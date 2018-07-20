@@ -29,9 +29,16 @@ namespace ngraph
                 static int GetNumCores()
                 {
                     const auto omp_num_threads = std::getenv("OMP_NUM_THREADS");
+                    const auto ngraph_intra_op_parallelism =
+                        std::getenv("NGRAPH_INTRA_OP_PARALLELISM");
                     int count;
 
                     if (omp_num_threads && (count = std::atoi(omp_num_threads)))
+                    {
+                        return count;
+                    }
+                    else if (ngraph_intra_op_parallelism &&
+                             (count == std::atoi(ngraph_intra_op_parallelism)))
                     {
                         return count;
                     }
