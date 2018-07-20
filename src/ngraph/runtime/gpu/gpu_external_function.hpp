@@ -80,7 +80,7 @@ namespace ngraph
                 EntryPoint m_compiled_function;
 
             private:
-                void assemble_and_reserve(const std::string& common_functions);
+                void optimize_and_assemble();
                 void emit_header();
                 void emit_timer_functions();
                 void emit_constant_declarations();
@@ -95,7 +95,7 @@ namespace ngraph
                 std::string strip_comments(const std::string& s) const;
 
                 codegen::CodeWriter m_writer;
-                pass::Manager m_pass_manager;
+                ngraph::pass::Manager m_pass_manager;
 
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
@@ -116,7 +116,7 @@ namespace ngraph
                 std::string m_function_name;
                 std::string m_pch_header_source;
 
-                std::unordered_map<std::string, size_t> m_memory_buffers;
+                std::shared_ptr<std::unordered_map<std::string, size_t>> m_memory_buffers;
                 std::shared_ptr<GPU_Backend::BackendContext> m_shared_context;
             };
         }

@@ -104,6 +104,7 @@
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
+#include "ngraph/runtime/gpu/pass/function_memory_reservation.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -247,6 +248,7 @@ runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     , m_is_compiled(false)
     , m_release_function(release_function)
     , m_temporaries_used(false)
+    , m_memory_buffers(new std::unordered_map<std::string, size_t>)
     , m_shared_context(shared_context)
 {
 }
@@ -255,29 +257,44 @@ runtime::gpu::GPU_ExternalFunction::~GPU_ExternalFunction()
 {
 }
 
-void runtime::gpu::GPU_ExternalFunction::assemble_and_reserve(const std::string& common_functions)
+void runtime::gpu::GPU_ExternalFunction::optimize_and_assemble()
 {
-    GPUAllocator allocator = m_shared_context->m_primitive_emitter->get_memory_allocator();
+    auto allocator =
+        std::make_shared<runtime::gpu::GPUAllocator>(m_shared_context->m_primitive_emitter->get_memory_allocator());
+
+    m_pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
+
+    m_pass_manager.register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
+
+    m_pass_manager.register_pass<ngraph::pass::Liveness>();
+
+    m_pass_manager.register_pass<ngraph::pass::MemoryLayout>(64);
+
+    m_pass_manager.register_pass<runtime::gpu::pass::FunctionMemoryReservation>(allocator, m_memory_buffers);
+
+    std::string common_function_string;
+    auto femitter = bind(&ngraph::runtime::gpu::GPU_ExternalFunction::emit_op_as_function,
+                         this,
+                         placeholders::_1,
+                         placeholders::_2);
+    m_pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
+        femitter, m_node_function_map, common_function_string);
+
+    string dump_filename = file_util::path_join(s_output_dir, m_function_name + "_ops.txt");
+    m_pass_manager.register_pass<ngraph::pass::DumpSorted>(dump_filename);
+
+    m_pass_manager.run_passes(m_function);
 
     for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
     {
-        // cache list of ordered ops
         m_function_ordered_ops.insert({current_function, current_function->get_ordered_ops()});
-
-        // reserve memory buffers for intermediate results
-        size_t temp_pool_size = current_function->get_temporary_pool_size();
-        if (temp_pool_size)
-        {
-            size_t pool_idx = allocator.reserve_workspace(temp_pool_size, false);
-            m_memory_buffers[current_function->get_name()] = pool_idx;
-        }
     }
 
     emit_header();
     emit_timer_functions();
     emit_constant_declarations();
     emit_function_declarations();
-    m_writer << common_functions << "\n";
+    m_writer << common_function_string << "\n";
     emit_functions();
 }
 
@@ -400,7 +417,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_constant_declarations()
             {
                 shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
                 // get an allocator for transient per kernel gpu memory
-                GPUAllocator allocator =
+                runtime::gpu::GPUAllocator allocator =
                     m_shared_context->m_primitive_emitter->get_memory_allocator();
                 size_t idx = allocator.reserve_argspace(
                     c->get_data_ptr(),
@@ -474,8 +491,9 @@ void runtime::gpu::GPU_ExternalFunction::emit_temp_mem_pool_allocation(
     if (m_temporaries_used)
     {
         m_writer << "// Allocate the memory pool\n";
+        // TODO memory pool malloc.
         m_writer << "void* pool_base_ptr = ngraph::runtime::gpu::invoke_memory_primitive(ctx, "
-                 << m_memory_buffers.at(current_function->get_name()) << ");\n";
+                 << m_memory_buffers->at(current_function->get_name()) << ");\n";
 
         // Add temporaries to the variable name map
         for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
@@ -654,24 +672,9 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     }
 
     m_function_name = m_function->get_name();
-    string dump_filename = file_util::path_join(s_output_dir, m_function_name + "_ops.txt");
 
-    // For now, just make everyone row-major.
-    m_pass_manager.register_pass<pass::ResultCopyElimination>();
-    m_pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
-    string common_function_string;
-    auto femitter = bind(&ngraph::runtime::gpu::GPU_ExternalFunction::emit_op_as_function,
-                         this,
-                         placeholders::_1,
-                         placeholders::_2);
-    m_pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
-        femitter, m_node_function_map, common_function_string);
-    m_pass_manager.register_pass<pass::Liveness>();
-    m_pass_manager.register_pass<pass::MemoryLayout>(64);
-    m_pass_manager.register_pass<pass::DumpSorted>(dump_filename);
-    m_pass_manager.run_passes(m_function);
 
-    assemble_and_reserve(common_function_string);
+    optimize_and_assemble();
 
     // allocate device buffers for primitive arguments and workspace
     m_shared_context->m_primitive_emitter->allocate_primitive_memory();

@@ -36,10 +36,7 @@ namespace ngraph
             {
             public:
                 GPUAllocator() = delete;
-                GPUAllocator(GPUMemoryManager* mgr)
-                    : m_manager(mgr)
-                {
-                }
+                GPUAllocator(GPUMemoryManager* mgr);
                 GPUAllocator(const GPUAllocator& g);
 
                 ~GPUAllocator();
@@ -74,7 +71,7 @@ namespace ngraph
 
                 size_t m_buffer_offset;
                 std::vector<uint8_t> m_buffered_mem;
-                pass::MemoryManager m_workspace_manager;
+                ngraph::pass::MemoryManager m_workspace_manager;
                 static constexpr const uint16_t alignment = 8;
 
                 struct allocation
@@ -86,6 +83,7 @@ namespace ngraph
                 std::list<allocation> m_argspace_mem;
                 std::list<allocation> m_workspace_mem;
                 GPUPrimitiveEmitter* m_primitive_emitter;
+                size_t m_open_allocators;
             };
         }
     }

@@ -39,6 +39,7 @@ set(SRC
     gpu_tensor_view.cpp
     gpu_util.cpp
     type_info.cpp
+    pass/function_memory_reservation.cpp
     )
 
 if (NGRAPH_GPU_ENABLE)
