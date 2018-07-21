@@ -19,6 +19,7 @@
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/gpu/emitter.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/runtime/gpu/wrapped_node.hpp"
 
 namespace ngraph
 {
@@ -31,7 +32,7 @@ namespace ngraph
             {
             public:
                 Emitter<op::Softmax>(Node* node)
-                    : m_node(static_cast<op::Softmax*>(node))
+                : m_node(static_cast<op::gpu::MemoryWrappedNode<op::Softmax>*>(node))
                 {
                 }
 
@@ -43,14 +44,13 @@ namespace ngraph
 
             public:
                 // static op emitter
-                static void emit(GPU_ExternalFunction* external_function,
-                                 codegen::CodeWriter& writer,
-                                 const ngraph::Node* node,
-                                 const std::vector<GPU_TensorViewWrapper>& args,
-                                 const std::vector<GPU_TensorViewWrapper>& out);
+                void emit(GPU_ExternalFunction* external_function,
+                          codegen::CodeWriter& writer,
+                          const std::vector<GPU_TensorViewWrapper>& args,
+                          const std::vector<GPU_TensorViewWrapper>& out);
 
             private:
-                op::Softmax* m_node;
+                op::gpu::MemoryWrappedNode<op::Softmax>* m_node;
             };
         }
     }

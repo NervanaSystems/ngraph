@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-pass::CommonFunctionCollection::CommonFunctionCollection(function<string(Node&, string)> emitter,
+pass::CommonFunctionCollection::CommonFunctionCollection(function<string(const std::shared_ptr<Node>&, string)> emitter,
                                                          unordered_map<Node*, Node*>& result_map,
                                                          string& emitted_functions)
     : m_emit_op_as_function(emitter)
@@ -47,14 +47,12 @@ bool pass::CommonFunctionCollection::run_on_module(vector<shared_ptr<Function>>&
     for (const shared_ptr<Function>& current_function : functions)
     {
         list<shared_ptr<Node>> op_list = current_function->get_ordered_ops();
-        for (const shared_ptr<Node>& op : op_list)
+        for (const shared_ptr<Node>& node : op_list)
         {
-            if (op->is_constant() || op->is_parameter())
+            if (node->is_constant() || node->is_parameter())
             {
                 continue;
             }
-
-            Node& node = *op;
 
             // First emit the op as a function, something like this:
             // static void __f__(float* _arg0, float *_out1)
@@ -72,7 +70,7 @@ bool pass::CommonFunctionCollection::run_on_module(vector<shared_ptr<Function>>&
             auto it = match_function_map.find(match_function);
             if (it != match_function_map.end())
             {
-                m_node_function_map.insert({&node, it->second});
+                m_node_function_map.insert({node.get(), it->second});
                 if (m_node_function_map.find(it->second) == m_node_function_map.end())
                 {
                     m_node_function_map.insert({it->second, it->second});
@@ -81,14 +79,14 @@ bool pass::CommonFunctionCollection::run_on_module(vector<shared_ptr<Function>>&
                     // we rename it to something unique so we can compile everything when done.
                     auto offset = match_function.find(function_name);
                     string emitted_function = match_function;
-                    string match_function_name = create_function_name(*it->second);
+                    string match_function_name = create_function_name(it->second);
                     emitted_function.replace(offset, function_name.size(), match_function_name);
                     ss << emitted_function << "\n";
                 }
             }
             else
             {
-                match_function_map.insert({match_function, &node});
+                match_function_map.insert({match_function, node.get()});
             }
         }
     }
@@ -96,7 +94,7 @@ bool pass::CommonFunctionCollection::run_on_module(vector<shared_ptr<Function>>&
     return false;
 }
 
-string pass::CommonFunctionCollection::create_function_name(const Node& node)
+string pass::CommonFunctionCollection::create_function_name(const Node* node)
 {
-    return "func_" + node.get_name();
+    return "func_" + node->get_name();
 }

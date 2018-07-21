@@ -236,8 +236,6 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::Relu), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Relu>},
     {TI(ngraph::op::ReluBackprop),
      &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::ReluBackprop>},
-    {TI(ngraph::op::Softmax), &runtime::gpu::Emitter<ngraph::op::Softmax>::emit},
-    {TI(ngraph::op::gpu::MemoryWrappedNode<ngraph::op::Softmax>), &runtime::gpu::Emitter<ngraph::op::Softmax>::emit},
     {TI(ngraph::op::And), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::And>},
     {TI(ngraph::op::Or), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Or>}};
 
@@ -554,11 +552,6 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                     *node; // Work around a compiler warning (*node inside typeid may have effects
                 // with shared pointers, which is fine here but clang doesn't like it.)
                 auto handler = dispatcher.find(type_index(typeid(n)));
-                if (handler == dispatcher.end())
-                {
-                    throw ngraph_error("Unhandled op during code generation : " +
-                                       node->description());
-                }
                 vector<GPU_TensorViewWrapper> in;
                 vector<string> node_input_names;
                 vector<string> node_output_names;
@@ -596,12 +589,24 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 if (it == m_node_function_map.end())
                 {
                     //throw runtime_error("No matching function found for '" + node->get_name() + "'");
-                    handler->second(this, m_writer, node.get(), in, out);
+                    if (auto wrapped = std::dynamic_pointer_cast<op::gpu::MemoryWrappedNode_Base>(node))
+                    {
+                        wrapped->emit(this, m_writer, in, out);
+                    }
+                    else if (handler != dispatcher.end())
+                    {
+                        handler->second(this, m_writer, node.get(), in, out);
+                    }
+                    else
+                    {
+                        throw ngraph_error("Unhandled op during code generation : " +
+                                           node->description());
+                    }
                 }
                 else
                 {
                     string func_name =
-                        ngraph::pass::CommonFunctionCollection::create_function_name(*it->second);
+                        ngraph::pass::CommonFunctionCollection::create_function_name(it->second);
                     vector<string> names;
                     for (const GPU_TensorViewWrapper& tv : in)
                     {
@@ -735,7 +740,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_debug_function_exit(Node* node)
     }
 }
 
-string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
+string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const std::shared_ptr<Node>& n,
                                                                const string& function_name)
 {
     codegen::CodeWriter writer;
@@ -743,6 +748,7 @@ string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
     writer.indent++;
     // Work around a compiler warning (*node inside typeid may have effects
     // with shared pointers, which is fine here but clang doesn't like it.)
+    Node& node = *n;
     auto handler = dispatcher.find(type_index(typeid(node)));
     vector<GPU_TensorViewWrapper> in;
     size_t arg_index = 0;
@@ -781,7 +787,14 @@ string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
     writer.indent--;
     writer << "\n)\n";
     codegen::CodeWriter tmp_writer;
-    handler->second(this, tmp_writer, &node, in, out);
+    if (auto wrapped = std::dynamic_pointer_cast<op::gpu::MemoryWrappedNode_Base>(n))
+    {
+        wrapped->emit(this, tmp_writer, in, out);
+    }
+    else
+    {
+        handler->second(this, tmp_writer, n.get(), in, out);
+    }
     string body = tmp_writer.get_code();
     if (body.size() > 0 && body[0] == '{')
     {

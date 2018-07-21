@@ -20,9 +20,9 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/runtime/gpu/emitters/softmax.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/runtime/gpu/emitter.hpp"
 #include <type_traits>
 
 namespace ngraph
@@ -31,14 +31,26 @@ namespace ngraph
     {
         namespace gpu
         {
+            class MemoryWrappedNode_Base : public Node
+            {
+            public:
+                MemoryWrappedNode_Base(const std::shared_ptr<Node>& node)
+                    : Node(node->description(), node->get_arguments()) {}
+                virtual ~MemoryWrappedNode_Base() = default;
+                virtual void emit(runtime::gpu::GPU_ExternalFunction* external_function,
+                                  codegen::CodeWriter& writer,
+                                  const std::vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                  const std::vector<runtime::gpu::GPU_TensorViewWrapper>& out) {}
+            };
+
             template <typename NODE_TYPE>
-            class MemoryWrappedNode : public Node
+            class MemoryWrappedNode : public MemoryWrappedNode_Base
             {
             public:
                 MemoryWrappedNode(const std::shared_ptr<NODE_TYPE>& node)
-                    : Node(node->description(), node->get_arguments())
+                    : MemoryWrappedNode_Base(node)
                     , m_node(node)
-                    , m_emitter(node.get())
+                    , m_emitter(this)
                 {
                     // add node's outputs to wrapped node
                     size_t i = 0;
@@ -64,6 +76,14 @@ namespace ngraph
                          this->add_output(m_node->get_element_type(), workspace);
                     }
                 }
+
+                void emit(runtime::gpu::GPU_ExternalFunction* external_function,
+                          codegen::CodeWriter& writer,
+                          const std::vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                          const std::vector<runtime::gpu::GPU_TensorViewWrapper>& out) override
+                    {
+                        m_emitter.emit(external_function, writer, args, out);
+                    }
 
                 std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override
                 {

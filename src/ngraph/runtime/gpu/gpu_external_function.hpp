@@ -92,7 +92,7 @@ namespace ngraph
                 void emit_temp_mem_pool_release();
                 void release_function() { m_function = nullptr; }
                 void store_emitted_functions(const std::string& code);
-                std::string emit_op_as_function(const Node& node, const std::string& function_name);
+                std::string emit_op_as_function(const std::shared_ptr<Node>& node, const std::string& function_name);
                 std::string strip_comments(const std::string& s) const;
 
                 codegen::CodeWriter m_writer;

@@ -783,7 +783,7 @@ using namespace ngraph::runtime;
             else
             {
                 string func_name =
-                    ngraph::pass::CommonFunctionCollection::create_function_name(*it->second);
+                    ngraph::pass::CommonFunctionCollection::create_function_name(it->second);
                 vector<string> names;
                 for (const TensorViewWrapper& tv : in)
                 {
@@ -1294,7 +1294,7 @@ bool runtime::cpu::CPU_ExternalFunction::is_functionally_identical(
     return node_cache.at(&n1) == node_cache.at(&n2);
 }
 
-string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
+string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const std::shared_ptr<Node>& n,
                                                                const string& function_name)
 {
     codegen::CodeWriter writer;
@@ -1302,6 +1302,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
     writer.indent++;
     // Work around a compiler warning (*node inside typeid may have effects
     // with shared pointers, which is fine here but clang doesn't like it.)
+    Node& node = *n;
     auto handler = dispatcher.find(type_index(typeid(node)));
     if (handler == dispatcher.end())
     {

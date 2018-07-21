@@ -17,6 +17,9 @@
 #include <memory>
 #include <unordered_map>
 
+#include "ngraph/op/softmax.hpp"
+#include "ngraph/runtime/gpu/emitters/softmax.hpp"
+
 #include "ngraph/runtime/gpu/pass/kernel_memory_allocation.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"

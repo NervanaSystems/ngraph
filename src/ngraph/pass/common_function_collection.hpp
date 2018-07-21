@@ -41,7 +41,7 @@ public:
     //        name of the function to call is create_function_name(<emitted static function node>)
     // @param emitted_functions - string to contain the emitted code for all of the static
     //        functions.
-    CommonFunctionCollection(std::function<std::string(Node&, std::string)> function_emitter,
+    CommonFunctionCollection(std::function<std::string(const std::shared_ptr<Node>&, std::string)> function_emitter,
                              std::unordered_map<Node*, Node*>& result_map,
                              std::string& emitted_functions);
 
@@ -53,10 +53,10 @@ public:
     // @param node - Node used to construct the function name. This node is the `value` of the
     //        result_map passed to the pass's constructor.
     // @return string containing the name of the function to be called
-    static std::string create_function_name(const Node& node);
+    static std::string create_function_name(const Node* node);
 
 private:
-    std::function<std::string(Node&, std::string)> m_emit_op_as_function;
+    std::function<std::string(const std::shared_ptr<Node>&, std::string)> m_emit_op_as_function;
     std::unordered_map<Node*, Node*>& m_node_function_map;
     std::string& m_emitted_functions;
 };
