@@ -17,11 +17,9 @@
 #pragma once
 
 #include <CPP/engine.hpp>
-#include <CPP/layout.hpp>
 #include <CPP/memory.hpp>
 
 #include "ngraph/runtime/tensor_view.hpp"
-#include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
@@ -56,7 +54,5 @@ public:
 
     cldnn::memory* get_data_ptr() { return ocl_memory.get(); }
 private:
-    cldnn::data_types get_cldnn_type(const ngraph::element::Type& element_type) const;
-
     std::shared_ptr<cldnn::memory> ocl_memory;
 };

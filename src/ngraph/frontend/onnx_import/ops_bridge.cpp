@@ -17,7 +17,9 @@
 #include <algorithm>
 #include <functional>
 
+#include "attribute.hpp"
 #include "ngraph/frontend/onnx_import/op/add.hpp"
+#include "ngraph/frontend/onnx_import/op/constant.hpp"
 #include "ops_bridge.hpp"
 
 namespace ngraph
@@ -39,6 +41,11 @@ namespace ngraph
             } // namespace error
 
             NodeVector add(const Node& node) { return op::add(node); }
+            NodeVector constant(const Node& node)
+            {
+                return {op::constant(node.get_attribute_value<Tensor>("value"))};
+            }
+
             class ops_bridge
             {
             public:
@@ -61,7 +68,12 @@ namespace ngraph
                     return instance;
                 }
 
-                ops_bridge() { m_map.emplace("Add", std::bind(add, std::placeholders::_1)); }
+                ops_bridge()
+                {
+                    m_map.emplace("Add", std::bind(add, std::placeholders::_1));
+                    m_map.emplace("Constant", std::bind(constant, std::placeholders::_1));
+                }
+
                 NodeVector operator()(const Node& node) const
                 {
                     try
