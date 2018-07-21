@@ -98,13 +98,13 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/pass/common_function_collection.hpp"
+#include "ngraph/runtime/gpu/emitters/softmax.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
-#include "ngraph/runtime/gpu/emitters/softmax.hpp"
 #include "ngraph/runtime/gpu/pass/kernel_memory_allocation.hpp"
 #include "ngraph/runtime/gpu/wrapped_node.hpp"
 
@@ -589,7 +589,8 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 if (it == m_node_function_map.end())
                 {
                     //throw runtime_error("No matching function found for '" + node->get_name() + "'");
-                    if (auto wrapped = std::dynamic_pointer_cast<op::gpu::MemoryWrappedNode_Base>(node))
+                    if (auto wrapped =
+                            std::dynamic_pointer_cast<op::gpu::MemoryWrappedNode_Base>(node))
                     {
                         wrapped->emit(this, m_writer, in, out);
                     }
@@ -654,7 +655,8 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     // For now, just make everyone row-major.
     m_pass_manager.register_pass<ngraph::runtime::gpu::pass::KernelMemoryAllocation>();
     m_pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
-    m_pass_manager.register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
+    m_pass_manager
+        .register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
     string common_function_string;
     auto femitter = bind(&ngraph::runtime::gpu::GPU_ExternalFunction::emit_op_as_function,
                          this,

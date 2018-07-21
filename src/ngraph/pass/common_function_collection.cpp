@@ -21,9 +21,10 @@
 using namespace std;
 using namespace ngraph;
 
-pass::CommonFunctionCollection::CommonFunctionCollection(function<string(const std::shared_ptr<Node>&, string)> emitter,
-                                                         unordered_map<Node*, Node*>& result_map,
-                                                         string& emitted_functions)
+pass::CommonFunctionCollection::CommonFunctionCollection(
+    function<string(const std::shared_ptr<Node>&, string)> emitter,
+    unordered_map<Node*, Node*>& result_map,
+    string& emitted_functions)
     : m_emit_op_as_function(emitter)
     , m_node_function_map(result_map)
     , m_emitted_functions(emitted_functions)

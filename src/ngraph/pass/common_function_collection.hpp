@@ -41,9 +41,10 @@ public:
     //        name of the function to call is create_function_name(<emitted static function node>)
     // @param emitted_functions - string to contain the emitted code for all of the static
     //        functions.
-    CommonFunctionCollection(std::function<std::string(const std::shared_ptr<Node>&, std::string)> function_emitter,
-                             std::unordered_map<Node*, Node*>& result_map,
-                             std::string& emitted_functions);
+    CommonFunctionCollection(
+        std::function<std::string(const std::shared_ptr<Node>&, std::string)> function_emitter,
+        std::unordered_map<Node*, Node*>& result_map,
+        std::string& emitted_functions);
 
     virtual ~CommonFunctionCollection();
 

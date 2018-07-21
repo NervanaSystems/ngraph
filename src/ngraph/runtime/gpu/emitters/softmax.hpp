@@ -18,8 +18,8 @@
 
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/gpu/emitter.hpp"
-#include "ngraph/shape.hpp"
 #include "ngraph/runtime/gpu/wrapped_node.hpp"
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
@@ -32,7 +32,7 @@ namespace ngraph
             {
             public:
                 Emitter<op::Softmax>(Node* node)
-                : m_node(static_cast<op::gpu::MemoryWrappedNode<op::Softmax>*>(node))
+                    : m_node(static_cast<op::gpu::MemoryWrappedNode<op::Softmax>*>(node))
                 {
                 }
 
