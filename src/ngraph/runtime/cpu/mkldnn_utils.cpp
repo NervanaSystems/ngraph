@@ -193,7 +193,7 @@ mkldnn::memory::data_type
     runtime::cpu::mkldnn_utils::get_mkldnn_data_type(const ngraph::element::Type& type)
 {
     auto it = s_mkldnn_data_type_map.find(type);
-    if (it == s_mkldnn_data_type_map.end() || it->second == memory::data_type::data_undef)
+    if (it == s_mkldnn_data_type_map.end())
     {
         throw ngraph_error("No MKLDNN data type exists for the given element type");
     }
@@ -223,6 +223,69 @@ mkldnn::memory::format runtime::cpu::mkldnn_utils::get_output_mkldnn_format(cons
     return dynamic_cast<runtime::cpu::LayoutDescriptor&>(*tvl).get_mkldnn_format();
 }
 
+const mkldnn::memory::desc& runtime::cpu::mkldnn_utils::get_input_mkldnn_md(const Node* node,
+                                                                            size_t index)
+{
+    auto tvl = node->get_inputs()[index].get_output().get_tensor_view()->get_tensor_view_layout();
+    return dynamic_cast<runtime::cpu::LayoutDescriptor&>(*tvl).get_mkldnn_md();
+}
+
+const mkldnn::memory::desc& runtime::cpu::mkldnn_utils::get_output_mkldnn_md(const Node* node,
+                                                                             size_t index)
+{
+    auto tvl = node->get_output_tensor_view(index)->get_tensor_view_layout();
+    return dynamic_cast<runtime::cpu::LayoutDescriptor&>(*tvl).get_mkldnn_md();
+}
+
+mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_default_mkldnn_md(const Node* node, size_t index, bool output=false, mkldnn::memory::format format=mkldnn::memory::format::any)
+{
+    Shape shape;
+    mkldnn::memory::data_type et;
+    if (output)
+    {
+        shape = node->get_output_shape(index);
+        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
+                            node->get_output_element_type(0));
+    } 
+    else
+    {
+        shape = node->get_input_shape(index);
+        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
+                            node->get_input_element_type(0));
+    }
+    
+    return memory::desc(memory::dims(shape.begin(), shape.end()), et, format);
+}
+
+mkldnn::memory::desc
+    runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md(const Shape& dims,
+                                                        const Strides& strides,
+                                                        const ngraph::element::Type type)
+{
+    memory::dims dim(dims.begin(), dims.end());
+    memory::dims stride(strides.begin(), strides.end());
+    memory::data_type dtype = get_mkldnn_data_type(type);
+
+    mkldnn_memory_desc_t md;
+    md.primitive_kind = mkldnn_memory;
+    md.ndims = static_cast<int>(dim.size());
+    md.format = mkldnn_blocked;
+    md.data_type = mkldnn::memory::convert_to_c(dtype);
+
+    for (size_t i = 0; i < dim.size(); i++)
+    {
+        md.layout_desc.blocking.block_dims[i] = 1;
+        md.layout_desc.blocking.strides[1][i] = 1;
+        md.layout_desc.blocking.strides[0][i] = stride[i];
+        md.layout_desc.blocking.padding_dims[i] = dim[i];
+        md.layout_desc.blocking.offset_padding_to_data[i] = 0;
+        md.dims[i] = dim[i];
+    }
+    md.layout_desc.blocking.offset_padding = 0;
+
+    return mkldnn::memory::desc(md);
+}
+
 bool runtime::cpu::mkldnn_utils::use_mkldnn_kernel(const ngraph::Node* node)
 {
     auto op_annotations = static_cast<const ngraph::op::Op*>(node)->get_op_annotations();
@@ -231,17 +294,23 @@ bool runtime::cpu::mkldnn_utils::use_mkldnn_kernel(const ngraph::Node* node)
                 ->is_mkldnn_op());
 }
 
-bool runtime::cpu::mkldnn_utils::compare_mkldnn_formats(mkldnn::memory::format fmt1,
-                                                        mkldnn::memory::format fmt2)
+bool runtime::cpu::mkldnn_utils::compare_mkldnn_formats(mkldnn::memory::format lhs,
+                                                        mkldnn::memory::format rhs)
 {
     std::set<mkldnn::memory::format> similar_4d_formats{mkldnn::memory::format::nchw,
                                                         mkldnn::memory::format::oihw};
-    if ((fmt1 == fmt2) || (similar_4d_formats.find(fmt1) != similar_4d_formats.end() &&
-                           similar_4d_formats.find(fmt2) != similar_4d_formats.end()))
+    if ((lhs == rhs) || (similar_4d_formats.find(lhs) != similar_4d_formats.end() &&
+                           similar_4d_formats.find(rhs) != similar_4d_formats.end()))
     {
         return true;
     }
     return false;
+}
+
+bool runtime::cpu::mkldnn_utils::compare_mkldnn_mds(const mkldnn::memory::desc& lhs, const mkldnn::memory::desc& rhs)
+{
+    return (memory::primitive_desc(lhs, runtime::cpu::mkldnn_utils::global_cpu_engine) ==
+            memory::primitive_desc(rhs, runtime::cpu::mkldnn_utils::global_cpu_engine));
 }
 
 bool runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(mkldnn::memory::format fmt)

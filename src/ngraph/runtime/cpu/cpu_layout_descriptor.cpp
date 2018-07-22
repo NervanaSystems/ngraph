@@ -18,15 +18,18 @@
 #include <algorithm>
 #include <numeric>
 
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+
 namespace ngraph
 {
     namespace runtime
     {
         namespace cpu
         {
-            const AxisVector LayoutDescriptor::Native2DAxisOrder{0, 1};
-            const AxisVector LayoutDescriptor::Native4DAxisOrder{0, 1, 2, 3};
-            const AxisVector LayoutDescriptor::CHWNAxisOrder{1, 2, 3, 0};
+            const mkldnn::memory::desc
+                LayoutDescriptor::DummyDesc(mkldnn::memory::dims(TENSOR_MAX_DIMS),
+                                            mkldnn::memory::f32,
+                                            mkldnn::memory::format::format_undef);
 
             AxisVector LayoutDescriptor::create_native_axis_order(size_t rank)
             {
@@ -41,7 +44,9 @@ namespace ngraph
                 , axis_order(tv_axis_order)
                 , offset(0)
                 , size(ngraph::shape_size(tv.get_tensor_view_type()->get_shape()))
-                , mkldnn_format(mkldnn::memory::format::format_undef)
+                , m_mkldnn_layout(false)
+                , m_mkldnn_format(mkldnn::memory::format::format_undef)
+                , m_mkldnn_md(LayoutDescriptor::DummyDesc)
             {
                 auto shape = get_shape();
                 size_t s = 1;
@@ -91,6 +96,15 @@ namespace ngraph
                 if (get_element_type() != p_other->get_element_type())
                 {
                     return false;
+                }
+
+                if (p_other->is_mkldnn_layout())
+                {
+                    if (!m_mkldnn_layout)
+                    {
+                        return false;
+                    }
+                    return runtime::cpu::mkldnn_utils::compare_mkldnn_mds(m_mkldnn_md, p_other->get_mkldnn_md());
                 }
 
                 if (strides != p_other->strides)

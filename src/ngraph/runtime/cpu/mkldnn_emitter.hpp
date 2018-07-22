@@ -125,9 +125,13 @@ namespace ngraph
                     }
                     auto result_format = mkldnn_utils::get_output_mkldnn_format(node, 0);
 
-                    auto data_desc = build_memory_descriptor(args[0], data_format);
-                    auto weights_desc = build_memory_descriptor(args[1], weights_format);
-                    auto result_desc = build_memory_descriptor(out[0], result_format);
+                    // auto data_desc = build_memory_descriptor(args[0], data_format);
+                    // auto weights_desc = build_memory_descriptor(args[1], weights_format);
+                    // auto result_desc = build_memory_descriptor(out[0], result_format);
+
+                    auto data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     mkldnn::post_ops ops;
 

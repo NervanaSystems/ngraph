@@ -47,26 +47,28 @@ namespace ngraph
                 const Strides& get_strides() const override { return strides; }
                 bool operator==(const TensorViewLayout& other) const override;
 
-                void set_mkldnn_format(const mkldnn::memory::format& format)
-                {
-                    mkldnn_format = format;
-                }
-                mkldnn::memory::format get_mkldnn_format() const { return mkldnn_format; }
+                void set_mkldnn_format(const mkldnn::memory::format& format) { m_mkldnn_format = format; }
+                mkldnn::memory::format get_mkldnn_format() const { return m_mkldnn_format; }
+                const mkldnn::memory::desc& get_mkldnn_md() const { return m_mkldnn_md; }
+                void set_mkldnn_md(const mkldnn::memory::desc md) { m_mkldnn_md = md; }
+                bool is_mkldnn_layout() const { return m_mkldnn_layout; }
+                void set_mkldnn_layout(bool flag) { m_mkldnn_layout = flag; }
+
                 const AxisVector& get_axis_order() const { return axis_order; }
                 void set_axis_order(const AxisVector& perm);
-                static const AxisVector Native2DAxisOrder;
-                static const AxisVector Native4DAxisOrder;
-                static const AxisVector CHWNAxisOrder;
                 static AxisVector create_native_axis_order(size_t rank);
 
+                static const mkldnn::memory::desc DummyDesc;
+                
             private:
                 AxisVector axis_order;
                 Strides strides;
                 size_t offset;
                 size_t size;
 
-                // Numeric backend-specific fields
-                mkldnn::memory::format mkldnn_format;
+                bool m_mkldnn_layout;
+                mkldnn::memory::format m_mkldnn_format;
+                mkldnn::memory::desc m_mkldnn_md;
             };
 
             typedef std::vector<std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>>
