@@ -14,7 +14,10 @@
 * limitations under the License.
 *******************************************************************************/
 
+#ifdef WIN32
+#else
 #include <dlfcn.h>
+#endif
 #include <sstream>
 
 #include "ngraph/file_util.hpp"

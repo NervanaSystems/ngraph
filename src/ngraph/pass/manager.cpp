@@ -15,7 +15,10 @@
 *******************************************************************************/
 
 #include <algorithm>
+#ifdef WIN32
+#else
 #include <cxxabi.h>
+#endif
 #include <iomanip>
 #include <iostream>
 #include <memory>
