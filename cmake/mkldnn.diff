@@ -2,12 +2,13 @@ diff --git a/mkldnn/src/src/CMakeLists.txt b/../../CMakeLists.txt
 index 95fb94ab..9ffa8947 100755
 --- a/mkldnn/src/src/CMakeLists.txt
 +++ b/../../CMakeLists.txt
-@@ -56,6 +56,9 @@ add_library(${TARGET_NAME} SHARED ${HEADERS} ${SOURCES})
+@@ -56,6 +56,10 @@ add_library(${TARGET_NAME} SHARED ${HEADERS} ${SOURCES})
  #Add mkldnn.dll to execution PATH
  set(CTESTCONFIG_PATH "${CTESTCONFIG_PATH}\;${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}" PARENT_SCOPE)
  target_link_libraries(${TARGET_NAME} ${${TARGET_NAME}_LINKER_LIBS} ${EXTRA_LIBS})
 +if(NOT APPLE)
-+  set_property(TARGET ${TARGET_NAME} APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,$ORIGIN")
++    set_property(TARGET ${TARGET_NAME} APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,$ORIGIN")
++    set_target_properties(${TARGET_NAME} PROPERTIES INSTALL_RPATH "$ORIGIN")
 +endif()
  set_property(TARGET ${TARGET_NAME} PROPERTY CXX_STANDARD 11)
  set_property(TARGET ${TARGET_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
