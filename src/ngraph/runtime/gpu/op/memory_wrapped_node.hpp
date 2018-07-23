@@ -114,7 +114,6 @@ namespace ngraph
 
                     // construct new wrapped node passing the same native inputs and wrapped constants
                     return std::make_shared<MemoryWrappedNode<NODE_TYPE>>(new_node, args);
-                    //return std::make_shared<MemoryWrappedNode<NODE_TYPE>>(new_node);
                 }
 
                 void emit(runtime::gpu::GPU_ExternalFunction* external_function,
