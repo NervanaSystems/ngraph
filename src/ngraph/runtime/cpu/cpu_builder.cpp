@@ -80,6 +80,7 @@
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/kernel/abs.hpp"
 #include "ngraph/runtime/cpu/kernel/add.hpp"
+#include "ngraph/runtime/cpu/kernel/and.hpp"
 #include "ngraph/runtime/cpu/kernel/broadcast.hpp"
 #include "ngraph/runtime/cpu/kernel/ceil.hpp"
 #include "ngraph/runtime/cpu/kernel/cwise_pow.hpp"
@@ -179,6 +180,40 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::LessEq)
             {
                 BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::less_eq);
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::And)
+            {
+                auto& functors = external_function->get_functors();
+                auto& tensor_data = external_function->get_tensor_data();
+
+                auto element_count = out[0].get_size();
+                auto& arg0_tensor = tensor_data[args[0].get_name()];
+                auto& arg1_tensor = tensor_data[args[1].get_name()];
+                auto& out0_tensor = tensor_data[out[0].get_name()];
+
+                auto functor = [&, element_count](CPURuntimeContext* ctx) {
+                                   runtime::cpu::kernel::logical_and(arg0_tensor, arg1_tensor, out0_tensor, element_count);
+                               };
+                functors.emplace_back(functor);
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Or)
+            {
+                auto& functors = external_function->get_functors();
+                auto& tensor_data = external_function->get_tensor_data();
+
+                auto element_count = out[0].get_size();
+                auto& arg0_tensor = tensor_data[args[0].get_name()];
+                auto& arg1_tensor = tensor_data[args[1].get_name()];
+                auto& out0_tensor = tensor_data[out[0].get_name()];
+
+                auto functor = [&, element_count](CPURuntimeContext* ctx) {
+                                   runtime::cpu::kernel::logical_or(arg0_tensor, arg1_tensor, out0_tensor, element_count);
+                               };
+                functors.emplace_back(functor);
             }
 
             template <>
@@ -322,6 +357,8 @@ namespace ngraph
             REGISTER_OP_BUILDER(LessEq);
             REGISTER_OP_BUILDER(Maximum);
             REGISTER_OP_BUILDER(Minimum);
+            REGISTER_OP_BUILDER(And);
+            REGISTER_OP_BUILDER(Or);
         }
     }
 }
