@@ -446,9 +446,9 @@ private:
     AxisSet m_reduction_axes;
     string m_output_var;
     // use simd for the inner most loop
-    int m_simd_index{0};
+    size_t m_simd_index{0};
     // set parallel for to inner loop unless we find something better below
-    int m_parallel_for_index{m_simd_index};
+    size_t m_parallel_for_index{m_simd_index};
     // Optimization heuristics
     // parallel for and simd for the same loop
     bool m_fused_parallel_simd{false};
