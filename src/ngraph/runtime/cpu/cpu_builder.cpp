@@ -99,6 +99,7 @@
 #include "ngraph/runtime/cpu/kernel/negative.hpp"
 #include "ngraph/runtime/cpu/kernel/not.hpp"
 #include "ngraph/runtime/cpu/kernel/not_equal.hpp"
+#include "ngraph/runtime/cpu/kernel/or.hpp"
 #include "ngraph/runtime/cpu/kernel/relu.hpp"
 #include "ngraph/runtime/cpu/kernel/result.hpp"
 #include "ngraph/runtime/cpu/kernel/sign.hpp"
@@ -194,8 +195,9 @@ namespace ngraph
                 auto& out0_tensor = tensor_data[out[0].get_name()];
 
                 auto functor = [&, element_count](CPURuntimeContext* ctx) {
-                                   runtime::cpu::kernel::logical_and(arg0_tensor, arg1_tensor, out0_tensor, element_count);
-                               };
+                    runtime::cpu::kernel::logical_and(
+                        arg0_tensor, arg1_tensor, out0_tensor, element_count);
+                };
                 functors.emplace_back(functor);
             }
 
@@ -211,8 +213,9 @@ namespace ngraph
                 auto& out0_tensor = tensor_data[out[0].get_name()];
 
                 auto functor = [&, element_count](CPURuntimeContext* ctx) {
-                                   runtime::cpu::kernel::logical_or(arg0_tensor, arg1_tensor, out0_tensor, element_count);
-                               };
+                    runtime::cpu::kernel::logical_or(
+                        arg0_tensor, arg1_tensor, out0_tensor, element_count);
+                };
                 functors.emplace_back(functor);
             }
 
