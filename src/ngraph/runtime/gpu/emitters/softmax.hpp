@@ -18,7 +18,7 @@
 
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/gpu/emitter.hpp"
-#include "ngraph/runtime/gpu/wrapped_node.hpp"
+#include "ngraph/runtime/gpu/op/memory_wrapped_node.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph

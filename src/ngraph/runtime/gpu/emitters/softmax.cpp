@@ -19,7 +19,6 @@
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_shape.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
-#include "ngraph/runtime/gpu/wrapped_node.hpp"
 
 using namespace ngraph;
 

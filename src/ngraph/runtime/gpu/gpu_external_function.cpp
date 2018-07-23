@@ -106,7 +106,7 @@
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/pass/kernel_memory_allocation.hpp"
-#include "ngraph/runtime/gpu/wrapped_node.hpp"
+#include "ngraph/runtime/gpu/op/memory_wrapped_node.hpp"
 
 using namespace std;
 using namespace ngraph;

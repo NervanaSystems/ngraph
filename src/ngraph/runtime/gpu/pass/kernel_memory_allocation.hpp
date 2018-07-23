@@ -42,3 +42,36 @@ public:
 
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 };
+
+template <typename NODE_TYPE>
+bool export_kernel_memory_allocations(std::shared_ptr<ngraph::Node> node)
+{
+    if (auto original_node = std::dynamic_pointer_cast<NODE_TYPE>(node))
+    {
+        if (auto prev_wrapped =
+            std::dynamic_pointer_cast<ngraph::op::gpu::MemoryWrappedNode_Base>(node))
+        {
+            return false;
+        }
+
+        // wrap node with user defined kernel allocations
+        auto wrapped_node =
+            std::make_shared<ngraph::op::gpu::MemoryWrappedNode<NODE_TYPE>>(original_node);
+
+        // wire up native outputs of wrapped node to the graph
+        for (size_t i = 0; i < original_node->get_outputs().size(); i++)
+        {
+            auto& node_output = original_node->get_outputs().at(i);
+            std::set<ngraph::descriptor::Input*> copy_inputs{std::begin(node_output.get_inputs()),
+                    std::end(node_output.get_inputs())};
+
+            auto new_output = std::make_shared<ngraph::op::GetOutputElement>(wrapped_node, i);
+            for (auto input : copy_inputs)
+            {
+                input->replace_output(new_output->get_outputs().at(0));
+            }
+        }
+        return true;
+    }
+    return false;
+}
