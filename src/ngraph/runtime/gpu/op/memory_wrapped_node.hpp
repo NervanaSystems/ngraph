@@ -57,7 +57,7 @@ namespace ngraph
                 MemoryWrappedNode(const std::shared_ptr<NODE_TYPE>& node)
                     : MemoryWrappedNode_Base(node->description(), node->get_arguments())
                     , m_node(node)
-                    , m_emitter(this)
+                    , m_emitter(node.get())
                 {
                     add_inputs();
                     add_outputs();
@@ -66,7 +66,7 @@ namespace ngraph
                 MemoryWrappedNode(const std::shared_ptr<NODE_TYPE>& node, const NodeVector& args)
                     : MemoryWrappedNode_Base(node->description(), args)
                     , m_node(node)
-                    , m_emitter(this)
+                    , m_emitter(node.get())
                 {
                     add_outputs();
                 }
