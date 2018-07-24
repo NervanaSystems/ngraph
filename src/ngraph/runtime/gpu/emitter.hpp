@@ -26,6 +26,8 @@
 
 namespace ngraph
 {
+    class Shape;
+
     namespace runtime
     {
         namespace gpu

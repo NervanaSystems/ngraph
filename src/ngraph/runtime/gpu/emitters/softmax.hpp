@@ -18,38 +18,25 @@
 
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/gpu/emitter.hpp"
-#include "ngraph/shape.hpp"
 
-namespace ngraph
+template <>
+class ngraph::runtime::gpu::Emitter<ngraph::op::Softmax>
 {
-    namespace runtime
-    {
-        namespace gpu
-        {
-            template <>
-            class Emitter<op::Softmax>
-            {
-            public:
-                Emitter<op::Softmax>(op::Softmax* node)
-                    : m_node(node)
-                {
-                }
+public:
+    Emitter<ngraph::op::Softmax>(ngraph::op::Softmax* node);
 
-                // Retrieve shapes of workspace requirements
-                std::vector<Shape> get_workspaces();
+    // Retrieve shapes of workspace requirements
+    std::vector<ngraph::Shape> get_workspaces();
 
-                // Retrieve constant data needed for kernel execution
-                std::vector<std::vector<int>> get_constants();
+    // Retrieve constant data needed for kernel execution
+    std::vector<std::vector<int>> get_constants();
 
-            public:
-                void emit(GPU_ExternalFunction* external_function,
-                          codegen::CodeWriter& writer,
-                          const std::vector<GPU_TensorViewWrapper>& args,
-                          const std::vector<GPU_TensorViewWrapper>& out);
+public:
+    void emit(ngraph::runtime::gpu::GPU_ExternalFunction* external_function,
+              ngraph::codegen::CodeWriter& writer,
+              const std::vector<ngraph::runtime::gpu::GPU_TensorViewWrapper>& args,
+              const std::vector<ngraph::runtime::gpu::GPU_TensorViewWrapper>& out);
 
-            private:
-                op::Softmax* m_node;
-            };
-        }
-    }
-}
+private:
+    ngraph::op::Softmax* m_node;
+};

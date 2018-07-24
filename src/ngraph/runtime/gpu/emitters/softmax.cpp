@@ -23,6 +23,11 @@
 
 using namespace ngraph;
 
+runtime::gpu::Emitter<ngraph::op::Softmax>::Emitter(ngraph::op::Softmax* node)
+    : m_node(node)
+{
+}
+
 std::vector<Shape> runtime::gpu::Emitter<op::Softmax>::get_workspaces()
 {
     auto input_shape = m_node->get_inputs().at(0).get_shape();
