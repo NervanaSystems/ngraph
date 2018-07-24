@@ -161,7 +161,6 @@ TEST(gpu_test, memory_wrapped_node_bprop)
 
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::gpu::pass::KernelMemoryAllocation>();
-    pass_manager.register_pass<pass::VisualizeTree>("wrapped_softmax");
     auto f = std::make_shared<Function>(softmax, op::ParameterVector{data});
 
     ngraph::autodiff::Adjoints adjoints(NodeVector{softmax}, NodeVector{delta});
@@ -169,7 +168,12 @@ TEST(gpu_test, memory_wrapped_node_bprop)
     auto d_data = adjoints.backprop_node(data);
 
     auto df = std::make_shared<Function>(NodeVector{d_data}, op::ParameterVector{data, delta});
+    pass_manager.run_passes(f);
     pass_manager.run_passes(df);
 
-    EXPECT_EQ(0, 0);
+    size_t nwrapped_fprop = count_ops_of_type<op::gpu::MemoryWrappedNode_Base>(f);
+    size_t nwrapped_bprop = count_ops_of_type<op::gpu::MemoryWrappedNode_Base>(df);
+
+    EXPECT_EQ(nwrapped_fprop, 1);
+    EXPECT_EQ(nwrapped_bprop, 1);
 }
