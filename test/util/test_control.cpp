@@ -25,23 +25,33 @@
 using namespace std;
 using namespace ngraph;
 
-static unordered_map<string, unordered_set<string>> s_blacklists;
-
 string ngraph::prepend_disabled(const string& test_case_name,
                                 const string& test_name,
                                 const string& manifest)
 {
+    static unordered_map<string, unordered_set<string>> s_blacklists;
+    cout << __FILE__ << " " << __LINE__ << " " << test_case_name << endl;
+    cout << __FILE__ << " " << __LINE__ << " " << test_name << endl;
+    cout << __FILE__ << " " << __LINE__ << " " << manifest << endl;
     string rc = test_name;
+    cout << __FILE__ << " " << __LINE__ << endl;
     unordered_set<string>& blacklist = s_blacklists[test_case_name];
+    cout << __FILE__ << " " << __LINE__ << endl;
     if (blacklist.empty() && !manifest.empty())
     {
+        cout << __FILE__ << " " << __LINE__ << endl;
         ifstream f(manifest);
+        cout << __FILE__ << " " << __LINE__ << endl;
         string line;
         while (getline(f, line))
         {
+            cout << __FILE__ << " " << __LINE__ << " " << line << endl;
             size_t pound_pos = line.find('#');
+            cout << __FILE__ << " " << __LINE__ << " " << pound_pos << endl;
             line = (pound_pos > line.size()) ? line : line.substr(0, pound_pos);
+            cout << __FILE__ << " " << __LINE__ << " " << line << endl;
             line = trim(line);
+            cout << __FILE__ << " " << __LINE__ << " " << line << endl;
             if (line.size() > 1)
             {
                 blacklist.insert(line);

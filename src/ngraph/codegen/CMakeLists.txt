@@ -73,8 +73,8 @@ add_custom_target(header_resource
 # The conditional is a hack. I want to use EXCLUDE_FROM_ALL and OPTIONAL but that does not
 # seem to be working for me.
 if (NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE)
-    add_library(codegen SHARED ${SRC})
-    set_target_properties(codegen PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
+    add_library(codegen STATIC ${SRC})
+    set_target_properties(codegen PROPERTIES VERSION ${NGRAPH_VERSION})
     add_dependencies(codegen header_resource libmkldnn libeigen)
     target_include_directories(codegen SYSTEM PUBLIC ${CMAKE_BINARY_DIR})
     target_link_libraries(codegen PRIVATE libllvm ngraph)
