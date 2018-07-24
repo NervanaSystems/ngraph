@@ -19,6 +19,7 @@
 
 #include "ngraph/file_util.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/util.hpp"
 
@@ -29,6 +30,7 @@ runtime::Backend::~Backend()
 {
 }
 
+#ifdef BACKEND_SHARED_LIBS
 // This doodad finds the full path of the containing shared library
 static string find_my_file()
 {
@@ -57,10 +59,12 @@ void* runtime::Backend::open_shared_library(string type)
 
     return handle;
 }
+#endif
 
 shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
 {
     shared_ptr<runtime::Backend> rc;
+#ifdef BACKEND_SHARED_LIBS
     void* handle = open_shared_library(type);
     if (!handle)
     {
@@ -99,9 +103,13 @@ shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
             // dlclose(handle);
         });
     }
+#else
+    rc = BackendManager::create_backend(type);
+#endif
     return rc;
 }
 
+#ifdef BACKEND_SHARED_LIBS
 map<string, string> runtime::Backend::get_registered_device_map()
 {
     map<string, string> rc;
@@ -135,15 +143,19 @@ map<string, string> runtime::Backend::get_registered_device_map()
     file_util::iterate_files(my_directory, f, false, true);
     return rc;
 }
+#endif
 
 vector<string> runtime::Backend::get_registered_devices()
 {
-    map<string, string> m = get_registered_device_map();
     vector<string> rc;
+#ifdef BACKEND_SHARED_LIBS
+    map<string, string> m = get_registered_device_map();
     for (const pair<string, string>& p : m)
     {
         rc.push_back(p.first);
     }
+#else
+#endif
     return rc;
 }
 

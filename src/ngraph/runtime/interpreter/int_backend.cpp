@@ -22,6 +22,7 @@
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -29,20 +30,17 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorViewLayout;
 
-extern "C" const char* get_ngraph_version_string()
+static shared_ptr<runtime::Backend> new_backend(const string& configuration_string)
 {
-    return NGRAPH_VERSION;
+    return make_shared<runtime::interpreter::INTBackend>();
 }
 
-extern "C" runtime::Backend* new_backend(const char* configuration_string)
+static class StaticInit
 {
-    return new runtime::interpreter::INTBackend();
-}
-
-extern "C" void delete_backend(runtime::Backend* backend)
-{
-    delete backend;
-}
+public:
+    StaticInit() { runtime::BackendManager::register_backend("INTERPRETER", new_backend); }
+    ~StaticInit() {}
+} s_init;
 
 shared_ptr<runtime::TensorView>
     runtime::interpreter::INTBackend::create_tensor(const element::Type& type, const Shape& shape)

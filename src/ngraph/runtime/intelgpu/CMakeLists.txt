@@ -22,12 +22,16 @@ set(SRC
 )
 
 if (NGRAPH_INTELGPU_ENABLE)
-    add_library(intelgpu_backend SHARED ${SRC})
-    set_target_properties(intelgpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
+    add_library(intelgpu_backend STATIC ${SRC})
+    set_target_properties(intelgpu_backend PROPERTIES VERSION ${NGRAPH_VERSION})
     target_link_libraries(intelgpu_backend PUBLIC ngraph)
     find_package(CLDNN REQUIRED)
     target_include_directories(intelgpu_backend SYSTEM PUBLIC ${CLDNN_INCLUDE_DIRS})
     target_link_libraries(intelgpu_backend PUBLIC ${CLDNN_LIBRARIES})
 
-    install(TARGETS intelgpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
+    install(TARGETS intelgpu_backend LIBRARY DESTINATION
+        LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
+        ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
+    )
+
 endif()
