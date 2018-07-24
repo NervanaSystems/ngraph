@@ -644,7 +644,6 @@ size_t MKLDNNEmitter::build_quantize_reorder(const mkldnn::memory::desc& input_d
     return primitive_index;
 }
 
-
 size_t MKLDNNEmitter::build_relu_forward(const mkldnn::memory::desc& input_desc,
                                          const mkldnn::memory::desc& result_desc)
 {

@@ -42,4 +42,3 @@ std::shared_ptr<ngraph::Node>
     }
     return std::make_shared<Dequantize>(new_args.at(0), m_input_min, m_input_max);
 }
-
