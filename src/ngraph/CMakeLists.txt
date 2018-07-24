@@ -113,6 +113,7 @@ set (SRC
     op/util/unary_elementwise.cpp
     pass/assign_placement.cpp
     pass/algebraic_simplification.cpp
+    pass/common_function_collection.cpp
     pass/constant_folding.cpp
     pass/cse.cpp
     pass/dump_sorted.cpp

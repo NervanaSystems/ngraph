@@ -105,7 +105,7 @@ set(NGRAPH_INSTALL_LIB "${CMAKE_INSTALL_PREFIX}/lib")
 set(NGRAPH_INSTALL_INCLUDE "${CMAKE_INSTALL_PREFIX}/include")
 set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/doc")
 set(NGRAPH_INSTALL_BIN "${CMAKE_INSTALL_PREFIX}/bin")
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+set(CMAKE_INSTALL_RPATH "$ORIGIN")
 
 #-----------------------------------------------------------------------------------------------
 # Compiler-specific logic...
@@ -153,6 +153,11 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     else()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector-strong")
     endif()
+endif()
+
+if (NGRAPH_USE_GOLD)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fuse-ld=gold")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=gold")
 endif()
 
 include(unit_test_control)

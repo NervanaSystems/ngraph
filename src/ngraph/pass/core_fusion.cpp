@@ -380,10 +380,24 @@ void pass::CoreFusion::construct_optimized_strided_conv()
 
         auto pattern_map = m.get_pattern_map();
         auto m_eltwise = pattern_map[eltwise_label];
-        auto strided_convs = m_eltwise->get_users();
+
+        std::vector<std::shared_ptr<Node>> strided_convs;
+        for (auto n : m_eltwise->get_users())
+        {
+            if (is_used(n.get()))
+            {
+                if (std::dynamic_pointer_cast<op::Convolution>(n) == nullptr)
+                {
+                    NGRAPH_DEBUG << "Not all live users of element wise operation are Convolution";
+                    return false;
+                }
+                strided_convs.push_back(n);
+            }
+        }
+
         if (strided_convs.size() != 2)
         {
-            NGRAPH_DEBUG << "Number of users of element wise operation isn't equal to 2";
+            NGRAPH_DEBUG << "Number of live users of element wise operation isn't equal to 2";
             return false;
         }
 
