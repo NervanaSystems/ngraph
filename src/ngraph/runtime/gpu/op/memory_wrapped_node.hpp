@@ -16,9 +16,9 @@
 
 #pragma once
 
+#include <algorithm>
 #include <memory>
 #include <type_traits>
-#include <algorithm>
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/node.hpp"
@@ -65,7 +65,7 @@ namespace ngraph
                     {
                         auto constant = std::make_shared<op::Constant>(
                             ngraph::element::from<
-                            typename std::remove_reference<decltype(data[0])>::type>(),
+                                typename std::remove_reference<decltype(data[0])>::type>(),
                             Shape{data.size()},
                             data);
                         this->m_inputs.emplace_back(this, i++, constant->get_outputs().at(0));
@@ -108,9 +108,11 @@ namespace ngraph
                 {
                     // clone underlying native node with new args
                     NodeVector new_args;
-                    std::copy(args.begin(), args.begin() + m_node->get_arguments().size(),
+                    std::copy(args.begin(),
+                              args.begin() + m_node->get_arguments().size(),
                               std::back_inserter(new_args));
-                    auto new_node = std::dynamic_pointer_cast<NODE_TYPE>(m_node->copy_with_new_args(new_args));
+                    auto new_node =
+                        std::dynamic_pointer_cast<NODE_TYPE>(m_node->copy_with_new_args(new_args));
 
                     // construct new wrapped node passing the same native inputs and wrapped constants
                     return std::make_shared<MemoryWrappedNode<NODE_TYPE>>(new_node, args);

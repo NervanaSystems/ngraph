@@ -152,7 +152,6 @@ TEST(gpu_test, memory_manager_seperate_workspaces_allocsize)
     EXPECT_EQ(emitter.sizeof_device_allocation(), total_size);
 }
 
-
 TEST(gpu_test, memory_wrapped_node_bprop)
 {
     Shape shape{2, 3};
@@ -172,6 +171,5 @@ TEST(gpu_test, memory_wrapped_node_bprop)
     auto df = std::make_shared<Function>(NodeVector{d_data}, op::ParameterVector{data, delta});
     pass_manager.run_passes(df);
 
-
-    EXPECT_EQ(0,0);
+    EXPECT_EQ(0, 0);
 }

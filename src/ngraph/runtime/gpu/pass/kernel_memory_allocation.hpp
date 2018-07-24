@@ -49,7 +49,7 @@ bool export_kernel_memory_allocations(std::shared_ptr<ngraph::Node> node)
     if (auto original_node = std::dynamic_pointer_cast<NODE_TYPE>(node))
     {
         if (auto prev_wrapped =
-            std::dynamic_pointer_cast<ngraph::op::gpu::MemoryWrappedNode_Base>(node))
+                std::dynamic_pointer_cast<ngraph::op::gpu::MemoryWrappedNode_Base>(node))
         {
             return false;
         }
@@ -63,7 +63,7 @@ bool export_kernel_memory_allocations(std::shared_ptr<ngraph::Node> node)
         {
             auto& node_output = original_node->get_outputs().at(i);
             std::set<ngraph::descriptor::Input*> copy_inputs{std::begin(node_output.get_inputs()),
-                    std::end(node_output.get_inputs())};
+                                                             std::end(node_output.get_inputs())};
 
             auto new_output = std::make_shared<ngraph::op::GetOutputElement>(wrapped_node, i);
             for (auto input : copy_inputs)

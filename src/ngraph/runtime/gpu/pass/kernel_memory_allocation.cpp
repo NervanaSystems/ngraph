@@ -23,8 +23,8 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/get_output_element.hpp"
-#include "ngraph/runtime/gpu/pass/kernel_memory_allocation.hpp"
 #include "ngraph/runtime/gpu/op/memory_wrapped_node.hpp"
+#include "ngraph/runtime/gpu/pass/kernel_memory_allocation.hpp"
 
 using namespace ngraph;
 
