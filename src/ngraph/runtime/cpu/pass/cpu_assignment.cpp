@@ -548,13 +548,7 @@ namespace ngraph
                     // not in the memory pool, or has output users.
                     bool need_copy =
                         reshape->get_is_transpose() || arg->is_parameter() || arg->is_constant();
-                    for (auto n = users.begin(); !need_copy && n != users.end(); ++n)
-                    {
-                        if ((*n)->is_output())
-                        {
-                            need_copy = true;
-                        }
-                    }
+
                     if (!need_copy)
                     {
                         // map output to the input memory
