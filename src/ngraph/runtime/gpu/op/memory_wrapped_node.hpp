@@ -59,30 +59,8 @@ namespace ngraph
                     , m_node(node)
                     , m_emitter(this)
                 {
-                    // add constant memory input
-                    size_t i = this->m_inputs.size();
-                    for (auto& data : m_emitter.get_constants())
-                    {
-                        auto constant = std::make_shared<op::Constant>(
-                            ngraph::element::from<
-                                typename std::remove_reference<decltype(data[0])>::type>(),
-                            Shape{data.size()},
-                            data);
-                        this->m_inputs.emplace_back(this, i++, constant->get_outputs().at(0));
-                    }
-
-                    // add node's outputs to wrapped node
-                    i = 0;
-                    for (auto& output : node->get_outputs())
-                    {
-                        this->m_outputs.emplace_back(this, i++, output.get_tensor_view());
-                    }
-
-                    // add worskapce output
-                    for (auto& workspace : m_emitter.get_workspaces())
-                    {
-                        this->add_output(m_node->get_element_type(), workspace);
-                    }
+                    add_inputs();
+                    add_outputs();
                 }
 
                 MemoryWrappedNode(const std::shared_ptr<NODE_TYPE>& node, const NodeVector& args)
@@ -90,21 +68,10 @@ namespace ngraph
                     , m_node(node)
                     , m_emitter(this)
                 {
-                    // add node's outputs to wrapped node
-                    size_t i = 0;
-                    for (auto& output : node->get_outputs())
-                    {
-                        this->m_outputs.emplace_back(this, i++, output.get_tensor_view());
-                    }
-
-                    // add worskapce output
-                    for (auto& workspace : m_emitter.get_workspaces())
-                    {
-                        this->add_output(m_node->get_element_type(), workspace);
-                    }
+                    add_outputs();
                 }
 
-                std::shared_ptr<Node> copy_with_new_args(const NodeVector& args) const override
+                virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& args) const override
                 {
                     // clone underlying native node with new args
                     NodeVector new_args;
@@ -126,8 +93,44 @@ namespace ngraph
                     m_emitter.emit(external_function, writer, args, out);
                 }
 
-                const std::shared_ptr<NODE_TYPE> get() const { return m_node; }
-            private:
+                const std::shared_ptr<NODE_TYPE> native_node() const { return m_node; }
+
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override
+                {
+                    throw std::runtime_error("Adjoint calculation should be done prior to node replacement via pass::gpu::KernelMemoryAllocation.");
+                }
+
+                void add_inputs()
+                {
+                    // add constant memory input
+                    size_t i = this->m_inputs.size();
+                    for (auto& data : m_emitter.get_constants())
+                    {
+                        auto constant = std::make_shared<op::Constant>(
+                            ngraph::element::from<
+                            typename std::remove_reference<decltype(data[0])>::type>(),
+                            Shape{data.size()},
+                            data);
+                        this->m_inputs.emplace_back(this, i++, constant->get_outputs().at(0));
+                    }
+                }
+                void add_outputs()
+                {
+                    // add node's outputs to wrapped node
+                    size_t i = 0;
+                    for (auto& output : m_node->get_outputs())
+                    {
+                        this->m_outputs.emplace_back(this, i++, output.get_tensor_view());
+                    }
+
+                    // add worskapce output
+                    for (auto& workspace : m_emitter.get_workspaces())
+                    {
+                        this->add_output(m_node->get_element_type(), workspace);
+                    }
+                }
+
                 std::shared_ptr<NODE_TYPE> m_node;
                 runtime::gpu::Emitter<NODE_TYPE> m_emitter;
             };

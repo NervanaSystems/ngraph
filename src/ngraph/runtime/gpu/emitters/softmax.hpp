@@ -32,7 +32,7 @@ namespace ngraph
             {
             public:
                 Emitter<op::Softmax>(Node* node)
-                    : m_node(static_cast<op::gpu::MemoryWrappedNode<op::Softmax>*>(node))
+                    : m_node(static_cast<op::gpu::MemoryWrappedNode<op::Softmax>*>(node)->native_node().get())
                 {
                 }
 
@@ -49,7 +49,7 @@ namespace ngraph
                           const std::vector<GPU_TensorViewWrapper>& out);
 
             private:
-                op::gpu::MemoryWrappedNode<op::Softmax>* m_node;
+                op::Softmax* m_node;
             };
         }
     }

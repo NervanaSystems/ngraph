@@ -25,8 +25,8 @@ using namespace ngraph;
 
 std::vector<Shape> runtime::gpu::Emitter<op::Softmax>::get_workspaces()
 {
-    auto input_shape = m_node->get()->get_inputs().at(0).get_shape();
-    auto axes = m_node->get()->get_axes();
+    auto input_shape = m_node->get_inputs().at(0).get_shape();
+    auto axes = m_node->get_axes();
     if (axes.size() != input_shape.size())
     {
         auto reduced_shape = input_shape;
@@ -37,7 +37,7 @@ std::vector<Shape> runtime::gpu::Emitter<op::Softmax>::get_workspaces()
         size_t reduced_size = shape_size(reduced_shape);
 
         return std::vector<Shape>{
-            Shape{reduced_size * m_node->get()->get_outputs().at(0).get_element_type().size()}};
+            Shape{reduced_size * m_node->get_outputs().at(0).get_element_type().size()}};
     }
     else
     {
@@ -47,9 +47,9 @@ std::vector<Shape> runtime::gpu::Emitter<op::Softmax>::get_workspaces()
 
 std::vector<std::vector<int>> runtime::gpu::Emitter<op::Softmax>::get_constants()
 {
-    auto input_shape = m_node->get()->get_inputs().at(0).get_shape();
-    auto output_shape = m_node->get()->get_outputs().at(0).get_shape();
-    auto axes = m_node->get()->get_axes();
+    auto input_shape = m_node->get_inputs().at(0).get_shape();
+    auto output_shape = m_node->get_outputs().at(0).get_shape();
+    auto axes = m_node->get_axes();
     if (axes.size() != input_shape.size())
     {
         std::vector<std::vector<int>> constants;
@@ -100,7 +100,7 @@ void runtime::gpu::Emitter<op::Softmax>::emit(GPU_ExternalFunction* external_fun
     writer.block_begin();
     {
         auto tensor_shape = args[0].get_shape();
-        auto axes = m_node->get()->get_axes();
+        auto axes = m_node->get_axes();
 
         auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
 
