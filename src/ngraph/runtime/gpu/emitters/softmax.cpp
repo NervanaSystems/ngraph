@@ -18,6 +18,7 @@
 
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_shape.hpp"
+#include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 
 using namespace ngraph;
@@ -115,6 +116,9 @@ void runtime::gpu::Emitter<op::Softmax>::emit(GPU_ExternalFunction* external_fun
                     {},
                     axes,
                     true /* multi-output */);
+
+            // ensure workspace is zeroed out
+            gpu::kernel::emit_memset(writer, out[1], 0, out[1].get_element_type().size() * out[1].get_size());
 
             writer << "gpu::invoke_primitive(ctx, " << exp_sum_reduce << ", ";
             writer << "std::vector<void*>{" << args[0].get_name();
