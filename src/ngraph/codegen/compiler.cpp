@@ -436,6 +436,7 @@ void codegen::CompilerCore::configure_search_path()
     add_header_search_path("/usr/lib/gcc/x86_64-linux-gnu/" + header_version + "/include-fixed");
     add_header_search_path("/usr/include/x86_64-linux-gnu");
     add_header_search_path("/usr/include");
+    add_header_search_path("/usr/include/c++/" + header_version + "/x86_64-redhat-linux");
 
     add_header_search_path(EIGEN_HEADERS_PATH);
     add_header_search_path(MKLDNN_HEADERS_PATH);
