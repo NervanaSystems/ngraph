@@ -16,7 +16,6 @@
 
 #include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/get_output_element.hpp"
 
 ngraph::op::Quantize::Quantize(std::shared_ptr<Node> input,
                                const float input_min_range,
@@ -30,9 +29,9 @@ ngraph::op::Quantize::Quantize(std::shared_ptr<Node> input,
         throw ngraph_error("input max range should be greater than min range");
     }
 
-    add_output("INT8", input->get_shape());
-    add_output("FLOAT", Shape{1});
-    add_output("FLOAT", Shape{1});
+    add_output(element::u8, input->get_shape());
+    add_output(element::f32, Shape{1});
+    add_output(element::f32, Shape{1});
 }
 
 std::shared_ptr<ngraph::Node>

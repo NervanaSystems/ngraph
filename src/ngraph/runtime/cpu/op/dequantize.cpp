@@ -16,12 +16,11 @@
 
 #include "ngraph/runtime/cpu/op/dequantize.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/get_output_element.hpp"
 
 ngraph::op::Dequantize::Dequantize(std::shared_ptr<Node> input,
                                    const float input_min_range,
                                    const float input_max_range)
-    : RequiresTensorViewArgs("Quantize", {input})
+    : RequiresTensorViewArgs("Dequantize", {input})
     , m_input_min(input_min_range)
     , m_input_max(input_max_range)
 {
@@ -30,7 +29,7 @@ ngraph::op::Dequantize::Dequantize(std::shared_ptr<Node> input,
         throw ngraph_error("input max range should be greater than min range");
     }
 
-    add_output("FLOAT", input->get_shape());
+    add_output(element::f32, input->get_shape());
 }
 
 std::shared_ptr<ngraph::Node>

@@ -55,8 +55,8 @@ namespace ngraph
             std::shared_ptr<Node> get_bias() { return get_argument(2); }
             std::shared_ptr<Node> get_filters() { return get_argument(1); }
             std::shared_ptr<Node> get_data_batch() { return get_argument(0); }
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+            //            virtual std::shared_ptr<Node>
+            //                copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
             Strides m_window_movement_strides;

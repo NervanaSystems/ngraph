@@ -21,6 +21,7 @@
 #include <string>
 #include <typeindex>
 #include <unordered_map>
+#include <unsupported/Eigen/CXX11/Tensor>
 #include <vector>
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
@@ -2738,9 +2739,11 @@ namespace ngraph
                     auto& deps = mkldnn_emitter->get_primitive_deps(quantize_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
+                    writer << "memcpy(" << out[1].get_name() << "," << &min_range << ", " << 4
+                           << ");\n";
+                    writer << "memcpy(" << out[2].get_name() << "," << &max_range << ", " << 4
+                           << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << args[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
                            << ", " << out[0].get_name() << ");\n";
 
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
@@ -2797,8 +2800,6 @@ namespace ngraph
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << args[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
                            << ", " << out[0].get_name() << ");\n";
 
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
@@ -2806,7 +2807,7 @@ namespace ngraph
                 }
                 else
                 {
-                    throw ngraph_error("unsupported parameters for QuantizeOp");
+                    throw ngraph_error("unsupported parameters for DequantizeOp");
                 }
             }
 
@@ -2859,31 +2860,29 @@ namespace ngraph
                     float min_out_value;
                     float max_out_value;
                     ngraph::runtime::cpu::quantization_util::
-                        QuantizationRangeForMultiplication<quint8, qint8, qint32>(min_input,
-                                                                                  max_input,
-                                                                                  min_filter,
-                                                                                  max_filter,
-                                                                                  &min_out_value,
-                                                                                  &max_out_value);
+                        QuantizationRangeForMultiplication<int8_t, uint8_t, int32_t>(
+                            min_input,
+                            max_input,
+                            min_filter,
+                            max_filter,
+                            &min_out_value,
+                            &max_out_value);
                     float scale_int32 = std::max(std::abs(min_out_value), std::abs(max_out_value));
                     float scale_eightbit = std::max(std::abs(min_output), std::abs(max_output));
                     float scale = 1.0;
                     scale = scale_int32 / scale_eightbit / (float)(1 << 23);
-                    std::vector<float> output_scale;
-                    output_scale.push_back(scale);
-                    mkldnn::post_ops ops;
-                    ops.append_sum({"output_scale", output_scale});
 
                     size_t conv_index = 0;
 
-                    conv_index = mkldnn_emitter->build_convolution_forward(
+                    conv_index = mkldnn_emitter->build_quantized_convolution(
                         input_data_desc,
                         weights_desc,
                         result_desc,
                         qconvolution->get_window_movement_strides(),
                         window_dilation_strides_adjusted,
                         qconvolution->get_padding_below(),
-                        qconvolution->get_padding_above());
+                        qconvolution->get_padding_above(),
+                        scale);
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])

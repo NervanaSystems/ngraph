@@ -27,8 +27,8 @@ namespace ngraph
                 template <class T>
                 float FloatForOneQuantizedLevel(float range_min, float range_max)
                 {
-                    const int64 highest = static_cast<int64>(Eigen::NumTraits<T>::highest());
-                    const int64 lowest = static_cast<int64>(Eigen::NumTraits<T>::lowest());
+                    const int64_t highest = static_cast<int64_t>(Eigen::NumTraits<T>::highest());
+                    const int64_t lowest = static_cast<int64_t>(Eigen::NumTraits<T>::lowest());
                     const float float_for_one_quantized_level =
                         (range_max - range_min) / (highest - lowest);
                     return float_for_one_quantized_level;
@@ -43,8 +43,8 @@ namespace ngraph
                     const float b_float_for_one_quant_level =
                         FloatForOneQuantizedLevel<T2>(min_b, max_b);
 
-                    const int64 c_highest = static_cast<int64>(Eigen::NumTraits<T3>::highest());
-                    const int64 c_lowest = static_cast<int64>(Eigen::NumTraits<T3>::lowest());
+                    const int64_t c_highest = static_cast<int64_t>(Eigen::NumTraits<T3>::highest());
+                    const int64_t c_lowest = static_cast<int64_t>(Eigen::NumTraits<T3>::lowest());
                     const float c_float_for_one_quant_level =
                         a_float_for_one_quant_level * b_float_for_one_quant_level;
 
