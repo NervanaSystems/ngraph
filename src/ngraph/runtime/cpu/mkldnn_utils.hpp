@@ -44,15 +44,20 @@ namespace ngraph
                 mkldnn::memory::format get_output_mkldnn_format(const Node* node, size_t index);
                 const mkldnn::memory::desc& get_input_mkldnn_md(const Node* node, size_t index);
                 const mkldnn::memory::desc& get_output_mkldnn_md(const Node* node, size_t index);
-                mkldnn::memory::desc create_default_mkldnn_md(const Node* node, size_t index, bool is_output, mkldnn::memory::format format);
+                mkldnn::memory::desc create_default_mkldnn_md(const Node* node,
+                                                              size_t index,
+                                                              bool is_output,
+                                                              mkldnn::memory::format format);
+                bool can_create_mkldnn_md(const Shape& dims,
+                                          const Strides& strides,
+                                          const ngraph::element::Type type);
                 mkldnn::memory::desc create_blocked_mkldnn_md(const Shape& dims,
-                                                        const Strides& strides,
-                                                        const ngraph::element::Type type);
+                                                              const Strides& strides,
+                                                              const ngraph::element::Type type);
                 bool use_mkldnn_kernel(const ngraph::Node* node);
-                bool compare_mkldnn_formats(mkldnn::memory::format lhs,
-                                            mkldnn::memory::format rhs);
+                bool compare_mkldnn_formats(mkldnn::memory::format lhs, mkldnn::memory::format rhs);
                 bool compare_mkldnn_mds(const mkldnn::memory::desc& lhs,
-                                            const mkldnn::memory::desc& rhs);
+                                        const mkldnn::memory::desc& rhs);
                 bool is_mkldnn_filter_format(mkldnn::memory::format fmt);
                 bool is_mkldnn_blocked_data_format(mkldnn::memory::format fmt);
             }

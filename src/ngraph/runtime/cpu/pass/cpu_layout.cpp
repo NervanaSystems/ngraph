@@ -73,8 +73,7 @@ shared_ptr<Node> runtime::cpu::pass::CPULayout::insert_input_conversions(
         auto rank = tvt->get_shape().size();
         auto tvl = tv->get_tensor_view_layout();
         auto mkldnn_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
-        if (!mkldnn_tvl || 
-            !mkldnn_tvl->is_mkldnn_layout() ||
+        if (!mkldnn_tvl || !mkldnn_tvl->is_mkldnn_layout() ||
             !mkldnn_utils::compare_mkldnn_mds(mkldnn_tvl->get_mkldnn_md(), required_mds[index]))
         //    !mkldnn_utils::compare_mkldnn_formats(mkldnn_tvl->get_mkldnn_format(),
         //                                                        required_formats[index]))
@@ -176,33 +175,34 @@ void runtime::cpu::pass::CPULayout::set_default_layouts(
 
         if (cpu_tvl && cpu_tvl->is_mkldnn_layout())
         {
-            auto native_md = mkldnn_utils::create_blocked_mkldnn_md(tvt->get_shape(), cpu_tvl->get_strides(), tvt->get_element_type());
-            if (!mkldnn_utils::compare_mkldnn_mds(cpu_tvl->get_mkldnn_md(), native_md)) 
+            auto native_md = mkldnn_utils::create_blocked_mkldnn_md(
+                tvt->get_shape(), cpu_tvl->get_strides(), tvt->get_element_type());
+            if (!mkldnn_utils::compare_mkldnn_mds(cpu_tvl->get_mkldnn_md(), native_md))
             {
-            auto native_axis_order =
-                ngraph::runtime::cpu::LayoutDescriptor::create_native_axis_order(shape.size());
-            auto layout =
-                std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv, native_axis_order);
+                auto native_axis_order =
+                    ngraph::runtime::cpu::LayoutDescriptor::create_native_axis_order(shape.size());
+                auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(
+                    *tv, native_axis_order);
 
-            layout->set_mkldnn_layout(true);
-            layout->set_mkldnn_format(mkldnn_utils::CreateNativeDataFormat(*cpu_tvl));
-            layout->set_mkldnn_md(native_md);
+                layout->set_mkldnn_layout(true);
+                layout->set_mkldnn_format(mkldnn_utils::CreateNativeDataFormat(*cpu_tvl));
+                layout->set_mkldnn_md(native_md);
 
-            auto new_node = std::shared_ptr<Node>(
-                new runtime::cpu::op::ConvertLayout(output.get_node(), output.get_index(), layout));
-            new_args.push_back(new_node);
-            if (use_replace)
-            {
-                replace_node = true;
-            }
-            else
-            {
-                input.replace_output(new_node->get_outputs().at(0));
-            }
-            NGRAPH_DEBUG << "Inserted conversion node " << new_node->get_name() << " between "
-                         << output.get_node()->get_name()
-                         << "(layout: " << cpu_tvl->get_mkldnn_format() << ") and "
-                         << node->get_name() << "(layout: default)";
+                auto new_node = std::shared_ptr<Node>(new runtime::cpu::op::ConvertLayout(
+                    output.get_node(), output.get_index(), layout));
+                new_args.push_back(new_node);
+                if (use_replace)
+                {
+                    replace_node = true;
+                }
+                else
+                {
+                    input.replace_output(new_node->get_outputs().at(0));
+                }
+                NGRAPH_DEBUG << "Inserted conversion node " << new_node->get_name() << " between "
+                             << output.get_node()->get_name()
+                             << "(layout: " << cpu_tvl->get_mkldnn_format() << ") and "
+                             << node->get_name() << "(layout: default)";
             }
             else
             {
@@ -251,7 +251,17 @@ void runtime::cpu::pass::CPULayout::set_default_layouts(
 
         auto layout =
             std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv, native_axis_order);
-        
+
+        if (mkldnn_utils::can_create_mkldnn_md(
+                tvt->get_shape(), layout->get_strides(), tvt->get_element_type()))
+        {
+            auto native_md = mkldnn_utils::create_blocked_mkldnn_md(
+                tvt->get_shape(), layout->get_strides(), tvt->get_element_type());
+            layout->set_mkldnn_layout(true);
+            layout->set_mkldnn_format(mkldnn::memory::format::blocked);
+            layout->set_mkldnn_md(native_md);
+        }
+
         // Set the MKLDNN format to native row-major variants
         // layout->set_mkldnn_format(mkldnn_utils::CreateNativeDataFormat(*layout));
         tv->set_tensor_view_layout(layout);
@@ -295,8 +305,8 @@ namespace ngraph
                         window_dilation_strides_adjusted.push_back(s - 1);
                     }
 
-                    memory::data_type et = mkldnn_utils::get_mkldnn_data_type(
-                        node->get_input_element_type(0));
+                    memory::data_type et =
+                        mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0));
 
                     engine cpu_engine(engine::cpu, 0);
                     memory::dims mkldnn_arg0_shape(arg0_shape.begin(), arg0_shape.end());
@@ -369,30 +379,26 @@ namespace ngraph
 
                     prim_input_formats.push_back(static_cast<memory::format>(
                         prim_desc.src_primitive_desc().desc().data.format));
-                    prim_input_mds.push_back(
-                        prim_desc.src_primitive_desc().desc());
+                    prim_input_mds.push_back(prim_desc.src_primitive_desc().desc());
 
                     if (default_weights_format)
                     {
                         //note, we need the original shape (4D) while arg_shape1 is redefined
                         prim_input_formats.push_back(
-                            mkldnn_utils::CreateNativeDataFormat(
-                                node->get_input_shape(1)));
+                            mkldnn_utils::CreateNativeDataFormat(node->get_input_shape(1)));
                     }
                     else
                     {
                         prim_input_formats.push_back(static_cast<memory::format>(
                             prim_desc.weights_primitive_desc().desc().data.format));
-                        prim_input_mds.push_back(
-                            prim_desc.weights_primitive_desc().desc());
+                        prim_input_mds.push_back(prim_desc.weights_primitive_desc().desc());
                     }
 
                     if (use_bias)
                     {
                         prim_input_formats.push_back(static_cast<memory::format>(
                             prim_desc.bias_primitive_desc().desc().data.format));
-                        prim_input_mds.push_back(
-                            prim_desc.bias_primitive_desc().desc());
+                        prim_input_mds.push_back(prim_desc.bias_primitive_desc().desc());
                     }
                     prim_output_formats.push_back(static_cast<memory::format>(
                         prim_desc.dst_primitive_desc().desc().data.format));
@@ -409,10 +415,14 @@ namespace ngraph
                         vector<memory::format> prim_output_formats;
                         vector<memory::desc> prim_output_mds;
                         ConvolutionLayout<ngraph::op::Convolution, false, false>(
-                            node, prim_input_formats, prim_input_mds, prim_output_formats, prim_output_mds);
+                            node,
+                            prim_input_formats,
+                            prim_input_mds,
+                            prim_output_formats,
+                            prim_output_mds);
 
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats, prim_input_mds);
+                        node = insert_input_conversions(
+                            external_function, node, prim_input_formats, prim_input_mds);
                         set_output_layouts(node, prim_output_formats, prim_output_mds);
                     }
                     else
@@ -431,10 +441,14 @@ namespace ngraph
                         vector<memory::format> prim_output_formats;
                         vector<memory::desc> prim_output_mds;
                         ConvolutionLayout<ngraph::op::GroupConvolution, false, true>(
-                            node, prim_input_formats, prim_input_mds, prim_output_formats, prim_output_mds);
+                            node,
+                            prim_input_formats,
+                            prim_input_mds,
+                            prim_output_formats,
+                            prim_output_mds);
 
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats, prim_input_mds);
+                        node = insert_input_conversions(
+                            external_function, node, prim_input_formats, prim_input_mds);
                         set_output_layouts(node, prim_output_formats, prim_output_mds);
                     }
                     else
@@ -453,9 +467,13 @@ namespace ngraph
                         vector<memory::format> prim_output_formats;
                         vector<memory::desc> prim_output_mds;
                         ConvolutionLayout<ngraph::op::ConvolutionBias, true, false>(
-                            node, prim_input_formats, prim_input_mds, prim_output_formats, prim_output_mds);
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats, prim_input_mds);
+                            node,
+                            prim_input_formats,
+                            prim_input_mds,
+                            prim_output_formats,
+                            prim_output_mds);
+                        node = insert_input_conversions(
+                            external_function, node, prim_input_formats, prim_input_mds);
                         set_output_layouts(node, prim_output_formats, prim_output_mds);
                     }
                     else
@@ -474,9 +492,13 @@ namespace ngraph
                         vector<memory::format> prim_output_formats;
                         vector<memory::desc> prim_output_mds;
                         ConvolutionLayout<ngraph::op::ConvolutionRelu, false, false>(
-                            node, prim_input_formats, prim_input_mds, prim_output_formats, prim_output_mds);
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats, prim_input_mds);
+                            node,
+                            prim_input_formats,
+                            prim_input_mds,
+                            prim_output_formats,
+                            prim_output_mds);
+                        node = insert_input_conversions(
+                            external_function, node, prim_input_formats, prim_input_mds);
                         set_output_layouts(node, prim_output_formats, prim_output_mds);
                     }
                     else
@@ -495,12 +517,16 @@ namespace ngraph
                         vector<memory::format> prim_output_formats;
                         vector<memory::desc> prim_output_mds;
                         ConvolutionLayout<ngraph::op::ConvolutionBiasAdd, true, false>(
-                            node, prim_input_formats, prim_input_mds, prim_output_formats, prim_output_mds);
+                            node,
+                            prim_input_formats,
+                            prim_input_mds,
+                            prim_output_formats,
+                            prim_output_mds);
                         // Force second input to sum to use the same layout as convolution output
                         prim_input_formats.push_back(prim_output_formats[0]);
                         prim_input_mds.push_back(prim_output_mds[0]);
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats, prim_input_mds);
+                        node = insert_input_conversions(
+                            external_function, node, prim_input_formats, prim_input_mds);
                         set_output_layouts(node, prim_output_formats, prim_output_mds);
                     }
                     else
@@ -531,8 +557,8 @@ namespace ngraph
                             window_dilation_strides_adjusted.push_back(s - 1);
                         }
 
-                        memory::data_type et = mkldnn_utils::get_mkldnn_data_type(
-                            node->get_input_element_type(0));
+                        memory::data_type et =
+                            mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0));
 
                         engine cpu_engine(engine::cpu, 0);
                         memory::dims mkldnn_arg0_shape(arg0_shape.begin(), arg0_shape.end());
@@ -586,17 +612,14 @@ namespace ngraph
                             prim_desc.weights_primitive_desc().desc().data.format));
                         prim_input_formats.push_back(static_cast<memory::format>(
                             prim_desc.diff_dst_primitive_desc().desc().data.format));
-                        prim_input_mds.push_back(
-                            prim_desc.weights_primitive_desc().desc());
-                        prim_input_mds.push_back(
-                            prim_desc.diff_dst_primitive_desc().desc());
+                        prim_input_mds.push_back(prim_desc.weights_primitive_desc().desc());
+                        prim_input_mds.push_back(prim_desc.diff_dst_primitive_desc().desc());
                         prim_output_formats.push_back(static_cast<memory::format>(
                             prim_desc.diff_src_primitive_desc().desc().data.format));
-                        prim_output_mds.push_back(
-                            prim_desc.diff_src_primitive_desc().desc());
+                        prim_output_mds.push_back(prim_desc.diff_src_primitive_desc().desc());
 
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats, prim_input_mds);
+                        node = insert_input_conversions(
+                            external_function, node, prim_input_formats, prim_input_mds);
                         set_output_layouts(node, prim_output_formats, prim_output_mds);
                     }
                     else
@@ -628,8 +651,8 @@ namespace ngraph
                         window_dilation_strides_adjusted.push_back(s - 1);
                     }
 
-                    memory::data_type et = mkldnn_utils::get_mkldnn_data_type(
-                        node->get_input_element_type(0));
+                    memory::data_type et =
+                        mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0));
 
                     engine cpu_engine(engine::cpu, 0);
                     memory::dims mkldnn_data_shape(data_shape.begin(), data_shape.end());
@@ -711,20 +734,16 @@ namespace ngraph
                         prim_desc.src_primitive_desc().desc().data.format));
                     prim_input_formats.push_back(static_cast<memory::format>(
                         prim_desc.diff_dst_primitive_desc().desc().data.format));
-                    prim_input_mds.push_back(
-                        prim_desc.src_primitive_desc().desc());
-                    prim_input_mds.push_back(
-                        prim_desc.diff_dst_primitive_desc().desc());
+                    prim_input_mds.push_back(prim_desc.src_primitive_desc().desc());
+                    prim_input_mds.push_back(prim_desc.diff_dst_primitive_desc().desc());
                     prim_output_formats.push_back(static_cast<memory::format>(
                         prim_desc.diff_weights_primitive_desc().desc().data.format));
-                    prim_output_mds.push_back(
-                        prim_desc.diff_weights_primitive_desc().desc());
+                    prim_output_mds.push_back(prim_desc.diff_weights_primitive_desc().desc());
                     if (use_bias)
                     {
                         prim_output_formats.push_back(static_cast<memory::format>(
                             prim_desc.diff_bias_primitive_desc().desc().data.format));
-                        prim_output_mds.push_back(
-                            prim_desc.diff_bias_primitive_desc().desc());
+                        prim_output_mds.push_back(prim_desc.diff_bias_primitive_desc().desc());
                     }
                 }
 
@@ -738,11 +757,14 @@ namespace ngraph
                         vector<memory::format> prim_output_formats;
                         vector<memory::desc> prim_output_mds;
                         ConvolutionBackpropFiltersLayout<ngraph::op::ConvolutionBackpropFilters,
-                                                         false>(
-                            node, prim_input_formats, prim_input_mds, prim_output_formats, prim_output_mds);
+                                                         false>(node,
+                                                                prim_input_formats,
+                                                                prim_input_mds,
+                                                                prim_output_formats,
+                                                                prim_output_mds);
 
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats, prim_input_mds);
+                        node = insert_input_conversions(
+                            external_function, node, prim_input_formats, prim_input_mds);
                         set_output_layouts(node, prim_output_formats, prim_output_mds);
                     }
                     else
@@ -762,10 +784,14 @@ namespace ngraph
                         vector<memory::desc> prim_output_mds;
                         ConvolutionBackpropFiltersLayout<
                             ngraph::op::ConvolutionBiasBackpropFiltersBias,
-                            true>(node, prim_input_formats, prim_input_mds, prim_output_formats, prim_output_mds);
+                            true>(node,
+                                  prim_input_formats,
+                                  prim_input_mds,
+                                  prim_output_formats,
+                                  prim_output_mds);
 
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats, prim_input_mds);
+                        node = insert_input_conversions(
+                            external_function, node, prim_input_formats, prim_input_mds);
                         set_output_layouts(node, prim_output_formats, prim_output_mds);
                     }
                     else
@@ -788,8 +814,8 @@ namespace ngraph
                         auto padding_below = avg_pool->get_padding_below();
                         auto padding_above = avg_pool->get_padding_above();
 
-                        memory::data_type et = mkldnn_utils::get_mkldnn_data_type(
-                            node->get_input_element_type(0));
+                        memory::data_type et =
+                            mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0));
 
                         algorithm algorithm_enumerator =
                             avg_pool->get_include_padding_in_avg_computation()
@@ -806,11 +832,8 @@ namespace ngraph
                         memory::dims mkldnn_padding_above(padding_above.begin(),
                                                           padding_above.end());
 
-                        auto input_layout =
-                            mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
-                        auto input_md =
-                            mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-                        auto input_desc = memory::desc(mkldnn_arg0_shape, et, input_layout);
+                        auto input_desc = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        auto input_layout = mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
                         auto result_desc =
                             memory::desc(mkldnn_result_shape, et, memory::format::any);
 
@@ -820,23 +843,22 @@ namespace ngraph
                         vector<memory::desc> prim_output_mds;
                         try
                         {
-                            auto prim_desc = pooling_forward::primitive_desc(
-                                {prop_kind::forward_inference,
-                                 algorithm_enumerator,
-                                 input_desc,
-                                 result_desc,
-                                 mkldnn_filter_strides,
-                                 mkldnn_filter_shape,
-                                 mkldnn_padding_below,
-                                 mkldnn_padding_above,
-                                 padding_kind::zero},
-                                mkldnn_utils::global_cpu_engine);
+                            auto prim_desc =
+                                pooling_forward::primitive_desc({prop_kind::forward_inference,
+                                                                 algorithm_enumerator,
+                                                                 input_desc,
+                                                                 result_desc,
+                                                                 mkldnn_filter_strides,
+                                                                 mkldnn_filter_shape,
+                                                                 mkldnn_padding_below,
+                                                                 mkldnn_padding_above,
+                                                                 padding_kind::zero},
+                                                                mkldnn_utils::global_cpu_engine);
                             prim_input_formats.push_back(input_layout);
-                            prim_input_mds.push_back(input_md);
+                            prim_input_mds.push_back(input_desc);
                             prim_output_formats.push_back(static_cast<memory::format>(
                                 prim_desc.dst_primitive_desc().desc().data.format));
-                            prim_output_mds.push_back(
-                                prim_desc.dst_primitive_desc().desc());
+                            prim_output_mds.push_back(prim_desc.dst_primitive_desc().desc());
                         }
                         catch (const mkldnn::error& e)
                         {
@@ -844,8 +866,8 @@ namespace ngraph
                                                to_string(input_layout) + e.message);
                         }
 
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats, prim_input_mds);
+                        node = insert_input_conversions(
+                            external_function, node, prim_input_formats, prim_input_mds);
                         set_output_layouts(node, prim_output_formats, prim_output_mds);
                     }
                     else
@@ -868,8 +890,8 @@ namespace ngraph
                         auto padding_below = avg_pool->get_padding_below();
                         auto padding_above = avg_pool->get_padding_above();
 
-                        memory::data_type et = mkldnn_utils::get_mkldnn_data_type(
-                            node->get_input_element_type(0));
+                        memory::data_type et =
+                            mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0));
 
                         algorithm algorithm_enumerator =
                             avg_pool->get_include_padding_in_avg_computation()
@@ -886,11 +908,8 @@ namespace ngraph
                         memory::dims mkldnn_padding_above(padding_above.begin(),
                                                           padding_above.end());
 
-                        auto input_layout =
-                            mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
-                        auto input_md =
-                            mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-                        auto input_desc = memory::desc(mkldnn_arg0_shape, et, input_layout);
+                        auto input_layout = mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        auto input_desc = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         auto result_desc =
                             memory::desc(mkldnn_result_shape, et, memory::format::any);
 
@@ -900,43 +919,42 @@ namespace ngraph
                         vector<memory::desc> prim_output_mds;
                         try
                         {
-                            auto fwd_prim_desc = pooling_forward::primitive_desc(
-                                {prop_kind::forward_inference,
-                                 algorithm_enumerator,
-                                 result_desc,
-                                 input_desc,
-                                 mkldnn_filter_strides,
-                                 mkldnn_filter_shape,
-                                 mkldnn_padding_below,
-                                 mkldnn_padding_above,
-                                 padding_kind::zero},
-                                mkldnn_utils::global_cpu_engine);
-                            auto prim_desc = pooling_backward::primitive_desc(
-                                {algorithm_enumerator,
-                                 result_desc,
-                                 input_desc,
-                                 mkldnn_filter_strides,
-                                 mkldnn_filter_shape,
-                                 mkldnn_padding_below,
-                                 mkldnn_padding_above,
-                                 padding_kind::zero},
-                                mkldnn_utils::global_cpu_engine,
-                                fwd_prim_desc);
+                            auto fwd_prim_desc =
+                                pooling_forward::primitive_desc({prop_kind::forward_inference,
+                                                                 algorithm_enumerator,
+                                                                 result_desc,
+                                                                 input_desc,
+                                                                 mkldnn_filter_strides,
+                                                                 mkldnn_filter_shape,
+                                                                 mkldnn_padding_below,
+                                                                 mkldnn_padding_above,
+                                                                 padding_kind::zero},
+                                                                mkldnn_utils::global_cpu_engine);
+                            auto prim_desc =
+                                pooling_backward::primitive_desc({algorithm_enumerator,
+                                                                  result_desc,
+                                                                  input_desc,
+                                                                  mkldnn_filter_strides,
+                                                                  mkldnn_filter_shape,
+                                                                  mkldnn_padding_below,
+                                                                  mkldnn_padding_above,
+                                                                  padding_kind::zero},
+                                                                 mkldnn_utils::global_cpu_engine,
+                                                                 fwd_prim_desc);
                             prim_input_formats.push_back(input_layout);
-                            prim_input_mds.push_back(input_md);
+                            prim_input_mds.push_back(input_desc);
                             prim_output_formats.push_back(static_cast<memory::format>(
                                 prim_desc.diff_src_primitive_desc().desc().data.format));
-                            prim_output_mds.push_back(
-                                prim_desc.diff_src_primitive_desc().desc());
+                            prim_output_mds.push_back(prim_desc.diff_src_primitive_desc().desc());
                         }
                         catch (const mkldnn::error& e)
                         {
                             throw ngraph_error("MKLDNN Unsupported pooling layout" +
-                                               to_string(input_layout) + e.message);
+                                               to_string(input_desc.data.format) + e.message);
                         }
 
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats, prim_input_mds);
+                        node = insert_input_conversions(
+                            external_function, node, prim_input_formats, prim_input_mds);
                         set_output_layouts(node, prim_output_formats, prim_output_mds);
                     }
                     else
@@ -961,8 +979,8 @@ namespace ngraph
                     auto padding_below = max_pool->get_padding_below();
                     auto padding_above = max_pool->get_padding_above();
 
-                    memory::data_type et = mkldnn_utils::get_mkldnn_data_type(
-                        node->get_input_element_type(0));
+                    memory::data_type et =
+                        mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0));
 
                     algorithm algorithm_enumerator = algorithm::pooling_max;
 
@@ -974,45 +992,40 @@ namespace ngraph
                     memory::dims mkldnn_padding_below(padding_below.begin(), padding_below.end());
                     memory::dims mkldnn_padding_above(padding_above.begin(), padding_above.end());
 
-                    auto input_layout =
-                        mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
-                    auto input_md =
-                        mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-                    auto input_desc = memory::desc(mkldnn_arg0_shape, et, input_layout);
+                    auto input_layout = mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                     auto result_desc = memory::desc(mkldnn_result_shape, et, memory::format::any);
 
                     try
                     {
-                        auto prim_desc = pooling_forward::primitive_desc(
-                            {pk,
-                             algorithm_enumerator,
-                             input_desc,
-                             result_desc,
-                             mkldnn_filter_strides,
-                             mkldnn_filter_shape,
-                             mkldnn_padding_below,
-                             mkldnn_padding_above,
-                             padding_kind::zero},
-                            mkldnn_utils::global_cpu_engine);
+                        auto prim_desc =
+                            pooling_forward::primitive_desc({pk,
+                                                             algorithm_enumerator,
+                                                             input_desc,
+                                                             result_desc,
+                                                             mkldnn_filter_strides,
+                                                             mkldnn_filter_shape,
+                                                             mkldnn_padding_below,
+                                                             mkldnn_padding_above,
+                                                             padding_kind::zero},
+                                                            mkldnn_utils::global_cpu_engine);
                         prim_input_formats.push_back(input_layout);
-                        prim_input_mds.push_back(input_md);
+                        prim_input_mds.push_back(input_desc);
                         prim_output_formats.push_back(static_cast<memory::format>(
                             prim_desc.dst_primitive_desc().desc().data.format));
-                        prim_output_mds.push_back(
-                            prim_desc.dst_primitive_desc().desc());
+                        prim_output_mds.push_back(prim_desc.dst_primitive_desc().desc());
 
                         if (pk == prop_kind::forward_training)
                         {
                             prim_output_formats.push_back(static_cast<memory::format>(
                                 prim_desc.workspace_primitive_desc().desc().data.format));
-                            prim_output_mds.push_back(
-                                prim_desc.workspace_primitive_desc().desc());
+                            prim_output_mds.push_back(prim_desc.workspace_primitive_desc().desc());
                         }
                     }
                     catch (const mkldnn::error& e)
                     {
                         throw ngraph_error("MKLDNN Unsupported pooling fwd layout" +
-                                           to_string(input_layout) + e.message);
+                                           to_string(input_desc.data.format) + e.message);
                     }
                 }
 
@@ -1026,10 +1039,14 @@ namespace ngraph
                         vector<memory::format> prim_output_formats;
                         vector<memory::desc> prim_output_mds;
                         MaxPoolLayout<ngraph::op::MaxPoolWithIndices, prop_kind::forward_training>(
-                            node, prim_input_formats, prim_input_mds, prim_output_formats, prim_output_mds);
+                            node,
+                            prim_input_formats,
+                            prim_input_mds,
+                            prim_output_formats,
+                            prim_output_mds);
 
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats, prim_input_mds);
+                        node = insert_input_conversions(
+                            external_function, node, prim_input_formats, prim_input_mds);
                         set_output_layouts(node, prim_output_formats, prim_output_mds);
                     }
                     else
@@ -1048,10 +1065,14 @@ namespace ngraph
                         vector<memory::format> prim_output_formats;
                         vector<memory::desc> prim_output_mds;
                         MaxPoolLayout<ngraph::op::MaxPool, prop_kind::forward_inference>(
-                            node, prim_input_formats, prim_input_mds, prim_output_formats, prim_output_mds);
+                            node,
+                            prim_input_formats,
+                            prim_input_mds,
+                            prim_output_formats,
+                            prim_output_mds);
 
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats, prim_input_mds);
+                        node = insert_input_conversions(
+                            external_function, node, prim_input_formats, prim_input_mds);
                         set_output_layouts(node, prim_output_formats, prim_output_mds);
                     }
                     else
@@ -1081,8 +1102,8 @@ namespace ngraph
                     auto padding_below = max_pool->get_padding_below();
                     auto padding_above = max_pool->get_padding_above();
 
-                    memory::data_type et = mkldnn_utils::get_mkldnn_data_type(
-                        node->get_input_element_type(1));
+                    memory::data_type et =
+                        mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(1));
 
                     algorithm algorithm_enumerator = algorithm::pooling_max;
 
@@ -1095,43 +1116,44 @@ namespace ngraph
                     memory::dims mkldnn_padding_below(padding_below.begin(), padding_below.end());
                     memory::dims mkldnn_padding_above(padding_above.begin(), padding_above.end());
 
+                    // auto fprop_input_layout =
+                    //    mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                    auto fprop_input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                     auto fprop_input_layout =
-                        mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
-                    auto fprop_input_md =
-                        mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-
+                        static_cast<memory::format>(fprop_input_md.data.format);
+                    // auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node.get(), 1);
                     auto diff_dst_desc = memory::desc(mkldnn_arg1_shape, et, fprop_input_layout);
                     auto diff_src_desc = memory::desc(mkldnn_arg0_shape, et, memory::format::any);
 
                     try
                     {
-                        auto fwd_prim_desc = pooling_forward::primitive_desc(
-                            {prop_kind::forward_training,
-                             algorithm_enumerator,
-                             diff_src_desc,
-                             diff_dst_desc,
-                             mkldnn_filter_strides,
-                             mkldnn_filter_shape,
-                             mkldnn_padding_below,
-                             mkldnn_padding_above,
-                             padding_kind::zero},
-                            mkldnn_utils::global_cpu_engine);
+                        auto fwd_prim_desc =
+                            pooling_forward::primitive_desc({prop_kind::forward_training,
+                                                             algorithm_enumerator,
+                                                             diff_src_desc,
+                                                             diff_dst_desc,
+                                                             mkldnn_filter_strides,
+                                                             mkldnn_filter_shape,
+                                                             mkldnn_padding_below,
+                                                             mkldnn_padding_above,
+                                                             padding_kind::zero},
+                                                            mkldnn_utils::global_cpu_engine);
 
-                        auto prim_desc = pooling_backward::primitive_desc(
-                            {algorithm_enumerator,
-                             diff_src_desc,
-                             diff_dst_desc,
-                             mkldnn_filter_strides,
-                             mkldnn_filter_shape,
-                             mkldnn_padding_below,
-                             mkldnn_padding_above,
-                             padding_kind::zero},
-                            mkldnn_utils::global_cpu_engine,
-                            fwd_prim_desc);
+                        auto prim_desc =
+                            pooling_backward::primitive_desc({algorithm_enumerator,
+                                                              diff_src_desc,
+                                                              diff_dst_desc,
+                                                              mkldnn_filter_strides,
+                                                              mkldnn_filter_shape,
+                                                              mkldnn_padding_below,
+                                                              mkldnn_padding_above,
+                                                              padding_kind::zero},
+                                                             mkldnn_utils::global_cpu_engine,
+                                                             fwd_prim_desc);
                         prim_input_formats.push_back(fprop_input_layout);
                         prim_input_formats.push_back(fprop_input_layout);
                         prim_input_mds.push_back(fprop_input_md);
-                        prim_input_mds.push_back(fprop_input_md);
+                        prim_input_mds.push_back(diff_dst_desc);
 
                         if (with_indices)
                         {
@@ -1143,13 +1165,12 @@ namespace ngraph
 
                         prim_output_formats.push_back(static_cast<memory::format>(
                             prim_desc.diff_src_primitive_desc().desc().data.format));
-                        prim_output_mds.push_back(
-                            prim_desc.diff_src_primitive_desc().desc());
+                        prim_output_mds.push_back(prim_desc.diff_src_primitive_desc().desc());
                     }
                     catch (const mkldnn::error& e)
                     {
                         throw ngraph_error("MKLDNN Unsupported pooling layout" +
-                                           to_string(fprop_input_layout) + e.message);
+                                           to_string(fprop_input_md.data.format) + e.message);
                     }
                 }
 
@@ -1163,10 +1184,14 @@ namespace ngraph
                         vector<memory::format> prim_output_formats;
                         vector<memory::desc> prim_output_mds;
                         MaxPoolBackpropLayout<ngraph::op::MaxPoolBackprop, false>(
-                            node, prim_input_formats, prim_input_mds, prim_output_formats, prim_output_mds);
+                            node,
+                            prim_input_formats,
+                            prim_input_mds,
+                            prim_output_formats,
+                            prim_output_mds);
 
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats, prim_input_mds);
+                        node = insert_input_conversions(
+                            external_function, node, prim_input_formats, prim_input_mds);
                         set_output_layouts(node, prim_output_formats, prim_output_mds);
                     }
                     else
@@ -1185,10 +1210,14 @@ namespace ngraph
                         vector<memory::format> prim_output_formats;
                         vector<memory::desc> prim_output_mds;
                         MaxPoolBackpropLayout<ngraph::op::MaxPoolWithIndicesBackprop, true>(
-                            node, prim_input_formats, prim_input_mds, prim_output_formats, prim_output_mds);
+                            node,
+                            prim_input_formats,
+                            prim_input_mds,
+                            prim_output_formats,
+                            prim_output_mds);
 
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats, prim_input_mds);
+                        node = insert_input_conversions(
+                            external_function, node, prim_input_formats, prim_input_mds);
                         set_output_layouts(node, prim_output_formats, prim_output_mds);
                     }
                     else
@@ -1207,10 +1236,8 @@ namespace ngraph
                     }
                     else
                     {
-                        auto input_layout =
-                            mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
-                        auto input_md =
-                            mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        auto input_layout = mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         vector<memory::format> prim_output_formats;
                         vector<memory::desc> prim_output_mds;
                         prim_output_formats.push_back(input_layout);
@@ -1223,10 +1250,9 @@ namespace ngraph
                 void CPULayout::LAYOUT_DECL(ngraph::op::GetOutputElement)
                 {
                     auto goe = static_cast<const ngraph::op::GetOutputElement*>(node.get());
-                    auto input_layout = mkldnn_utils::get_input_mkldnn_format(
-                        node.get(), goe->get_n());
-                    auto input_md = mkldnn_utils::get_input_mkldnn_md(
-                        node.get(), goe->get_n());
+                    auto input_layout =
+                        mkldnn_utils::get_input_mkldnn_format(node.get(), goe->get_n());
+                    auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), goe->get_n());
                     vector<memory::format> prim_output_formats;
                     vector<memory::desc> prim_output_mds;
                     prim_output_formats.push_back(input_layout);
@@ -1239,10 +1265,8 @@ namespace ngraph
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        auto input_layout =
-                            mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
-                        auto input_md =
-                            mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        auto input_layout = mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         vector<memory::format> prim_output_formats;
                         vector<memory::desc> prim_output_mds;
                         prim_output_formats.push_back(input_layout);
@@ -1260,10 +1284,8 @@ namespace ngraph
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        auto input_layout =
-                            mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
-                        auto input_md =
-                            mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        auto input_layout = mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         vector<memory::format> prim_output_formats;
                         vector<memory::desc> prim_output_mds;
                         prim_output_formats.push_back(input_layout);
@@ -1281,10 +1303,8 @@ namespace ngraph
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        auto input_layout =
-                            mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
-                        auto input_md =
-                            mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        auto input_layout = mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         vector<memory::format> prim_input_formats;
                         vector<memory::desc> prim_input_mds;
                         vector<memory::format> prim_output_formats;
@@ -1296,8 +1316,8 @@ namespace ngraph
                         prim_input_mds.push_back(input_md);
                         prim_output_formats.push_back(input_layout);
                         prim_output_mds.push_back(input_md);
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats, prim_input_mds);
+                        node = insert_input_conversions(
+                            external_function, node, prim_input_formats, prim_input_mds);
                         set_output_layouts(node, prim_output_formats, prim_output_mds);
                     }
                     else
@@ -1311,18 +1331,13 @@ namespace ngraph
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        auto kernel_layout =
-                            mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
-                        auto kernel_md =
-                            mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-                        if (!mkldnn_utils::is_mkldnn_blocked_data_format(
-                                kernel_layout))
+                        auto kernel_layout = mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        auto kernel_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        if (!mkldnn_utils::is_mkldnn_blocked_data_format(kernel_layout))
                         {
                             // Propagate delta layout
-                            kernel_layout =
-                                mkldnn_utils::get_input_mkldnn_format(node.get(), 1);
-                            kernel_md =
-                                mkldnn_utils::get_input_mkldnn_md(node.get(), 1);
+                            kernel_layout = mkldnn_utils::get_input_mkldnn_format(node.get(), 1);
+                            kernel_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 1);
                         }
 
                         vector<memory::format> prim_input_formats;
@@ -1335,8 +1350,8 @@ namespace ngraph
                         prim_input_mds.push_back(kernel_md);
                         prim_output_formats.push_back(kernel_layout);
                         prim_output_mds.push_back(kernel_md);
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats, prim_input_mds);
+                        node = insert_input_conversions(
+                            external_function, node, prim_input_formats, prim_input_mds);
                         set_output_layouts(node, prim_output_formats, prim_output_mds);
                     }
                     else
@@ -1344,58 +1359,62 @@ namespace ngraph
                         set_default_layouts(external_function, node);
                     }
                 }
-                
+
                 template <typename T>
                 void BatchNormLayout(std::shared_ptr<ngraph::Node> node,
-                                           vector<memory::format>& prim_input_formats,
-                                           vector<memory::desc>& prim_input_mds,
-                                           vector<memory::format>& prim_output_formats,
-                                           vector<memory::desc>& prim_output_mds)
+                                     vector<memory::format>& prim_input_formats,
+                                     vector<memory::desc>& prim_input_mds,
+                                     vector<memory::format>& prim_output_formats,
+                                     vector<memory::desc>& prim_output_mds)
                 {
                     auto bn = static_cast<const ngraph::op::BatchNorm*>(node.get());
 
-                    auto input_layout =
-                            mkldnn_utils::get_input_mkldnn_format(node.get(), 2);
-                        auto input_md =
-                            mkldnn_utils::get_input_mkldnn_md(node.get(), 2);
-                        auto arg0_md = mkldnn_utils::create_default_mkldnn_md(node.get(), 0, false, memory::format::x);
-                        auto arg1_md = mkldnn_utils::create_default_mkldnn_md(node.get(), 1, false, memory::format::x);
+                    auto input_layout = mkldnn_utils::get_input_mkldnn_format(node.get(), 2);
+                    auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 2);
+                    auto arg0_md = mkldnn_utils::create_default_mkldnn_md(
+                        node.get(), 0, false, memory::format::x);
+                    auto arg1_md = mkldnn_utils::create_default_mkldnn_md(
+                        node.get(), 1, false, memory::format::x);
 
-                        if (bn->get_training_flag() && node->get_input_size() == 3)
-                        {
-                            auto out1_md = mkldnn_utils::create_default_mkldnn_md(node.get(), 1, true, memory::format::x);
-                            auto out2_md = mkldnn_utils::create_default_mkldnn_md(node.get(), 2, true, memory::format::x);
-                            
-                            prim_input_formats.push_back(memory::format::x);
-                            prim_input_formats.push_back(memory::format::x);
-                            prim_input_formats.push_back(input_layout);
-                            prim_input_mds.push_back(arg0_md);
-                            prim_input_mds.push_back(arg1_md);
-                            prim_input_mds.push_back(input_md);
-                            prim_output_formats.push_back(input_layout);
-                            prim_output_mds.push_back(input_md);
-                            prim_output_formats.push_back(memory::format::x);
-                            prim_output_formats.push_back(memory::format::x);
-                            prim_output_mds.push_back(out1_md);
-                            prim_output_mds.push_back(out2_md);
-                        }
-                        else
-                        {
-                            auto arg3_md = mkldnn_utils::create_default_mkldnn_md(node.get(), 3, false, memory::format::x);
-                            auto arg4_md = mkldnn_utils::create_default_mkldnn_md(node.get(), 4, false, memory::format::x);
-                            prim_input_formats.push_back(memory::format::x);
-                            prim_input_formats.push_back(memory::format::x);
-                            prim_input_formats.push_back(input_layout);
-                            prim_input_formats.push_back(memory::format::x);
-                            prim_input_formats.push_back(memory::format::x);
-                            prim_input_mds.push_back(arg0_md);
-                            prim_input_mds.push_back(arg1_md);
-                            prim_input_mds.push_back(input_md);
-                            prim_input_mds.push_back(arg3_md);
-                            prim_input_mds.push_back(arg4_md);
-                            prim_output_formats.push_back(input_layout);
-                            prim_output_mds.push_back(input_md);
-                        }
+                    if (bn->get_training_flag() && node->get_input_size() == 3)
+                    {
+                        auto out1_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 1, true, memory::format::x);
+                        auto out2_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 2, true, memory::format::x);
+
+                        prim_input_formats.push_back(memory::format::x);
+                        prim_input_formats.push_back(memory::format::x);
+                        prim_input_formats.push_back(input_layout);
+                        prim_input_mds.push_back(arg0_md);
+                        prim_input_mds.push_back(arg1_md);
+                        prim_input_mds.push_back(input_md);
+                        prim_output_formats.push_back(input_layout);
+                        prim_output_mds.push_back(input_md);
+                        prim_output_formats.push_back(memory::format::x);
+                        prim_output_formats.push_back(memory::format::x);
+                        prim_output_mds.push_back(out1_md);
+                        prim_output_mds.push_back(out2_md);
+                    }
+                    else
+                    {
+                        auto arg3_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 3, false, memory::format::x);
+                        auto arg4_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 4, false, memory::format::x);
+                        prim_input_formats.push_back(memory::format::x);
+                        prim_input_formats.push_back(memory::format::x);
+                        prim_input_formats.push_back(input_layout);
+                        prim_input_formats.push_back(memory::format::x);
+                        prim_input_formats.push_back(memory::format::x);
+                        prim_input_mds.push_back(arg0_md);
+                        prim_input_mds.push_back(arg1_md);
+                        prim_input_mds.push_back(input_md);
+                        prim_input_mds.push_back(arg3_md);
+                        prim_input_mds.push_back(arg4_md);
+                        prim_output_formats.push_back(input_layout);
+                        prim_output_mds.push_back(input_md);
+                    }
                 }
 
                 template <>
@@ -1407,9 +1426,13 @@ namespace ngraph
                         vector<memory::desc> prim_input_mds;
                         vector<memory::format> prim_output_formats;
                         vector<memory::desc> prim_output_mds;
-                        BatchNormLayout<ngraph::op::BatchNorm>(node, prim_input_formats, prim_input_mds, prim_output_formats, prim_output_mds);
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats, prim_input_mds);
+                        BatchNormLayout<ngraph::op::BatchNorm>(node,
+                                                               prim_input_formats,
+                                                               prim_input_mds,
+                                                               prim_output_formats,
+                                                               prim_output_mds);
+                        node = insert_input_conversions(
+                            external_function, node, prim_input_formats, prim_input_mds);
                         set_output_layouts(node, prim_output_formats, prim_output_mds);
                     }
                     else
@@ -1427,9 +1450,13 @@ namespace ngraph
                         vector<memory::desc> prim_input_mds;
                         vector<memory::format> prim_output_formats;
                         vector<memory::desc> prim_output_mds;
-                        BatchNormLayout<ngraph::op::BatchNormRelu>(node, prim_input_formats, prim_input_mds, prim_output_formats, prim_output_mds);
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats, prim_input_mds);
+                        BatchNormLayout<ngraph::op::BatchNormRelu>(node,
+                                                                   prim_input_formats,
+                                                                   prim_input_mds,
+                                                                   prim_output_formats,
+                                                                   prim_output_mds);
+                        node = insert_input_conversions(
+                            external_function, node, prim_input_formats, prim_input_mds);
                         set_output_layouts(node, prim_output_formats, prim_output_mds);
                     }
                     else
@@ -1443,25 +1470,26 @@ namespace ngraph
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        auto kernel_layout =
-                            mkldnn_utils::get_input_mkldnn_format(node.get(), 2);
-                        auto kernel_md =
-                            mkldnn_utils::get_input_mkldnn_md(node.get(), 2);
-                        auto arg0_md = mkldnn_utils::create_default_mkldnn_md(node.get(), 0, false, memory::format::x);
-                        auto arg1_md = mkldnn_utils::create_default_mkldnn_md(node.get(), 1, false, memory::format::x);
-                        auto arg3_md = mkldnn_utils::create_default_mkldnn_md(node.get(), 3, false, memory::format::x);
-                        auto arg4_md = mkldnn_utils::create_default_mkldnn_md(node.get(), 4, false, memory::format::x);
-                        auto out1_md = mkldnn_utils::create_default_mkldnn_md(node.get(), 1, true, memory::format::x);
-                        auto out2_md = mkldnn_utils::create_default_mkldnn_md(node.get(), 2, true, memory::format::x);
+                        auto kernel_layout = mkldnn_utils::get_input_mkldnn_format(node.get(), 2);
+                        auto kernel_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 2);
+                        auto arg0_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 0, false, memory::format::x);
+                        auto arg1_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 1, false, memory::format::x);
+                        auto arg3_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 3, false, memory::format::x);
+                        auto arg4_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 4, false, memory::format::x);
+                        auto out1_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 1, true, memory::format::x);
+                        auto out2_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 2, true, memory::format::x);
 
-                        if (!mkldnn_utils::is_mkldnn_blocked_data_format(
-                                kernel_layout))
+                        if (!mkldnn_utils::is_mkldnn_blocked_data_format(kernel_layout))
                         {
                             // Propagate delta layout
-                            kernel_layout =
-                                mkldnn_utils::get_input_mkldnn_format(node.get(), 5);
-                            kernel_md =
-                                mkldnn_utils::get_input_mkldnn_md(node.get(), 5);
+                            kernel_layout = mkldnn_utils::get_input_mkldnn_format(node.get(), 5);
+                            kernel_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 5);
                         }
 
                         vector<memory::format> prim_input_formats;
@@ -1469,12 +1497,12 @@ namespace ngraph
                         vector<memory::format> prim_output_formats;
                         vector<memory::desc> prim_output_mds;
 
-                        prim_input_formats.push_back(memory::format::x);  // gamma
-                        prim_input_formats.push_back(memory::format::x);  // beta
-                        prim_input_formats.push_back(kernel_layout);      // input
-                        prim_input_formats.push_back(memory::format::x);  // mean
-                        prim_input_formats.push_back(memory::format::x);  // variance
-                        prim_input_formats.push_back(kernel_layout);      // delta
+                        prim_input_formats.push_back(memory::format::x); // gamma
+                        prim_input_formats.push_back(memory::format::x); // beta
+                        prim_input_formats.push_back(kernel_layout);     // input
+                        prim_input_formats.push_back(memory::format::x); // mean
+                        prim_input_formats.push_back(memory::format::x); // variance
+                        prim_input_formats.push_back(kernel_layout);     // delta
                         prim_input_mds.push_back(arg0_md);
                         prim_input_mds.push_back(arg1_md);
                         prim_input_mds.push_back(kernel_md);
@@ -1489,8 +1517,8 @@ namespace ngraph
                         prim_output_mds.push_back(out1_md);
                         prim_output_mds.push_back(out2_md);
 
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats, prim_input_mds);
+                        node = insert_input_conversions(
+                            external_function, node, prim_input_formats, prim_input_mds);
                         set_output_layouts(node, prim_output_formats, prim_output_mds);
                     }
                     else
@@ -1504,10 +1532,8 @@ namespace ngraph
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        auto input0_layout =
-                            mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
-                        auto input0_md =
-                            mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        auto input0_layout = mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        auto input0_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
 
                         vector<memory::format> prim_input_formats;
                         vector<memory::desc> prim_input_mds;
@@ -1519,8 +1545,8 @@ namespace ngraph
                         prim_input_mds.push_back(input0_md);
                         prim_output_formats.push_back(input0_layout);
                         prim_output_mds.push_back(input0_md);
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats, prim_input_mds);
+                        node = insert_input_conversions(
+                            external_function, node, prim_input_formats, prim_input_mds);
                         set_output_layouts(node, prim_output_formats, prim_output_mds);
                     }
                     else
@@ -1535,41 +1561,48 @@ namespace ngraph
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         auto concat = static_cast<const ngraph::op::Concat*>(node.get());
-                        auto input0_format =
-                            mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
-                        auto input0_md =
-                            mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        auto input0_format = mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        auto input0_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
 
                         size_t concat_dim = concat->get_concatenation_axis();
-                        auto result_desc = mkldnn_utils::create_default_mkldnn_md(node.get(), 0, true, memory::format::any);
+                        auto result_desc = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 0, true, memory::format::any);
 
                         std::vector<mkldnn::memory::primitive_desc> inputs_pd;
-                       
-                        for (size_t i = 0; i < node->get_input_size(); i++)
-                        {
-                            inputs_pd.push_back(mkldnn::memory::primitive_desc(
-                                    mkldnn_utils::create_default_mkldnn_md(node.get(), i, false, input0_format), 
-                                    mkldnn_utils::global_cpu_engine));
-                        }
-                        auto prim_desc = concat::primitive_desc(
-                            result_desc, static_cast<int>(concat_dim), inputs_pd);
 
-                        vector<memory::format> prim_input_formats;
-                        vector<memory::desc> prim_input_mds;
-                        vector<memory::format> prim_output_formats;
-                        vector<memory::desc> prim_output_mds;
                         for (size_t i = 0; i < node->get_input_size(); i++)
                         {
-                            prim_input_formats.push_back(input0_format);
-                            prim_input_mds.push_back(inputs_pd[i].desc());
+                            auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), i);
+                            inputs_pd.push_back(mkldnn::memory::primitive_desc(
+                                // mkldnn_utils::create_default_mkldnn_md(node.get(), i, false, input0_format),
+                                input_md,
+                                mkldnn_utils::global_cpu_engine));
                         }
-                        prim_output_formats.push_back(static_cast<memory::format>(
-                            prim_desc.dst_primitive_desc().desc().data.format));
-                        prim_output_mds.push_back(
-                            prim_desc.dst_primitive_desc().desc());
-                        node =
-                            insert_input_conversions(external_function, node, prim_input_formats, prim_input_mds);
-                        set_output_layouts(node, prim_output_formats, prim_output_mds);
+                        try
+                        {
+                            auto prim_desc = concat::primitive_desc(
+                                result_desc, static_cast<int>(concat_dim), inputs_pd);
+
+                            vector<memory::format> prim_input_formats;
+                            vector<memory::desc> prim_input_mds;
+                            vector<memory::format> prim_output_formats;
+                            vector<memory::desc> prim_output_mds;
+                            for (size_t i = 0; i < node->get_input_size(); i++)
+                            {
+                                prim_input_formats.push_back(input0_format);
+                                prim_input_mds.push_back(inputs_pd[i].desc());
+                            }
+                            prim_output_formats.push_back(static_cast<memory::format>(
+                                prim_desc.dst_primitive_desc().desc().data.format));
+                            prim_output_mds.push_back(prim_desc.dst_primitive_desc().desc());
+                            node = insert_input_conversions(
+                                external_function, node, prim_input_formats, prim_input_mds);
+                            set_output_layouts(node, prim_output_formats, prim_output_mds);
+                        }
+                        catch (const mkldnn::error& e)
+                        {
+                            throw ngraph_error(e.message);
+                        }
                     }
                     else
                     {
@@ -1614,10 +1647,8 @@ namespace ngraph
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        auto input_layout =
-                            mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
-                        auto input_md =
-                            mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        auto input_layout = mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         vector<memory::format> prim_output_formats;
                         vector<memory::desc> prim_output_mds;
                         prim_output_formats.push_back(input_layout);
@@ -1635,10 +1666,8 @@ namespace ngraph
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        auto input_layout =
-                            mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
-                        auto input_md =
-                            mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        auto input_layout = mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         vector<memory::format> prim_output_formats;
                         vector<memory::desc> prim_output_mds;
                         prim_output_formats.push_back(input_layout);

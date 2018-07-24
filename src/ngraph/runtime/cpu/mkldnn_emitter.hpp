@@ -125,10 +125,6 @@ namespace ngraph
                     }
                     auto result_format = mkldnn_utils::get_output_mkldnn_format(node, 0);
 
-                    // auto data_desc = build_memory_descriptor(args[0], data_format);
-                    // auto weights_desc = build_memory_descriptor(args[1], weights_format);
-                    // auto result_desc = build_memory_descriptor(out[0], result_format);
-
                     auto data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
@@ -171,7 +167,8 @@ namespace ngraph
                         std::is_same<OP, ngraph::op::ConvolutionBiasAdd>())
                     {
                         auto bias_format = mkldnn_utils::get_input_mkldnn_format(node, 2);
-                        auto bias_desc = build_memory_descriptor(args[2], bias_format);
+                        // auto bias_desc = build_memory_descriptor(args[2], bias_format);
+                        auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
                         return build_convolution_forward(data_desc,
                                                          weights_desc,
                                                          bias_desc,
@@ -266,11 +263,14 @@ namespace ngraph
                                           ? mkldnn::memory::format::oihw
                                           : arg0_format;
                     }
-                    auto arg0_desc = build_memory_descriptor(args[0], arg0_format);
+                    // auto arg0_desc = build_memory_descriptor(args[0], arg0_format);
+                    auto arg0_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto arg1_format = mkldnn_utils::get_input_mkldnn_format(node, 1);
-                    auto arg1_desc = build_memory_descriptor(args[1], arg1_format);
+                    // auto arg1_desc = build_memory_descriptor(args[1], arg1_format);
+                    auto arg1_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto out0_format = mkldnn_utils::get_output_mkldnn_format(node, 0);
-                    auto out0_desc = build_memory_descriptor(out[0], out0_format);
+                    // auto out0_desc = build_memory_descriptor(out[0], out0_format);
+                    auto out0_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     if (std::is_same<OP, ngraph::op::ConvolutionBackpropData>())
                     {
@@ -297,7 +297,8 @@ namespace ngraph
                     if (std::is_same<OP, ngraph::op::ConvolutionBiasBackpropFiltersBias>())
                     {
                         auto out1_format = mkldnn_utils::get_output_mkldnn_format(node, 1);
-                        auto out1_desc = build_memory_descriptor(out[1], out1_format);
+                        // auto out1_desc = build_memory_descriptor(out[1], out1_format);
+                        auto out1_desc = mkldnn_utils::get_output_mkldnn_md(node, 1);
                         return build_convolution_backward_weights_bias(
                             arg0_desc,
                             arg1_desc,

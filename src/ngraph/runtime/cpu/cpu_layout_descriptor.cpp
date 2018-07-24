@@ -104,7 +104,8 @@ namespace ngraph
                     {
                         return false;
                     }
-                    return runtime::cpu::mkldnn_utils::compare_mkldnn_mds(m_mkldnn_md, p_other->get_mkldnn_md());
+                    return runtime::cpu::mkldnn_utils::compare_mkldnn_mds(m_mkldnn_md,
+                                                                          p_other->get_mkldnn_md());
                 }
 
                 if (strides != p_other->strides)
