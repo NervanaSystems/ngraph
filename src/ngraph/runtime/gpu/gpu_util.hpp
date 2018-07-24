@@ -60,6 +60,20 @@
         }                                                                                          \
     } while (0)
 
+#define CUDA_RT_SAFE_CALL(x)                                                                       \
+    do                                                                                             \
+    {                                                                                              \
+        cudaError_t err = x;                                                                       \
+        if (cudaSuccess != err)                                                                    \
+        {                                                                                          \
+            std::stringstream safe_call_ss;                                                        \
+            safe_call_ss << "\nerror: " #x " failed with error"                                    \
+                         << "\nfile: " << __FILE__ << "\nline: " << __LINE__                       \
+                         << "\nmsg: " << cudaGetErrorString(err);                                  \
+            throw std::runtime_error(safe_call_ss.str());                                          \
+        }                                                                                          \
+    } while (0)
+
 #define CUDNN_SAFE_CALL(func)                                                                      \
     do                                                                                             \
     {                                                                                              \
@@ -113,6 +127,41 @@ namespace ngraph
                 cuda_memcpyDtH(local.data(), p, size_in_bytes);
                 std::cout << "{" << ngraph::join(local) << "}" << std::endl;
             }
+
+            class StopWatch
+            {
+            public:
+                void start();
+                void stop();
+                size_t get_call_count();
+                size_t get_total_seconds();
+                size_t get_total_milliseconds();
+                size_t get_total_microseconds();
+                size_t get_total_nanoseconds();
+
+            private:
+                std::vector<cudaEvent_t> starts;
+                std::vector<cudaEvent_t> stops;
+                size_t m_total_count = 0;
+                size_t m_total_time_in_ns = 0;
+                bool m_active = false;
+            };
+
+            class StopWatchPool
+            {
+            public:
+                void allocate(size_t num)
+                {
+                    for (size_t i = 0; i < num; i++)
+                    {
+                        pool.push_back(StopWatch());
+                    }
+                }
+                StopWatch& get(size_t idx) { return pool[idx]; }
+                size_t size() { return pool.size(); }
+            private:
+                std::vector<StopWatch> pool;
+            };
         }
     }
 }

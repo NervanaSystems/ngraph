@@ -56,17 +56,19 @@ skip ahead to the next section, :ref:`install_ngonnx`.
       $ apt install build-essential cmake curl clang-3.9 git zlib1g zlib1g-dev libtinfo-dev
       $ git clone https://github.com/NervanaSystems/ngraph.git
       $ cd ngraph && mkdir build
-      $ cd build && cmake ../ -DNGRAPH_USE_PREBUILT_LLVM=TRUE
+      $ cd build && cmake ../ -DCMAKE_INSTALL_PREFIX=~/ngraph_dist -DNGRAPH_USE_PREBUILT_LLVM=TRUE
       $ make install
 
-#. Build the Python package (binary wheel) for ngraph and set up an env for ONNX:
+#. Build the Python package (binary wheel) for ngraph and set up an env for ONNX;
+   be sure to export the ``NGRAPH_CPP_BUILD_PATH`` where the ``ngraph_dist`` was 
+   installed. 
 
    .. code-block:: console
 
       $ cd ngraph/python
       $ git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
       $ export PYBIND_HEADERS_PATH=$PWD/pybind11
-      $ export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist
+      $ export NGRAPH_CPP_BUILD_PATH=~/ngraph_dist
       $ python3 setup.py bdist_wheel
       $ cd .. python3 -m venv onnx
       $ cd onnx/
@@ -77,7 +79,7 @@ skip ahead to the next section, :ref:`install_ngonnx`.
 
    .. code-block:: console
 
-      (onnx)$ pip install -U python/dist/ngraph-0.2.0-cp35-cp35m-linux_x86_64.whl    
+      (onnx)$ pip install -U python/dist/ngraph-0.5.0-cp35-cp35m-linux_x86_64.whl    
 
 
 #. Confirm ngraph is properly installed through a Python interpreter:

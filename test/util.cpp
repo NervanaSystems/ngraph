@@ -324,3 +324,44 @@ TEST(util, parse_string)
     EXPECT_FLOAT_EQ(-numeric_limits<double>::infinity(), parse_string<double>("-INFINITY"));
     EXPECT_TRUE(std::isnan(parse_string<double>("NaN")));
 }
+
+TEST(graph_util, get_subgraph_outputs_trivial_tests)
+{
+    auto outputs = ngraph::get_subgraph_outputs(NodeVector{}, NodeVector{});
+    ASSERT_EQ(outputs.size(), 0);
+
+    Shape shape{};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto absn = make_shared<op::Abs>(A);
+    auto neg_absn = make_shared<op::Negative>(absn);
+    outputs = ngraph::get_subgraph_outputs(NodeVector{A}, NodeVector{});
+    ASSERT_EQ(outputs, (NodeVector{A}));
+
+    outputs = ngraph::get_subgraph_outputs(NodeVector{A}, NodeVector{A});
+    ASSERT_EQ(outputs, (NodeVector{}));
+
+    outputs = ngraph::get_subgraph_outputs(NodeVector{A, absn}, NodeVector{});
+    ASSERT_EQ(outputs, (NodeVector{absn}));
+
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto abs_b = make_shared<op::Abs>(B);
+    auto neg_b = make_shared<op::Negative>(B);
+    auto abs_b_neg = make_shared<op::Negative>(abs_b);
+    outputs = ngraph::get_subgraph_outputs(NodeVector{B, abs_b}, NodeVector{});
+    ASSERT_EQ(outputs, (NodeVector{B, abs_b}));
+
+    outputs = ngraph::get_subgraph_outputs(NodeVector{B, abs_b}, NodeVector{B});
+    ASSERT_EQ(outputs, (NodeVector{abs_b}));
+
+    outputs = ngraph::get_subgraph_outputs(NodeVector{B, abs_b, abs_b_neg}, NodeVector{});
+    ASSERT_EQ(outputs, (NodeVector{B}));
+
+    auto add_b = make_shared<op::Add>(neg_b, abs_b_neg);
+    outputs =
+        ngraph::get_subgraph_outputs(NodeVector{B, abs_b, neg_b, abs_b_neg, add_b}, NodeVector{});
+    ASSERT_EQ(outputs, (NodeVector{}));
+
+    //now add_b uses abs_b_neg
+    outputs = ngraph::get_subgraph_outputs(NodeVector{B, abs_b, abs_b_neg}, NodeVector{});
+    ASSERT_EQ(outputs, (NodeVector{B, abs_b_neg}));
+}
