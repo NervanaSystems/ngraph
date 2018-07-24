@@ -43,7 +43,6 @@ namespace ngraph
                 std::vector<std::vector<int>> get_constants();
 
             public:
-                // static op emitter
                 void emit(GPU_ExternalFunction* external_function,
                           codegen::CodeWriter& writer,
                           const std::vector<GPU_TensorViewWrapper>& args,

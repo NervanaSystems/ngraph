@@ -588,7 +588,6 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 auto it = m_node_function_map.find(node.get());
                 if (it == m_node_function_map.end())
                 {
-                    //throw runtime_error("No matching function found for '" + node->get_name() + "'");
                     if (auto wrapped =
                             std::dynamic_pointer_cast<op::gpu::MemoryWrappedNode_Base>(node))
                     {
