@@ -27,6 +27,9 @@ namespace ngraph
             namespace pass
             {
                 class KernelMemoryAllocation;
+
+                template <typename NODE_TYPE>
+                bool add_kernel_allocations(std::shared_ptr<ngraph::Node> node);
             }
         }
     }
@@ -44,7 +47,7 @@ public:
 };
 
 template <typename NODE_TYPE>
-bool export_kernel_memory_allocations(std::shared_ptr<ngraph::Node> node)
+bool ngraph::runtime::gpu::pass::add_kernel_allocations(std::shared_ptr<ngraph::Node> node)
 {
     if (auto original_node = std::dynamic_pointer_cast<NODE_TYPE>(node))
     {

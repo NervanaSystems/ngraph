@@ -34,7 +34,7 @@ static std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<No
     initialize_ops_to_replace()
 {
     return std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>(
-        {{TI(op::Softmax), export_kernel_memory_allocations<op::Softmax>}});
+        {{TI(op::Softmax), runtime::gpu::pass::add_kernel_allocations<op::Softmax>}});
 }
 
 static std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>
