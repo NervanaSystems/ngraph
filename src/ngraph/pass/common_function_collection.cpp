@@ -48,9 +48,9 @@ bool pass::CommonFunctionCollection::run_on_module(vector<shared_ptr<Function>>&
     for (const shared_ptr<Function>& current_function : functions)
     {
         list<shared_ptr<Node>> op_list = current_function->get_ordered_ops();
-        for (const shared_ptr<Node>& node : op_list)
+        for (const shared_ptr<Node>& op : op_list)
         {
-            if (node->is_constant() || node->is_parameter())
+            if (op->is_constant() || op->is_parameter())
             {
                 continue;
             }
@@ -67,11 +67,11 @@ bool pass::CommonFunctionCollection::run_on_module(vector<shared_ptr<Function>>&
             // function and the original node is *also* mapped to call the original node's function.
             // We also emit the static function declaration to m_emitted_functions when the match
             // is found the first time.
-            string match_function = m_emit_op_as_function(node, function_name);
+            string match_function = m_emit_op_as_function(op, function_name);
             auto it = match_function_map.find(match_function);
             if (it != match_function_map.end())
             {
-                m_node_function_map.insert({node.get(), it->second});
+                m_node_function_map.insert({op.get(), it->second});
                 if (m_node_function_map.find(it->second) == m_node_function_map.end())
                 {
                     m_node_function_map.insert({it->second, it->second});
@@ -87,7 +87,7 @@ bool pass::CommonFunctionCollection::run_on_module(vector<shared_ptr<Function>>&
             }
             else
             {
-                match_function_map.insert({match_function, node.get()});
+                match_function_map.insert({match_function, op.get()});
             }
         }
     }
