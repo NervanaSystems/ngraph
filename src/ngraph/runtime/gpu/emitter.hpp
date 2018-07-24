@@ -30,18 +30,6 @@ namespace ngraph
     {
         namespace gpu
         {
-            class EmitterBase
-            {
-            public:
-                EmitterBase(ngraph::Node* node)
-                    : m_node(node)
-                {
-                }
-
-            protected:
-                Node* m_node;
-            };
-
             template <typename NODE_TYPE>
             class Emitter;
         }
