@@ -71,7 +71,8 @@ namespace ngraph
                     add_outputs();
                 }
 
-                virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& args) const override
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& args) const override
                 {
                     // clone underlying native node with new args
                     NodeVector new_args;
@@ -94,11 +95,13 @@ namespace ngraph
                 }
 
                 const std::shared_ptr<NODE_TYPE> native_node() const { return m_node; }
-
             protected:
-                virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override
                 {
-                    throw std::runtime_error("Adjoint calculation should be done prior to node replacement via pass::gpu::KernelMemoryAllocation.");
+                    throw std::runtime_error(
+                        "Adjoint calculation should be done prior to node replacement via "
+                        "pass::gpu::KernelMemoryAllocation.");
                 }
 
                 void add_inputs()
@@ -109,7 +112,7 @@ namespace ngraph
                     {
                         auto constant = std::make_shared<op::Constant>(
                             ngraph::element::from<
-                            typename std::remove_reference<decltype(data[0])>::type>(),
+                                typename std::remove_reference<decltype(data[0])>::type>(),
                             Shape{data.size()},
                             data);
                         this->m_inputs.emplace_back(this, i++, constant->get_outputs().at(0));

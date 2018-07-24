@@ -32,7 +32,9 @@ namespace ngraph
             {
             public:
                 Emitter<op::Softmax>(Node* node)
-                    : m_node(static_cast<op::gpu::MemoryWrappedNode<op::Softmax>*>(node)->native_node().get())
+                    : m_node(static_cast<op::gpu::MemoryWrappedNode<op::Softmax>*>(node)
+                                 ->native_node()
+                                 .get())
                 {
                 }
 
