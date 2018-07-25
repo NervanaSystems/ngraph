@@ -1239,10 +1239,10 @@ void runtime::cpu::CPU_ExternalFunction::build()
                                         if (runtime::cpu::IsTracingEnabled())
                                         {
                                             ctx->op_durations[profiler_count++] =
-                                                (std::chrono::duration_cast<cpu::Timescale>(cpu::Clock::now() -
-                                                                                            start_ts))
+                                                (std::chrono::duration_cast<cpu::Timescale>(
+                                                     cpu::Clock::now() - start_ts))
                                                     .count();
-                                         }
+                                        }
 
                                         std::advance(functor, 1);
                                     }
