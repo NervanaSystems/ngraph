@@ -1144,10 +1144,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         auto& n = *node; // Work around a compiler warning (*node inside typeid may have effects
         // with shared pointers, which is fine here but clang doesn't like it.)
         auto handler = build_dispatcher.find(type_index(typeid(n)));
-        if (handler == build_dispatcher.end())
-        {
-            throw ngraph_error("Unhandled op during code generation : " + node->description());
-        }
+
         vector<TensorViewWrapper> in;
         vector<string> in_names;
         for (const descriptor::Input& input : node->get_inputs())
@@ -1274,7 +1271,34 @@ shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
 
     if (!m_is_built && m_direct_execution)
     {
-        build();
+        for (shared_ptr<Node> node : m_function->get_ordered_ops())
+        {
+            if (node->is_parameter() || node->is_constant())
+            {
+                continue;
+            }
+            auto& n = *node; // Work around a compiler warning (*node inside typeid may have effects
+            // with shared pointers, which is fine here but clang doesn't like it.)
+            auto handler = build_dispatcher.find(type_index(typeid(n)));
+            if (handler == build_dispatcher.end())
+            {
+                if (std::getenv("NGRAPH_DEX_FALLBACK") == nullptr)
+                {
+                    throw ngraph_error("Unhandled op during code generation : " +
+                                       node->description());
+                }
+                m_direct_execution = false;
+                break;
+            }
+        }
+        if (m_direct_execution)
+        {
+            build();
+        }
+        else
+        {
+            compile();
+        }
     }
 
     return make_shared<ngraph::runtime::cpu::CPU_CallFrame>(shared_from_this(),
