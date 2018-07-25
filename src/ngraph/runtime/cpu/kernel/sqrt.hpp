@@ -19,10 +19,7 @@
 #define EIGEN_USE_THREADS
 #include <unsupported/Eigen/CXX11/Tensor>
 
-#include "ngraph/axis_set.hpp"
 #include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
-#include "ngraph/runtime/reference/broadcast.hpp"
-#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
@@ -32,33 +29,19 @@ namespace ngraph
         {
             namespace kernel
             {
-                template <typename ElementType, unsigned int Rank>
-                void broadcast(void* input,
-                               void* output,
-                               const Shape& input_shape,
-                               const Shape& output_shape)
+                template <typename ElementType>
+                void sqrt(void* input, void* output, size_t count)
                 {
-                    Eigen::array<Eigen::Index, Rank> out_dims;
-                    Eigen::array<Eigen::Index, Rank> in_dims;
+                    Eigen::array<Eigen::Index, 1> out_dims, in_dims;
 
-                    for (int i = 0; i < Rank; i++)
-                    {
-                        out_dims[i] = output_shape[i];
-                        in_dims[i] = input_shape[i];
-                    }
+                    out_dims[0] = in_dims[0] = count;
 
-                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> out(
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> out(
                         static_cast<ElementType*>(output), out_dims);
-                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> in(
                         static_cast<ElementType*>(input), in_dims);
 
-                    Eigen::array<ptrdiff_t, Rank> factors;
-                    for (int i = 0; i < Rank; i++)
-                    {
-                        factors[i] = output_shape[i] / input_shape[i];
-                    }
-
-                    out.device(eigen::global_thread_pool_device) = in.broadcast(factors);
+                    out.device(eigen::global_thread_pool_device) = in.sqrt();
                 }
             }
         }
