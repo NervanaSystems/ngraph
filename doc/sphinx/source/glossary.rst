@@ -169,4 +169,4 @@ Glossary
 
       :abbr:`Stochastic Gradient Descent (SGD)`, also known as incremental 
       gradient descent, is an iterative method for optimizing a differentiable 
-      objective function with approximation 
+      objective function.
