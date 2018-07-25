@@ -35,11 +35,14 @@ static shared_ptr<runtime::Backend> new_backend(const string& configuration_stri
     return make_shared<runtime::interpreter::INTBackend>();
 }
 
-static class StaticInit
+static class INTERPRETERStaticInit
 {
 public:
-    StaticInit() { runtime::BackendManager::register_backend("INTERPRETER", new_backend); }
-    ~StaticInit() {}
+    INTERPRETERStaticInit()
+    {
+        runtime::BackendManager::register_backend("INTERPRETER", new_backend);
+    }
+    ~INTERPRETERStaticInit() {}
 } s_init;
 
 shared_ptr<runtime::TensorView>

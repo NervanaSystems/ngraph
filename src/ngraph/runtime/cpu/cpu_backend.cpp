@@ -35,14 +35,14 @@ shared_ptr<runtime::Backend>
     return make_shared<runtime::cpu::CPU_Backend>();
 }
 
-static class StaticInit
+static class CPUStaticInit
 {
 public:
-    StaticInit()
+    CPUStaticInit()
     {
         runtime::BackendManager::register_backend("CPU", runtime::cpu::CPU_Backend::new_backend);
     }
-    ~StaticInit() {}
+    ~CPUStaticInit() {}
 } s_init;
 
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(

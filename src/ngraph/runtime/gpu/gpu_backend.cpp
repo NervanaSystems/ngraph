@@ -35,11 +35,11 @@ static shared_ptr<runtime::Backend> new_backend(const string& configuration_stri
     return make_shared<runtime::gpu::GPU_Backend>();
 }
 
-static class StaticInit
+static class GPUStaticInit
 {
 public:
-    StaticInit() { runtime::BackendManager::register_backend("GPU", new_backend); }
-    ~StaticInit() {}
+    GPUStaticInit() { runtime::BackendManager::register_backend("GPU", new_backend); }
+    ~GPUStaticInit() {}
 } s_init;
 
 runtime::gpu::GPU_Backend::GPU_Backend()

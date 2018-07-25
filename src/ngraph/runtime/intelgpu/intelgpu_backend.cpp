@@ -97,11 +97,11 @@ static shared_ptr<runtime::Backend> new_backend(const string& configuration_stri
     return make_shared<runtime::intelgpu::IntelGPUBackend>();
 }
 
-static class StaticInit
+static class INTELGPUStaticInit
 {
 public:
-    StaticInit() { runtime::BackendManager::register_backend("INTELGPU", new_backend); }
-    ~StaticInit() {}
+    INTELGPUStaticInit() { runtime::BackendManager::register_backend("INTELGPU", new_backend); }
+    ~INTELGPUStaticInit() {}
 } s_init;
 
 runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()

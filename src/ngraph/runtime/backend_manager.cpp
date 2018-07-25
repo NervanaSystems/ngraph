@@ -15,7 +15,6 @@
 *******************************************************************************/
 
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -28,7 +27,6 @@ unordered_map<string, runtime::new_backend_t>& runtime::BackendManager::get_regi
 
 void runtime::BackendManager::register_backend(const string& name, new_backend_t new_backend)
 {
-    NGRAPH_INFO << name;
     get_registry()[name] = new_backend;
 }
 
