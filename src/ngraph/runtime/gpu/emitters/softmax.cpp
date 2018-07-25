@@ -41,8 +41,7 @@ std::vector<Shape> runtime::gpu::Emitter<op::Softmax>::get_workspaces()
         }
         size_t reduced_size = shape_size(reduced_shape);
 
-        return std::vector<Shape>{
-            Shape{reduced_size * m_node->get_outputs().at(0).get_element_type().size()}};
+        return std::vector<Shape>{Shape{reduced_size}};
     }
     else
     {
