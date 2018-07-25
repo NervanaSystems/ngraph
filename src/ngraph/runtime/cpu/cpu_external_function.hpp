@@ -105,6 +105,11 @@ namespace ngraph
                 {
                     return executor;
                 }
+                std::unordered_map<std::string, std::shared_ptr<CPU_ExternalFunction>>&
+                    get_callees()
+                {
+                    return callees;
+                }
                 bool is_direct_execution() const { return m_direct_execution; }
             protected:
                 void build();
@@ -167,6 +172,7 @@ namespace ngraph
                 std::unordered_map<std::string, bool> tensor_stale;
                 std::unordered_map<std::string, size_t> intermediates_offsets;
                 std::unordered_map<std::string, size_t> function_input_index, function_output_index;
+                std::unordered_map<std::string, std::shared_ptr<CPU_ExternalFunction>> callees;
                 bool m_is_built;
                 bool m_direct_execution;
             };
