@@ -18,8 +18,8 @@
 
 #include <memory>
 
-#include "ngraph/runtime/gpu/op/util/requires_emitter.hpp"
 #include "ngraph/runtime/gpu/emitter.hpp"
+#include "ngraph/runtime/gpu/op/util/requires_emitter.hpp"
 
 namespace ngraph
 {
@@ -46,23 +46,23 @@ namespace ngraph
                 }
 
                 virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& args) const override
+                    copy_with_new_args(const NodeVector& args) const override
                 {
                     auto new_node =
                         std::dynamic_pointer_cast<NODE_TYPE>(m_node->copy_with_new_args(args));
                     return std::make_shared<EmittableNode<NODE_TYPE>>(new_node, args);
                 }
 
-                virtual void emit(runtime::gpu::GPU_ExternalFunction* external_function,
-                                  codegen::CodeWriter& writer,
-                                  const std::vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                  const std::vector<runtime::gpu::GPU_TensorViewWrapper>& out) override
+                virtual void
+                    emit(runtime::gpu::GPU_ExternalFunction* external_function,
+                         codegen::CodeWriter& writer,
+                         const std::vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                         const std::vector<runtime::gpu::GPU_TensorViewWrapper>& out) override
                 {
                     m_emitter.emit(external_function, writer, args, out);
                 }
 
                 const std::shared_ptr<NODE_TYPE> native_node() const { return m_node; }
-
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const NodeVector& deltas) override

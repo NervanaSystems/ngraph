@@ -52,7 +52,7 @@ bool ngraph::runtime::gpu::pass::add_kernel_allocations(std::shared_ptr<ngraph::
     if (auto original_node = std::dynamic_pointer_cast<NODE_TYPE>(node))
     {
         if (auto prev_wrapped =
-            std::dynamic_pointer_cast<ngraph::op::gpu::MemoryWrappedNode<NODE_TYPE>>(node))
+                std::dynamic_pointer_cast<ngraph::op::gpu::MemoryWrappedNode<NODE_TYPE>>(node))
         {
             return false;
         }

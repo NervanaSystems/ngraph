@@ -22,8 +22,8 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/shape.hpp"
 #include "ngraph/runtime/gpu/op/emittable_node.hpp"
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
@@ -56,8 +56,8 @@ namespace ngraph
                     std::copy(args.begin(),
                               args.begin() + this->m_node->get_arguments().size(),
                               std::back_inserter(new_args));
-                    auto new_node =
-                        std::dynamic_pointer_cast<NODE_TYPE>(this->m_node->copy_with_new_args(new_args));
+                    auto new_node = std::dynamic_pointer_cast<NODE_TYPE>(
+                        this->m_node->copy_with_new_args(new_args));
 
                     // construct new wrapped node passing the same native inputs and wrapped constants
                     return std::make_shared<MemoryWrappedNode<NODE_TYPE>>(new_node, args);

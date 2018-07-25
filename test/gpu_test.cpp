@@ -47,6 +47,7 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
+#include "ngraph/runtime/gpu/emitters/softmax.hpp"
 #include "ngraph/runtime/gpu/op/memory_wrapped_node.hpp"
 #include "ngraph/runtime/gpu/pass/kernel_memory_allocation.hpp"
 #include "ngraph/serializer.hpp"
@@ -59,7 +60,6 @@
 #include "util/random.hpp"
 #include "util/random.hpp"
 #include "util/test_tools.hpp"
-#include "ngraph/runtime/gpu/emitters/softmax.hpp"
 
 using namespace ngraph;
 
