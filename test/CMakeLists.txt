@@ -113,13 +113,14 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
 endif()
 
 add_executable(unit-test ${SRC})
+
 target_link_libraries(unit-test ngraph_test_util)
 target_link_libraries(unit-test ngraph libgtest libjson pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
 if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for graph_partition, convolution, and backwards unit tests
-    target_link_libraries(unit-test cpu_backend interpreter_backend)
+    target_link_libraries(unit-test -Wl,--whole-archive cpu_backend -Wl,--no-whole-archive)
     target_link_libraries(unit-test libmkldnn)
 endif()
 
@@ -129,11 +130,11 @@ endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
     add_definitions(-DNGRAPH_INTERPRETER_ENABLE)
-    target_link_libraries(unit-test interpreter_backend)
+    target_link_libraries(unit-test -Wl,--whole-archive interpreter_backend -Wl,--no-whole-archive)
 endif()
 
 if (NGRAPH_GPU_ENABLE)
-    target_link_libraries(unit-test gpu_backend)
+    target_link_libraries(unit-test -Wl,--whole-archive gpu_backend -Wl,--no-whole-archive)
 endif()
 
 add_custom_target(style-check

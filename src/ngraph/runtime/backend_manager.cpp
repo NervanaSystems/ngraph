@@ -28,6 +28,7 @@ unordered_map<string, runtime::new_backend_t>& runtime::BackendManager::get_regi
 
 void runtime::BackendManager::register_backend(const string& name, new_backend_t new_backend)
 {
+    NGRAPH_INFO << name;
     get_registry()[name] = new_backend;
 }
 
@@ -50,7 +51,15 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
         type = type.substr(0, colon);
     }
 
-    new_backend_t new_backend = get_registry().at(type);
+    auto registry = get_registry();
+    auto it = registry.find(type);
+    if (it == registry.end())
+    {
+        stringstream ss;
+        ss << "Backend '" << type << "' not registered";
+        throw runtime_error(ss.str());
+    }
+    new_backend_t new_backend = it->second;
     rc = new_backend(config);
     return rc;
 }

@@ -42,6 +42,7 @@
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -91,20 +92,17 @@ static void do_unary_operation(cldnn::topology& topology,
     topology.add(cldnn_unary);
 }
 
-extern "C" const char* get_ngraph_version_string()
+static shared_ptr<runtime::Backend> new_backend(const string& configuration_string)
 {
-    return NGRAPH_VERSION;
+    return make_shared<runtime::intelgpu::IntelGPUBackend>();
 }
 
-extern "C" runtime::Backend* new_backend(const char* configuration_string)
+static class StaticInit
 {
-    return new runtime::intelgpu::IntelGPUBackend();
-}
-
-extern "C" void delete_backend(runtime::Backend* backend)
-{
-    delete backend;
-}
+public:
+    StaticInit() { runtime::BackendManager::register_backend("INTELGPU", new_backend); }
+    ~StaticInit() {}
+} s_init;
 
 runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()
 {

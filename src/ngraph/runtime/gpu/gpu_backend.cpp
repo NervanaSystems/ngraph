@@ -20,6 +20,7 @@
 #include <cudnn.h>
 
 #include "ngraph/graph_util.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
@@ -29,20 +30,17 @@
 using namespace ngraph;
 using namespace std;
 
-extern "C" const char* get_ngraph_version_string()
+static shared_ptr<runtime::Backend> new_backend(const string& configuration_string)
 {
-    return NGRAPH_VERSION;
+    return make_shared<runtime::gpu::GPU_Backend>();
 }
 
-extern "C" runtime::Backend* new_backend(const char* configuration_string)
+static class StaticInit
 {
-    return new runtime::gpu::GPU_Backend();
-}
-
-extern "C" void delete_backend(runtime::Backend* backend)
-{
-    delete backend;
-}
+public:
+    StaticInit() { runtime::BackendManager::register_backend("GPU", new_backend); }
+    ~StaticInit() {}
+} s_init;
 
 runtime::gpu::GPU_Backend::GPU_Backend()
     : runtime::Backend()
