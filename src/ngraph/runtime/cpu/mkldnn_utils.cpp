@@ -61,33 +61,6 @@ static const std::unordered_set<std::type_index> s_op_registry{
     TI(ngraph::op::ReluBackprop),
     TI(ngraph::op::Reshape)};
 
-// Mapping from POD types to MKLDNN data types
-static const std::map<element::Type, const mkldnn::memory::data_type> s_mkldnn_data_type_map{
-    {element::boolean, mkldnn::memory::data_type::s8},
-    {element::f32, mkldnn::memory::data_type::f32},
-    {element::f64, mkldnn::memory::data_type::data_undef},
-    {element::i8, mkldnn::memory::data_type::s8},
-    {element::i16, mkldnn::memory::data_type::s16},
-    {element::i32, mkldnn::memory::data_type::s32},
-    {element::i64, mkldnn::memory::data_type::data_undef},
-    {element::u8, mkldnn::memory::data_type::u8},
-    {element::u16, mkldnn::memory::data_type::data_undef},
-    {element::u32, mkldnn::memory::data_type::data_undef},
-    {element::u64, mkldnn::memory::data_type::data_undef}};
-
-static const std::map<element::Type, const std::string> s_mkldnn_data_type_string_map{
-    {element::boolean, "mkldnn::memory::data_type::s8"},
-    {element::f32, "mkldnn::memory::data_type::f32"},
-    {element::f64, "mkldnn::memory::data_type::data_undef"},
-    {element::i8, "mkldnn::memory::data_type::s8"},
-    {element::i16, "mkldnn::memory::data_type::s16"},
-    {element::i32, "mkldnn::memory::data_type::s32"},
-    {element::i64, "mkldnn::memory::data_type::data_undef"},
-    {element::u8, "mkldnn::memory::data_type::u8"},
-    {element::u16, "mkldnn::memory::data_type::data_undef"},
-    {element::u32, "mkldnn::memory::data_type::data_undef"},
-    {element::u64, "mkldnn::memory::data_type::data_undef"}};
-
 // TODO (jbobba): Add the rest of memory formats to this map as well
 static const std::map<memory::format, const std::string> s_mkldnn_format_string_map{
     {memory::format::format_undef, "memory::format::format_undef"},
@@ -183,6 +156,19 @@ mkldnn::memory::format runtime::cpu::mkldnn_utils::CreateNativeDataFormat(const 
 const std::string&
     runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(const ngraph::element::Type& type)
 {
+    static const std::map<element::Type, const std::string> s_mkldnn_data_type_string_map{
+        {element::boolean, "mkldnn::memory::data_type::s8"},
+        {element::f32, "mkldnn::memory::data_type::f32"},
+        {element::f64, "mkldnn::memory::data_type::data_undef"},
+        {element::i8, "mkldnn::memory::data_type::s8"},
+        {element::i16, "mkldnn::memory::data_type::s16"},
+        {element::i32, "mkldnn::memory::data_type::s32"},
+        {element::i64, "mkldnn::memory::data_type::data_undef"},
+        {element::u8, "mkldnn::memory::data_type::u8"},
+        {element::u16, "mkldnn::memory::data_type::data_undef"},
+        {element::u32, "mkldnn::memory::data_type::data_undef"},
+        {element::u64, "mkldnn::memory::data_type::data_undef"}};
+
     auto it = s_mkldnn_data_type_string_map.find(type);
     if (it == s_mkldnn_data_type_string_map.end() || it->second.empty())
         throw ngraph_error("No MKLDNN data type exists for the given element type");
@@ -192,6 +178,20 @@ const std::string&
 mkldnn::memory::data_type
     runtime::cpu::mkldnn_utils::get_mkldnn_data_type(const ngraph::element::Type& type)
 {
+    // Mapping from POD types to MKLDNN data types
+    static const std::map<element::Type, const mkldnn::memory::data_type> s_mkldnn_data_type_map{
+        {element::boolean, mkldnn::memory::data_type::s8},
+        {element::f32, mkldnn::memory::data_type::f32},
+        {element::f64, mkldnn::memory::data_type::data_undef},
+        {element::i8, mkldnn::memory::data_type::s8},
+        {element::i16, mkldnn::memory::data_type::s16},
+        {element::i32, mkldnn::memory::data_type::s32},
+        {element::i64, mkldnn::memory::data_type::data_undef},
+        {element::u8, mkldnn::memory::data_type::u8},
+        {element::u16, mkldnn::memory::data_type::data_undef},
+        {element::u32, mkldnn::memory::data_type::data_undef},
+        {element::u64, mkldnn::memory::data_type::data_undef}};
+
     auto it = s_mkldnn_data_type_map.find(type);
     if (it == s_mkldnn_data_type_map.end() || it->second == memory::data_type::data_undef)
     {
