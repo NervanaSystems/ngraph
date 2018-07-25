@@ -14,6 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <sstream>
+
 #include "ngraph/runtime/backend_manager.hpp"
 
 using namespace std;
@@ -33,7 +35,10 @@ void runtime::BackendManager::register_backend(const string& name, new_backend_t
 vector<string> runtime::BackendManager::get_registered_backends()
 {
     vector<string> rc;
-
+    for (const auto& p : get_registry())
+    {
+        rc.push_back(p.first);
+    }
     return rc;
 }
 

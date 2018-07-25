@@ -81,13 +81,6 @@ namespace ngraph
             void validate_call(std::shared_ptr<const Function> func,
                                const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
                                const std::vector<std::shared_ptr<runtime::TensorView>>& inputs);
-
-        private:
-#ifdef BACKEND_SHARED_LIBS
-            static void* open_shared_library(std::string type);
-            static std::map<std::string, std::string> get_registered_device_map();
-#endif
-            static bool is_backend_name(const std::string& file, std::string& backend_name);
         };
     }
 }
