@@ -403,6 +403,14 @@ namespace ngraph
                         "ConvolutionBiasBackpropFiltersBias is only supported with MKLDNN kernel.");
                 }
             }
+
+            REGISTER_OP_BUILDER(Convolution);
+            REGISTER_OP_BUILDER(ConvolutionRelu);
+            REGISTER_OP_BUILDER(ConvolutionBias);
+            REGISTER_OP_BUILDER(ConvolutionBiasAdd);
+            REGISTER_OP_BUILDER(ConvolutionBackpropData);
+            REGISTER_OP_BUILDER(ConvolutionBackpropFilters);
+            REGISTER_OP_BUILDER(ConvolutionBiasBackpropFiltersBias);
         }
     }
 }

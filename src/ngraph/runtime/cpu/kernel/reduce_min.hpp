@@ -20,7 +20,7 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 
 #include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
-#include "ngraph/runtime/reference/max.hpp"
+#include "ngraph/runtime/reference/min.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -32,7 +32,7 @@ namespace ngraph
             namespace kernel
             {
                 template <typename ElementType, unsigned int Rank>
-                void reduce_max_all(void* input,
+                void reduce_min_all(void* input,
                                     void* output,
                                     const Shape& input_shape,
                                     const Shape& output_shape)
@@ -49,11 +49,11 @@ namespace ngraph
                         static_cast<ElementType*>(output), out_dims);
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(
                         static_cast<ElementType*>(input), in_dims);
-                    out.device(eigen::global_thread_pool_device) = in.maximum();
+                    out.device(eigen::global_thread_pool_device) = in.minimum();
                 }
 
                 template <typename ElementType, unsigned int Rank, unsigned int ReductionDims>
-                void reduce_max(void* input,
+                void reduce_min(void* input,
                                 void* output,
                                 const Shape& input_shape,
                                 const Shape& output_shape,
@@ -84,61 +84,61 @@ namespace ngraph
                         out(static_cast<ElementType*>(output), out_dims);
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(
                         static_cast<ElementType*>(input), in_dims);
-                    out.device(eigen::global_thread_pool_device) = in.maximum(reduction_dims);
+                    out.device(eigen::global_thread_pool_device) = in.minimum(reduction_dims);
                 }
 
                 template <typename ElementType, unsigned int Rank>
-                void reduce_max_1rd(void* input,
+                void reduce_min_1rd(void* input,
                                     void* output,
                                     const Shape& input_shape,
                                     const Shape& output_shape,
                                     const AxisSet& reduction_axes)
                 {
-                    reduce_max<ElementType, Rank, 1>(
+                    reduce_min<ElementType, Rank, 1>(
                         input, output, input_shape, output_shape, reduction_axes);
                 }
 
                 template <typename ElementType>
-                void reduce_max_3d_2rd(void* input,
+                void reduce_min_3d_2rd(void* input,
                                        void* output,
                                        const Shape& input_shape,
                                        const Shape& output_shape,
                                        const AxisSet& reduction_axes)
                 {
-                    reduce_max<ElementType, 3, 2>(
+                    reduce_min<ElementType, 3, 2>(
                         input, output, input_shape, output_shape, reduction_axes);
                 }
 
                 template <typename ElementType>
-                void reduce_max_4d_2rd(void* input,
+                void reduce_min_4d_2rd(void* input,
                                        void* output,
                                        const Shape& input_shape,
                                        const Shape& output_shape,
                                        const AxisSet& reduction_axes)
                 {
-                    reduce_max<ElementType, 4, 2>(
+                    reduce_min<ElementType, 4, 2>(
                         input, output, input_shape, output_shape, reduction_axes);
                 }
 
                 template <typename ElementType>
-                void reduce_max_5d_2rd(void* input,
+                void reduce_min_5d_2rd(void* input,
                                        void* output,
                                        const Shape& input_shape,
                                        const Shape& output_shape,
                                        const AxisSet& reduction_axes)
                 {
-                    reduce_max<ElementType, 5, 2>(
+                    reduce_min<ElementType, 5, 2>(
                         input, output, input_shape, output_shape, reduction_axes);
                 }
 
                 template <typename ElementType>
-                void max(void* arg,
+                void min(void* arg,
                          void* out,
                          const Shape& in_shape,
                          const Shape& out_shape,
                          const AxisSet& reduction_axes)
                 {
-                    reference::max(static_cast<ElementType*>(arg),
+                    reference::min(static_cast<ElementType*>(arg),
                                    static_cast<ElementType*>(out),
                                    in_shape,
                                    out_shape,
