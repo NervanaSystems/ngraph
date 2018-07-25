@@ -59,6 +59,7 @@
 #include "util/random.hpp"
 #include "util/random.hpp"
 #include "util/test_tools.hpp"
+#include "ngraph/runtime/gpu/emitters/softmax.hpp"
 
 using namespace ngraph;
 
@@ -171,9 +172,11 @@ TEST(gpu_test, memory_wrapped_node_bprop)
     pass_manager.run_passes(f);
     pass_manager.run_passes(df);
 
-    size_t nwrapped_fprop = count_ops_of_type<op::gpu::MemoryWrappedNode_Base>(f);
-    size_t nwrapped_bprop = count_ops_of_type<op::gpu::MemoryWrappedNode_Base>(df);
+    size_t nwrapped_fprop = count_ops_of_type<op::gpu::MemoryWrappedNode<op::Softmax>>(f);
+    size_t nwrapped_bprop = count_ops_of_type<op::gpu::MemoryWrappedNode<op::Softmax>>(df);
 
     EXPECT_EQ(nwrapped_fprop, 1);
     EXPECT_EQ(nwrapped_bprop, 1);
+
+    EXPECT_EQ(count_ops_of_type<op::gpu::RequiresEmitter>(f), 1);
 }

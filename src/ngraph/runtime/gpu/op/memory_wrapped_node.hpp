@@ -20,12 +20,10 @@
 #include <memory>
 #include <type_traits>
 
-#include "ngraph/axis_set.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/runtime/gpu/emitter.hpp"
 #include "ngraph/shape.hpp"
-#include "ngraph/type/element_type.hpp"
+#include "ngraph/runtime/gpu/op/emittable_node.hpp"
 
 namespace ngraph
 {
@@ -33,40 +31,19 @@ namespace ngraph
     {
         namespace gpu
         {
-            class MemoryWrappedNode_Base : public Node
-            {
-            public:
-                MemoryWrappedNode_Base(std::string node_type, const NodeVector& args)
-                    : Node(node_type, args)
-                {
-                }
-
-                virtual ~MemoryWrappedNode_Base() = default;
-                virtual void emit(runtime::gpu::GPU_ExternalFunction* external_function,
-                                  codegen::CodeWriter& writer,
-                                  const std::vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                  const std::vector<runtime::gpu::GPU_TensorViewWrapper>& out)
-                {
-                }
-            };
-
             template <typename NODE_TYPE>
-            class MemoryWrappedNode : public MemoryWrappedNode_Base
+            class MemoryWrappedNode : public EmittableNode<NODE_TYPE>
             {
             public:
                 MemoryWrappedNode(const std::shared_ptr<NODE_TYPE>& node)
-                    : MemoryWrappedNode_Base(node->description(), node->get_arguments())
-                    , m_node(node)
-                    , m_emitter(node.get())
+                    : EmittableNode<NODE_TYPE>(node)
                 {
                     add_inputs();
                     add_outputs();
                 }
 
                 MemoryWrappedNode(const std::shared_ptr<NODE_TYPE>& node, const NodeVector& args)
-                    : MemoryWrappedNode_Base(node->description(), args)
-                    , m_node(node)
-                    , m_emitter(node.get())
+                    : EmittableNode<NODE_TYPE>(node, args)
                 {
                     add_outputs();
                 }
@@ -77,38 +54,21 @@ namespace ngraph
                     // clone underlying native node with new args
                     NodeVector new_args;
                     std::copy(args.begin(),
-                              args.begin() + m_node->get_arguments().size(),
+                              args.begin() + this->m_node->get_arguments().size(),
                               std::back_inserter(new_args));
                     auto new_node =
-                        std::dynamic_pointer_cast<NODE_TYPE>(m_node->copy_with_new_args(new_args));
+                        std::dynamic_pointer_cast<NODE_TYPE>(this->m_node->copy_with_new_args(new_args));
 
                     // construct new wrapped node passing the same native inputs and wrapped constants
                     return std::make_shared<MemoryWrappedNode<NODE_TYPE>>(new_node, args);
                 }
 
-                void emit(runtime::gpu::GPU_ExternalFunction* external_function,
-                          codegen::CodeWriter& writer,
-                          const std::vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                          const std::vector<runtime::gpu::GPU_TensorViewWrapper>& out) override
-                {
-                    m_emitter.emit(external_function, writer, args, out);
-                }
-
-                const std::shared_ptr<NODE_TYPE> native_node() const { return m_node; }
             protected:
-                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override
-                {
-                    throw std::runtime_error(
-                        "Adjoint calculation should be done prior to node replacement via "
-                        "pass::gpu::KernelMemoryAllocation.");
-                }
-
                 void add_inputs()
                 {
                     // add constant memory input
                     size_t i = this->m_inputs.size();
-                    for (auto& data : m_emitter.get_constants())
+                    for (auto& data : this->m_emitter.get_constants())
                     {
                         auto constant = std::make_shared<op::Constant>(
                             ngraph::element::from<
@@ -122,20 +82,17 @@ namespace ngraph
                 {
                     // add node's outputs to wrapped node
                     size_t i = 0;
-                    for (auto& output : m_node->get_outputs())
+                    for (auto& output : this->m_node->get_outputs())
                     {
                         this->m_outputs.emplace_back(this, i++, output.get_tensor_view());
                     }
 
                     // add worskapce output
-                    for (auto& workspace : m_emitter.get_workspaces())
+                    for (auto& workspace : this->m_emitter.get_workspaces())
                     {
-                        this->add_output(m_node->get_element_type(), workspace);
+                        this->add_output(this->m_node->get_element_type(), workspace);
                     }
                 }
-
-                std::shared_ptr<NODE_TYPE> m_node;
-                runtime::gpu::Emitter<NODE_TYPE> m_emitter;
             };
         }
     }

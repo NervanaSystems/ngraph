@@ -588,10 +588,9 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 auto it = m_node_function_map.find(node.get());
                 if (it == m_node_function_map.end())
                 {
-                    if (auto wrapped =
-                            std::dynamic_pointer_cast<op::gpu::MemoryWrappedNode_Base>(node))
+                    if (auto emittable = std::dynamic_pointer_cast<op::gpu::RequiresEmitter>(node))
                     {
-                        wrapped->emit(this, m_writer, in, out);
+                        emittable->emit(this, m_writer, in, out);
                     }
                     else if (handler != dispatcher.end())
                     {
@@ -788,9 +787,9 @@ string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const std::shared
     writer.indent--;
     writer << "\n)\n";
     codegen::CodeWriter tmp_writer;
-    if (auto wrapped = std::dynamic_pointer_cast<op::gpu::MemoryWrappedNode_Base>(n))
+    if (auto emittable = std::dynamic_pointer_cast<op::gpu::RequiresEmitter>(n))
     {
-        wrapped->emit(this, tmp_writer, in, out);
+        emittable->emit(this, tmp_writer, in, out);
     }
     else
     {
