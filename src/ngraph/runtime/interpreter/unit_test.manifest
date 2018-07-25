@@ -4,4 +4,3 @@ batchnorm_fprop_b2c2h2w1
 batchnorm_fprop_globalstats_b2c2w2h1
 batchnorm_fprop_inference_b2c2h2w1
 computation_reuse
-mkldnn_layouts
