@@ -155,6 +155,11 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     endif()
 endif()
 
+if (NGRAPH_USE_GOLD)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fuse-ld=gold")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=gold")
+endif()
+
 include(unit_test_control)
 set(UNIT_TEST_CONFIG_LIST "" CACHE INTERNAL "")
 
