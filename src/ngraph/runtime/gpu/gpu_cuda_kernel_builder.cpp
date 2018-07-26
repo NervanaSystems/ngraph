@@ -190,23 +190,19 @@ void runtime::gpu::CudaKernelBuilder::get_onehot_op(codegen::CodeWriter& writer,
                                                     const std::array<std::string, 2>& data_types)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
-           << data_types[1] << "* out, size_t m, size_t k, size_t n)\n";
-    writer << "{\n";
-    writer.indent++;
+           << data_types[1] << "* out, uint32_t m, uint32_t k, uint32_t n)\n";
+    writer.block_begin();
     {
-        writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
+        writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
         writer << "if (tid < n)\n";
-        writer << "{\n";
-        writer.indent++;
+        writer.block_begin();
         {
-            writer << "size_t idx = (tid / m) * m * k + (m * in[tid]) + tid % m;\n";
+            writer << "uint32_t idx = (tid / m) * m * k + (m * in[tid]) + tid % m;\n";
             writer << "out[idx] = 1;\n";
         }
-        writer.indent--;
-        writer << "}\n";
+        writer.block_end();
     }
-    writer.indent--;
-    writer << "}\n";
+    writer.block_end();
 }
 
 void runtime::gpu::CudaKernelBuilder::get_reshape_op(codegen::CodeWriter& writer,
