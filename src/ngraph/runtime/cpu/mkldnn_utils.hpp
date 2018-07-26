@@ -40,8 +40,6 @@ namespace ngraph
                 mkldnn::memory::data_type get_mkldnn_data_type(const ngraph::element::Type& type);
                 const std::string& get_mkldnn_format_string(mkldnn::memory::format fmt);
 
-                mkldnn::memory::format get_input_mkldnn_format(const Node* node, size_t index);
-                mkldnn::memory::format get_output_mkldnn_format(const Node* node, size_t index);
                 const mkldnn::memory::desc& get_input_mkldnn_md(const Node* node, size_t index);
                 const mkldnn::memory::desc& get_output_mkldnn_md(const Node* node, size_t index);
                 mkldnn::memory::desc create_default_mkldnn_md(const Node* node,

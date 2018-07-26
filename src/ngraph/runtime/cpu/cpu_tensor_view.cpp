@@ -125,7 +125,7 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
         {
             return false;
         }
-        if (cpu_tvl->get_mkldnn_format() == memory::format::format_undef)
+        if (!cpu_tvl->is_mkldnn_layout())
         {
             return false;
         }
@@ -133,16 +133,16 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
             this->get_shape(),
             cpu_tvl->get_strides(),
             this->get_descriptor()->get_tensor_view_type()->get_element_type());
-        if (!mkldnn_utils::compare_mkldnn_mds(cpu_tvl->get_mkldnn_md(), native_md))
+        if (mkldnn_utils::compare_mkldnn_mds(cpu_tvl->get_mkldnn_md(), native_md))
         {
-            return true;
+            return false;
         }
+        return true;
     };
 
     if (needs_conversion())
     {
         auto tensor_shape = this->get_shape();
-        auto input_format = cpu_tvl->get_mkldnn_format();
         auto input_desc = cpu_tvl->get_mkldnn_md();
         auto output_format = runtime::cpu::mkldnn_utils::CreateNativeDataFormat(*cpu_tvl);
         memory::data_type et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
@@ -150,7 +150,6 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
 
         engine cpu_engine{engine::cpu, 0};
         memory::dims mkldnn_shape{tensor_shape.begin(), tensor_shape.end()};
-        // memory::desc input_desc{mkldnn_shape, et, input_format};
         memory::desc output_desc{mkldnn_shape, et, output_format};
         memory input{{input_desc, cpu_engine}, aligned_buffer};
         memory output{{output_desc, cpu_engine}, target};

@@ -41,11 +41,10 @@ namespace ngraph
             LayoutDescriptor::LayoutDescriptor(const ngraph::descriptor::TensorView& tv,
                                                const AxisVector& tv_axis_order)
                 : TensorViewLayout(tv)
-                , axis_order(tv_axis_order)
-                , offset(0)
-                , size(ngraph::shape_size(tv.get_tensor_view_type()->get_shape()))
+                , m_axis_order(tv_axis_order)
+                , m_offset(0)
+                , m_size(ngraph::shape_size(tv.get_tensor_view_type()->get_shape()))
                 , m_mkldnn_layout(false)
-                , m_mkldnn_format(mkldnn::memory::format::format_undef)
                 , m_mkldnn_md(LayoutDescriptor::DummyDesc)
             {
                 auto shape = get_shape();
@@ -63,23 +62,22 @@ namespace ngraph
                         throw ngraph_error("Axis is out of bounds");
                     }
 
-                    strides.emplace_back(s);
+                    m_strides.emplace_back(s);
                     s *= shape[*it];
                 }
-                std::reverse(strides.begin(), strides.end());
+                std::reverse(m_strides.begin(), m_strides.end());
             }
 
-            void LayoutDescriptor::set_axis_order(const AxisVector& perm) { axis_order = perm; }
             size_t LayoutDescriptor::get_index_offset(const std::vector<size_t>& indices)
             {
-                if (indices.size() != strides.size())
+                if (indices.size() != m_strides.size())
                 {
                     throw ngraph_error("Indices have incorrect rank");
                 }
                 size_t result = 0;
                 for (int i = 0; i < indices.size(); i++)
                 {
-                    result += strides[i] + indices[i];
+                    result += m_strides[i] * indices[i];
                 }
                 return result;
             }
@@ -108,12 +106,12 @@ namespace ngraph
                                                                           p_other->get_mkldnn_md());
                 }
 
-                if (strides != p_other->strides)
+                if (m_strides != p_other->m_strides)
                 {
                     return false;
                 }
 
-                if (offset != p_other->offset)
+                if (m_offset != p_other->m_offset)
                 {
                     return false;
                 }

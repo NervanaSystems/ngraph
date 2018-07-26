@@ -40,36 +40,34 @@ namespace ngraph
                 LayoutDescriptor(const ngraph::descriptor::TensorView& tv,
                                  const AxisVector& tv_axis_order);
                 ~LayoutDescriptor() override {}
-                size_t get_size() override { return size; }
-                size_t get_offset() const { return offset; }
+                size_t get_size() override { return m_size; }
+                size_t get_offset() const { return m_offset; }
                 size_t get_index_offset(const std::vector<size_t>& indices) override;
 
-                const Strides& get_strides() const override { return strides; }
+                const Strides& get_strides() const override { return m_strides; }
+                void set_strides(Strides& strides) { m_strides = strides; }
                 bool operator==(const TensorViewLayout& other) const override;
 
-                void set_mkldnn_format(const mkldnn::memory::format& format)
-                {
-                    m_mkldnn_format = format;
-                }
-                mkldnn::memory::format get_mkldnn_format() const { return m_mkldnn_format; }
                 const mkldnn::memory::desc& get_mkldnn_md() const { return m_mkldnn_md; }
-                void set_mkldnn_md(const mkldnn::memory::desc md) { m_mkldnn_md = md; }
+                void set_mkldnn_md(const mkldnn::memory::desc md)
+                {
+                    m_mkldnn_md = md;
+                    m_mkldnn_layout = true;
+                }
                 bool is_mkldnn_layout() const { return m_mkldnn_layout; }
-                void set_mkldnn_layout(bool flag) { m_mkldnn_layout = flag; }
-                const AxisVector& get_axis_order() const { return axis_order; }
-                void set_axis_order(const AxisVector& perm);
+                const AxisVector& get_axis_order() const { return m_axis_order; }
+                void set_axis_order(const AxisVector& perm) { m_axis_order = perm; }
                 static AxisVector create_native_axis_order(size_t rank);
 
                 static const mkldnn::memory::desc DummyDesc;
 
             private:
-                AxisVector axis_order;
-                Strides strides;
-                size_t offset;
-                size_t size;
+                AxisVector m_axis_order;
+                Strides m_strides;
+                size_t m_offset;
+                size_t m_size;
 
                 bool m_mkldnn_layout;
-                mkldnn::memory::format m_mkldnn_format;
                 mkldnn::memory::desc m_mkldnn_md;
             };
 

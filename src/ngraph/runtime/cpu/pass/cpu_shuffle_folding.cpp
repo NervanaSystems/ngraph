@@ -76,6 +76,7 @@ bool ngraph::runtime::cpu::pass::CPUShuffleFolding::run_on_function(
                     auto reshape_input_layout_descriptor =
                         std::static_pointer_cast<runtime::cpu::LayoutDescriptor>(
                             reshape_input_layout);
+                    /*
                     auto reshape_input_format =
                         reshape_input_layout_descriptor->get_mkldnn_format();
                     auto output_format =
@@ -89,13 +90,14 @@ bool ngraph::runtime::cpu::pass::CPUShuffleFolding::run_on_function(
                         if (input_order_format_map.find(reshape->get_input_order()) !=
                             input_order_format_map.end())
                         {
-                            reshape_input_layout_descriptor->set_mkldnn_format(
-                                input_order_format_map.at(reshape->get_input_order()));
+                            // reshape_input_layout_descriptor->set_mkldnn_format(
+                            //    input_order_format_map.at(reshape->get_input_order()));
                             reshape_input_layout_descriptor->set_axis_order(
                                 reshape->get_input_order());
                             function->replace_node(reshape, reshape->get_argument(0));
                         }
                     }
+                    */
                 }
             }
         }

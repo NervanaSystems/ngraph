@@ -74,14 +74,6 @@ mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor(const TensorViewWrap
         fmt);
 }
 
-mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor(const TensorViewWrapper& tvw) const
-{
-    auto layout =
-        std::static_pointer_cast<LayoutDescriptor>(tvw.get_tensor_view()->get_tensor_view_layout());
-
-    return build_memory_descriptor(tvw, layout->get_mkldnn_format());
-}
-
 mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor(const Shape& shape,
                                                             const ngraph::element::Type& et,
                                                             mkldnn::memory::format fmt) const
@@ -118,11 +110,6 @@ mkldnn::memory::desc
     md.layout_desc.blocking.offset_padding = 0;
 
     return mkldnn::memory::desc(md);
-}
-
-mkldnn::memory MKLDNNEmitter::build_memory_primitive(const TensorViewWrapper& tvw) const
-{
-    return mkldnn::memory({build_memory_descriptor(tvw), mkldnn_utils::global_cpu_engine}, nullptr);
 }
 
 size_t MKLDNNEmitter::build_memory_primitive(const mkldnn::memory::desc& desc)

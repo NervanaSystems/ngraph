@@ -164,12 +164,6 @@ namespace ngraph
                     std::vector<float> scale_vector(2, 1);
                     std::vector<mkldnn::memory::primitive_desc> inputs_pd;
 
-                    auto input0_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
-                    auto input1_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 1);
-                    auto result_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input0_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto input1_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
@@ -697,15 +691,6 @@ namespace ngraph
 
                 if (batchnorm->get_training_flag() && args.size() == 3)
                 {
-                    auto input_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2);
-                    auto result_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
-                    auto mean_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 1);
-                    auto variance_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 2);
-
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto weights_shape = Shape{2, args[0].get_size()};
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
@@ -743,13 +728,6 @@ namespace ngraph
                 }
                 else
                 {
-                    auto input_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2);
-                    auto mean_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 3);
-                    auto variance_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 4);
-                    auto result_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto weights_shape = Shape{2, args[0].get_size()};
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
@@ -855,12 +833,6 @@ namespace ngraph
                 writer << "memcpy(&bn_weights[0]+" << args[0].get_size() << ", "
                        << args[1].get_name() << ", "
                        << args[1].get_size() * args[1].get_element_type().size() << ");\n";
-
-                auto input_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2);
-                auto mean_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 3);
-                auto variance_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 4);
-                auto delta_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 5);
-                auto dinput_format = runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto weights_shape = Shape{2, args[0].get_size()};
@@ -1196,18 +1168,8 @@ namespace ngraph
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    std::vector<mkldnn::memory::format> inputs_format;
-                    std::vector<mkldnn::memory::desc> inputs_data_desc;
-
-                    for (size_t i = 0; i < args.size(); i++)
-                    {
-                        inputs_format.push_back(
-                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, i));
-                    }
-
-                    auto result_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    std::vector<mkldnn::memory::desc> inputs_data_desc;
                     for (size_t i = 0; i < args.size(); i++)
                     {
                         inputs_data_desc.push_back(mkldnn_utils::get_input_mkldnn_md(node, i));
@@ -2688,12 +2650,6 @@ namespace ngraph
                         window_dilation_strides_adjusted.push_back(s - 1);
                     }
 
-                    auto input_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
-
-                    auto output_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
-
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
 
@@ -3768,37 +3724,6 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::runtime::cpu::op::ConvertLayout)
             {
-                auto input_tvl =
-                    node->get_inputs()[0].get_output().get_tensor_view()->get_tensor_view_layout();
-                auto input_cpu_tvl =
-                    dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(input_tvl);
-                auto input_format = input_cpu_tvl->get_mkldnn_format();
-
-                // Reorder input shape if needed
-                auto input_axis_order = input_cpu_tvl->get_axis_order();
-                Shape input_shape(input_axis_order.size());
-                for (size_t idx = 0; idx < input_axis_order.size(); idx++)
-                {
-                    input_shape[idx] = args[0].get_shape()[input_axis_order[idx]];
-                }
-
-                auto output_tvl = node->get_output_tensor_view(0)->get_tensor_view_layout();
-                auto output_format =
-                    dynamic_cast<runtime::cpu::LayoutDescriptor&>(*output_tvl).get_mkldnn_format();
-
-                // MKLDNN relies on format names for selecting optimized kernel implementations
-                // Hacky way to deal with this until they move to using canonicalized layouts
-                if (input_format == mkldnn::memory::format::nchw &&
-                    runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(output_format))
-                {
-                    input_format = mkldnn::memory::format::oihw;
-                }
-                if (output_format == mkldnn::memory::format::nchw &&
-                    runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(input_format))
-                {
-                    output_format = mkldnn::memory::format::oihw;
-                }
-
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
 
                 auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
