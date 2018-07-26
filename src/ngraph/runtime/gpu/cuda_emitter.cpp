@@ -143,9 +143,8 @@ size_t runtime::gpu::CUDAEmitter::build_reverse(const std::array<std::string, 2>
                                                 GPUShape input_shape,
                                                 std::vector<uint32_t> reverse_axes)
 {
-    auto rank = input_shape.size();
     std::stringstream kernel_name;
-    kernel_name << "reverse_" << join(dtypes, "_") << "_r_" << rank;
+    kernel_name << "reverse_" << join(dtypes, "_");
 
     std::string hash = kernel_name.str() + "_i_" + join(input_shape, "_");
     // For backwards compatability we currently use two unordered maps
