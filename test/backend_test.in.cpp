@@ -871,7 +871,25 @@ NGRAPH_TEST(${BACKEND_NAME}, divide_by_zero_int32)
     copy_data(b, vector<int>{0, 0, 0, 0});
     auto result = backend->create_tensor(element::i32, shape);
 
-    EXPECT_ANY_THROW({ backend->call(f, {result}, {a, b}); });
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wused-but-marked-unused"
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
+
+    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+    EXPECT_DEATH_IF_SUPPORTED(
+        {
+            try
+            {
+                backend->call(f, {result}, {a, b});
+            }
+            catch (...)
+            {
+                abort();
+            }
+        },
+        "");
+
+#pragma clang diagnostic pop
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, equal)
@@ -1888,6 +1906,152 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
 
     backend->call(f, {result}, {a});
     EXPECT_EQ((vector<int64_t>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), read_vector<int64_t>(result));
+}
+
+static void broadcast_test_helper(const Shape& shape_a, const Shape& shape_r, const AxisSet& axis)
+{
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+
+    vector<float> inp_data(shape_size<const Shape>(shape_a));
+    iota(inp_data.begin(), inp_data.end(), 1);
+
+    auto f =
+        make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, axis), op::ParameterVector{A});
+
+    auto ref_backend = runtime::Backend::create("INTERPRETER");
+    auto wrk_backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto wrk_a = wrk_backend->create_tensor(element::f32, shape_a);
+    copy_data(wrk_a, inp_data);
+
+    auto ref_a = ref_backend->create_tensor(element::f32, shape_a);
+    copy_data(ref_a, inp_data);
+
+    auto wrk_result = wrk_backend->create_tensor(element::f32, shape_r);
+    auto ref_result = ref_backend->create_tensor(element::f32, shape_r);
+
+    wrk_backend->call(f, {wrk_result}, {wrk_a});
+    ref_backend->call(f, {ref_result}, {ref_a});
+    EXPECT_EQ(read_vector<float>(ref_result), read_vector<float>(wrk_result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_vector_middle)
+{
+    Shape shape_a{2};
+    Shape shape_r{3, 2, 4};
+    AxisSet axis{0, 2};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_vector_forward_2)
+{
+    Shape shape_a{2};
+    Shape shape_r{3, 2};
+    AxisSet axis{0};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_vector_forward_3)
+{
+    Shape shape_a{2};
+    Shape shape_r{4, 3, 2};
+    AxisSet axis{0, 1};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_vector_forward_4)
+{
+    Shape shape_a{2};
+    Shape shape_r{5, 4, 3, 2};
+    AxisSet axis{0, 1, 2};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_scalar)
+{
+    Shape shape_a{};
+    Shape shape_r{5, 4, 3, 2};
+    AxisSet axis{0, 1, 2, 3};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_vector_backward_2)
+{
+    Shape shape_a{2};
+    Shape shape_r{2, 3};
+    AxisSet axis{1};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_vector_backward_3)
+{
+    Shape shape_a{2};
+    Shape shape_r{2, 3, 4};
+    AxisSet axis{1, 2};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_vector_backward_4)
+{
+    Shape shape_a{2};
+    Shape shape_r{2, 3, 4, 5};
+    AxisSet axis{1, 2, 3};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_matrix_backward_4)
+{
+    Shape shape_a{4, 5};
+    Shape shape_r{2, 3, 4, 5};
+    AxisSet axis{0, 1};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_matrix_stride_1)
+{
+    Shape shape_a{3, 5};
+    Shape shape_r{2, 3, 4, 5};
+    AxisSet axis{0, 2};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_matrix_stride_2)
+{
+    Shape shape_a{3, 4};
+    Shape shape_r{2, 3, 4, 5};
+    AxisSet axis{0, 3};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_matrix_stride_3)
+{
+    Shape shape_a{2, 4};
+    Shape shape_r{2, 3, 4, 5};
+    AxisSet axis{1, 3};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_3d_backward)
+{
+    Shape shape_a{2, 3, 4};
+    Shape shape_r{5, 2, 3, 4};
+    AxisSet axis{0};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_3d_stride_1)
+{
+    Shape shape_a{2, 3, 4};
+    Shape shape_r{2, 5, 3, 4};
+    AxisSet axis{1};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_3d_stride_2)
+{
+    Shape shape_a{2, 3, 4};
+    Shape shape_r{2, 3, 5, 4};
+    AxisSet axis{2};
+    broadcast_test_helper(shape_a, shape_r, axis);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_matrix_0)
@@ -4668,7 +4832,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_3d)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    auto cpu_results = execute(cpu_f, args, "${BACKEND_NAME}");
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
@@ -5818,52 +5982,6 @@ NGRAPH_TEST(${BACKEND_NAME}, convolution_outlining)
     EXPECT_EQ(vector<float>{expected_result}, read_vector<float>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, mkldnn_layouts)
-{
-    Shape shape_a{1, 16, 2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    Shape shape_b{32, 16, 1, 1};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    Shape shape_r{1, 32, 2, 2};
-    auto conv1 = make_shared<op::Convolution>(A,
-                                              B,
-                                              Strides{1, 1},
-                                              Strides{1, 1},
-                                              CoordinateDiff{0, 0},
-                                              CoordinateDiff{0, 0},
-                                              Strides{1, 1});
-    Shape pool_shape{1, 1};
-    auto pool1 = make_shared<op::AvgPool>(conv1, pool_shape);
-    auto pool1_result = make_shared<op::Result>(pool1);
-    // Request result in default layout
-    pool1_result->set_needs_default_layout(true);
-    auto f = make_shared<Function>(ResultVector{pool1_result}, op::ParameterVector{A, B});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    vector<float> input(64, 1.0f);
-    vector<float> weights;
-    vector<float> rv(128);
-    for (int i = 0; i < 128; i++)
-        weights.push_back(0.0f);
-    for (int i = 0; i < 384; i++)
-        weights.push_back(1.0f);
-
-    auto a = backend->create_tensor(element::f32, shape_a, input.data());
-    auto b = backend->create_tensor(element::f32, shape_b, weights.data());
-    auto result = backend->create_tensor(element::f32, shape_r, rv.data());
-
-    vector<float> expected_result;
-    for (int i = 0; i < 32; i++)
-        expected_result.push_back(0.0f);
-    for (int i = 0; i < 96; i++)
-        expected_result.push_back(16.0f);
-
-    backend->call(f, {result}, {a, b});
-
-    EXPECT_EQ(vector<float>{expected_result}, rv);
-}
-
 NGRAPH_TEST(${BACKEND_NAME}, computation_reuse)
 {
     Shape shape_a{1, 16, 2, 2};
@@ -6445,7 +6563,7 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_3d)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    auto cpu_results = execute(cpu_f, args, "${BACKEND_NAME}");
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));

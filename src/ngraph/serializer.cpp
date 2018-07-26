@@ -1202,6 +1202,7 @@ static json write(const Node& n, bool binary_constant_data)
     {
         auto tmp = dynamic_cast<const op::Parameter*>(&n);
         node["shape"] = tmp->get_shape();
+        node["cacheable"] = tmp->get_cacheable();
         node["element_type"] = write_element_type(tmp->get_element_type());
     }
     else if (node_op == "Product")

@@ -18,6 +18,8 @@ set(SRC
     intelgpu_backend.cpp
     intelgpu_tensor_view.cpp
     intelgpu_layout.cpp
+    intelgpu_op_batchnorm.cpp
+    intelgpu_op_broadcast.cpp
 )
 
 if (NGRAPH_INTELGPU_ENABLE)
