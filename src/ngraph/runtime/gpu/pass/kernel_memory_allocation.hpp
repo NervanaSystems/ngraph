@@ -28,7 +28,8 @@ namespace ngraph
             {
                 class KernelMemoryAllocation;
 
-                template <template <typename NODE_TYPE> class CONTAINER_NODE_TYPE, typename NODE_TYPE>
+                template <template <typename NODE_TYPE> class CONTAINER_NODE_TYPE,
+                          typename NODE_TYPE>
                 bool package_node(std::shared_ptr<ngraph::Node> node);
             }
         }
@@ -57,8 +58,7 @@ bool ngraph::runtime::gpu::pass::package_node(std::shared_ptr<ngraph::Node> node
             return false;
         }
 
-        auto container_node =
-            std::make_shared<CONTAINER_NODE_TYPE<NODE_TYPE>>(native_node);
+        auto container_node = std::make_shared<CONTAINER_NODE_TYPE<NODE_TYPE>>(native_node);
 
         container_node->graph_replace();
 

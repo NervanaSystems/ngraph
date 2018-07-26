@@ -101,7 +101,8 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const std::array<std::string, 2>& dt
     size_t nthreads = shape_size(output_shape);
     //TODO: currently we set it to 64, will add tuning method later
     uint32_t block_size_x = 64;
-    uint32_t aligned_grid_size_x = align_to_block_size(static_cast<uint32_t>(nthreads), block_size_x);
+    uint32_t aligned_grid_size_x =
+        align_to_block_size(static_cast<uint32_t>(nthreads), block_size_x);
 
     // if the kernel has not been compiled, build it
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(hash);
@@ -1343,7 +1344,6 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const std::array<std::string, 
     uint32_t block_size_x = 64;
     uint32_t aligned_grid_size_x =
         align_to_block_size(static_cast<uint32_t>(nthreads), block_size_x);
-
 
     std::unique_ptr<gpu::primitive> broadcast(new gpu::primitive{[=](void** inputs,
                                                                      void** outputs) mutable {

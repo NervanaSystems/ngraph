@@ -68,16 +68,19 @@ namespace ngraph
                     for (size_t i = 0; i < this->m_node->get_outputs().size(); i++)
                     {
                         auto& node_output = this->m_node->get_outputs().at(i);
-                        std::set<ngraph::descriptor::Input*> copy_inputs{std::begin(node_output.get_inputs()),
-                                std::end(node_output.get_inputs())};
+                        std::set<ngraph::descriptor::Input*> copy_inputs{
+                            std::begin(node_output.get_inputs()),
+                            std::end(node_output.get_inputs())};
 
-                        auto new_output = std::make_shared<ngraph::op::GetOutputElement>(this->shared_from_this(), i);
+                        auto new_output = std::make_shared<ngraph::op::GetOutputElement>(
+                            this->shared_from_this(), i);
                         for (auto input : copy_inputs)
                         {
                             input->replace_output(new_output->get_outputs().at(0));
                         }
                     }
                 }
+
             protected:
                 void add_constant_inputs()
                 {

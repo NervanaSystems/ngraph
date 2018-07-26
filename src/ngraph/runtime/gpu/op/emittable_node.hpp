@@ -70,10 +70,12 @@ namespace ngraph
                     {
                         auto& node_output = this->m_node->get_outputs().at(i);
                         // build set of input pointers for this specific output
-                        std::set<ngraph::descriptor::Input*> copy_inputs{std::begin(node_output.get_inputs()),
-                                std::end(node_output.get_inputs())};
+                        std::set<ngraph::descriptor::Input*> copy_inputs{
+                            std::begin(node_output.get_inputs()),
+                            std::end(node_output.get_inputs())};
 
-                        auto new_output = std::make_shared<ngraph::op::GetOutputElement>(this->shared_from_this(), i);
+                        auto new_output = std::make_shared<ngraph::op::GetOutputElement>(
+                            this->shared_from_this(), i);
                         for (auto input : copy_inputs)
                         {
                             input->replace_output(this->get_outputs().at(0));
@@ -82,7 +84,6 @@ namespace ngraph
                 }
 
                 const std::shared_ptr<NODE_TYPE> native_node() const { return m_node; }
-
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const NodeVector& deltas) override
@@ -93,6 +94,7 @@ namespace ngraph
 
                 std::shared_ptr<NODE_TYPE> m_node;
                 runtime::gpu::Emitter<NODE_TYPE> m_emitter;
+
             private:
                 void add_node_outputs()
                 {
