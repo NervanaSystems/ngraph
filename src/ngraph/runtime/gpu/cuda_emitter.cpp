@@ -146,7 +146,7 @@ size_t runtime::gpu::CUDAEmitter::build_reverse(const std::array<std::string, 2>
     std::stringstream kernel_name;
     kernel_name << "reverse_" << join(dtypes, "_");
 
-    std::string hash = kernel_name.str() + "_i_" + join(input_shape, "_");
+    std::string hash = kernel_name.str() + "_i_" + join(input_shape, "_") + "_axes_" + join(reverse_axes, "_");
     // For backwards compatability we currently use two unordered maps
     // 1. one looks up the compiled cuda kernel (CudaFunctionPool)
     // 2. the other looks to see if this kernel is already in the primitive list
@@ -180,13 +180,16 @@ size_t runtime::gpu::CUDAEmitter::build_reverse(const std::array<std::string, 2>
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
     size_t idx_input_shape =
         allocator.reserve_argspace(input_shape.data(), input_shape.size() * sizeof(uint32_t));
+    size_t idx_reverse_axes =
+        allocator.reserve_argspace(reverse_axes.data(), reverse_axes.size() * sizeof(uint32_t));
 
     // create the launch primitive
     std::unique_ptr<gpu::primitive> kernel_launch(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
             void* param_input_shape = runtime::gpu::invoke_memory_primitive(m_ctx, idx_input_shape);
+            void* param_reverse_axes = runtime::gpu::invoke_memory_primitive(m_ctx, idx_reverse_axes);
             std::vector<void*> args_list{
-                &inputs[0], &outputs[0], &param_input_shape, &reverse_axes, &nthreads};
+                &inputs[0], &outputs[0], &param_input_shape, &param_reverse_axes, &nthreads};
 
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                           aligned_grid_size_x,
