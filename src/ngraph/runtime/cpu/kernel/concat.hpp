@@ -15,13 +15,14 @@
 *******************************************************************************/
 
 #pragma once
+#include <functional>
+#include <iostream>
+#include <vector>
 
 #define EIGEN_USE_THREADS
 #include <unsupported/Eigen/CXX11/Tensor>
 
-#include "ngraph/axis_set.hpp"
 #include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
-#include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -32,33 +33,37 @@ namespace ngraph
         {
             namespace kernel
             {
-                template <typename ElementType, unsigned int Rank>
-                void broadcast(void* input,
-                               void* output,
-                               const Shape& input_shape,
-                               const Shape& output_shape)
+                template <typename ElementType, int Rank>
+                void concat(std::vector<std::reference_wrapper<void*>> inputs,
+                            std::vector<Shape> input_shapes,
+                            void* output,
+                            Shape output_shape,
+                            size_t axis)
                 {
                     Eigen::array<Eigen::Index, Rank> out_dims;
-                    Eigen::array<Eigen::Index, Rank> in_dims;
-
                     for (int i = 0; i < Rank; i++)
                     {
                         out_dims[i] = output_shape[i];
-                        in_dims[i] = input_shape[i];
                     }
-
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> out(
                         static_cast<ElementType*>(output), out_dims);
-                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(
-                        static_cast<ElementType*>(input), in_dims);
 
-                    Eigen::array<ptrdiff_t, Rank> factors;
-                    for (int i = 0; i < Rank; i++)
+                    Eigen::array<Eigen::Index, Rank> in_dims, concat_pos;
+                    concat_pos.fill(0);
+
+                    for (int i = 0; i < input_shapes.size(); i++)
                     {
-                        factors[i] = output_shape[i] / input_shape[i];
-                    }
+                        for (int j = 0; j < Rank; j++)
+                        {
+                            in_dims[j] = input_shapes[i][j];
+                        }
 
-                    out.device(eigen::global_thread_pool_device) = in.broadcast(factors);
+                        Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(
+                            static_cast<ElementType*>(inputs[i].get()), in_dims);
+                        out.slice(concat_pos, in_dims).device(eigen::global_thread_pool_device) =
+                            in;
+                        concat_pos[axis] += in_dims[axis];
+                    }
                 }
             }
         }

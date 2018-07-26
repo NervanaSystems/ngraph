@@ -16,7 +16,6 @@
 
 #include <CPP/activation.hpp>
 #include <CPP/batch_norm.hpp>
-#include <CPP/concatenation.hpp>
 #include <CPP/convolution.hpp>
 #include <CPP/data.hpp>
 #include <CPP/eltwise.hpp>
@@ -25,13 +24,13 @@
 #include <CPP/permute.hpp>
 #include <CPP/pooling.hpp>
 #include <CPP/reorder.hpp>
-#include <CPP/reshape.hpp>
 #include <CPP/scale.hpp>
 #include <CPP/topology.hpp>
 
 #include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_op_broadcast.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
 
 #include "ngraph/node.hpp"
@@ -43,6 +42,7 @@
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -92,9 +92,31 @@ static void do_unary_operation(cldnn::topology& topology,
     topology.add(cldnn_unary);
 }
 
-static runtime::Backend* new_backend(const char* configuration_string)
+// This function needed to only change the name of the data in topology
+// No real data copy needed
+static void do_equal_propagation(cldnn::topology& topology,
+                                 const string& input_name,
+                                 const string& output_name)
+{
+    const vector<cldnn::primitive_id> input_names(1, input_name);
+
+    const cldnn::concatenation op_concat(output_name, input_names, cldnn::concatenation::along_x);
+    topology.add(op_concat);
+}
+
+extern "C" const char* get_ngraph_version_string()
+{
+    return NGRAPH_VERSION;
+}
+
+extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
     return new runtime::intelgpu::IntelGPUBackend();
+}
+
+extern "C" void delete_backend(runtime::Backend* backend)
+{
+    delete backend;
 }
 
 static class INTELGPUStaticInit
@@ -150,15 +172,21 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             arguments_check(op, 1, 1);
 
-            const descriptor::Tensor& input_tensor = op->get_inputs().begin()->get_tensor();
-            const descriptor::Tensor& output_tensor = op->get_outputs().begin()->get_tensor();
-            const string& input_name = input_tensor.get_name();
-            const string& output_name = output_tensor.get_name();
-            const cldnn::layout input_layout = IntelGPULayout::create_cldnn_layout(
-                input_tensor.get_element_type(), op->get_inputs().begin()->get_shape());
+            const string& input_name = op->get_inputs().begin()->get_tensor().get_name();
+            const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
 
-            const cldnn::reorder op_reorder(output_name, input_name, input_layout);
-            topology.add(op_reorder);
+            do_equal_propagation(topology, input_name, output_name);
+        }
+        else if ("GetOutputElement" == op->description())
+        {
+            arguments_check(op, 3, 1);
+
+            const shared_ptr<op::GetOutputElement> elem =
+                static_pointer_cast<op::GetOutputElement>(op);
+            const string& input_name = op->get_inputs().at(elem->get_n()).get_tensor().get_name();
+            const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+
+            do_equal_propagation(topology, input_name, output_name);
         }
         else if ("Add" == op->description())
         {
@@ -211,7 +239,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
             vector<cldnn::tensor::value_type> offset({0, 0, 0, 0}); // No action by default
             size_t ridx = 4;
-            for (auto i = pad.rbegin(); i != pad.rend() && ridx > 0; ++i, --ridx)
+            for (auto i = pad.crbegin(); i != pad.crend() && ridx > 0; ++i, --ridx)
             {
                 offset.at(ridx - 1) = -(*i);
             }
@@ -232,6 +260,29 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                               output_size);
             topology.add(cldd_pooling);
         }
+        else if ("Broadcast" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const string& input_name = op->get_inputs().begin()->get_tensor().get_name();
+            const Shape& input_shape = op->get_inputs().begin()->get_shape();
+
+            const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+            const Shape& output_shape = op->get_outputs().begin()->get_shape();
+
+            const shared_ptr<op::Broadcast> broadcast = static_pointer_cast<op::Broadcast>(op);
+            const AxisSet& axis = broadcast->get_broadcast_axes();
+
+            if (axis.empty())
+            {
+                do_equal_propagation(topology, input_name, output_name);
+            }
+            else
+            {
+                do_broadcast_operation(
+                    topology, input_name, input_shape, output_name, output_shape, axis);
+            }
+        }
         else if ("Reshape" == op->description())
         {
             arguments_check(op, 1, 1);
@@ -250,7 +301,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             // For example, in 2D array, indexes are 0,1 but in 4D array it should be 2,3
             // because cldnn::tensor is always 4D assuming cldnn::bfyx model
             size_t rindex = max_dim;
-            for (auto i = broadcast_axes.rbegin(); i != broadcast_axes.rend() && rindex > 0;
+            for (auto i = broadcast_axes.crbegin(); i != broadcast_axes.crend() && rindex > 0;
                  ++i, --rindex)
             {
                 permute_order.at(rindex - 1) = *i + scale;

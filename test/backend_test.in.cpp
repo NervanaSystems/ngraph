@@ -1897,6 +1897,152 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
     EXPECT_EQ((vector<int64_t>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), read_vector<int64_t>(result));
 }
 
+static void broadcast_test_helper(const Shape& shape_a, const Shape& shape_r, const AxisSet& axis)
+{
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+
+    vector<float> inp_data(shape_size<const Shape>(shape_a));
+    iota(inp_data.begin(), inp_data.end(), 1);
+
+    auto f =
+        make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, axis), op::ParameterVector{A});
+
+    auto ref_backend = runtime::Backend::create("INTERPRETER");
+    auto wrk_backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto wrk_a = wrk_backend->create_tensor(element::f32, shape_a);
+    copy_data(wrk_a, inp_data);
+
+    auto ref_a = ref_backend->create_tensor(element::f32, shape_a);
+    copy_data(ref_a, inp_data);
+
+    auto wrk_result = wrk_backend->create_tensor(element::f32, shape_r);
+    auto ref_result = ref_backend->create_tensor(element::f32, shape_r);
+
+    wrk_backend->call(f, {wrk_result}, {wrk_a});
+    ref_backend->call(f, {ref_result}, {ref_a});
+    EXPECT_EQ(read_vector<float>(ref_result), read_vector<float>(wrk_result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_vector_middle)
+{
+    Shape shape_a{2};
+    Shape shape_r{3, 2, 4};
+    AxisSet axis{0, 2};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_vector_forward_2)
+{
+    Shape shape_a{2};
+    Shape shape_r{3, 2};
+    AxisSet axis{0};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_vector_forward_3)
+{
+    Shape shape_a{2};
+    Shape shape_r{4, 3, 2};
+    AxisSet axis{0, 1};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_vector_forward_4)
+{
+    Shape shape_a{2};
+    Shape shape_r{5, 4, 3, 2};
+    AxisSet axis{0, 1, 2};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_scalar)
+{
+    Shape shape_a{};
+    Shape shape_r{5, 4, 3, 2};
+    AxisSet axis{0, 1, 2, 3};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_vector_backward_2)
+{
+    Shape shape_a{2};
+    Shape shape_r{2, 3};
+    AxisSet axis{1};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_vector_backward_3)
+{
+    Shape shape_a{2};
+    Shape shape_r{2, 3, 4};
+    AxisSet axis{1, 2};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_vector_backward_4)
+{
+    Shape shape_a{2};
+    Shape shape_r{2, 3, 4, 5};
+    AxisSet axis{1, 2, 3};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_matrix_backward_4)
+{
+    Shape shape_a{4, 5};
+    Shape shape_r{2, 3, 4, 5};
+    AxisSet axis{0, 1};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_matrix_stride_1)
+{
+    Shape shape_a{3, 5};
+    Shape shape_r{2, 3, 4, 5};
+    AxisSet axis{0, 2};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_matrix_stride_2)
+{
+    Shape shape_a{3, 4};
+    Shape shape_r{2, 3, 4, 5};
+    AxisSet axis{0, 3};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_matrix_stride_3)
+{
+    Shape shape_a{2, 4};
+    Shape shape_r{2, 3, 4, 5};
+    AxisSet axis{1, 3};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_3d_backward)
+{
+    Shape shape_a{2, 3, 4};
+    Shape shape_r{5, 2, 3, 4};
+    AxisSet axis{0};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_3d_stride_1)
+{
+    Shape shape_a{2, 3, 4};
+    Shape shape_r{2, 5, 3, 4};
+    AxisSet axis{1};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_3d_stride_2)
+{
+    Shape shape_a{2, 3, 4};
+    Shape shape_r{2, 3, 5, 4};
+    AxisSet axis{2};
+    broadcast_test_helper(shape_a, shape_r, axis);
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_matrix_0)
 {
     Shape shape_a{2, 2};
