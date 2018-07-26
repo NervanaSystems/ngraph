@@ -17,11 +17,11 @@
 #pragma once
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <map>
 
 namespace ngraph
 {
@@ -30,7 +30,7 @@ namespace ngraph
         class Backend;
         class BackendManager;
 
-        using new_backend_t = std::function<std::shared_ptr<Backend>(const std::string& config)>;
+        using new_backend_t = std::function<Backend*(const char* config)>;
     }
 }
 

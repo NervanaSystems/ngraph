@@ -30,9 +30,9 @@
 using namespace ngraph;
 using namespace std;
 
-static shared_ptr<runtime::Backend> new_backend(const string& configuration_string)
+static runtime::Backend* new_backend(const char* configuration_string)
 {
-    return make_shared<runtime::gpu::GPU_Backend>();
+    return new runtime::gpu::GPU_Backend();
 }
 
 static class GPUStaticInit

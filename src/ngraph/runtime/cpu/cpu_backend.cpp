@@ -27,21 +27,18 @@
 using namespace ngraph;
 using namespace std;
 
-shared_ptr<runtime::Backend>
-    runtime::cpu::CPU_Backend::new_backend(const string& configuration_string)
+// Force TBB to link to the backend
+static int tbb_version = tbb::TBB_runtime_interface_version();
+
+static runtime::Backend* new_backend(const char* configuration_string)
 {
-    // Force TBB to link to the backend
-    tbb::TBB_runtime_interface_version();
-    return make_shared<runtime::cpu::CPU_Backend>();
+    return new runtime::cpu::CPU_Backend();
 }
 
 static class CPUStaticInit
 {
 public:
-    CPUStaticInit()
-    {
-        runtime::BackendManager::register_backend("CPU", runtime::cpu::CPU_Backend::new_backend);
-    }
+    CPUStaticInit() { runtime::BackendManager::register_backend("CPU", new_backend); }
     ~CPUStaticInit() {}
 } s_init;
 

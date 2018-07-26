@@ -30,9 +30,9 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorViewLayout;
 
-static shared_ptr<runtime::Backend> new_backend(const string& configuration_string)
+static runtime::Backend* new_backend(const char* configuration_string)
 {
-    return make_shared<runtime::interpreter::INTBackend>();
+    return new runtime::interpreter::INTBackend();
 }
 
 static class INTERPRETERStaticInit

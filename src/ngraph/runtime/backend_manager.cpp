@@ -18,6 +18,7 @@
 #include <sstream>
 
 #include "ngraph/file_util.hpp"
+#include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/util.hpp"
 
@@ -59,14 +60,51 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
 
     auto registry = get_registry();
     auto it = registry.find(type);
-    if (it == registry.end())
+    if (it != registry.end())
     {
-        stringstream ss;
-        ss << "Backend '" << type << "' not registered";
-        throw runtime_error(ss.str());
+        new_backend_t new_backend = it->second;
+        rc = shared_ptr<runtime::Backend>(new_backend(config.c_str()));
     }
-    new_backend_t new_backend = it->second;
-    rc = new_backend(config);
+    else
+    {
+        void* handle = open_shared_library(type);
+        if (!handle)
+        {
+            stringstream ss;
+            ss << "Backend '" << type << "' not registered";
+            throw runtime_error(ss.str());
+        }
+        function<const char*()> get_ngraph_version_string =
+            reinterpret_cast<const char* (*)()>(dlsym(handle, "get_ngraph_version_string"));
+        if (!get_ngraph_version_string)
+        {
+            dlclose(handle);
+            throw runtime_error("Backend '" + type +
+                                "' does not implement get_ngraph_version_string");
+        }
+
+        function<runtime::Backend*(const char*)> new_backend =
+            reinterpret_cast<runtime::Backend* (*)(const char*)>(dlsym(handle, "new_backend"));
+        if (!new_backend)
+        {
+            dlclose(handle);
+            throw runtime_error("Backend '" + type + "' does not implement new_backend");
+        }
+
+        function<void(runtime::Backend*)> delete_backend =
+            reinterpret_cast<void (*)(runtime::Backend*)>(dlsym(handle, "delete_backend"));
+        if (!delete_backend)
+        {
+            dlclose(handle);
+            throw runtime_error("Backend '" + type + "' does not implement delete_backend");
+        }
+
+        runtime::Backend* backend = new_backend(config.c_str());
+        rc = shared_ptr<runtime::Backend>(backend, [=](runtime::Backend* b) {
+            delete_backend(b);
+            // dlclose(handle);
+        });
+    }
     return rc;
 }
 

@@ -92,9 +92,9 @@ static void do_unary_operation(cldnn::topology& topology,
     topology.add(cldnn_unary);
 }
 
-static shared_ptr<runtime::Backend> new_backend(const string& configuration_string)
+static runtime::Backend* new_backend(const char* configuration_string)
 {
-    return make_shared<runtime::intelgpu::IntelGPUBackend>();
+    return new runtime::intelgpu::IntelGPUBackend();
 }
 
 static class INTELGPUStaticInit
