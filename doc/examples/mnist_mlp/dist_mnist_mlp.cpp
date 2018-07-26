@@ -276,8 +276,7 @@ int main(int argc, const char* argv[])
         if (train_loader.get_epoch() != last_epoch)
         {
             last_epoch = train_loader.get_epoch();
-            std::cout << "[rank " << comm_rank << "] "
-                      << "Test accuracy: "
+            std::cout << "Test accuracy: "
                       << test_accuracy(test_loader,
                                        backend,
                                        inference_function,
