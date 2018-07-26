@@ -1034,10 +1034,8 @@ namespace ngraph
                 {
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
-                    auto index =
-                        cuda_emitter->build_reverse({{args[0].get_type(), out[0].get_type()}},
-                                                  arg_shape,
-                                                  reverse_axes_flag);
+                    auto index = cuda_emitter->build_reverse(
+                        {{args[0].get_type(), out[0].get_type()}}, arg_shape, reverse_axes_flag);
 
                     writer << "gpu::invoke_primitive(ctx, " << index << ", ";
                     writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
@@ -1117,11 +1115,8 @@ namespace ngraph
                 {
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
-                    auto index =
-                        cuda_emitter->build_onehot({{args[0].get_type(), out[0].get_type()}},
-                                                  arg_shape,
-                                                  result_shape,
-                                                  idx);
+                    auto index = cuda_emitter->build_onehot(
+                        {{args[0].get_type(), out[0].get_type()}}, arg_shape, result_shape, idx);
 
                     writer << "gpu::invoke_primitive(ctx, " << index << ", ";
                     writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";

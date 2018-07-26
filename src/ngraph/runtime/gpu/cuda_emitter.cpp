@@ -70,16 +70,15 @@ runtime::gpu::CUDAEmitter::CUDAEmitter(runtime::gpu::GPUPrimitiveEmitter* emitte
 }
 
 size_t runtime::gpu::CUDAEmitter::build_onehot(const std::array<std::string, 2>& dtypes,
-                              GPUShape input_shape,
-                              GPUShape output_shape,
-                                size_t one_hot_axis)
+                                               GPUShape input_shape,
+                                               GPUShape output_shape,
+                                               size_t one_hot_axis)
 {
-    auto rank = input_shape.size();
     std::stringstream kernel_name;
     kernel_name << "onehot_" << join(dtypes, "_");
 
-    std::string hash =
-        kernel_name.str() + "_i_" + join(input_shape, "_") + "_o_" + join(output_shape, "_") + std::to_string(one_hot_axis);
+    std::string hash = kernel_name.str() + "_i_" + join(input_shape, "_") + "_o_" +
+                       join(output_shape, "_") + std::to_string(one_hot_axis);
     // For backwards compatability we currently use two unordered maps
     // 1. one looks up the compiled cuda kernel (CudaFunctionPool)
     // 2. the other looks to see if this kernel is already in the primitive list
@@ -100,7 +99,7 @@ size_t runtime::gpu::CUDAEmitter::build_onehot(const std::array<std::string, 2>&
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
-        CudaKernelBuilder::get_reshape_op(writer, kernel_name.str(), dtypes);
+        CudaKernelBuilder::get_onehot_op(writer, kernel_name.str(), dtypes);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
 
@@ -117,23 +116,23 @@ size_t runtime::gpu::CUDAEmitter::build_onehot(const std::array<std::string, 2>&
     }
 
     // create the launch primitive
-    std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](void** inputs,
-                                                                         void** outputs) mutable {
-        std::vector<void*> args_list{
-            &inputs[0], &outputs[0], &repeat_size, &repeat_times, &nthreads};
-        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                      aligned_grid_size_x,
-                                      1,
-                                      1, // grid dim
-                                      block_size_x,
-                                      1,
-                                      1, // block dim
-                                      0,
-                                      NULL, // shared mem and stream
-                                      args_list.data(),
-                                      0));  // arguments
-        debug_sync();
-    }});
+    std::unique_ptr<gpu::primitive> kernel_launch(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            std::vector<void*> args_list{
+                &inputs[0], &outputs[0], &repeat_size, &repeat_times, &nthreads};
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          aligned_grid_size_x,
+                                          1,
+                                          1, // grid dim
+                                          block_size_x,
+                                          1,
+                                          1, // block dim
+                                          0,
+                                          NULL, // shared mem and stream
+                                          args_list.data(),
+                                          0)); // arguments
+            debug_sync();
+        }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
     m_primitive_emitter->cache(hash, primitive_index);
@@ -141,15 +140,14 @@ size_t runtime::gpu::CUDAEmitter::build_onehot(const std::array<std::string, 2>&
 }
 
 size_t runtime::gpu::CUDAEmitter::build_reverse(const std::array<std::string, 2>& dtypes,
-                                GPUShape input_shape,
-                                std::vector<uint32_t> reverse_axes)
+                                                GPUShape input_shape,
+                                                std::vector<uint32_t> reverse_axes)
 {
     auto rank = input_shape.size();
     std::stringstream kernel_name;
     kernel_name << "reverse_" << join(dtypes, "_") << "_r_" << rank;
 
-    std::string hash =
-        kernel_name.str() + "_i_" + join(input_shape, "_");
+    std::string hash = kernel_name.str() + "_i_" + join(input_shape, "_");
     // For backwards compatability we currently use two unordered maps
     // 1. one looks up the compiled cuda kernel (CudaFunctionPool)
     // 2. the other looks to see if this kernel is already in the primitive list
@@ -170,7 +168,7 @@ size_t runtime::gpu::CUDAEmitter::build_reverse(const std::array<std::string, 2>
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
-        CudaKernelBuilder::get_reshape_op(writer, kernel_name.str(), dtypes, rank);
+        CudaKernelBuilder::get_reverse_op(writer, kernel_name.str(), dtypes);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
 
@@ -185,31 +183,30 @@ size_t runtime::gpu::CUDAEmitter::build_reverse(const std::array<std::string, 2>
         allocator.reserve_argspace(input_shape.data(), input_shape.size() * sizeof(uint32_t));
 
     // create the launch primitive
-    std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](void** inputs,
-                                                                         void** outputs) mutable {
-        void* param_input_shape = runtime::gpu::invoke_memory_primitive(m_ctx, idx_input_shape);
-        std::vector<void*> args_list{
-            &inputs[0], &outputs[0], &param_input_shape, &reverse_axes, &nthreads};
+    std::unique_ptr<gpu::primitive> kernel_launch(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void* param_input_shape = runtime::gpu::invoke_memory_primitive(m_ctx, idx_input_shape);
+            std::vector<void*> args_list{
+                &inputs[0], &outputs[0], &param_input_shape, &reverse_axes, &nthreads};
 
-        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                      aligned_grid_size_x,
-                                      1,
-                                      1, // grid dim
-                                      block_size_x,
-                                      1,
-                                      1, // block dim
-                                      0,
-                                      NULL, // shared mem and stream
-                                      args_list.data(),
-                                      0));  // arguments
-        debug_sync();
-    }});
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          aligned_grid_size_x,
+                                          1,
+                                          1, // grid dim
+                                          block_size_x,
+                                          1,
+                                          1, // block dim
+                                          0,
+                                          NULL, // shared mem and stream
+                                          args_list.data(),
+                                          0)); // arguments
+            debug_sync();
+        }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }
-
 
 size_t runtime::gpu::CUDAEmitter::build_pad(const std::array<std::string, 2>& dtypes,
                                             GPUShape input_shape,
@@ -552,7 +549,7 @@ size_t runtime::gpu::CUDAEmitter::build_reshape(const std::array<std::string, 2>
                                       0,
                                       NULL, // shared mem and stream
                                       args_list.data(),
-                                      0));  // arguments
+                                      0)); // arguments
         debug_sync();
     }});
 

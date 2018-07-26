@@ -87,13 +87,13 @@ namespace ngraph
                                               size_t sequence_axis);
 
                 size_t build_onehot(const std::array<std::string, 2>& dtypes,
-                              GPUShape input_shape,
-                              GPUShape output_shape,
-                                size_t one_hot_axis);
+                                    GPUShape input_shape,
+                                    GPUShape output_shape,
+                                    size_t one_hot_axis);
 
                 size_t build_reverse(const std::array<std::string, 2>& dtypes,
-                                GPUShape input_shape,
-                                std::vector<uint32_t> reverse_axes);
+                                     GPUShape input_shape,
+                                     std::vector<uint32_t> reverse_axes);
 
                 template <typename T>
                 size_t build_elementwise(const std::vector<std::string>& dtypes,
