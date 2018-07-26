@@ -14,9 +14,12 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <dlfcn.h>
 #include <sstream>
 
+#include "ngraph/file_util.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -64,5 +67,88 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
     }
     new_backend_t new_backend = it->second;
     rc = new_backend(config);
+    return rc;
+}
+
+// This doodad finds the full path of the containing shared library
+static string find_my_file()
+{
+    Dl_info dl_info;
+    dladdr(reinterpret_cast<void*>(find_my_file), &dl_info);
+    return dl_info.dli_fname;
+}
+
+void* runtime::BackendManager::open_shared_library(string type)
+{
+    string ext = SHARED_LIB_EXT;
+
+    void* handle = nullptr;
+
+    // strip off attributes, IE:CPU becomes IE
+    auto colon = type.find(":");
+    if (colon != type.npos)
+    {
+        type = type.substr(0, colon);
+    }
+
+    string library_name = "lib" + to_lower(type) + "_backend" + string(SHARED_LIB_EXT);
+    string my_directory = file_util::get_directory(find_my_file());
+    string library_path = file_util::path_join(my_directory, library_name);
+    handle = dlopen(library_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
+
+    return handle;
+}
+
+map<string, string> runtime::BackendManager::get_registered_device_map()
+{
+    map<string, string> rc;
+    string my_directory = file_util::get_directory(find_my_file());
+    vector<string> backend_list;
+
+    auto f = [&](const string& file, bool is_dir) {
+        string name = file_util::get_file_name(file);
+        string backend_name;
+        if (is_backend_name(name, backend_name))
+        {
+            auto handle = dlopen(file.c_str(), RTLD_LAZY | RTLD_LOCAL);
+            if (handle)
+            {
+                if (dlsym(handle, "new_backend") && dlsym(handle, "delete_backend"))
+                {
+                    function<const char*()> get_ngraph_version_string =
+                        reinterpret_cast<const char* (*)()>(
+                            dlsym(handle, "get_ngraph_version_string"));
+                    if (get_ngraph_version_string &&
+                        get_ngraph_version_string() == string(NGRAPH_VERSION))
+                    {
+                        rc.insert({to_upper(backend_name), file});
+                    }
+                }
+
+                dlclose(handle);
+            }
+        }
+    };
+    file_util::iterate_files(my_directory, f, false, true);
+    return rc;
+}
+
+bool runtime::BackendManager::is_backend_name(const string& file, string& backend_name)
+{
+    string name = file_util::get_file_name(file);
+    string ext = SHARED_LIB_EXT;
+    bool rc = false;
+    if (!name.compare(0, 3, "lib"))
+    {
+        if (!name.compare(name.size() - ext.size(), ext.size(), ext))
+        {
+            auto pos = name.find("_backend");
+            if (pos != name.npos)
+            {
+                backend_name = name.substr(3, pos - 3);
+                rc = true;
+            }
+        }
+    }
     return rc;
 }

@@ -21,6 +21,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <map>
 
 namespace ngraph
 {
@@ -46,4 +47,8 @@ private:
     static std::unordered_map<std::string, new_backend_t>& get_registry();
 
     static std::unordered_map<std::string, new_backend_t> s_registered_backend;
+
+    static void* open_shared_library(std::string type);
+    static std::map<std::string, std::string> get_registered_device_map();
+    static bool is_backend_name(const std::string& file, std::string& backend_name);
 };

@@ -14,7 +14,6 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <dlfcn.h>
 #include <sstream>
 
 #include "ngraph/file_util.hpp"
