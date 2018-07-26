@@ -418,8 +418,9 @@ void runtime::gpu::CudaKernelBuilder::get_reverse_op(codegen::CodeWriter& writer
                 writer << "uint32_t idx = i - 1;\n";
                 writer << "uint32_t axes_i_in = input_idx % input_shape[idx];\n";
                 writer << "input_idx /= input_shape[idx];\n";
-                writer << "uint32_t axes_i_out = reverse_axes[idx] ? input_shape[idx] - axes_i_in - "
-                          "1 : axes_i_in;\n";
+                writer
+                    << "uint32_t axes_i_out = reverse_axes[idx] ? input_shape[idx] - axes_i_in - "
+                       "1 : axes_i_in;\n";
                 writer << "output_idx += axes_i_out * stride;\n";
                 writer << "stride *= input_shape[idx];\n";
             }

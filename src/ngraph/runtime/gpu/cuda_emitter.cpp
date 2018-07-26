@@ -143,10 +143,12 @@ size_t runtime::gpu::CUDAEmitter::build_reverse(const std::array<std::string, 2>
                                                 GPUShape input_shape,
                                                 std::vector<uint32_t> reverse_axes)
 {
+    uint32_t rank = static_cast<uint32_t>(input_shape.size());
     std::stringstream kernel_name;
     kernel_name << "reverse_" << join(dtypes, "_");
 
-    std::string hash = kernel_name.str() + "_i_" + join(input_shape, "_") + "_axes_" + join(reverse_axes, "_");
+    std::string hash = kernel_name.str() + "_i_" + join(input_shape, "_") + "_axes_" +
+                       join(reverse_axes, "_") + std::to_string(rank);
     // For backwards compatability we currently use two unordered maps
     // 1. one looks up the compiled cuda kernel (CudaFunctionPool)
     // 2. the other looks to see if this kernel is already in the primitive list
@@ -184,26 +186,26 @@ size_t runtime::gpu::CUDAEmitter::build_reverse(const std::array<std::string, 2>
         allocator.reserve_argspace(reverse_axes.data(), reverse_axes.size() * sizeof(uint32_t));
 
     // create the launch primitive
-    std::unique_ptr<gpu::primitive> kernel_launch(
-        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-            void* param_input_shape = runtime::gpu::invoke_memory_primitive(m_ctx, idx_input_shape);
-            void* param_reverse_axes = runtime::gpu::invoke_memory_primitive(m_ctx, idx_reverse_axes);
-            std::vector<void*> args_list{
-                &inputs[0], &outputs[0], &param_input_shape, &param_reverse_axes, &nthreads};
+    std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](void** inputs,
+                                                                         void** outputs) mutable {
+        void* param_input_shape = runtime::gpu::invoke_memory_primitive(m_ctx, idx_input_shape);
+        void* param_reverse_axes = runtime::gpu::invoke_memory_primitive(m_ctx, idx_reverse_axes);
+        std::vector<void*> args_list{
+            &inputs[0], &outputs[0], &param_input_shape, &param_reverse_axes, &rank, &nthreads};
 
-            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          aligned_grid_size_x,
-                                          1,
-                                          1, // grid dim
-                                          block_size_x,
-                                          1,
-                                          1, // block dim
-                                          0,
-                                          NULL, // shared mem and stream
-                                          args_list.data(),
-                                          0)); // arguments
-            debug_sync();
-        }});
+        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                      aligned_grid_size_x,
+                                      1,
+                                      1, // grid dim
+                                      block_size_x,
+                                      1,
+                                      1, // block dim
+                                      0,
+                                      NULL, // shared mem and stream
+                                      args_list.data(),
+                                      0)); // arguments
+        debug_sync();
+    }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
     m_primitive_emitter->cache(hash, primitive_index);
