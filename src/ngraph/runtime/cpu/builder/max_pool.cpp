@@ -14,8 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/runtime/cpu/kernel/avg_pool.hpp"
-#include "ngraph/op/avg_pool.hpp"
+#include "ngraph/runtime/cpu/kernel/max_pool.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -30,9 +30,9 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::AvgPool)
+            void Builder::BUILDER_DECL(ngraph::op::MaxPool)
             {
-                auto avg_pool = static_cast<const ngraph::op::AvgPool*>(node);
+                auto max_pool = static_cast<const ngraph::op::MaxPool*>(node);
 
                 auto& functors = external_function->get_functors();
                 auto& tensor_data = external_function->get_tensor_data();
@@ -43,12 +43,10 @@ namespace ngraph
                 auto& arg0_tensor = tensor_data[args[0].get_name()];
                 auto& out_tensor = tensor_data[out[0].get_name()];
 
-                auto window_shape = avg_pool->get_window_shape();
-                auto window_movement_strides = avg_pool->get_window_movement_strides();
-                auto padding_below = avg_pool->get_padding_below();
-                auto padding_above = avg_pool->get_padding_above();
-                auto include_padding_in_avg_computation =
-                    avg_pool->get_include_padding_in_avg_computation();
+                auto window_shape = max_pool->get_window_shape();
+                auto window_movement_strides = max_pool->get_window_movement_strides();
+                auto padding_below = max_pool->get_padding_below();
+                auto padding_above = max_pool->get_padding_above();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -58,32 +56,30 @@ namespace ngraph
                     auto result_desc = mkldnn_emitter->build_memory_descriptor(
                         out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
 
-                    size_t avg_pool_index = mkldnn_emitter->build_pooling_forward(
-                        (include_padding_in_avg_computation
-                             ? mkldnn::algorithm::pooling_avg_include_padding
-                             : mkldnn::algorithm::pooling_avg_exclude_padding),
-                        input_desc,
-                        result_desc,
-                        window_movement_strides,
-                        window_shape,
-                        padding_below,
-                        padding_above);
+                    size_t max_pool_index =
+                        mkldnn_emitter->build_pooling_forward(mkldnn::algorithm::pooling_max,
+                                                              input_desc,
+                                                              result_desc,
+                                                              window_movement_strides,
+                                                              window_shape,
+                                                              padding_below,
+                                                              padding_above);
 
-                    auto& deps = mkldnn_emitter->get_primitive_deps(avg_pool_index);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(max_pool_index);
 
-                    auto functor = [&, avg_pool_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, max_pool_index](CPURuntimeContext* ctx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, avg_pool_index);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, max_pool_index);
                     };
                     functors.emplace_back(functor);
                 }
                 else
                 {
-                    std::function<decltype(runtime::cpu::kernel::avg_pool<float>)> kernel;
+                    std::function<decltype(runtime::cpu::kernel::max_pool<float>)> kernel;
 
                     SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::avg_pool);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::max_pool);
 
                     auto functor = [&,
                                     kernel,
@@ -92,8 +88,7 @@ namespace ngraph
                                     window_shape,
                                     window_movement_strides,
                                     padding_below,
-                                    padding_above,
-                                    include_padding_in_avg_computation](CPURuntimeContext* ctx) {
+                                    padding_above](CPURuntimeContext* ctx) {
                         kernel(arg0_tensor,
                                out_tensor,
                                arg0_shape,
@@ -101,14 +96,13 @@ namespace ngraph
                                window_shape,
                                window_movement_strides,
                                padding_below,
-                               padding_above,
-                               include_padding_in_avg_computation);
+                               padding_above);
                     };
                     functors.emplace_back(functor);
                 }
             }
 
-            REGISTER_OP_BUILDER(AvgPool);
+            REGISTER_OP_BUILDER(MaxPool);
         }
     }
 }
