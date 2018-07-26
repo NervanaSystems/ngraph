@@ -29,7 +29,7 @@ runtime::intelgpu::IntelGPULayout::IntelGPULayout(const descriptor::TensorView& 
 {
 }
 
-size_t runtime::intelgpu::IntelGPULayout::get_index_offset(const std::vector<size_t>& indices)
+size_t runtime::intelgpu::IntelGPULayout::get_index_offset(const vector<size_t>& indices)
 {
     if (indices.size() != strides.size())
     {
@@ -74,16 +74,16 @@ cldnn::data_types
     {
         ostringstream os;
         os << "IntelGPULayout::get_cldnn_type: Unknown type " << element_type;
-        throw std::invalid_argument(os.str());
+        throw invalid_argument(os.str());
     }
 }
 
 cldnn::tensor runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(const Shape& element_shape)
 {
-    std::vector<size_t> idx(4, 1);
+    vector<size_t> idx(4, 1);
     size_t index = 0;
 
-    for (auto i = element_shape.rbegin(); i != element_shape.rend() && index < 3; ++i, ++index)
+    for (auto i = element_shape.crbegin(); i != element_shape.crend() && index < 3; ++i, ++index)
     {
         idx.at(index) = *i;
     }
@@ -108,4 +108,22 @@ cldnn::layout runtime::intelgpu::IntelGPULayout::create_cldnn_layout(
     const cldnn::tensor tensor = create_cldnn_tensor(element_shape);
 
     return cldnn::layout(data_type, format, tensor);
+}
+
+cldnn::concatenation::concatenation_axis
+    runtime::intelgpu::IntelGPULayout::get_cldnn_axis(size_t tensor_channel)
+{
+    switch (tensor_channel)
+    {
+    case 0: return cldnn::concatenation::along_b;
+    case 1: return cldnn::concatenation::along_f;
+    case 2: return cldnn::concatenation::along_y;
+    case 3: return cldnn::concatenation::along_x;
+    default:
+    {
+        ostringstream os;
+        os << "IntelGPULayout::get_cldnn_axis: wrong tensor channel " << tensor_channel;
+        throw invalid_argument(os.str());
+    }
+    }
 }
