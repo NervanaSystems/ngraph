@@ -22,7 +22,7 @@ include(ExternalProject)
 #------------------------------------------------------------------------------
 
 SET(TVM_GIT_REPO_URL https://github.com/dmlc/tvm.git)
-SET(TVM_GIT_LABEL master)
+SET(TVM_GIT_LABEL v0.3)
 
 # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
 if (${CMAKE_VERSION} VERSION_LESS 3.2)
@@ -31,10 +31,10 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
         PREFIX tvm
         GIT_REPOSITORY ${TVM_GIT_REPO_URL}
         GIT_TAG ${TVM_GIT_LABEL}
+        # Disable install step
+        INSTALL_COMMAND ""
         UPDATE_COMMAND ""
         CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                   -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/tvm
-                   -DINSTALL_DEV=ON
                    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                    -DCMAKE_CXX_FLAGS="-fPIC"
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/tvm/tmp"
@@ -49,17 +49,13 @@ else()
     ExternalProject_Add(
         ext_tvm
         PREFIX tvm
-        DEPENDS ext_llvm
         GIT_REPOSITORY ${TVM_GIT_REPO_URL}
         GIT_TAG ${TVM_GIT_LABEL}
+        # Disable install step
+        INSTALL_COMMAND ""
         UPDATE_COMMAND ""
-        PATCH_COMMAND patch ${EXTERNAL_PROJECTS_ROOT}/tvm/src/CMakeLists.txt --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/tvm.diff || exit 0
         CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                   -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/tvm
-                   -DINSTALL_DEV=ON
-                   -DUSE_SORT=ON
-                   -DUSE_LLVM=${EXTERNAL_PROJECTS_ROOT}/ext_llvm-prefix/src/ext_llvm/bin/llvm-config
                    -DCMAKE_CXX_FLAGS="-fPIC"
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/tvm/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/tvm/stamp"
@@ -67,26 +63,16 @@ else()
         SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/tvm/src"
         BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/tvm/build"
         INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/tvm"
-        BUILD_BYPRODUCTS "${EXTERNAL_PROJECTS_ROOT}/tvm/src"
+        BUILD_BYPRODUCTS "${EXTERNAL_PROJECTS_ROOT}/tvm/build"
         EXCLUDE_FROM_ALL TRUE
         )
 endif()
 
 #------------------------------------------------------------------------------
 
-ExternalProject_Get_Property(ext_tvm INSTALL_DIR)
-set(TVM_LINK_LIBS
-    ${EXTERNAL_PROJECTS_ROOT}/tvm/build/libtvm.so
-    ${EXTERNAL_PROJECTS_ROOT}/tvm/build/libtvm_topi.so
-    ${EXTERNAL_PROJECTS_ROOT}/tvm/build/libtvm_runtime.so
-)
+ExternalProject_Get_Property(ext_tvm SOURCE_DIR BINARY_DIR)
 
-# work around for set_source_files_properties in resource/CMakeLists.txt, which
-# can not accept path list with spaces.
-set(TVM_INCLUDE_DIR "${EXTERNAL_PROJECTS_ROOT}/tvm/include\;${EXTERNAL_PROJECTS_ROOT}/tvm/include/HalideIR")
 add_library(libtvm INTERFACE)
 add_dependencies(libtvm ext_tvm)
-target_include_directories(libtvm SYSTEM INTERFACE
-                           ${EXTERNAL_PROJECTS_ROOT}/tvm/include
-                           ${EXTERNAL_PROJECTS_ROOT}/tvm/include/HalideIR)
-target_link_libraries(libtvm INTERFACE ${TVM_LINK_LIBS})
+target_include_directories(libtvm SYSTEM INTERFACE ${SOURCE_DIR}/include/tvm)
+target_link_libraries(libgtest INTERFACE ${BINARY_DIR}/libtvm.so)
