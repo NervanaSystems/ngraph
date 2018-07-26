@@ -22,8 +22,8 @@
 #include <tuple>
 #include <vector>
 
-#include "ngraph/util.hpp"
 #include "ngraph/runtime/gpu/cuda_error_check.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {

@@ -30,27 +30,26 @@
 
 //why use "do...while.."
 //https://stackoverflow.com/questions/154136/why-use-apparently-meaningless-do-while-and-if-else-statements-in-macros
-#define NVRTC_SAFE_CALL_NO_THROW(x)                                     \
-    do                                                                  \
-    {                                                                   \
-        nvrtcResult result = x;                                         \
-        if (result != NVRTC_SUCCESS)                                    \
-        {                                                               \
-            std::cout << "\nerror: " #x " failed with error "           \
-                      << std::string(nvrtcGetErrorString(result))       \
-                      << std::endl;                                     \
-        }                                                               \
+#define NVRTC_SAFE_CALL_NO_THROW(x)                                                                \
+    do                                                                                             \
+    {                                                                                              \
+        nvrtcResult result = x;                                                                    \
+        if (result != NVRTC_SUCCESS)                                                               \
+        {                                                                                          \
+            std::cout << "\nerror: " #x " failed with error "                                      \
+                      << std::string(nvrtcGetErrorString(result)) << std::endl;                    \
+        }                                                                                          \
     } while (0)
 
-#define NVRTC_SAFE_CALL(x)                                              \
-    do                                                                  \
-    {                                                                   \
-        nvrtcResult result = x;                                         \
-        if (result != NVRTC_SUCCESS)                                    \
-        {                                                               \
-            throw std::runtime_error("\nerror: " #x " failed with error " + \
-                                     std::string(nvrtcGetErrorString(result))); \
-        }                                                               \
+#define NVRTC_SAFE_CALL(x)                                                                         \
+    do                                                                                             \
+    {                                                                                              \
+        nvrtcResult result = x;                                                                    \
+        if (result != NVRTC_SUCCESS)                                                               \
+        {                                                                                          \
+            throw std::runtime_error("\nerror: " #x " failed with error " +                        \
+                                     std::string(nvrtcGetErrorString(result)));                    \
+        }                                                                                          \
     } while (0)
 
 #define CUDA_SAFE_CALL_NO_THROW(x)                                                                 \
@@ -64,7 +63,7 @@
             std::stringstream safe_call_ss;                                                        \
             safe_call_ss << "\nerror: " #x " failed with error"                                    \
                          << "\nfile: " << __FILE__ << "\nline: " << __LINE__ << "\nmsg: " << msg;  \
-            std:: cout << safe_call_ss.str() << std::endl;                                         \
+            std::cout << safe_call_ss.str() << std::endl;                                          \
         }                                                                                          \
     } while (0)
 
@@ -111,7 +110,6 @@
         }                                                                                          \
     } while (0)
 
-
 #define CUDNN_SAFE_CALL_NO_THROW(func)                                                             \
     do                                                                                             \
     {                                                                                              \
@@ -122,7 +120,7 @@
             std::stringstream safe_call_ss;                                                        \
             safe_call_ss << "\nerror: " #func " failed with error"                                 \
                          << "\nfile: " << __FILE__ << "\nline: " << __LINE__ << "\nmsg: " << msg;  \
-            std:: cout << safe_call_ss.str() << std::endl;                                         \
+            std::cout << safe_call_ss.str() << std::endl;                                          \
         }                                                                                          \
     } while (0)
 
@@ -149,7 +147,7 @@
             std::stringstream safe_call_ss;                                                        \
             safe_call_ss << "\nerror: " #func " failed with error"                                 \
                          << "\nfile: " << __FILE__ << "\nline: " << __LINE__ << "\nmsg: " << e;    \
-            std:: cout << safe_call_ss.str() << std::endl;                                         \
+            std::cout << safe_call_ss.str() << std::endl;                                          \
         }                                                                                          \
     } while (0)
 
