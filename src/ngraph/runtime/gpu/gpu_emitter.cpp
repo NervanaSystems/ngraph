@@ -841,7 +841,12 @@ namespace ngraph
                         cuda_emitter->build_concat(dtypes, input_shapes, axis, out[0].get_shape());
 
                     writer << "gpu::invoke_primitive(ctx, " << index << ", ";
-                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{";
+                    for(auto arg:args)
+                    {
+                        writer << arg.get_name() << ", ";
+                    }
+                    writer << "}.data(), ";
                     writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
                     writer << ");\n";
                 }
