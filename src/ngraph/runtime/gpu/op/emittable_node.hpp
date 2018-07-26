@@ -36,6 +36,7 @@ namespace ngraph
                     , m_node(node)
                     , m_emitter(node.get())
                 {
+                    add_node_outputs();
                 }
 
                 EmittableNode(const std::shared_ptr<NODE_TYPE>& node, const NodeVector& args)
@@ -43,6 +44,7 @@ namespace ngraph
                     , m_node(node)
                     , m_emitter(node.get())
                 {
+                    add_node_outputs();
                 }
 
                 virtual std::shared_ptr<Node>
@@ -62,7 +64,25 @@ namespace ngraph
                     m_emitter.emit(external_function, writer, args, out);
                 }
 
+                virtual void graph_replace()
+                {
+                    for (size_t i = 0; i < this->m_node->get_outputs().size(); i++)
+                    {
+                        auto& node_output = this->m_node->get_outputs().at(i);
+                        // build set of input pointers for this specific output
+                        std::set<ngraph::descriptor::Input*> copy_inputs{std::begin(node_output.get_inputs()),
+                                std::end(node_output.get_inputs())};
+
+                        auto new_output = std::make_shared<ngraph::op::GetOutputElement>(this->shared_from_this(), i);
+                        for (auto input : copy_inputs)
+                        {
+                            input->replace_output(this->get_outputs().at(0));
+                        }
+                    }
+                }
+
                 const std::shared_ptr<NODE_TYPE> native_node() const { return m_node; }
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const NodeVector& deltas) override
@@ -73,6 +93,16 @@ namespace ngraph
 
                 std::shared_ptr<NODE_TYPE> m_node;
                 runtime::gpu::Emitter<NODE_TYPE> m_emitter;
+            private:
+                void add_node_outputs()
+                {
+                    // add node's outputs to outputs of this
+                    size_t i = 0;
+                    for (auto& output : this->m_node->get_outputs())
+                    {
+                        this->m_outputs.emplace_back(this, i++, output.get_tensor_view());
+                    }
+                }
             };
         }
     }

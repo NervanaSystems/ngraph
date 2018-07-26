@@ -28,8 +28,8 @@ namespace ngraph
             {
                 class KernelMemoryAllocation;
 
-                template <typename NODE_TYPE>
-                bool add_kernel_allocations(std::shared_ptr<ngraph::Node> node);
+                template <template <typename NODE_TYPE> class CONTAINER_NODE_TYPE, typename NODE_TYPE>
+                bool package_node(std::shared_ptr<ngraph::Node> node);
             }
         }
     }
@@ -46,34 +46,22 @@ public:
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 };
 
-template <typename NODE_TYPE>
-bool ngraph::runtime::gpu::pass::add_kernel_allocations(std::shared_ptr<ngraph::Node> node)
+template <template <class NODE_TYPE> class CONTAINER_NODE_TYPE, class NODE_TYPE>
+bool ngraph::runtime::gpu::pass::package_node(std::shared_ptr<ngraph::Node> node)
 {
-    if (auto original_node = std::dynamic_pointer_cast<NODE_TYPE>(node))
+    std::cout << node->get_name() << " before wrap" << std::endl;
+    if (auto native_node = std::dynamic_pointer_cast<NODE_TYPE>(node))
     {
-        if (auto prev_wrapped =
-                std::dynamic_pointer_cast<ngraph::op::gpu::MemoryWrappedNode<NODE_TYPE>>(node))
+        if (std::dynamic_pointer_cast<ngraph::op::gpu::RequiresEmitter>(node) != nullptr)
         {
             return false;
         }
 
-        // wrap node with user defined kernel allocations
-        auto wrapped_node =
-            std::make_shared<ngraph::op::gpu::MemoryWrappedNode<NODE_TYPE>>(original_node);
+        auto container_node =
+            std::make_shared<CONTAINER_NODE_TYPE<NODE_TYPE>>(native_node);
 
-        // wire up native outputs of wrapped node to the graph
-        for (size_t i = 0; i < original_node->get_outputs().size(); i++)
-        {
-            auto& node_output = original_node->get_outputs().at(i);
-            std::set<ngraph::descriptor::Input*> copy_inputs{std::begin(node_output.get_inputs()),
-                                                             std::end(node_output.get_inputs())};
+        container_node->graph_replace();
 
-            auto new_output = std::make_shared<ngraph::op::GetOutputElement>(wrapped_node, i);
-            for (auto input : copy_inputs)
-            {
-                input->replace_output(new_output->get_outputs().at(0));
-            }
-        }
         return true;
     }
     return false;

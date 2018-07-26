@@ -38,14 +38,14 @@ namespace ngraph
                 MemoryWrappedNode(const std::shared_ptr<NODE_TYPE>& node)
                     : EmittableNode<NODE_TYPE>(node)
                 {
-                    add_inputs();
-                    add_outputs();
+                    add_constant_inputs();
+                    add_workspace_outputs();
                 }
 
                 MemoryWrappedNode(const std::shared_ptr<NODE_TYPE>& node, const NodeVector& args)
                     : EmittableNode<NODE_TYPE>(node, args)
                 {
-                    add_outputs();
+                    add_workspace_outputs();
                 }
 
                 virtual std::shared_ptr<Node>
@@ -63,10 +63,24 @@ namespace ngraph
                     return std::make_shared<MemoryWrappedNode<NODE_TYPE>>(new_node, args);
                 }
 
-            protected:
-                void add_inputs()
+                virtual void graph_replace() override
                 {
-                    // add constant memory input
+                    for (size_t i = 0; i < this->m_node->get_outputs().size(); i++)
+                    {
+                        auto& node_output = this->m_node->get_outputs().at(i);
+                        std::set<ngraph::descriptor::Input*> copy_inputs{std::begin(node_output.get_inputs()),
+                                std::end(node_output.get_inputs())};
+
+                        auto new_output = std::make_shared<ngraph::op::GetOutputElement>(this->shared_from_this(), i);
+                        for (auto input : copy_inputs)
+                        {
+                            input->replace_output(new_output->get_outputs().at(0));
+                        }
+                    }
+                }
+            protected:
+                void add_constant_inputs()
+                {
                     size_t i = this->m_inputs.size();
                     for (auto& data : this->m_emitter.get_constants())
                     {
@@ -78,16 +92,8 @@ namespace ngraph
                         this->m_inputs.emplace_back(this, i++, constant->get_outputs().at(0));
                     }
                 }
-                void add_outputs()
+                void add_workspace_outputs()
                 {
-                    // add node's outputs to wrapped node
-                    size_t i = 0;
-                    for (auto& output : this->m_node->get_outputs())
-                    {
-                        this->m_outputs.emplace_back(this, i++, output.get_tensor_view());
-                    }
-
-                    // add worskapce output
                     for (auto& workspace : this->m_emitter.get_workspaces())
                     {
                         this->add_output(this->m_node->get_element_type(), workspace);

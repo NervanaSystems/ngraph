@@ -115,24 +115,7 @@ namespace ngraph
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Add)
             {
-                if (out[0].get_size() == 0)
-                {
-                    return;
-                }
-                writer.block_begin();
-                {
-                    auto& cudnn_emitter =
-                        external_function->get_primitive_emitter()->get_cudnn_emitter();
-                    auto index = cudnn_emitter->build_tensor_op(
-                        CUDNN_OP_TENSOR_ADD, out[0].get_type(), args[0].get_shape(), 1.0, 1.0, 0);
-
-                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
-                    writer << "std::vector<void*>{" << args[0].get_name() << ","
-                           << args[1].get_name() << "}.data(), ";
-                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                    writer << ");\n";
-                }
-                writer.block_end();
+                //Emitter<ngraph::op::add) m;
             }
 
             template <>

@@ -160,7 +160,6 @@ static StaticInitializers s_static_initializers;
 #define TI(x) type_index(typeid(x))
 
 static const runtime::gpu::OpMap dispatcher{
-    {TI(ngraph::op::Add), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Add>},
     {TI(ngraph::op::Dot), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Dot>},
     {TI(ngraph::op::Multiply), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Multiply>},
     {TI(ngraph::op::Parameter), &runtime::gpu::GPU_Emitter::nop},
@@ -793,6 +792,7 @@ string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const std::shared
     }
     else
     {
+        std::cout << n->get_name() << std::endl;
         handler->second(this, tmp_writer, n.get(), in, out);
     }
     string body = tmp_writer.get_code();
