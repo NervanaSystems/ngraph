@@ -238,6 +238,7 @@ else()
 endif()
 
 include(cmake/external_tbb.cmake)
+include(cmake/external_tvm.cmake)
 
 if (NGRAPH_HALIDE)
     message(WARNING "Halide build system integration is currently using an older LLVM release \
