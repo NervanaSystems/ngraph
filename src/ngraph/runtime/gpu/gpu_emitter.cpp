@@ -824,21 +824,21 @@ namespace ngraph
                 auto concat = static_cast<const ngraph::op::Concat*>(node);
                 auto axis = concat->get_concatenation_axis();
 
-
                 std::vector<std::string> dtypes;
                 std::vector<GPUShape> input_shapes;
-                for(auot arg:args)
+                for (auto arg : args)
                 {
                     dtypes.push_back(arg.get_type());
                     input_shapes.push_back(arg.get_shape());
                 }
                 dtypes.push_back(out[0].get_type());
-                
+
                 writer.block_begin();
                 {
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
-                    auto index = cuda_emitter->build_concat(dtypes, input_shapes, axis, out[0].get_shape());
+                    auto index =
+                        cuda_emitter->build_concat(dtypes, input_shapes, axis, out[0].get_shape());
 
                     writer << "gpu::invoke_primitive(ctx, " << index << ", ";
                     writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
