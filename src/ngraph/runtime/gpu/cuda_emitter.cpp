@@ -70,9 +70,9 @@ runtime::gpu::CUDAEmitter::CUDAEmitter(runtime::gpu::GPUPrimitiveEmitter* emitte
 }
 
 size_t runtime::gpu::CUDAEmitter::build_concat(const std::vector<std::string>& dtypes,
-                    std::vector<GPUShape> input_shapes,
-                    size_t concat_axis,
-                    GPUShape output_shape)
+                                               std::vector<GPUShape> input_shapes,
+                                               size_t concat_axis,
+                                               GPUShape output_shape)
 {
     std::stringstream kernel_name;
     size_t input_size = input_shapes.size();
