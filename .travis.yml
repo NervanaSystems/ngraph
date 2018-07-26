@@ -9,9 +9,9 @@ git:
   depth: false
 
 env:
-  - TASK=cpp_test
-  - TASK=python2_test
-  - TASK=python3_test
+  - travis_wait 15 TASK=cpp_test
+  - travis_wait 15 TASK=python2_test
+  - travis_wait 15 TASK=python3_test
 
 before_install:
   - docker build -t test_ngraph -f .ci/travis/ubuntu/Dockerfile .
