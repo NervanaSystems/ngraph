@@ -135,6 +135,11 @@ namespace ngraph
                                          GPUShape filter_dilation,
                                          GPUShape output_shape);
 
+                size_t build_concat(const std::vector<std::string>& dtypes,
+                                    std::vector<GPUShape> input_shapes,
+                                    size_t concat_axis,
+                                    GPUShape output_shape);
+
                 void debug_sync();
                 void sync();
 
