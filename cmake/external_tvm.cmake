@@ -63,7 +63,7 @@ else()
         SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/tvm/src"
         BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/tvm/build"
         INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/tvm"
-        BUILD_BYPRODUCTS "${EXTERNAL_PROJECTS_ROOT}/tvm/build"
+        BUILD_BYPRODUCTS "${EXTERNAL_PROJECTS_ROOT}/tvm/src"
         EXCLUDE_FROM_ALL TRUE
         )
 endif()
@@ -71,8 +71,13 @@ endif()
 #------------------------------------------------------------------------------
 
 ExternalProject_Get_Property(ext_tvm SOURCE_DIR BINARY_DIR)
+set(TVM_LINK_LIBS
+    ${EXTERNAL_PROJECTS_ROOT}/tvm/build/libtvm.so
+    ${EXTERNAL_PROJECTS_ROOT}/tvm/build/libtvm_topi.so
+    ${EXTERNAL_PROJECTS_ROOT}/tvm/build/libtvm_runtime.so
+)
 
 add_library(libtvm INTERFACE)
+target_include_directories(libtvm SYSTEM INTERFACE ${SOURCE_DIR})
 add_dependencies(libtvm ext_tvm)
-target_include_directories(libtvm SYSTEM INTERFACE ${SOURCE_DIR}/include/tvm)
-target_link_libraries(libgtest INTERFACE ${BINARY_DIR}/libtvm.so)
+target_link_libraries(libtvm INTERFACE ${TVM_LINK_LIBS})
