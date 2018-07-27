@@ -26,8 +26,6 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/get_output_element.hpp"
-#include "ngraph/runtime/cpu/op/dequantize.hpp"
-#include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
@@ -2563,65 +2561,6 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_4d_transpose)
                        88., 64., 89., 65., 90., 66., 91., 67., 92., 68., 93., 69., 94., 70., 95.,
                        71., 96., 72., 97., 73., 98., 74., 99., 75., 100.}),
         read_vector<float>(result));
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, quantize_to_int8)
-{
-    vector<float> a_data = {-255.0, 0.0, 1.0, 1.25, 1.75, 64.0, 127.0, 500.0};
-    const float input_min = -255.0;
-    const float input_max = 127.0;
-
-    auto A = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto QT = make_shared<op::Quantize>(A, input_min, input_max);
-
-    auto f0 =
-        make_shared<Function>(make_shared<op::GetOutputElement>(QT, 0), op::ParameterVector{A});
-    auto f1 =
-        make_shared<Function>(make_shared<op::GetOutputElement>(QT, 1), op::ParameterVector{A});
-    auto f2 =
-        make_shared<Function>(make_shared<op::GetOutputElement>(QT, 2), op::ParameterVector{A});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, Shape{1});
-    copy_data(a, a_data);
-
-    auto result = backend->create_tensor(element::u8, Shape{1});
-    backend->call(f0, {result}, {a});
-    EXPECT_EQ((vector<uint8_t>{0, 0, 2, 3, 4, 129, 255, 255}), read_vector<uint8_t>(result));
-
-    #if 0
-    auto result_min = backend->create_tensor(element::f32, Shape{1});    
-    backend->call(f0, {result_min}, {a});
-    EXPECT_EQ((vector<float>{0.0}), read_vector<float>(result_min));    
-
-    auto result_max = backend->create_tensor(element::f32, Shape{1});
-    backend->call(f0, {result_max}, {a});
-    EXPECT_EQ((vector<float>{0.0}), read_vector<float>(result_max));
-    #endif
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, dequantize_from_int8)
-{
-    vector<uint8_t> a_data = {255};
-    const float input_min = -1.0f;
-    const float input_max = 2.0f;
-    Shape shape_a{1};
-
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto r = make_shared<op::Dequantize>(A, input_min, input_max);
-    auto f = make_shared<Function>(r, op::ParameterVector{A});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::u8, Shape{1});
-    copy_data(a, a_data);
-    auto result = backend->create_tensor(element::f32, Shape{1});
-
-    backend->call(f, {result}, {a});
-    EXPECT_EQ((vector<float>{2.0}), read_vector<float>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, reshape_4d_no_transpose)

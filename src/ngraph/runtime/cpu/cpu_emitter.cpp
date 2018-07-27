@@ -2718,7 +2718,7 @@ namespace ngraph
                         100.0f;
                     max_range = std::max(input_max_range, min_range + epsilon);
                     max_range = std::max(0.0f, max_range);
-                    int num_bits = sizeof(float) * 8;
+                    int num_bits = sizeof(uint8_t) * 8;
                     const float max_abs = std::max(std::abs(min_range), std::abs(max_range));
                     max_range = max_abs;
                     min_range = 0.0;
@@ -2741,10 +2741,12 @@ namespace ngraph
                            << ", " << args[0].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
                            << ", " << out[0].get_name() << ");\n";
-                    writer << "memcpy(" << out[1].get_name() << "," << &min_range << ", " << 4
-                           << ");\n";
-                    writer << "memcpy(" << out[2].get_name() << "," << &max_range << ", " << 4
-                           << ");\n";
+                    writer << "*(" << out[1].get_name() << ") = " << min_range << ";\n";
+                    writer << "*(" << out[2].get_name() << ") = " << max_range << ";\n";
+                    //writer << "memcpy(" << out[1].get_name() << "," << min_range << ", " << 4
+                    //       << ");\n";
+                    //writer << "memcpy(" << out[2].get_name() << "," << max_range << ", " << 4
+                    //       << ");\n";
 
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(quantize_index) << ");\n";
