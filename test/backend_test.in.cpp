@@ -39,17 +39,6 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-static const vector<element::Type> s_known_element_types = {element::from<float>(),
-                                                            element::from<double>(),
-                                                            element::from<int8_t>(),
-                                                            element::from<int16_t>(),
-                                                            element::from<int32_t>(),
-                                                            element::from<int64_t>(),
-                                                            element::from<uint8_t>(),
-                                                            element::from<uint16_t>(),
-                                                            element::from<uint32_t>(),
-                                                            element::from<uint64_t>()};
-
 NGRAPH_TEST(${BACKEND_NAME}, function_name)
 {
     Shape shape{2, 2};
@@ -5653,13 +5642,23 @@ NGRAPH_TEST(${BACKEND_NAME}, select_and_scatter_3d_without_overlap)
 template <typename OP>
 void make_unary_empty_test(const string& backend_name)
 {
+    static const vector<element::Type> test_element_types = {element::from<float>(),
+                                                             element::from<double>(),
+                                                             element::from<int8_t>(),
+                                                             element::from<int16_t>(),
+                                                             element::from<int32_t>(),
+                                                             element::from<int64_t>(),
+                                                             element::from<uint8_t>(),
+                                                             element::from<uint16_t>(),
+                                                             element::from<uint32_t>(),
+                                                             element::from<uint64_t>()};
     Shape shape{0};
 
     op::ParameterVector params;
     NodeVector result_list;
-    for (size_t i = 0; i < s_known_element_types.size(); i++)
+    for (size_t i = 0; i < test_element_types.size(); i++)
     {
-        shared_ptr<op::Parameter> p = make_shared<op::Parameter>(s_known_element_types[i], shape);
+        shared_ptr<op::Parameter> p = make_shared<op::Parameter>(test_element_types[i], shape);
         params.push_back(p);
         result_list.push_back(make_shared<OP>(p));
     }
@@ -5669,10 +5668,10 @@ void make_unary_empty_test(const string& backend_name)
 
     vector<shared_ptr<runtime::TensorView>> inputs;
     vector<shared_ptr<runtime::TensorView>> outputs;
-    for (size_t i = 0; i < s_known_element_types.size(); i++)
+    for (size_t i = 0; i < test_element_types.size(); i++)
     {
-        inputs.push_back(backend->create_tensor(s_known_element_types[i], shape));
-        outputs.push_back(backend->create_tensor(s_known_element_types[i], shape));
+        inputs.push_back(backend->create_tensor(test_element_types[i], shape));
+        outputs.push_back(backend->create_tensor(test_element_types[i], shape));
     }
 
     backend->call(f, outputs, inputs);
@@ -5703,11 +5702,21 @@ void make_unary_empty_test(const string& backend_name)
 template <typename OP>
 void make_binary_empty_test(const string& backend_name, bool is_comparison = false)
 {
+    static const vector<element::Type> test_element_types = {element::from<float>(),
+                                                             element::from<double>(),
+                                                             element::from<int8_t>(),
+                                                             element::from<int16_t>(),
+                                                             element::from<int32_t>(),
+                                                             element::from<int64_t>(),
+                                                             element::from<uint8_t>(),
+                                                             element::from<uint16_t>(),
+                                                             element::from<uint32_t>(),
+                                                             element::from<uint64_t>()};
     Shape shape{0};
     op::ParameterVector A;
-    for (size_t i = 0; i < s_known_element_types.size(); i++)
+    for (size_t i = 0; i < test_element_types.size(); i++)
     {
-        A.push_back(make_shared<op::Parameter>(s_known_element_types[i], shape));
+        A.push_back(make_shared<op::Parameter>(test_element_types[i], shape));
     }
 
     NodeVector result_list;
@@ -5721,16 +5730,16 @@ void make_binary_empty_test(const string& backend_name, bool is_comparison = fal
 
     vector<shared_ptr<runtime::TensorView>> inputs;
     vector<shared_ptr<runtime::TensorView>> outputs;
-    for (size_t i = 0; i < s_known_element_types.size(); i++)
+    for (size_t i = 0; i < test_element_types.size(); i++)
     {
-        inputs.push_back(backend->create_tensor(s_known_element_types[i], shape));
+        inputs.push_back(backend->create_tensor(test_element_types[i], shape));
         if (is_comparison)
         {
             outputs.push_back(backend->create_tensor(element::from<char>(), shape));
         }
         else
         {
-            outputs.push_back(backend->create_tensor(s_known_element_types[i], shape));
+            outputs.push_back(backend->create_tensor(test_element_types[i], shape));
         }
     }
 

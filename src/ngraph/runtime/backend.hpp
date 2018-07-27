@@ -29,63 +29,57 @@ namespace ngraph
     {
         class ExternalFunction;
         class TensorView;
-
-        /// @brief Interface to a generic backend.
-        ///
-        /// Backends are responsible for function execution and value allocation.
-        class Backend
-        {
-        public:
-            virtual ~Backend();
-            /// @brief Create a new Backend object
-            /// @param type The name of a registered backend, such as "CPU" or "GPU".
-            ///   To select a subdevice use "GPU:N" where s`N` is the subdevice number.
-            /// @returns shared_ptr to a new Backend or nullptr if the named backend
-            ///   does not exist.
-            static std::shared_ptr<Backend> create(const std::string& type);
-
-            /// @brief Query the list of registered devices
-            /// @returns A vector of all registered devices.
-            static std::vector<std::string> get_registered_devices();
-
-            virtual std::shared_ptr<ngraph::runtime::TensorView>
-                create_tensor(const ngraph::element::Type& element_type, const Shape& shape) = 0;
-
-            /// @brief Return a handle for a tensor for given mem on backend device
-            virtual std::shared_ptr<ngraph::runtime::TensorView>
-                create_tensor(const ngraph::element::Type& element_type,
-                              const Shape& shape,
-                              void* memory_pointer) = 0;
-
-            template <typename T>
-            std::shared_ptr<ngraph::runtime::TensorView> create_tensor(const Shape& shape)
-            {
-                return create_tensor(element::from<T>(), shape);
-            }
-
-            virtual bool compile(std::shared_ptr<Function> func) = 0;
-
-            virtual bool call(std::shared_ptr<Function> func,
-                              const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
-                              const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) = 0;
-
-            virtual void remove_compiled_function(std::shared_ptr<Function> func);
-
-            virtual void enable_performance_data(std::shared_ptr<Function> func, bool enable) {}
-            virtual std::vector<PerformanceCounter>
-                get_performance_data(std::shared_ptr<Function> func) const;
-
-            static bool register_backend(const std::string& name, std::shared_ptr<Backend>);
-
-        protected:
-            void validate_call(std::shared_ptr<const Function> func,
-                               const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
-                               const std::vector<std::shared_ptr<runtime::TensorView>>& inputs);
-
-        private:
-            static void* open_shared_library(std::string type);
-            static std::map<std::string, std::string> get_registered_device_map();
-            static bool is_backend_name(const std::string& file, std::string& backend_name);
-        };
+        class Backend;
     }
 }
+
+/// @brief Interface to a generic backend.
+///
+/// Backends are responsible for function execution and value allocation.
+class ngraph::runtime::Backend
+{
+public:
+    virtual ~Backend();
+    /// @brief Create a new Backend object
+    /// @param type The name of a registered backend, such as "CPU" or "GPU".
+    ///   To select a subdevice use "GPU:N" where s`N` is the subdevice number.
+    /// @returns shared_ptr to a new Backend or nullptr if the named backend
+    ///   does not exist.
+    static std::shared_ptr<Backend> create(const std::string& type);
+
+    /// @brief Query the list of registered devices
+    /// @returns A vector of all registered devices.
+    static std::vector<std::string> get_registered_devices();
+
+    virtual std::shared_ptr<ngraph::runtime::TensorView>
+        create_tensor(const ngraph::element::Type& element_type, const Shape& shape) = 0;
+
+    /// @brief Return a handle for a tensor for given mem on backend device
+    virtual std::shared_ptr<ngraph::runtime::TensorView> create_tensor(
+        const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer) = 0;
+
+    template <typename T>
+    std::shared_ptr<ngraph::runtime::TensorView> create_tensor(const Shape& shape)
+    {
+        return create_tensor(element::from<T>(), shape);
+    }
+
+    virtual bool compile(std::shared_ptr<Function> func) = 0;
+
+    virtual bool call(std::shared_ptr<Function> func,
+                      const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+                      const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) = 0;
+
+    virtual void remove_compiled_function(std::shared_ptr<Function> func);
+
+    virtual void enable_performance_data(std::shared_ptr<Function> func, bool enable) {}
+    virtual std::vector<PerformanceCounter>
+        get_performance_data(std::shared_ptr<Function> func) const;
+
+    static bool register_backend(const std::string& name, std::shared_ptr<Backend>);
+
+protected:
+    void validate_call(std::shared_ptr<const Function> func,
+                       const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+                       const std::vector<std::shared_ptr<runtime::TensorView>>& inputs);
+};

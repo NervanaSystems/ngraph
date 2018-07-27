@@ -25,12 +25,11 @@
 using namespace std;
 using namespace ngraph;
 
-static unordered_map<string, unordered_set<string>> s_blacklists;
-
 string ngraph::prepend_disabled(const string& test_case_name,
                                 const string& test_name,
                                 const string& manifest)
 {
+    static unordered_map<string, unordered_set<string>> s_blacklists;
     string rc = test_name;
     unordered_set<string>& blacklist = s_blacklists[test_case_name];
     if (blacklist.empty() && !manifest.empty())

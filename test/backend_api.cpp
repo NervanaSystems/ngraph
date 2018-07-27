@@ -17,6 +17,7 @@
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;

@@ -41,6 +41,7 @@
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -117,6 +118,13 @@ extern "C" void delete_backend(runtime::Backend* backend)
 {
     delete backend;
 }
+
+static class INTELGPUStaticInit
+{
+public:
+    INTELGPUStaticInit() { runtime::BackendManager::register_backend("INTELGPU", new_backend); }
+    ~INTELGPUStaticInit() {}
+} s_init;
 
 runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()
 {
