@@ -252,17 +252,17 @@ void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
         writer << data_types[i] << "* in" << i << ", ";
     }
     writer << data_types[num_inputs]
-           << "* out, size_t* block_strides, size_t block_size, size_t n)\n";
+           << "* out, uint32_t* block_strides, uint32_t block_size, uint32_t n)\n";
     writer.block_begin();
     {
-        writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
+        writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
         writer << "if(tid < n)\n";
         writer.block_begin();
         {
             writer << "out[tid] = 1;\n";
-            writer << "size_t output_idx = tid;\n";
-            writer << "size_t block_id = tid / block_size;\n";
-            writer << "size_t block_idx = tid % block_size;\n";
+            writer << "uint32_t output_idx = tid;\n";
+            writer << "uint32_t block_id = tid / block_size;\n";
+            writer << "uint32_t block_idx = tid % block_size;\n";
             writer << "bool processed = false;\n";
             for (size_t i = 0; i < num_inputs; i++)
             {
