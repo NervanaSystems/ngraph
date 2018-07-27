@@ -18,6 +18,7 @@
 
 #include <mkldnn.hpp>
 
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/type/element_type.hpp"

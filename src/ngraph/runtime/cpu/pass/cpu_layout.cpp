@@ -23,6 +23,7 @@
 #include <mkldnn.hpp>
 
 #include "cpu_layout.hpp"
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
@@ -69,18 +70,12 @@ shared_ptr<Node> runtime::cpu::pass::CPULayout::insert_input_conversions(
     {
         const auto& output = input.get_output();
         auto tv = output.get_tensor_view();
-        auto tvt = tv->get_tensor_view_type();
-        auto rank = tvt->get_shape().size();
         auto tvl = tv->get_tensor_view_layout();
         auto mkldnn_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
         if (!mkldnn_tvl || !mkldnn_tvl->is_mkldnn_layout() ||
             !mkldnn_utils::compare_mkldnn_mds(mkldnn_tvl->get_mkldnn_md(), required_mds[index]))
         {
-            auto native_axis_order =
-                ngraph::runtime::cpu::LayoutDescriptor::create_native_axis_order(rank);
-            auto layout =
-                std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv, native_axis_order);
-
+            auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
             layout->set_mkldnn_md(required_mds[index]);
 
             auto new_node = std::shared_ptr<Node>(
@@ -132,20 +127,13 @@ void runtime::cpu::pass::CPULayout::set_output_layouts(shared_ptr<Node>& node,
     for (size_t i = 0; i < node->get_output_size(); ++i)
     {
         auto tv = node->get_output_tensor_view(i);
-        auto tvt = tv->get_tensor_view_type();
-        auto rank = tvt->get_shape().size();
-
         auto tvl = tv->get_tensor_view_layout();
         if (tvl)
         {
             throw ngraph_error("Node output layout already set");
         }
 
-        auto native_axis_order =
-            ngraph::runtime::cpu::LayoutDescriptor::create_native_axis_order(rank);
-
-        auto layout =
-            std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv, native_axis_order);
+        auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
 
         layout->set_mkldnn_md(output_mds[i]);
         tv->set_tensor_view_layout(layout);
@@ -154,7 +142,7 @@ void runtime::cpu::pass::CPULayout::set_output_layouts(shared_ptr<Node>& node,
     }
 }
 
-void runtime::cpu::pass::CPULayout::set_default_layouts(
+void runtime::cpu::pass::CPULayout::set_native_layouts(
     runtime::cpu::CPU_ExternalFunction* external_function,
     std::shared_ptr<Node> node,
     bool use_replace = true)
@@ -166,21 +154,18 @@ void runtime::cpu::pass::CPULayout::set_default_layouts(
     {
         const auto& output = input.get_output();
         auto tv = output.get_tensor_view();
-        auto tvt = tv->get_tensor_view_type();
-        auto shape = tvt->get_shape();
+        auto et = tv->get_tensor_view_type()->get_element_type();
+        auto shape = tv->get_tensor_view_type()->get_shape();
         auto tvl = tv->get_tensor_view_layout();
         auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
 
         if (cpu_tvl && cpu_tvl->is_mkldnn_layout())
         {
-            auto native_md = mkldnn_utils::create_blocked_mkldnn_md(
-                tvt->get_shape(), cpu_tvl->get_strides(), tvt->get_element_type());
+            auto native_md =
+                mkldnn_utils::create_blocked_mkldnn_md(shape, cpu_tvl->get_strides(), et);
             if (!mkldnn_utils::compare_mkldnn_mds(cpu_tvl->get_mkldnn_md(), native_md))
             {
-                auto native_axis_order =
-                    ngraph::runtime::cpu::LayoutDescriptor::create_native_axis_order(shape.size());
-                auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(
-                    *tv, native_axis_order);
+                auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
 
                 layout->set_mkldnn_md(native_md);
 
@@ -235,27 +220,21 @@ void runtime::cpu::pass::CPULayout::set_default_layouts(
         auto tv = node->get_output_tensor_view(i);
         if (tv->get_tensor_view_layout())
         {
+            // TODO(jbobba): Should this be an error instead?
             continue;
         }
 
-        auto tvt = tv->get_tensor_view_type();
-        auto rank = tvt->get_shape().size();
-        auto shape = tvt->get_shape();
+        auto shape = tv->get_tensor_view_type()->get_shape();
+        auto et = tv->get_tensor_view_type()->get_element_type();
 
-        auto native_axis_order =
-            ngraph::runtime::cpu::LayoutDescriptor::create_native_axis_order(rank);
+        auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
 
-        auto layout =
-            std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv, native_axis_order);
-
-        if (mkldnn_utils::can_create_mkldnn_md(
-                tvt->get_shape(), layout->get_strides(), tvt->get_element_type()))
+        if (mkldnn_utils::can_create_mkldnn_md(shape, layout->get_strides(), et))
         {
-            auto native_md = mkldnn_utils::create_blocked_mkldnn_md(
-                tvt->get_shape(), layout->get_strides(), tvt->get_element_type());
+            auto native_md =
+                mkldnn_utils::create_blocked_mkldnn_md(shape, layout->get_strides(), et);
             layout->set_mkldnn_md(native_md);
         }
-
         tv->set_tensor_view_layout(layout);
     }
 }
@@ -402,7 +381,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -421,7 +400,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -439,7 +418,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -457,7 +436,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -477,7 +456,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -561,7 +540,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -690,7 +669,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -710,7 +689,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -779,7 +758,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -859,7 +838,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -936,7 +915,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -955,7 +934,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -1056,7 +1035,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -1075,7 +1054,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -1087,7 +1066,7 @@ namespace ngraph
                         mkldnn_utils::get_input_mkldnn_md(node.get(), 0).data.format ==
                             mkldnn_format_undef)
                     {
-                        set_default_layouts(external_function, node, false);
+                        set_native_layouts(external_function, node, false);
                     }
                     else
                     {
@@ -1139,7 +1118,7 @@ namespace ngraph
                             {
                                 output_strides[i] = input_strides[axis_order[i]];
                             }
-                            set_default_layouts(external_function, node);
+                            set_native_layouts(external_function, node);
                             auto output_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
                                 node->get_output_tensor_view()->get_tensor_view_layout());
                             // output_tvl->set_strides(output_strides);
@@ -1147,7 +1126,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -1159,7 +1138,7 @@ namespace ngraph
                     if (mkldnn_utils::get_input_mkldnn_md(node.get(), 0).data.format ==
                         mkldnn_format_undef)
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                     else
                     {
@@ -1182,7 +1161,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -1198,7 +1177,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -1219,7 +1198,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -1246,7 +1225,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -1307,7 +1286,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -1395,7 +1374,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -1442,7 +1421,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -1454,7 +1433,7 @@ namespace ngraph
                         // TODO: for now, framework formats for src_layer, src_iter, weights_layer and weights_iter
                         // matches to the expected mkldnn format. we need to handle a case to insert convert Op's
                         // if the format doesn't matches.
-                        set_default_layouts(external_function, node, false);
+                        set_native_layouts(external_function, node, false);
                     }
                     else
                     {
@@ -1470,7 +1449,7 @@ namespace ngraph
                         // TODO: for now, framework formats for src_layer, src_iter, weights_layer and weights_iter
                         // matches to the expected mkldnn format. we need to handle a case to insert convert Op's
                         // if the format doesn't matches.
-                        set_default_layouts(external_function, node, false);
+                        set_native_layouts(external_function, node, false);
                     }
                     else
                     {
@@ -1490,7 +1469,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -1506,7 +1485,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_default_layouts(external_function, node);
+                        set_native_layouts(external_function, node);
                     }
                 }
             }
@@ -1577,7 +1556,7 @@ bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::share
         }
         else
         {
-            set_default_layouts(m_external_function, node);
+            set_native_layouts(m_external_function, node);
         }
     }
 

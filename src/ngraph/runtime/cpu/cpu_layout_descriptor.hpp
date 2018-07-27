@@ -23,7 +23,6 @@
 
 #include <mkldnn.hpp>
 
-#include "ngraph/axis_vector.hpp"
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/type.hpp"
@@ -37,8 +36,7 @@ namespace ngraph
             class LayoutDescriptor : public ngraph::descriptor::layout::TensorViewLayout
             {
             public:
-                LayoutDescriptor(const ngraph::descriptor::TensorView& tv,
-                                 const AxisVector& tv_axis_order);
+                LayoutDescriptor(const ngraph::descriptor::TensorView& tv);
                 ~LayoutDescriptor() override {}
                 size_t get_size() override { return m_size; }
                 size_t get_offset() const { return m_offset; }
@@ -49,25 +47,24 @@ namespace ngraph
                 bool operator==(const TensorViewLayout& other) const override;
 
                 const mkldnn::memory::desc& get_mkldnn_md() const { return m_mkldnn_md; }
-                void set_mkldnn_md(const mkldnn::memory::desc md)
+                void set_mkldnn_md(const mkldnn::memory::desc md) { m_mkldnn_md = md; }
+                bool is_mkldnn_layout() const
                 {
-                    m_mkldnn_md = md;
-                    m_mkldnn_layout = true;
+                    return m_mkldnn_md.data.format != mkldnn::memory::format::format_undef;
                 }
-                bool is_mkldnn_layout() const { return m_mkldnn_layout; }
-                const AxisVector& get_axis_order() const { return m_axis_order; }
-                void set_axis_order(const AxisVector& perm) { m_axis_order = perm; }
-                static AxisVector create_native_axis_order(size_t rank);
 
                 static const mkldnn::memory::desc DummyDesc;
 
             private:
-                AxisVector m_axis_order;
+                // Native row-major layout for now
                 Strides m_strides;
                 size_t m_offset;
                 size_t m_size;
 
-                bool m_mkldnn_layout;
+                // For tensor views that can be tracked with MKLDNN memory
+                // descriptors, this holds the physical layout information
+                // Otherwise, physical layout is assumed to be in row-major
+                // format represented by m_strides
                 mkldnn::memory::desc m_mkldnn_md;
             };
 

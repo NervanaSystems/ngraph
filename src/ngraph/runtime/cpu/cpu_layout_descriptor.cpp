@@ -31,39 +31,19 @@ namespace ngraph
                                             mkldnn::memory::f32,
                                             mkldnn::memory::format::format_undef);
 
-            AxisVector LayoutDescriptor::create_native_axis_order(size_t rank)
-            {
-                AxisVector native_axis_order(rank);
-                std::iota(native_axis_order.begin(), native_axis_order.end(), 0);
-                return native_axis_order;
-            }
-
-            LayoutDescriptor::LayoutDescriptor(const ngraph::descriptor::TensorView& tv,
-                                               const AxisVector& tv_axis_order)
+            LayoutDescriptor::LayoutDescriptor(const ngraph::descriptor::TensorView& tv)
                 : TensorViewLayout(tv)
-                , m_axis_order(tv_axis_order)
                 , m_offset(0)
                 , m_size(ngraph::shape_size(tv.get_tensor_view_type()->get_shape()))
-                , m_mkldnn_layout(false)
                 , m_mkldnn_md(LayoutDescriptor::DummyDesc)
             {
                 auto shape = get_shape();
                 size_t s = 1;
 
-                if (tv_axis_order.size() != shape.size())
+                for (size_t i = 0; i < shape.size(); i++)
                 {
-                    throw ngraph_error("Axis order is incomplete");
-                }
-
-                for (auto it = tv_axis_order.crbegin(); it != tv_axis_order.crend(); it++)
-                {
-                    if (*it >= shape.size())
-                    {
-                        throw ngraph_error("Axis is out of bounds");
-                    }
-
                     m_strides.emplace_back(s);
-                    s *= shape[*it];
+                    s *= shape[shape.size() - (i + 1)];
                 }
                 std::reverse(m_strides.begin(), m_strides.end());
             }
@@ -98,7 +78,7 @@ namespace ngraph
 
                 if (p_other->is_mkldnn_layout())
                 {
-                    if (!m_mkldnn_layout)
+                    if (!is_mkldnn_layout())
                     {
                         return false;
                     }

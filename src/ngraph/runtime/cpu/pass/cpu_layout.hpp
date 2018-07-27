@@ -60,9 +60,9 @@ namespace ngraph
                     static void
                         set_output_layouts(std::shared_ptr<Node>& node,
                                            const std::vector<mkldnn::memory::desc>& output_mds);
-                    static void set_default_layouts(CPU_ExternalFunction* external_function,
-                                                    std::shared_ptr<Node> node,
-                                                    bool use_replace);
+                    static void set_native_layouts(CPU_ExternalFunction* external_function,
+                                                   std::shared_ptr<Node> node,
+                                                   bool use_replace);
                 };
             }
         }

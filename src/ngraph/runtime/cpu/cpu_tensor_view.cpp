@@ -46,8 +46,8 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
     // TODO(jmenon): A fallback layout should not be needed but is required
     // because of how some unit test functionality is written (ex. 'backprop_derivative')
     // This needs to be removed
-    m_descriptor->set_tensor_view_layout(std::make_shared<runtime::cpu::LayoutDescriptor>(
-        *m_descriptor, runtime::cpu::LayoutDescriptor::create_native_axis_order(shape.size())));
+    m_descriptor->set_tensor_view_layout(
+        std::make_shared<runtime::cpu::LayoutDescriptor>(*m_descriptor));
 
     buffer_size = shape_size(shape) * element_type.size();
 
@@ -153,10 +153,8 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
             cpu_tvl->get_strides(),
             this->get_descriptor()->get_tensor_view_type()->get_element_type());
 
-        engine cpu_engine{engine::cpu, 0};
-
-        memory input{{input_desc, cpu_engine}, aligned_buffer};
-        memory output{{output_desc, cpu_engine}, target};
+        memory input{{input_desc, mkldnn_utils::global_cpu_engine}, aligned_buffer};
+        memory output{{output_desc, mkldnn_utils::global_cpu_engine}, target};
         reorder prim{input, output};
         mkldnn::stream s(mkldnn::stream::kind::eager);
         s.submit({prim}).wait();
