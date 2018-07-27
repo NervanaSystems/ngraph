@@ -26,7 +26,7 @@ from ngraph.impl.op import Parameter
 from ngraph.utils.types import get_dtype, NumericData
 from ngraph.exceptions import UserInputError
 
-log = logging.getLogger(__file__)
+log = logging.getLogger(__name__)
 
 
 def runtime(backend_name='CPU'):  # type: (str) -> 'Runtime'
