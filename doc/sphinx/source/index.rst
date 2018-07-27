@@ -147,6 +147,7 @@ Contents
    framework-integration-guides.rst
    frameworks/index.rst
    programmable/index.rst
+   distr/index.rst
    python_api/index.rst
    project/index.rst
 
@@ -163,3 +164,4 @@ Indices and tables
 .. _ngraph onnx companion tool: https://github.com/NervanaSystems/ngraph-onnx
 .. _Movidius: https://www.movidius.com/
 .. _contributions: https://github.com/NervanaSystems/ngraph#how-to-contribute
+  

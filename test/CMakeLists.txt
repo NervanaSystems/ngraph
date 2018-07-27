@@ -16,6 +16,7 @@
 
 set(SRC
     algebraic_simplification.cpp
+    assertion.cpp
     builder_autobroadcast.cpp
     build_graph.cpp
     constant_folding.cpp
