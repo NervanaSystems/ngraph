@@ -19,25 +19,13 @@
 #include <CPP/scale.hpp>
 #include <CPP/split.hpp>
 
+#include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
 
 #include "ngraph/op/batch_norm.hpp"
 
 using namespace std;
 using namespace ngraph;
-
-// This function converts Shape dimension id into cldnn::concatenation id
-static cldnn::concatenation::concatenation_axis get_cldnn_axis(size_t tensor_channel)
-{
-    switch (tensor_channel)
-    {
-    case 0: return cldnn::concatenation::along_b;
-    case 1: return cldnn::concatenation::along_f;
-    case 2: return cldnn::concatenation::along_y;
-    case 3: return cldnn::concatenation::along_x;
-    default: throw invalid_argument("intelgpu::get_cldnn_axis() wrong input tensor channel.");
-    }
-}
 
 static string do_matrix_split(cldnn::topology& topology,
                               const string& name,
@@ -88,6 +76,8 @@ void runtime::intelgpu::do_batch_norm_operation(cldnn::topology& topology,
     // Also, input data must be at least 2D array
     const size_t shape_channel = 1;
     const size_t cldnn_channel = 4 - input_shape.size() + shape_channel;
+    const cldnn::concatenation::concatenation_axis direction =
+        runtime::intelgpu::IntelGPULayout::get_cldnn_axis(cldnn_channel);
 
     const size_t split_arr_count = input_shape.at(shape_channel);
     for (size_t i = 0; i < split_arr_count; ++i)
@@ -99,7 +89,6 @@ void runtime::intelgpu::do_batch_norm_operation(cldnn::topology& topology,
         vector<cldnn::tensor::value_type> offset({0, 0, 0, 0}); // No action by default
         offset.at(cldnn_channel) = i;
 
-        cout << "Splitted to " << i << " with " << vector_to_string(offset) << "\n";
         const cldnn::tensor input_offset(offset.at(0), offset.at(1), offset.at(3), offset.at(2));
         split_offsets.push_back(pair<cldnn::primitive_id, cldnn::tensor>(str_i, input_offset));
     }
@@ -141,6 +130,6 @@ void runtime::intelgpu::do_batch_norm_operation(cldnn::topology& topology,
         dim_set.push_back(output_name + suf);
     }
 
-    const cldnn::concatenation op_concat(output_name, dim_set, get_cldnn_axis(cldnn_channel));
+    const cldnn::concatenation op_concat(output_name, dim_set, direction);
     topology.add(op_concat);
 }

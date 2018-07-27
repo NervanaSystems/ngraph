@@ -130,4 +130,6 @@ namespace ngraph
                             std::vector<std::pair<size_t, size_t>>{
                                 std::pair<size_t, size_t>(new_axis_pos, new_axis_val)});
     }
+
+    std::ostream& operator<<(std::ostream& s, const Coordinate& coordinate);
 }

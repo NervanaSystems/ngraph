@@ -26,9 +26,11 @@ usually named ``<some_model>.onnx`` or ``<some_model>.onnx.pb``. These
    or ``.onnx.pb`` formatted file, you should be able to run the inference 
    without needing to dig into anything from the "Frameworks" sections. You 
    will, however, need to have completed the steps outlined in 
-   our :doc:`../install` guide.  
+   our :doc:`../install` guide.  If you intend to build nGraph for :   doc:`distributed-training`, 
+   you will need to build that has already been compiled with the additional 
+   cmake flag: ``-DNGRAPH_DISTRIBUTED_ENABLE=TRUE``.
 
-To demonstrate functionality, we'll use an already serialized CIFAR10 model 
+To demonstrate functionality, we'll use an already-serialized CIFAR10 model 
 trained via ResNet20. Remember that this model has already been trained and 
 exported from a framework such as Caffe2, PyTorch or CNTK; we are simply going 
 to build an nGraph representation of the model, execute it, and produce some 

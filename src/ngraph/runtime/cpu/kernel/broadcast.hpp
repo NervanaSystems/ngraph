@@ -19,8 +19,10 @@
 #define EIGEN_USE_THREADS
 #include <unsupported/Eigen/CXX11/Tensor>
 
+#include "ngraph/axis_set.hpp"
 #include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
@@ -30,18 +32,33 @@ namespace ngraph
         {
             namespace kernel
             {
-                template <typename ElementType>
-                void broadcast(void* input0,
+                template <typename ElementType, unsigned int Rank>
+                void broadcast(void* input,
                                void* output,
-                               const Shape& arg0_shape,
-                               const Shape& result_shape,
-                               const AxisSet& broadcast_axes)
+                               const Shape& input_shape,
+                               const Shape& output_shape)
                 {
-                    reference::broadcast<ElementType>(static_cast<const ElementType*>(input0),
-                                                      static_cast<ElementType*>(output),
-                                                      arg0_shape,
-                                                      result_shape,
-                                                      broadcast_axes);
+                    Eigen::array<Eigen::Index, Rank> out_dims;
+                    Eigen::array<Eigen::Index, Rank> in_dims;
+
+                    for (int i = 0; i < Rank; i++)
+                    {
+                        out_dims[i] = output_shape[i];
+                        in_dims[i] = input_shape[i];
+                    }
+
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> out(
+                        static_cast<ElementType*>(output), out_dims);
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(
+                        static_cast<ElementType*>(input), in_dims);
+
+                    Eigen::array<ptrdiff_t, Rank> factors;
+                    for (int i = 0; i < Rank; i++)
+                    {
+                        factors[i] = output_shape[i] / input_shape[i];
+                    }
+
+                    out.device(eigen::global_thread_pool_device) = in.broadcast(factors);
                 }
             }
         }
