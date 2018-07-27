@@ -794,3 +794,23 @@ TEST(pattern, label_on_skip)
     ASSERT_EQ(matcher->get_pattern_map()[const_label], iconst);
     ASSERT_EQ(matcher->get_pattern_map()[label], b);
 }
+
+TEST(pattern, is_contained_match)
+{
+    Shape shape{};
+    auto a = make_shared<op::Parameter>(element::i32, shape);
+    auto absn = make_shared<op::Abs>(a);
+    TestMatcher n(nullptr);
+
+    auto label_a = std::make_shared<pattern::op::Label>(a);
+    auto label_abs = make_shared<op::Abs>(a);
+    ASSERT_TRUE(n.match(label_abs, absn));
+    auto result_absn = make_shared<op::Result>(absn);
+    ASSERT_TRUE(n.is_contained_match());
+
+    auto absn2 = make_shared<op::Abs>(absn);
+    auto result_absn2 = make_shared<op::Result>(absn2);
+    auto label_abs2 = make_shared<op::Abs>(label_abs);
+    ASSERT_TRUE(n.match(label_abs2, absn2));
+    ASSERT_FALSE(n.is_contained_match());
+}
