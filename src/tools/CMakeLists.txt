@@ -14,6 +14,8 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_subdirectory(compile_benchmark)
+if (NOT NGRAPH_CPU_NO_CODEGEN)
+    add_subdirectory(compile_benchmark)
+endif()
 add_subdirectory(nbench)
 add_subdirectory(reserialize)

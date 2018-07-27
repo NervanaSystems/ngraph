@@ -26,9 +26,14 @@
 #include <unordered_map>
 #include <vector>
 
+#if !defined(NGRAPH_CPU_NO_CODEGEN)
+
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
+
+#endif
+
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
@@ -45,6 +50,8 @@ namespace ngraph
             class CPU_Emitter;
             class CPU_CallFrame;
 
+#if !defined(NGRAPH_CPU_NO_CODEGEN)
+
             using OpFunction = std::function<void(CPU_ExternalFunction* external_function,
                                                   codegen::CodeWriter&,
                                                   const ngraph::Node*,
@@ -52,6 +59,7 @@ namespace ngraph
                                                   const std::vector<TensorViewWrapper>& outputs)>;
 
             using OpMap = std::unordered_map<std::type_index, OpFunction>;
+#endif
 
             struct OpAttributes
             {
@@ -113,11 +121,19 @@ namespace ngraph
                 bool is_direct_execution() const { return m_direct_execution; }
             protected:
                 void build();
+
+#if !defined(NGRAPH_CPU_NO_CODEGEN)
+
                 void compile();
 
+#endif
+
             private:
+#if !defined(NGRAPH_CPU_NO_CODEGEN)
+
                 void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
                                                std::string output_name);
+
                 void emit_debug_function_entry(codegen::CodeWriter& writer,
                                                Node* node,
                                                const std::vector<TensorViewWrapper>& in,
@@ -137,15 +153,21 @@ namespace ngraph
                     const std::unordered_map<const Node*, std::string>& node_cache);
                 std::string emit_op_as_function(const Node&, const std::string& function_name);
                 std::string strip_comments(const std::string&);
+
+#endif
                 void release_function() { m_function = nullptr; }
                 std::shared_ptr<ngraph::Function> m_function;
                 bool m_release_function;
-                bool m_is_compiled;
+
+                bool m_use_tbb;
+
                 EntryPoint m_compiled_function;
+#if !defined(NGRAPH_CPU_NO_CODEGEN)
+
+                bool m_is_compiled;
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
                 bool m_emit_timing;
-                bool m_use_tbb;
 
                 std::unordered_map<std::string, std::string> m_variable_name_map;
                 std::map<std::string, size_t> m_name_index_map;
@@ -154,6 +176,8 @@ namespace ngraph
                 // Constant ops we need to keep a list of shared_ptr to each Constant
                 // so they don't get freed before we are done with them
                 std::vector<std::shared_ptr<Node>> m_active_constants;
+
+#endif
 
                 LayoutDescriptorPtrs parameter_layout_descriptors;
                 LayoutDescriptorPtrs result_layout_descriptors;
