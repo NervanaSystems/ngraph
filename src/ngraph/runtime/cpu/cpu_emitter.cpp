@@ -1602,20 +1602,29 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Reshape)
             {
                 auto reshape = static_cast<const ngraph::op::Reshape*>(node);
-                if (!reshape->get_is_transpose() && out[0].get_name() == args[0].get_name())
-                {
-                    writer.block_begin();
-                    writer << "// Stride change only, skipping.\n";
-                    writer.block_end();
-                    return;
-                }
+                auto can_skip_reshape = [&]() {
+                    if (!reshape->get_is_transpose())
+                    {
+                        return true;
+                    }
+                    auto annotation = reshape->get_op_annotations();
+                    if (annotation && annotation->get_in_place_oi_pairs().size() > 0)
+                    {
+                        return true;
+                    }
+                };
 
-                if (annotation && annotation->get_in_place_oi_pairs().size() > 0)
+                if (can_skip_reshape())
                 {
                     writer.block_begin();
-                    writer << "// Reshape eliminated but copy needed.\n";
+                    writer << "// Reshape eliminated but copy if needed.\n";
+                    writer << "if (" << out[0].get_name() << " != " << args[0].get_name()
+                           << ") {\n";
+                    writer.block_begin();
                     writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
                            << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+                    writer.block_end();
+                    writer << "}\n";
                     writer.block_end();
                     return;
                 }

@@ -42,6 +42,32 @@ namespace ngraph
 
                 auto reshape = static_cast<const ngraph::op::Reshape*>(node);
 
+                auto can_skip_reshape = [&]() {
+                    if (!reshape->get_is_transpose())
+                    {
+                        return true;
+                    }
+                    auto annotation = reshape->get_op_annotations();
+                    if (annotation && annotation->get_in_place_oi_pairs().size() > 0)
+                    {
+                        return true;
+                    }
+                    return false;
+                };
+
+                if (can_skip_reshape())
+                {
+                    size_t size = out[0].get_size() * out[0].get_element_type().size();
+                    auto functor = [&, size](CPURuntimeContext* ctx) {
+                        if (out_tensor != arg_tensor)
+                        {
+                            memcpy(out_tensor, arg_tensor, size);
+                        }
+                    };
+                    functors.emplace_back(functor);
+                    return;
+                }
+
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto input_tvl = node->get_inputs()[0]
