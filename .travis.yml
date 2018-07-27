@@ -14,7 +14,7 @@ env:
   - travis_wait 20 TASK=python3_test
 
 before_install:
-  - travis_wait docker build -t test_ngraph -f .ci/travis/ubuntu/Dockerfile .
+  - docker build -t test_ngraph -f .ci/travis/ubuntu/Dockerfile .
 
 install: true
 
