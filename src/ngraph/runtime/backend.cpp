@@ -137,7 +137,7 @@ map<string, string> runtime::Backend::get_registered_device_map()
         {
             DL_HANDLE handle;
 #ifdef WIN32
-            handle = LoadLibrary(library_path.c_str());
+            handle = LoadLibrary(file.c_str());
 #else
             handle = dlopen(file.c_str(), RTLD_LAZY | RTLD_LOCAL);
 #endif
