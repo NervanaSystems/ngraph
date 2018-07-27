@@ -23,8 +23,15 @@
 #include <typeinfo>
 #include <unordered_map>
 
+// Kill clang diagnostics bug
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreserved-id-macro"
+
 #undef __TBB_PREVIEW_LIGHTWEIGHT_POLICY
 #define __TBB_PREVIEW_LIGHTWEIGHT_POLICY 1
+
+#pragma clang diagnostic pop
+
 #include <tbb/flow_graph.h>
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
