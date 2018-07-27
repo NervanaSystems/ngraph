@@ -165,3 +165,8 @@ Glossary
       gates. These gates help avoid the problem of exploding or vanishing 
       gradients that occur in the traditional RNN.
 
+   SGD
+
+      :abbr:`Stochastic Gradient Descent (SGD)`, also known as incremental 
+      gradient descent, is an iterative method for optimizing a differentiable 
+      objective function.
