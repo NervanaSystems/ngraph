@@ -2739,12 +2739,12 @@ namespace ngraph
                     auto& deps = mkldnn_emitter->get_primitive_deps(quantize_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
                     writer << "memcpy(" << out[1].get_name() << "," << &min_range << ", " << 4
                            << ");\n";
                     writer << "memcpy(" << out[2].get_name() << "," << &max_range << ", " << 4
                            << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << out[0].get_name() << ");\n";
 
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(quantize_index) << ");\n";
