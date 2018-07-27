@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <CPP/concatenation.hpp>
 #include <CPP/layout.hpp>
 #include <CPP/tensor.hpp>
 
@@ -50,6 +51,9 @@ public:
     static cldnn::layout create_cldnn_layout(const ngraph::element::Type& element_type,
                                              const Shape& element_shape);
     static cldnn::tensor create_cldnn_tensor(const Shape& element_shape);
+
+    // This function converts Shape dimension_id into cldnn::concatenation id
+    static cldnn::concatenation::concatenation_axis get_cldnn_axis(size_t tensor_channel);
 
 private:
     Strides strides;
