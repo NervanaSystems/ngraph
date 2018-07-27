@@ -21,7 +21,7 @@ import ngraph as ng
 from ngraph.impl import Node, AxisSet
 from ngraph.utils.types import TensorShape, get_dtype, make_constant_node, NodeInput
 
-log = logging.getLogger(__file__)
+log = logging.getLogger(__name__)
 
 
 def get_broadcast_axes(output_shape, input_shape, axis=None):
