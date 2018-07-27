@@ -17,6 +17,7 @@
 #include <CPP/custom_gpu_primitive.hpp>
 #include <CPP/reshape.hpp>
 
+#include "ngraph/runtime/intelgpu/code_writer.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
 
@@ -82,45 +83,58 @@ void runtime::intelgpu::do_pad_kernel(cldnn::topology& topology,
 {
     const size_t input_count = shape_size<Shape>(output_shape);
     const string entry_point_name = "op_pad_kernel";
-    ostringstream kernel_code;
+    codegen::CodeWriter writer;
 
     // The kernel name and parameters
-    kernel_code << "__kernel void " << entry_point_name << "(const __global float input"
-                << array_dims(input_shape)
-                << ", const __global float scalar[1], __global float output"
-                << array_dims(output_shape) << ")\n{\n";
+    writer << "__kernel void " << entry_point_name << "(const __global float input"
+           << array_dims(input_shape) << ", const __global float scalar[1], __global float output"
+           << array_dims(output_shape) << ")\n";
 
-    // Loop for Broadcast scalar over full output tensor
-    size_t var_idx = 0;
-    for (auto i = output_shape.cbegin(); i != output_shape.cend(); ++i, ++var_idx)
+    writer.block_begin();
     {
-        kernel_code << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << *i << "; ++i"
-                    << var_idx << ") {\n";
-    }
-    kernel_code << "output" << access_dims(output_shape) << " = scalar[0];\n";
-    // Closing brackets for Broadcast loop
-    kernel_code << string(output_shape.size(), '}') << "\n\n";
+        // Loop for Broadcast scalar over full output tensor
+        size_t var_idx = 0;
+        for (auto i = output_shape.cbegin(); i != output_shape.cend(); ++i, ++var_idx)
+        {
+            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << *i << "; ++i"
+                   << var_idx << ")\n";
+            writer.block_begin();
+        }
 
-    // Loop for Copy input matrix into output matrix with padding.
-    // Padding include "pad_below" and "pad_interior" according nGraph documentation
-    var_idx = 0;
-    for (auto i = input_shape.cbegin(); i != input_shape.cend(); ++i, ++var_idx)
-    {
-        kernel_code << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << *i << "; ++i"
-                    << var_idx << ") {\n";
-    }
-    kernel_code << "output" << access_dims_strided(input_shape, pad_below, pad_interior)
-                << " = input" << access_dims(input_shape) << ";\n";
+        writer << "output" << access_dims(output_shape) << " = scalar[0];\n";
 
-    // Closing brackets for main Copy loop
-    kernel_code << string(input_shape.size(), '}');
-    // End of function bracket
-    kernel_code << "\n}\n";
+        // Closing brackets for Broadcast loop
+        for (auto const& i : output_shape)
+        {
+            writer.block_end();
+        }
+
+        // Loop for Copy input matrix into output matrix with padding.
+        // Padding include "pad_below" and "pad_interior" according nGraph documentation
+        var_idx = 0;
+        for (auto i = input_shape.cbegin(); i != input_shape.cend(); ++i, ++var_idx)
+        {
+            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << *i << "; ++i"
+                   << var_idx << ")\n";
+            writer.block_begin();
+        }
+
+        writer << "output" << access_dims_strided(input_shape, pad_below, pad_interior)
+               << " = input" << access_dims(input_shape) << ";\n";
+
+        // Closing brackets for main Copy loop
+        for (auto const& i : input_shape)
+        {
+            writer.block_end();
+        }
+
+    } // End of function bracket
+    writer.block_end();
 
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
     const cldnn::custom_gpu_primitive op_scalar(output_name,
                                                 {input_name, scalar_name},
-                                                {kernel_code.str()},
+                                                {writer.get_code()},
                                                 entry_point_name,
                                                 parameters_2inp_1out,
                                                 "",
