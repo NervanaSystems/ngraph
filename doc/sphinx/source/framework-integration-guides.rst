@@ -94,6 +94,10 @@ Compile MXNet with nGraph
       $ python example/image-classification/train_mnist.py
 
 
+#. (Optional) For experimental or alternative approaches to distributed training
+   methodologies, including data parallel training, see the :doc:`distr/index` 
+   and :doc:`How to <howto/index>` articles on :doc:`howto/distribute-train`. 
+
 
 .. _tensorflow_intg:
 
@@ -102,7 +106,6 @@ TensorFlow\*
 
 See the `ngraph tensorflow bridge README`_ for how to install the `DSO`_ for the 
 nGraph-TensorFlow bridge.
-
 
 
 .. _neon_intg:
@@ -168,6 +171,9 @@ system that already has an ``ngraph_dist`` installed.
 
       (neon_venv)$ python cifar10_conv.py
 
+#. (Optional) For experimental or alternative approaches to distributed training
+   methodologies, including data parallel training, see the :doc:`distr/index` 
+   and :doc:`How to <howto/index>` articles on :doc:`howto/distribute-train`. 
 
 
 
