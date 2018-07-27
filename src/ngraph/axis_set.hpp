@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cstddef>
+#include <ostream>
 #include <set>
 #include <vector>
 
@@ -59,4 +60,6 @@ namespace ngraph
             return *this;
         }
     };
+
+    std::ostream& operator<<(std::ostream& s, const AxisSet& axis_set);
 }
