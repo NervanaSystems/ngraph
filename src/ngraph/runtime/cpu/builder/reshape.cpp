@@ -171,6 +171,8 @@ namespace ngraph
                     functors.emplace_back(functor);
                 }
             }
+
+            REGISTER_OP_BUILDER(Reshape);
         }
     }
 }

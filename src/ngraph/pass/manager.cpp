@@ -56,14 +56,20 @@ void ngraph::pass::Manager::initialize_default_passes()
 {
 }
 
-void ngraph::pass::Manager::run_passes(shared_ptr<Function> func)
+void ngraph::pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
 {
     bool profile_enabled = getenv("NGRAPH_PROFILE_PASS_ENABLE") != nullptr;
 
-    // find all functions
     vector<shared_ptr<Function>> fs;
-    traverse_functions(func, [&](shared_ptr<Function> f) { fs.push_back(f); });
-
+    if (transitive)
+    {
+        // find all functions
+        traverse_functions(func, [&](shared_ptr<Function> f) { fs.push_back(f); });
+    }
+    else
+    {
+        fs = {func};
+    }
     set<shared_ptr<Function>> tfs(begin(fs), end(fs));
     get_state().set_functions(tfs);
 

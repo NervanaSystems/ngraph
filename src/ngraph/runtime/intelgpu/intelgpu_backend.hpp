@@ -20,6 +20,7 @@
 #include <memory>
 
 #include <CPP/engine.hpp>
+#include <CPP/network.hpp>
 
 #include "ngraph/runtime/backend.hpp"
 

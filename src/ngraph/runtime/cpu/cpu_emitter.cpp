@@ -1602,9 +1602,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Reshape)
             {
                 auto reshape = static_cast<const ngraph::op::Reshape*>(node);
-                auto annotation = reshape->get_op_annotations();
-                if (annotation && annotation->get_in_place_oi_pairs().size() > 0 &&
-                    out[0].get_name() == args[0].get_name())
+                if (!reshape->get_is_transpose() && out[0].get_name() == args[0].get_name())
                 {
                     writer.block_begin();
                     writer << "// Stride change only, skipping.\n";
@@ -4358,6 +4356,10 @@ namespace ngraph
             {
                 auto abse =
                     std::bind(emit_function_call, std::string("std::abs"), std::placeholders::_1);
+                auto mine =
+                    std::bind(emit_function_call, std::string("std::min"), std::placeholders::_1);
+                auto maxe =
+                    std::bind(emit_function_call, std::string("std::max"), std::placeholders::_1);
                 auto adde = std::bind(emit_infix_operator, std::string("+"), std::placeholders::_1);
                 auto nege =
                     std::bind(emit_prefix_operator, std::string("-"), std::placeholders::_1);
@@ -4367,6 +4369,9 @@ namespace ngraph
                     std::type_index,
                     std::function<std::string(const std::vector<std::string>&)>>{
                     {TI(ngraph::op::Abs), abse},
+                    {TI(ngraph::op::Minimum), mine},
+                    {TI(ngraph::op::Relu), maxe},
+                    {TI(ngraph::op::Maximum), maxe},
                     {TI(ngraph::op::Add), adde},
                     {TI(ngraph::op::Negative), nege},
                     {TI(ngraph::op::Subtract), sube},
@@ -4377,10 +4382,25 @@ namespace ngraph
                                       std::function<std::string(const std::vector<std::string>&)>>
                 inline_emitters = initialize_inline_emitters();
 
+            //GOEE doesn't see GOEs in subgraphs that are hidden inside LoopKernels
+            //we have to manually propagate the source output
+            static const ngraph::descriptor::Output*
+                get_goe_input_output(ngraph::descriptor::Output* output)
+            {
+                auto it = output;
+                while (auto goe =
+                           std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(it->get_node()))
+                {
+                    it = &goe->get_inputs().at(goe->get_n()).get_output();
+                }
+                return it;
+            }
+
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::runtime::cpu::op::LoopKernel)
             {
-                std::unordered_map<std::shared_ptr<Node>, std::string> loop_symbol_table;
+                std::unordered_map<const ngraph::descriptor::Output*, std::string>
+                    loop_symbol_table;
                 //pre-fill symbol table with inputs
 
                 const ngraph::runtime::cpu::op::LoopKernel* clk =
@@ -4388,10 +4408,11 @@ namespace ngraph
 
                 NodeVector output_nodes = clk->get_kernel_outputs();
                 NodeVector node_list = clk->get_node_list();
+
                 for (size_t i = 0; i < args.size(); i++)
                 {
                     std::string sname = std::string(args[i].get_name()) + "[i]";
-                    auto entry = std::make_pair(clk->get_argument(i), sname);
+                    auto entry = std::make_pair(&clk->get_inputs().at(i).get_output(), sname);
                     loop_symbol_table.insert(entry);
                 }
 
@@ -4400,7 +4421,8 @@ namespace ngraph
                 for (size_t i = 0; i < out.size(); i++)
                 {
                     std::string sname = std::string(out[i].get_name()) + "[i]";
-                    auto entry = std::make_pair(output_nodes.at(i), sname);
+                    //TODO: no support for multiple-output ops in loop kernel
+                    auto entry = std::make_pair(&output_nodes.at(i)->get_outputs().at(0), sname);
                     loop_symbol_table.insert(entry);
                 }
 
@@ -4412,7 +4434,8 @@ namespace ngraph
 
                 for (size_t i = 0; i < node_list.size(); i++)
                 {
-                    auto op = node_list[i];
+                    auto op_node = node_list[i];
+                    auto op = &op_node->get_outputs().at(0);
                     std::string tmp;
                     if (loop_symbol_table.count(op) == 0)
                     {
@@ -4432,13 +4455,22 @@ namespace ngraph
 
                     //prepare arguments
                     std::vector<std::string> sargs;
-                    for (auto arg : op->get_arguments())
+                    for (auto& input : op_node->get_inputs())
                     {
                         //args are expected to be in a map already
-                        sargs.push_back(loop_symbol_table.at(arg));
+                        sargs.push_back(
+                            loop_symbol_table.at(get_goe_input_output(&input.get_output())));
                     }
 
-                    const Node& n = *op;
+                    if (std::dynamic_pointer_cast<ngraph::op::Relu>(op_node))
+                    {
+                        auto casted_zero = std::string("static_cast<") +
+                                           op->get_element_type().c_type_string() +
+                                           std::string(">(0)");
+                        sargs.push_back(casted_zero);
+                    }
+
+                    const Node& n = *op_node;
                     auto emitter = inline_emitters.at(TI(n));
                     writer << tmp << " = " << emitter(sargs) << ";\n";
                 }

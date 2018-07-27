@@ -54,7 +54,7 @@ public:
         }
     }
 
-    void run_passes(std::shared_ptr<Function>);
+    void run_passes(std::shared_ptr<Function>, bool transitive = true);
 
     ManagerState& get_state();
     void set_pass_visualization(bool new_state) { m_visualize = new_state; }
