@@ -85,6 +85,8 @@ shared_ptr<Node> runtime::cpu::pass::CPULayout::insert_input_conversions(
 
             auto new_node = std::shared_ptr<Node>(
                 new runtime::cpu::op::ConvertLayout(output.get_node(), output.get_index(), layout));
+            auto convert_input = mkldnn_utils::get_input_mkldnn_md(new_node.get(), 0).data.format;
+            auto convert_output = mkldnn_utils::get_output_mkldnn_md(new_node.get(), 0).data.format;
             new_args.push_back(new_node);
             replace_node = true;
             NGRAPH_DEBUG << "Inserted conversion node " << new_node->get_name() << " between "
@@ -1099,13 +1101,49 @@ namespace ngraph
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Reshape)
                 {
-                    auto reshape = static_cast<const ngraph::op::Reshape*>(node.get());
+                    auto reshape = static_cast<ngraph::op::Reshape*>(node.get());
                     if (reshape->get_is_transpose())
                     {
-                        // Take the input layout and rotate the strides to reflect the transposed
-                        // strides on output.
-
-                        set_default_layouts(external_function, node);
+                        auto axis_order = reshape->get_input_order();
+                        auto tvl = node->get_inputs()[0]
+                                       .get_output()
+                                       .get_tensor_view()
+                                       ->get_tensor_view_layout();
+                        auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
+                        if (cpu_tvl && cpu_tvl->is_mkldnn_layout())
+                        {
+                            // Rotate MKLDNN memory descriptor
+                            auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                            auto output_md = mkldnn_utils::rotate_blocked_md(input_md, axis_order);
+                            set_output_layouts(node, {output_md});
+                            auto op_annotations = reshape->get_op_annotations();
+                            if (op_annotations)
+                            {
+                                std::map<size_t, size_t> oi_pairs = {{0, 0}};
+                                op_annotations->set_in_place_oi_pairs(oi_pairs);
+                            }
+                            else
+                            {
+                                op_annotations =
+                                    std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                                std::map<size_t, size_t> oi_pairs = {{0, 0}};
+                                op_annotations->set_in_place_oi_pairs(oi_pairs);
+                                reshape->set_op_annotations(op_annotations);
+                            }
+                        }
+                        else
+                        {
+                            auto input_strides = cpu_tvl->get_strides();
+                            Strides output_strides(input_strides.size());
+                            for (size_t i = 0; i < input_strides.size(); i++)
+                            {
+                                output_strides[i] = input_strides[axis_order[i]];
+                            }
+                            set_default_layouts(external_function, node);
+                            auto output_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
+                                node->get_output_tensor_view()->get_tensor_view_layout());
+                            // output_tvl->set_strides(output_strides);
+                        }
                     }
                     else
                     {

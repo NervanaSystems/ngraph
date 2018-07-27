@@ -1611,6 +1611,17 @@ namespace ngraph
                     writer.block_end();
                     return;
                 }
+
+                if (annotation && annotation->get_in_place_oi_pairs().size() > 0)
+                {
+                    writer.block_begin();
+                    writer << "// Reshape eliminated but copy needed.\n";
+                    writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
+                           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+                    writer.block_end();
+                    return;
+                }
+
                 writer.block_begin();
 #if USE_EIGEN_CORE_INLINE == 1
                 auto arg_shape = args[0].get_shape();

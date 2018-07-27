@@ -129,6 +129,10 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
         {
             return false;
         }
+        if (cpu_tvl->get_size() <= 1)
+        {
+            return false;
+        }
         auto native_md = mkldnn_utils::create_blocked_mkldnn_md(
             this->get_shape(),
             cpu_tvl->get_strides(),
@@ -144,13 +148,13 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
     {
         auto tensor_shape = this->get_shape();
         auto input_desc = cpu_tvl->get_mkldnn_md();
-        auto output_format = runtime::cpu::mkldnn_utils::CreateNativeDataFormat(*cpu_tvl);
-        memory::data_type et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
+        auto output_desc = mkldnn_utils::create_blocked_mkldnn_md(
+            this->get_shape(),
+            cpu_tvl->get_strides(),
             this->get_descriptor()->get_tensor_view_type()->get_element_type());
 
         engine cpu_engine{engine::cpu, 0};
-        memory::dims mkldnn_shape{tensor_shape.begin(), tensor_shape.end()};
-        memory::desc output_desc{mkldnn_shape, et, output_format};
+
         memory input{{input_desc, cpu_engine}, aligned_buffer};
         memory output{{output_desc, cpu_engine}, target};
         reorder prim{input, output};
