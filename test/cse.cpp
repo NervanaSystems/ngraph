@@ -271,3 +271,39 @@ TEST(CSE, reduction_ops)
     execute_cse_reduction_test<op::Sum>();
     execute_cse_reduction_test<op::Product>();
 }
+
+TEST(CSE, constant)
+{
+    Shape zero_shape{0};
+    auto iconst0 = op::Constant::create(element::i32, Shape{}, {0});
+    auto iconst0_1 = op::Constant::create(element::i32, Shape{}, {0});
+    auto iconst1 = op::Constant::create(element::i32, Shape{}, {1});
+    auto iconst1_1 = op::Constant::create(element::i32, Shape{}, {1});
+    auto fconst0 = op::Constant::create(element::f32, Shape{}, {0});
+    auto iconst111 = op::Constant::create(element::i32, Shape{3}, {1, 1, 1});
+    auto iconst112 = op::Constant::create(element::i32, Shape{3}, {1, 1, 2});
+
+    auto abs0 = std::make_shared<op::Abs>(iconst0);
+    auto abs0_1 = std::make_shared<op::Abs>(iconst0_1);
+
+    auto abs1 = std::make_shared<op::Abs>(iconst1);
+    auto abs1_1 = std::make_shared<op::Abs>(iconst1_1);
+
+    auto absf = std::make_shared<op::Abs>(fconst0);
+
+    auto abs111 = std::make_shared<op::Abs>(iconst111);
+    auto abs112 = std::make_shared<op::Abs>(iconst112);
+
+    auto f = std::make_shared<Function>(
+        NodeVector{abs0, abs0_1, abs1, abs1_1, absf, abs111, abs112}, op::ParameterVector{});
+    pass::Manager pass_manager;
+
+    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(abs0->get_argument(0), abs0_1->get_argument(0));
+    ASSERT_EQ(abs1->get_argument(0), abs1_1->get_argument(0));
+    ASSERT_NE(abs0->get_argument(0), abs1->get_argument(0));
+    ASSERT_NE(abs0->get_argument(0), absf->get_argument(0));
+    ASSERT_NE(abs111->get_argument(0), abs112->get_argument(0));
+}

@@ -19,6 +19,7 @@
 #include <typeindex>
 #include <typeinfo>
 
+#include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/parameter.hpp"
 
@@ -69,6 +70,27 @@ namespace ngraph
                 }
             }
             return is_match;
+        }
+
+        bool Matcher::is_contained_match(const NodeVector& exclusions, bool ignore_unused)
+        {
+            if (exclusions.empty())
+            {
+                NodeVector label_exclusions;
+                for (auto entry : m_pattern_map)
+                {
+                    //leaf label
+                    if (entry.first->get_inputs().empty())
+                    {
+                        label_exclusions.push_back(entry.second);
+                    }
+                }
+                return ngraph::get_subgraph_outputs(
+                           get_matched_nodes(), label_exclusions, ignore_unused)
+                           .size() < 2;
+            }
+
+            return ngraph::get_subgraph_outputs(get_matched_nodes(), exclusions).size() < 2;
         }
 
         bool Matcher::match_skip(const std::shared_ptr<op::Skip>& skip,
