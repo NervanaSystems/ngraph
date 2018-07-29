@@ -266,6 +266,8 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
             const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
             const Shape& output_shape = op->get_outputs().begin()->get_shape();
+            const element::Type& output_type =
+                op->get_outputs().begin()->get_tensor().get_element_type();
 
             const shared_ptr<op::Broadcast> broadcast = static_pointer_cast<op::Broadcast>(op);
             const AxisSet& axis = broadcast->get_broadcast_axes();
@@ -274,10 +276,67 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             {
                 do_equal_propagation(topology, input_name, output_name);
             }
+            else if (input_shape.empty())
+            {
+                do_bcast_sum_operation_scalar(topology,
+                                              input_name,
+                                              input_shape,
+                                              output_name,
+                                              output_shape,
+                                              output_type,
+                                              true);
+            }
             else
             {
-                do_broadcast_operation(
-                    topology, input_name, input_shape, output_name, output_shape, axis);
+                do_bcast_sum_operation(topology,
+                                       input_name,
+                                       input_shape,
+                                       output_name,
+                                       output_shape,
+                                       output_type,
+                                       axis,
+                                       true);
+            }
+        }
+        else if ("Sum" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const string& input_name = op->get_inputs().begin()->get_tensor().get_name();
+            const Shape& input_shape = op->get_inputs().begin()->get_shape();
+
+            const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+            const Shape& output_shape = op->get_outputs().begin()->get_shape();
+            const element::Type& output_type =
+                op->get_outputs().begin()->get_tensor().get_element_type();
+
+            const shared_ptr<op::Sum> sum = static_pointer_cast<op::Sum>(op);
+            const AxisSet& axis = sum->get_reduction_axes();
+
+            if (axis.empty())
+            {
+                do_equal_propagation(topology, input_name, output_name);
+            }
+            else if (output_shape.empty())
+            {
+                do_bcast_sum_operation_scalar(topology,
+                                              input_name,
+                                              input_shape,
+                                              output_name,
+                                              output_shape,
+                                              output_type,
+                                              false);
+            }
+            else
+            {
+                do_bcast_sum_operation(topology,
+                                       input_name,
+                                       input_shape,
+                                       output_name,
+                                       output_shape,
+                                       output_type,
+                                       axis,
+                                       false);
             }
         }
         else if ("Reshape" == op->description())
