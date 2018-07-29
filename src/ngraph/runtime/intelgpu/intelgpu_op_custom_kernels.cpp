@@ -429,7 +429,6 @@ void runtime::intelgpu::do_dot_operation(cldnn::topology& topology,
         do_dot_operation_error(inputA_shape, inputB_shape, output_shape);
     }
 
-    //cout << writer.get_code() << endl;
     const cldnn::custom_gpu_primitive op_dot(output_name,
                                              {inputA_name, inputB_name},
                                              {writer.get_code()},
