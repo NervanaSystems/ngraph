@@ -219,6 +219,28 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             const cldnn::data op_const(output_name, mem);
             topology.add(op_const);
         }
+        else if ("Dot" == op->description())
+        {
+            arguments_check(op, 2, 1);
+
+            const string& inputA_name = op->get_inputs().at(0).get_tensor().get_name();
+            const Shape& inputA_shape = op->get_inputs().at(0).get_shape();
+            const string& inputB_name = op->get_inputs().at(1).get_tensor().get_name();
+            const Shape& inputB_shape = op->get_inputs().at(1).get_shape();
+            const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+            const Shape& output_shape = op->get_outputs().begin()->get_shape();
+            const element::Type& output_type =
+                op->get_outputs().begin()->get_tensor().get_element_type();
+
+            do_dot_operation(topology,
+                             inputA_name,
+                             inputA_shape,
+                             inputB_name,
+                             inputB_shape,
+                             output_name,
+                             output_shape,
+                             output_type);
+        }
         else if ("MaxPool" == op->description())
         {
             arguments_check(op, 1, 1);
@@ -349,15 +371,15 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             const Shape& pad_below = pad->get_padding_below();
             const Shape& pad_interior = pad->get_padding_interior();
 
-            do_pad_kernel(topology,
-                          input_name,
-                          input_shape,
-                          scalar_name,
-                          output_name,
-                          output_shape,
-                          output_type,
-                          pad_below,
-                          pad_interior);
+            do_pad_operation(topology,
+                             input_name,
+                             input_shape,
+                             scalar_name,
+                             output_name,
+                             output_shape,
+                             output_type,
+                             pad_below,
+                             pad_interior);
         }
         else if ("BatchNorm" == op->description())
         {
