@@ -46,12 +46,13 @@ static string access_dims(const Shape& dimentions, const AxisSet& axis = {})
     size_t var_idx = 0;
     string buffer;
 
-    for (auto i = dimentions.cbegin(); i != dimentions.cend(); ++i, ++var_idx)
+    for (auto const& i : dimentions)
     {
         if (axis.find(var_idx) == axis.end())
         {
             buffer += "[i" + to_string(var_idx) + "]";
         }
+        ++var_idx;
     }
 
     return buffer;
@@ -63,10 +64,11 @@ static string
     string buffer;
     size_t var_idx = 0;
 
-    for (auto i = dimentions.cbegin(); i != dimentions.cend(); ++i, ++var_idx)
+    for (auto const& i : dimentions)
     {
         buffer += "[i" + to_string(var_idx) + " * (" + to_string(pad_interior.at(var_idx)) +
                   " + 1) + " + to_string(pad_below.at(var_idx)) + "]";
+        ++var_idx;
     }
 
     return buffer;
@@ -101,11 +103,12 @@ void runtime::intelgpu::do_pad_operation(cldnn::topology& topology,
     {
         // Loop for Broadcast scalar over full output tensor
         size_t var_idx = 0;
-        for (auto i = output_shape.cbegin(); i != output_shape.cend(); ++i, ++var_idx)
+        for (auto const& i : output_shape)
         {
-            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << *i << "; ++i"
+            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
                    << var_idx << ")\n";
             writer.block_begin();
+            ++var_idx;
         }
 
         writer << "output" << access_dims(output_shape) << " = scalar[0];\n";
@@ -119,11 +122,12 @@ void runtime::intelgpu::do_pad_operation(cldnn::topology& topology,
         // Loop for Copy input matrix into output matrix with padding.
         // Padding include "pad_below" and "pad_interior" according nGraph documentation
         var_idx = 0;
-        for (auto i = input_shape.cbegin(); i != input_shape.cend(); ++i, ++var_idx)
+        for (auto const& i : input_shape)
         {
-            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << *i << "; ++i"
+            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
                    << var_idx << ")\n";
             writer.block_begin();
+            ++var_idx;
         }
 
         writer << "output" << access_dims_strided(input_shape, pad_below, pad_interior)
@@ -191,11 +195,12 @@ static void do_2d_2d_mul(codegen::CodeWriter& writer,
     {
         size_t var_idx = 0;
         // Main loops
-        for (auto i = shapeA.cbegin(); i != shapeA.cend(); ++i, ++var_idx)
+        for (auto const& i : shapeA)
         {
-            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << *i << "; ++i"
+            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
                    << var_idx << ")\n";
             writer.block_begin();
+            ++var_idx;
         }
 
         // Inner loop
@@ -233,11 +238,12 @@ static void do_3d_3d_mul(codegen::CodeWriter& writer,
     {
         size_t var_idx = 0;
         // Main loops
-        for (auto i = shapeZ.cbegin(); i != shapeZ.cend(); ++i, ++var_idx)
+        for (auto const& i : shapeZ)
         {
-            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << *i << "; ++i"
+            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
                    << var_idx << ")\n";
             writer.block_begin();
+            ++var_idx;
         }
 
         // Inner loop
@@ -275,11 +281,12 @@ static void do_3d_2d_mul(codegen::CodeWriter& writer,
     {
         size_t var_idx = 0;
         // Main loops
-        for (auto i = shapeZ.cbegin(); i != shapeZ.cend(); ++i, ++var_idx)
+        for (auto const& i : shapeZ)
         {
-            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << *i << "; ++i"
+            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
                    << var_idx << ")\n";
             writer.block_begin();
+            ++var_idx;
         }
 
         // Inner loop
@@ -429,6 +436,7 @@ void runtime::intelgpu::do_dot_operation(cldnn::topology& topology,
         do_dot_operation_error(inputA_shape, inputB_shape, output_shape);
     }
 
+    //cout << writer.get_code() << endl;
     const cldnn::custom_gpu_primitive op_dot(output_name,
                                              {inputA_name, inputB_name},
                                              {writer.get_code()},
