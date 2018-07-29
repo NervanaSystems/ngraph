@@ -30,7 +30,7 @@ RUN mkdir /root/ngraph/build
 WORKDIR /root/ngraph/build
 RUN cmake ../ -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DCMAKE_INSTALL_PREFIX="~/ngraph_dist"
 RUN make style-check
-RUN make -j 8
+RUN make 
 RUN make install
 
 # Prepare nGraph Python API
@@ -39,6 +39,8 @@ RUN git clone --recursive -b allow-nonconstructible-holders https://github.com/j
 ENV NGRAPH_CPP_BUILD_PATH /root/ngraph_dist
 ENV LD_LIBRARY_PATH /root/ngraph_dist/lib
 ENV PYBIND_HEADERS_PATH /root/ngraph/python/pybind11
+
+RUN df -k 
 
 # Test nGraph and nGraph Python API
 CMD cd /root/ngraph/build && make check ; cd /root/ngraph/python && tox

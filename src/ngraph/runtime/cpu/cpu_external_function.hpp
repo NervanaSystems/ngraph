@@ -166,6 +166,8 @@ namespace ngraph
 
                 std::list<std::function<void(CPURuntimeContext*)>> functors;
                 std::list<std::pair<std::function<bool(CPURuntimeContext*)>, size_t>> enables;
+                std::list<std::pair<std::function<bool(CPURuntimeContext*)>, std::string>>
+                    enable_nodename_list;
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>
                     executor;
                 std::unordered_map<std::string, void*> tensor_data;

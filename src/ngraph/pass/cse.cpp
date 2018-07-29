@@ -64,6 +64,23 @@ using namespace ngraph;
 
 #define TI(x) std::type_index(typeid(x))
 
+static bool cse_constant(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
+{
+    NGRAPH_DEBUG << "In cse_constant for " << a->get_name() << " and " << b->get_name();
+
+    if (a->get_shape() != b->get_shape() || a->get_element_type() != b->get_element_type())
+    {
+        return false;
+    }
+
+    auto ca = std::dynamic_pointer_cast<op::Constant>(a);
+    auto cb = std::dynamic_pointer_cast<op::Constant>(b);
+
+    size_t size = shape_size(a->get_shape()) * a->get_element_type().size();
+
+    return !memcmp(ca->get_data_ptr(), cb->get_data_ptr(), size);
+}
+
 static bool cse_reshape(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_reshape for " << a->get_name() << " and " << b->get_name();
@@ -123,6 +140,7 @@ static std::unordered_map<std::type_index,
          {TI(op::Asin), cse_unarywise},
          {TI(op::Atan), cse_unarywise},
          {TI(op::Ceiling), cse_unarywise},
+         {TI(op::Constant), cse_constant},
          {TI(op::Cos), cse_unarywise},
          {TI(op::Cosh), cse_unarywise},
          {TI(op::Exp), cse_unarywise},
@@ -233,8 +251,7 @@ bool ngraph::pass::CommonSubexpressionElimination::run_on_function(
 
     for (auto n : f->get_ordered_ops())
     {
-        if (n->is_output() || n->is_parameter() ||
-            n->is_constant() /*we could CSE constants as well*/)
+        if (n->is_output() || n->is_parameter())
         {
             continue;
         }
