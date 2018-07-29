@@ -38,13 +38,13 @@ using namespace ngraph;
 
 TEST(quantize_cpu, quantize_to_uint8_small)
 {
-    vector<float> a_data = {-1.0, 0.0, 2.0};
-    const float input_min = -1.0f;
-    const float input_max = 2.0f;
-    Shape shape_a{3};
+    vector<float> a_data = {-85.0, 0.0, 2.0, 10.0, 15.0};
+    const float input_min = -85.0f;
+    const float input_max = 15.0f;
+    Shape shape_a{5};
 
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto QT = make_shared<op::Quantize>(A, input_min, input_max);
+    auto QT = make_shared<op::Quantize>(A, input_min, input_max, element::u8);
     auto output_data = std::make_shared<op::GetOutputElement>(QT, 0);
     auto output_min = std::make_shared<op::GetOutputElement>(QT, 1);
     auto output_max = std::make_shared<op::GetOutputElement>(QT, 2);
@@ -64,9 +64,9 @@ TEST(quantize_cpu, quantize_to_uint8_small)
 
     backend->call(f, {result, result_min, result_max}, {a});
 
-    EXPECT_EQ((vector<uint8_t>{0, 0, 255}), read_vector<uint8_t>(result));
+    EXPECT_EQ((vector<uint8_t>{0, 0, 6, 30, 45}), read_vector<uint8_t>(result));
     EXPECT_EQ((vector<float>{0.0}), read_vector<float>(result_min));
-    EXPECT_EQ((vector<float>{2.0}), read_vector<float>(result_max));
+    EXPECT_EQ((vector<float>{85.0}), read_vector<float>(result_max));
 }
 
 TEST(quantize_cpu, quantize_to_uint8)
@@ -77,7 +77,7 @@ TEST(quantize_cpu, quantize_to_uint8)
     Shape shape_a{8};
 
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto QT = make_shared<op::Quantize>(A, input_min, input_max);
+    auto QT = make_shared<op::Quantize>(A, input_min, input_max, element::u8);
     auto output_data = std::make_shared<op::GetOutputElement>(QT, 0);
     auto output_min = std::make_shared<op::GetOutputElement>(QT, 1);
     auto output_max = std::make_shared<op::GetOutputElement>(QT, 2);
@@ -102,46 +102,44 @@ TEST(quantize_cpu, quantize_to_uint8)
     EXPECT_EQ((vector<float>{255.0}), read_vector<float>(result_max));
 }
 
-TEST(quantize_cpu, dequantize_from_uint8_scale_up)
+template <typename T>
+void DequantizeTest(
+    int input, float min, float max, float expected_output, const element::Type& type)
 {
-    vector<uint8_t> a_data = {255};
-    const float input_min = 200.0f;
-    const float input_max = 400.0f;
+    vector<T> a_data = {static_cast<T>(input)};
     Shape shape_a{1};
 
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto r = make_shared<op::Dequantize>(A, input_min, input_max);
+    auto A = make_shared<op::Parameter>(type, shape_a);
+    auto r = make_shared<op::Dequantize>(A, min, max, type);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto backend = runtime::Backend::create("CPU");
 
     // Create some tensors for input/output
-    auto a = backend->create_tensor(element::u8, Shape{1});
+    auto a = backend->create_tensor(type, Shape{1});
     copy_data(a, a_data);
     auto result = backend->create_tensor(element::f32, Shape{1});
 
     backend->call(f, {result}, {a});
-    EXPECT_EQ((vector<float>{400.0}), read_vector<float>(result));
+    EXPECT_EQ((vector<float>{expected_output}), read_vector<float>(result));
 }
 
-TEST(quantize_cpu, dequantize_from_uint8_scale_down)
+TEST(quantize_cpu, dequantize_from_uint8)
 {
-    vector<uint8_t> a_data = {255};
-    const float input_min = -1.0f;
-    const float input_max = 2.0f;
-    Shape shape_a{1};
+    DequantizeTest<uint8_t>(255, 100.0f, 300.0f, 300.0, element::u8);
+}
 
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto r = make_shared<op::Dequantize>(A, input_min, input_max);
-    auto f = make_shared<Function>(r, op::ParameterVector{A});
+TEST(quantize_cpu, dequantize_from_uint8_smallrange)
+{
+    DequantizeTest<uint8_t>(255, -2.0f, 5.0f, 5.0, element::u8);
+}
 
-    auto backend = runtime::Backend::create("CPU");
+TEST(quantize_cpu, dequantize_from_int8_smallrange)
+{
+    DequantizeTest<int8_t>(-127, -2.0f, 1.0f, -2.0, element::i8);
+}
 
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::u8, Shape{1});
-    copy_data(a, a_data);
-    auto result = backend->create_tensor(element::f32, Shape{1});
-
-    backend->call(f, {result}, {a});
-    EXPECT_EQ((vector<float>{2.0}), read_vector<float>(result));
+TEST(quantize_cpu, dequantize_from_int8)
+{
+    DequantizeTest<int8_t>(42, -1.0f, 300.0f, 99.212601, element::i8);
 }

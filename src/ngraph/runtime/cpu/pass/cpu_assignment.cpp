@@ -174,21 +174,28 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Quantize)
                 {
-                    auto quantize = static_cast<op::Quantize*>(node);
-                    auto op_annotations =
-                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                    op_annotations->set_mkldnn_op(true);
-                    quantize->set_op_annotations(op_annotations);
+                    if (node->get_input_element_type(0) == element::f32)
+                    {
+                        auto quantize = static_cast<op::Quantize*>(node);
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        quantize->set_op_annotations(op_annotations);
+                    }
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Dequantize)
                 {
-                    auto dequantize = static_cast<op::Dequantize*>(node);
-                    auto op_annotations =
-                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                    op_annotations->set_mkldnn_op(true);
-                    dequantize->set_op_annotations(op_annotations);
+                    if (node->get_input_element_type(0) == element::u8 ||
+                        node->get_input_element_type(0) == element::i8)
+                    {
+                        auto dequantize = static_cast<op::Dequantize*>(node);
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        dequantize->set_op_annotations(op_annotations);
+                    }
                 }
 
                 template <>

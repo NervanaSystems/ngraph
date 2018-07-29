@@ -32,16 +32,20 @@ namespace ngraph
         public:
             Quantize(std::shared_ptr<Node> input,
                      const float input_min_range,
-                     const float input_max_range);
+                     const float input_max_range,
+                     const element::Type& type);
 
             const float get_input_min() const { return m_input_min; }
             const float get_input_max() const { return m_input_max; }
+            //TODO:Templatize it.
+            const element::Type& get_quantize_et() const { return m_element_type; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         private:
             const float m_input_min;
             const float m_input_max;
+            const element::Type m_element_type;
         };
     }
 }

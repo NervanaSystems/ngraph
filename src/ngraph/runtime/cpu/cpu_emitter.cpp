@@ -2712,13 +2712,15 @@ namespace ngraph
 
                     float min_range;
                     float max_range;
+                    // If input_min_range and input_max_range are close,
+                    // introduce a slightly larger delta between them.
                     min_range = std::min(0.0f, input_min_range);
                     const float epsilon =
                         std::max(1.0f, std::max(fabsf(input_min_range), fabsf(input_max_range))) /
                         100.0f;
                     max_range = std::max(input_max_range, min_range + epsilon);
                     max_range = std::max(0.0f, max_range);
-                    int num_bits = sizeof(uint8_t) * 8;
+                    int num_bits = (quantize->get_quantize_et()).bitwidth();
                     const float max_abs = std::max(std::abs(min_range), std::abs(max_range));
                     max_range = max_abs;
                     min_range = 0.0;
@@ -2743,10 +2745,6 @@ namespace ngraph
                            << ", " << out[0].get_name() << ");\n";
                     writer << "*(" << out[1].get_name() << ") = " << min_range << ";\n";
                     writer << "*(" << out[2].get_name() << ") = " << max_range << ";\n";
-                    //writer << "memcpy(" << out[1].get_name() << "," << min_range << ", " << 4
-                    //       << ");\n";
-                    //writer << "memcpy(" << out[2].get_name() << "," << max_range << ", " << 4
-                    //       << ");\n";
 
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(quantize_index) << ");\n";
@@ -2782,8 +2780,9 @@ namespace ngraph
                     float max_range = dequantize->get_input_max();
 
                     const float max_abs = std::max(std::abs(min_range), std::abs(max_range));
-                    //bool is_signed = std::is_signed<T>::value;
-                    const int target_bits = 8; //is_signed ? 7 : 8;
+                    bool is_signed = (dequantize->get_dequantize_et()).is_signed();
+                    int num_bits = (dequantize->get_dequantize_et()).bitwidth();
+                    const int target_bits = is_signed ? (num_bits - 1) : num_bits;
                     const float target_range = static_cast<float>((uint64_t{1} << target_bits) - 1);
                     const float scale_factor = max_abs / target_range;
 

@@ -19,10 +19,12 @@
 
 ngraph::op::Dequantize::Dequantize(std::shared_ptr<Node> input,
                                    const float input_min_range,
-                                   const float input_max_range)
+                                   const float input_max_range,
+                                   const element::Type& type)
     : RequiresTensorViewArgs("Dequantize", {input})
     , m_input_min(input_min_range)
     , m_input_max(input_max_range)
+    , m_element_type(type)
 {
     if (input_max_range < input_min_range)
     {
@@ -35,9 +37,9 @@ ngraph::op::Dequantize::Dequantize(std::shared_ptr<Node> input,
 std::shared_ptr<ngraph::Node>
     ngraph::op::Dequantize::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 3)
+    if (new_args.size() != 4)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return std::make_shared<Dequantize>(new_args.at(0), m_input_min, m_input_max);
+    return std::make_shared<Dequantize>(new_args.at(0), m_input_min, m_input_max, m_element_type);
 }
