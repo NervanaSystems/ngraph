@@ -20,6 +20,8 @@ set(SRC
     intelgpu_layout.cpp
     intelgpu_op_batchnorm.cpp
     intelgpu_op_broadcast.cpp
+    intelgpu_op_custom_kernels.cpp
+    code_writer.cpp
 )
 
 if (NGRAPH_INTELGPU_ENABLE)

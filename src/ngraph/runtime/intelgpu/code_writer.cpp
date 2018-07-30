@@ -14,27 +14,34 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <memory>
-#include <string>
+#include "code_writer.hpp"
 
-#include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
-
+using namespace std;
 using namespace ngraph;
 
-runtime::gpu::CudaContextManager& runtime::gpu::CudaContextManager::Instance()
+codegen::CodeWriter::CodeWriter()
+    : indent(0)
+    , m_pending_indent(true)
+    , m_temporary_name_count(0)
 {
-    static CudaContextManager manager;
-    return manager;
 }
 
-runtime::gpu::CudaContextManager::CudaContextManager()
+string codegen::CodeWriter::get_code() const
 {
-    CUDA_SAFE_CALL(cuInit(0));
-    CUDA_SAFE_CALL(cuDeviceGet(&m_device, 0));
-    CUDA_SAFE_CALL(cuDevicePrimaryCtxRetain(&m_context, m_device));
+    return m_ss.str();
 }
 
-runtime::gpu::CudaContextManager::~CudaContextManager()
+void codegen::CodeWriter::operator+=(const std::string& s)
 {
-    CUDA_SAFE_CALL_NO_THROW(cuDevicePrimaryCtxRelease(m_device));
+    *this << s;
+}
+
+std::string codegen::CodeWriter::generate_temporary_name(std::string prefix)
+{
+    std::stringstream ss;
+
+    ss << prefix << m_temporary_name_count;
+    m_temporary_name_count++;
+
+    return ss.str();
 }
