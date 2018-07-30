@@ -38,7 +38,7 @@ namespace ngraph
         class LRN : public util::UnaryElementwiseArithmetic
         {
         public:
-            /// \brief Constructs a sine operation.
+            /// \brief Constructs a LRN operation.
             ///
             /// \param arg Node that produces the input tensor.
             LRN(const std::shared_ptr<Node>& arg,
