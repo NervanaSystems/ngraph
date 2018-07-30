@@ -16,8 +16,6 @@
 
 #pragma once
 
-#include <memory>
-
 #include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/util/requires_tensor_view_args.hpp"
