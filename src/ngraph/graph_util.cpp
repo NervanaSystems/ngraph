@@ -465,6 +465,33 @@ bool ngraph::is_one(std::shared_ptr<Node> reduce_constant)
     return result_bool;
 }
 
+NodeVector ngraph::get_subgraph_outputs(const NodeVector& nodes,
+                                        const NodeVector& exclusions,
+                                        bool ignore_unused)
+{
+    std::set<shared_ptr<Node>> exclusions_set(exclusions.begin(), exclusions.end());
+    std::set<shared_ptr<Node>> nodes_set(nodes.begin(), nodes.end());
+
+    NodeVector outputs;
+
+    for (auto n : nodes)
+    {
+        if (exclusions_set.count(n) != 0)
+        {
+            continue;
+        }
+
+        for (auto u : n->get_users())
+        {
+            if (nodes_set.count(u) == 0 && (!ignore_unused || is_used(u.get())))
+            {
+                outputs.push_back(n);
+            }
+        }
+    }
+    return outputs;
+}
+
 bool ngraph::is_used(Node* node)
 {
     std::unordered_set<Node*> instances_seen;
@@ -502,4 +529,50 @@ size_t ngraph::get_user_count(Node* node)
         count += is_used(node_user.get());
     }
     return count;
+}
+
+bool ngraph::computes_result(Node* node)
+{
+    if (node->is_output())
+    {
+        return true;
+    }
+
+    // Check if node feeds a result node that has been copy eliminated
+    for (const descriptor::Output& output : node->get_outputs())
+    {
+        for (const descriptor::Input* input : output.get_inputs())
+        {
+            auto res = std::dynamic_pointer_cast<ngraph::op::Result>(input->get_node());
+            if (res && !res->needs_copy())
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool ngraph::possibly_overwritten(Node* node)
+{
+    for (const descriptor::Output& output : node->get_outputs())
+    {
+        for (const descriptor::Input* input : output.get_inputs())
+        {
+            if (auto op = std::dynamic_pointer_cast<ngraph::op::Op>(input->get_node()))
+            {
+                if (auto op_annotations = op->get_op_annotations())
+                {
+                    for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
+                    {
+                        if (input->get_index() == oi_pair.second)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return false;
 }

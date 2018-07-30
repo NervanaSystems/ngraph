@@ -193,30 +193,6 @@ namespace ngraph
                 }
 
                 template <>
-                void CPUAssignment::ASSIGN_DECL(ngraph::op::ConvolutionBiasRelu)
-                {
-                    auto convolution = static_cast<op::ConvolutionBiasRelu*>(node);
-
-                    auto arg0_rank = node->get_input_shape(0).size();
-                    auto arg1_rank = node->get_input_shape(1).size();
-
-                    bool data_dilated = false;
-                    for (size_t s : convolution->get_data_dilation_strides())
-                    {
-                        data_dilated = data_dilated || (s != 1);
-                    }
-
-                    if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
-                        node->get_input_element_type(0) == element::f32)
-                    {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        convolution->set_op_annotations(op_annotations);
-                    }
-                }
-
-                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ConvolutionBiasAdd)
                 {
                     auto convolution = static_cast<op::ConvolutionBiasAdd*>(node);
@@ -563,6 +539,24 @@ namespace ngraph
                     auto axis_order = reshape->get_input_order();
                     bool flag = true;
 
+                    auto op_annotations =
+                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+
+                    auto users = reshape->get_users();
+                    auto arg = reshape->get_argument(0);
+                    // we need to copy input data if reshape modifies the data or inputs are
+                    // not in the memory pool, or has output users.
+                    bool need_copy =
+                        reshape->get_is_transpose() || arg->is_parameter() || arg->is_constant();
+
+                    if (!need_copy)
+                    {
+                        // map output to the input memory
+                        std::map<size_t, size_t> oi_pairs = {{0, 0}};
+                        op_annotations->set_in_place_oi_pairs(oi_pairs);
+                        reshape->set_op_annotations(op_annotations);
+                    }
+
                     // Use Eigen for 3D
                     if (node->get_input_element_type(0) == element::f32 &&
                         arg0_shape.size() < TENSOR_MAX_DIMS && arg0_shape.size() > 3 &&
@@ -579,8 +573,6 @@ namespace ngraph
 
                         if (flag)
                         {
-                            auto op_annotations =
-                                std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                             op_annotations->set_mkldnn_op(true);
                             reshape->set_op_annotations(op_annotations);
                         }
@@ -725,8 +717,6 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::GroupConvolution>},
     {TI(ngraph::op::ConvolutionRelu),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionRelu>},
-    {TI(ngraph::op::ConvolutionBiasRelu),
-     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBiasRelu>},
     {TI(ngraph::op::ConvolutionBiasAdd),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBiasAdd>},
     {TI(ngraph::op::BatchNormRelu),

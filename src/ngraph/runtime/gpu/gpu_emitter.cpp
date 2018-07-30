@@ -123,13 +123,8 @@ namespace ngraph
                 {
                     auto& cudnn_emitter =
                         external_function->get_primitive_emitter()->get_cudnn_emitter();
-                    auto index = cudnn_emitter->build_tensor_op(external_function->ctx().get(),
-                                                                CUDNN_OP_TENSOR_ADD,
-                                                                out[0].get_type(),
-                                                                args[0].get_shape(),
-                                                                1.0,
-                                                                1.0,
-                                                                0);
+                    auto index = cudnn_emitter->build_tensor_op(
+                        CUDNN_OP_TENSOR_ADD, out[0].get_type(), args[0].get_shape(), 1.0, 1.0, 0);
 
                     writer << "gpu::invoke_primitive(ctx, " << index << ", ";
                     writer << "std::vector<void*>{" << args[0].get_name() << ","
@@ -187,22 +182,16 @@ namespace ngraph
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
 
-                    size_t reshape_data_index =
-                        cuda_emitter->build_reshape(external_function->ctx().get(),
-                                                    {{args[0].get_type(), args[0].get_type()}},
-                                                    input_shape,
-                                                    input_order);
+                    size_t reshape_data_index = cuda_emitter->build_reshape(
+                        {{args[0].get_type(), args[0].get_type()}}, input_shape, input_order);
                     writer << "void* data = gpu::invoke_memory_primitive(ctx, "
                            << transposed_data_idx << ");\n";
                     writer << "gpu::invoke_primitive(ctx, " << reshape_data_index << ", ";
                     writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
                     writer << "std::vector<void*>{data}.data());\n";
 
-                    size_t reshape_filter_index =
-                        cuda_emitter->build_reshape(external_function->ctx().get(),
-                                                    {{args[1].get_type(), args[1].get_type()}},
-                                                    filter_shape,
-                                                    input_order);
+                    size_t reshape_filter_index = cuda_emitter->build_reshape(
+                        {{args[1].get_type(), args[1].get_type()}}, filter_shape, input_order);
                     writer << "void* filter = gpu::invoke_memory_primitive(ctx, "
                            << transposed_filter_idx << ");\n";
                     writer << "gpu::invoke_primitive(ctx, " << reshape_filter_index << ", ";
@@ -227,7 +216,6 @@ namespace ngraph
                     output_shape = reshape(output_shape, input_order);
 
                     size_t conv_index = cuda_emitter->build_convolution(
-                        external_function->ctx().get(),
                         {{args[0].get_type(), args[1].get_type(), out[0].get_type()}},
                         input_shape,
                         padding_below_diff,
@@ -250,11 +238,8 @@ namespace ngraph
                         input_order.push_back(i);
                     }
 
-                    size_t reshape_output_index =
-                        cuda_emitter->build_reshape(external_function->ctx().get(),
-                                                    {{args[1].get_type(), args[1].get_type()}},
-                                                    output_shape,
-                                                    input_order);
+                    size_t reshape_output_index = cuda_emitter->build_reshape(
+                        {{args[1].get_type(), args[1].get_type()}}, output_shape, input_order);
                     writer << "gpu::invoke_primitive(ctx, " << reshape_output_index << ", ";
                     writer << "std::vector<void*>{output}.data(), ";
                     writer << "std::vector<void*>{" << out[0].get_name() << "}.data());\n";
@@ -304,7 +289,6 @@ namespace ngraph
                         auto& cuda_emitter =
                             external_function->get_primitive_emitter()->get_cuda_emitter();
                         auto pad_dynamic_index = cuda_emitter->build_pad_dynamic(
-                            external_function->ctx().get(),
                             {{args[0].get_type(), out[0].get_type()}},
                             input_shape,
                             input_shape_padded,
@@ -322,8 +306,7 @@ namespace ngraph
                     auto& cudnn_emitter =
                         external_function->get_primitive_emitter()->get_cudnn_emitter();
 
-                    size_t index = cudnn_emitter->build_convolution(external_function->ctx().get(),
-                                                                    out[0].get_type(),
+                    size_t index = cudnn_emitter->build_convolution(out[0].get_type(),
                                                                     input_shape_padded,
                                                                     args[1].get_shape(),
                                                                     out[0].get_shape(),
@@ -424,8 +407,7 @@ namespace ngraph
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
                     auto pad_dynamic_index =
-                        cuda_emitter->build_pad_dynamic(external_function->ctx().get(),
-                                                        {{args[0].get_type(), out[0].get_type()}},
+                        cuda_emitter->build_pad_dynamic({{args[0].get_type(), out[0].get_type()}},
                                                         output_shape,
                                                         output_shape_padded,
                                                         padding_below,
@@ -442,8 +424,7 @@ namespace ngraph
                 auto& cudnn_emitter =
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
                 size_t index =
-                    cudnn_emitter->build_convolution_backward_data(external_function->ctx().get(),
-                                                                   out[0].get_type(),
+                    cudnn_emitter->build_convolution_backward_data(out[0].get_type(),
                                                                    args[0].get_shape(),
                                                                    args[1].get_shape(),
                                                                    output_shape_padded,
@@ -469,8 +450,7 @@ namespace ngraph
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
                     auto slice_index =
-                        cuda_emitter->build_slice(external_function->ctx().get(),
-                                                  {{args[0].get_type(), out[0].get_type()}},
+                        cuda_emitter->build_slice({{args[0].get_type(), out[0].get_type()}},
                                                   output_shape_padded,
                                                   padding_below_back,
                                                   padding_interior_back,
@@ -550,8 +530,7 @@ namespace ngraph
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
                     auto pad_dynamic_index =
-                        cuda_emitter->build_pad_dynamic(external_function->ctx().get(),
-                                                        {{args[0].get_type(), out[0].get_type()}},
+                        cuda_emitter->build_pad_dynamic({{args[0].get_type(), out[0].get_type()}},
                                                         input_shape,
                                                         input_shape_padded,
                                                         padding_below,
@@ -569,8 +548,7 @@ namespace ngraph
                 auto& cudnn_emitter =
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
                 size_t index =
-                    cudnn_emitter->build_convolution_backward_filter(external_function->ctx().get(),
-                                                                     out[0].get_type(),
+                    cudnn_emitter->build_convolution_backward_filter(out[0].get_type(),
                                                                      input_shape_padded,
                                                                      args[1].get_shape(),
                                                                      out[0].get_shape(),
@@ -770,13 +748,8 @@ namespace ngraph
                 {
                     auto& cudnn_emitter =
                         external_function->get_primitive_emitter()->get_cudnn_emitter();
-                    auto index = cudnn_emitter->build_tensor_op(external_function->ctx().get(),
-                                                                CUDNN_OP_TENSOR_MAX,
-                                                                out[0].get_type(),
-                                                                args[0].get_shape(),
-                                                                1.0,
-                                                                1.0,
-                                                                0);
+                    auto index = cudnn_emitter->build_tensor_op(
+                        CUDNN_OP_TENSOR_MAX, out[0].get_type(), args[0].get_shape(), 1.0, 1.0, 0);
 
                     writer << "gpu::invoke_primitive(ctx, " << index << ", ";
                     writer << "std::vector<void*>{" << args[0].get_name() << ","
@@ -798,13 +771,8 @@ namespace ngraph
                 {
                     auto& cudnn_emitter =
                         external_function->get_primitive_emitter()->get_cudnn_emitter();
-                    auto index = cudnn_emitter->build_tensor_op(external_function->ctx().get(),
-                                                                CUDNN_OP_TENSOR_MIN,
-                                                                out[0].get_type(),
-                                                                args[0].get_shape(),
-                                                                1.0,
-                                                                1.0,
-                                                                0);
+                    auto index = cudnn_emitter->build_tensor_op(
+                        CUDNN_OP_TENSOR_MIN, out[0].get_type(), args[0].get_shape(), 1.0, 1.0, 0);
 
                     writer << "gpu::invoke_primitive(ctx, " << index << ", ";
                     writer << "std::vector<void*>{" << args[0].get_name() << ","
@@ -838,11 +806,8 @@ namespace ngraph
 
                 auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
 
-                auto bcast_index =
-                    cuda_emitter->build_broadcast(external_function->ctx().get(),
-                                                  {{args[0].get_type(), out[0].get_type()}},
-                                                  result_shape,
-                                                  axes);
+                auto bcast_index = cuda_emitter->build_broadcast(
+                    {{args[0].get_type(), out[0].get_type()}}, result_shape, axes);
                 writer << "gpu::invoke_primitive(ctx, " << bcast_index << ", ";
                 writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
                 writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
@@ -859,46 +824,32 @@ namespace ngraph
                 auto concat = static_cast<const ngraph::op::Concat*>(node);
                 auto axis = concat->get_concatenation_axis();
 
-                std::vector<size_t> block_strides(args.size(), 1);
-                size_t block_size = 0;
-                for (size_t i = 0; i < args.size(); i++)
+                std::vector<std::string> dtypes;
+                std::vector<GPUShape> input_shapes;
+                for (auto arg : args)
                 {
-                    auto arg_shape = args[i].get_shape();
-                    auto arg_rank = arg_shape.size();
-                    for (size_t j = axis; j < arg_rank; j++)
-                    {
-                        block_strides[i] *= arg_shape[j];
-                    }
-                    block_size += block_strides[i];
+                    dtypes.push_back(arg.get_type());
+                    input_shapes.push_back(arg.get_shape());
                 }
+                dtypes.push_back(out[0].get_type());
 
                 writer.block_begin();
-                writer << "int count = " << out[0].get_size() << ";\n";
-                writer << "int num_inputs = " << args.size() << ";\n";
-
-                GPUAllocator allocator =
-                    external_function->get_primitive_emitter()->get_memory_allocator();
-                size_t idx_block_strides = allocator.reserve_argspace(
-                    block_strides.data(), block_strides.size() * sizeof(size_t));
-                writer << "void* block_strides_d = runtime::gpu::invoke_memory_primitive(ctx, "
-                       << idx_block_strides << ");\n";
-
-                writer << "ngraph::runtime::gpu::emit_concat_op(\"" << node->description() << "\""
-                       << ", std::vector<std::string>{";
-                for (size_t i = 0; i < args.size(); i++)
                 {
-                    writer << "\"" << args[i].get_type() << "\", ";
+                    auto& cuda_emitter =
+                        external_function->get_primitive_emitter()->get_cuda_emitter();
+                    auto index =
+                        cuda_emitter->build_concat(dtypes, input_shapes, axis, out[0].get_shape());
+
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
+                    writer << "std::vector<void*>{" << args[0].get_name();
+                    for (size_t i = 1; i < args.size(); i++)
+                    {
+                        writer << ", " << args[i].get_name();
+                    }
+                    writer << "}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                    writer << ");\n";
                 }
-                writer << "\"" << out[0].get_type() << "\"}"
-                       << ", ctx"
-                       << ", count"
-                       << ", " << block_size << ", CUdeviceptr(block_strides_d)"
-                       << ", CUdeviceptr(" << out[0].get_name() << ")";
-                for (size_t i = 0; i < args.size(); i++)
-                {
-                    writer << ", CUdeviceptr(" << args[i].get_name() << ")";
-                }
-                writer << ");\n";
                 writer.block_end();
             }
 
@@ -921,12 +872,8 @@ namespace ngraph
                 auto result_shape = out[0].get_shape();
                 auto input_order = reshape->get_input_order();
                 bool same_layout = is_sorted(input_order.begin(), input_order.end());
-                size_t result_shape_product = 1;
+                size_t result_shape_product = shape_size(result_shape);
 
-                for (auto i : result_shape)
-                {
-                    result_shape_product *= i;
-                }
                 // If there is no layout change or we are just going from 1^n to 1^m or a zero-size tensor,
                 // we can just copy.
                 if (same_layout || result_shape_product < 2)
@@ -956,47 +903,15 @@ namespace ngraph
                 // Other cases (reordering of axes for tensors with rank>2).
                 else
                 {
-                    std::vector<size_t> input_strides(arg_rank);
-                    std::vector<size_t> output_strides(arg_rank);
-                    std::vector<size_t> trans_strides(arg_rank);
-                    size_t stride = 1;
-                    for (int i = static_cast<int>(arg_rank) - 1; i >= 0; i--)
-                    {
-                        input_strides[i] = stride;
-                        stride *= arg_shape[i];
-                    }
-                    stride = 1;
-                    for (int i = static_cast<int>(arg_rank) - 1; i >= 0; i--)
-                    {
-                        output_strides[i] = stride;
-                        stride *= arg_shape[input_order[i]];
-                    }
-                    for (int i = 0; i < arg_rank; i++)
-                    {
-                        trans_strides[input_order[i]] = output_strides[i];
-                    }
+                    auto& cuda_emitter =
+                        external_function->get_primitive_emitter()->get_cuda_emitter();
+                    auto index = cuda_emitter->build_reshape(
+                        {{args[0].get_type(), out[0].get_type()}}, arg_shape, input_order);
 
-                    GPUAllocator allocator =
-                        external_function->get_primitive_emitter()->get_memory_allocator();
-                    size_t idx_input_strides = allocator.reserve_argspace(
-                        input_strides.data(), input_strides.size() * sizeof(size_t));
-                    size_t idx_trans_strides = allocator.reserve_argspace(
-                        trans_strides.data(), trans_strides.size() * sizeof(size_t));
-
-                    writer << "void* input_strides_d = "
-                              "runtime::gpu::invoke_memory_primitive(ctx, "
-                           << idx_input_strides << ");\n";
-                    writer << "void* trans_strides_d = "
-                              "runtime::gpu::invoke_memory_primitive(ctx, "
-                           << idx_trans_strides << ");\n";
-                    writer << "runtime::gpu::emit_reshape(\"" << node->description() << "\", {\""
-                           << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
-                           << ", ctx"
-                           << ", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
-                           << out[0].get_name() << ")"
-                           << ", "
-                           << "CUdeviceptr(input_strides_d), CUdeviceptr(trans_strides_d)"
-                           << ", " << arg_rank << ", " << args[0].get_size() << ");\n";
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
+                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                    writer << ");\n";
                 }
                 writer.block_end();
             }
@@ -1064,8 +979,7 @@ namespace ngraph
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
                     auto index =
-                        cuda_emitter->build_slice(external_function->ctx().get(),
-                                                  {{args[0].get_type(), out[0].get_type()}},
+                        cuda_emitter->build_slice({{args[0].get_type(), out[0].get_type()}},
                                                   arg_shape,
                                                   lower_bounds,
                                                   slice_strides,
@@ -1150,7 +1064,6 @@ namespace ngraph
                 auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
 
                 auto rs_index = cuda_emitter->build_reverse_sequence(
-                    external_function->ctx().get(),
                     {{args[0].get_type(), args[1].get_type(), out[0].get_type()}},
                     arg_shape0,
                     arg_shape1,
@@ -1175,13 +1088,8 @@ namespace ngraph
                 {
                     auto& cudnn_emitter =
                         external_function->get_primitive_emitter()->get_cudnn_emitter();
-                    auto index = cudnn_emitter->build_tensor_op(external_function->ctx().get(),
-                                                                CUDNN_OP_TENSOR_MUL,
-                                                                out[0].get_type(),
-                                                                args[0].get_shape(),
-                                                                1.0,
-                                                                1.0,
-                                                                0);
+                    auto index = cudnn_emitter->build_tensor_op(
+                        CUDNN_OP_TENSOR_MUL, out[0].get_type(), args[0].get_shape(), 1.0, 1.0, 0);
 
                     writer << "gpu::invoke_primitive(ctx, " << index << ", ";
                     writer << "std::vector<void*>{" << args[0].get_name() << ","
@@ -1234,13 +1142,8 @@ namespace ngraph
                 {
                     auto& cudnn_emitter =
                         external_function->get_primitive_emitter()->get_cudnn_emitter();
-                    auto index = cudnn_emitter->build_tensor_op(external_function->ctx().get(),
-                                                                CUDNN_OP_TENSOR_SQRT,
-                                                                out[0].get_type(),
-                                                                args[0].get_shape(),
-                                                                1.0,
-                                                                0,
-                                                                0);
+                    auto index = cudnn_emitter->build_tensor_op(
+                        CUDNN_OP_TENSOR_SQRT, out[0].get_type(), args[0].get_shape(), 1.0, 0, 0);
 
                     writer << "gpu::invoke_primitive(ctx, " << index << ", ";
                     writer << "std::vector<void*>{" << args[0].get_name() << ","
@@ -1292,8 +1195,7 @@ namespace ngraph
                             auto& cudnn_emitter =
                                 external_function->get_primitive_emitter()->get_cudnn_emitter();
                             auto max_index =
-                                cudnn_emitter->build_reduce_forward(external_function->ctx().get(),
-                                                                    CUDNN_REDUCE_TENSOR_MAX,
+                                cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_MAX,
                                                                     out[0].get_type(),
                                                                     args[0].get_shape(),
                                                                     max_op->get_reduction_axes());
@@ -1341,8 +1243,7 @@ namespace ngraph
                             auto& cudnn_emitter =
                                 external_function->get_primitive_emitter()->get_cudnn_emitter();
                             auto min_index =
-                                cudnn_emitter->build_reduce_forward(external_function->ctx().get(),
-                                                                    CUDNN_REDUCE_TENSOR_MIN,
+                                cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_MIN,
                                                                     out[0].get_type(),
                                                                     args[0].get_shape(),
                                                                     min_op->get_reduction_axes());
@@ -1381,8 +1282,7 @@ namespace ngraph
                             auto& cudnn_emitter =
                                 external_function->get_primitive_emitter()->get_cudnn_emitter();
                             auto sum_index =
-                                cudnn_emitter->build_reduce_forward(external_function->ctx().get(),
-                                                                    CUDNN_REDUCE_TENSOR_ADD,
+                                cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_ADD,
                                                                     out[0].get_type(),
                                                                     args[0].get_shape(),
                                                                     sum->get_reduction_axes());
@@ -1426,8 +1326,7 @@ namespace ngraph
                             auto& cudnn_emitter =
                                 external_function->get_primitive_emitter()->get_cudnn_emitter();
                             auto index =
-                                cudnn_emitter->build_reduce_forward(external_function->ctx().get(),
-                                                                    CUDNN_REDUCE_TENSOR_MUL,
+                                cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_MUL,
                                                                     out[0].get_type(),
                                                                     args[0].get_shape(),
                                                                     product->get_reduction_axes());
@@ -1524,7 +1423,6 @@ namespace ngraph
                             auto& cudnn_emitter =
                                 external_function->get_primitive_emitter()->get_cudnn_emitter();
                             auto reduce_index = cudnn_emitter->build_reduce_forward(
-                                external_function->ctx().get(),
                                 reduce_tensor_op,
                                 out[0].get_type(),
                                 args[0].get_shape(),
@@ -1629,7 +1527,6 @@ namespace ngraph
                                 args[0].get_type(), args[0].get_type(), out[0].get_type()};
 
                             reduce_index = cuda_emitter->build_reduce_window(
-                                external_function->ctx().get(),
                                 it->second,
                                 dtypes,
                                 args[0].get_shape(),
@@ -1664,8 +1561,7 @@ namespace ngraph
                         external_function->get_primitive_emitter()->get_cuda_emitter();
 
                     auto pad_index =
-                        cuda_emitter->build_pad(external_function->ctx().get(),
-                                                {{args[0].get_type(), out[0].get_type()}},
+                        cuda_emitter->build_pad({{args[0].get_type(), out[0].get_type()}},
                                                 input_shape,
                                                 output_shape,
                                                 padding_below,
@@ -1727,8 +1623,7 @@ namespace ngraph
                         ss << TypeInfo::Get(args[0].get_element_type())->lowest();
 
                         auto pad_index =
-                            cuda_emitter->build_pad(external_function->ctx().get(),
-                                                    {{args[0].get_type(), out[0].get_type()}},
+                            cuda_emitter->build_pad({{args[0].get_type(), out[0].get_type()}},
                                                     input_shape,
                                                     shape_to_pool,
                                                     padding_below,
@@ -1766,7 +1661,6 @@ namespace ngraph
                                 external_function->get_primitive_emitter()->get_cuda_emitter();
 
                             max_pool_index = cuda_emitter->build_1d_max_pool(
-                                external_function->ctx().get(),
                                 {{args[0].get_type(), out[0].get_type()}},
                                 input_shape,
                                 result_shape,
@@ -1780,7 +1674,6 @@ namespace ngraph
                                 external_function->get_primitive_emitter()->get_cudnn_emitter();
 
                             max_pool_index = cudnn_emitter->build_pooling(
-                                external_function->ctx().get(),
                                 CUDNN_POOLING_MAX,
                                 out[0].get_type(),
                                 CUDNNEmitter::Prop::Forward,
@@ -1828,8 +1721,7 @@ namespace ngraph
                     if (fp_input_shape.size() >= 4)
                     {
                         auto max_pool_bp_index =
-                            cudnn_emitter->build_pooling(external_function->ctx().get(),
-                                                         CUDNN_POOLING_MAX,
+                            cudnn_emitter->build_pooling(CUDNN_POOLING_MAX,
                                                          out[0].get_type(),
                                                          CUDNNEmitter::Prop::Backward,
                                                          fp_input_shape,
@@ -1868,8 +1760,7 @@ namespace ngraph
                     direction = CUDNNEmitter::Prop::Inference;
                 }
 
-                auto bn_index = cudnn_emitter->build_batchnorm(external_function->ctx().get(),
-                                                               CUDNN_BATCHNORM_SPATIAL,
+                auto bn_index = cudnn_emitter->build_batchnorm(CUDNN_BATCHNORM_SPATIAL,
                                                                out[0].get_type(),
                                                                direction,
                                                                args[2].get_shape(),
@@ -1905,8 +1796,7 @@ namespace ngraph
                 auto& cudnn_emitter =
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
 
-                auto bn_index = cudnn_emitter->build_batchnorm(external_function->ctx().get(),
-                                                               CUDNN_BATCHNORM_SPATIAL,
+                auto bn_index = cudnn_emitter->build_batchnorm(CUDNN_BATCHNORM_SPATIAL,
                                                                out[0].get_type(),
                                                                CUDNNEmitter::Prop::Backward,
                                                                args[2].get_shape(),
@@ -2003,8 +1893,7 @@ namespace ngraph
                             external_function->get_primitive_emitter()->get_cuda_emitter();
 
                         avg_pool_index =
-                            cuda_emitter->build_avg_pool(external_function->ctx().get(),
-                                                         {{args[0].get_type(), out[0].get_type()}},
+                            cuda_emitter->build_avg_pool({{args[0].get_type(), out[0].get_type()}},
                                                          input_shape,
                                                          result_shape,
                                                          avg_pool->get_window_shape(),
@@ -2024,7 +1913,6 @@ namespace ngraph
                                                       : CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
 
                             avg_pool_index = cudnn_emitter->build_pooling(
-                                external_function->ctx().get(),
                                 cudnn_avg_type,
                                 out[0].get_type(),
                                 CUDNNEmitter::Prop::Forward,
@@ -2069,8 +1957,7 @@ namespace ngraph
                                                   : CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
 
                         auto avg_pool_bp_index =
-                            cudnn_emitter->build_pooling(external_function->ctx().get(),
-                                                         cudnn_avg_type,
+                            cudnn_emitter->build_pooling(cudnn_avg_type,
                                                          out[0].get_type(),
                                                          CUDNNEmitter::Prop::Backward,
                                                          output_shape,
@@ -2128,7 +2015,6 @@ namespace ngraph
                             external_function->get_primitive_emitter()->get_cuda_emitter();
 
                         auto replace_slice_index = cuda_emitter->build_replace_slice(
-                            external_function->ctx().get(),
                             {{args[0].get_type(), args[1].get_type(), out[0].get_type()}},
                             input_shape,
                             source_shape,
@@ -2179,7 +2065,6 @@ namespace ngraph
                         size_t exp_sum_reduce =
                             cuda_emitter
                                 ->build_elementwise_collective<ngraph::op::Exp, ngraph::op::Add>(
-                                    external_function->ctx().get(),
                                     {{args[0].get_type(), out[0].get_type()}},
                                     args[0].get_shape(),
                                     {},
@@ -2199,7 +2084,6 @@ namespace ngraph
                         // inplace binary division with fused broadcast to calculate softmax
                         size_t div_broadcast =
                             cuda_emitter->build_elementwise_collective<ngraph::op::Divide>(
-                                external_function->ctx().get(),
                                 {{out[0].get_type(), out[0].get_type(), out[0].get_type()}},
                                 out[0].get_shape(),
                                 {1},
@@ -2214,8 +2098,7 @@ namespace ngraph
                     else
                     {
                         size_t softmax_index =
-                            cudnn_emitter->build_softmax(external_function->ctx().get(),
-                                                         CUDNN_SOFTMAX_FAST,
+                            cudnn_emitter->build_softmax(CUDNN_SOFTMAX_FAST,
                                                          CUDNN_SOFTMAX_MODE_INSTANCE,
                                                          out[0].get_type(),
                                                          CUDNNEmitter::Prop::Forward,

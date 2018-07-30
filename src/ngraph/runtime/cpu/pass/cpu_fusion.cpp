@@ -993,7 +993,15 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
             return false;
         }
 
-        auto conv_relu = std::shared_ptr<Node>(new op::ConvolutionBiasRelu(conv));
+        auto conv_relu = std::make_shared<op::ConvolutionBias>(conv->get_argument(0),
+                                                               conv->get_argument(1),
+                                                               conv->get_argument(2),
+                                                               conv->get_window_movement_strides(),
+                                                               conv->get_window_dilation_strides(),
+                                                               conv->get_padding_below(),
+                                                               conv->get_padding_above(),
+                                                               conv->get_data_dilation_strides(),
+                                                               true);
         ngraph::replace_node(m.get_match_root(), conv_relu);
         return true;
     };
