@@ -1043,35 +1043,22 @@ size_t runtime::gpu::CUDAEmitter::build_softmax(const std::vector<std::string>& 
     size_t workspace_idx = allocator.reserve_workspace(reduced_size * output_element_size);
 
     // exponentiate with fused sum reduction to calculate softmax denominator
-    size_t exp_sum_reduce =
-        build_elementwise_collective<ngraph::op::Exp, ngraph::op::Add>(
-            {{dtypes[0], dtypes[1]}},
-            tensor_shape,
-            {},
-            axes,
-            true /* multi-output */);
+    size_t exp_sum_reduce = build_elementwise_collective<ngraph::op::Exp, ngraph::op::Add>(
+        {{dtypes[0], dtypes[1]}}, tensor_shape, {}, axes, true /* multi-output */);
 
     // inplace binary division with fused broadcast to calculate softmax
-    size_t div_broadcast =
-        build_elementwise_collective<ngraph::op::Divide>(
-            {{dtypes[1], dtypes[1], dtypes[1]}},
-            tensor_shape,
-            {1},
-            axes);
+    size_t div_broadcast = build_elementwise_collective<ngraph::op::Divide>(
+        {{dtypes[1], dtypes[1], dtypes[1]}}, tensor_shape, {1}, axes);
 
-    std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](void** inputs,
-                                                                         void** outputs) mutable {
-                void* workspace = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
-                // cache the elementwise result and the fused result (multi-output)
-                runtime::gpu::invoke_primitive(m_ctx,
-                                               exp_sum_reduce,
-                                               inputs,
-                                               std::vector<void*>{ workspace, outputs[0] }.data());
-                runtime::gpu::invoke_primitive(m_ctx,
-                                               div_broadcast,
-                                               std::vector<void*>{ outputs[0], workspace }.data(),
-                                               outputs);
-    }});
+    std::unique_ptr<gpu::primitive> kernel_launch(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void* workspace = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
+            // cache the elementwise result and the fused result (multi-output)
+            runtime::gpu::invoke_primitive(
+                m_ctx, exp_sum_reduce, inputs, std::vector<void*>{workspace, outputs[0]}.data());
+            runtime::gpu::invoke_primitive(
+                m_ctx, div_broadcast, std::vector<void*>{outputs[0], workspace}.data(), outputs);
+        }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
     m_primitive_emitter->cache(hash, primitive_index);
