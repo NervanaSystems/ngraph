@@ -22,6 +22,7 @@
 #include <fstream>
 #include <string>
 #include <tuple>
+#include <mutex>
 
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
@@ -255,49 +256,6 @@ runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
 
 runtime::gpu::GPU_ExternalFunction::~GPU_ExternalFunction()
 {
-}
-
-void runtime::gpu::GPU_ExternalFunction::optimize_and_assemble()
-{
-    auto allocator = std::make_shared<runtime::gpu::GPUAllocator>(
-        m_shared_context->m_primitive_emitter->get_memory_allocator());
-
-    m_pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
-
-    m_pass_manager
-        .register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
-
-    m_pass_manager.register_pass<ngraph::pass::Liveness>();
-
-    m_pass_manager.register_pass<ngraph::pass::MemoryLayout>(64);
-
-    m_pass_manager.register_pass<runtime::gpu::pass::FunctionMemoryReservation>(allocator,
-                                                                                m_memory_buffers);
-
-    std::string common_function_string;
-    auto femitter = bind(&ngraph::runtime::gpu::GPU_ExternalFunction::emit_op_as_function,
-                         this,
-                         placeholders::_1,
-                         placeholders::_2);
-    m_pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
-        femitter, m_node_function_map, common_function_string);
-
-    string dump_filename = file_util::path_join(s_output_dir, m_function_name + "_ops.txt");
-    m_pass_manager.register_pass<ngraph::pass::DumpSorted>(dump_filename);
-
-    m_pass_manager.run_passes(m_function);
-
-    for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
-    {
-        m_function_ordered_ops.insert({current_function, current_function->get_ordered_ops()});
-    }
-
-    emit_header();
-    emit_timer_functions();
-    emit_constant_declarations();
-    emit_function_declarations();
-    m_writer << common_function_string << "\n";
-    emit_functions();
 }
 
 void runtime::gpu::GPU_ExternalFunction::emit_header()
@@ -666,18 +624,60 @@ void runtime::gpu::GPU_ExternalFunction::store_emitted_functions(const string& c
     out.close();
 }
 
+static std::mutex compilation;
+
 void runtime::gpu::GPU_ExternalFunction::compile()
 {
     if (m_is_compiled)
     {
         return;
     }
+    std::unique_lock<std::mutex> lock(compilation);
 
     m_function_name = m_function->get_name();
 
-    optimize_and_assemble();
+    auto allocator = std::make_shared<runtime::gpu::GPUAllocator>(
+        m_shared_context->m_primitive_emitter->get_memory_allocator());
+
+    m_pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
+
+    m_pass_manager
+        .register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
+
+    m_pass_manager.register_pass<ngraph::pass::Liveness>();
+
+    m_pass_manager.register_pass<ngraph::pass::MemoryLayout>(64);
+
+    m_pass_manager.register_pass<runtime::gpu::pass::FunctionMemoryReservation>(allocator,
+                                                                                m_memory_buffers);
+
+    std::string common_function_string;
+    auto femitter = bind(&ngraph::runtime::gpu::GPU_ExternalFunction::emit_op_as_function,
+                         this,
+                         placeholders::_1,
+                         placeholders::_2);
+    m_pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
+        femitter, m_node_function_map, common_function_string);
+
+    string dump_filename = file_util::path_join(s_output_dir, m_function_name + "_ops.txt");
+    m_pass_manager.register_pass<ngraph::pass::DumpSorted>(dump_filename);
+
+    m_pass_manager.run_passes(m_function);
+
+    for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
+    {
+        m_function_ordered_ops.emplace(current_function, current_function->get_ordered_ops());
+    }
+
+    emit_header();
+    emit_timer_functions();
+    emit_constant_declarations();
+    emit_function_declarations();
+    m_writer << common_function_string << "\n";
+    emit_functions();
 
     // allocate device buffers for primitive arguments and workspace
+    allocator->close();
     m_shared_context->m_primitive_emitter->allocate_primitive_memory();
 
     string code = m_writer.get_code();

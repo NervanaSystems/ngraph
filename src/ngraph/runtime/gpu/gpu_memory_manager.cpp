@@ -168,12 +168,19 @@ size_t runtime::gpu::GPUAllocator::reserve_workspace(size_t size, bool zero_init
     return m_manager->m_primitive_emitter->insert(mem_primitive);
 }
 
-runtime::gpu::GPUAllocator::~GPUAllocator()
+void runtime::gpu::GPUAllocator::close()
 {
     while (!m_active.empty())
     {
         m_manager->m_workspace_manager.free(m_active.top());
         m_active.pop();
     }
-    m_manager->m_open_allocators--;
+    if (m_manager->m_open_allocators > 0)
+    {
+        m_manager->m_open_allocators--;
+    }
+}
+runtime::gpu::GPUAllocator::~GPUAllocator()
+{
+    this->close();
 }

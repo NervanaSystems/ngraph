@@ -49,6 +49,7 @@ namespace ngraph
                 size_t reserve_argspace(const void* data, size_t size);
                 size_t reserve_workspace(size_t size, bool zero_initialize = true);
 
+                void close();
             private:
                 GPUMemoryManager* m_manager;
                 std::stack<size_t> m_active;
