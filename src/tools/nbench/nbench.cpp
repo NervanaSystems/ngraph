@@ -174,7 +174,6 @@ OPTIONS
     }
     else if (!directory.empty())
     {
-        NGRAPH_INFO << "directory " << directory;
         vector<string> models;
         file_util::iterate_files(directory,
                                  [&](const string& file, bool is_dir) {
