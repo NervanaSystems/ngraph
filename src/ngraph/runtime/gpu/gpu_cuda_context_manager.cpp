@@ -36,5 +36,5 @@ runtime::gpu::CudaContextManager::CudaContextManager()
 
 runtime::gpu::CudaContextManager::~CudaContextManager()
 {
-    CUDA_SAFE_CALL(cuDevicePrimaryCtxRelease(m_device));
+    CUDA_SAFE_CALL_NO_THROW(cuDevicePrimaryCtxRelease(m_device));
 }

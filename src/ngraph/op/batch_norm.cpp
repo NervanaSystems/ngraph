@@ -267,7 +267,7 @@ void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
     //Please see `add_output` in `BatchNorm::BatchNorm` for more details
     if (this->get_training_flag() && get_input_size() == 3)
     {
-        auto goes = op::get_output_elements(this->shared_from_this());
+        auto goes = op::get_output_elements(*this);
         mean = goes.at(1);
         var = goes.at(2);
     }

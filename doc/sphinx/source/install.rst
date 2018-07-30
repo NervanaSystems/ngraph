@@ -153,8 +153,8 @@ The process documented here will work on CentOS 7.4.
       $ wget https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz      
       $ tar -xzvf cmake-3.4.3.tar.gz
       $ cd cmake-3.4.3
-      $ ./bootstrap
-      $ make && sudo make install  
+      $ ./bootstrap --system-curl --prefix=~/cmake
+      $ make && make install     
 
 #. Clone the `NervanaSystems` ``ngraph`` repo via HTTPS and use Cmake 3.4.3 to 
    build nGraph Libraries to ``~/ngraph_dist``. 
@@ -164,7 +164,7 @@ The process documented here will work on CentOS 7.4.
       $ cd /opt/libraries 
       $ git clone https://github.com/NervanaSystems/ngraph.git
       $ cd ngraph && mkdir build && cd build
-      $ cmake ../ -DCMAKE_INSTALL_PREFIX=~/ngraph_dist  
+      $ ~/cmake/bin/cmake .. -DCMAKE_INSTALL_PREFIX=~/ngraph_dist  
       $ make && sudo make install 
 
 
