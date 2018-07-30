@@ -2722,9 +2722,21 @@ namespace ngraph
                     max_range = std::max(0.0f, max_range);
                     int num_bits = (quantize->get_quantize_et()).bitwidth();
                     const float max_abs = std::max(std::abs(min_range), std::abs(max_range));
-                    max_range = max_abs;
-                    min_range = 0.0;
-                    float target_range = static_cast<float>((uint64_t{1} << num_bits) - 1);
+                    bool is_signed = (quantize->get_quantize_et()).is_signed();
+                    float target_range;
+                    if (is_signed)
+                    {
+                        max_range = max_abs;
+                        min_range = -max_abs;
+                        target_range = static_cast<float>((uint64_t{1} << (num_bits - 1)) - 1);
+                    }
+                    else
+                    {
+                        max_range = max_abs;
+                        min_range = 0.0;
+                        target_range = static_cast<float>((uint64_t{1} << num_bits) - 1);
+                    }
+
                     const float scale_factor = target_range / max_abs;
 
                     std::vector<float> scales;
