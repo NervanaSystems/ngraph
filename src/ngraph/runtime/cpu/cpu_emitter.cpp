@@ -52,6 +52,7 @@
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
+#include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
@@ -1392,6 +1393,21 @@ namespace ngraph
                 writer.block_end();
 #endif
                 writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::LRN)
+            {
+                const ngraph::op::LRN* lrn = static_cast<const ngraph::op::LRN*>(node);
+
+                writer << "reference::lrn<" << lrn->get_element_type().c_type_string() << ">(";
+                writer << "            " << args[0].get_name() << ",\n";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            {" << join(args[0].get_shape()) << "},\n";
+                writer << "            " << lrn->get_alpha() << ",\n";
+                writer << "            " << lrn->get_beta() << ",\n";
+                writer << "            " << lrn->get_bias() << ",\n";
+                writer << "            " << lrn->get_nsize() << ");\n";
             }
 
             template <>
