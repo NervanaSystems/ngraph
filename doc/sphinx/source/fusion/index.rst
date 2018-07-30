@@ -66,6 +66,7 @@ work of the optimization pass writer.
    :maxdepth: 1 
 
    graph-rewrite.rst
+   passes-that-use-matcher.rst
 
 
 
