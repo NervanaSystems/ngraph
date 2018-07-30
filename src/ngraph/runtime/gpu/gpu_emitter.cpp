@@ -2041,73 +2041,33 @@ namespace ngraph
                     auto tensor_shape = args[0].get_shape();
                     auto axes = softmax->get_axes();
 
-                    auto& cudnn_emitter =
-                        external_function->get_primitive_emitter()->get_cudnn_emitter();
-
+                    size_t softmax_index;
                     if (axes.size() != tensor_shape.size())
                     {
                         auto& cuda_emitter =
                             external_function->get_primitive_emitter()->get_cuda_emitter();
 
-                        // reserve a temporary buffer for the intermediate reduction
-                        GPUAllocator allocator =
-                            external_function->get_primitive_emitter()->get_memory_allocator();
-                        auto reduced_shape = tensor_shape;
-                        for (auto const& axis : axes)
-                        {
-                            reduced_shape[axis] = 1;
-                        }
-                        size_t reduced_size = shape_size(reduced_shape);
-                        size_t workspace_idx = allocator.reserve_workspace(
-                            reduced_size * out[0].get_element_type().size());
-
-                        // exponentiate with fused sum reduction to calculate softmax denominator
-                        size_t exp_sum_reduce =
-                            cuda_emitter
-                                ->build_elementwise_collective<ngraph::op::Exp, ngraph::op::Add>(
-                                    {{args[0].get_type(), out[0].get_type()}},
-                                    args[0].get_shape(),
-                                    {},
-                                    axes,
-                                    true /* multi-output */);
-
-                        writer << "void* workspace = gpu::invoke_memory_primitive(ctx, "
-                               << workspace_idx << ");\n";
-                        writer << "gpu::invoke_primitive(ctx, " << exp_sum_reduce << ", ";
-                        writer << "std::vector<void*>{" << args[0].get_name();
-                        writer << "}.data(), ";
-                        // cache the elementwise result and the fused result (multi-output)
-                        writer << "std::vector<void*>{ workspace, ";
-                        writer << out[0].get_name() << "}.data()";
-                        writer << ");\n";
-
-                        // inplace binary division with fused broadcast to calculate softmax
-                        size_t div_broadcast =
-                            cuda_emitter->build_elementwise_collective<ngraph::op::Divide>(
-                                {{out[0].get_type(), out[0].get_type(), out[0].get_type()}},
-                                out[0].get_shape(),
-                                {1},
-                                axes);
-
-                        writer << "gpu::invoke_primitive(ctx, " << div_broadcast << ", ";
-                        writer << "std::vector<void*>{" << out[0].get_name();
-                        writer << ", workspace}.data(), ";
-                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                        writer << ");\n";
+                        softmax_index = cuda_emitter->build_softmax(
+                            {{args[0].get_type(), out[0].get_type()}},
+                            tensor_shape, axes, out[0].get_element_type().size());
                     }
                     else
                     {
-                        size_t softmax_index =
+                        auto& cudnn_emitter =
+                            external_function->get_primitive_emitter()->get_cudnn_emitter();
+
+                        softmax_index =
                             cudnn_emitter->build_softmax(CUDNN_SOFTMAX_FAST,
                                                          CUDNN_SOFTMAX_MODE_INSTANCE,
                                                          out[0].get_type(),
                                                          CUDNNEmitter::Prop::Forward,
                                                          tensor_shape);
-                        writer << "gpu::invoke_primitive(ctx, " << softmax_index << ", ";
-                        writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                        writer << ");\n";
                     }
+
+                    writer << "gpu::invoke_primitive(ctx, " << softmax_index << ", ";
+                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                    writer << ");\n";
                 }
                 writer.block_end();
             }

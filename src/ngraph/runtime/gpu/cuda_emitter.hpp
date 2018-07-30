@@ -111,6 +111,11 @@ namespace ngraph
                                                         save_elementwise);
                 }
 
+                size_t build_softmax(const std::vector<std::string>& dtypes,
+                                     GPUShape tensor_shape,
+                                     const std::set<size_t>& axes,
+                                     size_t output_element_size);
+
                 size_t build_replace_slice(const std::array<std::string, 3>& dtypes,
                                            GPUShape tensor_shape,
                                            GPUShape source_shape,

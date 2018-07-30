@@ -1009,6 +1009,75 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const std::vector<std
     return primitive_index;
 }
 
+size_t runtime::gpu::CUDAEmitter::build_softmax(const std::vector<std::string>& dtypes,
+                                                GPUShape tensor_shape,
+                                                const std::set<size_t>& axes,
+                                                size_t output_element_size)
+{
+    // kernel_name is used to check if the cuda kernel has been previously compiled
+    std::stringstream kernel_name;
+    kernel_name << "softmax_" << join(dtypes, "_");
+
+    // hash is used to check if the emitted primitive already exists
+    std::stringstream ss;
+    ss << kernel_name.str() << "_s" << join(tensor_shape, "_") << "_ra" << join(axes, "_");
+    auto hash = ss.str();
+
+    // if the primitive exists, we are done
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    // build composite primitive
+
+    // reserve a temporary buffer for the intermediate reduction
+    GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+    auto reduced_shape = tensor_shape;
+    for (auto const& axis : axes)
+    {
+        reduced_shape[axis] = 1;
+    }
+    size_t reduced_size = shape_size(reduced_shape);
+    size_t workspace_idx = allocator.reserve_workspace(reduced_size * output_element_size);
+
+    // exponentiate with fused sum reduction to calculate softmax denominator
+    size_t exp_sum_reduce =
+        build_elementwise_collective<ngraph::op::Exp, ngraph::op::Add>(
+            {{dtypes[0], dtypes[1]}},
+            tensor_shape,
+            {},
+            axes,
+            true /* multi-output */);
+
+    // inplace binary division with fused broadcast to calculate softmax
+    size_t div_broadcast =
+        build_elementwise_collective<ngraph::op::Divide>(
+            {{dtypes[1], dtypes[1], dtypes[1]}},
+            tensor_shape,
+            {1},
+            axes);
+
+    std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](void** inputs,
+                                                                         void** outputs) mutable {
+                void* workspace = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
+                // cache the elementwise result and the fused result (multi-output)
+                runtime::gpu::invoke_primitive(m_ctx,
+                                               exp_sum_reduce,
+                                               inputs,
+                                               std::vector<void*>{ workspace, outputs[0] }.data());
+                runtime::gpu::invoke_primitive(m_ctx,
+                                               div_broadcast,
+                                               std::vector<void*>{ outputs[0], workspace }.data(),
+                                               outputs);
+    }});
+
+    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
+
 size_t
     runtime::gpu::CUDAEmitter::build_fused_ew_to_collective(const std::vector<std::string>& dtypes,
                                                             GPUShape tensor_shape,
