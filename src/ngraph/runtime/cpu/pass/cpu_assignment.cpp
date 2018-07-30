@@ -45,7 +45,6 @@
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/quantize.hpp"
-#include "ngraph/runtime/cpu/op/quantized_conv.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 
@@ -196,16 +195,6 @@ namespace ngraph
                         op_annotations->set_mkldnn_op(true);
                         dequantize->set_op_annotations(op_annotations);
                     }
-                }
-
-                template <>
-                void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedConvolution)
-                {
-                    auto quantized_conv = static_cast<op::QuantizedConvolution*>(node);
-                    auto op_annotations =
-                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                    op_annotations->set_mkldnn_op(true);
-                    quantized_conv->set_op_annotations(op_annotations);
                 }
 
                 template <>
@@ -758,8 +747,6 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Dequantize),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Dequantize>},
     {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Quantize>},
-    {TI(ngraph::op::QuantizedConvolution),
-     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedConvolution>},
     {TI(ngraph::op::ConvolutionRelu),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionRelu>},
     {TI(ngraph::op::ConvolutionBiasAdd),

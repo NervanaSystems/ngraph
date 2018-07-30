@@ -99,15 +99,6 @@ namespace ngraph
                                                  const ngraph::CoordinateDiff& padding_above,
                                                  const mkldnn::post_ops& pops = mkldnn::post_ops());
 
-                size_t build_quantized_convolution(const mkldnn::memory::desc& input_data_desc,
-                                                   const mkldnn::memory::desc& weights_desc,
-                                                   const mkldnn::memory::desc& result_desc,
-                                                   const ngraph::Strides& strides,
-                                                   const ngraph::Strides& dilation_strides,
-                                                   const ngraph::CoordinateDiff& padding_below,
-                                                   const ngraph::CoordinateDiff& padding_above,
-                                                   const float scale);
-
                 template <typename OP>
                 size_t build_convolution(const ngraph::Node* node,
                                          const std::vector<TensorViewWrapper>& args,
