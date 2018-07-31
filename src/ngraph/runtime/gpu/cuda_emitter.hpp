@@ -22,13 +22,13 @@
 #include "ngraph/runtime/gpu/gpu_shape.hpp"
 #include "ngraph/strides.hpp"
 
+#include "ngraph/op/softmax.hpp"
+#include "ngraph/op/convolution.hpp"
+
 namespace ngraph
 {
     class GPUShape;
-    namespace op
-    {
-        class Convolution;
-    }
+
     namespace runtime
     {
         namespace gpu
@@ -39,6 +39,10 @@ namespace ngraph
             class CUDAEmitter
             {
                 friend class GPUPrimitiveEmitter;
+
+            public:
+                size_t build_primitive(const op::Softmax* node);
+                size_t build_primitive(const op::Convolution* node);
 
             public:
                 size_t build_pad(const std::array<std::string, 2>& dtypes,
@@ -114,11 +118,6 @@ namespace ngraph
                                                         save_elementwise);
                 }
 
-                size_t build_softmax(const std::vector<std::string>& dtypes,
-                                     GPUShape tensor_shape,
-                                     const std::set<size_t>& axes,
-                                     size_t output_element_size);
-
                 size_t build_replace_slice(const std::array<std::string, 3>& dtypes,
                                            GPUShape tensor_shape,
                                            GPUShape source_shape,
@@ -134,7 +133,6 @@ namespace ngraph
                                      GPUShape input_shape,
                                      GPUShape input_order);
 
-                size_t build_convolution(const op::Convolution* node);
                 size_t build_convolution(const std::array<std::string, 3>& dtypes,
                                          GPUShape input_shape,
                                          GPUShape input_pad_below,

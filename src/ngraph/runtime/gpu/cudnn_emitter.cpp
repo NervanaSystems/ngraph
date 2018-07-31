@@ -27,8 +27,6 @@
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 #include "ngraph/util.hpp"
 
-#include "ngraph/op/convolution.hpp"
-
 using namespace ngraph;
 
 cudnnTensorDescriptor_t& runtime::gpu::CUDNNEmitter::tensor_descriptor_from_shape(
@@ -330,7 +328,7 @@ cudnnConvolutionDescriptor_t& runtime::gpu::CUDNNEmitter::get_cudnn_convolution_
     return conv_descriptor;
 }
 
-size_t runtime::gpu::CUDNNEmitter::build_convolution(const op::Convolution* node)
+size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
 {
     auto& args = node->get_inputs();
     auto& out = node->get_outputs();

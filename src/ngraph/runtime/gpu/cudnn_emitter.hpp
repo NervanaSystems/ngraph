@@ -30,12 +30,10 @@
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/shape.hpp"
 
+#include "ngraph/op/convolution.hpp"
+
 namespace ngraph
 {
-    namespace op
-    {
-        class Convolution;
-    }
     namespace runtime
     {
         namespace gpu
@@ -60,7 +58,7 @@ namespace ngraph
                     Backward
                 };
 
-                size_t build_convolution(const op::Convolution* node);
+                size_t build_primitive(const op::Convolution* node);
                 size_t build_convolution(const std::string& dtype,
                                          const Shape& input_tensor_shape,
                                          const Shape& input_filter_shape,

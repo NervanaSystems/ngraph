@@ -145,13 +145,13 @@ namespace ngraph
                 {
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
-                    conv_index = cuda_emitter->build_convolution(convolution);
+                    conv_index = cuda_emitter->build_primitive(convolution);
                 }
                 else
                 {
                     auto& cudnn_emitter =
                         external_function->get_primitive_emitter()->get_cudnn_emitter();
-                    conv_index = cudnn_emitter->build_convolution(convolution);
+                    conv_index = cudnn_emitter->build_primitive(convolution);
                 }
 
                 writer << "gpu::invoke_primitive(ctx, " << conv_index << ", ";
@@ -1866,23 +1866,16 @@ namespace ngraph
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Softmax)
             {
+                auto softmax = static_cast<const ngraph::op::Softmax*>(node);
                 writer.block_begin();
                 {
-                    auto softmax = static_cast<const ngraph::op::Softmax*>(node);
-                    auto tensor_shape = args[0].get_shape();
-                    auto axes = softmax->get_axes();
-
                     size_t softmax_index;
-                    if (axes.size() != tensor_shape.size())
+                    if (softmax->get_axes().size() != args[0].get_shape().size())
                     {
                         auto& cuda_emitter =
                             external_function->get_primitive_emitter()->get_cuda_emitter();
 
-                        softmax_index =
-                            cuda_emitter->build_softmax({{args[0].get_type(), out[0].get_type()}},
-                                                        tensor_shape,
-                                                        axes,
-                                                        out[0].get_element_type().size());
+                        softmax_index = cuda_emitter->build_primitive(softmax);
                     }
                     else
                     {
@@ -1893,7 +1886,7 @@ namespace ngraph
                                                                      CUDNN_SOFTMAX_MODE_INSTANCE,
                                                                      out[0].get_type(),
                                                                      CUDNNEmitter::Prop::Forward,
-                                                                     tensor_shape);
+                                                                     args[0].get_shape());
                     }
 
                     writer << "gpu::invoke_primitive(ctx, " << softmax_index << ", ";

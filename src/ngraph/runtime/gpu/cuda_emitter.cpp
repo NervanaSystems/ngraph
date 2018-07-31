@@ -22,13 +22,12 @@
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/runtime/gpu/cuda_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
+#include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_invoke.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 #include "ngraph/util.hpp"
-
-#include "ngraph/op/convolution.hpp"
 
 using namespace ngraph;
 
@@ -1011,21 +1010,18 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const std::vector<std
     return primitive_index;
 }
 
-size_t runtime::gpu::CUDAEmitter::build_softmax(const std::vector<std::string>& dtypes,
-                                                GPUShape tensor_shape,
-                                                const std::set<size_t>& axes,
-                                                size_t output_element_size)
+size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Softmax* node)
 {
-    // kernel_name is used to check if the cuda kernel has been previously compiled
-    std::stringstream kernel_name;
-    kernel_name << "softmax_" << join(dtypes, "_");
+    auto& args = node->get_inputs();
+    auto& out = node->get_outputs();
+    auto tensor_shape = args[0].get_shape();
+    auto axes = node->get_axes();
 
-    // hash is used to check if the emitted primitive already exists
     std::stringstream ss;
-    ss << kernel_name.str() << "_s" << join(tensor_shape, "_") << "_ra" << join(axes, "_");
+    ss << "softmax_" << runtime::gpu::kernel::emit_type_string(node)
+       <<  "_s" << join(tensor_shape, "_") << "_ra" << join(axes, "_");
     auto hash = ss.str();
 
-    // if the primitive exists, we are done
     size_t primitive_index = m_primitive_emitter->lookup(hash);
     if (primitive_index != std::numeric_limits<size_t>::max())
     {
@@ -1042,15 +1038,19 @@ size_t runtime::gpu::CUDAEmitter::build_softmax(const std::vector<std::string>& 
         reduced_shape[axis] = 1;
     }
     size_t reduced_size = shape_size(reduced_shape);
-    size_t workspace_idx = allocator.reserve_workspace(reduced_size * output_element_size);
+    size_t workspace_idx = allocator.reserve_workspace(reduced_size * out[0].get_element_type().size());
 
     // exponentiate with fused sum reduction to calculate softmax denominator
+    auto input_type = args[0].get_element_type().c_type_string();
+    auto output_type = out[0].get_element_type().c_type_string();
     size_t exp_sum_reduce = build_elementwise_collective<ngraph::op::Exp, ngraph::op::Add>(
-        {{dtypes[0], dtypes[1]}}, tensor_shape, {}, axes, true /* multi-output */);
+        {{input_type, output_type}},
+        tensor_shape, {}, axes, true /* multi-output */);
 
     // inplace binary division with fused broadcast to calculate softmax
     size_t div_broadcast = build_elementwise_collective<ngraph::op::Divide>(
-        {{dtypes[1], dtypes[1], dtypes[1]}}, tensor_shape, {1}, axes);
+        std::vector<std::string>(3, output_type),
+        tensor_shape, {1}, axes);
 
     std::unique_ptr<gpu::primitive> kernel_launch(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
@@ -1567,18 +1567,10 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const std::array<std::string, 
     return primitive_index;
 }
 
-size_t runtime::gpu::CUDAEmitter::build_convolution(const op::Convolution* node)
+size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Convolution* node)
 {
     std::stringstream ss;
-    ss << "convolution_fprop_";
-    for (auto const& input : node->get_inputs())
-    {
-        ss << input.get_element_type().c_type_string() << "_";
-    }
-    for (auto const& output : node->get_outputs())
-    {
-        ss << output.get_element_type().c_type_string() << "_";
-    }
+    ss << "convolution_fprop_" << runtime::gpu::kernel::emit_type_string(node);
 
 
     auto& args = node->get_inputs();
@@ -1594,7 +1586,6 @@ size_t runtime::gpu::CUDAEmitter::build_convolution(const op::Convolution* node)
        << join(node->get_window_movement_strides(), "_") << "_fdi" << join(node->get_window_dilation_strides(), "_");
 
     auto hash = ss.str();
-    std::replace(hash.begin(), hash.end(), ' ', '_');
 
     // check if the requested primtive is already built
     size_t primitive_index = m_primitive_emitter->lookup(hash);
