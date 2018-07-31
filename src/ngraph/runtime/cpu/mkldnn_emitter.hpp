@@ -115,6 +115,12 @@ namespace ngraph
 
                     auto data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+
+                    if (weights_desc.data.format == mkldnn_nchw)
+                    {
+                        // MKLDNN doesn't seem to like nchw on weights
+                        weights_desc.data.format = mkldnn_oihw;
+                    }
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     mkldnn::post_ops ops;

@@ -1612,6 +1612,7 @@ namespace ngraph
                     {
                         return true;
                     }
+                    return false;
                 };
 
                 if (can_skip_reshape())

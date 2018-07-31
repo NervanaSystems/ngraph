@@ -283,6 +283,10 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md(
     memory::dims stride(strides.begin(), strides.end());
     memory::data_type dtype = get_mkldnn_data_type(type);
 
+    if (dims.size() == 1)
+    {
+        return memory::desc(dim, dtype, memory::format::x);
+    }
     if (dims.size() == 2)
     {
         if (is_perm_sorted(strides, {0, 1}))
@@ -393,6 +397,7 @@ memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& i
         return get_named_md(md, X);
     switch (md.ndims)
     {
+    case 1: CANONICALIZE_MD(mkldnn_x); break;
     case 2: CANONICALIZE_MD(mkldnn_nc); break;
     case 4:
         CANONICALIZE_MD(mkldnn_nchw);
