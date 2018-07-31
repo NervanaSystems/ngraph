@@ -212,37 +212,10 @@ namespace ngraph
         return y > x ? 0 : x - y;
     }
 
-    template <typename T, bool (*func)(T)>
-    void check_fp_values(const char* name, const T* array, size_t n)
-    {
-        bool (*fPtr)(T) = &std::isinf;
-        const char* cerr_type = fPtr == func ? "Inf" : "NaN";
-        for (size_t i = 0; i < n; i++)
-        {
-            if (func(array[i]))
-            {
-                throw std::runtime_error(std::string("Discovered ") + cerr_type + " in '" + name +
-                                         "'");
-            }
-        }
-    }
-
-    // These wrappers are needed for SUSE. Template deduction fails for isinf(float) and
-    // isinf(double). For the double template specializations below the compiler gets
-    // confused and tries to use the isinf(float) instead of isinf(double) function. The
-    // wrappers make it explicit which function to call
-    static bool isinf_float(float arg) { return std::isinf(arg); }
-    static bool isnan_float(float arg) { return std::isnan(arg); }
-    static bool isinf_double(double arg) { return std::isinf(arg); }
-    static bool isnan_double(double arg) { return std::isnan(arg); }
-    template <>
-    void check_fp_values<float, isinf_float>(const char* name, const float* array, size_t n);
-    template <>
-    void check_fp_values<float, isnan_float>(const char* name, const float* array, size_t n);
-    template <>
-    void check_fp_values<double, isinf_double>(const char* name, const double* array, size_t n);
-    template <>
-    void check_fp_values<double, isnan_double>(const char* name, const double* array, size_t n);
+    void check_fp_values_isinf(const char* name, const float* array, size_t n);
+    void check_fp_values_isinf(const char* name, const double* array, size_t n);
+    void check_fp_values_isnan(const char* name, const float* array, size_t n);
+    void check_fp_values_isnan(const char* name, const double* array, size_t n);
 
     void* aligned_alloc(size_t alignment, size_t size);
     void aligned_free(void*);
