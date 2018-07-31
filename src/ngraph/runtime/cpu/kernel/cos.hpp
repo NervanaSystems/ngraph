@@ -30,7 +30,7 @@ namespace ngraph
             namespace kernel
             {
                 template <typename ElementType>
-                void cwise_cos(void* input0, void* output, size_t count)
+                void cos(void* input0, void* output, size_t count)
                 {
                     Eigen::array<Eigen::Index, 1> out_dims, in_dims;
 

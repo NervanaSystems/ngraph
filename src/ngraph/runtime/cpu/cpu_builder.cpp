@@ -79,19 +79,16 @@
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/kernel/abs.hpp"
+#include "ngraph/runtime/cpu/kernel/acos.hpp"
 #include "ngraph/runtime/cpu/kernel/add.hpp"
 #include "ngraph/runtime/cpu/kernel/and.hpp"
+#include "ngraph/runtime/cpu/kernel/asin.hpp"
+#include "ngraph/runtime/cpu/kernel/atan.hpp"
 #include "ngraph/runtime/cpu/kernel/broadcast.hpp"
 #include "ngraph/runtime/cpu/kernel/ceil.hpp"
-#include "ngraph/runtime/cpu/kernel/cwise_acos.hpp"
-#include "ngraph/runtime/cpu/kernel/cwise_asin.hpp"
-#include "ngraph/runtime/cpu/kernel/cwise_atan.hpp"
-#include "ngraph/runtime/cpu/kernel/cwise_cos.hpp"
-#include "ngraph/runtime/cpu/kernel/cwise_cosh.hpp"
+#include "ngraph/runtime/cpu/kernel/cos.hpp"
+#include "ngraph/runtime/cpu/kernel/cosh.hpp"
 #include "ngraph/runtime/cpu/kernel/cwise_pow.hpp"
-#include "ngraph/runtime/cpu/kernel/cwise_sin.hpp"
-#include "ngraph/runtime/cpu/kernel/cwise_sinh.hpp"
-#include "ngraph/runtime/cpu/kernel/cwise_tan.hpp"
 #include "ngraph/runtime/cpu/kernel/divide.hpp"
 #include "ngraph/runtime/cpu/kernel/equal.hpp"
 #include "ngraph/runtime/cpu/kernel/exp.hpp"
@@ -111,8 +108,11 @@
 #include "ngraph/runtime/cpu/kernel/relu.hpp"
 #include "ngraph/runtime/cpu/kernel/result.hpp"
 #include "ngraph/runtime/cpu/kernel/sign.hpp"
+#include "ngraph/runtime/cpu/kernel/sin.hpp"
+#include "ngraph/runtime/cpu/kernel/sinh.hpp"
 #include "ngraph/runtime/cpu/kernel/sqrt.hpp"
 #include "ngraph/runtime/cpu/kernel/subtract.hpp"
+#include "ngraph/runtime/cpu/kernel/tan.hpp"
 #include "ngraph/runtime/cpu/kernel/tanh.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -254,19 +254,19 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Acos)
             {
-                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::cwise_acos);
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::acos);
             }
 
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Asin)
             {
-                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::cwise_asin);
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::asin);
             }
 
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Atan)
             {
-                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::cwise_atan);
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::atan);
             }
 
             template <>
@@ -278,13 +278,13 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Cos)
             {
-                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::cwise_cos);
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::cos);
             }
 
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Cosh)
             {
-                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::cwise_cosh);
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::cosh);
             }
 
             template <>
@@ -344,19 +344,19 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Sin)
             {
-                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::cwise_sin);
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::sin);
             }
 
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Sinh)
             {
-                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::cwise_sinh);
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::sinh);
             }
 
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Tan)
             {
-                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::cwise_tan);
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::tan);
             }
 
             template <>

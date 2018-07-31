@@ -30,7 +30,7 @@ namespace ngraph
             namespace kernel
             {
                 template <typename ElementType>
-                void cwise_atan(void* input0, void* output, size_t count)
+                void cosh(void* input0, void* output, size_t count)
                 {
                     Eigen::array<Eigen::Index, 1> out_dims, in_dims;
 
@@ -42,7 +42,7 @@ namespace ngraph
                         static_cast<ElementType*>(input0), in_dims);
 
                     out.device(eigen::global_thread_pool_device) =
-                        in0.unaryExpr(Eigen::internal::scalar_atan_op<ElementType>());
+                        in0.unaryExpr(Eigen::internal::scalar_cosh_op<ElementType>());
                 }
             }
         }
