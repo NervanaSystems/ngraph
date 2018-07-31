@@ -528,7 +528,7 @@ string codegen::CompilerCore::find_os_specific_path(const string& path)
             const string prefix = "x86_64-";
             const string suffix = "-linux";
             string path = file_util::get_file_name(file);
-            if (path.size() > prefix.size() && path.size() > suffix.size() &&
+            if (path.size() > (prefix.size() + suffix.size()) &&
                 path.compare(0, prefix.size(), prefix) == 0 &&
                 path.compare(path.size() - suffix.size(), suffix.size(), suffix) == 0)
             {
