@@ -22,8 +22,8 @@
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/runtime/gpu/cuda_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
-#include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_invoke.hpp"
+#include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
@@ -1018,8 +1018,8 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Softmax* node)
     auto axes = node->get_axes();
 
     std::stringstream ss;
-    ss << "softmax_" << runtime::gpu::kernel::emit_type_string(node)
-       <<  "_s" << join(tensor_shape, "_") << "_ra" << join(axes, "_");
+    ss << "softmax_" << runtime::gpu::kernel::emit_type_string(node) << "_s"
+       << join(tensor_shape, "_") << "_ra" << join(axes, "_");
     auto hash = ss.str();
 
     size_t primitive_index = m_primitive_emitter->lookup(hash);
@@ -1038,19 +1038,18 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Softmax* node)
         reduced_shape[axis] = 1;
     }
     size_t reduced_size = shape_size(reduced_shape);
-    size_t workspace_idx = allocator.reserve_workspace(reduced_size * out[0].get_element_type().size());
+    size_t workspace_idx =
+        allocator.reserve_workspace(reduced_size * out[0].get_element_type().size());
 
     // exponentiate with fused sum reduction to calculate softmax denominator
     auto input_type = args[0].get_element_type().c_type_string();
     auto output_type = out[0].get_element_type().c_type_string();
     size_t exp_sum_reduce = build_elementwise_collective<ngraph::op::Exp, ngraph::op::Add>(
-        {{input_type, output_type}},
-        tensor_shape, {}, axes, true /* multi-output */);
+        {{input_type, output_type}}, tensor_shape, {}, axes, true /* multi-output */);
 
     // inplace binary division with fused broadcast to calculate softmax
     size_t div_broadcast = build_elementwise_collective<ngraph::op::Divide>(
-        std::vector<std::string>(3, output_type),
-        tensor_shape, {1}, axes);
+        std::vector<std::string>(3, output_type), tensor_shape, {1}, axes);
 
     std::unique_ptr<gpu::primitive> kernel_launch(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
@@ -1572,7 +1571,6 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Convolution* node)
     std::stringstream ss;
     ss << "convolution_fprop_" << runtime::gpu::kernel::emit_type_string(node);
 
-
     auto& args = node->get_inputs();
     auto& out = node->get_outputs();
     auto input_shape = args[0].get_shape();
@@ -1581,9 +1579,10 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Convolution* node)
     auto tensor_size = input_shape.size();
 
     // primitive cache parameters
-    ss << "_s" << join(input_shape, "_") << "_pb" << join(node->get_padding_below(), "_")
-       << "_pi" << join(node->get_data_dilation_strides(), "_") << "_fs" << join(filter_shape, "_") << "_fst"
-       << join(node->get_window_movement_strides(), "_") << "_fdi" << join(node->get_window_dilation_strides(), "_");
+    ss << "_s" << join(input_shape, "_") << "_pb" << join(node->get_padding_below(), "_") << "_pi"
+       << join(node->get_data_dilation_strides(), "_") << "_fs" << join(filter_shape, "_") << "_fst"
+       << join(node->get_window_movement_strides(), "_") << "_fdi"
+       << join(node->get_window_dilation_strides(), "_");
 
     auto hash = ss.str();
 
@@ -1602,12 +1601,12 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Convolution* node)
     // c.f runtime/cpu/pass/cpu_layout.cpp
 
     GPUAllocator allocator = m_primitive_emitter->get_memory_allocator();
-    size_t transposed_data_idx = allocator.reserve_workspace(
-        shape_size(input_shape) * args[0].get_element_type().size());
-    size_t transposed_filter_idx = allocator.reserve_workspace(
-        shape_size(filter_shape) * args[1].get_element_type().size());
-    size_t transposed_output_idx = allocator.reserve_workspace(
-        shape_size(output_shape) * out[0].get_element_type().size());
+    size_t transposed_data_idx =
+        allocator.reserve_workspace(shape_size(input_shape) * args[0].get_element_type().size());
+    size_t transposed_filter_idx =
+        allocator.reserve_workspace(shape_size(filter_shape) * args[1].get_element_type().size());
+    size_t transposed_output_idx =
+        allocator.reserve_workspace(shape_size(output_shape) * out[0].get_element_type().size());
 
     GPUShape input_order;
     for (int i = 1; i <= tensor_size; i++)
@@ -1617,11 +1616,13 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Convolution* node)
 
     size_t reshape_data_index = build_reshape(
         {{args[0].get_element_type().c_type_string(), args[0].get_element_type().c_type_string()}},
-        input_shape, input_order);
+        input_shape,
+        input_order);
 
     size_t reshape_filter_index = build_reshape(
         {{args[1].get_element_type().c_type_string(), args[1].get_element_type().c_type_string()}},
-        filter_shape, input_order);
+        filter_shape,
+        input_order);
 
     // local helper to reshape tensor shape objects
     auto reshape = [](const Shape& shape, const GPUShape& order) {
@@ -1640,19 +1641,16 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Convolution* node)
     // reorder axes of the output shape (NK{do_1,...,do_n} -> K{do_1,...,do_n}N)
     output_shape = reshape(output_shape, input_order);
 
-    size_t conv_index =
-        build_convolution(
-            {{args[0].get_element_type().c_type_string(),
-                        args[1].get_element_type().c_type_string(),
-                        out[0].get_element_type().c_type_string()}},
-            input_shape,
-            node->get_padding_below(),
-            node->get_data_dilation_strides(),
-            filter_shape,
-            node->get_window_movement_strides(),
-            node->get_window_dilation_strides(),
-            output_shape);
-
+    size_t conv_index = build_convolution({{args[0].get_element_type().c_type_string(),
+                                            args[1].get_element_type().c_type_string(),
+                                            out[0].get_element_type().c_type_string()}},
+                                          input_shape,
+                                          node->get_padding_below(),
+                                          node->get_data_dilation_strides(),
+                                          filter_shape,
+                                          node->get_window_movement_strides(),
+                                          node->get_window_dilation_strides(),
+                                          output_shape);
 
     // reshape output tensor (K{do_1,...,do_n}N -> NK{do_1,...,do_n})
     input_order.clear();
@@ -1664,28 +1662,31 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Convolution* node)
 
     size_t reshape_output_index = build_reshape(
         {{args[1].get_element_type().c_type_string(), args[1].get_element_type().c_type_string()}},
-        output_shape, input_order);
-
+        output_shape,
+        input_order);
 
     std::unique_ptr<gpu::primitive> kernel_launch(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-                void* data = gpu::invoke_memory_primitive(m_ctx, transposed_data_idx);
-                void* filter = gpu::invoke_memory_primitive(m_ctx, transposed_filter_idx );
-                void* output = gpu::invoke_memory_primitive(m_ctx, transposed_output_idx);
-                gpu::invoke_primitive(m_ctx,
-                                      reshape_data_index,
-                                      std::vector<void*>{ inputs[0] }.data(),
-                                      std::vector<void*>{ data }.data());
-                gpu::invoke_primitive(m_ctx,
-                                      reshape_filter_index,
-                                      std::vector<void*>{ inputs[1] }.data(),
-                                      std::vector<void*>{ filter }.data());
-                gpu::invoke_primitive(m_ctx, conv_index, std::vector<void*>{data, filter}.data(), std::vector<void*>{output}.data());
-                gpu::invoke_primitive(m_ctx,
-                                      reshape_output_index,
-                                      std::vector<void*>{ output }.data(),
-                                      std::vector<void*>{ outputs[0] }.data());
-            }});
+            void* data = gpu::invoke_memory_primitive(m_ctx, transposed_data_idx);
+            void* filter = gpu::invoke_memory_primitive(m_ctx, transposed_filter_idx);
+            void* output = gpu::invoke_memory_primitive(m_ctx, transposed_output_idx);
+            gpu::invoke_primitive(m_ctx,
+                                  reshape_data_index,
+                                  std::vector<void*>{inputs[0]}.data(),
+                                  std::vector<void*>{data}.data());
+            gpu::invoke_primitive(m_ctx,
+                                  reshape_filter_index,
+                                  std::vector<void*>{inputs[1]}.data(),
+                                  std::vector<void*>{filter}.data());
+            gpu::invoke_primitive(m_ctx,
+                                  conv_index,
+                                  std::vector<void*>{data, filter}.data(),
+                                  std::vector<void*>{output}.data());
+            gpu::invoke_primitive(m_ctx,
+                                  reshape_output_index,
+                                  std::vector<void*>{output}.data(),
+                                  std::vector<void*>{outputs[0]}.data());
+        }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
     m_primitive_emitter->cache(hash, primitive_index);

@@ -20,10 +20,10 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/gpu/cudnn_emitter.hpp"
+#include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_invoke.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
-#include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 #include "ngraph/util.hpp"
 
@@ -358,7 +358,6 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
         return primitive_index;
     }
 
-
     bool is_deconvolution = false;
     for (auto a : data_dilation_strides)
     {
@@ -388,22 +387,20 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
         input_shape_padded = runtime::gpu::get_padded_shape(
             input_shape, padding_below, padding_above, padding_interior);
         Shape input_padded_strides = row_major_strides(input_shape_padded);
-        auto temp_size =
-            shape_size(input_shape_padded) * args[0].get_element_type().size();
+        auto temp_size = shape_size(input_shape_padded) * args[0].get_element_type().size();
         GPUAllocator allocator = m_primitive_emitter->get_memory_allocator();
 
         // reserve zero initialized workspace
         idx_workspace = allocator.reserve_workspace(temp_size, true);
 
         auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
-        pad_dynamic_index = cuda_emitter->build_pad_dynamic(
-            {{args[0].get_element_type().c_type_string(), out[0].get_element_type().c_type_string()}},
-            input_shape,
-            input_shape_padded,
-            padding_below,
-            padding_interior);
-
-
+        pad_dynamic_index =
+            cuda_emitter->build_pad_dynamic({{args[0].get_element_type().c_type_string(),
+                                              out[0].get_element_type().c_type_string()}},
+                                            input_shape,
+                                            input_shape_padded,
+                                            padding_below,
+                                            padding_interior);
 
         // asymetric padding has been applied, zero out padding vectors to
         // ensure cudnn does not assume padding
@@ -420,23 +417,22 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
 
     std::unique_ptr<gpu::primitive> kernel_launch(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-                if (idx_workspace != std::numeric_limits<size_t>::max() && pad_dynamic_index != std::numeric_limits<size_t>::max())
-                {
-                    void* pad_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, idx_workspace);
-                    gpu::invoke_primitive(m_ctx,
-                                          pad_dynamic_index,
-                                          std::vector<void*>{ inputs[0] }.data(),
-                                          std::vector<void*>{ pad_buffer }.data());
-                    gpu::invoke_primitive(m_ctx,
-                                          conv_index,
-                                          std::vector<void*>{ pad_buffer, inputs[1] }.data(),
-                                          outputs);
-                }
-                else
-                {
-                    gpu::invoke_primitive(m_ctx, conv_index, inputs, outputs);
-                }
-            }});
+            if (idx_workspace != std::numeric_limits<size_t>::max() &&
+                pad_dynamic_index != std::numeric_limits<size_t>::max())
+            {
+                void* pad_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, idx_workspace);
+                gpu::invoke_primitive(m_ctx,
+                                      pad_dynamic_index,
+                                      std::vector<void*>{inputs[0]}.data(),
+                                      std::vector<void*>{pad_buffer}.data());
+                gpu::invoke_primitive(
+                    m_ctx, conv_index, std::vector<void*>{pad_buffer, inputs[1]}.data(), outputs);
+            }
+            else
+            {
+                gpu::invoke_primitive(m_ctx, conv_index, inputs, outputs);
+            }
+        }});
     primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;

@@ -22,8 +22,8 @@
 #include "ngraph/runtime/gpu/gpu_shape.hpp"
 #include "ngraph/strides.hpp"
 
-#include "ngraph/op/softmax.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/softmax.hpp"
 
 namespace ngraph
 {
