@@ -2080,7 +2080,7 @@ namespace ngraph
                         writer << "std::vector<void*>{ workspace, ";
                         writer << out[0].get_name() << "}.data()";
                         writer << ");\n";
-
+/*
                         // inplace binary division with fused broadcast to calculate softmax
                         size_t div_broadcast =
                             cuda_emitter->build_elementwise_collective<ngraph::op::Divide>(
@@ -2088,12 +2088,12 @@ namespace ngraph
                                 out[0].get_shape(),
                                 {1},
                                 axes);
-
                         writer << "gpu::invoke_primitive(ctx, " << div_broadcast << ", ";
                         writer << "std::vector<void*>{" << out[0].get_name();
                         writer << ", workspace}.data(), ";
                         writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
                         writer << ");\n";
+*/
                     }
                     else
                     {

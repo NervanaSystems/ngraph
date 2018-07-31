@@ -33,14 +33,13 @@ void runtime::gpu::CudaKernelBuilder::get_elementwise_op(codegen::CodeWriter& wr
         writer << data_types[i] << "* in" << i << ", ";
     }
     writer << data_types[num_inputs] << "* out, "
-           << "size_t n)\n";
-    writer << "{\n";
-    writer.indent++;
+           << "uint32_t n)\n";
+    writer.block_begin();
     {
-        writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x; \n";
-        writer << "if (tid < n)\n";
-        writer << "{\n";
-        writer.indent++;
+        writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x; \n";
+        writer << "uint32_t step = gridDim.x * blockDim.x; \n";
+        writer << "for ( ;tid < n; tid += step)\n";
+        writer.block_begin();
         {
             writer << "out[tid] = " << op << "(";
             for (size_t i = 0; i < num_inputs - 1; i++)
@@ -49,11 +48,9 @@ void runtime::gpu::CudaKernelBuilder::get_elementwise_op(codegen::CodeWriter& wr
             }
             writer << "in" << num_inputs - 1 << "[tid]);\n";
         }
-        writer.indent--;
-        writer << "}\n";
+        writer.block_end();
     }
-    writer.indent--;
-    writer << "}\n";
+    writer.block_end();
 
     return;
 }
