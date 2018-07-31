@@ -51,10 +51,8 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
-                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
-                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
-                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     size_t max_pool_index =
                         mkldnn_emitter->build_pooling_forward(mkldnn::algorithm::pooling_max,

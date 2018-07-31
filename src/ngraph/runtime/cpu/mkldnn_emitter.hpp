@@ -66,7 +66,6 @@ namespace ngraph
                 // TODO(jmenon): Get rid of TensorViewWrappers at some point
                 mkldnn::memory::desc build_memory_descriptor(const TensorViewWrapper& tvw,
                                                              mkldnn::memory::format fmt) const;
-                mkldnn::memory::desc build_memory_descriptor(const TensorViewWrapper& tvw) const;
                 mkldnn::memory::desc build_memory_descriptor(const Shape& shape,
                                                              const ngraph::element::Type& et,
                                                              mkldnn::memory::format fmt) const;
@@ -74,7 +73,6 @@ namespace ngraph
                     build_blocked_memory_descriptor(const mkldnn::memory::dims& dim,
                                                     const mkldnn::memory::dims& strides,
                                                     mkldnn::memory::data_type dtype) const;
-                mkldnn::memory build_memory_primitive(const TensorViewWrapper& tvw) const;
                 size_t build_memory_primitive(const mkldnn::memory::desc& desc);
 
                 size_t build_convolution_forward(const mkldnn::memory::desc& input_data_desc,
@@ -115,19 +113,15 @@ namespace ngraph
                         window_dilation_strides_adjusted.push_back(s - 1);
                     }
 
-                    auto data_format = mkldnn_utils::get_input_mkldnn_format(node, 0);
-                    auto weights_format = mkldnn_utils::get_input_mkldnn_format(node, 1);
+                    auto data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
 
-                    // HACK to help MKLDNN pick the right implementation
-                    if (weights_format == mkldnn::memory::format::nchw)
+                    if (weights_desc.data.format == mkldnn_nchw)
                     {
-                        weights_format = mkldnn::memory::format::oihw;
+                        // MKLDNN doesn't seem to like nchw on weights
+                        weights_desc.data.format = mkldnn_oihw;
                     }
-                    auto result_format = mkldnn_utils::get_output_mkldnn_format(node, 0);
-
-                    auto data_desc = build_memory_descriptor(args[0], data_format);
-                    auto weights_desc = build_memory_descriptor(args[1], weights_format);
-                    auto result_desc = build_memory_descriptor(out[0], result_format);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     mkldnn::post_ops ops;
 
@@ -166,8 +160,7 @@ namespace ngraph
                     if (std::is_same<OP, ngraph::op::ConvolutionBias>() ||
                         std::is_same<OP, ngraph::op::ConvolutionBiasAdd>())
                     {
-                        auto bias_format = mkldnn_utils::get_input_mkldnn_format(node, 2);
-                        auto bias_desc = build_memory_descriptor(args[2], bias_format);
+                        auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
                         return build_convolution_forward(data_desc,
                                                          weights_desc,
                                                          bias_desc,
@@ -254,19 +247,9 @@ namespace ngraph
                         window_dilation_strides_adjusted.push_back(s - 1);
                     }
 
-                    auto arg0_format = mkldnn_utils::get_input_mkldnn_format(node, 0);
-                    if (std::is_same<OP, ngraph::op::ConvolutionBackpropData>())
-                    {
-                        // HACK to help MKLDNN pick the right implementation
-                        arg0_format = (arg0_format == mkldnn::memory::format::nchw)
-                                          ? mkldnn::memory::format::oihw
-                                          : arg0_format;
-                    }
-                    auto arg0_desc = build_memory_descriptor(args[0], arg0_format);
-                    auto arg1_format = mkldnn_utils::get_input_mkldnn_format(node, 1);
-                    auto arg1_desc = build_memory_descriptor(args[1], arg1_format);
-                    auto out0_format = mkldnn_utils::get_output_mkldnn_format(node, 0);
-                    auto out0_desc = build_memory_descriptor(out[0], out0_format);
+                    auto arg0_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto arg1_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                    auto out0_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     if (std::is_same<OP, ngraph::op::ConvolutionBackpropData>())
                     {
@@ -292,8 +275,7 @@ namespace ngraph
                     }
                     if (std::is_same<OP, ngraph::op::ConvolutionBiasBackpropFiltersBias>())
                     {
-                        auto out1_format = mkldnn_utils::get_output_mkldnn_format(node, 1);
-                        auto out1_desc = build_memory_descriptor(out[1], out1_format);
+                        auto out1_desc = mkldnn_utils::get_output_mkldnn_md(node, 1);
                         return build_convolution_backward_weights_bias(
                             arg0_desc,
                             arg1_desc,
