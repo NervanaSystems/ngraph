@@ -819,12 +819,12 @@ using namespace ngraph::runtime;
                 {
                     if (std::getenv("NGRAPH_CPU_NAN_CHECK"))
                     {
-                        generate_isnan_isinf_check(writer, node, out, "std::isnan");
+                        generate_isnan_isinf_check(writer, node, out, "isnan");
                     }
 
                     if (std::getenv("NGRAPH_CPU_INF_CHECK"))
                     {
-                        generate_isnan_isinf_check(writer, node, out, "std::isinf");
+                        generate_isnan_isinf_check(writer, node, out, "isinf");
                     }
                 }
             }

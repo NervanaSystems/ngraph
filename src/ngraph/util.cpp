@@ -388,7 +388,7 @@ std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv)
     return os;
 }
 
-void check_fp_values_isinf(const char* name, const float* array, size_t n)
+void ngraph::check_fp_values_isinf(const char* name, const float* array, size_t n)
 {
     for (size_t i = 0; i < n; i++)
     {
@@ -399,7 +399,7 @@ void check_fp_values_isinf(const char* name, const float* array, size_t n)
     }
 }
 
-void check_fp_values_isinf(const char* name, const double* array, size_t n)
+void ngraph::check_fp_values_isinf(const char* name, const double* array, size_t n)
 {
     for (size_t i = 0; i < n; i++)
     {
@@ -410,7 +410,7 @@ void check_fp_values_isinf(const char* name, const double* array, size_t n)
     }
 }
 
-void check_fp_values_isnan(const char* name, const float* array, size_t n)
+void ngraph::check_fp_values_isnan(const char* name, const float* array, size_t n)
 {
     for (size_t i = 0; i < n; i++)
     {
@@ -421,7 +421,7 @@ void check_fp_values_isnan(const char* name, const float* array, size_t n)
     }
 }
 
-void check_fp_values_isnan(const char* name, const double* array, size_t n)
+void ngraph::check_fp_values_isnan(const char* name, const double* array, size_t n)
 {
     for (size_t i = 0; i < n; i++)
     {
