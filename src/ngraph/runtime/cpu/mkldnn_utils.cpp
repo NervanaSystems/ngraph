@@ -366,20 +366,20 @@ memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& i
 
     auto out_md = memory::desc(md);
 
-    auto get_named_md = [](const mkldnn_memory_desc_t& in, const mkldnn_memory_format_t format) {
+    auto get_named_md = [](const mkldnn_memory_desc_t& blk, const mkldnn_memory_format_t format) {
         mkldnn_memory_desc_t named_md;
         // Could throw an exception if named `format` is not compatible with `md.dims`
         error::wrap_c_api(
-            mkldnn_memory_desc_init(&named_md, in.ndims, in.dims, in.data_type, format), "");
+            mkldnn_memory_desc_init(&named_md, blk.ndims, blk.dims, blk.data_type, format), "");
         return memory::desc(named_md);
     };
 
-    auto compare_named_md = [&](const mkldnn_memory_desc_t& in,
+    auto compare_named_md = [&](const mkldnn_memory_desc_t& blk,
                                 const mkldnn_memory_format_t format,
                                 const memory::desc& out_md) {
         try
         {
-            auto named_md = get_named_md(in, format);
+            auto named_md = get_named_md(blk, format);
             if (compare_mkldnn_mds(named_md, out_md))
             {
                 return true;
