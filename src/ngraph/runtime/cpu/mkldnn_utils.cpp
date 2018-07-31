@@ -366,27 +366,28 @@ memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& i
 
     auto out_md = memory::desc(md);
 
-    auto get_named_md = [](const mkldnn_memory_desc_t& md, const mkldnn_memory_format_t format) {
+    auto get_named_md = [](const mkldnn_memory_desc_t& in, const mkldnn_memory_format_t format) {
         mkldnn_memory_desc_t named_md;
         // Could throw an exception if named `format` is not compatible with `md.dims`
         error::wrap_c_api(
-            mkldnn_memory_desc_init(&named_md, md.ndims, md.dims, md.data_type, format), "");
+            mkldnn_memory_desc_init(&named_md, in.ndims, in.dims, in.data_type, format), "");
         return memory::desc(named_md);
     };
 
-    auto compare_named_md = [&](const mkldnn_memory_desc_t& md,
+    auto compare_named_md = [&](const mkldnn_memory_desc_t& in,
                                 const mkldnn_memory_format_t format,
                                 const memory::desc& out_md) {
         try
         {
-            auto named_md = get_named_md(md, format);
+            auto named_md = get_named_md(in, format);
             if (compare_mkldnn_mds(named_md, out_md))
             {
                 return true;
             }
         }
-        catch (const mkldnn::error& e)
+        catch (const mkldnn::error&)
         {
+            // Cannot create the named descriptor compatible with `in` desc
             return false;
         }
         return false;
