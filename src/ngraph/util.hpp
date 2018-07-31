@@ -227,6 +227,10 @@ namespace ngraph
         }
     }
 
+    // These wrappers are needed for SUSE. Template deduction fails for isinf(float) and
+    // isinf(double). For the double template specializations below the compiler gets
+    // confused and tries to use the isinf(float) instead of isinf(double) function. The
+    // wrappers make it explicit which function to call
     static bool isinf_float(float arg) { return std::isinf(arg); }
     static bool isnan_float(float arg) { return std::isnan(arg); }
     static bool isinf_double(double arg) { return std::isinf(arg); }
