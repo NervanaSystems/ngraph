@@ -31,8 +31,6 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
         PREFIX tvm
         GIT_REPOSITORY ${TVM_GIT_REPO_URL}
         GIT_TAG ${TVM_GIT_LABEL}
-        # Disable install step
-        INSTALL_COMMAND ""
         UPDATE_COMMAND ""
         CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
@@ -51,8 +49,6 @@ else()
         PREFIX tvm
         GIT_REPOSITORY ${TVM_GIT_REPO_URL}
         GIT_TAG ${TVM_GIT_LABEL}
-        # Disable install step
-        INSTALL_COMMAND ""
         UPDATE_COMMAND ""
         CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
@@ -70,7 +66,7 @@ endif()
 
 #------------------------------------------------------------------------------
 
-ExternalProject_Get_Property(ext_tvm SOURCE_DIR BINARY_DIR)
+ExternalProject_Get_Property(ext_tvm INSTALL_DIR)
 set(TVM_LINK_LIBS
     ${EXTERNAL_PROJECTS_ROOT}/tvm/build/libtvm.so
     ${EXTERNAL_PROJECTS_ROOT}/tvm/build/libtvm_topi.so
@@ -78,6 +74,6 @@ set(TVM_LINK_LIBS
 )
 
 add_library(libtvm INTERFACE)
-target_include_directories(libtvm SYSTEM INTERFACE ${SOURCE_DIR})
 add_dependencies(libtvm ext_tvm)
+target_include_directories(libtvm SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/tvm/include)
 target_link_libraries(libtvm INTERFACE ${TVM_LINK_LIBS})
