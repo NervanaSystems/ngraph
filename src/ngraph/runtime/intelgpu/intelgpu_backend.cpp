@@ -356,7 +356,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             do_unary_operation(topology, op, activation_relu);
         }
-	      else if ("ReluBackprop" == op->description())
+	else if ("ReluBackprop" == op->description())
         {
             do_backprop_operation(topology, op, activation_grad_relu);
         }
