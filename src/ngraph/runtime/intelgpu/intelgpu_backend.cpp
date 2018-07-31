@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include <CPP/activation.hpp>
+#include <CPP/activation_grad.hpp>
 #include <CPP/batch_norm.hpp>
 #include <CPP/convolution.hpp>
 #include <CPP/data.hpp>
@@ -94,6 +95,23 @@ static void do_unary_operation(cldnn::topology& topology,
 
     const cldnn::activation cldnn_unary(output_name, input_name, mode, param);
     topology.add(cldnn_unary);
+}
+
+static void do_backprop_operation(cldnn::topology& topology,
+                                  const shared_ptr<Node>& op,
+                                  cldnn_activation_grad_func mode,
+                                  const cldnn_activation_additional_params& param = {0.f, 0.f})
+{
+    arguments_check(op, 2, 1);
+
+    const string& input = op->get_inputs()[0].get_tensor().get_name();
+    const string& input_grad = op->get_inputs()[1].get_tensor().get_name();
+
+    const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+
+    const cldnn::activation_grad cldnn_activ_grad(output_name, input_grad, input, mode, param);
+
+    topology.add(cldnn_activ_grad);
 }
 
 // This function needed to only change the name of the data in topology
@@ -338,6 +356,10 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             do_unary_operation(topology, op, activation_relu);
         }
+	      else if ("ReluBackprop" == op->description())
+        {
+            do_backprop_operation(topology, op, activation_grad_relu);
+        }
         else if ("Abs" == op->description())
         {
             do_unary_operation(topology, op, activation_abs);
@@ -350,9 +372,17 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             do_unary_operation(topology, op, activation_hyperbolic_tan);
         }
+        else if ("Sigmoid" == op->description())
+        {
+            do_unary_operation(topology, op, activation_logistic);
+        }
         else if ("Subtract" == op->description())
         {
             do_eltwise_operation(topology, op, cldnn::eltwise_mode::sub);
+        }
+        else if ("Power" == op->description())
+        {
+            do_eltwise_operation(topology, op, cldnn::eltwise_mode::pow);
         }
         else if ("Pad" == op->description())
         {
