@@ -25,7 +25,10 @@
 namespace ngraph
 {
     class GPUShape;
-
+    namespace op
+    {
+        class Convolution;
+    }
     namespace runtime
     {
         namespace gpu
@@ -131,6 +134,7 @@ namespace ngraph
                                      GPUShape input_shape,
                                      GPUShape input_order);
 
+                size_t build_convolution(const op::Convolution* node);
                 size_t build_convolution(const std::array<std::string, 3>& dtypes,
                                          GPUShape input_shape,
                                          GPUShape input_pad_below,

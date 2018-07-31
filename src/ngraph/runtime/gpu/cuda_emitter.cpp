@@ -28,6 +28,8 @@
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 #include "ngraph/util.hpp"
 
+#include "ngraph/op/convolution.hpp"
+
 using namespace ngraph;
 
 struct pooling_op_shape
@@ -1565,6 +1567,140 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const std::array<std::string, 
     return primitive_index;
 }
 
+size_t runtime::gpu::CUDAEmitter::build_convolution(const op::Convolution* node)
+{
+    std::stringstream ss;
+    ss << "convolution_fprop_";
+    for (auto const& input : node->get_inputs())
+    {
+        ss << input.get_element_type().c_type_string() << "_";
+    }
+    for (auto const& output : node->get_outputs())
+    {
+        ss << output.get_element_type().c_type_string() << "_";
+    }
+
+
+    auto& args = node->get_inputs();
+    auto& out = node->get_outputs();
+    auto input_shape = args[0].get_shape();
+    auto filter_shape = args[1].get_shape();
+    auto output_shape = out[0].get_shape();
+    auto tensor_size = input_shape.size();
+
+    // primitive cache parameters
+    ss << "_s" << join(input_shape, "_") << "_pb" << join(node->get_padding_below(), "_")
+       << "_pi" << join(node->get_data_dilation_strides(), "_") << "_fs" << join(filter_shape, "_") << "_fst"
+       << join(node->get_window_movement_strides(), "_") << "_fdi" << join(node->get_window_dilation_strides(), "_");
+
+    auto hash = ss.str();
+    std::replace(hash.begin(), hash.end(), ' ', '_');
+
+    // check if the requested primtive is already built
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    // Reshape from NC{d1,..,dn} -> C{d1,...,dn}N
+    // and from KC{df1,...,dfn} -> C{df1,...,dfn}N.
+
+    // TODO: This should be done via a pass similar to
+    // what is done for convolution in the IA transformer
+    // c.f runtime/cpu/pass/cpu_layout.cpp
+
+    GPUAllocator allocator = m_primitive_emitter->get_memory_allocator();
+    size_t transposed_data_idx = allocator.reserve_workspace(
+        shape_size(input_shape) * args[0].get_element_type().size());
+    size_t transposed_filter_idx = allocator.reserve_workspace(
+        shape_size(filter_shape) * args[1].get_element_type().size());
+    size_t transposed_output_idx = allocator.reserve_workspace(
+        shape_size(output_shape) * out[0].get_element_type().size());
+
+    GPUShape input_order;
+    for (int i = 1; i <= tensor_size; i++)
+    {
+        input_order.push_back(i % tensor_size);
+    }
+
+    size_t reshape_data_index = build_reshape(
+        {{args[0].get_element_type().c_type_string(), args[0].get_element_type().c_type_string()}},
+        input_shape, input_order);
+
+    size_t reshape_filter_index = build_reshape(
+        {{args[1].get_element_type().c_type_string(), args[1].get_element_type().c_type_string()}},
+        filter_shape, input_order);
+
+    // local helper to reshape tensor shape objects
+    auto reshape = [](const Shape& shape, const GPUShape& order) {
+        Shape output(shape.size(), 0);
+        for (size_t i = 0; i < shape.size(); i++)
+        {
+            output[i] = shape[order[i]];
+        }
+        return output;
+    };
+
+    // reorder axes of the input shape (NC{d_1,...,d_n} -> C{d_1,...,d_n}N)
+    input_shape = reshape(input_shape, input_order);
+    // reorder axes of the filter shape (KC{df_1,...,df_n} -> C{df_1,...,df_n}K)
+    filter_shape = reshape(filter_shape, input_order);
+    // reorder axes of the output shape (NK{do_1,...,do_n} -> K{do_1,...,do_n}N)
+    output_shape = reshape(output_shape, input_order);
+
+    size_t conv_index =
+        build_convolution(
+            {{args[0].get_element_type().c_type_string(),
+                        args[1].get_element_type().c_type_string(),
+                        out[0].get_element_type().c_type_string()}},
+            input_shape,
+            node->get_padding_below(),
+            node->get_data_dilation_strides(),
+            filter_shape,
+            node->get_window_movement_strides(),
+            node->get_window_dilation_strides(),
+            output_shape);
+
+
+    // reshape output tensor (K{do_1,...,do_n}N -> NK{do_1,...,do_n})
+    input_order.clear();
+    input_order.push_back(static_cast<int>(tensor_size - 1));
+    for (int i = 0; i < tensor_size - 1; i++)
+    {
+        input_order.push_back(i);
+    }
+
+    size_t reshape_output_index = build_reshape(
+        {{args[1].get_element_type().c_type_string(), args[1].get_element_type().c_type_string()}},
+        output_shape, input_order);
+
+
+    std::unique_ptr<gpu::primitive> kernel_launch(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+                void* data = gpu::invoke_memory_primitive(m_ctx, transposed_data_idx);
+                void* filter = gpu::invoke_memory_primitive(m_ctx, transposed_filter_idx );
+                void* output = gpu::invoke_memory_primitive(m_ctx, transposed_output_idx);
+                gpu::invoke_primitive(m_ctx,
+                                      reshape_data_index,
+                                      std::vector<void*>{ inputs[0] }.data(),
+                                      std::vector<void*>{ data }.data());
+                gpu::invoke_primitive(m_ctx,
+                                      reshape_filter_index,
+                                      std::vector<void*>{ inputs[1] }.data(),
+                                      std::vector<void*>{ filter }.data());
+                gpu::invoke_primitive(m_ctx, conv_index, std::vector<void*>{data, filter}.data(), std::vector<void*>{output}.data());
+                gpu::invoke_primitive(m_ctx,
+                                      reshape_output_index,
+                                      std::vector<void*>{ output }.data(),
+                                      std::vector<void*>{ outputs[0] }.data());
+            }});
+
+    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
+
 size_t runtime::gpu::CUDAEmitter::build_convolution(const std::array<std::string, 3>& dtypes,
                                                     GPUShape input_shape,
                                                     GPUShape input_pad_below,
@@ -1587,7 +1723,7 @@ size_t runtime::gpu::CUDAEmitter::build_convolution(const std::array<std::string
     // coalescing and vectorization is maintained regardless of coordinate access
     // (e.g. data and filter dilation).
 
-    std::string kernel_name = "convolution_fprop_" + join(dtypes, "_");
+    std::string kernel_name = "convolution_fprop_c_nd_n" + join(dtypes, "_");
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
 
     // prerequisits for kernel cacheing and building
@@ -1604,20 +1740,6 @@ size_t runtime::gpu::CUDAEmitter::build_convolution(const std::array<std::string
     // additional kernel cache parameters
     kernel_name = kernel_name + "_n" + std::to_string(N) + "_k" + std::to_string(K) + "_fsz" +
                   std::to_string(filter_size) + "_r" + std::to_string(rank);
-
-    // primitive cache parameters
-    std::stringstream ss;
-    ss << kernel_name << "_s" << join(input_shape, "_") << "_pb" << join(input_pad_below, "_")
-       << "_pi" << join(input_dilation, "_") << "_fs" << join(filter_shape, "_") << "_fst"
-       << join(filter_stride, "_") << "_fdi" << join(filter_dilation, "_");
-    auto hash = ss.str();
-
-    // check if the requested kernel is already an inserted primitive
-    size_t primitive_index = m_primitive_emitter->lookup(hash);
-    if (primitive_index != std::numeric_limits<size_t>::max())
-    {
-        return primitive_index;
-    }
 
     // tiling options are determined by
     // batch size (N) and number of filters (K)
@@ -1816,9 +1938,7 @@ size_t runtime::gpu::CUDAEmitter::build_convolution(const std::array<std::string
         debug_sync();
     }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(conv));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->insert(std::move(conv));
 }
 
 void runtime::gpu::CUDAEmitter::print_tensor_from_gpu(codegen::CodeWriter& writer,
