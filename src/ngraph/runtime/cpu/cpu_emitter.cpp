@@ -1456,14 +1456,50 @@ namespace ngraph
             {
                 const ngraph::op::LRN* lrn = static_cast<const ngraph::op::LRN*>(node);
 
-                writer << "reference::lrn<" << lrn->get_element_type().c_type_string() << ">(";
-                writer << "            " << args[0].get_name() << ",\n";
-                writer << "            " << out[0].get_name() << ",\n";
-                writer << "            {" << join(args[0].get_shape()) << "},\n";
-                writer << "            " << lrn->get_alpha() << ",\n";
-                writer << "            " << lrn->get_beta() << ",\n";
-                writer << "            " << lrn->get_bias() << ",\n";
-                writer << "            " << lrn->get_nsize() << ");\n";
+                writer.block_begin();
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto input_format =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
+
+                    auto output_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_data_desc =
+                        mkldnn_emitter->build_memory_descriptor(args[0], input_format);
+                    auto result_desc =
+                        mkldnn_emitter->build_memory_descriptor(out[0], output_format);
+
+                    auto lrn_index =
+                        mkldnn_emitter->build_lrn_forward(input_data_desc,
+                                                          result_desc,
+                                                          static_cast<float>(lrn->get_alpha()),
+                                                          static_cast<float>(lrn->get_beta()),
+                                                          static_cast<float>(lrn->get_bias()),
+                                                          static_cast<int>(lrn->get_nsize()));
+
+                    auto& deps = mkldnn_emitter->get_primitive_deps(lrn_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(lrn_index) << ");\n";
+                }
+                else
+                {
+                    writer << "reference::lrn<" << lrn->get_element_type().c_type_string() << ">(";
+                    writer << "            " << args[0].get_name() << ",\n";
+                    writer << "            " << out[0].get_name() << ",\n";
+                    writer << "            {" << join(args[0].get_shape()) << "},\n";
+                    writer << "            " << lrn->get_alpha() << ",\n";
+                    writer << "            " << lrn->get_beta() << ",\n";
+                    writer << "            " << lrn->get_bias() << ",\n";
+                    writer << "            " << lrn->get_nsize() << ");\n";
+                }
+                writer.block_end();
             }
 
             template <>
