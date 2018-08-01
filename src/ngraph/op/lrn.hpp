@@ -50,18 +50,18 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            size_t get_nsize() const { return m_size; }
             double get_alpha() const { return m_alpha; }
             double get_beta() const { return m_beta; }
             double get_bias() const { return m_bias; }
+            size_t get_nsize() const { return m_size; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
 
-            size_t m_size;
             double m_alpha;
             double m_beta;
             double m_bias;
+            size_t m_size;
         };
     }
 }
