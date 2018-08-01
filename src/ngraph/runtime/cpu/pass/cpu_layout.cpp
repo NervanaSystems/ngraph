@@ -49,6 +49,7 @@
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/quantized_conv.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 
 using namespace std;
@@ -272,6 +273,12 @@ namespace ngraph
                     memory::data_type et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
                         node->get_input_element_type(0));
 
+                    memory::data_type et_weights = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
+                        node->get_input_element_type(1));
+
+                    memory::data_type et_result = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
+                        node->get_output_element_type(0));
+
                     engine cpu_engine(engine::cpu, 0);
                     memory::dims mkldnn_arg0_shape(arg0_shape.begin(), arg0_shape.end());
                     memory::dims mkldnn_arg1_shape(arg1_shape.begin(), arg1_shape.end());
@@ -283,8 +290,10 @@ namespace ngraph
                     memory::dims mkldnn_padding_below(padding_below.begin(), padding_below.end());
                     memory::dims mkldnn_padding_above(padding_above.begin(), padding_above.end());
                     const memory::desc input_data_desc(mkldnn_arg0_shape, et, memory::format::any);
-                    const memory::desc weights_desc(mkldnn_arg1_shape, et, memory::format::any);
-                    const memory::desc result_desc(mkldnn_result_shape, et, memory::format::any);
+                    const memory::desc weights_desc(
+                        mkldnn_arg1_shape, et_weights, memory::format::any);
+                    const memory::desc result_desc(
+                        mkldnn_result_shape, et_result, memory::format::any);
                     std::unique_ptr<convolution_forward::desc> fwd_desc{nullptr};
                     if (use_bias)
                     {
@@ -374,6 +383,27 @@ namespace ngraph
                         ConvolutionLayout<ngraph::op::Convolution, false, false>(
                             node, prim_input_formats, prim_output_formats);
 
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedConvolution)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+                        ConvolutionLayout<ngraph::op::QuantizedConvolution, false, false>(
+                            node, prim_input_formats, prim_output_formats);
+                        prim_output_formats.push_back(memory::format::x);
+                        prim_output_formats.push_back(memory::format::x);
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
                         set_output_layouts(node, prim_output_formats);
@@ -1497,6 +1527,8 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::AvgPoolBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPoolBackprop>},
     {TI(ngraph::op::Convolution), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Convolution>},
+    {TI(ngraph::op::QuantizedConvolution),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolution>},
     {TI(ngraph::op::GroupConvolution),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::GroupConvolution>},
     {TI(ngraph::op::ConvolutionBackpropData),

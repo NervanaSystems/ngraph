@@ -2873,7 +2873,7 @@ namespace ngraph
                     float min_out_value;
                     float max_out_value;
                     ngraph::runtime::cpu::quantization_util::
-                        QuantizationRangeForMultiplication<int8_t, uint8_t, int32_t>(
+                        QuantizationRangeForMultiplication<uint8_t, int8_t, int32_t>(
                             min_input,
                             max_input,
                             min_filter,
@@ -2883,7 +2883,8 @@ namespace ngraph
                     float scale_int32 = std::max(std::abs(min_out_value), std::abs(max_out_value));
                     float scale_eightbit = std::max(std::abs(min_output), std::abs(max_output));
                     float scale = 1.0;
-                    scale = scale_int32 / scale_eightbit / (float)(1 << 23);
+                    // Output is signed int.
+                    scale = scale_int32 / scale_eightbit / (float)(1 << 24);
 
                     size_t conv_index = 0;
 
@@ -2904,6 +2905,8 @@ namespace ngraph
                            << ", " << args[1].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
                            << ", " << out[0].get_name() << ");\n";
+                    writer << "*(" << out[1].get_name() << ") = " << min_output << ";\n";
+                    writer << "*(" << out[2].get_name() << ") = " << max_output << ";\n";
 
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(conv_index) << ");\n";

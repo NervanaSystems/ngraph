@@ -26,7 +26,6 @@ using namespace ngraph;
 
 op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& data_batch,
                                                const shared_ptr<Node>& filters,
-                                               const shared_ptr<Node>& bias,
                                                const Strides& window_movement_strides,
                                                const Strides& window_dilation_strides,
                                                const CoordinateDiff& padding_below,
@@ -38,7 +37,7 @@ op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& data_batc
                                                const float max_filter,
                                                const float min_output,
                                                const float max_output)
-    : RequiresTensorViewArgs("QuantizedConvolution", {data_batch, filters, bias})
+    : RequiresTensorViewArgs("QuantizedConvolution", {data_batch, filters})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -49,22 +48,13 @@ op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& data_batc
     , m_min_filter(min_filter)
     , m_max_filter(max_filter)
     , m_min_output(min_output)
+    , m_max_output(max_output)
 {
     auto& data_batch_shape = data_batch->get_shape();
-    auto& data_batch_et = data_batch->get_element_type();
     auto& filters_shape = filters->get_shape();
-    auto& filters_et = filters->get_element_type();
-
-    //
-    // Make sure data batch and filter element types match.
-    //
-    if (data_batch_et != filters_et)
-    {
-        throw ngraph_error("QuantizedConvolution data batch and filter element types do not match");
-    }
 
     set_value_type_checked(
-        data_batch_et,
+        element::i8,
         util::infer_convolution_output_shape(data_batch_shape,
                                              filters_shape,
                                              window_movement_strides,
@@ -79,4 +69,28 @@ op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& data_batc
                                              0, /* batch_axis_result,            */
                                              1, /* output_channel_axis_result,   */
                                              ""));
+    add_output(element::f32, Shape{1});
+    add_output(element::f32, Shape{1});
+}
+
+shared_ptr<Node> op::QuantizedConvolution::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 2)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+
+    return shared_ptr<Node>(new QuantizedConvolution(new_args.at(0),
+                                                     new_args.at(1),
+                                                     get_window_movement_strides(),
+                                                     get_window_dilation_strides(),
+                                                     get_padding_below(),
+                                                     get_padding_above(),
+                                                     get_data_dilation_strides(),
+                                                     m_min_input,
+                                                     m_max_input,
+                                                     m_min_filter,
+                                                     m_max_filter,
+                                                     m_min_output,
+                                                     m_max_output));
 }

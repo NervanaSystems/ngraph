@@ -28,7 +28,6 @@ namespace ngraph
         public:
             QuantizedConvolution(const std::shared_ptr<Node>& data_batch,
                                  const std::shared_ptr<Node>& filters,
-                                 const std::shared_ptr<Node>& bias,
                                  const Strides& window_movement_strides,
                                  const Strides& window_dilation_strides,
                                  const CoordinateDiff& padding_below,
@@ -52,11 +51,10 @@ namespace ngraph
             const float get_max_filter() const { return m_max_filter; }
             const float get_min_output() const { return m_min_output; }
             const float get_max_output() const { return m_max_output; }
-            std::shared_ptr<Node> get_bias() { return get_argument(2); }
             std::shared_ptr<Node> get_filters() { return get_argument(1); }
             std::shared_ptr<Node> get_data_batch() { return get_argument(0); }
-            //            virtual std::shared_ptr<Node>
-            //                copy_with_new_args(const NodeVector& new_args) const override;
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
             Strides m_window_movement_strides;
@@ -64,12 +62,12 @@ namespace ngraph
             CoordinateDiff m_padding_below;
             CoordinateDiff m_padding_above;
             Strides m_data_dilation_strides;
-            float m_min_input;
-            float m_max_input;
-            float m_min_filter;
-            float m_max_filter;
-            float m_min_output;
-            float m_max_output;
+            const float m_min_input;
+            const float m_max_input;
+            const float m_min_filter;
+            const float m_max_filter;
+            const float m_min_output;
+            const float m_max_output;
         };
     }
 }
