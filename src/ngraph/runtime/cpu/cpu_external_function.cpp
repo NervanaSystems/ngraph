@@ -1192,7 +1192,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
     }
 
     executor = [&](CPURuntimeContext* ctx, vector<void*>& inputs, vector<void*>& outputs) {
-        static bool first_iteration = true;
         cpu::Timestamp start_ts;
         int profiler_count = 0;
 
@@ -1217,7 +1216,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         if (m_use_tbb)
         {
             // Build the flow graph
-            if (first_iteration)
+            if (ctx->first_iteration)
             {
                 std::unordered_map<
                     std::string,
@@ -1234,7 +1233,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
                         flowgraph_node = new tbb::flow::continue_node<tbb::flow::continue_msg,
                                                                       tbb::flow::lightweight>(
                             *(ctx->G), [&](const tbb::flow::continue_msg& msg) {
-                                if (p.first(ctx) || first_iteration)
+                                if (p.first(ctx) || ctx->first_iteration)
                                 {
                                     for (size_t j = 0; j < p.second; j++)
                                     {
@@ -1315,7 +1314,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         {
             for (const auto& p : enables)
             {
-                if (p.first(ctx) || first_iteration)
+                if (p.first(ctx) || ctx->first_iteration)
                 {
                     for (size_t j = 0; j < p.second; j++)
                     {
@@ -1348,7 +1347,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
                 }
             }
         }
-        first_iteration = false;
+        ctx->first_iteration = false;
 
         if (runtime::cpu::IsTracingEnabled())
         {
