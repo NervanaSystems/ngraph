@@ -103,7 +103,7 @@ shared_ptr<Node> runtime::cpu::pass::CPULayout::insert_input_conversions(
         {
             auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
             layout->set_mkldnn_md(required_mds[index]);
-
+            layout->compute_mkldnn_memory_size(layout->get_mkldnn_md());
             auto new_node = std::shared_ptr<Node>(
                 new runtime::cpu::op::ConvertLayout(output.get_node(), output.get_index(), layout));
             new_args.push_back(new_node);
@@ -116,6 +116,7 @@ shared_ptr<Node> runtime::cpu::pass::CPULayout::insert_input_conversions(
         }
         else
         {
+            tvl->compute_mkldnn_memory_size(tvl->get_mkldnn_md());
             new_args.push_back(output.get_node());
         }
         index++;
@@ -156,6 +157,7 @@ void runtime::cpu::pass::CPULayout::set_output_layouts(shared_ptr<Node>& node,
         }
         auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
         layout->set_mkldnn_md(output_mds[i]);
+        layout->compute_mkldnn_memory_size(layout->get_mkldnn_md());
         tv->set_tensor_view_layout(layout);
         NGRAPH_DEBUG << "Setting Node: " << node->get_name()
                      << " output layout: " << output_mds[i].data.format << endl;
@@ -174,9 +176,6 @@ void runtime::cpu::pass::CPULayout::set_native_layouts(
     {
         const auto& output = input.get_output();
         auto input_node = output.get_node();
-        bool is_mkldnn = dynamic_pointer_cast<const ngraph::op::Op>(input_node)
-                             ? runtime::cpu::mkldnn_utils::use_mkldnn_kernel(input_node.get())
-                             : false;
         auto tv = output.get_tensor_view();
         auto et = tv->get_tensor_view_type()->get_element_type();
         auto shape = tv->get_tensor_view_type()->get_shape();
@@ -193,6 +192,7 @@ void runtime::cpu::pass::CPULayout::set_native_layouts(
 
                 layout->set_mkldnn_md(native_md);
 
+                layout->compute_mkldnn_memory_size(layout->get_mkldnn_md());
                 auto new_node = std::shared_ptr<Node>(new runtime::cpu::op::ConvertLayout(
                     output.get_node(), output.get_index(), layout));
                 new_args.push_back(new_node);
@@ -211,6 +211,7 @@ void runtime::cpu::pass::CPULayout::set_native_layouts(
             }
             else
             {
+                cpu_tvl->compute_mkldnn_memory_size(cpu_tvl->get_mkldnn_md());
                 new_args.push_back(output.get_node());
             }
         }
@@ -257,6 +258,7 @@ void runtime::cpu::pass::CPULayout::set_native_layouts(
             auto native_md =
                 mkldnn_utils::create_blocked_mkldnn_md(shape, layout->get_strides(), et);
             layout->set_mkldnn_md(native_md);
+            layout->compute_mkldnn_memory_size(layout->get_mkldnn_md());
         }
         tv->set_tensor_view_layout(layout);
     }
@@ -367,8 +369,6 @@ namespace ngraph
                         }
                     }
                     convolution_forward::primitive_desc prim_desc(*fwd_desc, cpu_engine);
-                    auto src_prim_desc = prim_desc.src_primitive_desc().desc();
-
                     i_mds.push_back(prim_desc.src_primitive_desc().desc());
 
                     if (default_weights_format)
@@ -1405,8 +1405,6 @@ namespace ngraph
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         auto concat = static_cast<const ngraph::op::Concat*>(node.get());
-                        auto input0_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-
                         size_t concat_dim = concat->get_concatenation_axis();
                         auto result_desc = mkldnn_utils::create_default_mkldnn_md(
                             node.get(), 0, true, memory::format::any);

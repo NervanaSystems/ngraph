@@ -39,13 +39,8 @@ namespace ngraph
                 LayoutDescriptor(const ngraph::descriptor::TensorView& tv);
                 ~LayoutDescriptor() override {}
                 size_t get_size() override { return m_size; }
-                virtual size_t size() override
-                {
-                    return mkldnn_memory_size;
-                }
-                void compute_mkldnn_memory_size(std::shared_ptr<const ngraph::TensorViewType> tvt,
-                                                const mkldnn::memory::format& fmt,
-                                                bool is_mkldnn = false);
+                virtual size_t size() override { return m_mkldnn_memory_size; }
+                void compute_mkldnn_memory_size(const mkldnn::memory::desc md);
                 size_t get_offset() const { return m_offset; }
                 size_t get_index_offset(const std::vector<size_t>& indices) override;
 
@@ -73,7 +68,7 @@ namespace ngraph
                 // Otherwise, physical layout is assumed to be in row-major
                 // format represented by m_strides
                 mkldnn::memory::desc m_mkldnn_md;
-                size_t mkldnn_memory_size;
+                size_t m_mkldnn_memory_size;
             };
 
             typedef std::vector<std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>>

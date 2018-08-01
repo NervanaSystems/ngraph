@@ -47,6 +47,9 @@ namespace ngraph
                     s *= shape[shape.size() - (i + 1)];
                 }
                 std::reverse(m_strides.begin(), m_strides.end());
+                auto tvt = tv.get_tensor_view_type();
+                m_mkldnn_memory_size =
+                    shape_size(tvt->get_shape()) * tvt->get_element_type().size();
             }
 
             size_t LayoutDescriptor::get_index_offset(const std::vector<size_t>& indices)
@@ -100,32 +103,13 @@ namespace ngraph
                 return true;
             }
 
-            void LayoutDescriptor::compute_mkldnn_memory_size(
-                std::shared_ptr<const ngraph::TensorViewType> tvt,
-                const mkldnn::memory::format& fmt,
-                bool is_mkldnn)
+            void LayoutDescriptor::compute_mkldnn_memory_size(const mkldnn::memory::desc mem_desc)
             {
                 try
                 {
-                    if (is_mkldnn)
-                    {
-                        auto mem_desc = mkldnn::memory::desc(
-                            mkldnn::memory::dims(tvt->get_shape().begin(), tvt->get_shape().end()),
-                            mkldnn_utils::get_mkldnn_data_type(tvt->get_element_type()),
-                            fmt);
-                        auto mem_prim_desc = mkldnn::memory::primitive_desc(
-                            mem_desc, mkldnn_utils::global_cpu_engine);
-                        mkldnn_memory_size = mem_prim_desc.get_size();
-                    }
-                    else
-                    {
-                        size_t size = 1;
-                        for (size_t s : tvt->get_shape())
-                        {
-                            size *= s;
-                        }
-                        mkldnn_memory_size = size * tvt->get_element_type().size();
-                    }
+                    auto mem_prim_desc =
+                        mkldnn::memory::primitive_desc(mem_desc, mkldnn_utils::global_cpu_engine);
+                    m_mkldnn_memory_size = mem_prim_desc.get_size();
                 }
                 catch (const mkldnn::error& e)
                 {
