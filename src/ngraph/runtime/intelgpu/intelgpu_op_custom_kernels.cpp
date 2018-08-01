@@ -27,6 +27,7 @@
 using namespace std;
 using namespace ngraph;
 
+static vector<cldnn_arg> parameters_1inp_1out = {{arg_input, 0}, {arg_output, 0}};
 static vector<cldnn_arg> parameters_2inp_1out = {{arg_input, 0}, {arg_input, 1}, {arg_output, 0}};
 
 static string array_dims(const Shape& dimentions)
@@ -58,16 +59,22 @@ static string access_dims(const Shape& dimentions, const AxisSet& axis = {})
     return buffer;
 }
 
-static string
-    access_dims_strided(const Shape& dimentions, const Shape& pad_below, const Shape& pad_interior)
+static string access_dims_strided(const Shape& dimentions,
+                                  const Shape& pad_below,
+                                  const Shape& pad_interior,
+                                  bool is_pad_interior)
 {
     string buffer;
     size_t var_idx = 0;
 
     for (auto const& i : dimentions)
     {
-        buffer += "[i" + to_string(var_idx) + " * (" + to_string(pad_interior.at(var_idx)) +
-                  " + 1) + " + to_string(pad_below.at(var_idx)) + "]";
+        buffer += "[i" + to_string(var_idx) + " * (" + to_string(pad_interior.at(var_idx));
+        if (is_pad_interior)
+        {
+            buffer += " + 1";
+        }
+        buffer += ") + " + to_string(pad_below.at(var_idx)) + "]";
         ++var_idx;
     }
 
@@ -130,7 +137,7 @@ void runtime::intelgpu::do_pad_operation(cldnn::topology& topology,
             ++var_idx;
         }
 
-        writer << "output" << access_dims_strided(input_shape, pad_below, pad_interior)
+        writer << "output" << access_dims_strided(input_shape, pad_below, pad_interior, true)
                << " = input" << access_dims(input_shape) << ";\n";
 
         // Closing brackets for main Copy loop
@@ -445,4 +452,54 @@ void runtime::intelgpu::do_dot_operation(cldnn::topology& topology,
                                              "",
                                              layout);
     topology.add(op_dot);
+}
+
+void runtime::intelgpu::do_slice_operation(cldnn::topology& topology,
+                                           const string& input_name,
+                                           const Shape& input_shape,
+                                           const string& output_name,
+                                           const Shape& output_shape,
+                                           const element::Type& output_type,
+                                           const Coordinate& lower_bounds,
+                                           const Coordinate& uppper_bounds,
+                                           const Strides& strides)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    string entry_point_name = "slice_unknown";
+    codegen::CodeWriter writer;
+
+    writer << "__kernel void " << entry_point_name << "(const __global float input"
+           << array_dims(input_shape) << ", __global float output" << array_dims(output_shape)
+           << ")\n";
+    writer.block_begin();
+    {
+        size_t var_idx = 0;
+        // Main loops
+        for (auto const& i : output_shape)
+        {
+            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
+                   << var_idx << ")\n";
+            writer.block_begin();
+            ++var_idx;
+        }
+
+        writer << "output" << access_dims(output_shape) << " = input"
+               << access_dims_strided(input_shape, lower_bounds, strides, false) << ";\n";
+
+        // Closing brackets for main loops
+        for (auto const& i : output_shape)
+        {
+            writer.block_end();
+        }
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_slice(output_name,
+                                               {input_name},
+                                               {writer.get_code()},
+                                               entry_point_name,
+                                               parameters_1inp_1out,
+                                               "",
+                                               layout);
+    topology.add(op_slice);
 }
