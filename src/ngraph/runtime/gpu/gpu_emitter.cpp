@@ -165,134 +165,24 @@ namespace ngraph
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::ConvolutionBackpropData)
             {
-                if (out[0].get_size() == 0)
-                {
-                    return;
-                }
-
                 auto convolution = static_cast<const ngraph::op::ConvolutionBackpropData*>(node);
-                Strides window_dilation_strides =
-                    convolution->get_window_dilation_strides_forward();
-                Strides window_movement_strides =
-                    convolution->get_window_movement_strides_forward();
-                Strides data_dilation_strides = convolution->get_data_dilation_strides_forward();
-                CoordinateDiff padding_below_diff = convolution->get_padding_below_forward();
-                CoordinateDiff padding_above_diff = convolution->get_padding_above_forward();
 
-                if (padding_below_diff.size() > 3)
+                if (convolution->get_padding_below_forward().size() > 3)
                 {
                     throw std::runtime_error(node->get_name() +
                                              "with more than 3D is not implemented.");
                 }
 
-                bool is_deconvolution = false;
-                for (auto a : data_dilation_strides)
-                {
-                    if (a != 1)
-                    {
-                        is_deconvolution = true;
-                        break;
-                    }
-                }
-
-                bool pad_required = (padding_below_diff != padding_above_diff);
-
-                Shape padding_below(padding_below_diff.size(), 0);
-                Shape padding_above(padding_above_diff.size(), 0);
-                for (int i = 0; i < padding_below.size(); i++)
-                {
-                    padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
-                    padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
-                }
-
-                auto output_shape = out[0].get_shape();
-                auto output_shape_padded = output_shape;
-                Shape padding_below_back(output_shape.size(), 0);
-                Shape padding_interior_back(output_shape.size(), 1);
-                size_t i = padding_below_back.size() - padding_below.size();
-                size_t j = 0;
-                for (; i < padding_below_back.size(); i++)
-                {
-                    padding_below_back[i] = padding_below[j];
-                    padding_interior_back[i] = data_dilation_strides[j];
-                    j++;
-                }
-
-                Shape padding_interior(data_dilation_strides);
-                writer.block_begin();
-                if (pad_required || is_deconvolution)
-                {
-                    output_shape_padded = get_padded_shape(
-                        output_shape, padding_below, padding_above, padding_interior);
-                    auto temp_size =
-                        shape_size(output_shape_padded) * args[0].get_element_type().size();
-                    GPUAllocator allocator =
-                        external_function->get_primitive_emitter()->get_memory_allocator();
-                    size_t idx_workspace = allocator.reserve_workspace(temp_size);
-                    writer << "void* pad_buffer = runtime::gpu::invoke_memory_primitive(ctx, "
-                           << idx_workspace << ");\n";
-                    writer << "std::vector<" << args[0].get_type() << "> pad_buffer_host("
-                           << shape_size(output_shape_padded) << ", 0);\n";
-                    writer << "runtime::gpu::cuda_memcpyHtD(pad_buffer, pad_buffer_host.data(), "
-                           << temp_size << ");\n";
-                    auto& cuda_emitter =
-                        external_function->get_primitive_emitter()->get_cuda_emitter();
-                    auto pad_dynamic_index =
-                        cuda_emitter->build_pad_dynamic({{args[0].get_type(), out[0].get_type()}},
-                                                        output_shape,
-                                                        output_shape_padded,
-                                                        padding_below,
-                                                        padding_interior);
-
-                    writer << "gpu::invoke_primitive(ctx, " << pad_dynamic_index << ", ";
-                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                    writer << "std::vector<void*>{pad_buffer}.data()";
-                    writer << ");\n";
-                    // asymetric padding has been applied, zero out padding vectors to
-                    // ensure cuDNN does not assume padding
-                    std::fill(padding_below.begin(), padding_below.end(), 0);
-                }
                 auto& cudnn_emitter =
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
-                size_t index =
-                    cudnn_emitter->build_convolution_backward_data(out[0].get_type(),
-                                                                   args[0].get_shape(),
-                                                                   args[1].get_shape(),
-                                                                   output_shape_padded,
-                                                                   window_movement_strides,
-                                                                   window_dilation_strides,
-                                                                   padding_below);
+                size_t conv_index = cudnn_emitter->build_primitive(convolution);
 
-                writer << "gpu::invoke_primitive(ctx, " << index << ", ";
-                writer << "std::vector<void*>{" << args[0].get_name() << "," << args[1].get_name()
-                       << "}.data(), ";
-                if (pad_required || is_deconvolution)
-                {
-                    writer << "std::vector<void*>{pad_buffer}.data()";
-                }
-                else
-                {
-                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                }
-                writer << ");\n";
-                // since we padded output with temp buffer, we need to copy back to real ouput
-                if (pad_required || is_deconvolution)
-                {
-                    auto& cuda_emitter =
-                        external_function->get_primitive_emitter()->get_cuda_emitter();
-                    auto slice_index =
-                        cuda_emitter->build_slice({{args[0].get_type(), out[0].get_type()}},
-                                                  output_shape_padded,
-                                                  padding_below_back,
-                                                  padding_interior_back,
-                                                  output_shape);
-
-                    writer << "gpu::invoke_primitive(ctx, " << slice_index << ", ";
-                    writer << "std::vector<void*>{pad_buffer}.data(), ";
-                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                    writer << ");\n";
-                }
-                writer.block_end();
+                writer << "gpu::invoke_primitive(ctx, " << conv_index << ", ";
+                writer << "std::vector<void*>{";
+                writer << args[0].get_name() << ", ";
+                writer << args[1].get_name() << ", ";
+                writer << "}.data(), ";
+                writer << "std::vector<void*>{" << out[0].get_name() << "}.data());\n";
             }
 
             template <>

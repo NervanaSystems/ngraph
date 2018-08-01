@@ -438,6 +438,135 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
     return primitive_index;
 }
 
+size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackpropData* node)
+{
+    auto& args = node->get_inputs();
+    auto& out = node->get_outputs();
+    auto input_shape = args[0].get_shape();
+    auto filter_shape = args[1].get_shape();
+    auto output_shape = out[0].get_shape();
+    Strides window_dilation_strides = node->get_window_dilation_strides_forward();
+    Strides window_movement_strides = node->get_window_movement_strides_forward();
+    Strides data_dilation_strides = node->get_data_dilation_strides_forward();
+    CoordinateDiff padding_below_diff = node->get_padding_below_forward();
+    CoordinateDiff padding_above_diff = node->get_padding_above_forward();
+    auto input_type = args[0].get_element_type().c_type_string();
+    auto output_type = out[0].get_element_type().c_type_string();
+
+    // construct hash to determine if kernel needs to be emitted
+    // or if it already exists in the primitive list
+    std::stringstream ss;
+    ss << "convolution_bp_data_op_" << output_type << "_i" << join(input_shape, "_") << "_w"
+       << join(filter_shape, "_") << "_o" << join(output_shape, "_") << "_ws"
+       << join(window_movement_strides, "_") << "_wd" << join(window_dilation_strides, "_") << "_p"
+       << join(padding_below_diff, "_");
+    std::string hash = ss.str();
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    bool is_deconvolution = false;
+    for (auto a : data_dilation_strides)
+    {
+        if (a != 1)
+        {
+            is_deconvolution = true;
+            break;
+        }
+    }
+
+    bool pad_required = (padding_below_diff != padding_above_diff);
+
+    Shape padding_below(padding_below_diff.size(), 0);
+    Shape padding_above(padding_above_diff.size(), 0);
+    for (int i = 0; i < padding_below.size(); i++)
+    {
+        padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
+        padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
+    }
+
+    auto output_shape_padded = output_shape;
+    Shape padding_below_back(output_shape.size(), 0);
+    Shape padding_interior_back(output_shape.size(), 1);
+    size_t i = padding_below_back.size() - padding_below.size();
+    size_t j = 0;
+    for (; i < padding_below_back.size(); i++)
+    {
+        padding_below_back[i] = padding_below[j];
+        padding_interior_back[i] = data_dilation_strides[j];
+        j++;
+    }
+
+    Shape padding_interior(data_dilation_strides);
+
+    size_t idx_workspace = std::numeric_limits<size_t>::max();
+    size_t pad_dynamic_index = std::numeric_limits<size_t>::max();
+    size_t slice_index = std::numeric_limits<size_t>::max();
+    if (pad_required || is_deconvolution)
+    {
+        output_shape_padded =
+            get_padded_shape(output_shape, padding_below, padding_above, padding_interior);
+        auto temp_size = shape_size(output_shape_padded) * args[0].get_element_type().size();
+        GPUAllocator allocator = m_primitive_emitter->get_memory_allocator();
+
+        // reserve zero initialized workspace
+        idx_workspace = allocator.reserve_workspace(temp_size, true);
+
+        auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
+        pad_dynamic_index = cuda_emitter->build_pad_dynamic({{input_type, output_type}},
+                                                            output_shape,
+                                                            output_shape_padded,
+                                                            padding_below,
+                                                            padding_interior);
+
+        slice_index = cuda_emitter->build_slice({{input_type, output_type}},
+                                                output_shape_padded,
+                                                padding_below_back,
+                                                padding_interior_back,
+                                                output_shape);
+
+        // asymetric padding has been applied, zero out padding vectors to
+        // ensure cudnn does not assume padding
+        std::fill(padding_below.begin(), padding_below.end(), 0);
+    }
+
+    size_t conv_index = build_convolution_backward_data(output_type,
+                                                        args[0].get_shape(),
+                                                        args[1].get_shape(),
+                                                        output_shape_padded,
+                                                        window_movement_strides,
+                                                        window_dilation_strides,
+                                                        padding_below);
+
+    std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](void** inputs,
+                                                                         void** outputs) mutable {
+        if (idx_workspace != std::numeric_limits<size_t>::max() &&
+            pad_dynamic_index != std::numeric_limits<size_t>::max() &&
+            slice_index != std::numeric_limits<size_t>::max())
+        {
+            void* pad_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, idx_workspace);
+            gpu::invoke_primitive(m_ctx,
+                                  pad_dynamic_index,
+                                  std::vector<void*>{inputs[0]}.data(),
+                                  std::vector<void*>{pad_buffer}.data());
+            gpu::invoke_primitive(m_ctx, conv_index, inputs, std::vector<void*>{pad_buffer}.data());
+            gpu::invoke_primitive(
+                m_ctx, slice_index, std::vector<void*>{pad_buffer}.data(), outputs);
+        }
+        else
+        {
+            gpu::invoke_primitive(m_ctx, conv_index, inputs, outputs);
+        }
+    }});
+
+    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
+
 size_t runtime::gpu::CUDNNEmitter::build_convolution(const std::string& dtype,
                                                      const Shape& input_tensor_shape,
                                                      const Shape& input_filter_shape,
@@ -507,20 +636,6 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
     const Strides& window_dilation_strides,
     const Shape& padding_below)
 {
-    // construct hash to determine if kernel needs to be emitted
-    // or if it already exists in the primitive list
-    std::stringstream ss;
-    ss << "convolution_bp_data_op_" << dtype << "_i" << join(input_tensor_shape, "_") << "_w"
-       << join(input_filter_shape, "_") << "_o" << join(output_tensor_shape, "_") << "_ws"
-       << join(window_movement_strides, "_") << "_wd" << join(window_dilation_strides, "_") << "_p"
-       << join(padding_below, "_");
-    std::string hash = ss.str();
-    // check if the requested kernel is already an inserted primitive
-    size_t primitive_index = m_primitive_emitter->lookup(hash);
-    if (primitive_index != std::numeric_limits<size_t>::max())
-    {
-        return primitive_index;
-    }
     const cudnnDataType_t data_type = get_cudnn_datatype(dtype);
     const cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
     const cudnnConvolutionMode_t mode = CUDNN_CROSS_CORRELATION;
@@ -570,9 +685,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
         debug_sync();
     }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(conv));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->insert(std::move(conv));
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(

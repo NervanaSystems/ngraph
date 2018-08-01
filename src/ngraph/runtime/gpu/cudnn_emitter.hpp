@@ -51,6 +51,11 @@ namespace ngraph
                 friend class GPUPrimitiveEmitter;
 
             public:
+                size_t build_primitive(const op::Convolution* node);
+                size_t build_primitive(const op::ConvolutionBackpropData* node);
+                size_t build_primitive(const op::ConvolutionBackpropFilters* node);
+
+            public:
                 enum class Prop
                 {
                     Inference = 0,
@@ -58,7 +63,6 @@ namespace ngraph
                     Backward
                 };
 
-                size_t build_primitive(const op::Convolution* node);
                 size_t build_convolution(const std::string& dtype,
                                          const Shape& input_tensor_shape,
                                          const Shape& input_filter_shape,
