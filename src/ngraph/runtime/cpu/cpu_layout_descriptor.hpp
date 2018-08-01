@@ -39,7 +39,10 @@ namespace ngraph
                 LayoutDescriptor(const ngraph::descriptor::TensorView& tv);
                 ~LayoutDescriptor() override {}
                 size_t get_size() override { return m_size; }
-                virtual size_t size() override { return m_mkldnn_memory_size; }
+                virtual size_t size() override { 
+                std::cout << "mkldnn_size: " << m_mkldnn_memory_size << std::endl;
+                return m_mkldnn_memory_size; 
+                }
                 void compute_mkldnn_memory_size(const mkldnn::memory::desc md);
                 size_t get_offset() const { return m_offset; }
                 size_t get_index_offset(const std::vector<size_t>& indices) override;
