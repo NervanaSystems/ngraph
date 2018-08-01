@@ -1195,10 +1195,13 @@ void runtime::cpu::CPU_ExternalFunction::build()
         cpu::Timestamp start_ts;
         int profiler_count = 0;
 
-        for (auto& p : intermediates_offsets)
+        if (ctx->first_iteration)
         {
-            tensor_data[p.first] =
-                static_cast<uint8_t*>(ctx->memory_buffers[0]->get_ptr()) + p.second;
+            for (auto& p : intermediates_offsets)
+            {
+                tensor_data[p.first] =
+                    static_cast<uint8_t*>(ctx->memory_buffers[0]->get_ptr()) + p.second;
+            }
         }
 
         for (const auto& p : function_input_index)
