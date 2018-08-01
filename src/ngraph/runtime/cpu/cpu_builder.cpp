@@ -102,6 +102,8 @@
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
+#include <tvm/tvm.h>
+
 #ifdef NGRAPH_DISTRIBUTED
 #include <mpi.h>
 #include "ngraph/op/allreduce.hpp"
@@ -116,6 +118,11 @@ namespace ngraph
     {
         namespace cpu
         {
+            tvm::Var tvm_test(){
+                using namespace tvm;
+                auto n = var("n");
+                return n;
+            }
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Subtract)
             {
