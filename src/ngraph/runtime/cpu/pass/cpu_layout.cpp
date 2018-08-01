@@ -362,8 +362,6 @@ namespace ngraph
                         }
                     }
                     convolution_forward::primitive_desc prim_desc(*fwd_desc, cpu_engine);
-                    auto src_prim_desc = prim_desc.src_primitive_desc().desc();
-
                     i_mds.push_back(prim_desc.src_primitive_desc().desc());
 
                     if (default_weights_format)
@@ -1400,7 +1398,6 @@ namespace ngraph
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         auto concat = static_cast<const ngraph::op::Concat*>(node.get());
-                        auto input0_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
 
                         size_t concat_dim = concat->get_concatenation_axis();
                         auto result_desc = mkldnn_utils::create_default_mkldnn_md(

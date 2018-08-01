@@ -376,11 +376,11 @@ memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& i
 
     auto compare_named_md = [&](const mkldnn_memory_desc_t& blk,
                                 const mkldnn_memory_format_t format,
-                                const memory::desc& out_md) {
+                                const memory::desc& out) {
         try
         {
             auto named_md = get_named_md(blk, format);
-            if (compare_mkldnn_mds(named_md, out_md))
+            if (compare_mkldnn_mds(named_md, out))
             {
                 return true;
             }
