@@ -114,7 +114,7 @@ namespace ngraph
             protected:
                 void build();
                 void compile();
-                void register_and_run_passes();
+                void register_and_run_passes(bool isCompile = true);
 
             private:
                 void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,

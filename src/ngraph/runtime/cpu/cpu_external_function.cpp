@@ -1240,7 +1240,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
     }
 }
 
-void runtime::cpu::CPU_ExternalFunction::register_and_run_passes()
+void runtime::cpu::CPU_ExternalFunction::register_and_run_passes(bool isCompile)
 {
     ngraph::pass::Manager pass_manager;
 
@@ -1256,7 +1256,7 @@ void runtime::cpu::CPU_ExternalFunction::register_and_run_passes()
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.run_passes(m_function);
+    pass_manager.run_passes(m_function, isCompile);
 }
 
 shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
@@ -1270,7 +1270,7 @@ shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
 
     if (!m_is_built && m_direct_execution)
     {
-        register_and_run_passes();
+        register_and_run_passes(false);
         for (shared_ptr<Node> node : m_function->get_ordered_ops())
         {
             if (node->is_parameter() || node->is_constant())
