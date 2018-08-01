@@ -2088,6 +2088,7 @@ namespace ngraph
                                 out[0].get_shape(),
                                 {1},
                                 axes);
+
                         writer << "gpu::invoke_primitive(ctx, " << div_broadcast << ", ";
                         writer << "std::vector<void*>{" << out[0].get_name();
                         writer << ", workspace}.data(), ";
