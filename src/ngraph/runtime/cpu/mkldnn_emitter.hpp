@@ -351,6 +351,13 @@ namespace ngraph
                 size_t build_reorder(const mkldnn::memory::desc& input_desc,
                                      const mkldnn::memory::desc& result_desc);
 
+                size_t build_lrn_forward(const mkldnn::memory::desc& input_desc,
+                                         const mkldnn::memory::desc& result_desc,
+                                         float alpha,
+                                         float beta,
+                                         float bias,
+                                         int nsize);
+
                 size_t build_relu_forward(const mkldnn::memory::desc& input_desc,
                                           const mkldnn::memory::desc& result_desc);
 
