@@ -15,6 +15,7 @@
 *******************************************************************************/
 #include <sstream>
 #include <string>
+#include <iterator>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
