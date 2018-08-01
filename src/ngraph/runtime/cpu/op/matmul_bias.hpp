@@ -35,10 +35,10 @@ namespace ngraph
                        bool transpose_x,
                        AxisSet axes = AxisSet{});
 
-            bool get_is_arg0_transposed() const { return m_transpose_w; }
-            bool get_is_arg1_transposed() const { return m_transpose_x; }
-            Shape get_arg0_shape() const { return m_shape_w; }
-            Shape get_arg1_shape() const { return m_shape_x; }
+            bool get_is_a_transposed() const { return m_transpose_w; }
+            bool get_is_b_transposed() const { return m_transpose_x; }
+            Shape get_a_shape() const { return m_shape_w; }
+            Shape get_b_shape() const { return m_shape_x; }
             const AxisSet& get_broadcast_axes() const { return m_broadcast_axes; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

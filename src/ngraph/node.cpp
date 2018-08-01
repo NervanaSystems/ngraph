@@ -16,6 +16,7 @@
 
 #include "ngraph/node.hpp"
 #include <memory>
+#include <sstream>
 #include <typeindex>
 #include <typeinfo>
 
@@ -328,4 +329,12 @@ NodeVector Node::get_users() const
     }
 
     return result;
+}
+
+std::string ngraph::type_check_assert_string(const Node* node)
+{
+    std::stringstream ss;
+    ss << "While type-checking node '" << node->get_name() << "' of type '" << node->description()
+       << "'";
+    return ss.str();
 }

@@ -29,7 +29,7 @@ runtime::intelgpu::IntelGPULayout::IntelGPULayout(const descriptor::TensorView& 
 {
 }
 
-size_t runtime::intelgpu::IntelGPULayout::get_index_offset(const std::vector<size_t>& indices)
+size_t runtime::intelgpu::IntelGPULayout::get_index_offset(const vector<size_t>& indices)
 {
     if (indices.size() != strides.size())
     {
@@ -73,18 +73,57 @@ cldnn::data_types
     else
     {
         ostringstream os;
-        os << "IntelGPUTensorView::get_cldnn_type: Unknown type " << element_type;
-        throw std::invalid_argument(os.str());
+        os << "IntelGPULayout::get_cldnn_type: Unknown type " << element_type;
+        throw invalid_argument(os.str());
     }
+}
+
+cldnn::tensor runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(const Shape& element_shape)
+{
+    vector<size_t> idx(4, 1);
+    size_t index = 0;
+
+    for (auto i = element_shape.crbegin(); i != element_shape.crend() && index < 3; ++i, ++index)
+    {
+        idx.at(index) = *i;
+    }
+
+    if (element_shape.size() > 3)
+    {
+        idx.at(3) =
+            accumulate(element_shape.rbegin() + 3, element_shape.rend(), 1, multiplies<size_t>());
+    }
+
+    //Parameters for this ctor: batch, feature, spatial_x, spatial_y
+    const cldnn::tensor tns(idx.at(3), idx.at(2), idx.at(0), idx.at(1));
+
+    return tns;
 }
 
 cldnn::layout runtime::intelgpu::IntelGPULayout::create_cldnn_layout(
     const ngraph::element::Type& element_type, const Shape& element_shape)
 {
-    const size_t mem_size = shape_size(element_shape);
     const cldnn::data_types data_type = get_cldnn_type(element_type);
-    const cldnn::tensor tensor(1, mem_size, 1, 1);
-    const cldnn::format::type format = cldnn::format::yxfb;
+    const cldnn::format::type format = cldnn::format::bfyx;
+    const cldnn::tensor tensor = create_cldnn_tensor(element_shape);
 
     return cldnn::layout(data_type, format, tensor);
+}
+
+cldnn::concatenation::concatenation_axis
+    runtime::intelgpu::IntelGPULayout::get_cldnn_axis(size_t tensor_channel)
+{
+    switch (tensor_channel)
+    {
+    case 0: return cldnn::concatenation::along_b;
+    case 1: return cldnn::concatenation::along_f;
+    case 2: return cldnn::concatenation::along_y;
+    case 3: return cldnn::concatenation::along_x;
+    default:
+    {
+        ostringstream os;
+        os << "IntelGPULayout::get_cldnn_axis: wrong tensor channel " << tensor_channel;
+        throw invalid_argument(os.str());
+    }
+    }
 }
