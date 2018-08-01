@@ -16,9 +16,9 @@
 #include <sstream>
 #include <string>
 
-#include "ngraph/strides.hpp" //ngraph::Strides
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include "ngraph/strides.hpp" //ngraph::Strides
 #include "pyngraph/strides.hpp"
 
 namespace py = pybind11;
@@ -43,5 +43,4 @@ void regclass_pyngraph_Strides(py::module m)
         std::string shape_str = py::cast(self).attr("__str__")().cast<std::string>();
         return "<" + class_name + ": (" + shape_str + ")>";
     });
-
 }
