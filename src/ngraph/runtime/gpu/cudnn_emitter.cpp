@@ -597,10 +597,6 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
         return primitive_index;
     }
 
-
-
-
-
     bool is_deconvolution = false;
     for (auto a : data_dilation_strides)
     {
@@ -623,7 +619,6 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
     auto input_shape_padded = input_shape_0;
     Shape padding_interior(data_dilation_strides);
 
-
     size_t idx_workspace = std::numeric_limits<size_t>::max();
     size_t pad_dynamic_index = std::numeric_limits<size_t>::max();
     if (pad_required || is_deconvolution)
@@ -637,12 +632,11 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
         idx_workspace = allocator.reserve_workspace(temp_size, true);
 
         auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
-        pad_dynamic_index =
-            cuda_emitter->build_pad_dynamic({{input_type, output_type}},
-                                            input_shape_0,
-                                            input_shape_padded,
-                                            padding_below,
-                                            padding_interior);
+        pad_dynamic_index = cuda_emitter->build_pad_dynamic({{input_type, output_type}},
+                                                            input_shape_0,
+                                                            input_shape_padded,
+                                                            padding_below,
+                                                            padding_interior);
 
         // asymetric padding has been applied, zero out padding vectors to
         // ensure cudnn does not assume padding
