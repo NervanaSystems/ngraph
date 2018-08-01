@@ -448,6 +448,69 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                 arguments_check(op, 5, 1); // throw exception in this case
             }
         }
+        else if ("Convolution" == op->description())
+        {
+            arguments_check(op, 2, 1);
+
+            const std::string& conv_name = op->get_outputs().begin()->get_tensor().get_name();
+            const std::string& image_name = op->get_inputs().at(0).get_tensor().get_name();
+            const std::string& weight_name = op->get_inputs().at(1).get_tensor().get_name();
+
+            const shared_ptr<op::Convolution> conv_op = static_pointer_cast<op::Convolution>(op);
+
+            const Strides& conv_stride = conv_op->get_window_movement_strides();
+            const Strides& conv_dilation = conv_op->get_window_dilation_strides();
+            const CoordinateDiff& conv_padding_below = conv_op->get_padding_below();
+            const CoordinateDiff& conv_padding_above = conv_op->get_padding_above();
+            const Strides& conv_data_dilation = conv_op->get_data_dilation_strides();
+
+            if (conv_stride.size() > 2)
+            {
+                ostringstream os;
+                os << "Unsupported strides for \"" << op->description() << '\"';
+                throw std::invalid_argument(os.str());
+            }
+
+            if (conv_padding_below.size() > 2 || conv_padding_above.size() > 2)
+            {
+                ostringstream os;
+                os << "Unsupported padding for \"" << op->description() << '\"';
+                throw std::invalid_argument(os.str());
+            }
+
+            //TODO: Further clDNN version will work with different paddings above and below
+            if (conv_padding_below.at(0) != conv_padding_above.at(0) ||
+                conv_padding_below.at(1) != conv_padding_above.at(1))
+            {
+                ostringstream os;
+                os << "Paddings above and below are different for \"" << op->description() << '\"';
+                throw std::invalid_argument(os.str());
+            }
+
+            if (conv_dilation.size() > 2)
+            {
+                ostringstream os;
+                os << "Unsupported dilation for \"" << op->description() << '\"';
+                throw std::invalid_argument(os.str());
+            }
+
+            if (conv_data_dilation.size() > 2 || conv_data_dilation.at(0) != 1 ||
+                conv_data_dilation.at(1) != 1)
+            {
+                ostringstream os;
+                os << "Unsupported data dilation for \"" << op->description() << '\"';
+                throw std::invalid_argument(os.str());
+            }
+
+            const cldnn::tensor input_offset(
+                0, 0, -conv_padding_below.at(1), -conv_padding_below.at(0));
+            const cldnn::tensor strides(1, 1, conv_stride.at(1), conv_stride.at(0));
+            const cldnn::tensor dilation(1, 1, conv_dilation.at(1), conv_dilation.at(0));
+
+            const cldnn::convolution cldnn_conv(
+                conv_name, image_name, {weight_name}, strides, input_offset, dilation);
+            topology.add(cldnn_conv);
+        }
         else
         {
             ostringstream os;
