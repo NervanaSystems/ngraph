@@ -108,6 +108,8 @@ namespace ngraph
                 return matched;
             }
 
+            bool is_contained_match(const NodeVector& exclusions = {}, bool ignore_unused = true);
+
             bool process_match(graph_rewrite_callback callback = nullptr);
             NodeVector get_matched_nodes() { return m_matched_list; }
             void reset() {}

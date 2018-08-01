@@ -15,10 +15,14 @@
 # ******************************************************************************
 
 set (SRC
+    axis_set.cpp
+    axis_vector.cpp
     autodiff/adjoints.cpp
     builder/autobroadcast.cpp
     builder/numpy_transpose.cpp
     builder/reduce_ops.cpp
+    coordinate.cpp
+    coordinate_diff.cpp
     coordinate_transform.cpp
     descriptor/input.cpp
     descriptor/layout/dense_tensor_view_layout.cpp
@@ -138,6 +142,8 @@ set (SRC
     runtime/host_tensor_view.cpp
     runtime/tensor_view.cpp
     serializer.cpp
+    shape.cpp
+    strides.cpp
     type/element_type.cpp
     type/type.cpp
     util.cpp

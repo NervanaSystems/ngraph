@@ -86,6 +86,15 @@ namespace ngraph
                                               size_t batch_axis,
                                               size_t sequence_axis);
 
+                size_t build_onehot(const std::array<std::string, 2>& dtypes,
+                                    GPUShape input_shape,
+                                    GPUShape output_shape,
+                                    size_t one_hot_axis);
+
+                size_t build_reverse(const std::array<std::string, 2>& dtypes,
+                                     GPUShape input_shape,
+                                     std::vector<uint32_t> reverse_axes);
+
                 template <typename T>
                 size_t build_elementwise(const std::vector<std::string>& dtypes,
                                          GPUShape tensor_shape)
@@ -134,6 +143,11 @@ namespace ngraph
                                          GPUShape filter_stride,
                                          GPUShape filter_dilation,
                                          GPUShape output_shape);
+
+                size_t build_concat(const std::vector<std::string>& dtypes,
+                                    std::vector<GPUShape> input_shapes,
+                                    size_t concat_axis,
+                                    GPUShape output_shape);
 
                 void debug_sync();
                 void sync();

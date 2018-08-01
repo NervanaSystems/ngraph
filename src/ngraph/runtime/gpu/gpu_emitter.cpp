@@ -93,7 +93,6 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
-#include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
@@ -824,46 +823,32 @@ namespace ngraph
                 auto concat = static_cast<const ngraph::op::Concat*>(node);
                 auto axis = concat->get_concatenation_axis();
 
-                std::vector<size_t> block_strides(args.size(), 1);
-                size_t block_size = 0;
-                for (size_t i = 0; i < args.size(); i++)
+                std::vector<std::string> dtypes;
+                std::vector<GPUShape> input_shapes;
+                for (auto arg : args)
                 {
-                    auto arg_shape = args[i].get_shape();
-                    auto arg_rank = arg_shape.size();
-                    for (size_t j = axis; j < arg_rank; j++)
-                    {
-                        block_strides[i] *= arg_shape[j];
-                    }
-                    block_size += block_strides[i];
+                    dtypes.push_back(arg.get_type());
+                    input_shapes.push_back(arg.get_shape());
                 }
+                dtypes.push_back(out[0].get_type());
 
                 writer.block_begin();
-                writer << "int count = " << out[0].get_size() << ";\n";
-                writer << "int num_inputs = " << args.size() << ";\n";
-
-                GPUAllocator allocator =
-                    external_function->get_primitive_emitter()->get_memory_allocator();
-                size_t idx_block_strides = allocator.reserve_argspace(
-                    block_strides.data(), block_strides.size() * sizeof(size_t));
-                writer << "void* block_strides_d = runtime::gpu::invoke_memory_primitive(ctx, "
-                       << idx_block_strides << ");\n";
-
-                writer << "ngraph::runtime::gpu::emit_concat_op(\"" << node->description() << "\""
-                       << ", std::vector<std::string>{";
-                for (size_t i = 0; i < args.size(); i++)
                 {
-                    writer << "\"" << args[i].get_type() << "\", ";
+                    auto& cuda_emitter =
+                        external_function->get_primitive_emitter()->get_cuda_emitter();
+                    auto index =
+                        cuda_emitter->build_concat(dtypes, input_shapes, axis, out[0].get_shape());
+
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
+                    writer << "std::vector<void*>{" << args[0].get_name();
+                    for (size_t i = 1; i < args.size(); i++)
+                    {
+                        writer << ", " << args[i].get_name();
+                    }
+                    writer << "}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                    writer << ");\n";
                 }
-                writer << "\"" << out[0].get_type() << "\"}"
-                       << ", ctx"
-                       << ", count"
-                       << ", " << block_size << ", CUdeviceptr(block_strides_d)"
-                       << ", CUdeviceptr(" << out[0].get_name() << ")";
-                for (size_t i = 0; i < args.size(); i++)
-                {
-                    writer << ", CUdeviceptr(" << args[i].get_name() << ")";
-                }
-                writer << ");\n";
                 writer.block_end();
             }
 
@@ -1020,7 +1005,7 @@ namespace ngraph
                 const auto arg_rank = arg_shape.size();
                 const auto result_shape = out[0].get_shape();
                 const auto reverse_axes = reverse->get_reversed_axes();
-                std::vector<size_t> reverse_axes_flag(arg_rank, 0);
+                std::vector<uint32_t> reverse_axes_flag(arg_rank, 0);
                 for (auto a : reverse_axes)
                 {
                     reverse_axes_flag[a] = 1;
@@ -1032,30 +1017,15 @@ namespace ngraph
                 }
                 else
                 {
-                    GPUAllocator allocator =
-                        external_function->get_primitive_emitter()->get_memory_allocator();
-                    size_t idx_arg_shape = allocator.reserve_argspace(
-                        arg_shape.data(), arg_shape.size() * sizeof(size_t));
-                    size_t idx_reverse_axes_flag = allocator.reserve_argspace(
-                        reverse_axes_flag.data(), reverse_axes_flag.size() * sizeof(size_t));
+                    auto& cuda_emitter =
+                        external_function->get_primitive_emitter()->get_cuda_emitter();
+                    auto index = cuda_emitter->build_reverse(
+                        {{args[0].get_type(), out[0].get_type()}}, arg_shape, reverse_axes_flag);
 
-                    writer << "size_t rank = " << arg_rank << ";\n";
-                    writer << "void* input_shapes_d = "
-                           << " runtime::gpu::invoke_memory_primitive(ctx, " << idx_arg_shape
-                           << ");\n";
-                    writer << "void* reverse_axes_d = "
-                           << " runtime::gpu::invoke_memory_primitive(ctx, "
-                           << idx_reverse_axes_flag << ");\n";
-
-                    writer << "runtime::gpu::emit_reverse(\"" << node->description()
-                           << "\", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
-                           << out[0].get_name() << ")"
-                           << ", {\"" << args[0].get_type() << "\", \"" << out[0].get_type()
-                           << "\"}"
-                           << ", "
-                           << "ctx, "
-                           << "CUdeviceptr(input_shapes_d), CUdeviceptr(reverse_axes_d), "
-                           << arg_rank << ", " << out[0].get_size() << ");\n";
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
+                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                    writer << ");\n";
                 }
                 writer.block_end();
             }
@@ -1125,23 +1095,19 @@ namespace ngraph
                 auto arg_shape = args[0].get_shape();
                 auto result_shape = out[0].get_shape();
                 size_t idx = onehot->get_one_hot_axis();
-                size_t repeat_times = result_shape[idx];
-                size_t repeat_size = 1;
-                for (size_t i = idx + 1; i < result_shape.size(); i++)
-                {
-                    repeat_size *= result_shape[i];
-                }
 
                 writer.block_begin();
-                writer << "runtime::gpu::cuda_memset(" << out[0].get_name() << ", 0, "
-                       << out[0].get_size() << " * " << out[0].get_element_type().size() << ");\n";
-                writer << "runtime::gpu::emit_onehot(\"" << node->description() << "\", {\""
-                       << args[0].get_type() << "\", \"" << out[0].get_type() << "\"}"
-                       << ", ctx"
-                       << ", CUdeviceptr(" << args[0].get_name() << "), CUdeviceptr("
-                       << out[0].get_name() << ")"
-                       << ", " << repeat_size << ", " << repeat_times << ", " << args[0].get_size()
-                       << ");\n";
+                {
+                    auto& cuda_emitter =
+                        external_function->get_primitive_emitter()->get_cuda_emitter();
+                    auto index = cuda_emitter->build_onehot(
+                        {{args[0].get_type(), out[0].get_type()}}, arg_shape, result_shape, idx);
+
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
+                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                    writer << ");\n";
+                }
                 writer.block_end();
             }
 
