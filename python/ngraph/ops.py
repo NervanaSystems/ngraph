@@ -611,6 +611,7 @@ def convolution_backprop_data(data_batch_shape,                      # type: Ten
                               data_dilation_strides_forward=None,    # type: List[int]
                               name=None,                             # type: str
                               ):
+    # type: (...) -> Node
     """Return node performing a batched-convolution data batch-backprop operation.
 
     :param data_batch_shape: The shape of the data batch from forward-prop.
