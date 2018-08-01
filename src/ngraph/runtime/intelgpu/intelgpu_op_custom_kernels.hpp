@@ -28,15 +28,24 @@ namespace ngraph
     {
         namespace intelgpu
         {
-            void do_pad_kernel(cldnn::topology& topology,
-                               const std::string& input_name,
-                               const Shape& input_shape,
-                               const std::string& scalar_name,
-                               const std::string& output_name,
-                               const Shape& output_shape,
-                               const element::Type& output_type,
-                               const Shape& pad_below,
-                               const Shape& pad_interior);
+            void do_pad_operation(cldnn::topology& topology,
+                                  const std::string& input_name,
+                                  const Shape& input_shape,
+                                  const std::string& scalar_name,
+                                  const std::string& output_name,
+                                  const Shape& output_shape,
+                                  const element::Type& output_type,
+                                  const Shape& pad_below,
+                                  const Shape& pad_interior);
+
+            void do_dot_operation(cldnn::topology& topology,
+                                  const std::string& inputA_name,
+                                  const Shape& inputA_shape,
+                                  const std::string& inputB_name,
+                                  const Shape& inputB_shape,
+                                  const std::string& output_name,
+                                  const Shape& output_shape,
+                                  const element::Type& output_type);
         }
     }
 }
