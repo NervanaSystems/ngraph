@@ -27,13 +27,26 @@ namespace ngraph
     {
         namespace intelgpu
         {
-            // This implements Broadcast nGraph operation
-            void do_broadcast_operation(cldnn::topology& topology,
+            // This implements Broadcast and Sum nGraph operations
+            // in case of input_shape is not empty
+            void do_bcast_sum_operation(cldnn::topology& topology,
                                         const std::string& input_name,
                                         const Shape& input_shape,
                                         const std::string& output_name,
                                         const Shape& output_shape,
-                                        const AxisSet& axis);
+                                        const element::Type& output_type,
+                                        const AxisSet& axis,
+                                        bool is_bcast);
+
+            // This implements Broadcast and Sum nGraph operations
+            // in case of input_shape is empty
+            void do_bcast_sum_operation_scalar(cldnn::topology& topology,
+                                               const std::string& input_name,
+                                               const Shape& input_shape,
+                                               const std::string& output_name,
+                                               const Shape& output_shape,
+                                               const element::Type& output_type,
+                                               bool is_bcast);
         }
     }
 }
