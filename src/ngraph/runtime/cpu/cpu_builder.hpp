@@ -157,6 +157,49 @@
         SELECT_RANK(KV, uint64_t, R, K);                                                           \
     }
 
+#define BUILD_UNARY_ELEMWISE_FUNCTOR(OP)                                                           \
+    auto& functors = external_function->get_functors();                                            \
+    auto& tensor_data = external_function->get_tensor_data();                                      \
+    std::function<void(void*, void*, size_t)> kernel;                                              \
+                                                                                                   \
+    SELECT_KERNEL(kernel, args[0].get_element_type(), OP);                                         \
+                                                                                                   \
+    auto element_count = out[0].get_size();                                                        \
+    auto& arg0_tensor = tensor_data[args[0].get_name()];                                           \
+    auto& out0_tensor = tensor_data[out[0].get_name()];                                            \
+                                                                                                   \
+    auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {                            \
+        kernel(arg0_tensor, out0_tensor, element_count);                                           \
+    };                                                                                             \
+    functors.emplace_back(functor);
+
+#define BUILD_BINARY_ELEMWISE_FUNCTOR(OP)                                                          \
+    auto& functors = external_function->get_functors();                                            \
+    auto& tensor_data = external_function->get_tensor_data();                                      \
+    std::function<void(void*, void*, void*, size_t)> kernel;                                       \
+                                                                                                   \
+    SELECT_KERNEL(kernel, args[0].get_element_type(), OP);                                         \
+                                                                                                   \
+    auto element_count = out[0].get_size();                                                        \
+    auto& arg0_tensor = tensor_data[args[0].get_name()];                                           \
+    auto& arg1_tensor = tensor_data[args[1].get_name()];                                           \
+    auto& out0_tensor = tensor_data[out[0].get_name()];                                            \
+                                                                                                   \
+    auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {                            \
+        kernel(arg0_tensor, arg1_tensor, out0_tensor, element_count);                              \
+    };                                                                                             \
+    functors.emplace_back(functor);
+
+#define REGISTER_OP_BUILDER(OP)                                                                    \
+    static struct __register_##OP##_builder                                                        \
+    {                                                                                              \
+        __register_##OP##_builder()                                                                \
+        {                                                                                          \
+            build_dispatcher.insert({type_index(typeid(ngraph::op::OP)),                           \
+                                     &runtime::cpu::Builder::build<ngraph::op::OP>});              \
+        }                                                                                          \
+    } __register_##OP##_builder_instance;
+
 namespace ngraph
 {
     namespace runtime
@@ -171,7 +214,7 @@ namespace ngraph
 
             using BuildOpMap = std::unordered_map<std::type_index, BuildOpFunction>;
 
-            extern const BuildOpMap build_dispatcher;
+            extern BuildOpMap build_dispatcher;
 
             class Builder
             {
@@ -191,12 +234,6 @@ namespace ngraph
                                 const std::vector<TensorViewWrapper>& out)
                 {
                 }
-
-                static void buildBatchNorm(CPU_ExternalFunction* external_function,
-                                           const ngraph::Node* node,
-                                           const std::vector<TensorViewWrapper>& args,
-                                           const std::vector<TensorViewWrapper>& out,
-                                           bool append_relu = false);
             };
         }
     }
