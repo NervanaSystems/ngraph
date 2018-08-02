@@ -32,7 +32,7 @@ node("bdw && nogpu") {
 
     // Clone the cje-algo directory which contains our Jenkins groovy scripts
     dir(JENKINS_DIR){
-        git(branch: JENKINS_BRANCH, changelog: false, poll: false
+        git(branch: JENKINS_BRANCH, changelog: false, poll: false,
             url: 'https://github.intel.com/AIPG/cje-algo')
     }
     echo "After cloning cje-algo, workspace looks like:"
