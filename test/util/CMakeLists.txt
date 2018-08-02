@@ -21,15 +21,9 @@ set (SRC
     test_control.cpp
 )
 
-include_directories(
-    SYSTEM
-    ${NGRAPH_INCLUDE_PATH}
-    ${GTEST_INCLUDE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/..
-)
-
 add_library(ngraph_test_util SHARED ${SRC})
 set_target_properties(ngraph_test_util PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
+target_include_directories(ngraph_test_util PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
 target_link_libraries(ngraph_test_util ngraph libgtest)
 
 install(TARGETS ngraph_test_util DESTINATION ${NGRAPH_INSTALL_LIB})

@@ -387,3 +387,47 @@ std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv)
     os << vector_to_string(names);
     return os;
 }
+
+void ngraph::check_fp_values_isinf(const char* name, const float* array, size_t n)
+{
+    for (size_t i = 0; i < n; i++)
+    {
+        if (isinf(array[i]))
+        {
+            throw std::runtime_error("Discovered Inf in '" + string(name) + "'");
+        }
+    }
+}
+
+void ngraph::check_fp_values_isinf(const char* name, const double* array, size_t n)
+{
+    for (size_t i = 0; i < n; i++)
+    {
+        if (isinf(array[i]))
+        {
+            throw std::runtime_error("Discovered Inf in '" + string(name) + "'");
+        }
+    }
+}
+
+void ngraph::check_fp_values_isnan(const char* name, const float* array, size_t n)
+{
+    for (size_t i = 0; i < n; i++)
+    {
+        if (isinf(array[i]))
+        {
+            throw std::runtime_error("Discovered NaN in '" + string(name) + "'");
+        }
+    }
+}
+
+void ngraph::check_fp_values_isnan(const char* name, const double* array, size_t n)
+{
+    for (size_t i = 0; i < n; i++)
+    {
+        if (isinf(array[i]))
+        {
+            throw std::runtime_error("Discovered NaN in '" + string(name) + "'");
+        }
+    }
+}
