@@ -36,6 +36,7 @@
 #include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
 
 #include "ngraph/node.hpp"
+#include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
@@ -43,7 +44,6 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
-#include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sum.hpp"
@@ -283,32 +283,39 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         else if ("AvgPool" == op->description())
         {
             arguments_check(op, 1, 1);
-            
+
             const string& input_name = op->get_inputs().begin()->get_tensor().get_name();
             const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
             const Shape& out_shape = op->get_outputs().begin()->get_shape();
-            const cldnn::tensor output_size = runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(out_shape);
-            
+            const cldnn::tensor output_size =
+                runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(out_shape);
+
             const shared_ptr<op::AvgPool> avg_pool = static_pointer_cast<op::AvgPool>(op);
 
             const Shape& pool_shape = avg_pool->get_window_shape();
             const Strides& pool_strides = avg_pool->get_window_movement_strides();
             const Shape& pad_below = avg_pool->get_padding_below();
-            const Shape& pad_above = avg_pool->get_padding_above();            
+            const Shape& pad_above = avg_pool->get_padding_above();
 
             vector<cldnn::tensor::value_type> offset({0, 0, 0, 0});
-	          size_t ridx = 4;
+            size_t ridx = 4;
             for (auto i = pad_below.crbegin(); i != pad_below.crend() && ridx > 0; ++i, --ridx)
             {
                 offset.at(ridx - 1) = -(*i);
             }
 
-            const cldnn::tensor input_offset(offset.at(0), offset.at(1), offset.at(3), offset.at(2));
-            const cldnn::tensor size = runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(pool_shape);
-            const cldnn::tensor stride = runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(pool_strides);
-	          const cldnn::pooling_mode mode = avg_pool->get_include_padding_in_avg_computation() ? cldnn::pooling_mode::average : cldnn::pooling_mode::average_no_padding;
-            
-            const cldnn::pooling cldnn_pooling(output_name, input_name, mode, size, stride, input_offset, output_size);
+            const cldnn::tensor input_offset(
+                offset.at(0), offset.at(1), offset.at(3), offset.at(2));
+            const cldnn::tensor size =
+                runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(pool_shape);
+            const cldnn::tensor stride =
+                runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(pool_strides);
+            const cldnn::pooling_mode mode = avg_pool->get_include_padding_in_avg_computation()
+                                                 ? cldnn::pooling_mode::average
+                                                 : cldnn::pooling_mode::average_no_padding;
+
+            const cldnn::pooling cldnn_pooling(
+                output_name, input_name, mode, size, stride, input_offset, output_size);
             topology.add(cldnn_pooling);
         }
         else if ("Broadcast" == op->description())
