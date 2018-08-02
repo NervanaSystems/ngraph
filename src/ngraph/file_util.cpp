@@ -73,6 +73,16 @@ string file_util::get_directory(const string& s)
     return rc;
 }
 
+string file_util::path_join(const string& s1, const string& s2, const string& s3)
+{
+    return path_join(path_join(s1, s2), s3);
+}
+
+string file_util::path_join(const string& s1, const string& s2, const string& s3, const string& s4)
+{
+    return path_join(path_join(path_join(s1, s2), s3), s4);
+}
+
 string file_util::path_join(const string& s1, const string& s2)
 {
     string rc;
