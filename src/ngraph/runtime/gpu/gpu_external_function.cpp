@@ -20,9 +20,9 @@
 #include <cuda_runtime.h>
 #include <cudnn.h>
 #include <fstream>
+#include <mutex>
 #include <string>
 #include <tuple>
-#include <mutex>
 
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
