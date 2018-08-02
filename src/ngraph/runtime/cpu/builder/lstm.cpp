@@ -14,7 +14,6 @@
 * limitations under the License.
 *******************************************************************************/
 
-//#include "ngraph/runtime/cpu/kernel/avg_pool.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
