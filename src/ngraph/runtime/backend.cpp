@@ -34,7 +34,7 @@ using namespace ngraph;
 #define CLOSE_LIBRARY(a) FreeLibrary(a)
 #define DLSYM(a, b) GetProcAddress(a, b)
 #else
-#define OPEN_LIBRARY(a, b) dlopen(a, b)
+// #define OPEN_LIBRARY(a, b) dlopen(a, b)
 #define CLOSE_LIBRARY(a) dlclose(a)
 #define DLSYM(a, b) dlsym(a, b)
 #endif
