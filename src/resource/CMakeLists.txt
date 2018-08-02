@@ -24,7 +24,6 @@ set (SRC
 get_target_property(MKLDNN_INCLUDE_DIR libmkldnn INTERFACE_INCLUDE_DIRECTORIES)
 get_target_property(EIGEN_INCLUDE_DIR libeigen INTERFACE_INCLUDE_DIRECTORIES)
 get_target_property(LLVM_INCLUDE_DIR libllvm INTERFACE_INCLUDE_DIRECTORIES)
-#get_target_property(TVM_INCLUDE_DIR libtvm INTERFACE_INCLUDE_DIRECTORIES)
 set(CLANG_INCLUDE_DIR ${LLVM_INCLUDE_DIR}/../lib/clang/5.0.1/include)
 get_filename_component(CLANG_INCLUDE_DIR ${CLANG_INCLUDE_DIR} ABSOLUTE)
 
@@ -51,7 +50,7 @@ if (NGRAPH_GPU_ENABLE)
 endif()
 
 add_executable(resource_generator EXCLUDE_FROM_ALL ${SRC})
-add_dependencies(resource_generator ext_llvm ext_eigen ext_mkldnn)
+add_dependencies(resource_generator ext_llvm ext_eigen ext_mkldnn ext_tvm)
 
 set_source_files_properties(main.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
 

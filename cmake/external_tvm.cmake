@@ -77,9 +77,12 @@ set(TVM_LINK_LIBS
     ${EXTERNAL_PROJECTS_ROOT}/tvm/build/libtvm_runtime.so
 )
 
+# work around for set_source_files_properties in resource/CMakeLists.txt, which
+# can not accept path list with spaces.
+set(TVM_INCLUDE_DIR "${EXTERNAL_PROJECTS_ROOT}/tvm/include\;${EXTERNAL_PROJECTS_ROOT}/tvm/include/HalideIR")
 add_library(libtvm INTERFACE)
 add_dependencies(libtvm ext_tvm)
 target_include_directories(libtvm SYSTEM INTERFACE
-                           ${EXTERNAL_PROJECTS_ROOT}/tvm/include 
+                           ${EXTERNAL_PROJECTS_ROOT}/tvm/include
                            ${EXTERNAL_PROJECTS_ROOT}/tvm/include/HalideIR)
 target_link_libraries(libtvm INTERFACE ${TVM_LINK_LIBS})
