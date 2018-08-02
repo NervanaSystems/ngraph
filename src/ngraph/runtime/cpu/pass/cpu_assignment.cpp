@@ -214,8 +214,7 @@ namespace ngraph
                         op_annotations->set_mkldnn_op(true);
                         const int ADD_INPUT = 3;
                         // Accumulates conv into the second input of the unfused add
-                        std::map<size_t, size_t> oi_pairs = {{0, ADD_INPUT}};
-                        op_annotations->set_in_place_oi_pairs(oi_pairs);
+                        op_annotations->add_in_place_oi_pair({0, ADD_INPUT, true});
                         convolution->set_op_annotations(op_annotations);
                     }
                 }
@@ -478,8 +477,7 @@ namespace ngraph
                         if (get_user_count(node->get_argument(0).get()) == 1)
                         {
                             // Safe to overwrite input
-                            std::map<size_t, size_t> oi_pairs = {{0, 0}};
-                            op_annotations->set_in_place_oi_pairs(oi_pairs);
+                            op_annotations->add_in_place_oi_pair({0, 0, true});
                         }
                         relu->set_op_annotations(op_annotations);
                     }
@@ -546,14 +544,12 @@ namespace ngraph
                     auto arg = reshape->get_argument(0);
                     // we need to copy input data if reshape modifies the data or inputs are
                     // not in the memory pool, or has output users.
-                    bool need_copy =
-                        reshape->get_is_transpose() || arg->is_parameter() || arg->is_constant();
+                    bool need_copy = reshape->get_is_transpose() || arg->is_constant();
 
                     if (!need_copy)
                     {
                         // map output to the input memory
-                        std::map<size_t, size_t> oi_pairs = {{0, 0}};
-                        op_annotations->set_in_place_oi_pairs(oi_pairs);
+                        op_annotations->add_in_place_oi_pair({0, 0, false});
                         reshape->set_op_annotations(op_annotations);
                     }
 

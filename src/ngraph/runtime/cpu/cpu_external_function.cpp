@@ -656,6 +656,7 @@ using namespace ngraph::runtime;
                 ss << "((" << type << "*)(inputs[" << arg_index << "]))";
                 m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
                 param_index_map[tv->get_tensor().get_name()] = arg_index;
+                propagate_in_place_input(&param->get_outputs().at(i), ss.str());
                 arg_index++;
             }
         }
@@ -973,6 +974,41 @@ using namespace ngraph::runtime;
     }
 }
 
+void runtime::cpu::CPU_ExternalFunction::propagate_in_place_input(
+    ngraph::descriptor::Output* output, std::string input_name)
+{
+    auto it = output;
+    auto propagate_further = false;
+    do
+    {
+        propagate_further = false;
+        for (auto input : it->get_inputs())
+        {
+            auto c_op = std::dynamic_pointer_cast<ngraph::op::Op>(input->get_node());
+            if (!c_op || c_op->is_output())
+            {
+                break;
+            }
+
+            if (auto op_annotations = c_op->get_op_annotations())
+            {
+                for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
+                {
+                    if (oi_pair.input == input->get_index() && !oi_pair.destructive)
+                    {
+                        size_t output_index = oi_pair.output;
+                        auto& output_tensor = c_op->get_outputs().at(output_index).get_tensor();
+
+                        m_variable_name_map[output_tensor.get_name()] = input_name;
+                        it = &c_op->get_outputs().at(output_index);
+                        propagate_further = true;
+                    }
+                }
+            }
+        }
+    } while (propagate_further);
+}
+
 void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
     ngraph::descriptor::Output* res_src_output, std::string output_name)
 {
@@ -992,18 +1028,21 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
         }
         if (auto op_annotations = arg->get_op_annotations())
         {
-            auto oi_pairs = op_annotations->get_in_place_oi_pairs();
-            if (oi_pairs.count(it->get_index()) != 0)
+            for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
             {
-                size_t input_index = oi_pairs.at(it->get_index());
-                auto& input_tensor = arg->get_inputs().at(input_index).get_tensor();
-                if (input_tensor.get_pool_offset() == offset &&
-                    !arg->get_inputs().at(input_index).get_output().get_node()->is_parameter())
+                if (oi_pair.output == it->get_index())
                 {
-                    NGRAPH_DEBUG << "Reusing " << output_name << " for " << input_tensor.get_name();
-                    m_variable_name_map[input_tensor.get_name()] = output_name;
-                    it = &arg->get_inputs().at(input_index).get_output();
-                    propagate_further = true;
+                    size_t input_index = oi_pair.input;
+                    auto& input_tensor = arg->get_inputs().at(input_index).get_tensor();
+                    if (input_tensor.get_pool_offset() == offset &&
+                        !arg->get_inputs().at(input_index).get_output().get_node()->is_parameter())
+                    {
+                        NGRAPH_DEBUG << "Reusing " << output_name << " for "
+                                     << input_tensor.get_name();
+                        m_variable_name_map[input_tensor.get_name()] = output_name;
+                        it = &arg->get_inputs().at(input_index).get_output();
+                        propagate_further = true;
+                    }
                 }
             }
         }
