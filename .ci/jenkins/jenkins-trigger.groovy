@@ -3,7 +3,7 @@
 // which can trigger GitHub jobs more effectively than the GitHub Pull
 // Request Builder (GHPRB) plugin, in our environment.
 
-node('BDW && NOGPU') {
+node('bdw && nogpu') {
 
     // The original ngraph-unittest job required the following parameters.  We
     // set these up below as global variables, so we do not need to rewrite the
