@@ -26,7 +26,7 @@
 
 using namespace ngraph;
 
-bool ngraph::runtime::gpu::pass::FunctionMemoryReservation::run_on_function(
+bool ngraph::runtime::gpu::pass::TensorMemoryReservation::run_on_function(
     std::shared_ptr<Function> f)
 {
     auto allocator = m_allocator.lock();
@@ -38,8 +38,9 @@ bool ngraph::runtime::gpu::pass::FunctionMemoryReservation::run_on_function(
         {
             size_t pool_idx = allocator->reserve_workspace(mem_pool_size, false);
             buffers->insert({f->get_name(), pool_idx});
+
+            return true;
         }
-        return true;
     }
     return false;
 }

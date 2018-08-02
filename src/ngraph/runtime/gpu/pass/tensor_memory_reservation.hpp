@@ -28,17 +28,17 @@ namespace ngraph
             class GPUAllocator;
             namespace pass
             {
-                class FunctionMemoryReservation;
+                class TensorMemoryReservation;
             }
         }
     }
 }
 
-class ngraph::runtime::gpu::pass::FunctionMemoryReservation : public ngraph::pass::FunctionPass
+class ngraph::runtime::gpu::pass::TensorMemoryReservation : public ngraph::pass::FunctionPass
 {
 public:
-    FunctionMemoryReservation(std::weak_ptr<ngraph::runtime::gpu::GPUAllocator> allocator,
-                              std::weak_ptr<std::unordered_map<std::string, size_t>> buffers)
+    TensorMemoryReservation(std::weak_ptr<ngraph::runtime::gpu::GPUAllocator> allocator,
+                            std::weak_ptr<std::unordered_map<std::string, size_t>> buffers)
         : ngraph::pass::FunctionPass()
         , m_allocator(allocator)
         , m_memory_buffers(buffers)
