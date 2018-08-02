@@ -84,7 +84,6 @@ namespace ngraph
                 std::list<allocation> m_argspace_mem;
                 std::list<allocation> m_workspace_mem;
                 GPUPrimitiveEmitter* m_primitive_emitter;
-                size_t m_open_allocators;
             };
         }
     }

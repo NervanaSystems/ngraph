@@ -31,7 +31,6 @@ runtime::gpu::GPUMemoryManager::GPUMemoryManager(GPUPrimitiveEmitter* emitter)
     , m_argspace_mem(1, {nullptr, 0})
     , m_workspace_mem(1, {nullptr, 0})
     , m_primitive_emitter(emitter)
-    , m_open_allocators(0)
 {
 }
 
@@ -63,7 +62,7 @@ runtime::gpu::GPUMemoryManager::~GPUMemoryManager()
 
 void runtime::gpu::GPUMemoryManager::allocate()
 {
-    if (m_open_allocators)
+    if (m_workspace_manager.get_node_list().size() != 1)
     {
         throw std::runtime_error(
             "Attempt to allocate memory while reservations are inprogress. Ensure all "
@@ -114,14 +113,12 @@ size_t runtime::gpu::GPUMemoryManager::queue_for_transfer(const void* data, size
 runtime::gpu::GPUAllocator::GPUAllocator(GPUMemoryManager* mgr)
     : m_manager(mgr)
 {
-    m_manager->m_open_allocators++;
 }
 
 runtime::gpu::GPUAllocator::GPUAllocator(const GPUAllocator& g)
 {
     m_manager = g.m_manager;
     m_active = g.m_active;
-    m_manager->m_open_allocators++;
 }
 
 size_t runtime::gpu::GPUAllocator::reserve_argspace(const void* data, size_t size)
@@ -174,10 +171,6 @@ void runtime::gpu::GPUAllocator::close()
     {
         m_manager->m_workspace_manager.free(m_active.top());
         m_active.pop();
-    }
-    if (m_manager->m_open_allocators > 0)
-    {
-        m_manager->m_open_allocators--;
     }
 }
 runtime::gpu::GPUAllocator::~GPUAllocator()
