@@ -784,6 +784,128 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
     return primitive_index;
 }
 
+size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Max* node)
+{
+    auto& args = node->get_inputs();
+    auto& out = node->get_outputs();
+    auto& input_shape = args[0].get_shape();
+    auto& output_shape = out[0].get_shape();
+    auto input_size = shape_size(input_shape);
+    auto output_size = shape_size(output_shape);
+    auto output_element_size = out[0].get_element_type().size();
+    auto output_type = out[0].get_element_type().c_type_string();
+
+    std::stringstream ss;
+    ss << "max_" << output_type << "_i" << join(input_shape, "_") << "_ra"
+       << join(node->get_reduction_axes(), "_");
+    std::string hash = ss.str();
+
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    std::unique_ptr<gpu::primitive> kernel_launch;
+    ;
+
+    // one of args[] axes has zero size, zero output
+    if (input_size == 0)
+    {
+        GPUAllocator allocator = m_primitive_emitter->get_memory_allocator();
+        std::vector<float> negative_inf(output_size, -std::numeric_limits<float>::infinity());
+        size_t idx_float_inf =
+            allocator.reserve_argspace(negative_inf.data(), negative_inf.size() * sizeof(float));
+
+        kernel_launch.reset(new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void* temp_d = runtime::gpu::invoke_memory_primitive(m_ctx, idx_float_inf);
+            runtime::gpu::cuda_memcpyDtD(outputs[0], temp_d, output_size * output_element_size);
+        }});
+    }
+    else if (input_size == output_size)
+    {
+        // no reduction
+        kernel_launch.reset(new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            runtime::gpu::cuda_memcpyDtD(outputs[0], inputs[0], output_size * output_element_size);
+        }});
+    }
+    else
+    {
+        auto& cudnn_emitter = m_primitive_emitter->get_cudnn_emitter();
+        auto max_index = cudnn_emitter->build_reduce_forward(
+            CUDNN_REDUCE_TENSOR_MAX, output_type, input_shape, node->get_reduction_axes());
+        kernel_launch.reset(new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            gpu::invoke_primitive(m_ctx, max_index, inputs, outputs);
+        }});
+    }
+
+    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
+
+size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Min* node)
+{
+    auto& args = node->get_inputs();
+    auto& out = node->get_outputs();
+    auto& input_shape = args[0].get_shape();
+    auto& output_shape = out[0].get_shape();
+    auto input_size = shape_size(input_shape);
+    auto output_size = shape_size(output_shape);
+    auto output_element_size = out[0].get_element_type().size();
+    auto output_type = out[0].get_element_type().c_type_string();
+
+    std::stringstream ss;
+    ss << "min_" << output_type << "_i" << join(input_shape, "_") << "_ra"
+       << join(node->get_reduction_axes(), "_");
+    std::string hash = ss.str();
+
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    std::unique_ptr<gpu::primitive> kernel_launch;
+    ;
+
+    // one of args[] axes has zero size, zero output
+    if (input_size == 0)
+    {
+        GPUAllocator allocator = m_primitive_emitter->get_memory_allocator();
+        std::vector<float> negative_inf(output_size, std::numeric_limits<float>::infinity());
+        size_t idx_float_inf =
+            allocator.reserve_argspace(negative_inf.data(), negative_inf.size() * sizeof(float));
+
+        kernel_launch.reset(new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void* temp_d = runtime::gpu::invoke_memory_primitive(m_ctx, idx_float_inf);
+            runtime::gpu::cuda_memcpyDtD(outputs[0], temp_d, output_size * output_element_size);
+        }});
+    }
+    else if (input_size == output_size)
+    {
+        // no reduction
+        kernel_launch.reset(new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            runtime::gpu::cuda_memcpyDtD(outputs[0], inputs[0], output_size * output_element_size);
+        }});
+    }
+    else
+    {
+        auto& cudnn_emitter = m_primitive_emitter->get_cudnn_emitter();
+        auto min_index = cudnn_emitter->build_reduce_forward(
+            CUDNN_REDUCE_TENSOR_MIN, output_type, input_shape, node->get_reduction_axes());
+        kernel_launch.reset(new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            gpu::invoke_primitive(m_ctx, min_index, inputs, outputs);
+        }});
+    }
+
+    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
+
 size_t runtime::gpu::CUDNNEmitter::build_convolution(const std::string& dtype,
                                                      const Shape& input_tensor_shape,
                                                      const Shape& input_filter_shape,

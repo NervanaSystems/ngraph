@@ -137,6 +137,11 @@ namespace ngraph
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Convolution)
             {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
+
                 auto convolution = static_cast<const ngraph::op::Convolution*>(node);
 
                 size_t conv_index = 0;
@@ -164,6 +169,11 @@ namespace ngraph
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::ConvolutionBackpropData)
             {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
+
                 auto convolution = static_cast<const ngraph::op::ConvolutionBackpropData*>(node);
 
                 if (convolution->get_padding_below_forward().size() > 3)
@@ -187,6 +197,11 @@ namespace ngraph
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::ConvolutionBackpropFilters)
             {
+                if (out[0].get_size() == 0)
+                {
+                    return;
+                }
+
                 auto convolution = static_cast<const ngraph::op::ConvolutionBackpropFilters*>(node);
 
                 if (convolution->get_padding_below_forward().size() > 3)
@@ -782,96 +797,40 @@ namespace ngraph
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Max)
             {
-                const ngraph::op::Max* max_op = static_cast<const ngraph::op::Max*>(node);
-                writer.block_begin();
+                if (out[0].get_size() == 0)
                 {
-                    if (out[0].get_size() != 0)
-                    {
-                        // one of args[] axes has zero size, zero output
-                        if (args[0].get_size() == 0)
-                        {
-                            GPUAllocator allocator =
-                                external_function->get_primitive_emitter()->get_memory_allocator();
-                            std::vector<float> negative_inf(
-                                out[0].get_size(), -std::numeric_limits<float>::infinity());
-                            size_t idx_float_inf = allocator.reserve_argspace(
-                                negative_inf.data(), negative_inf.size() * sizeof(float));
-                            writer << "void* temp_d = runtime::gpu::invoke_memory_primitive(ctx, "
-                                   << idx_float_inf << ");\n";
-                            writer << "runtime::gpu::cuda_memcpyDtD(" << out[0].get_name()
-                                   << ", temp_d, " << out[0].get_size() << " * "
-                                   << out[0].get_element_type().size() << ");\n";
-                        }
-                        else if (args[0].get_size() == out[0].get_size())
-                        {
-                            kernel::emit_memcpyDtD(writer, out[0], args[0]);
-                        }
-                        else
-                        {
-                            auto& cudnn_emitter =
-                                external_function->get_primitive_emitter()->get_cudnn_emitter();
-                            auto max_index =
-                                cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_MAX,
-                                                                    out[0].get_type(),
-                                                                    args[0].get_shape(),
-                                                                    max_op->get_reduction_axes());
-
-                            writer << "gpu::invoke_primitive(ctx, " << max_index << ", ";
-                            writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                            writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                            writer << ");\n";
-                        }
-                    }
+                    return;
                 }
-                writer.block_end();
+
+                const ngraph::op::Max* max = static_cast<const ngraph::op::Max*>(node);
+                auto& cudnn_emitter =
+                    external_function->get_primitive_emitter()->get_cudnn_emitter();
+                auto index = cudnn_emitter->build_primitive(max);
+
+                writer << "gpu::invoke_primitive(ctx, " << index << ", ";
+                writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                writer << "std::vector<void*>{" << out[0].get_name() << "}.data());\n";
+
                 return;
             }
 
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Min)
             {
-                const ngraph::op::Min* min_op = static_cast<const ngraph::op::Min*>(node);
-                writer.block_begin();
+                if (out[0].get_size() == 0)
                 {
-                    if (out[0].get_size() != 0)
-                    {
-                        // one of args[] axes has zero size, zero output
-                        if (args[0].get_size() == 0)
-                        {
-                            GPUAllocator allocator =
-                                external_function->get_primitive_emitter()->get_memory_allocator();
-                            std::vector<float> positive_inf(out[0].get_size(),
-                                                            std::numeric_limits<float>::infinity());
-                            size_t idx_float_inf = allocator.reserve_argspace(
-                                positive_inf.data(), positive_inf.size() * sizeof(float));
-                            writer << "void* temp_d = runtime::gpu::invoke_memory_primitive(ctx, "
-                                   << idx_float_inf << ");\n";
-                            writer << "runtime::gpu::cuda_memcpyDtD(" << out[0].get_name()
-                                   << ", temp_d, " << out[0].get_size() << " * "
-                                   << out[0].get_element_type().size() << ");\n";
-                        }
-                        else if (args[0].get_size() == out[0].get_size())
-                        {
-                            kernel::emit_memcpyDtD(writer, out[0], args[0]);
-                        }
-                        else
-                        {
-                            auto& cudnn_emitter =
-                                external_function->get_primitive_emitter()->get_cudnn_emitter();
-                            auto min_index =
-                                cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_MIN,
-                                                                    out[0].get_type(),
-                                                                    args[0].get_shape(),
-                                                                    min_op->get_reduction_axes());
-
-                            writer << "gpu::invoke_primitive(ctx, " << min_index << ", ";
-                            writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                            writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                            writer << ");\n";
-                        }
-                    }
+                    return;
                 }
-                writer.block_end();
+
+                const ngraph::op::Min* min = static_cast<const ngraph::op::Min*>(node);
+                auto& cudnn_emitter =
+                    external_function->get_primitive_emitter()->get_cudnn_emitter();
+                auto index = cudnn_emitter->build_primitive(min);
+
+                writer << "gpu::invoke_primitive(ctx, " << index << ", ";
+                writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                writer << "std::vector<void*>{" << out[0].get_name() << "}.data());\n";
+
                 return;
             }
 
