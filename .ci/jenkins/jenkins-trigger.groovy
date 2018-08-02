@@ -16,7 +16,7 @@ JENKINS_BRANCH = "chrisl/new-ngraph-ci-trigger"
 TIMEOUTTIME = 3600
 
 // Constants
-JENKINS_DIR="cje-algo"
+JENKINS_DIR="."
 
 
 node("bdw && nogpu") {
@@ -31,10 +31,8 @@ node("bdw && nogpu") {
     echo "TIMEOUTTIME      = ${TIMEOUTTIME}"
 
     // Clone the cje-algo directory which contains our Jenkins groovy scripts
-    dir(JENKINS_DIR){
-        git(branch: JENKINS_BRANCH, changelog: false, poll: false,
-            url: 'https://github.intel.com/AIPG/cje-algo')
-    }
+    git(branch: JENKINS_BRANCH, changelog: false, poll: false,
+        url: 'https://github.intel.com/AIPG/cje-algo')
     echo "After cloning cje-algo, workspace looks like:"
     sh "ls -l"
 
@@ -43,7 +41,9 @@ node("bdw && nogpu") {
     // NOTE: We keep the main job script in github.intel.com because it may
     //      contain references to technology which has not yet been released.
     //
-    echo "Would call ngraph-unittest.groovy here"
+    echo "Calling ngraph-unittest.groovy"
+    def ngraphUnitTest = load("${JENKINS_DIR}/ngraph-unittest.groovy")
+    ngraphUnitTest()
 
 }  // End:  node( ... )
 
