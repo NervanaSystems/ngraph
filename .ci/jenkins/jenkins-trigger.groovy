@@ -9,8 +9,8 @@
 //
 // ngraph-unittest parameters:
 BRANCH = BRANCH_NAME
-// PR_URL = CHANGE_URL
-// PR_COMMIT_AUTHOR = CHANGE_AUTHOR
+PR_URL = CHANGE_URL
+PR_COMMIT_AUTHOR = CHANGE_AUTHOR
 // TRIGGER_URL        <- No longer needed
 JENKINS_BRANCH = "chrisl/new-ci-trigger"
 TIMEOUTTIME = 3600
@@ -25,8 +25,8 @@ node("bdw && nogpu") {
 
     echo "jenkins-trigger parameters:"
     echo "BRANCH           = ${BRANCH}"
-    // echo "PR_URL           = ${PR_URL}"
-    // echo "PR_COMMIT_AUTHOR = ${PR_COMMIT_AUTHOR}"
+    echo "PR_URL           = ${PR_URL}"
+    echo "PR_COMMIT_AUTHOR = ${PR_COMMIT_AUTHOR}"
     echo "JENKINS_BRANCH   = ${JENKINS_BRANCH}"
     echo "TIMEOUTTIME      = ${TIMEOUTTIME}"
 
