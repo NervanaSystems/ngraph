@@ -30,6 +30,11 @@
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/shape.hpp"
 
+#include "ngraph/op/convolution.hpp"
+#include "ngraph/op/max.hpp"
+#include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/min.hpp"
+
 namespace ngraph
 {
     namespace runtime
@@ -47,6 +52,14 @@ namespace ngraph
             class CUDNNEmitter
             {
                 friend class GPUPrimitiveEmitter;
+
+            public:
+                size_t build_primitive(const op::Convolution* node);
+                size_t build_primitive(const op::ConvolutionBackpropData* node);
+                size_t build_primitive(const op::ConvolutionBackpropFilters* node);
+                size_t build_primitive(const op::MaxPool* node);
+                size_t build_primitive(const op::Max* node);
+                size_t build_primitive(const op::Min* node);
 
             public:
                 enum class Prop
