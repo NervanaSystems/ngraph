@@ -23,6 +23,7 @@
 #include "ngraph/strides.hpp"
 
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/softmax.hpp"
 
 namespace ngraph
@@ -43,6 +44,7 @@ namespace ngraph
             public:
                 size_t build_primitive(const op::Softmax* node);
                 size_t build_primitive(const op::Convolution* node);
+                size_t build_primitive(const op::MaxPool* node);
 
             public:
                 size_t build_pad(const std::array<std::string, 2>& dtypes,

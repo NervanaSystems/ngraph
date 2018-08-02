@@ -25,6 +25,7 @@
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/runtime/gpu/type_info.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -675,6 +676,114 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
     return primitive_index;
 }
 
+size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
+{
+    auto& args = node->get_inputs();
+    auto& out = node->get_outputs();
+    auto& input_shape = args[0].get_shape();
+    auto& result_shape = out[0].get_shape();
+    auto padding_below = node->get_padding_below();
+    auto padding_above = node->get_padding_above();
+    auto input_type = args[0].get_element_type().c_type_string();
+    auto output_type = out[0].get_element_type().c_type_string();
+
+    // construct hash to determine if kernel needs to be emitted
+    // or if it already exists in the primitive list
+    std::stringstream ss;
+    ss << "max_pool_" << output_type << "_i" << join(input_shape, "_") << "_o"
+       << join(result_shape, "_") << "_ws" << join(node->get_window_shape(), "_") << "_wst"
+       << join(node->get_window_movement_strides(), "_") << "_pb" << join(padding_below, "_")
+       << "_pb" << join(padding_above, "_");
+    std::string hash = ss.str();
+
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    /// assymetric padding detection
+    bool pad_required = false;
+    auto shape_to_pool =
+        runtime::gpu::get_padded_shape(input_shape, padding_below, padding_above, {});
+    if (shape_to_pool != input_shape)
+    {
+        pad_required = true;
+    }
+
+    pad_required = pad_required && (padding_below != padding_above);
+    // asymetric padding
+    size_t idx_workspace = std::numeric_limits<size_t>::max();
+    size_t pad_index = std::numeric_limits<size_t>::max();
+    if (pad_required)
+    {
+        auto temp_size = shape_size(shape_to_pool) * args[0].get_element_type().size();
+        GPUAllocator allocator = m_primitive_emitter->get_memory_allocator();
+        idx_workspace = allocator.reserve_workspace(temp_size);
+
+        auto pad_value = TypeInfo::Get(args[0].get_element_type())->lowest();
+
+        auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
+        pad_index = cuda_emitter->build_pad({{input_type, output_type}},
+                                            input_shape,
+                                            shape_to_pool,
+                                            padding_below,
+                                            padding_above,
+                                            Shape{},
+                                            pad_value);
+
+        // asymetric padding has been applied, zero out padding vectors to
+        // ensure cuDNN does not assume padding during pooling
+        std::fill(padding_below.begin(), padding_below.end(), 0);
+        std::fill(padding_above.begin(), padding_above.end(), 0);
+    }
+
+    /// end asymmetric padding detection
+
+    size_t max_pool_index = build_pooling(CUDNN_POOLING_MAX,
+                                          output_type,
+                                          CUDNNEmitter::Prop::Forward,
+                                          shape_to_pool,
+                                          result_shape,
+                                          node->get_window_movement_strides(),
+                                          node->get_window_shape(),
+                                          padding_below,
+                                          padding_above);
+
+    std::unique_ptr<gpu::primitive> kernel_launch(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            if (idx_workspace != std::numeric_limits<size_t>::max() &&
+                pad_index != std::numeric_limits<size_t>::max())
+            {
+                // void* pad_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, idx_workspace);
+                // gpu::invoke_primitive(m_ctx,
+                //                       pad_dynamic_index,
+                //                       std::vector<void*>{inputs[0]}.data(),
+                //                       std::vector<void*>{pad_buffer}.data());
+
+                // gpu::invoke_primitive(
+                //     m_ctx, conv_index, std::vector<void*>{pad_buffer, inputs[1]}.data(), outputs);
+
+                void* pad_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, idx_workspace);
+                gpu::invoke_primitive(m_ctx,
+                                      pad_index,
+                                      std::vector<void*>{inputs[0]}.data(),
+                                      std::vector<void*>{pad_buffer}.data());
+                gpu::invoke_primitive(
+                    m_ctx, max_pool_index, std::vector<void*>{pad_buffer}.data(), outputs);
+            }
+            else
+            {
+                gpu::invoke_primitive(m_ctx, max_pool_index, inputs, outputs);
+            }
+        }});
+
+    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
+
 size_t runtime::gpu::CUDNNEmitter::build_convolution(const std::string& dtype,
                                                      const Shape& input_tensor_shape,
                                                      const Shape& input_filter_shape,
@@ -890,7 +999,10 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t& pool_
     auto& input_desc = tensor_descriptor_from_shape(input_shape, data_type, tensor_format);
     auto& output_desc = tensor_descriptor_from_shape(output_shape, data_type, tensor_format);
 
-    if (input_shape.size() == 4)
+    if (input_shape.size() == 3)
+    {
+    }
+    else if (input_shape.size() == 4)
     {
         CUDNN_SAFE_CALL(cudnnSetPooling2dDescriptor(desc,
                                                     pool_op,
