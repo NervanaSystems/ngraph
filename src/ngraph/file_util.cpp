@@ -45,7 +45,6 @@
 #define RMFILE(a) remove(a)
 #endif
 
-
 using namespace std;
 using namespace ngraph;
 
@@ -138,15 +137,15 @@ void file_util::remove_directory(const string& dir)
                       [](const string& file, bool is_dir) {
                           if (is_dir)
                           {
-							  RMDIR(file.c_str());
+                              RMDIR(file.c_str());
                           }
                           else
                           {
-							  RMFILE(file.c_str());
+                              RMFILE(file.c_str());
                           }
                       },
                       true);
-		RMDIR(dir.c_str());
+        RMDIR(dir.c_str());
     }
 }
 
@@ -158,7 +157,7 @@ void file_util::remove_file(const string& file)
 bool file_util::make_directory(const string& dir)
 {
 #ifdef WIN32
-	CreateDirectoryA(dir.c_str(), nullptr);
+    CreateDirectoryA(dir.c_str(), nullptr);
 #else
     if (mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH))
     {
@@ -290,15 +289,17 @@ void file_util::iterate_files(const string& path,
     vector<string> files;
     vector<string> dirs;
 #ifdef WIN32
-	string file_match = path_join(path, "*");
-	WIN32_FIND_DATA data;
-	HANDLE hFind = FindFirstFile(file_match.c_str(), &data);
-	if (hFind != INVALID_HANDLE_VALUE) {
-		do {
-			std::cout << data.cFileName << std::endl;
-		} while (FindNextFile(hFind, &data));
-		FindClose(hFind);
-	}
+    string file_match = path_join(path, "*");
+    WIN32_FIND_DATA data;
+    HANDLE hFind = FindFirstFile(file_match.c_str(), &data);
+    if (hFind != INVALID_HANDLE_VALUE)
+    {
+        do
+        {
+            std::cout << data.cFileName << std::endl;
+        } while (FindNextFile(hFind, &data));
+        FindClose(hFind);
+    }
 #else
     iterate_files_worker(path,
                          [&files, &dirs](const string& file, bool is_dir) {
@@ -327,13 +328,13 @@ void file_util::iterate_files(const string& path,
 
 string file_util::tmp_filename(const string& extension)
 {
-	string rc;
+    string rc;
 #ifdef WIN32
-	rc = _tempnam(file_util::get_temp_directory_path().c_str(), "ngraph_");
+    rc = _tempnam(file_util::get_temp_directory_path().c_str(), "ngraph_");
 #else
-	string tmp_template =
-		file_util::path_join(file_util::get_temp_directory_path(), "ngraph_XXXXXX" + extension);
-	char* tmpname = strdup(tmp_template.c_str());
+    string tmp_template =
+        file_util::path_join(file_util::get_temp_directory_path(), "ngraph_XXXXXX" + extension);
+    char* tmpname = strdup(tmp_template.c_str());
 
     // mkstemp opens the file with open() so we need to close it
     close(mkstemps(tmpname, static_cast<int>(extension.size())));
