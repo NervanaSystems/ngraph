@@ -23,9 +23,9 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, Atan, AvgPool, BatchNorm, Broadcast, \
     Ceiling, Concat, Constant, Convert, Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, \
     Dot, Equal, Exp, Floor, FunctionCall, GetOutputElement, Greater, GreaterEq, Less, LessEq, \
-    Log, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, \
-    Parameter, Product, Power, Reduce, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, \
-    Sinh, Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh
+    Log, LRN, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, \
+    Pad, Parameter, Product, Power, Reduce, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, \
+    Sin, Sinh, Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh
 
 from typing import Callable, Iterable, List, Union
 
@@ -927,6 +927,19 @@ def batch_norm(eps,             # type: float
         return BatchNorm(eps, gamma, beta, data)
     else:
         return BatchNorm(eps, gamma, beta, data, mean, variance, training)
+
+
+@nameable_op
+def lrn(data,       # type: Node
+        alpha,      # type: float
+        beta,       # type: float
+        bias,       # type: float
+        size,       # type: int
+        name=None,  # type: str
+        ):
+    # type: (...) -> Node
+    """Return LRN node."""
+    return LRN(data, alpha, beta, bias, size)
 
 
 @nameable_op
