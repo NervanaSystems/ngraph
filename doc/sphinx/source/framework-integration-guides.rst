@@ -8,34 +8,34 @@ Integrate Supported Frameworks
 * :ref:`tensorflow_intg`
 * :ref:`neon_intg`
 
-
-A “supported” framework means there is a framework :term:`bridge` that can be 
-cloned from one of our GitHub repos and built to connect to supported a backend, 
-all the while maintaining the framework’s programmatic interface. Current 
-bridge-enabled frameworks include TensorFlow* and MXNet*. 
+A framework is "supported" when there is a framework :term:`bridge` that can be 
+cloned from one of our GitHub repos and built to connect to a supported backend
+with nGraph, all the while maintaining the framework's programmatic or user 
+interface. Current bridge-enabled frameworks include TensorFlow* and MXNet*. 
 
 Once connected via the bridge, the framework can then run and train a deep 
-learning model with various workloads using nGraph Compiler as an optimizing 
-compiler available through the framework.  
+learning model with various workloads on various backends using nGraph Compiler 
+as an optimizing compiler available through the framework.  
 
 
 .. _mxnet_intg:
 
-MXNet\* 
-========
+MXNet\* bridge
+===============
 
 
-#. See the `nGraph-MXNet Integration`_ README for how to enable the bridge.
+#. See the README on `nGraph-MXNet`_ Integration for how to enable the bridge.
 
 #. (Optional) For experimental or alternative approaches to distributed training
-   methodologies, including data parallel training, see the :doc:`distr/index` 
-   and :doc:`How to <howto/index>` articles on :doc:`howto/distribute-train`. 
+   methodologies, including data parallel training, see the MXNet-relevant sections
+   of the docs on :doc:`distr/index` and :doc:`How to <howto/index>` topics like
+   :doc:`howto/distribute-train`. 
 
 
 .. _tensorflow_intg:
 
-TensorFlow\* 
-=============
+TensorFlow\* bridge
+===================
 
 See the `ngraph tensorflow bridge README`_ for how to install the `DSO`_ for the 
 nGraph-TensorFlow bridge.
@@ -109,13 +109,12 @@ system that already has an ``ngraph_dist`` installed.
    and :doc:`How to <howto/index>` articles on :doc:`howto/distribute-train`. 
 
 
-
 .. _nGraph-MXNet: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/NGRAPH_README.md
 .. _MXNet: http://mxnet.incubator.apache.org
 .. _DSO: http://csweb.cs.wfu.edu/%7Etorgerse/Kokua/More_SGI/007-2360-010/sgi_html/ch03.html
 .. _ngraph-neon python README: https://github.com/NervanaSystems/ngraph/blob/master/python/README.md
 .. _ngraph neon repo's README: https://github.com/NervanaSystems/ngraph-neon/blob/master/README.md
 .. _neon docs: https://github.com/NervanaSystems/neon/tree/master/doc
-.. _being the fastest: https://github.com/soumith/convnet-benchmarks/
-.. _for training CNN-based models with GPUs: https://www.microway.com/hpc-tech-tips/deep-learning-frameworks-survey-tensorflow-torch-theano-caffe-neon-ibm-machine-learning-stack/
+.. _being the fastest: https://github.com/soumith/convnet-benchmarks
+.. _for training CNN-based models with GPUs: https://www.microway.com/hpc-tech-tips/deep-learning-frameworks-survey-tensorflow-torch-theano-caffe-neon-ibm-machine-learning-stack
 .. _ngraph tensorflow bridge README: https://github.com/NervanaSystems/ngraph-tf
