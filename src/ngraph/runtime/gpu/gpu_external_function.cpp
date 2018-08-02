@@ -104,7 +104,7 @@
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
-#include "ngraph/runtime/gpu/pass/function_memory_reservation.hpp"
+#include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -645,7 +645,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 
     m_pass_manager.register_pass<ngraph::pass::MemoryLayout>(64);
 
-    m_pass_manager.register_pass<runtime::gpu::pass::FunctionMemoryReservation>(
+    m_pass_manager.register_pass<runtime::gpu::pass::TensorMemoryReservation>(
         allocator, m_tensor_memory_buffers);
 
     std::string common_function_string;

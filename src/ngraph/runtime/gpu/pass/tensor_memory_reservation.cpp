@@ -22,7 +22,7 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/gpu/gpu_memory_manager.hpp"
-#include "ngraph/runtime/gpu/pass/function_memory_reservation.hpp"
+#include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
 
 using namespace ngraph;
 
