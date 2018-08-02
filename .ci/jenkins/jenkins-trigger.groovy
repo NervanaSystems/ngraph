@@ -10,7 +10,7 @@
 // ngraph-unittest parameters:
 BRANCH = BRANCH_NAME
 // PR_URL = CHANGE_URL
-PR_COMMIT_AUTHOR = CHANGE_AUTHOR
+// PR_COMMIT_AUTHOR = CHANGE_AUTHOR
 // TRIGGER_URL        <- No longer needed
 JENKINS_BRANCH = "chrisl/new-ngraph-ci-trigger"
 TIMEOUTTIME = 3600
