@@ -1275,7 +1275,7 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Softmax* node)
     }
 
     // build composite primitive
-    auto& cudnn_emitter = m_primitive_emitter->get_cudnn_emitter(); 
+    auto& cudnn_emitter = m_primitive_emitter->get_cudnn_emitter();
 
     // reserve a temporary buffer for the intermediate reduction
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
@@ -1288,36 +1288,38 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Softmax* node)
     size_t tensor_size = shape_size(tensor_shape);
     size_t type_size = out[0].get_element_type().size();
 
-    size_t reduce_buffer_idx = allocator.reserve_workspace(
-                            reduced_size * type_size);
-    size_t workspace_buffer_idx = allocator.reserve_workspace(
-        tensor_size * type_size);
+    size_t reduce_buffer_idx = allocator.reserve_workspace(reduced_size * type_size);
+    size_t workspace_buffer_idx = allocator.reserve_workspace(tensor_size * type_size);
 
     // exponentiate with fused sum reduction to calculate softmax denominator
     auto input_type = args[0].get_element_type().c_type_string();
     auto output_type = out[0].get_element_type().c_type_string();
 
-    auto exp_index = build_elementwise_collective<ngraph::op::Exp>(
-        {{input_type, output_type}}, tensor_shape);
+    auto exp_index =
+        build_elementwise_collective<ngraph::op::Exp>({{input_type, output_type}}, tensor_shape);
     auto reduce_index = cudnn_emitter->build_reduce_forward(
         CUDNN_REDUCE_TENSOR_ADD, output_type, tensor_shape, axes);
     // inplace binary division with fused broadcast to calculate softmax
     size_t div_broadcast = build_elementwise_collective<ngraph::op::Divide>(
         std::vector<std::string>(3, output_type), tensor_shape, {1}, axes);
 
-    if(reduced_size == tensor_size)
+    if (reduced_size == tensor_size)
     {
-        std::unique_ptr<gpu::primitive> kernel_launch(
-            new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-                void* reduce_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, reduce_buffer_idx);
-                void* workspace_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_buffer_idx);
-                // cache the elementwise result and the fused result (multi-output)
-                runtime::gpu::invoke_primitive(
-                    m_ctx, exp_index, inputs, std::vector<void*>{workspace_buffer}.data());
-                runtime::gpu::cuda_memcpyDtD(reduce_buffer, workspace_buffer, tensor_size * type_size);
-                runtime::gpu::invoke_primitive(
-                    m_ctx, div_broadcast, std::vector<void*>{workspace_buffer, reduce_buffer}.data(), outputs);
-            }});
+        std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](
+            void** inputs, void** outputs) mutable {
+            void* reduce_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, reduce_buffer_idx);
+            void* workspace_buffer =
+                runtime::gpu::invoke_memory_primitive(m_ctx, workspace_buffer_idx);
+            // cache the elementwise result and the fused result (multi-output)
+            runtime::gpu::invoke_primitive(
+                m_ctx, exp_index, inputs, std::vector<void*>{workspace_buffer}.data());
+            runtime::gpu::cuda_memcpyDtD(reduce_buffer, workspace_buffer, tensor_size * type_size);
+            runtime::gpu::invoke_primitive(
+                m_ctx,
+                div_broadcast,
+                std::vector<void*>{workspace_buffer, reduce_buffer}.data(),
+                outputs);
+        }});
 
         primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
     }
@@ -1325,15 +1327,22 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Softmax* node)
     {
         std::unique_ptr<gpu::primitive> kernel_launch(
             new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-                void* reduce_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, reduce_buffer_idx);
-                void* workspace_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_buffer_idx);
+                void* reduce_buffer =
+                    runtime::gpu::invoke_memory_primitive(m_ctx, reduce_buffer_idx);
+                void* workspace_buffer =
+                    runtime::gpu::invoke_memory_primitive(m_ctx, workspace_buffer_idx);
                 // cache the elementwise result and the fused result (multi-output)
                 runtime::gpu::invoke_primitive(
                     m_ctx, exp_index, inputs, std::vector<void*>{workspace_buffer}.data());
+                runtime::gpu::invoke_primitive(m_ctx,
+                                               reduce_index,
+                                               std::vector<void*>{workspace_buffer}.data(),
+                                               std::vector<void*>{reduce_buffer}.data());
                 runtime::gpu::invoke_primitive(
-                        m_ctx, reduce_index, std::vector<void*>{workspace_buffer}.data(), std::vector<void*>{reduce_buffer}.data());
-                runtime::gpu::invoke_primitive(
-                    m_ctx, div_broadcast, std::vector<void*>{workspace_buffer, reduce_buffer}.data(), outputs);
+                    m_ctx,
+                    div_broadcast,
+                    std::vector<void*>{workspace_buffer, reduce_buffer}.data(),
+                    outputs);
             }});
 
         primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
