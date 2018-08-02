@@ -171,8 +171,8 @@ static void
     auto ctype = node->get_element_type().c_type_string();
     writer << "{   // A " << funcname << " for" << node->get_name() << "\n";
     writer.indent++;
-    writer << " ngraph::check_fp_values<" << ctype << "," << funcname << "> (\"" << node->get_name()
-           << "\", (" << ctype << "*)" << out[0].get_name() << ", " << out[0].get_size() << ");\n";
+    writer << " ngraph::check_fp_values_" << funcname << "(\"" << node->get_name() << "\", ("
+           << ctype << "*)" << out[0].get_name() << ", " << out[0].get_size() << ");\n";
     writer.indent--;
     writer << "}\n";
 }
@@ -819,12 +819,12 @@ using namespace ngraph::runtime;
                 {
                     if (std::getenv("NGRAPH_CPU_NAN_CHECK"))
                     {
-                        generate_isnan_isinf_check(writer, node, out, "std::isnan");
+                        generate_isnan_isinf_check(writer, node, out, "isnan");
                     }
 
                     if (std::getenv("NGRAPH_CPU_INF_CHECK"))
                     {
-                        generate_isnan_isinf_check(writer, node, out, "std::isinf");
+                        generate_isnan_isinf_check(writer, node, out, "isinf");
                     }
                 }
             }
