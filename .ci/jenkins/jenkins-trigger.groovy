@@ -17,8 +17,8 @@ TIMEOUTTIME = 3600
 
 echo "jenkins-trigger parameters:"
 echo "BRANCH           = ${BRANCH}"
-echo "PR_URL           = ${PR_URL}"
-echo "PR_COMMIT_AUTHOR = ${PR_COMMIT_AUTHOR}"
+// echo "PR_URL           = ${PR_URL}"
+// echo "PR_COMMIT_AUTHOR = ${PR_COMMIT_AUTHOR}"
 echo "JENKINS_BRANCH   = ${JENKINS_BRANCH}"
 echo "TIMEOUTTIME      = ${TIMEOUTTIME}"
 
