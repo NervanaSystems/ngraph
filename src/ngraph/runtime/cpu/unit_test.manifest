@@ -10,3 +10,4 @@ one_hot_vector_1_barely_oob
 one_hot_vector_1_far_oob
 one_hot_vector_1_fp
 one_hot_vector_1_fp_nonint
+backwards_batch_norm_three_outputs
