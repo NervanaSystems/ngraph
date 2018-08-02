@@ -49,6 +49,9 @@
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
+#include "ngraph/runtime/cpu/op/quantized_conv.hpp"
+#include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 
 using namespace std;
@@ -272,6 +275,12 @@ namespace ngraph
                     memory::data_type et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
                         node->get_input_element_type(0));
 
+                    memory::data_type et_weights = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
+                        node->get_input_element_type(1));
+
+                    memory::data_type et_result = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
+                        node->get_output_element_type(0));
+
                     engine cpu_engine(engine::cpu, 0);
                     memory::dims mkldnn_arg0_shape(arg0_shape.begin(), arg0_shape.end());
                     memory::dims mkldnn_arg1_shape(arg1_shape.begin(), arg1_shape.end());
@@ -283,8 +292,10 @@ namespace ngraph
                     memory::dims mkldnn_padding_below(padding_below.begin(), padding_below.end());
                     memory::dims mkldnn_padding_above(padding_above.begin(), padding_above.end());
                     const memory::desc input_data_desc(mkldnn_arg0_shape, et, memory::format::any);
-                    const memory::desc weights_desc(mkldnn_arg1_shape, et, memory::format::any);
-                    const memory::desc result_desc(mkldnn_result_shape, et, memory::format::any);
+                    const memory::desc weights_desc(
+                        mkldnn_arg1_shape, et_weights, memory::format::any);
+                    const memory::desc result_desc(
+                        mkldnn_result_shape, et_result, memory::format::any);
                     std::unique_ptr<convolution_forward::desc> fwd_desc{nullptr};
                     if (use_bias)
                     {
@@ -374,6 +385,27 @@ namespace ngraph
                         ConvolutionLayout<ngraph::op::Convolution, false, false>(
                             node, prim_input_formats, prim_output_formats);
 
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedConvolution)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+                        ConvolutionLayout<ngraph::op::QuantizedConvolution, false, false>(
+                            node, prim_input_formats, prim_output_formats);
+                        prim_output_formats.push_back(memory::format::x);
+                        prim_output_formats.push_back(memory::format::x);
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
                         set_output_layouts(node, prim_output_formats);
@@ -706,69 +738,74 @@ namespace ngraph
                     }
                 }
 
+                template <typename T>
+                void AvgPoolLayout(std::shared_ptr<ngraph::Node> node,
+                                   vector<memory::format>& prim_input_formats,
+                                   vector<memory::format>& prim_output_formats)
+                {
+                    auto avg_pool = static_cast<const ngraph::op::AvgPool*>(node.get());
+
+                    auto arg0_shape = node->get_input_shape(0);
+                    auto result_shape = node->get_output_shape(0);
+                    auto filter_shape = avg_pool->get_window_shape();
+                    auto filter_strides = avg_pool->get_window_movement_strides();
+                    auto padding_below = avg_pool->get_padding_below();
+                    auto padding_above = avg_pool->get_padding_above();
+
+                    memory::data_type et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
+                        node->get_input_element_type(0));
+
+                    algorithm algorithm_enumerator =
+                        avg_pool->get_include_padding_in_avg_computation()
+                            ? algorithm::pooling_avg_include_padding
+                            : algorithm::pooling_avg_exclude_padding;
+
+                    memory::dims mkldnn_arg0_shape(arg0_shape.begin(), arg0_shape.end());
+                    memory::dims mkldnn_result_shape(result_shape.begin(), result_shape.end());
+                    memory::dims mkldnn_filter_shape(filter_shape.begin(), filter_shape.end());
+                    memory::dims mkldnn_filter_strides(filter_strides.begin(),
+                                                       filter_strides.end());
+                    memory::dims mkldnn_padding_below(padding_below.begin(), padding_below.end());
+                    memory::dims mkldnn_padding_above(padding_above.begin(), padding_above.end());
+
+                    auto input_layout =
+                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                    auto input_desc = memory::desc(mkldnn_arg0_shape, et, input_layout);
+                    auto result_desc = memory::desc(mkldnn_result_shape, et, memory::format::any);
+
+                    try
+                    {
+                        auto prim_desc = pooling_forward::primitive_desc(
+                            {prop_kind::forward_inference,
+                             algorithm_enumerator,
+                             input_desc,
+                             result_desc,
+                             mkldnn_filter_strides,
+                             mkldnn_filter_shape,
+                             mkldnn_padding_below,
+                             mkldnn_padding_above,
+                             padding_kind::zero},
+                            runtime::cpu::mkldnn_utils::global_cpu_engine);
+                        prim_input_formats.push_back(input_layout);
+                        prim_output_formats.push_back(static_cast<memory::format>(
+                            prim_desc.dst_primitive_desc().desc().data.format));
+                    }
+                    catch (const mkldnn::error& e)
+                    {
+                        throw ngraph_error("MKLDNN Unsupported pooling layout" +
+                                           to_string(input_layout) + e.message);
+                    }
+                }
+
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::AvgPool)
                 {
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        auto avg_pool = static_cast<const ngraph::op::AvgPool*>(node.get());
-
-                        auto arg0_shape = node->get_input_shape(0);
-                        auto result_shape = node->get_output_shape(0);
-                        auto filter_shape = avg_pool->get_window_shape();
-                        auto filter_strides = avg_pool->get_window_movement_strides();
-                        auto padding_below = avg_pool->get_padding_below();
-                        auto padding_above = avg_pool->get_padding_above();
-
-                        memory::data_type et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
-                            node->get_input_element_type(0));
-
-                        algorithm algorithm_enumerator =
-                            avg_pool->get_include_padding_in_avg_computation()
-                                ? algorithm::pooling_avg_include_padding
-                                : algorithm::pooling_avg_exclude_padding;
-
-                        memory::dims mkldnn_arg0_shape(arg0_shape.begin(), arg0_shape.end());
-                        memory::dims mkldnn_result_shape(result_shape.begin(), result_shape.end());
-                        memory::dims mkldnn_filter_shape(filter_shape.begin(), filter_shape.end());
-                        memory::dims mkldnn_filter_strides(filter_strides.begin(),
-                                                           filter_strides.end());
-                        memory::dims mkldnn_padding_below(padding_below.begin(),
-                                                          padding_below.end());
-                        memory::dims mkldnn_padding_above(padding_above.begin(),
-                                                          padding_above.end());
-
-                        auto input_layout =
-                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
-                        auto input_desc = memory::desc(mkldnn_arg0_shape, et, input_layout);
-                        auto result_desc =
-                            memory::desc(mkldnn_result_shape, et, memory::format::any);
-
                         vector<memory::format> prim_input_formats;
                         vector<memory::format> prim_output_formats;
-                        try
-                        {
-                            auto prim_desc = pooling_forward::primitive_desc(
-                                {prop_kind::forward_inference,
-                                 algorithm_enumerator,
-                                 input_desc,
-                                 result_desc,
-                                 mkldnn_filter_strides,
-                                 mkldnn_filter_shape,
-                                 mkldnn_padding_below,
-                                 mkldnn_padding_above,
-                                 padding_kind::zero},
-                                runtime::cpu::mkldnn_utils::global_cpu_engine);
-                            prim_input_formats.push_back(input_layout);
-                            prim_output_formats.push_back(static_cast<memory::format>(
-                                prim_desc.dst_primitive_desc().desc().data.format));
-                        }
-                        catch (const mkldnn::error& e)
-                        {
-                            throw ngraph_error("MKLDNN Unsupported pooling layout" +
-                                               to_string(input_layout) + e.message);
-                        }
-
+                        AvgPoolLayout<ngraph::op::AvgPool>(
+                            node, prim_input_formats, prim_output_formats);
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
                         set_output_layouts(node, prim_output_formats);
@@ -954,6 +991,52 @@ namespace ngraph
                         vector<memory::format> prim_output_formats;
                         MaxPoolLayout<ngraph::op::MaxPool, prop_kind::forward_inference>(
                             node, prim_input_formats, prim_output_formats);
+
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedMaxPool)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+                        MaxPoolLayout<ngraph::op::QuantizedMaxPool, prop_kind::forward_inference>(
+                            node, prim_input_formats, prim_output_formats);
+
+                        prim_output_formats.push_back(memory::format::x);
+                        prim_output_formats.push_back(memory::format::x);
+
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedAvgPool)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+                        AvgPoolLayout<ngraph::op::QuantizedAvgPool>(
+                            node, prim_input_formats, prim_output_formats);
+
+                        prim_output_formats.push_back(memory::format::x);
+                        prim_output_formats.push_back(memory::format::x);
 
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
@@ -1497,6 +1580,10 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::AvgPoolBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPoolBackprop>},
     {TI(ngraph::op::Convolution), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Convolution>},
+    {TI(ngraph::op::QuantizedConvolution),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolution>},
+    {TI(ngraph::op::QuantizedMaxPool),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedMaxPool>},
     {TI(ngraph::op::GroupConvolution),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::GroupConvolution>},
     {TI(ngraph::op::ConvolutionBackpropData),
