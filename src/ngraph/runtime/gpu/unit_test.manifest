@@ -2,6 +2,7 @@
 abc_int64
 batch_norm_one_output
 batch_norm_three_outputs
+backwards_batch_norm_three_outputs
 #need to check
 computation_reuse
 #int64 is not supprted
