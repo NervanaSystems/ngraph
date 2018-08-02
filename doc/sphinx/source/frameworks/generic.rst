@@ -12,12 +12,12 @@ options for whatever custom use case they need.
 
 The two primary tasks that can be accomplished in the “bridge code” space of the 
 nGraph Abstraction layer are: (1) compiling a dataflow graph and (2) executing 
-a pre-compiled graph. See the :doc:`../framework-integration-guide` for how to 
-get started working with generic frameworks. For more in-depth help in writing 
-graph optimizations and bridge code, we provide tutorials and hints in the 
-documentation with articles on how to :doc:`../fusion/index`, and 
-programmatically :doc:`../howto/execute` that can target various compute 
-resources.
+a pre-compiled graph. See the :doc:`../framework-integration-guides` for how we 
+have built bridges with other frameworks. For more in-depth help in writing 
+graph optimizations and bridge code, we provide articles on how to 
+:doc:`../fusion/index`, and programmatically :doc:`../howto/execute` that can 
+target various compute resources using nGraph when a framework provides some 
+inputs to be computed.
 
 
 Activate nGraph |trade| on generic frameworks

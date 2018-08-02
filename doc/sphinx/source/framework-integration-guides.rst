@@ -21,21 +21,22 @@ compiler available through the framework.
 
 .. _mxnet_intg:
 
-MXNet\* 
-========
+MXNet\* bridge
+===============
 
 
-#. See the `nGraph-MXNet Integration`_ README for how to enable the bridge.
+#. See the README on the `nGraph-MXNet`_ Integration for how to enable the bridge.
 
 #. (Optional) For experimental or alternative approaches to distributed training
-   methodologies, including data parallel training, see the :doc:`distr/index` 
-   and :doc:`How to <howto/index>` articles on :doc:`howto/distribute-train`. 
+   methodologies, including data parallel training, see the MXNet-relevant sections
+   of the :doc:`distr/index` and :doc:`How to <howto/index>` articles on 
+   :doc:`howto/distribute-train`. 
 
 
 .. _tensorflow_intg:
 
-TensorFlow\* 
-=============
+TensorFlow\* bridge
+===================
 
 See the `ngraph tensorflow bridge README`_ for how to install the `DSO`_ for the 
 nGraph-TensorFlow bridge.
