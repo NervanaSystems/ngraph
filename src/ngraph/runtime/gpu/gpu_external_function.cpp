@@ -248,7 +248,7 @@ runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     , m_is_compiled(false)
     , m_release_function(release_function)
     , m_temporaries_used(false)
-    , m_memory_buffers(new std::unordered_map<std::string, size_t>)
+    , m_tensor_memory_buffers(new std::unordered_map<std::string, size_t>)
     , m_shared_context(shared_context)
 {
 }
@@ -451,7 +451,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_temp_mem_pool_allocation(
         m_writer << "// Allocate the memory pool\n";
         // TODO memory pool malloc.
         m_writer << "void* pool_base_ptr = ngraph::runtime::gpu::invoke_memory_primitive(ctx, "
-                 << m_memory_buffers->at(current_function->get_name()) << ");\n";
+                 << m_tensor_memory_buffers->at(current_function->get_name()) << ");\n";
 
         // Add temporaries to the variable name map
         for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
@@ -646,8 +646,8 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 
     m_pass_manager.register_pass<ngraph::pass::MemoryLayout>(64);
 
-    m_pass_manager.register_pass<runtime::gpu::pass::FunctionMemoryReservation>(allocator,
-                                                                                m_memory_buffers);
+    m_pass_manager.register_pass<runtime::gpu::pass::FunctionMemoryReservation>(
+        allocator, m_tensor_memory_buffers);
 
     std::string common_function_string;
     auto femitter = bind(&ngraph::runtime::gpu::GPU_ExternalFunction::emit_op_as_function,

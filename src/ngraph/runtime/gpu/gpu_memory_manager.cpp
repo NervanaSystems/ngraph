@@ -27,7 +27,7 @@ constexpr const uint32_t initial_buffer_size = 10 * 1024 * 1024;
 runtime::gpu::GPUMemoryManager::GPUMemoryManager(GPUPrimitiveEmitter* emitter)
     : m_buffer_offset(0)
     , m_buffered_mem(initial_buffer_size)
-    , m_workspace_manager(alignment)
+    , m_workspace_manager(runtime::gpu::GPUMemoryManager::alignment)
     , m_argspace_mem(1, {nullptr, 0})
     , m_workspace_mem(1, {nullptr, 0})
     , m_primitive_emitter(emitter)
@@ -70,7 +70,8 @@ void runtime::gpu::GPUMemoryManager::allocate()
     }
     if (m_buffer_offset)
     {
-        m_buffer_offset = ngraph::pass::MemoryManager::align(m_buffer_offset, alignment);
+        m_buffer_offset = ngraph::pass::MemoryManager::align(
+            m_buffer_offset, runtime::gpu::GPUMemoryManager::alignment);
         // the back most node is always empty, fill it here
         m_argspace_mem.back().ptr = runtime::gpu::create_gpu_buffer(m_buffer_offset);
         m_argspace_mem.back().size = m_buffer_offset;
@@ -88,8 +89,6 @@ void runtime::gpu::GPUMemoryManager::allocate()
         m_workspace_mem.back().ptr = runtime::gpu::create_gpu_buffer(workspace_size);
         m_workspace_mem.back().size = workspace_size;
         m_workspace_mem.push_back({nullptr, 0});
-        // construct a new manager if the current one was used
-        //m_workspace_manager = ngraph::pass::MemoryManager(alignment);
     }
 }
 
