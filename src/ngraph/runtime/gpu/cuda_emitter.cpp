@@ -28,6 +28,7 @@
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 #include "ngraph/runtime/gpu/type_info.hpp"
 #include "ngraph/util.hpp"
@@ -1273,8 +1274,7 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Softmax* node)
     }
 
     // build composite primitive
-    auto& cudnn_emitter =
-          external_function->get_primitive_emitter()->get_cudnn_emitter();
+    auto& cudnn_emitter = m_primitive_emitter->get_cudnn_emitter(); 
 
     // reserve a temporary buffer for the intermediate reduction
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
@@ -1299,7 +1299,7 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Softmax* node)
     auto exp_index = build_elementwise_collective<ngraph::op::Exp>(
         {{input_type, output_type}}, tensor_shape, {}, axes, true /* multi-output */);
     auto reduce_index = cudnn_emitter->build_reduce_forward(
-        CUDNN_REDUCE_TENSOR_ADD, out[0].get_type(), args[0].get_shape(), axes);
+        CUDNN_REDUCE_TENSOR_ADD, output_type, tensor_shape, axes);
     // inplace binary division with fused broadcast to calculate softmax
     size_t div_broadcast = build_elementwise_collective<ngraph::op::Divide>(
         std::vector<std::string>(3, output_type), tensor_shape);
