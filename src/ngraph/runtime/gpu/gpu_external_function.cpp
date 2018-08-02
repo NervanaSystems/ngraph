@@ -110,6 +110,7 @@ using namespace std;
 using namespace ngraph;
 
 static const string s_output_dir = "gpu_codegen";
+static std::mutex s_compilation;
 
 class StaticInitializers
 {
@@ -622,15 +623,13 @@ void runtime::gpu::GPU_ExternalFunction::store_emitted_functions(const string& c
     out.close();
 }
 
-static std::mutex compilation;
-
 void runtime::gpu::GPU_ExternalFunction::compile()
 {
     if (m_is_compiled)
     {
         return;
     }
-    std::unique_lock<std::mutex> lock(compilation);
+    std::unique_lock<std::mutex> lock(s_compilation);
 
     m_function_name = m_function->get_name();
 
