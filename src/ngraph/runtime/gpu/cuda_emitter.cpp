@@ -1122,11 +1122,12 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const std::vector<std
 
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
-    size_t nthreads = shape_size(tensor_shape);
+    uint32_t nthreads = static_cast<uint32_t>(shape_size(tensor_shape));
     //TODO: currently we set it to 64, will add tuning method later
-    uint32_t block_size_x = 64;
-    uint32_t aligned_grid_size_x =
-        align_to_block_size(static_cast<uint32_t>(nthreads), block_size_x);
+    uint32_t block_size_x = 512;
+    int num_SMs;
+    CUDA_RT_SAFE_CALL(cudaDeviceGetAttribute(&num_SMs, cudaDevAttrMultiProcessorCount, 0));
+    uint32_t aligned_grid_size_x = fmin(num_SMs * 32, align_to_block_size(nthreads, block_size_x));
 
     // create the launch primitive
     std::unique_ptr<gpu::primitive> ew(
