@@ -50,6 +50,7 @@
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv.hpp"
+#include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 
 using namespace std;
@@ -995,6 +996,29 @@ namespace ngraph
                     }
                 }
 
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedMaxPool)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::format> prim_input_formats;
+                        vector<memory::format> prim_output_formats;
+                        MaxPoolLayout<ngraph::op::QuantizedMaxPool, prop_kind::forward_inference>(
+                            node, prim_input_formats, prim_output_formats);
+
+                        prim_output_formats.push_back(memory::format::x);
+                        prim_output_formats.push_back(memory::format::x);
+
+                        node =
+                            insert_input_conversions(external_function, node, prim_input_formats);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
+
                 template <typename T, bool with_indices>
                 void MaxPoolBackpropLayout(std::shared_ptr<ngraph::Node> node,
                                            vector<memory::format>& prim_input_formats,
@@ -1529,6 +1553,8 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::Convolution), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Convolution>},
     {TI(ngraph::op::QuantizedConvolution),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolution>},
+    {TI(ngraph::op::QuantizedMaxPool),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedMaxPool>},
     {TI(ngraph::op::GroupConvolution),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::GroupConvolution>},
     {TI(ngraph::op::ConvolutionBackpropData),

@@ -55,6 +55,7 @@ set(SRC
     op/quantize.cpp
     op/dequantize.cpp
     op/quantized_conv.cpp
+    op/quantized_max_pool.cpp
     pass/cpu_assignment.cpp
     pass/cpu_concat_inputs.cpp
     pass/cpu_fusion.cpp

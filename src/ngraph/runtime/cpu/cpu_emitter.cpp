@@ -107,6 +107,7 @@
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv.hpp"
+#include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
@@ -2914,6 +2915,48 @@ namespace ngraph
                 else
                 {
                     throw ngraph_error("unsupported parameters for QuantizedConvolution");
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedMaxPool)
+            {
+                auto qmax_pool = static_cast<const ngraph::op::QuantizedMaxPool*>(node);
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto arg_shape = args[0].get_shape();
+                    auto result_shape = out[0].get_shape();
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
+
+                    size_t qmax_pool_index = mkldnn_emitter->build_pooling_forward(
+                        mkldnn::algorithm::pooling_max,
+                        input_desc,
+                        result_desc,
+                        qmax_pool->get_window_movement_strides(),
+                        qmax_pool->get_window_shape(),
+                        qmax_pool->get_padding_below(),
+                        qmax_pool->get_padding_above());
+
+                    const float min_input = qmax_pool->get_min_input();
+                    const float max_input = qmax_pool->get_max_input();
+                    auto& deps = mkldnn_emitter->get_primitive_deps(qmax_pool_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+                    writer << "*(" << out[1].get_name() << ") = " << min_input << ";\n";
+                    writer << "*(" << out[2].get_name() << ") = " << max_input << ";\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(qmax_pool_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("unsupported parameters for QuantizedMaxPool");
                 }
             }
 
