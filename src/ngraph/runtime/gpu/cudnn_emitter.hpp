@@ -31,6 +31,7 @@
 #include "ngraph/shape.hpp"
 
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/max_pool.hpp"
 
 namespace ngraph
 {
@@ -54,6 +55,7 @@ namespace ngraph
                 size_t build_primitive(const op::Convolution* node);
                 size_t build_primitive(const op::ConvolutionBackpropData* node);
                 size_t build_primitive(const op::ConvolutionBackpropFilters* node);
+                size_t build_primitive(const op::MaxPool* node);
 
             public:
                 enum class Prop
