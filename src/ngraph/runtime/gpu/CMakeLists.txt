@@ -27,7 +27,6 @@ set(SRC
     gpu_cuda_function_builder.cpp
     gpu_cuda_function_pool.cpp
     gpu_cuda_kernel_builder.cpp
-    gpu_cuda_kernel_emitters.cpp
     gpu_emitter.cpp
     gpu_external_function.cpp
     gpu_invoke.cpp
