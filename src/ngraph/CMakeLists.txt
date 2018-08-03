@@ -64,6 +64,7 @@ set (SRC
     op/less.cpp
     op/less_eq.cpp
     op/log.cpp
+    op/lrn.cpp
     op/max.cpp
     op/maximum.cpp
     op/max_pool.cpp
