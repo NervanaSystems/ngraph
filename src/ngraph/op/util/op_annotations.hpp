@@ -14,6 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/except.hpp"
+
 #pragma once
 
 namespace ngraph
