@@ -208,8 +208,8 @@ namespace ngraph
             auto clone_bwd = s_clone_bwd_map[f];
             auto cache_dfdx = get_autodiff<T>(backend, clone_bwd, mod_df_input_args, indep_params);
 
-            const auto numpy_atol = 1e-5f;
-            const auto numpy_rtol = 1e-8f;
+            const T numpy_atol = static_cast<const T>(1e-5f);
+            const T numpy_rtol = static_cast<const T>(1e-8f);
             auto close = ngraph::test::all_close<T>(dfdx, cache_dfdx, numpy_atol, numpy_rtol);
             if (!close)
             {

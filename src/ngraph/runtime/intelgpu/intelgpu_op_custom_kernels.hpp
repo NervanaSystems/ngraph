@@ -19,7 +19,9 @@
 #include <CPP/topology.hpp>
 
 #include "ngraph/axis_set.hpp"
+#include "ngraph/coordinate.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/strides.hpp"
 #include "ngraph/type/element_type.hpp"
 
 namespace ngraph
@@ -28,15 +30,45 @@ namespace ngraph
     {
         namespace intelgpu
         {
-            void do_pad_kernel(cldnn::topology& topology,
-                               const std::string& input_name,
-                               const Shape& input_shape,
-                               const std::string& scalar_name,
-                               const std::string& output_name,
-                               const Shape& output_shape,
-                               const element::Type& output_type,
-                               const Shape& pad_below,
-                               const Shape& pad_interior);
+            void do_pad_operation(cldnn::topology& topology,
+                                  const std::string& input_name,
+                                  const Shape& input_shape,
+                                  const std::string& scalar_name,
+                                  const std::string& output_name,
+                                  const Shape& output_shape,
+                                  const element::Type& output_type,
+                                  const Shape& pad_below,
+                                  const Shape& pad_interior);
+
+            void do_dot_operation(cldnn::topology& topology,
+                                  const std::string& inputA_name,
+                                  const Shape& inputA_shape,
+                                  const std::string& inputB_name,
+                                  const Shape& inputB_shape,
+                                  const std::string& output_name,
+                                  const Shape& output_shape,
+                                  const element::Type& output_type);
+
+            void do_slice_operation(cldnn::topology& topology,
+                                    const std::string& input_name,
+                                    const Shape& input_shape,
+                                    const std::string& output_name,
+                                    const Shape& output_shape,
+                                    const element::Type& output_type,
+                                    const Coordinate& lower_bounds,
+                                    const Coordinate& uppper_bounds,
+                                    const Strides& strides);
+
+            void do_select_operation(cldnn::topology& topology,
+                                     const std::string& input0_name,
+                                     const Shape& input0_shape,
+                                     const std::string& input1_name,
+                                     const Shape& input1_shape,
+                                     const std::string& input2_name,
+                                     const Shape& input2_shape,
+                                     const std::string& output_name,
+                                     const Shape& output_shape,
+                                     const element::Type& output_type);
         }
     }
 }

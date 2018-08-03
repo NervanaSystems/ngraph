@@ -19,6 +19,7 @@
 #include <CPP/topology.hpp>
 
 #include "ngraph/shape.hpp"
+#include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
@@ -27,22 +28,36 @@ namespace ngraph
         namespace intelgpu
         {
             // This implements BatchNorm nGraph operation
-            // Since nGraph uses channels in this operation but clDNN uses full input data
-            // at one time we have to use following algorithm:
-            // 1. Split all input data arrays into several matrices by channel axis
-            // 2. Independently do cldnn::batch_norm on particular matrix
-            // 3. Every result of the cldnn::batch_norm must be scaled and
-            //    shifted because cldnn::batch_norm dosn't use gamma and beta
-            // 4. Concatenate all results into output matrix by channel axis
+            // nGraph uses channels in this operation but clDNN uses full input data
             void do_batch_norm_operation(cldnn::topology& topology,
                                          const std::string& output_name,
+                                         const Shape& output_shape,
+                                         const element::Type& output_type,
                                          double eps,
                                          const std::string& input_name,
                                          const Shape& input_shape,
                                          const std::string& gamma_name,
+                                         const Shape& gamma_shape,
                                          const std::string& beta_name,
-                                         const std::string& mean_name = std::string(),
-                                         const std::string& variance_name = std::string());
+                                         const std::string& mean_name,
+                                         const std::string& variance_name);
+
+            // This creates mean of the input matrix by Channel axis
+            void do_create_mean(cldnn::topology& topology,
+                                const std::string& output_name,
+                                const Shape& output_shape,
+                                const element::Type& output_type,
+                                const std::string& input_name,
+                                const Shape& input_shape);
+
+            // This creates mean of the input matrix by Channel axis
+            void do_create_variance(cldnn::topology& topology,
+                                    const std::string& output_name,
+                                    const Shape& output_shape,
+                                    const element::Type& output_type,
+                                    const std::string& input_name,
+                                    const Shape& input_shape,
+                                    const std::string& mean_name);
         }
     }
 }

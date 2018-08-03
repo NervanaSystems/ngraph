@@ -58,7 +58,7 @@ bool runtime::intelgpu::IntelGPULayout::
 cldnn::data_types
     runtime::intelgpu::IntelGPULayout::get_cldnn_type(const element::Type& element_type)
 {
-    if (element_type == ngraph::element::i8)
+    if ((element_type == ngraph::element::i8) || (element_type == ngraph::element::boolean))
     {
         return cldnn::data_types::i8;
     }
