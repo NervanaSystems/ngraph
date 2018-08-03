@@ -42,18 +42,18 @@ namespace ngraph
                 GPUKernelArgs(const std::shared_ptr<GPUHostParameters>& params);
                 GPUKernelArgs(const GPUKernelArgs& args);
 
-                GPUKernelArgs& add_placeholder(std::string type, std::string name);
+                GPUKernelArgs& add_placeholder(const std::string& type, const std::string& name);
 
                 template <typename T>
                 typename std::enable_if<!is_container<T>::value, GPUKernelArgs&>::type
-                    add(std::string name, const T& arg)
+                    add(const std::string& name, const T& arg)
                 {
                     add_argument(name, arg);
                 }
 
                 template <typename T>
                 typename std::enable_if<is_container<T>::value, GPUKernelArgs&>::type
-                    add(std::string name, const T& arg)
+                    add(const std::string& name, const T& arg)
                 {
                     add_arguments(name, arg);
                 }
@@ -87,7 +87,7 @@ namespace ngraph
 
             private:
                 template <typename T>
-                GPUKernelArgs& add_argument(std::string name, const T& arg)
+                GPUKernelArgs& add_argument(const std::string& name, const T& arg)
                 {
                     validate();
                     void* host_arg = m_host_parameters->cache(arg);
@@ -98,21 +98,20 @@ namespace ngraph
                 }
 
                 template <typename T>
-                GPUKernelArgs& add_arguments(std::string name, const T& args)
+                GPUKernelArgs& add_arguments(const std::string& name, const T& args)
                 {
                     validate();
+
+                    size_t i = 0;
                     for (auto const& arg : args)
                     {
-                        void* host_arg = m_host_parameters->cache(arg);
-                        m_argument_list.push_back(host_arg);
-                        m_placeholder_positions.push_back(false);
-                        add_to_signature(type_names.at(std::type_index(typeid(typename T::value_type))), name);
+                        add_argument(name + std::to_string(i++), arg);
                     }
                     return *this;
                 }
 
                 void validate();
-                std::string add_to_signature(std::string type, std::string name);
+                std::string add_to_signature(const std::string& type, const std::string& name);
 
             private:
                 bool m_signature_generated;

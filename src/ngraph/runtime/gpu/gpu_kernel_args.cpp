@@ -23,6 +23,7 @@
 using namespace ngraph;
 
 const std::unordered_map<std::type_index, std::string> runtime::gpu::GPUKernelArgs::type_names = {
+    {TI(size_t), "size_t"},
     {TI(char), "char"},
     {TI(float), "float"},
     {TI(double), "double"},
@@ -33,7 +34,14 @@ const std::unordered_map<std::type_index, std::string> runtime::gpu::GPUKernelAr
     {TI(uint8_t), "uint8_t"},
     {TI(uint16_t), "uint16_t"},
     {TI(uint32_t), "uint32_t"},
-    {TI(uint64_t), "uint64_t"}};
+    {TI(uint64_t), "uint64_t"},
+    {TI(int), "int"},
+    {TI(long), "long"},
+    {TI(long long), "long long"},
+    {TI(unsigned int), "unsigned int"},
+    {TI(unsigned long), "unsigned long"},
+    {TI(unsigned long long), "unsigned long long"}
+};
 
 runtime::gpu::GPUKernelArgs::GPUKernelArgs(const std::shared_ptr<GPUHostParameters>& params)
     : m_signature_generated(false)
@@ -61,7 +69,7 @@ void runtime::gpu::GPUKernelArgs::validate()
     }
 }
 
-std::string runtime::gpu::GPUKernelArgs::add_to_signature(std::string type, std::string name)
+std::string runtime::gpu::GPUKernelArgs::add_to_signature(const std::string& type, const std::string& name)
 {
     if (m_input_signature.str() == "(")
     {
@@ -73,8 +81,8 @@ std::string runtime::gpu::GPUKernelArgs::add_to_signature(std::string type, std:
     }
 }
 
-runtime::gpu::GPUKernelArgs& runtime::gpu::GPUKernelArgs::add_placeholder(std::string type,
-                                                                          std::string name)
+runtime::gpu::GPUKernelArgs& runtime::gpu::GPUKernelArgs::add_placeholder(const std::string& type,
+                                                                          const std::string& name)
 {
     validate();
     m_argument_list.push_back(nullptr);
