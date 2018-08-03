@@ -33,15 +33,13 @@ const std::unordered_map<std::type_index, std::string> runtime::gpu::GPUKernelAr
     {TI(uint8_t), "uint8_t"},
     {TI(uint16_t), "uint16_t"},
     {TI(uint32_t), "uint32_t"},
-    {TI(uint64_t), "uint64_t"}
-};
+    {TI(uint64_t), "uint64_t"}};
 
 runtime::gpu::GPUKernelArgs::GPUKernelArgs(const std::shared_ptr<GPUHostParameters>& params)
     : m_signature_generated(false)
     , m_host_parameters(params)
 {
     m_input_signature << "(";
-
 }
 
 runtime::gpu::GPUKernelArgs::GPUKernelArgs(const GPUKernelArgs& args)
@@ -57,7 +55,8 @@ void runtime::gpu::GPUKernelArgs::validate()
     if (m_signature_generated)
     {
         throw std::runtime_error(
-            "Kernel input signature already generated. Adding additional kernel arguments has no effect.");
+            "Kernel input signature already generated. Adding additional kernel arguments has no "
+            "effect.");
     }
 }
 
@@ -73,8 +72,8 @@ std::string runtime::gpu::GPUKernelArgs::add_to_signature(std::string name, std:
     }
 }
 
-
-runtime::gpu::GPUKernelArgs& runtime::gpu::GPUKernelArgs::add_placeholder(std::string name, std::string type)
+runtime::gpu::GPUKernelArgs& runtime::gpu::GPUKernelArgs::add_placeholder(std::string name,
+                                                                          std::string type)
 {
     validate();
     m_argument_list.push_back(nullptr);

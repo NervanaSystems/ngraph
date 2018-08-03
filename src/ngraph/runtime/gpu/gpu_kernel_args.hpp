@@ -16,11 +16,11 @@
 
 #pragma once
 #include <memory>
-#include <vector>
 #include <sstream>
-#include <typeinfo>
 #include <typeindex>
+#include <typeinfo>
 #include <unordered_map>
+#include <vector>
 
 #include "ngraph/runtime/gpu/gpu_host_parameters.hpp"
 
@@ -31,9 +31,9 @@ namespace ngraph
         namespace gpu
         {
             // Helper structs to deduce whether a type is iterable
-            template<typename T>
+            template <typename T>
             struct has_const_iterator;
-            template<typename T>
+            template <typename T>
             struct is_container;
 
             class GPUKernelArgs
@@ -46,21 +46,20 @@ namespace ngraph
 
                 template <typename T>
                 typename std::enable_if<!is_container<T>::value, GPUKernelArgs&>::type
-                add(std::string name, const T& arg)
+                    add(std::string name, const T& arg)
                 {
                     add_argument(name, arg);
                 }
 
                 template <typename T>
                 typename std::enable_if<is_container<T>::value, GPUKernelArgs&>::type
-                add(std::string name, const T& arg)
+                    add(std::string name, const T& arg)
                 {
                     add_arguments(name, arg);
                 }
 
                 std::string get_input_signature();
                 void** get_argument_list() { return m_argument_list.data(); }
-
             private:
                 template <typename T>
                 GPUKernelArgs& add_argument(std::string name, const T& arg)
@@ -76,7 +75,7 @@ namespace ngraph
                 GPUKernelArgs& add_arguments(std::string name, const T& args)
                 {
                     validate();
-                    for (auto const & arg : args)
+                    for (auto const& arg : args)
                     {
                         void* host_arg = m_host_parameters->cache(arg);
                         m_argument_list.push_back(host_arg);
@@ -96,23 +95,33 @@ namespace ngraph
                 static const std::unordered_map<std::type_index, std::string> type_names;
             };
 
-            template<typename T>
+            template <typename T>
             struct has_const_iterator
             {
             private:
-                typedef struct { char x; } true_type;
-                typedef struct { char x, y; } false_type;
+                typedef struct
+                {
+                    char x;
+                } true_type;
+                typedef struct
+                {
+                    char x, y;
+                } false_type;
 
-                template<typename U> static true_type check(typename U::const_iterator*);
-                template<typename U> static false_type check(...);
+                template <typename U>
+                static true_type check(typename U::const_iterator*);
+                template <typename U>
+                static false_type check(...);
+
             public:
                 static const bool value = sizeof(check<T>(0)) == sizeof(true_type);
                 typedef T type;
             };
 
-            template<typename T>
+            template <typename T>
             struct is_container : std::integral_constant<bool, has_const_iterator<T>::value>
-            { };
+            {
+            };
         }
     }
 }
