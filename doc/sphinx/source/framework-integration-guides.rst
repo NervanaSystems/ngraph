@@ -23,20 +23,11 @@ as an optimizing compiler available through the framework.
 MXNet\* bridge
 ===============
 
-
-<<<<<<< HEAD
 #. See the README on `nGraph-MXNet`_ Integration for how to enable the bridge.
 
 #. (Optional) For experimental or alternative approaches to distributed training
    methodologies, including data parallel training, see the MXNet-relevant sections
    of the docs on :doc:`distr/index` and :doc:`How to <howto/index>` topics like
-=======
-#. See the README on the `nGraph-MXNet`_ Integration for how to enable the bridge.
-
-#. (Optional) For experimental or alternative approaches to distributed training
-   methodologies, including data parallel training, see the MXNet-relevant sections
-   of the :doc:`distr/index` and :doc:`How to <howto/index>` articles on 
->>>>>>> 0e70ab43c7d1af34dad9f3b1cd723bc0dc985fe9
    :doc:`howto/distribute-train`. 
 
 
