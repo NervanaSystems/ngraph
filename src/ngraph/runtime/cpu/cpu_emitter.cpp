@@ -233,7 +233,7 @@ namespace ngraph
             }
 #endif
 
-            void emitCblasSgemmBatch(codegen::CodeWriter& writer,
+            static void emitCblasSgemmBatch(codegen::CodeWriter& writer,
                                      const Shape& shape_a,
                                      const Shape& shape_b,
                                      const Shape& shape_c,
