@@ -31,6 +31,7 @@ from ngraph.ops import concat
 from ngraph.ops import constant
 from ngraph.ops import convert
 from ngraph.ops import convolution
+from ngraph.ops import convolution_backprop_data
 from ngraph.ops import cos
 from ngraph.ops import cosh
 from ngraph.ops import divide

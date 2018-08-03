@@ -19,7 +19,9 @@
 #include <CPP/topology.hpp>
 
 #include "ngraph/axis_set.hpp"
+#include "ngraph/coordinate.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/strides.hpp"
 #include "ngraph/type/element_type.hpp"
 
 namespace ngraph
@@ -46,6 +48,16 @@ namespace ngraph
                                   const std::string& output_name,
                                   const Shape& output_shape,
                                   const element::Type& output_type);
+
+            void do_slice_operation(cldnn::topology& topology,
+                                    const std::string& input_name,
+                                    const Shape& input_shape,
+                                    const std::string& output_name,
+                                    const Shape& output_shape,
+                                    const element::Type& output_type,
+                                    const Coordinate& lower_bounds,
+                                    const Coordinate& uppper_bounds,
+                                    const Strides& strides);
         }
     }
 }
