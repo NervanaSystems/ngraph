@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include "ngraph/assertion.hpp"
+
 namespace ngraph
 {
     namespace op
