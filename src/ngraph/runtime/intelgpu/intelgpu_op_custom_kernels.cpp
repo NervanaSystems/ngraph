@@ -29,6 +29,8 @@ using namespace ngraph;
 
 static vector<cldnn_arg> parameters_1inp_1out = {{arg_input, 0}, {arg_output, 0}};
 static vector<cldnn_arg> parameters_2inp_1out = {{arg_input, 0}, {arg_input, 1}, {arg_output, 0}};
+static vector<cldnn_arg> parameters_3inp_1out = {
+    {arg_input, 0}, {arg_input, 1}, {arg_input, 2}, {arg_output, 0}};
 
 static string array_dims(const Shape& dimentions)
 {
@@ -156,7 +158,8 @@ void runtime::intelgpu::do_pad_operation(cldnn::topology& topology,
                                                 entry_point_name,
                                                 parameters_2inp_1out,
                                                 "",
-                                                layout);
+                                                layout,
+                                                {1});
     topology.add(op_scalar);
 }
 
@@ -450,7 +453,8 @@ void runtime::intelgpu::do_dot_operation(cldnn::topology& topology,
                                              entry_point_name,
                                              parameters_2inp_1out,
                                              "",
-                                             layout);
+                                             layout,
+                                             {1});
     topology.add(op_dot);
 }
 
@@ -500,6 +504,74 @@ void runtime::intelgpu::do_slice_operation(cldnn::topology& topology,
                                                entry_point_name,
                                                parameters_1inp_1out,
                                                "",
-                                               layout);
+                                               layout,
+                                               {1});
     topology.add(op_slice);
+}
+
+void runtime::intelgpu::do_select_operation(cldnn::topology& topology,
+                                            const string& input0_name,
+                                            const Shape& input0_shape,
+                                            const string& input1_name,
+                                            const Shape& input1_shape,
+                                            const string& input2_name,
+                                            const Shape& input2_shape,
+                                            const string& output_name,
+                                            const Shape& output_shape,
+                                            const element::Type& output_type)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    string entry_point_name = "select" + output_name;
+    codegen::CodeWriter writer;
+
+    writer << "__kernel void " << entry_point_name << "(const __global char input0"
+           << array_dims(input0_shape) << ", const __global float input1"
+           << array_dims(input1_shape) << ", const __global float input2"
+           << array_dims(input2_shape) << ", __global float output" << array_dims(output_shape)
+           << ")\n";
+
+    writer.block_begin();
+    {
+        size_t var_idx = 0;
+        // Main loops
+        for (auto const& i : output_shape)
+        {
+            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
+                   << var_idx << ")\n";
+            writer.block_begin();
+            ++var_idx;
+        }
+
+        writer << "if (input0" << access_dims(input0_shape) << " != 0)\n";
+        writer.block_begin();
+        {
+            writer << "output" << access_dims(output_shape) << " = input1"
+                   << access_dims(input1_shape) << ";\n";
+        }
+        writer.block_end();
+        writer << "else\n";
+        writer.block_begin();
+        {
+            writer << "output" << access_dims(output_shape) << " = input2"
+                   << access_dims(input2_shape) << ";\n";
+        }
+        writer.block_end();
+
+        // Closing brackets for main loops
+        for (auto const& i : output_shape)
+        {
+            writer.block_end();
+        }
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_select(output_name,
+                                                {input0_name, input1_name, input2_name},
+                                                {writer.get_code()},
+                                                entry_point_name,
+                                                parameters_3inp_1out,
+                                                "",
+                                                layout,
+                                                {1});
+    topology.add(op_select);
 }
