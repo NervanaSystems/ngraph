@@ -87,7 +87,7 @@ runtime::gpu::GPUKernelArgs& runtime::gpu::GPUKernelArgs::add_placeholder(const 
     validate();
     m_argument_list.push_back(nullptr);
     m_placeholder_positions.push_back(true);
-    add_to_signature(type, name);
+    add_to_signature(type + "*", name);
     return *this;
 }
 
