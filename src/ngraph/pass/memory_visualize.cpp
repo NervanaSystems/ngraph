@@ -185,7 +185,7 @@ void pass::MemoryVisualize::draw_histogram(ostream& file, const list<shared_ptr<
     size_t offset = 200;
     size_t width = 1000;
     size_t scale = width - offset;
-    size_t line_spacing = stroke_width * 1.5;
+    size_t line_spacing = static_cast<size_t>(stroke_width * 1.5);
     size_t line_count = 0;
     for (shared_ptr<Node> node : nodes)
     {
@@ -203,7 +203,7 @@ void pass::MemoryVisualize::draw_histogram(ostream& file, const list<shared_ptr<
         float footprint = float(MemoryVisualize::memory_footprint(node));
         y += line_spacing;
         size_t x1 = offset;
-        size_t x2 = ((usage / memory_footprint) * scale) + offset;
+        size_t x2 = static_cast<size_t>(((usage / memory_footprint) * scale) + offset);
         file << "<text x=\"" << 0 << "\" y=\"" << y + text_offset << "\" fill=\""
              << "black"
              << "\">" << node->get_name() << "</text>\n";
@@ -211,7 +211,7 @@ void pass::MemoryVisualize::draw_histogram(ostream& file, const list<shared_ptr<
              << "\"";
         file << " style=\"stroke:forestgreen;stroke-width:" << stroke_width << "\" />\n";
         x1 = x2;
-        x2 = ((footprint / memory_footprint) * scale) + offset;
+        x2 = static_cast<size_t>(((footprint / memory_footprint) * scale) + offset);
         file << "<line x1=\"" << x1 << "\" y1=\"" << y << "\" x2=\"" << x2 << "\" y2=\"" << y
              << "\"";
         file << " style=\"stroke:firebrick;stroke-width:" << stroke_width << "\" />\n";
@@ -241,11 +241,11 @@ int pass::MemoryVisualize::compute_op_weight(const shared_ptr<Node> exop)
     int mass = 0;
     for (const descriptor::Tensor* tensor : exop->liveness_new_list)
     {
-        mass += tensor->size();
+        mass += static_cast<int>(tensor->size());
     }
     for (const descriptor::Tensor* tensor : exop->liveness_free_list)
     {
-        mass -= tensor->size();
+        mass -= static_cast<int>(tensor->size());
     }
     return mass;
 }
