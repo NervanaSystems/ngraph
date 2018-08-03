@@ -21,11 +21,11 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
     NodeVector, Shape, Strides
 
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, Atan, AvgPool, BatchNorm, Broadcast, \
-    Ceiling, Concat, Constant, Convert, Convolution, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, \
-    FunctionCall, GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, Max, Maximum, MaxPool, \
-    Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, Power, \
-    Reduce, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, Sqrt, \
-    Subtract, Sum, Tan, Tanh
+    Ceiling, Concat, Constant, Convert, Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, \
+    Dot, Equal, Exp, Floor, FunctionCall, GetOutputElement, Greater, GreaterEq, Less, LessEq, \
+    Log, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, \
+    Parameter, Product, Power, Reduce, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, \
+    Sinh, Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh
 
 from typing import Callable, Iterable, List, Union
 
@@ -598,6 +598,49 @@ def convolution(data_batch,                     # type: Node
     return Convolution(data_batch, filter_weights, Strides(filter_strides),
                        Strides(filter_dilation_strides), CoordinateDiff(padding_below),
                        CoordinateDiff(padding_above), Strides(data_dilation_strides))
+
+
+@nameable_op
+def convolution_backprop_data(data_batch_shape,                      # type: TensorShape
+                              filters,                               # type: Node
+                              output_delta,                          # type: Node
+                              window_movement_strides_forward=None,  # type: List[int]
+                              window_dilation_strides_forward=None,  # type: List[int]
+                              padding_below_forward=None,            # type: List[int]
+                              padding_above_forward=None,            # type: List[int]
+                              data_dilation_strides_forward=None,    # type: List[int]
+                              name=None,                             # type: str
+                              ):
+    # type: (...) -> Node
+    """Return node performing a batched-convolution data batch-backprop operation.
+
+    :param data_batch_shape: The shape of the data batch from forward-prop.
+    :param filters: The node producing the filters from forward-prop.
+    :param output_delta: The node producing output delta.
+    :param window_movement_strides_forward: The window movement strides from forward-prop.
+    :param window_dilation_strides_forward: The window dilation strides from forward-prop.
+    :param padding_below_forward: The padding-below sizes from forward-prop.
+    :param padding_above_forward: The padding-above sizes from forward-prop.
+    :param data_dilation_strides_forward: The data dilation strides from forward-prop.
+    """
+    spatial_dim_count = len(data_batch_shape) - 2
+    if window_movement_strides_forward is None:
+        window_movement_strides_forward = [1] * spatial_dim_count
+    if window_dilation_strides_forward is None:
+        window_dilation_strides_forward = [1] * spatial_dim_count
+    if padding_below_forward is None:
+        padding_below_forward = [0] * spatial_dim_count
+    if padding_above_forward is None:
+        padding_above_forward = [0] * spatial_dim_count
+    if data_dilation_strides_forward is None:
+        data_dilation_strides_forward = [1] * spatial_dim_count
+
+    return ConvolutionBackpropData(Shape(data_batch_shape), filters, output_delta,
+                                   Strides(window_movement_strides_forward),
+                                   Strides(window_dilation_strides_forward),
+                                   CoordinateDiff(padding_below_forward),
+                                   CoordinateDiff(padding_above_forward),
+                                   Strides(data_dilation_strides_forward))
 
 
 @nameable_op

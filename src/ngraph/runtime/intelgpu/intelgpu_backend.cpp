@@ -46,6 +46,7 @@
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/util.hpp"
 
@@ -185,6 +186,39 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
 
             do_equal_propagation(topology, input_name, output_name);
+        }
+        else if ("Slice" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const string& input_name = op->get_inputs().begin()->get_tensor().get_name();
+            const Shape& input_shape = op->get_inputs().begin()->get_shape();
+            const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+            const Shape& output_shape = op->get_outputs().begin()->get_shape();
+            const element::Type& output_type =
+                op->get_outputs().begin()->get_tensor().get_element_type();
+            const shared_ptr<op::Slice> elem = static_pointer_cast<op::Slice>(op);
+            const Coordinate& lower_bounds = elem->get_lower_bounds();
+            const Coordinate& upper_bounds = elem->get_upper_bounds();
+            const Strides& strides = elem->get_strides();
+
+            if (input_shape.empty() || output_shape.empty() || lower_bounds.empty() ||
+                upper_bounds.empty() || strides.empty())
+            {
+                do_equal_propagation(topology, input_name, output_name);
+            }
+            else
+            {
+                do_slice_operation(topology,
+                                   input_name,
+                                   input_shape,
+                                   output_name,
+                                   output_shape,
+                                   output_type,
+                                   lower_bounds,
+                                   upper_bounds,
+                                   strides);
+            }
         }
         else if ("Add" == op->description())
         {

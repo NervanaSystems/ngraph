@@ -2,6 +2,7 @@
 abc_int64
 batch_norm_one_output
 batch_norm_three_outputs
+backwards_batch_norm_three_outputs
 #need to check
 computation_reuse
 #int64 is not supprted
@@ -11,6 +12,7 @@ divide_by_zero_int32
 dot_matrix_vector_int64
 #no mkldnn on GPU
 #error throw is not the same on GPU, not supported yet
+lrn
 one_hot_scalar_fp_nonint_in_3
 one_hot_scalar_oob_in_3
 one_hot_vector_1_barely_oob

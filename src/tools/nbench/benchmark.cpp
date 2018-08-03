@@ -130,6 +130,45 @@ void init_int_tv(shared_ptr<runtime::TensorView> tv, T min, T max)
     tv->write(vec.data(), 0, vec.size() * sizeof(T));
 }
 
+template <>
+void init_int_tv<char>(shared_ptr<runtime::TensorView> tv, char min, char max)
+{
+    size_t size = tv->get_element_count();
+    uniform_int_distribution<int16_t> dist(static_cast<short>(min), static_cast<short>(max));
+    vector<char> vec(size);
+    for (char& element : vec)
+    {
+        element = static_cast<char>(dist(s_random_engine));
+    }
+    tv->write(vec.data(), 0, vec.size() * sizeof(char));
+}
+
+template <>
+void init_int_tv<int8_t>(shared_ptr<runtime::TensorView> tv, int8_t min, int8_t max)
+{
+    size_t size = tv->get_element_count();
+    uniform_int_distribution<int16_t> dist(static_cast<short>(min), static_cast<short>(max));
+    vector<int8_t> vec(size);
+    for (int8_t& element : vec)
+    {
+        element = static_cast<int8_t>(dist(s_random_engine));
+    }
+    tv->write(vec.data(), 0, vec.size() * sizeof(int8_t));
+}
+
+template <>
+void init_int_tv<uint8_t>(shared_ptr<runtime::TensorView> tv, uint8_t min, uint8_t max)
+{
+    size_t size = tv->get_element_count();
+    uniform_int_distribution<int16_t> dist(static_cast<short>(min), static_cast<short>(max));
+    vector<uint8_t> vec(size);
+    for (uint8_t& element : vec)
+    {
+        element = static_cast<uint8_t>(dist(s_random_engine));
+    }
+    tv->write(vec.data(), 0, vec.size() * sizeof(uint8_t));
+}
+
 template <typename T>
 void init_real_tv(shared_ptr<runtime::TensorView> tv, T min, T max)
 {
