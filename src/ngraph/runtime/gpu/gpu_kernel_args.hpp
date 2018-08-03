@@ -30,7 +30,6 @@ namespace ngraph
     {
         namespace gpu
         {
-            // Helper structs to deduce whether a type is iterable
             template <typename T>
             struct has_const_iterator;
             template <typename T>
@@ -42,8 +41,14 @@ namespace ngraph
                 GPUKernelArgs(const std::shared_ptr<GPUHostParameters>& params);
                 GPUKernelArgs(const GPUKernelArgs& args);
 
+                //
+                // Add a placeholder parameter for a tensor pointer which will be resolved at runtime.
+                //
                 GPUKernelArgs& add_placeholder(const std::string& type, const std::string& name);
 
+                //
+                // Add a POD argument to the kernel signature and argument list.
+                //
                 template <typename T>
                 typename std::enable_if<!is_container<T>::value, GPUKernelArgs&>::type
                     add(const std::string& name, const T& arg)
@@ -51,6 +56,10 @@ namespace ngraph
                     return add_argument(name, arg);
                 }
 
+                //
+                // Add POD arguments as above, but by expanding the array arguments and
+                // and adding each individual arg as kernel register arguments.
+                //
                 template <typename T>
                 typename std::enable_if<is_container<T>::value, GPUKernelArgs&>::type
                     add(const std::string& name, const T& arg)
@@ -58,6 +67,11 @@ namespace ngraph
                     return add_arguments(name, arg);
                 }
 
+                //
+                // Resolve the kernel argument list for use with the launch primitive.
+                // Its inputs are a variable number of device addresses which replace
+                // the previously added placeholder arguments.
+                //
                 template <typename... Args>
                 void** get_argument_list(Args&&... args)
                 {
@@ -87,9 +101,17 @@ namespace ngraph
                     return m_argument_list.data();
                 }
 
+                //
+                // Retrieve the kernel parameter signature given the added kernel arguments.
+                //
                 std::string get_input_signature();
 
             private:
+
+                //
+                // Cache the host argument for persistence, add it to the argument list,
+                // and add its signature to the kernel input signature.
+                //
                 template <typename T>
                 GPUKernelArgs& add_argument(const std::string& name, const T& arg)
                 {
@@ -101,6 +123,9 @@ namespace ngraph
                     return *this;
                 }
 
+                //
+                // Same as above for a container type T.
+                //
                 template <typename T>
                 GPUKernelArgs& add_arguments(const std::string& name, const T& args)
                 {
@@ -115,6 +140,10 @@ namespace ngraph
                 }
 
                 void validate();
+
+                //
+                // Given an input argument type and name, add it to the kernel parameter signature.
+                //
                 void add_to_signature(const std::string& type, const std::string& name);
 
             private:
@@ -126,6 +155,9 @@ namespace ngraph
                 static const std::unordered_map<std::type_index, std::string> type_names;
             };
 
+            //
+            // Helper structs to deduce whether a type is iterable.
+            //
             template <typename T>
             struct has_const_iterator
             {
