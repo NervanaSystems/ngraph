@@ -74,13 +74,14 @@ namespace ngraph
                     return m_shared_context->m_primitive_emitter;
                 }
 
+                static const size_t s_memory_pool_alignment;
+
             protected:
                 void compile();
 
                 EntryPoint m_compiled_function;
 
             private:
-                void optimize_and_assemble();
                 void emit_header();
                 void emit_timer_functions();
                 void emit_constant_declarations();

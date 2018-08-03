@@ -239,6 +239,8 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::And), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::And>},
     {TI(ngraph::op::Or), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Or>}};
 
+const size_t runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction::s_memory_pool_alignment = 64;
+
 runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function,
     std::shared_ptr<GPU_Backend::BackendContext>& shared_context,
@@ -643,7 +645,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 
     m_pass_manager.register_pass<ngraph::pass::Liveness>();
 
-    m_pass_manager.register_pass<ngraph::pass::MemoryLayout>(64);
+    m_pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
 
     m_pass_manager.register_pass<runtime::gpu::pass::TensorMemoryReservation>(
         allocator, m_tensor_memory_buffers);
