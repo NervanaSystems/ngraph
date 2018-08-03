@@ -1719,8 +1719,6 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const std::array<std::string, 
         return primitive_index;
     }
 
-
-
     // calculate strides
     GPUShape strides = row_major_strides(result_shape);
     // precacluate invariants for integer division via multiplication
@@ -1745,16 +1743,6 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const std::array<std::string, 
     {
         reduced_strides[axis] = 0;
     }
-
-    // GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
-    // size_t idx_strides = allocator.reserve_argspace(strides.data(), strides.size() * sizeof(int));
-    // size_t idx_stride_magic =
-    //     allocator.reserve_argspace(stride_magic.data(), stride_magic.size() * sizeof(int));
-    // size_t idx_stride_shift =
-    //     allocator.reserve_argspace(stride_shift.data(), stride_shift.size() * sizeof(int));
-    // size_t idx_reduced_strides =
-    //     allocator.reserve_argspace(reduced_strides.data(), reduced_strides.size() * sizeof(int));
-
 
     // TODO: blending factors are not currently implemented
     float alpha = 1.0f;
