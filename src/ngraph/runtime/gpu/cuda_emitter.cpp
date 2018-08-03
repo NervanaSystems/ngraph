@@ -1784,7 +1784,7 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const std::array<std::string, 
         codegen::CodeWriter writer;
         writer << include_helpers();
         runtime::gpu::CudaKernelBuilder::get_kernel_signature(
-            writer, kernel_name, dtypes, args.get_input_signature());
+            writer, kernel_name, args.get_input_signature());
         runtime::gpu::CudaKernelBuilder::get_broadcast_op(
             writer, result_shape.size());
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());

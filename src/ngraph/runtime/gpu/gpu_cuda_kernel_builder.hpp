@@ -34,17 +34,11 @@ namespace ngraph
             class CudaKernelBuilder
             {
             public:
-                template <typename T>
                 static void get_kernel_signature(codegen::CodeWriter& writer,
                                                  const std::string& name,
-                                                 const T& data_types,
                                                  const std::string& input_signature)
                 {
                     writer << "extern \"C\" __global__ void cuda_" << name;
-                    for (auto const& type : data_types)
-                    {
-                        writer << "_" << type;
-                    }
                     writer << input_signature;
                 }
 
