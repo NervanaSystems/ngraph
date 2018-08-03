@@ -74,13 +74,14 @@ namespace ngraph
                     return m_shared_context->m_primitive_emitter;
                 }
 
+                static const size_t s_memory_pool_alignment;
+
             protected:
                 void compile();
 
                 EntryPoint m_compiled_function;
 
             private:
-                void collect_unique_functions();
                 void emit_header();
                 void emit_timer_functions();
                 void emit_constant_declarations();
@@ -89,14 +90,13 @@ namespace ngraph
                 void emit_debug_function_entry(Node* node);
                 void emit_debug_function_exit(Node* node);
                 void emit_temp_mem_pool_allocation(std::shared_ptr<Function> current_function);
-                void emit_temp_mem_pool_release();
                 void release_function() { m_function = nullptr; }
                 void store_emitted_functions(const std::string& code);
                 std::string emit_op_as_function(const Node& node, const std::string& function_name);
                 std::string strip_comments(const std::string& s) const;
 
                 codegen::CodeWriter m_writer;
-                pass::Manager m_pass_manager;
+                ngraph::pass::Manager m_pass_manager;
 
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
@@ -117,6 +117,7 @@ namespace ngraph
                 std::string m_function_name;
                 std::string m_pch_header_source;
 
+                std::shared_ptr<std::unordered_map<std::string, size_t>> m_tensor_memory_buffers;
                 std::shared_ptr<GPU_Backend::BackendContext> m_shared_context;
             };
         }
