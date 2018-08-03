@@ -54,8 +54,6 @@ node("bdw && nogpu") {
     echo "Calling ngraph-unittest.groovy"
     returnValue = load("${JENKINS_DIR}/ngraph-unittest.groovy")
     echo "ngraph-unittest.groovy returned ${returnValue}"
-    // def ngraphUnitTest = load("${JENKINS_DIR}/ngraph-unittest.groovy")
-    // ngraphUnitTest()
 
 }  // End:  node( ... )
 
