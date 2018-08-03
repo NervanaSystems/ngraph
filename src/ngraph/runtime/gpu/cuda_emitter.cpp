@@ -1257,16 +1257,18 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::MaxPool* node)
 }
 
 size_t runtime::gpu::CUDAEmitter::build_softmax_divide(const std::vector<std::string>& dtypes,
-                                                    GPUShape input_shape,
-                                                    GPUShape reduce_shape,
-                                                    std::vector<size_t> axes_flag)
+                                                       GPUShape input_shape,
+                                                       GPUShape reduce_shape,
+                                                       std::vector<size_t> axes_flag)
 {
-    std::string kernel_name = "softmax_divide_" + join(dtypes, "_") + "_axes_" + join(axes_flag, "_");
+    std::string kernel_name =
+        "softmax_divide_" + join(dtypes, "_") + "_axes_" + join(axes_flag, "_");
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
 
     size_t nthreads = shape_size(input_shape);
 
-    std::string hash = kernel_name + "_n" + join(input_shape, "_") + join(reduce_shape, "_") + std::to_string(nthreads);
+    std::string hash = kernel_name + "_n" + join(input_shape, "_") + join(reduce_shape, "_") +
+                       std::to_string(nthreads);
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash);
     if (primitive_index != std::numeric_limits<size_t>::max())
@@ -1300,24 +1302,30 @@ size_t runtime::gpu::CUDAEmitter::build_softmax_divide(const std::vector<std::st
     uint32_t aligned_grid_size_x =
         align_to_block_size(static_cast<uint32_t>(nthreads), block_size_x);
 
-    std::unique_ptr<gpu::primitive> pool(
-        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-            void* input_stride_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, input_stride_idx);
-            void* reduce_stride_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, reduce_stride_idx);
-            void* args_list[] = {&inputs[0], &inputs[1], &outputs[0], &input_stride_buffer, &reduce_stride_buffer, &nthreads};
-            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          aligned_grid_size_x,
-                                          1,
-                                          1, // grid dim
-                                          block_size_x,
-                                          1,
-                                          1, // block dim
-                                          0,
-                                          NULL, // shared mem and stream
-                                          args_list,
-                                          0)); // arguments
-            debug_sync();
-        }});
+    std::unique_ptr<gpu::primitive> pool(new gpu::primitive{[=](void** inputs,
+                                                                void** outputs) mutable {
+        void* input_stride_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, input_stride_idx);
+        void* reduce_stride_buffer =
+            runtime::gpu::invoke_memory_primitive(m_ctx, reduce_stride_idx);
+        void* args_list[] = {&inputs[0],
+                             &inputs[1],
+                             &outputs[0],
+                             &input_stride_buffer,
+                             &reduce_stride_buffer,
+                             &nthreads};
+        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                      aligned_grid_size_x,
+                                      1,
+                                      1, // grid dim
+                                      block_size_x,
+                                      1,
+                                      1, // block dim
+                                      0,
+                                      NULL, // shared mem and stream
+                                      args_list,
+                                      0)); // arguments
+        debug_sync();
+    }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(pool));
     m_primitive_emitter->cache(hash, primitive_index);

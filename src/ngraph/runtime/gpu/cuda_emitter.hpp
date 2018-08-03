@@ -159,9 +159,9 @@ namespace ngraph
                                     GPUShape output_shape);
 
                 size_t build_softmax_divide(const std::vector<std::string>& dtypes,
-                                                    GPUShape input_shape,
-                                                    GPUShape reduce_shape,
-                                                    std::vector<size_t> axes_flag);
+                                            GPUShape input_shape,
+                                            GPUShape reduce_shape,
+                                            std::vector<size_t> axes_flag);
 
                 void debug_sync();
                 void sync();
