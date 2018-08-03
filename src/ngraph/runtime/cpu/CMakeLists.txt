@@ -15,6 +15,28 @@
 # ******************************************************************************
 
 set(SRC
+    builder/avg_pool.cpp
+    builder/batch_norm.cpp
+    builder/broadcast.cpp
+    builder/concat.cpp
+    builder/convert_layout.cpp
+    builder/convert.cpp
+    builder/convolution.cpp
+    builder/dot.cpp
+    builder/function_call.cpp
+    builder/matmul_bias.cpp
+    builder/max_pool.cpp
+    builder/max.cpp
+    builder/min.cpp
+    builder/relu.cpp
+    builder/product.cpp
+    builder/reshape.cpp
+    builder/reverse_sequence.cpp
+    builder/reverse.cpp
+    builder/select_and_scatter.cpp
+    builder/select.cpp
+    builder/sigmoid.cpp
+    builder/sum.cpp
     cpu_backend.cpp
     cpu_builder.cpp
     cpu_call_frame.cpp
@@ -27,28 +49,6 @@ set(SRC
     cpu_tensor_view_wrapper.cpp
     cpu_tensor_view.cpp
     cpu_tracing.cpp
-    builder/avg_pool.cpp
-    builder/batch_norm.cpp
-    builder/broadcast.cpp
-    builder/concat.cpp
-    builder/convert.cpp
-    builder/convert_layout.cpp
-    builder/convolution.cpp
-    builder/dot.cpp
-    builder/function_call.cpp
-    builder/matmul_bias.cpp
-    builder/max.cpp
-    builder/max_pool.cpp
-    builder/min.cpp
-    builder/relu.cpp
-    builder/product.cpp
-    builder/reshape.cpp
-    builder/reverse.cpp
-    builder/reverse_sequence.cpp
-    builder/select.cpp
-    builder/select_and_scatter.cpp
-    builder/sigmoid.cpp
-    builder/sum.cpp
     kernel/eigen_thread_pool.cpp
     kernel/pad.cpp
     kernel/reduce_max.cpp
@@ -60,10 +60,10 @@ set(SRC
     op/batch_dot.cpp
     op/batch_norm_relu.cpp
     op/bounded_relu.cpp
-    op/group_conv.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
     op/convert_layout.cpp
+    op/group_conv.cpp
     op/loop_kernel.cpp
     op/lstm.cpp
     op/matmul_bias.cpp
@@ -74,10 +74,10 @@ set(SRC
     pass/cpu_concat_inputs.cpp
     pass/cpu_fusion.cpp
     pass/cpu_layout.cpp
+    pass/cpu_loop_kernel_fusion.cpp
+    pass/cpu_mat_fusion.cpp
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
-    pass/cpu_mat_fusion.cpp
-    pass/cpu_loop_kernel_fusion.cpp
     pass/cpu_shuffle_folding.cpp
     pass/cpu_workspace_insertion.cpp
 )
