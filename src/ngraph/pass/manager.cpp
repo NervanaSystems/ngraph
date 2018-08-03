@@ -15,7 +15,10 @@
 *******************************************************************************/
 
 #include <algorithm>
+#ifdef WIN32
+#else
 #include <cxxabi.h>
+#endif
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -142,8 +145,10 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func, bool transitiv
         {
             PassBase* p = pass.get();
             string name = typeid(*p).name();
+#ifndef WIN32
             int status;
             name = abi::__cxa_demangle(name.c_str(), 0, 0, &status);
+#endif
             cout << setw(7) << pass_timer.get_milliseconds() << "ms " << name << "\n";
         }
     }

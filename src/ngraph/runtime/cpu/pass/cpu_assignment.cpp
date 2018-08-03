@@ -30,6 +30,7 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -214,8 +215,7 @@ namespace ngraph
                         op_annotations->set_mkldnn_op(true);
                         const int ADD_INPUT = 3;
                         // Accumulates conv into the second input of the unfused add
-                        std::map<size_t, size_t> oi_pairs = {{0, ADD_INPUT}};
-                        op_annotations->set_in_place_oi_pairs(oi_pairs);
+                        op_annotations->add_in_place_oi_pair({0, ADD_INPUT, true});
                         convolution->set_op_annotations(op_annotations);
                     }
                 }
@@ -478,10 +478,26 @@ namespace ngraph
                         if (get_user_count(node->get_argument(0).get()) == 1)
                         {
                             // Safe to overwrite input
-                            std::map<size_t, size_t> oi_pairs = {{0, 0}};
-                            op_annotations->set_in_place_oi_pairs(oi_pairs);
+                            op_annotations->add_in_place_oi_pair({0, 0, true});
                         }
                         relu->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::LRN)
+                {
+                    auto lrn = static_cast<op::LRN*>(node);
+                    auto arg0_shape = node->get_input_shape(0);
+                    auto arg0_rank = arg0_shape.size();
+                    auto result_shape = node->get_output_shape(0);
+
+                    if ((arg0_rank == 4) && node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        lrn->set_op_annotations(op_annotations);
                     }
                 }
 
@@ -546,14 +562,12 @@ namespace ngraph
                     auto arg = reshape->get_argument(0);
                     // we need to copy input data if reshape modifies the data or inputs are
                     // not in the memory pool, or has output users.
-                    bool need_copy =
-                        reshape->get_is_transpose() || arg->is_parameter() || arg->is_constant();
+                    bool need_copy = reshape->get_is_transpose() || arg->is_constant();
 
                     if (!need_copy)
                     {
                         // map output to the input memory
-                        std::map<size_t, size_t> oi_pairs = {{0, 0}};
-                        op_annotations->set_in_place_oi_pairs(oi_pairs);
+                        op_annotations->add_in_place_oi_pair({0, 0, false});
                         reshape->set_op_annotations(op_annotations);
                     }
 
@@ -736,6 +750,7 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBias>},
     {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBiasBackpropFiltersBias>},
+    {TI(ngraph::op::LRN), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::LRN>},
     {TI(ngraph::op::Relu), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Relu>},
     {TI(ngraph::op::ReluBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ReluBackprop>},

@@ -72,6 +72,7 @@
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
+#include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
@@ -171,8 +172,8 @@ static void
     auto ctype = node->get_element_type().c_type_string();
     writer << "{   // A " << funcname << " for" << node->get_name() << "\n";
     writer.indent++;
-    writer << " ngraph::check_fp_values<" << ctype << "," << funcname << "> (\"" << node->get_name()
-           << "\", (" << ctype << "*)" << out[0].get_name() << ", " << out[0].get_size() << ");\n";
+    writer << " ngraph::check_fp_values_" << funcname << "(\"" << node->get_name() << "\", ("
+           << ctype << "*)" << out[0].get_name() << ", " << out[0].get_size() << ");\n";
     writer.indent--;
     writer << "}\n";
 }
@@ -319,6 +320,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Or), &runtime::cpu::CPU_Emitter::emit<op::Or>},
     {TI(ngraph::runtime::cpu::op::LoopKernel),
      &runtime::cpu::CPU_Emitter::emit<runtime::cpu::op::LoopKernel>},
+    {TI(ngraph::op::LRN), &runtime::cpu::CPU_Emitter::emit<ngraph::op::LRN>},
 };
 
 const size_t runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction::s_memory_pool_alignment =
@@ -419,6 +421,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/reference/concat.hpp"
 #include "ngraph/runtime/reference/convolution.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
+#include "ngraph/runtime/reference/lrn.hpp"
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/max_pool.hpp"
 #include "ngraph/runtime/reference/min.hpp"
@@ -597,7 +600,6 @@ using namespace ngraph::runtime;
         }
 
         writer << "bool " << current_function->get_name() << "_t_en[" << tensor_index << "];\n";
-        writer << "bool " << current_function->get_name() << "_init = true;\n";
 
         writer << "extern \"C\" void " << current_function->get_name();
         writer << "(void** inputs, void** outputs, cpu::CPURuntimeContext* ctx)\n";
@@ -635,7 +637,7 @@ using namespace ngraph::runtime;
         if (m_use_tbb)
         {
             writer << "\n";
-            writer << "if (" << current_function->get_name() << "_init) {\n";
+            writer << "if (ctx->first_iteration) {\n";
             writer.indent++;
             writer << "tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>* "
                       "flowgraph_node_start"
@@ -657,6 +659,7 @@ using namespace ngraph::runtime;
                 ss << "((" << type << "*)(inputs[" << arg_index << "]))";
                 m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
                 param_index_map[tv->get_tensor().get_name()] = arg_index;
+                propagate_in_place_input(&param->get_outputs().at(i), ss.str());
                 arg_index++;
             }
         }
@@ -759,7 +762,7 @@ using namespace ngraph::runtime;
             // Op Control
             if (!node->is_parameter() && !node->is_constant())
             {
-                writer << "if (" << current_function->get_name() << "_init ";
+                writer << "if (ctx->first_iteration ";
                 for (const descriptor::Input& input : node->get_inputs())
                 {
                     const descriptor::Output& output = input.get_output();
@@ -819,12 +822,12 @@ using namespace ngraph::runtime;
                 {
                     if (std::getenv("NGRAPH_CPU_NAN_CHECK"))
                     {
-                        generate_isnan_isinf_check(writer, node, out, "std::isnan");
+                        generate_isnan_isinf_check(writer, node, out, "isnan");
                     }
 
                     if (std::getenv("NGRAPH_CPU_INF_CHECK"))
                     {
-                        generate_isnan_isinf_check(writer, node, out, "std::isinf");
+                        generate_isnan_isinf_check(writer, node, out, "isinf");
                     }
                 }
             }
@@ -896,7 +899,7 @@ using namespace ngraph::runtime;
                    << "->try_put(tbb::flow::continue_msg());\n";
             writer << "try { ctx->G->wait_for_all(); } catch(...) { throw; }\n";
         }
-        writer << current_function->get_name() << "_init = false;\n";
+        writer << "ctx->first_iteration = false;\n";
 
         writer.indent--;
         // End generated function
@@ -974,6 +977,41 @@ using namespace ngraph::runtime;
     }
 }
 
+void runtime::cpu::CPU_ExternalFunction::propagate_in_place_input(
+    ngraph::descriptor::Output* output, std::string input_name)
+{
+    auto it = output;
+    auto propagate_further = false;
+    do
+    {
+        propagate_further = false;
+        for (auto input : it->get_inputs())
+        {
+            auto c_op = std::dynamic_pointer_cast<ngraph::op::Op>(input->get_node());
+            if (!c_op || c_op->is_output())
+            {
+                break;
+            }
+
+            if (auto op_annotations = c_op->get_op_annotations())
+            {
+                for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
+                {
+                    if (oi_pair.input == input->get_index() && !oi_pair.destructive)
+                    {
+                        size_t output_index = oi_pair.output;
+                        auto& output_tensor = c_op->get_outputs().at(output_index).get_tensor();
+
+                        m_variable_name_map[output_tensor.get_name()] = input_name;
+                        it = &c_op->get_outputs().at(output_index);
+                        propagate_further = true;
+                    }
+                }
+            }
+        }
+    } while (propagate_further);
+}
+
 void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
     ngraph::descriptor::Output* res_src_output, std::string output_name)
 {
@@ -993,18 +1031,21 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
         }
         if (auto op_annotations = arg->get_op_annotations())
         {
-            auto oi_pairs = op_annotations->get_in_place_oi_pairs();
-            if (oi_pairs.count(it->get_index()) != 0)
+            for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
             {
-                size_t input_index = oi_pairs.at(it->get_index());
-                auto& input_tensor = arg->get_inputs().at(input_index).get_tensor();
-                if (input_tensor.get_pool_offset() == offset &&
-                    !arg->get_inputs().at(input_index).get_output().get_node()->is_parameter())
+                if (oi_pair.output == it->get_index())
                 {
-                    NGRAPH_DEBUG << "Reusing " << output_name << " for " << input_tensor.get_name();
-                    m_variable_name_map[input_tensor.get_name()] = output_name;
-                    it = &arg->get_inputs().at(input_index).get_output();
-                    propagate_further = true;
+                    size_t input_index = oi_pair.input;
+                    auto& input_tensor = arg->get_inputs().at(input_index).get_tensor();
+                    if (input_tensor.get_pool_offset() == offset &&
+                        !arg->get_inputs().at(input_index).get_output().get_node()->is_parameter())
+                    {
+                        NGRAPH_DEBUG << "Reusing " << output_name << " for "
+                                     << input_tensor.get_name();
+                        m_variable_name_map[input_tensor.get_name()] = output_name;
+                        it = &arg->get_inputs().at(input_index).get_output();
+                        propagate_further = true;
+                    }
                 }
             }
         }
@@ -1192,14 +1233,16 @@ void runtime::cpu::CPU_ExternalFunction::build()
     }
 
     executor = [&](CPURuntimeContext* ctx, vector<void*>& inputs, vector<void*>& outputs) {
-        static bool first_iteration = true;
         cpu::Timestamp start_ts;
         int profiler_count = 0;
 
-        for (auto& p : intermediates_offsets)
+        if (ctx->first_iteration)
         {
-            tensor_data[p.first] =
-                static_cast<uint8_t*>(ctx->memory_buffers[0]->get_ptr()) + p.second;
+            for (auto& p : intermediates_offsets)
+            {
+                tensor_data[p.first] =
+                    static_cast<uint8_t*>(ctx->memory_buffers[0]->get_ptr()) + p.second;
+            }
         }
 
         for (const auto& p : function_input_index)
@@ -1217,7 +1260,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         if (m_use_tbb)
         {
             // Build the flow graph
-            if (first_iteration)
+            if (ctx->first_iteration)
             {
                 std::unordered_map<
                     std::string,
@@ -1234,7 +1277,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
                         flowgraph_node = new tbb::flow::continue_node<tbb::flow::continue_msg,
                                                                       tbb::flow::lightweight>(
                             *(ctx->G), [&](const tbb::flow::continue_msg& msg) {
-                                if (p.first(ctx) || first_iteration)
+                                if (p.first(ctx) || ctx->first_iteration)
                                 {
                                     for (size_t j = 0; j < p.second; j++)
                                     {
@@ -1315,7 +1358,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         {
             for (const auto& p : enables)
             {
-                if (p.first(ctx) || first_iteration)
+                if (p.first(ctx) || ctx->first_iteration)
                 {
                     for (size_t j = 0; j < p.second; j++)
                     {
@@ -1348,7 +1391,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
                 }
             }
         }
-        first_iteration = false;
+        ctx->first_iteration = false;
 
         if (runtime::cpu::IsTracingEnabled())
         {

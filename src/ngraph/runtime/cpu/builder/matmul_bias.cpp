@@ -39,8 +39,8 @@ namespace ngraph
 
                 const ngraph::op::MatmulBias* mm = static_cast<const ngraph::op::MatmulBias*>(node);
 
-                const auto& arg0_shape = mm->get_arg0_shape();
-                const auto& arg1_shape = mm->get_arg1_shape();
+                const auto& arg0_shape = mm->get_a_shape();
+                const auto& arg1_shape = mm->get_b_shape();
                 const auto& arg2_shape = node->get_shape();
 
                 auto m = arg0_shape[0];
@@ -51,14 +51,14 @@ namespace ngraph
                 auto lda = arg0_shape[1];
                 auto ldb = arg1_shape[1];
 
-                if (mm->get_is_arg0_transposed())
+                if (mm->get_is_a_transposed())
                 {
                     transpose_A = true;
                     m = arg0_shape[1];
                     k = arg0_shape[0];
                 }
 
-                if (mm->get_is_arg1_transposed())
+                if (mm->get_is_b_transposed())
                 {
                     transpose_B = true;
                     n = arg1_shape[0];
