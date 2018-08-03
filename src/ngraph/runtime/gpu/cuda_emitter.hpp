@@ -22,6 +22,10 @@
 #include "ngraph/runtime/gpu/gpu_shape.hpp"
 #include "ngraph/strides.hpp"
 
+#include "ngraph/op/convolution.hpp"
+#include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/softmax.hpp"
+
 namespace ngraph
 {
     class GPUShape;
@@ -36,6 +40,11 @@ namespace ngraph
             class CUDAEmitter
             {
                 friend class GPUPrimitiveEmitter;
+
+            public:
+                size_t build_primitive(const op::Softmax* node);
+                size_t build_primitive(const op::Convolution* node);
+                size_t build_primitive(const op::MaxPool* node);
 
             public:
                 size_t build_pad(const std::array<std::string, 2>& dtypes,
@@ -85,6 +94,15 @@ namespace ngraph
                                               GPUShape output_shape,
                                               size_t batch_axis,
                                               size_t sequence_axis);
+
+                size_t build_onehot(const std::array<std::string, 2>& dtypes,
+                                    GPUShape input_shape,
+                                    GPUShape output_shape,
+                                    size_t one_hot_axis);
+
+                size_t build_reverse(const std::array<std::string, 2>& dtypes,
+                                     GPUShape input_shape,
+                                     std::vector<uint32_t> reverse_axes);
 
                 template <typename T>
                 size_t build_elementwise(const std::vector<std::string>& dtypes,
