@@ -17,11 +17,19 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
+
+#ifdef WIN32
+#include <windows.h>
+#define DL_HANDLE HMODULE
+#else
+#define DL_HANDLE void*
+#endif
 
 namespace ngraph
 {
@@ -83,7 +91,7 @@ namespace ngraph
                                const std::vector<std::shared_ptr<runtime::TensorView>>& inputs);
 
         private:
-            static void* open_shared_library(std::string type);
+            static DL_HANDLE open_shared_library(std::string type);
             static std::map<std::string, std::string> get_registered_device_map();
             static bool is_backend_name(const std::string& file, std::string& backend_name);
         };
