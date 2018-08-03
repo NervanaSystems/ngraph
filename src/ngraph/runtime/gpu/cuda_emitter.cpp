@@ -1256,7 +1256,7 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::MaxPool* node)
     return primitive_index;
 }
 
-size_t runtime::gpu::CUDAEmitter::build_softmax_divide(const std::array<std::string, 2>& dtypes,
+size_t runtime::gpu::CUDAEmitter::build_softmax_divide(const std::vector<std::string>& dtypes,
                                                     GPUShape input_shape,
                                                     GPUShape reduce_shape,
                                                     std::vector<size_t> axes_flag)
@@ -1285,8 +1285,9 @@ size_t runtime::gpu::CUDAEmitter::build_softmax_divide(const std::array<std::str
     }
 
     GPUShape input_strides = row_major_strides(input_shape);
-    GPUShape reduce_strides = row_major_strides(reduced_shape);
+    GPUShape reduce_strides = row_major_strides(reduce_shape);
 
+    GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
     size_t input_stride_idx =
         allocator.reserve_argspace(input_strides.data(), input_strides.size() * sizeof(uint32_t));
     size_t reduce_stride_idx =
@@ -1342,7 +1343,6 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Softmax* node)
     // build composite primitive
     auto& cudnn_emitter = m_primitive_emitter->get_cudnn_emitter();
 
-    // reserve a temporary buffer for the intermediate reduction
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
     auto reduced_shape = input_shape;
     std::vector<size_t> axes_flag(input_shape.size(), 0);

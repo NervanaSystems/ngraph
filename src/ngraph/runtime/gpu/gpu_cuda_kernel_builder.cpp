@@ -62,7 +62,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_divide_op(codegen::CodeWriter&
                                                          size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in0, "
-           << data_types[1] << "* in1, " << data_type[2]
+           << data_types[1] << "* in1, " << data_types[2]
            << "* out, uint32_t* input0_strides, uint32_t* input1_strides, uint32_t n)\n";
     writer.block_begin();
     {
