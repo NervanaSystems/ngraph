@@ -116,11 +116,14 @@ namespace ngraph
                     auto data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
 
-                    if (weights_desc.data.format == mkldnn_nchw)
+                    // MKLDNN relies on named formats for kernel selection
+                    switch (weights_desc.data.format)
                     {
-                        // MKLDNN doesn't seem to like nchw on weights
-                        weights_desc.data.format = mkldnn_oihw;
+                    case mkldnn_nchw: weights_desc.data.format = mkldnn_oihw; break;
+                    case mkldnn_ncdhw: weights_desc.data.format = mkldnn_oidhw; break;
+                    default:;
                     }
+
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     mkldnn::post_ops ops;
@@ -253,6 +256,14 @@ namespace ngraph
 
                     if (std::is_same<OP, ngraph::op::ConvolutionBackpropData>())
                     {
+                        // MKLDNN relies on named formats for kernel selection
+                        switch (arg0_desc.data.format)
+                        {
+                        case mkldnn_nchw: arg0_desc.data.format = mkldnn_oihw; break;
+                        case mkldnn_ncdhw: arg0_desc.data.format = mkldnn_oidhw; break;
+                        default:;
+                        }
+
                         return build_convolution_backward_data(
                             arg0_desc,
                             arg1_desc,
