@@ -52,8 +52,10 @@ node("bdw && nogpu") {
     //      contain references to technology which has not yet been released.
     //
     echo "Calling ngraph-unittest.groovy"
-    def ngraphUnitTest = load("${JENKINS_DIR}/ngraph-unittest.groovy")
-    ngraphUnitTest()
+    returnValue = load("${JENKINS_DIR}/ngraph-unittest.groovy")
+    echo "ngraph-unittest.groovy returned ${returnValue}"
+    // def ngraphUnitTest = load("${JENKINS_DIR}/ngraph-unittest.groovy")
+    // ngraphUnitTest()
 
 }  // End:  node( ... )
 
