@@ -93,3 +93,45 @@ def test_convolution_2d():
                                    [0, 0, 20, 20, 0],
                                    [0, 0, 20, 20, 0]]]],
                                 dtype=np.float32))
+
+
+@pytest.config.gpu_skip(reason='Not implemented')
+def test_convolution_backprop_data():
+    runtime = get_runtime()
+
+    data_batch_shape = [1, 1, 9, 9]
+    filter_shape = [1, 1, 3, 3]
+    output_delta_shape = [1, 1, 7, 7]
+
+    filter_param = ng.parameter(shape=filter_shape)
+    output_delta_param = ng.parameter(shape=output_delta_shape)
+
+    deconvolution = ng.convolution_backprop_data(data_batch_shape, filter_param, output_delta_param)
+
+    data_batch_data = np.array([[[[-20, -20, 20, 20, 0, 0, 0],
+                                  [-20, -20, 20, 20, 0, 0, 0],
+                                  [-20, -20, 20, 20, 0, 0, 0],
+                                  [-20, -20, 20, 20, 0, 0, 0],
+                                  [-20, -20, 20, 20, 0, 0, 0],
+                                  [-20, -20, 20, 20, 0, 0, 0],
+                                  [-20, -20, 20, 20, 0, 0, 0]]]],
+                               dtype=np.float32)
+
+    filter_data = np.array([
+        [1., 0., -1.],
+        [2., 0., -2.],
+        [1., 0., -1.]], dtype=np.float32).reshape(1, 1, 3, 3)
+
+    model = runtime.computation(deconvolution, filter_param, output_delta_param)
+    result = model(filter_data, data_batch_data)
+    assert np.allclose(result,
+                       np.array([[[[-20., -20., 40., 40., -20., -20., 0., 0., 0.],
+                                   [-60., -60., 120., 120., -60., -60., 0., 0., 0.],
+                                   [-80., -80., 160., 160., -80., -80., 0., 0., 0.],
+                                   [-80., -80., 160., 160., -80., -80., 0., 0., 0.],
+                                   [-80., -80., 160., 160., -80., -80., 0., 0., 0.],
+                                   [-80., -80., 160., 160., -80., -80., 0., 0., 0.],
+                                   [-80., -80., 160., 160., -80., -80., 0., 0., 0.],
+                                   [-60., -60., 120., 120., -60., -60., 0., 0., 0.],
+                                   [-20., -20., 40., 40., -20., -20., 0., 0., 0.]]]],
+                                dtype=np.float32))

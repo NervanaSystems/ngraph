@@ -43,8 +43,11 @@ TEST(gpu_test, memory_manager_unallocated)
 TEST(gpu_test, memory_manager_allocated)
 {
     runtime::gpu::GPUPrimitiveEmitter emitter;
-    auto allocator = emitter.get_memory_allocator();
-    size_t idx = allocator.reserve_workspace(10);
+    size_t idx;
+    {
+        auto allocator = emitter.get_memory_allocator();
+        idx = allocator.reserve_workspace(10);
+    }
     emitter.allocate_primitive_memory();
     runtime::gpu::memory_primitive& mem_primitive = emitter.get_memory_primitives()[idx];
     EXPECT_NO_THROW(mem_primitive());
@@ -52,10 +55,13 @@ TEST(gpu_test, memory_manager_allocated)
 
 TEST(gpu_test, memory_manager_extract_arguments)
 {
-    runtime::gpu::GPUPrimitiveEmitter emitter;
-    auto allocator = emitter.get_memory_allocator();
     std::vector<float> fp32_args = {2112.0f, 2112.0f};
-    size_t idx = allocator.reserve_argspace(fp32_args.data(), fp32_args.size() * sizeof(float));
+    runtime::gpu::GPUPrimitiveEmitter emitter;
+    size_t idx;
+    {
+        auto allocator = emitter.get_memory_allocator();
+        idx = allocator.reserve_argspace(fp32_args.data(), fp32_args.size() * sizeof(float));
+    }
     emitter.allocate_primitive_memory();
     runtime::gpu::memory_primitive& mem_primitive = emitter.get_memory_primitives()[idx];
     std::vector<float> host(2, 0);
@@ -65,10 +71,12 @@ TEST(gpu_test, memory_manager_extract_arguments)
 
 TEST(gpu_test, memory_manager_argspace_size)
 {
-    runtime::gpu::GPUPrimitiveEmitter emitter;
-    auto allocator = emitter.get_memory_allocator();
     std::vector<float> fp32_args = {2112.0f, 2112.0f};
-    allocator.reserve_argspace(fp32_args.data(), fp32_args.size() * sizeof(float));
+    runtime::gpu::GPUPrimitiveEmitter emitter;
+    {
+        auto allocator = emitter.get_memory_allocator();
+        allocator.reserve_argspace(fp32_args.data(), fp32_args.size() * sizeof(float));
+    }
     emitter.allocate_primitive_memory();
     EXPECT_EQ(emitter.sizeof_device_allocation(), fp32_args.size() * sizeof(float));
 }
