@@ -147,19 +147,8 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
 }
 
 void runtime::gpu::CudaKernelBuilder::get_broadcast_op(codegen::CodeWriter& writer,
-                                                       const std::string& name,
-                                                       const std::array<std::string, 2>& data_types,
                                                        const size_t rank)
 {
-    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
-           << data_types[1] << "* out, "
-           << "int* strides, "
-           << "int* stride_magic, "
-           << "int* stride_shift, "
-           << "int* reduced_strides, "
-           << "float alpha, float beta, "
-           << "size_t nthreads"
-           << ")\n";
     writer.block_begin();
     {
         writer << "const int tid = blockDim.x*blockIdx.x + threadIdx.x;\n";
