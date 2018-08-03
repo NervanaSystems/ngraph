@@ -93,7 +93,7 @@ option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
 
-cmake_dependent_option(NGRAPH_CPU_NO_CODEGEN "Remove codegen from the build" FALSE
+cmake_dependent_option(NGRAPH_DEX_ONLY "Remove codegen from the build" FALSE
                        "NOT NGRAPH_INTELGPU_ENABLE;NOT NGRAPH_GPU_ENABLE;NOT NGRAPH_DISTRIBUTED_ENABLE" FALSE)
 
 #-----------------------------------------------------------------------------------------------
@@ -221,7 +221,7 @@ include(cmake/external_json.cmake)
 include(cmake/external_eigen.cmake)
 include(cmake/external_mkldnn.cmake)
 
-if (NOT NGRAPH_CPU_NO_CODEGEN)
+if (NOT NGRAPH_DEX_ONLY)
     if (NGRAPH_USE_PREBUILT_LLVM OR DEFINED LLVM_TARBALL_URL)
         include(cmake/external_llvm_prebuilt.cmake)
     else()

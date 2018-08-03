@@ -34,7 +34,7 @@
 
 #include <tbb/flow_graph.h>
 
-#if !defined(NGRAPH_CPU_NO_CODEGEN)
+#if !defined(NGRAPH_DEX_ONLY)
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
@@ -174,7 +174,7 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     , m_release_function(release_function)
     , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
     , m_compiled_function(nullptr)
-#if !defined(NGRAPH_CPU_NO_CODEGEN)
+#if !defined(NGRAPH_DEX_ONLY)
     , m_is_compiled(false)
     , m_emit_timing(false)
 #endif
@@ -188,7 +188,7 @@ runtime::cpu::CPU_ExternalFunction::~CPU_ExternalFunction()
 {
 }
 
-#if !defined(NGRAPH_CPU_NO_CODEGEN)
+#if !defined(NGRAPH_DEX_ONLY)
 
 static const string s_output_dir = "cpu_codegen";
 
@@ -1420,7 +1420,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
 shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
     runtime::cpu::CPU_ExternalFunction::make_call_frame()
 {
-#if !defined(NGRAPH_CPU_NO_CODEGEN)
+#if !defined(NGRAPH_DEX_ONLY)
     if (!m_is_compiled && !m_direct_execution)
     {
         compile();
@@ -1448,7 +1448,7 @@ const runtime::cpu::LayoutDescriptorPtrs&
     return result_layout_descriptors;
 }
 
-#if !defined(NGRAPH_CPU_NO_CODEGEN)
+#if !defined(NGRAPH_DEX_ONLY)
 
 void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(
     codegen::CodeWriter& writer,

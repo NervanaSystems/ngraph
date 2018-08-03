@@ -79,7 +79,7 @@ set(SRC
     pass/cpu_workspace_insertion.cpp
 )
 
-if (NOT NGRAPH_CPU_NO_CODEGEN)
+if (NOT NGRAPH_DEX_ONLY)
     set(SRC
         ${SRC}
         cpu_emitter.cpp
@@ -122,8 +122,8 @@ if (NGRAPH_CPU_ENABLE)
 
     add_library(cpu_backend SHARED ${SRC})
     set_target_properties(cpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
-    if (NGRAPH_CPU_NO_CODEGEN)
-        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_CPU_NO_CODEGEN")
+    if (NGRAPH_DEX_ONLY)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
     endif()
 
     if(NGRAPH_DISTRIBUTED_ENABLE)
@@ -135,7 +135,7 @@ if (NGRAPH_CPU_ENABLE)
     endif()
 
     target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libeigen libjson libtbb)
-    if (NOT NGRAPH_CPU_NO_CODEGEN)
+    if (NOT NGRAPH_DEX_ONLY)
         target_link_libraries(cpu_backend PUBLIC codegen)
     endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)

@@ -18,7 +18,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIN_NGRAPH_LIBRARY")
 
 include_directories(ngraph)
 
-if (NOT NGRAPH_CPU_NO_CODEGEN)
+if (NOT NGRAPH_DEX_ONLY)
     add_subdirectory(resource)
 endif()
 

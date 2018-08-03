@@ -26,7 +26,7 @@
 #include <unordered_map>
 #include <vector>
 
-#if !defined(NGRAPH_CPU_NO_CODEGEN)
+#if !defined(NGRAPH_DEX_ONLY)
 
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
@@ -50,7 +50,7 @@ namespace ngraph
             class CPU_Emitter;
             class CPU_CallFrame;
 
-#if !defined(NGRAPH_CPU_NO_CODEGEN)
+#if !defined(NGRAPH_DEX_ONLY)
 
             using OpFunction = std::function<void(CPU_ExternalFunction* external_function,
                                                   codegen::CodeWriter&,
@@ -122,7 +122,7 @@ namespace ngraph
             protected:
                 void build();
 
-#if !defined(NGRAPH_CPU_NO_CODEGEN)
+#if !defined(NGRAPH_DEX_ONLY)
 
                 void compile();
 
@@ -138,7 +138,7 @@ namespace ngraph
                 void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
                                                std::string output_name);
 
-#if !defined(NGRAPH_CPU_NO_CODEGEN)
+#if !defined(NGRAPH_DEX_ONLY)
 
                 void emit_debug_function_entry(codegen::CodeWriter& writer,
                                                Node* node,
@@ -168,7 +168,7 @@ namespace ngraph
                 bool m_use_tbb;
 
                 EntryPoint m_compiled_function;
-#if !defined(NGRAPH_CPU_NO_CODEGEN)
+#if !defined(NGRAPH_DEX_ONLY)
 
                 bool m_is_compiled;
                 std::unique_ptr<codegen::Compiler> m_compiler;
