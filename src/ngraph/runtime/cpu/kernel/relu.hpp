@@ -20,6 +20,7 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 
 #include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
+#include "ngraph/runtime/reference/relu.hpp"
 
 namespace ngraph
 {
@@ -42,6 +43,15 @@ namespace ngraph
                         static_cast<ElementType*>(input0), in_dims);
 
                     out.device(eigen::global_thread_pool_device) = in0.cwiseMax(ElementType(0));
+                }
+
+                template <typename ElementType>
+                void relu_backprop(void* arg, void* delta_arg, void* out, size_t count)
+                {
+                    reference::relu_backprop<ElementType>(static_cast<ElementType*>(arg),
+                                                          static_cast<ElementType*>(delta_arg),
+                                                          static_cast<ElementType*>(out),
+                                                          count);
                 }
             }
         }
