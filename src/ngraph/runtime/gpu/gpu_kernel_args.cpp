@@ -40,8 +40,7 @@ const std::unordered_map<std::type_index, std::string> runtime::gpu::GPUKernelAr
     {TI(long long), "long long"},
     {TI(unsigned int), "unsigned int"},
     {TI(unsigned long), "unsigned long"},
-    {TI(unsigned long long), "unsigned long long"}
-};
+    {TI(unsigned long long), "unsigned long long"}};
 
 runtime::gpu::GPUKernelArgs::GPUKernelArgs(const std::shared_ptr<GPUHostParameters>& params)
     : m_signature_generated(false)

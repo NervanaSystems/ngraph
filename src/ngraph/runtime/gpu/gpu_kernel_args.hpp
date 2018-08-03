@@ -71,14 +71,18 @@ namespace ngraph
                         {
                             if (i >= num_args)
                             {
-                                throw std::runtime_error("Too few kernel arguments supplied for resolving placeholder parameters.");
+                                throw std::runtime_error(
+                                    "Too few kernel arguments supplied for resolving placeholder "
+                                    "parameters.");
                             }
                             m_argument_list[n] = arg_list[i++];
                         }
                     }
                     if (i != num_args)
                     {
-                        throw std::runtime_error("Too many kernel arguments supplied for resolving placeholder parameters.");
+                        throw std::runtime_error(
+                            "Too many kernel arguments supplied for resolving placeholder "
+                            "parameters.");
                     }
                     return m_argument_list.data();
                 }
