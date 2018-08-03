@@ -32,6 +32,7 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/relu.hpp"
@@ -1135,6 +1136,23 @@ namespace ngraph
                 }
 
                 template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::LRN)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        auto input_layout =
+                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node.get(), 0);
+                        vector<memory::format> prim_output_formats;
+                        prim_output_formats.push_back(input_layout);
+                        set_output_layouts(node, prim_output_formats);
+                    }
+                    else
+                    {
+                        set_default_layouts(external_function, node);
+                    }
+                }
+
+                template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Sigmoid)
                 {
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
@@ -1525,6 +1543,7 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormBackprop>},
     {TI(ngraph::op::GetOutputElement),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::GetOutputElement>},
+    {TI(ngraph::op::LRN), &runtime::cpu::pass::CPULayout::layout<ngraph::op::LRN>},
     {TI(ngraph::op::Relu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Relu>},
     {TI(ngraph::op::Result), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Result>},
     {TI(ngraph::op::ReluBackprop),
