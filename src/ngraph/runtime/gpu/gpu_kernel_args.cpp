@@ -69,7 +69,7 @@ void runtime::gpu::GPUKernelArgs::validate()
     }
 }
 
-std::string runtime::gpu::GPUKernelArgs::add_to_signature(const std::string& type, const std::string& name)
+void runtime::gpu::GPUKernelArgs::add_to_signature(const std::string& type, const std::string& name)
 {
     if (m_input_signature.str() == "(")
     {

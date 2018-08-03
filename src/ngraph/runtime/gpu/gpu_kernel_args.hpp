@@ -48,14 +48,14 @@ namespace ngraph
                 typename std::enable_if<!is_container<T>::value, GPUKernelArgs&>::type
                     add(const std::string& name, const T& arg)
                 {
-                    add_argument(name, arg);
+                    return add_argument(name, arg);
                 }
 
                 template <typename T>
                 typename std::enable_if<is_container<T>::value, GPUKernelArgs&>::type
                     add(const std::string& name, const T& arg)
                 {
-                    add_arguments(name, arg);
+                    return add_arguments(name, arg);
                 }
 
                 template <typename... Args>
@@ -111,7 +111,7 @@ namespace ngraph
                 }
 
                 void validate();
-                std::string add_to_signature(const std::string& type, const std::string& name);
+                void add_to_signature(const std::string& type, const std::string& name);
 
             private:
                 bool m_signature_generated;
