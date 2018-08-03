@@ -46,6 +46,7 @@
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/util.hpp"
 
@@ -185,6 +186,65 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
 
             do_equal_propagation(topology, input_name, output_name);
+        }
+        else if ("Slice" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const string& input_name = op->get_inputs().begin()->get_tensor().get_name();
+            const Shape& input_shape = op->get_inputs().begin()->get_shape();
+            const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+            const Shape& output_shape = op->get_outputs().begin()->get_shape();
+            const element::Type& output_type =
+                op->get_outputs().begin()->get_tensor().get_element_type();
+            const shared_ptr<op::Slice> elem = static_pointer_cast<op::Slice>(op);
+            const Coordinate& lower_bounds = elem->get_lower_bounds();
+            const Coordinate& upper_bounds = elem->get_upper_bounds();
+            const Strides& strides = elem->get_strides();
+
+            if (input_shape.empty() || output_shape.empty() || lower_bounds.empty() ||
+                upper_bounds.empty() || strides.empty())
+            {
+                do_equal_propagation(topology, input_name, output_name);
+            }
+            else
+            {
+                do_slice_operation(topology,
+                                   input_name,
+                                   input_shape,
+                                   output_name,
+                                   output_shape,
+                                   output_type,
+                                   lower_bounds,
+                                   upper_bounds,
+                                   strides);
+            }
+        }
+        else if ("Select" == op->description())
+        {
+            arguments_check(op, 3, 1);
+
+            const string& input0_name = op->get_inputs().at(0).get_tensor().get_name();
+            const Shape& input0_shape = op->get_inputs().at(0).get_shape();
+            const string& input1_name = op->get_inputs().at(1).get_tensor().get_name();
+            const Shape& input1_shape = op->get_inputs().at(1).get_shape();
+            const string& input2_name = op->get_inputs().at(2).get_tensor().get_name();
+            const Shape& input2_shape = op->get_inputs().at(2).get_shape();
+            const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+            const Shape& output_shape = op->get_outputs().begin()->get_shape();
+            const element::Type& output_type =
+                op->get_outputs().begin()->get_tensor().get_element_type();
+
+            do_select_operation(topology,
+                                input0_name,
+                                input0_shape,
+                                input1_name,
+                                input1_shape,
+                                input2_name,
+                                input2_shape,
+                                output_name,
+                                output_shape,
+                                output_type);
         }
         else if ("Add" == op->description())
         {
@@ -473,34 +533,57 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             }
 
             const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+            const Shape& output_shape = op->get_outputs().begin()->get_shape();
+            const element::Type& output_type =
+                op->get_outputs().begin()->get_tensor().get_element_type();
             const string& gamma_name = op->get_inputs().at(0).get_tensor().get_name();
+            const Shape& gamma_shape = op->get_inputs().at(0).get_shape();
             const string& beta_name = op->get_inputs().at(1).get_tensor().get_name();
             const string& input_name = op->get_inputs().at(2).get_tensor().get_name();
             const Shape& input_shape = op->get_inputs().at(2).get_shape();
+            string mean_name;
+            string variance_name;
 
-            if (op->get_outputs().size() == 1)
+            if (op->get_outputs().size() == 3)
             {
-                arguments_check(op, 5, 1);
+                arguments_check(op, 3, 3);
 
-                const string& mean_name = op->get_inputs().at(3).get_tensor().get_name();
-                const string& variance_name = op->get_inputs().at(4).get_tensor().get_name();
+                mean_name = op->get_outputs().at(1).get_tensor().get_name();
+                variance_name = op->get_outputs().at(2).get_tensor().get_name();
+
+                do_create_mean(
+                    topology, mean_name, gamma_shape, output_type, input_name, input_shape);
+                do_create_variance(topology,
+                                   variance_name,
+                                   gamma_shape,
+                                   output_type,
+                                   input_name,
+                                   input_shape,
+                                   mean_name);
+            }
+
+            if (op->get_outputs().size() == 1 || op->get_outputs().size() == 3)
+            {
+                if (mean_name.empty() || variance_name.empty())
+                {
+                    arguments_check(op, 5, 1);
+
+                    mean_name = op->get_inputs().at(3).get_tensor().get_name();
+                    variance_name = op->get_inputs().at(4).get_tensor().get_name();
+                }
 
                 do_batch_norm_operation(topology,
                                         output_name,
+                                        output_shape,
+                                        output_type,
                                         eps,
                                         input_name,
                                         input_shape,
                                         gamma_name,
+                                        gamma_shape,
                                         beta_name,
                                         mean_name,
                                         variance_name);
-            }
-            else if (op->get_outputs().size() == 3)
-            {
-                arguments_check(op, 3, 3);
-
-                do_batch_norm_operation(
-                    topology, output_name, eps, input_name, input_shape, gamma_name, beta_name);
             }
             else
             {
