@@ -144,14 +144,16 @@ namespace ngraph
                                                            std::string i_stride_shift,
                                                            std::string i_reduced_strides,
                                                            std::string o_coordinates,
-                                                           size_t rank);
+                                                           size_t rank,
+                                                           bool register_arguments = false);
                 static void coordinate_transform_to_multi_d(codegen::CodeWriter& writer,
                                                             std::string i_strides,
                                                             std::string i_stride_magic,
                                                             std::string i_stride_shift,
                                                             std::string i_coord_product,
                                                             std::string o_coordinates,
-                                                            size_t rank);
+                                                            size_t rank,
+                                                            bool register_arguments = false);
             };
         }
     }
