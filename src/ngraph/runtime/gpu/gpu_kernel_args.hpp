@@ -58,18 +58,33 @@ namespace ngraph
                     add_arguments(name, arg);
                 }
 
-                std::string get_input_signature();
-
                 template <typename... Args>
                 void** get_argument_list(Args&&... args)
                 {
+                    size_t num_args = sizeof...(args);
                     void* arg_list[] = {args...};
-                    for (size_t i = 0; i < sizeof...(args); i++)
+
+                    size_t i = 0;
+                    for (size_t n = 0; n < m_argument_list.size(); n++)
                     {
-                        m_argument_list[i] = arg_list[i];
+                        if (m_placeholder_positions[n])
+                        {
+                            if (i >= num_args)
+                            {
+                                throw std::runtime_error("Too few kernel arguments supplied for resolving placeholder parameters.");
+                            }
+                            m_argument_list[n] = arg_list[i++];
+                        }
+                    }
+                    if (i != num_args)
+                    {
+                        throw std::runtime_error("Too many kernel arguments supplied for resolving placeholder parameters.");
                     }
                     return m_argument_list.data();
                 }
+
+                std::string get_input_signature();
+
             private:
                 template <typename T>
                 GPUKernelArgs& add_argument(std::string name, const T& arg)
@@ -77,6 +92,7 @@ namespace ngraph
                     validate();
                     void* host_arg = m_host_parameters->cache(arg);
                     m_argument_list.push_back(host_arg);
+                    m_placeholder_positions.push_back(false);
                     add_to_signature(type_names.at(std::type_index(typeid(T))), name);
                     return *this;
                 }
@@ -89,6 +105,7 @@ namespace ngraph
                     {
                         void* host_arg = m_host_parameters->cache(arg);
                         m_argument_list.push_back(host_arg);
+                        m_placeholder_positions.push_back(false);
                         add_to_signature(type_names.at(std::type_index(typeid(typename T::value_type))), name);
                     }
                     return *this;
@@ -100,6 +117,7 @@ namespace ngraph
             private:
                 bool m_signature_generated;
                 std::vector<void*> m_argument_list;
+                std::vector<bool> m_placeholder_positions;
                 std::stringstream m_input_signature;
                 std::shared_ptr<GPUHostParameters> m_host_parameters;
                 static const std::unordered_map<std::type_index, std::string> type_names;

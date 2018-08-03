@@ -46,6 +46,7 @@ runtime::gpu::GPUKernelArgs::GPUKernelArgs(const GPUKernelArgs& args)
 {
     m_signature_generated = args.m_signature_generated;
     m_argument_list = args.m_argument_list;
+    m_placeholder_positions = args.m_placeholder_positions;
     m_input_signature << args.m_input_signature.str();
     m_host_parameters = args.m_host_parameters;
 }
@@ -77,6 +78,7 @@ runtime::gpu::GPUKernelArgs& runtime::gpu::GPUKernelArgs::add_placeholder(std::s
 {
     validate();
     m_argument_list.push_back(nullptr);
+    m_placeholder_positions.push_back(true);
     add_to_signature(type, name);
     return *this;
 }
