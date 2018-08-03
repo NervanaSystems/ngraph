@@ -60,7 +60,7 @@ void runtime::gpu::GPUKernelArgs::validate()
     }
 }
 
-std::string runtime::gpu::GPUKernelArgs::add_to_signature(std::string name, std::string type)
+std::string runtime::gpu::GPUKernelArgs::add_to_signature(std::string type, std::string name)
 {
     if (m_input_signature.str() == "(")
     {
@@ -72,12 +72,12 @@ std::string runtime::gpu::GPUKernelArgs::add_to_signature(std::string name, std:
     }
 }
 
-runtime::gpu::GPUKernelArgs& runtime::gpu::GPUKernelArgs::add_placeholder(std::string name,
-                                                                          std::string type)
+runtime::gpu::GPUKernelArgs& runtime::gpu::GPUKernelArgs::add_placeholder(std::string type,
+                                                                          std::string name)
 {
     validate();
     m_argument_list.push_back(nullptr);
-    add_to_signature(name, type);
+    add_to_signature(type, name);
     return *this;
 }
 
