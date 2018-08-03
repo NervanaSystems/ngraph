@@ -978,17 +978,19 @@ using namespace ngraph::runtime;
 void runtime::cpu::CPU_ExternalFunction::propagate_in_place_input(
     ngraph::descriptor::Output* output, std::string input_name)
 {
-    auto it = output;
-    auto propagate_further = false;
-    do
+    std::deque<ngraph::descriptor::Output*> stack;
+    stack.push_front(output);
+
+    while (stack.size() > 0)
     {
-        propagate_further = false;
+        ngraph::descriptor::Output* it = stack.front();
+        stack.pop_front();
         for (auto input : it->get_inputs())
         {
             auto c_op = std::dynamic_pointer_cast<ngraph::op::Op>(input->get_node());
             if (!c_op || c_op->is_output())
             {
-                break;
+                continue;
             }
 
             if (auto op_annotations = c_op->get_op_annotations())
@@ -1001,13 +1003,14 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_input(
                         auto& output_tensor = c_op->get_outputs().at(output_index).get_tensor();
 
                         m_variable_name_map[output_tensor.get_name()] = input_name;
-                        it = &c_op->get_outputs().at(output_index);
-                        propagate_further = true;
+                        NGRAPH_DEBUG << "CPU codegen: Forwarding " << input_name << " through "
+                                     << output_tensor.get_name();
+                        stack.push_back(&c_op->get_outputs().at(output_index));
                     }
                 }
             }
         }
-    } while (propagate_further);
+    }
 }
 
 void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(

@@ -1143,6 +1143,22 @@ namespace ngraph
                     }
                     else
                     {
+                        // Shape change only, tensor in native layout can be
+                        // forwarded to output
+                        auto op_annotations = reshape->get_op_annotations();
+                        if (op_annotations)
+                        {
+                            // pass-through
+                            op_annotations->add_in_place_oi_pair({0, 0, false});
+                        }
+                        else
+                        {
+                            op_annotations =
+                                std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                            // pass-through
+                            op_annotations->add_in_place_oi_pair({0, 0, false});
+                            reshape->set_op_annotations(op_annotations);
+                        }
                         set_native_layouts(external_function, node);
                     }
                 }
