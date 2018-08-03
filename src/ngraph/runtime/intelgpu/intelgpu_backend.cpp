@@ -533,34 +533,57 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             }
 
             const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+            const Shape& output_shape = op->get_outputs().begin()->get_shape();
+            const element::Type& output_type =
+                op->get_outputs().begin()->get_tensor().get_element_type();
             const string& gamma_name = op->get_inputs().at(0).get_tensor().get_name();
+            const Shape& gamma_shape = op->get_inputs().at(0).get_shape();
             const string& beta_name = op->get_inputs().at(1).get_tensor().get_name();
             const string& input_name = op->get_inputs().at(2).get_tensor().get_name();
             const Shape& input_shape = op->get_inputs().at(2).get_shape();
+            string mean_name;
+            string variance_name;
 
-            if (op->get_outputs().size() == 1)
+            if (op->get_outputs().size() == 3)
             {
-                arguments_check(op, 5, 1);
+                arguments_check(op, 3, 3);
 
-                const string& mean_name = op->get_inputs().at(3).get_tensor().get_name();
-                const string& variance_name = op->get_inputs().at(4).get_tensor().get_name();
+                mean_name = op->get_outputs().at(1).get_tensor().get_name();
+                variance_name = op->get_outputs().at(2).get_tensor().get_name();
+
+                do_create_mean(
+                    topology, mean_name, gamma_shape, output_type, input_name, input_shape);
+                do_create_variance(topology,
+                                   variance_name,
+                                   gamma_shape,
+                                   output_type,
+                                   input_name,
+                                   input_shape,
+                                   mean_name);
+            }
+
+            if (op->get_outputs().size() == 1 || op->get_outputs().size() == 3)
+            {
+                if (mean_name.empty() || variance_name.empty())
+                {
+                    arguments_check(op, 5, 1);
+
+                    mean_name = op->get_inputs().at(3).get_tensor().get_name();
+                    variance_name = op->get_inputs().at(4).get_tensor().get_name();
+                }
 
                 do_batch_norm_operation(topology,
                                         output_name,
+                                        output_shape,
+                                        output_type,
                                         eps,
                                         input_name,
                                         input_shape,
                                         gamma_name,
+                                        gamma_shape,
                                         beta_name,
                                         mean_name,
                                         variance_name);
-            }
-            else if (op->get_outputs().size() == 3)
-            {
-                arguments_check(op, 3, 3);
-
-                do_batch_norm_operation(
-                    topology, output_name, eps, input_name, input_shape, gamma_name, beta_name);
             }
             else
             {
