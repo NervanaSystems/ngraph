@@ -108,7 +108,85 @@ namespace ngraph
                 }
             }
 
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::AvgPoolBackprop)
+            {
+                auto apb = static_cast<const ngraph::op::AvgPoolBackprop*>(node);
+
+                auto& functors = external_function->get_functors();
+                auto& tensor_data = external_function->get_tensor_data();
+
+                auto delta_shape = args[0].get_shape();
+                auto out_shape = out[0].get_shape();
+
+                auto& delta_tensor = tensor_data[args[0].get_name()];
+                auto& out_tensor = tensor_data[out[0].get_name()];
+
+                auto window_shape = apb->get_window_shape();
+                auto window_movement_strides = apb->get_window_movement_strides();
+                auto padding_below = apb->get_padding_below();
+                auto padding_above = apb->get_padding_above();
+                auto include_padding_in_avg_computation =
+                    apb->get_include_padding_in_avg_computation();
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto diff_dst_desc = mkldnn_emitter->build_memory_descriptor(
+                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
+                    auto diff_src_desc = mkldnn_emitter->build_memory_descriptor(
+                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
+
+                    size_t avg_pool_index = mkldnn_emitter->build_pooling_backward(
+                        (apb->get_include_padding_in_avg_computation()
+                             ? mkldnn::algorithm::pooling_avg_include_padding
+                             : mkldnn::algorithm::pooling_avg_exclude_padding),
+                        diff_dst_desc,
+                        diff_src_desc,
+                        apb->get_window_movement_strides(),
+                        apb->get_window_shape(),
+                        apb->get_padding_below(),
+                        apb->get_padding_above());
+
+                    auto& deps = mkldnn_emitter->get_primitive_deps(avg_pool_index);
+                    auto functor = [&, avg_pool_index](CPURuntimeContext* ctx) {
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], delta_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, avg_pool_index);
+                    };
+                    functors.emplace_back(functor);
+                }
+                else
+                {
+                    std::function<decltype(runtime::cpu::kernel::avg_pool_backprop<float>)> kernel;
+
+                    SELECT_KERNEL(
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::avg_pool_backprop);
+
+                    auto functor = [&,
+                                    kernel,
+                                    delta_shape,
+                                    out_shape,
+                                    window_shape,
+                                    window_movement_strides,
+                                    padding_below,
+                                    padding_above,
+                                    include_padding_in_avg_computation](CPURuntimeContext* ctx) {
+                        kernel(delta_tensor,
+                               out_tensor,
+                               delta_shape,
+                               out_shape,
+                               window_shape,
+                               window_movement_strides,
+                               padding_below,
+                               padding_above,
+                               include_padding_in_avg_computation);
+                    };
+                    functors.emplace_back(functor);
+                }
+            }
             REGISTER_OP_BUILDER(AvgPool);
+            REGISTER_OP_BUILDER(AvgPoolBackprop);
         }
     }
 }
