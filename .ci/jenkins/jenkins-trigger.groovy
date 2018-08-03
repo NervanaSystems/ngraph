@@ -18,6 +18,16 @@ TIMEOUTTIME = 3600
 // Constants
 JENKINS_DIR="."
 
+// This groovy script is specifically designed as a Jenkins multi-branch
+// pipeline trigger.  This requires some of the git checkout commands to
+// be different ("checkout scm") than regular pipeline scripts (which use
+// checkout(...) with explicit parameters).  Since some of the ngraph-unittest
+// are dynamic functions shared by multiple jobs, we need a way to switch
+// between the two types of checkouts.  Nick and I decided to use an optional
+// environment variable -- if this environment variable exists when
+// runNgraphBuild() runs, then "checkout scm" is used in order to be compatible
+// with multi-branch pipeline checkouts.
+env.MB_PIPELINE_CHECKOUT = true
 
 node("bdw && nogpu") {
 
