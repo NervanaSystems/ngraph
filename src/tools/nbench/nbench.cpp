@@ -192,8 +192,9 @@ OPTIONS
                      << " iterations.\n";
                 run_benchmark(f, backend, iterations, timing_detail);
             }
-            catch (...)
+            catch (exception e)
             {
+                cout << "Exception caught on '" << m << "'\n" << e.what() << endl;
             }
         }
     }
