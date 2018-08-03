@@ -44,13 +44,18 @@ namespace ngraph
                     throw ngraph_error(
                         "Lstm op doesnt have the required number of inputs to emit MKLDNN kernel");
                 }
-                const int src_sequence_length_max = lstm_node->get_src_sequence_length();
-                const int direction = lstm_node->get_direction();
-                const int num_fused_layers = lstm_node->get_num_fused_layers();
-                const int lstm_cell_n_gates = lstm_node->get_gates_per_cell();
-                const int lstm_cell_n_states = lstm_node->get_num_cell_states();
-                const int feature_size = lstm_node->get_src_iter_feature_size();
-                const int batch = lstm_node->get_batch_size();
+                auto src_sequence_length_max =
+                    static_cast<unsigned long>(lstm_node->get_src_sequence_length());
+                auto direction = static_cast<unsigned long>(lstm_node->get_direction());
+                auto num_fused_layers =
+                    static_cast<unsigned long>(lstm_node->get_num_fused_layers());
+                auto feature_size =
+                    static_cast<unsigned long>(lstm_node->get_src_iter_feature_size());
+                auto batch = static_cast<unsigned long>(lstm_node->get_batch_size());
+                auto lstm_cell_n_gates =
+                    static_cast<unsigned long>(lstm_node->get_gates_per_cell());
+                auto lstm_cell_n_states =
+                    static_cast<unsigned long>(lstm_node->get_num_cell_states());
 
                 if (out[0].get_shape().size() == 2 && (out[0].get_shape()[1] != feature_size))
                 {
@@ -77,48 +82,42 @@ namespace ngraph
                 auto& dst_layer_tensor = tensor_data[out[0].get_name()];
                 auto& dst_iter_tensor = tensor_data[out[1].get_name()];
 
-                mkldnn::memory::dims src_layer_tz = {
-                    src_sequence_length_max, batch, lstm_node->get_src_layer_feature_size()};
-                mkldnn::memory::dims src_iter_tz = {
+                Shape src_layer_tz{
+                    src_sequence_length_max,
+                    batch,
+                    static_cast<unsigned long>(lstm_node->get_src_layer_feature_size())};
+                Shape src_iter_tz{
                     num_fused_layers, direction, lstm_cell_n_states, batch, feature_size};
-                mkldnn::memory::dims weights_layer_tz = {num_fused_layers,
-                                                         direction,
-                                                         lstm_node->get_src_layer_feature_size(),
-                                                         lstm_cell_n_gates,
-                                                         feature_size};
-                mkldnn::memory::dims weights_iter_tz = {
+                Shape wei_layer_tz{
+                    num_fused_layers,
+                    direction,
+                    static_cast<unsigned long>(lstm_node->get_src_layer_feature_size()),
+                    lstm_cell_n_gates,
+                    feature_size};
+                Shape wei_iter_tz{
                     num_fused_layers, direction, feature_size, lstm_cell_n_gates, feature_size};
-                mkldnn::memory::dims bias_tz = {
-                    num_fused_layers, direction, lstm_cell_n_gates, feature_size};
-                mkldnn::memory::dims dst_layer_tz = {src_sequence_length_max, batch, feature_size};
-                mkldnn::memory::dims dst_iter_tz = {
+                Shape bias_tz{num_fused_layers, direction, lstm_cell_n_gates, feature_size};
+                Shape dst_layer_tz{src_sequence_length_max, batch, feature_size};
+                Shape dst_iter_tz{
                     num_fused_layers, direction, lstm_cell_n_states, batch, feature_size};
-
-                // We create the memory descriptors used by the user
-                auto src_layer_md = mkldnn::memory::desc(
-                    {src_layer_tz}, mkldnn::memory::data_type::f32, mkldnn::memory::format::tnc);
-
-                auto src_iter_md = mkldnn::memory::desc(
-                    {src_iter_tz}, mkldnn::memory::data_type::f32, mkldnn::memory::format::ldsnc);
-
-                auto wei_layer_md = mkldnn::memory::desc({weights_layer_tz},
-                                                         mkldnn::memory::data_type::f32,
-                                                         mkldnn::memory::format::ldigo);
-
-                auto wei_iter_md = mkldnn::memory::desc({weights_iter_tz},
-                                                        mkldnn::memory::data_type::f32,
-                                                        mkldnn::memory::format::ldigo);
-
-                auto bias_md = mkldnn::memory::desc(
-                    {bias_tz}, mkldnn::memory::data_type::f32, mkldnn::memory::format::ldgo);
-
-                auto dst_layer_md = mkldnn::memory::desc(
-                    {dst_layer_tz}, mkldnn::memory::data_type::f32, mkldnn::memory::format::tnc);
-
-                auto dst_iter_md = mkldnn::memory::desc(
-                    {dst_iter_tz}, mkldnn::memory::data_type::f32, mkldnn::memory::format::ldsnc);
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                // We create the memory descriptors used by the user
+                auto src_layer_md = mkldnn_emitter->build_memory_descriptor(
+                    src_layer_tz, args[0].get_element_type(), mkldnn::memory::format::tnc);
+                auto src_iter_md = mkldnn_emitter->build_memory_descriptor(
+                    src_iter_tz, args[1].get_element_type(), mkldnn::memory::format::ldsnc);
+                auto wei_layer_md = mkldnn_emitter->build_memory_descriptor(
+                    wei_layer_tz, args[2].get_element_type(), mkldnn::memory::format::ldigo);
+                auto wei_iter_md = mkldnn_emitter->build_memory_descriptor(
+                    wei_iter_tz, args[3].get_element_type(), mkldnn::memory::format::ldigo);
+                auto bias_md = mkldnn_emitter->build_memory_descriptor(
+                    bias_tz, args[4].get_element_type(), mkldnn::memory::format::ldgo);
+                auto dst_layer_md = mkldnn_emitter->build_memory_descriptor(
+                    dst_layer_tz, out[0].get_element_type(), mkldnn::memory::format::tnc);
+                auto dst_iter_md = mkldnn_emitter->build_memory_descriptor(
+                    dst_iter_tz, out[1].get_element_type(), mkldnn::memory::format::ldsnc);
+
                 auto lstm_index = mkldnn_emitter->build_rnn_forward(src_layer_md,
                                                                     src_iter_md,
                                                                     wei_layer_md,
