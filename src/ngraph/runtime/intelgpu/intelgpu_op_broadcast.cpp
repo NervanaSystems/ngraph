@@ -100,7 +100,8 @@ void runtime::intelgpu::do_bcast_sum_operation_scalar(cldnn::topology& topology,
                                                 function_name,
                                                 parameters_1inp_1out,
                                                 string("-DCOUNT=" + to_string(input_count)),
-                                                layout);
+                                                layout,
+                                                {1});
     topology.add(op_scalar);
 }
 
@@ -171,6 +172,7 @@ void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
                                                    function_name,
                                                    parameters_1inp_1out,
                                                    "",
-                                                   layout);
+                                                   layout,
+                                                   {1});
     topology.add(op_bcast_sum);
 }
