@@ -14,7 +14,11 @@
 * limitations under the License.
 *******************************************************************************/
 
+#ifdef WIN32
+#include <windows.h>
+#else
 #include <dlfcn.h>
+#endif
 #include <sstream>
 
 #include "ngraph/file_util.hpp"
@@ -25,6 +29,16 @@
 using namespace std;
 using namespace ngraph;
 
+#ifdef WIN32
+#define OPEN_LIBRARY(a, b) LoadLibrary(a)
+#define CLOSE_LIBRARY(a) FreeLibrary(a)
+#define DLSYM(a, b) GetProcAddress(a, b)
+#else
+// #define OPEN_LIBRARY(a, b) dlopen(a, b)
+#define CLOSE_LIBRARY(a) dlclose(a)
+#define DLSYM(a, b) dlsym(a, b)
+#endif
+
 runtime::Backend::~Backend()
 {
 }
@@ -32,16 +46,20 @@ runtime::Backend::~Backend()
 // This doodad finds the full path of the containing shared library
 static string find_my_file()
 {
+#ifdef WIN32
+    return ".";
+#else
     Dl_info dl_info;
     dladdr(reinterpret_cast<void*>(find_my_file), &dl_info);
     return dl_info.dli_fname;
+#endif
 }
 
-void* runtime::Backend::open_shared_library(string type)
+DL_HANDLE runtime::Backend::open_shared_library(string type)
 {
     string ext = SHARED_LIB_EXT;
 
-    void* handle = nullptr;
+    DL_HANDLE handle;
 
     // strip off attributes, IE:CPU becomes IE
     auto colon = type.find(":");
@@ -53,7 +71,11 @@ void* runtime::Backend::open_shared_library(string type)
     string library_name = "lib" + to_lower(type) + "_backend" + string(SHARED_LIB_EXT);
     string my_directory = file_util::get_directory(find_my_file());
     string library_path = file_util::path_join(my_directory, library_name);
+#ifdef WIN32
+    handle = LoadLibrary(library_path.c_str());
+#else
     handle = dlopen(library_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
+#endif
 
     return handle;
 }
@@ -61,7 +83,7 @@ void* runtime::Backend::open_shared_library(string type)
 shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
 {
     shared_ptr<runtime::Backend> rc;
-    void* handle = open_shared_library(type);
+    DL_HANDLE handle = open_shared_library(type);
     if (!handle)
     {
         throw runtime_error("Backend '" + type + "' not found");
@@ -69,34 +91,34 @@ shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
     else
     {
         function<const char*()> get_ngraph_version_string =
-            reinterpret_cast<const char* (*)()>(dlsym(handle, "get_ngraph_version_string"));
+            reinterpret_cast<const char* (*)()>(DLSYM(handle, "get_ngraph_version_string"));
         if (!get_ngraph_version_string)
         {
-            dlclose(handle);
+            CLOSE_LIBRARY(handle);
             throw runtime_error("Backend '" + type +
                                 "' does not implement get_ngraph_version_string");
         }
 
         function<runtime::Backend*(const char*)> new_backend =
-            reinterpret_cast<runtime::Backend* (*)(const char*)>(dlsym(handle, "new_backend"));
+            reinterpret_cast<runtime::Backend* (*)(const char*)>(DLSYM(handle, "new_backend"));
         if (!new_backend)
         {
-            dlclose(handle);
+            CLOSE_LIBRARY(handle);
             throw runtime_error("Backend '" + type + "' does not implement new_backend");
         }
 
         function<void(runtime::Backend*)> delete_backend =
-            reinterpret_cast<void (*)(runtime::Backend*)>(dlsym(handle, "delete_backend"));
+            reinterpret_cast<void (*)(runtime::Backend*)>(DLSYM(handle, "delete_backend"));
         if (!delete_backend)
         {
-            dlclose(handle);
+            CLOSE_LIBRARY(handle);
             throw runtime_error("Backend '" + type + "' does not implement delete_backend");
         }
 
         runtime::Backend* backend = new_backend(type.c_str());
         rc = shared_ptr<runtime::Backend>(backend, [=](runtime::Backend* b) {
             delete_backend(b);
-            // dlclose(handle);
+            // CLOSE_LIBRARY(handle);
         });
     }
     return rc;
@@ -113,14 +135,19 @@ map<string, string> runtime::Backend::get_registered_device_map()
         string backend_name;
         if (is_backend_name(name, backend_name))
         {
-            auto handle = dlopen(file.c_str(), RTLD_LAZY | RTLD_LOCAL);
+            DL_HANDLE handle;
+#ifdef WIN32
+            handle = LoadLibrary(file.c_str());
+#else
+            handle = dlopen(file.c_str(), RTLD_LAZY | RTLD_LOCAL);
+#endif
             if (handle)
             {
-                if (dlsym(handle, "new_backend") && dlsym(handle, "delete_backend"))
+                if (DLSYM(handle, "new_backend") && DLSYM(handle, "delete_backend"))
                 {
                     function<const char*()> get_ngraph_version_string =
                         reinterpret_cast<const char* (*)()>(
-                            dlsym(handle, "get_ngraph_version_string"));
+                            DLSYM(handle, "get_ngraph_version_string"));
                     if (get_ngraph_version_string &&
                         get_ngraph_version_string() == string(NGRAPH_VERSION))
                     {
@@ -128,7 +155,7 @@ map<string, string> runtime::Backend::get_registered_device_map()
                     }
                 }
 
-                dlclose(handle);
+                CLOSE_LIBRARY(handle);
             }
         }
     };
