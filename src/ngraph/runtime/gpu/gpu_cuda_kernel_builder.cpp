@@ -75,14 +75,14 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_divide_op(codegen::CodeWriter&
             size_t i = 0;
             for (; i < rank - 1; i++)
             {
-                if(axes_flag[i] == 1)
+                if(axes_flag[i] != 1)
                 {
                     writer << "input1_idx += (input0_idx / input0_strides[" << i << "]) * input1_strides["
                         << i << "];\n";
                 }
                 writer << "input0_idx %= input0_strides[" << i << "];\n";
             }
-            if(axes_flag[i] == 1)
+            if(axes_flag[i] != 1)
             {
                 writer << "input1_idx += (input0_idx / input0_strides[" << i << "]) * input1_strides[" << i
                     << "];\n";
