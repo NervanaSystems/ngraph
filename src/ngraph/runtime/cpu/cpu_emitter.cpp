@@ -234,17 +234,17 @@ namespace ngraph
 #endif
 
             static void emitCblasSgemmBatch(codegen::CodeWriter& writer,
-                                     const Shape& shape_a,
-                                     const Shape& shape_b,
-                                     const Shape& shape_c,
-                                     bool transpose_a,
-                                     bool transpose_b,
-                                     const std::string& data_a,
-                                     const std::string& data_b,
-                                     const std::string& data_c,
-                                     const std::string& alpha,
-                                     const std::string& beta,
-                                     size_t group_size)
+                                            const Shape& shape_a,
+                                            const Shape& shape_b,
+                                            const Shape& shape_c,
+                                            bool transpose_a,
+                                            bool transpose_b,
+                                            const std::string& data_a,
+                                            const std::string& data_b,
+                                            const std::string& data_c,
+                                            const std::string& alpha,
+                                            const std::string& beta,
+                                            size_t group_size)
             {
                 static const char* cblas_transpose = "cblas::Transpose::Transpose";
                 static const char* cblas_no_transpose = "cblas::Transpose::None";
