@@ -628,6 +628,33 @@ size_t MKLDNNEmitter::build_reorder(const mkldnn::memory::desc& input_desc,
     return primitive_index;
 }
 
+size_t MKLDNNEmitter::build_lrn_forward(const mkldnn::memory::desc& input_desc,
+                                        const mkldnn::memory::desc& result_desc,
+                                        float alpha,
+                                        float beta,
+                                        float bias,
+                                        int nsize)
+{
+    size_t input_index = build_memory_primitive(input_desc);
+    size_t result_index = build_memory_primitive(result_desc);
+
+    auto lrn_desc = mkldnn::lrn_forward::desc(mkldnn::prop_kind::forward_scoring,
+                                              mkldnn::algorithm::lrn_across_channels,
+                                              input_desc,
+                                              nsize,
+                                              alpha,
+                                              beta,
+                                              bias);
+    auto lrn_prim_desc =
+        mkldnn::lrn_forward::primitive_desc(lrn_desc, mkldnn_utils::global_cpu_engine);
+
+    size_t primitive_index = insert_primitive(new mkldnn::lrn_forward(
+        lrn_prim_desc, *m_mkldnn_primitives[input_index], *m_mkldnn_primitives[result_index]));
+
+    m_primitive_deps[primitive_index] = {input_index, result_index};
+    return primitive_index;
+}
+
 size_t MKLDNNEmitter::build_relu_forward(const mkldnn::memory::desc& input_desc,
                                          const mkldnn::memory::desc& result_desc)
 {

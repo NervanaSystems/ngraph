@@ -47,8 +47,8 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
             {
                 for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                 {
-                    auto output = &node->get_outputs().at(oi_pair.first).get_tensor();
-                    auto input = &node->get_inputs().at(oi_pair.second).get_tensor();
+                    auto output = &node->get_outputs().at(oi_pair.output).get_tensor();
+                    auto input = &node->get_inputs().at(oi_pair.input).get_tensor();
 
                     if (node->liveness_free_list.count(input) != 0 &&
                         node->liveness_new_list.count(output) != 0)

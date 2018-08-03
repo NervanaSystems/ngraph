@@ -26,6 +26,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/lrn.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
@@ -1462,6 +1463,37 @@ NGRAPH_TEST(${BACKEND_NAME}, log)
 
     backend->call(f, {result}, {a});
     EXPECT_TRUE(test::all_close_f(loga, read_vector<float>(result)));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, lrn)
+{
+    Shape shape{2, 3, 2, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto lrn = make_shared<op::LRN>(A, 1., 2., 1., 3);
+    auto f = make_shared<Function>(lrn, op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    vector<float> args{0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f};
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, args);
+
+    auto result = backend->create_tensor(element::f32, shape);
+    backend->call(f, {result}, {a});
+
+    vector<float> expected{0.f,
+                           0.05325444f,
+                           0.03402646f,
+                           0.01869806f,
+                           0.06805293f,
+                           0.03287071f,
+                           0.00509002f,
+                           0.00356153f,
+                           0.00174719f,
+                           0.0012555f,
+                           0.00322708f,
+                           0.00235574f};
+    EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, maximum)
