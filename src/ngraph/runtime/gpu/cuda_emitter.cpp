@@ -1303,15 +1303,22 @@ size_t runtime::gpu::CUDAEmitter::build_softmax_divide(const std::vector<std::st
 
     std::unique_ptr<gpu::primitive> pool(new gpu::primitive{[=](void** inputs,
                                                                 void** outputs) mutable {
-        void* input_stride_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, input_stride_idx);
-        void* reduce_stride_buffer =
-            runtime::gpu::invoke_memory_primitive(m_ctx, reduce_stride_idx);
-        void* args_list[] = {&inputs[0],
-                             &inputs[1],
-                             &outputs[0],
-                             &input_stride_buffer,
-                             &reduce_stride_buffer,
-                             &nthreads};
+        // void* input_stride_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, input_stride_idx);
+        // void* reduce_stride_buffer =
+        //     runtime::gpu::invoke_memory_primitive(m_ctx, reduce_stride_idx);
+        std::vector<void*> arg_list;
+        arg_list.push_back(&inputs[0]);
+        arg_list.push_back(&inputs[1]);
+        arg_list.push_back(&outputs[0]);
+        for(size_t i = 0; i < input_strides.size(); i++)
+        {
+            arg_list.push_back(&input_strides[i]);
+        }
+        for(size_t i = 0; i < reduce_strides.size(); i++)
+        {
+            arg_list.push_back(&reduce_strides[i]);
+        }
+        arg_list.push_back(&nthreads);
         CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                       aligned_grid_size_x,
                                       1,
@@ -1321,7 +1328,7 @@ size_t runtime::gpu::CUDAEmitter::build_softmax_divide(const std::vector<std::st
                                       1, // block dim
                                       0,
                                       NULL, // shared mem and stream
-                                      args_list,
+                                      args_list.data(),
                                       0)); // arguments
         debug_sync();
     }});
