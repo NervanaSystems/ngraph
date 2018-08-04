@@ -23,49 +23,12 @@
 #include "ngraph/runtime/intelgpu/code_writer.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
 
 #include "ngraph/op/batch_norm.hpp"
 
 using namespace std;
 using namespace ngraph;
-
-static vector<cldnn_arg> parameters_1inp_1out = {{arg_input, 0}, {arg_output, 0}};
-static vector<cldnn_arg> parameters_2inp_1out = {{arg_input, 0}, {arg_input, 1}, {arg_output, 0}};
-static vector<cldnn_arg> parameters_5inp_1out = {{arg_input, 0},
-                                                 {arg_input, 1},
-                                                 {arg_input, 2},
-                                                 {arg_input, 3},
-                                                 {arg_input, 4},
-                                                 {arg_output, 0}};
-
-static string array_dims(const Shape& dimentions)
-{
-    string buffer;
-
-    for (auto const& dim : dimentions)
-    {
-        buffer += "[" + to_string(dim) + "]";
-    }
-
-    return buffer;
-}
-
-static string access_dims(const Shape& dimentions, const AxisSet& axis = {})
-{
-    size_t var_idx = 0;
-    string buffer;
-
-    for (auto const& i : dimentions)
-    {
-        if (axis.find(var_idx) == axis.end())
-        {
-            buffer += "[i" + to_string(var_idx) + "]";
-        }
-        ++var_idx;
-    }
-
-    return buffer;
-}
 
 void runtime::intelgpu::do_create_mean(cldnn::topology& topology,
                                        const string& output_name,
@@ -138,7 +101,7 @@ void runtime::intelgpu::do_create_mean(cldnn::topology& topology,
                                               {input_name},
                                               {writer.get_code()},
                                               entry_point_name,
-                                              parameters_1inp_1out,
+                                              get_kernel_args(1, 1),
                                               "",
                                               layout,
                                               {1});
@@ -221,7 +184,7 @@ void runtime::intelgpu::do_create_variance(cldnn::topology& topology,
                                                   {input_name, mean_name},
                                                   {writer.get_code()},
                                                   entry_point_name,
-                                                  parameters_2inp_1out,
+                                                  get_kernel_args(2, 1),
                                                   "",
                                                   layout,
                                                   {1});
@@ -313,7 +276,7 @@ void runtime::intelgpu::do_batch_norm_operation(cldnn::topology& topology,
                                                     inputs,
                                                     {writer.get_code()},
                                                     entry_point_name,
-                                                    parameters_5inp_1out,
+                                                    get_kernel_args(5, 1),
                                                     "",
                                                     layout,
                                                     {1});
