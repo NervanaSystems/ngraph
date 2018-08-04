@@ -65,6 +65,16 @@ static void arguments_check(const shared_ptr<Node>& op, size_t input, size_t out
     }
 }
 
+static void argument_type_check(const element::Type& type)
+{
+    if (type != element::f32)
+    {
+        ostringstream os;
+        os << "Kernel data type " << type << " is not supported";
+        throw invalid_argument(os.str());
+    }
+}
+
 static void do_eltwise_operation(cldnn::topology& topology,
                                  const shared_ptr<Node>& op,
                                  cldnn::eltwise_mode mode)
@@ -96,6 +106,33 @@ static void do_unary_operation(cldnn::topology& topology,
 
     const cldnn::activation cldnn_unary(output_name, input_name, mode, param);
     topology.add(cldnn_unary);
+}
+
+static void do_logical_operation(cldnn::topology& topology,
+                                 const shared_ptr<Node>& op,
+                                 const string& operation)
+{
+    arguments_check(op, 2, 1);
+
+    const string& inputA_name = op->get_inputs().at(0).get_tensor().get_name();
+    const Shape& inputA_shape = op->get_inputs().at(0).get_shape();
+    argument_type_check(op->get_inputs().at(0).get_tensor().get_element_type());
+    const string& inputB_name = op->get_inputs().at(1).get_tensor().get_name();
+    const Shape& inputB_shape = op->get_inputs().at(1).get_shape();
+    argument_type_check(op->get_inputs().at(1).get_tensor().get_element_type());
+    const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+    const Shape& output_shape = op->get_outputs().begin()->get_shape();
+    const element::Type& output_type = op->get_outputs().begin()->get_tensor().get_element_type();
+
+    runtime::intelgpu::do_logic_kernel(topology,
+                                       inputA_name,
+                                       inputA_shape,
+                                       inputB_name,
+                                       inputB_shape,
+                                       output_name,
+                                       output_shape,
+                                       output_type,
+                                       operation);
 }
 
 // This function needed to only change the name of the data in topology
@@ -486,6 +523,30 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         else if ("Sigmoid" == op->description())
         {
             do_unary_operation(topology, op, activation_logistic);
+        }
+        else if ("Greater" == op->description())
+        {
+            do_logical_operation(topology, op, " > ");
+        }
+        else if ("GreaterEq" == op->description())
+        {
+            do_logical_operation(topology, op, " >= ");
+        }
+        else if ("Equal" == op->description())
+        {
+            do_logical_operation(topology, op, " == ");
+        }
+        else if ("NotEqual" == op->description())
+        {
+            do_logical_operation(topology, op, " != ");
+        }
+        else if ("Less" == op->description())
+        {
+            do_logical_operation(topology, op, " < ");
+        }
+        else if ("LessEq" == op->description())
+        {
+            do_logical_operation(topology, op, " <= ");
         }
         else if ("Subtract" == op->description())
         {

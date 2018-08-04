@@ -69,6 +69,16 @@ namespace ngraph
                                      const std::string& output_name,
                                      const Shape& output_shape,
                                      const element::Type& output_type);
+
+            void do_logic_kernel(cldnn::topology& topology,
+                                 const std::string& inputA_name,
+                                 const Shape& inputA_shape,
+                                 const std::string& inputB_name,
+                                 const Shape& inputB_shape,
+                                 const std::string& output_name,
+                                 const Shape& output_shape,
+                                 const element::Type& output_type,
+                                 const std::string& operation);
         }
     }
 }
