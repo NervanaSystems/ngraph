@@ -156,7 +156,6 @@ void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
 
             writer << "output" << access_dims(output_shape) << " = 0.0f;\n";
 
-
             // Closing brackets for Sum initialization loop
             for (auto const& i : output_shape)
             {
