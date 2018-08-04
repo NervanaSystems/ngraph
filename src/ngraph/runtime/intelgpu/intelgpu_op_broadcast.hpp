@@ -47,6 +47,15 @@ namespace ngraph
                                                const Shape& output_shape,
                                                const element::Type& output_type,
                                                bool is_bcast);
+
+            // This implements Product operation
+            void do_product_operation(cldnn::topology& topology,
+                                      const std::string& input_name,
+                                      const Shape& input_shape,
+                                      const std::string& output_name,
+                                      const Shape& output_shape,
+                                      const element::Type& output_type,
+                                      const AxisSet& axis);
         }
     }
 }

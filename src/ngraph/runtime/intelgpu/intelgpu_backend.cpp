@@ -45,6 +45,7 @@
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/pad.hpp"
+#include "ngraph/op/product.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
@@ -420,6 +421,36 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                        output_type,
                                        axis,
                                        false);
+            }
+        }
+        else if ("Product" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const string& input_name = op->get_inputs().begin()->get_tensor().get_name();
+            const Shape& input_shape = op->get_inputs().begin()->get_shape();
+
+            const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+            const Shape& output_shape = op->get_outputs().begin()->get_shape();
+            const element::Type& output_type =
+                op->get_outputs().begin()->get_tensor().get_element_type();
+
+            const shared_ptr<op::Product> prod = static_pointer_cast<op::Product>(op);
+            const AxisSet& axis = prod->get_reduction_axes();
+
+            if (axis.empty())
+            {
+                do_equal_propagation(topology, input_name, output_name);
+            }
+            else
+            {
+                do_product_operation(topology,
+                                     input_name,
+                                     input_shape,
+                                     output_name,
+                                     output_shape,
+                                     output_type,
+                                     axis);
             }
         }
         else if ("Reshape" == op->description())
