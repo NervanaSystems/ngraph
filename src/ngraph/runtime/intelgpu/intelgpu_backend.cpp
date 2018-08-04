@@ -43,7 +43,9 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/min.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
@@ -652,6 +654,54 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             const cldnn::convolution cldnn_conv(
                 conv_name, image_name, {weight_name}, strides, input_offset, dilation);
             topology.add(cldnn_conv);
+        }
+        else if ("Min" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const string& input_name = op->get_inputs().begin()->get_tensor().get_name();
+            const Shape& input_shape = op->get_inputs().begin()->get_shape();
+
+            const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+            const Shape& output_shape = op->get_outputs().begin()->get_shape();
+            const element::Type& output_type =
+                op->get_outputs().begin()->get_tensor().get_element_type();
+
+            const shared_ptr<op::Min> min_op = static_pointer_cast<op::Min>(op);
+            const AxisSet& axis = min_op->get_reduction_axes();
+
+            do_max_min_operation(topology,
+                                 input_name,
+                                 input_shape,
+                                 output_name,
+                                 output_shape,
+                                 output_type,
+                                 axis,
+                                 true);
+        }
+        else if ("Max" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const string& input_name = op->get_inputs().begin()->get_tensor().get_name();
+            const Shape& input_shape = op->get_inputs().begin()->get_shape();
+
+            const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+            const Shape& output_shape = op->get_outputs().begin()->get_shape();
+            const element::Type& output_type =
+                op->get_outputs().begin()->get_tensor().get_element_type();
+
+            const shared_ptr<op::Max> max_op = static_pointer_cast<op::Max>(op);
+            const AxisSet& axis = max_op->get_reduction_axes();
+
+            do_max_min_operation(topology,
+                                 input_name,
+                                 input_shape,
+                                 output_name,
+                                 output_shape,
+                                 output_type,
+                                 axis,
+                                 false);
         }
         else
         {

@@ -53,6 +53,11 @@ string runtime::intelgpu::array_dims(const Shape& dimentions)
         buffer += "[" + to_string(dim) + "]";
     }
 
+    if (buffer.empty())
+    { // it means scalar
+        buffer = "[1]";
+    }
+
     return buffer;
 }
 
@@ -68,6 +73,11 @@ string runtime::intelgpu::access_dims(const Shape& dimentions, const AxisSet& ax
             buffer += "[i" + to_string(var_idx) + "]";
         }
         ++var_idx;
+    }
+
+    if (buffer.empty())
+    { // it means scalar
+        buffer = "[0]";
     }
 
     return buffer;
