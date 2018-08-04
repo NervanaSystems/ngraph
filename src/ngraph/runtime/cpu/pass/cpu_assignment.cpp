@@ -46,6 +46,7 @@
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
+#include "ngraph/runtime/cpu/op/quantized_concat.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv.hpp"
 #include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -239,6 +240,36 @@ namespace ngraph
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
                         quantized_ap->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedConcat)
+                {
+                    auto quantized_concat = static_cast<op::QuantizedConcat*>(node);
+                    vector<float> input_mins = quantized_concat->get_input_mins();
+                    vector<float> input_maxes = quantized_concat->get_input_maxes();
+
+                    const float input_min = input_mins[0];
+                    const float input_max = input_maxes[0];
+
+                    if ((node->get_input_element_type(0) == element::u8 ||
+                         node->get_input_element_type(0) == element::i8) &&
+                        node->get_input_size() == input_mins.size() &&
+                        node->get_input_size() == input_maxes.size())
+                    {
+                        //MKLDNN does not support cases where the min and max
+                        //are different for different input tensors.
+                        for (int i = 1; i < input_mins.size(); i++)
+                        {
+                            if (input_mins[i] != input_min || input_maxes[i] != input_max)
+                                return;
+                        }
+
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        quantized_concat->set_op_annotations(op_annotations);
                     }
                 }
 
@@ -798,6 +829,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedMaxPool>},
     {TI(ngraph::op::QuantizedAvgPool),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedAvgPool>},
+    {TI(ngraph::op::QuantizedConcat),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedConcat>},
     {TI(ngraph::op::ConvolutionRelu),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionRelu>},
     {TI(ngraph::op::ConvolutionBiasAdd),

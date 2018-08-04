@@ -27,6 +27,7 @@
 #include "ngraph/runtime/cpu/op/dequantize.hpp"
 #include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
+#include "ngraph/runtime/cpu/op/quantized_concat.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv.hpp"
 #include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "util/all_close.hpp"
@@ -404,4 +405,90 @@ TEST(quantize_cpu, quantize_avg_pool_2d_signed)
     EXPECT_EQ((vector<int8_t>{2, 0, 0, 0, 0, 1}), read_vector<int8_t>(result));
     EXPECT_EQ((vector<float>{0.0}), read_vector<float>(result_min));
     EXPECT_EQ((vector<float>{127.0}), read_vector<float>(result_max));
+}
+
+TEST(quantize_cpu, quantize_concat_unsigned)
+{
+    Shape shape_a{2, 2};
+    auto A = make_shared<op::Parameter>(element::u8, shape_a);
+    Shape shape_b{3, 2};
+    auto B = make_shared<op::Parameter>(element::u8, shape_b);
+    Shape shape_c{3, 2};
+    auto C = make_shared<op::Parameter>(element::u8, shape_c);
+    Shape shape_r{8, 2};
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, shape_a);
+    copy_data(a, vector<uint8_t>{2, 4, 8, 16});
+    auto b = backend->create_tensor(element::u8, shape_b);
+    copy_data(b, vector<uint8_t>{2, 2, 4, 8, 16, 15});
+    auto c = backend->create_tensor(element::u8, shape_c);
+    copy_data(c, vector<uint8_t>{2, 3, 5, 7, 11, 16});
+
+    vector<float> input_mins = {2.0, 2.0, 2.0};
+    vector<float> input_maxes = {16.0, 16.0, 16.0};
+
+    auto QC = make_shared<op::QuantizedConcat>(NodeVector{A, B, C}, 0, input_mins, input_maxes);
+
+    auto output_data = std::make_shared<op::GetOutputElement>(QC, 0);
+    auto output_min = std::make_shared<op::GetOutputElement>(QC, 1);
+    auto output_max = std::make_shared<op::GetOutputElement>(QC, 2);
+
+    auto f = make_shared<Function>(NodeVector{output_data, output_min, output_max},
+                                   op::ParameterVector{A, B, C});
+
+    auto result = backend->create_tensor(element::u8, shape_r);
+    auto result_min = backend->create_tensor(element::f32, Shape{1});
+    auto result_max = backend->create_tensor(element::f32, Shape{1});
+
+    backend->call(f, {result, result_min, result_max}, {a, b, c});
+    EXPECT_EQ((vector<uint8_t>{2, 4, 8, 16, 2, 2, 4, 8, 16, 15, 2, 3, 5, 7, 11, 16}),
+              read_vector<uint8_t>(result));
+    EXPECT_EQ((vector<float>{2.0}), read_vector<float>(result_min));
+    EXPECT_EQ((vector<float>{16.0}), read_vector<float>(result_max));
+}
+
+TEST(quantize_cpu, quantize_concat_signed)
+{
+    Shape shape_a{2, 2};
+    auto A = make_shared<op::Parameter>(element::i8, shape_a);
+    Shape shape_b{3, 2};
+    auto B = make_shared<op::Parameter>(element::i8, shape_b);
+    Shape shape_c{3, 2};
+    auto C = make_shared<op::Parameter>(element::i8, shape_c);
+    Shape shape_r{8, 2};
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i8, shape_a);
+    copy_data(a, vector<int8_t>{-2, 4, 8, 16});
+    auto b = backend->create_tensor(element::i8, shape_b);
+    copy_data(b, vector<int8_t>{-2, 2, 4, 8, 16, 15});
+    auto c = backend->create_tensor(element::i8, shape_c);
+    copy_data(c, vector<int8_t>{-2, 3, 5, 7, 11, 16});
+
+    vector<float> input_mins = {-2.0, -2.0, -2.0};
+    vector<float> input_maxes = {16.0, 16.0, 16.0};
+
+    auto QC = make_shared<op::QuantizedConcat>(NodeVector{A, B, C}, 0, input_mins, input_maxes);
+
+    auto output_data = std::make_shared<op::GetOutputElement>(QC, 0);
+    auto output_min = std::make_shared<op::GetOutputElement>(QC, 1);
+    auto output_max = std::make_shared<op::GetOutputElement>(QC, 2);
+
+    auto f = make_shared<Function>(NodeVector{output_data, output_min, output_max},
+                                   op::ParameterVector{A, B, C});
+
+    auto result = backend->create_tensor(element::i8, shape_r);
+    auto result_min = backend->create_tensor(element::f32, Shape{1});
+    auto result_max = backend->create_tensor(element::f32, Shape{1});
+
+    backend->call(f, {result, result_min, result_max}, {a, b, c});
+    EXPECT_EQ((vector<int8_t>{-2, 4, 8, 16, -2, 2, 4, 8, 16, 15, -2, 3, 5, 7, 11, 16}),
+              read_vector<int8_t>(result));
+    EXPECT_EQ((vector<float>{-2.0}), read_vector<float>(result_min));
+    EXPECT_EQ((vector<float>{16.0}), read_vector<float>(result_max));
 }

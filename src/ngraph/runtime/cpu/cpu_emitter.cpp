@@ -107,6 +107,7 @@
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
+#include "ngraph/runtime/cpu/op/quantized_concat.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv.hpp"
 #include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -2722,22 +2723,11 @@ namespace ngraph
                         100.0f;
                     max_range = std::max(input_max_range, min_range + epsilon);
                     max_range = std::max(0.0f, max_range);
-                    int num_bits = (quantize->get_quantize_et()).bitwidth();
                     const float max_abs = std::max(std::abs(min_range), std::abs(max_range));
                     bool is_signed = (quantize->get_quantize_et()).is_signed();
-                    float target_range;
-                    if (is_signed)
-                    {
-                        max_range = max_abs;
-                        min_range = -max_abs;
-                        target_range = static_cast<float>((uint64_t{1} << (num_bits - 1)) - 1);
-                    }
-                    else
-                    {
-                        max_range = max_abs;
-                        min_range = 0.0;
-                        target_range = static_cast<float>((uint64_t{1} << num_bits) - 1);
-                    }
+                    const float target_range = (is_signed ? std::pow(2, 7) : std::pow(2, 8)) - 1;
+                    max_range = max_abs;
+                    min_range = is_signed ? -max_abs : 0;
 
                     const float scale_factor = target_range / max_abs;
 
@@ -2795,9 +2785,7 @@ namespace ngraph
 
                     const float max_abs = std::max(std::abs(min_range), std::abs(max_range));
                     bool is_signed = (dequantize->get_dequantize_et()).is_signed();
-                    int num_bits = (dequantize->get_dequantize_et()).bitwidth();
-                    const int target_bits = is_signed ? (num_bits - 1) : num_bits;
-                    const float target_range = static_cast<float>((uint64_t{1} << target_bits) - 1);
+                    const float target_range = (is_signed ? std::pow(2, 7) : std::pow(2, 8)) - 1;
                     const float scale_factor = max_abs / target_range;
 
                     std::vector<float> scales;
@@ -2882,11 +2870,14 @@ namespace ngraph
                             max_filter,
                             &min_out_value,
                             &max_out_value);
-                    float scale_int32 = std::max(std::abs(min_out_value), std::abs(max_out_value));
-                    float scale_eightbit = std::max(std::abs(min_output), std::abs(max_output));
-                    float scale = 1.0;
+                    const float max_abs32 =
+                        std::max(std::abs(min_out_value), std::abs(max_out_value));
+                    const float max_abs8 = std::max(std::abs(min_output), std::abs(max_output));
                     // Output is signed int.
-                    scale = scale_int32 / scale_eightbit / (float)(1 << 24);
+                    // s32 = f32 * std::pow(2, 31)/ max_abs32;
+                    // s8 = f32 * std::pow(2, 7)/ max_abs8;
+                    // s8 = s32 * std::pow(2, -24) * max_abs32 / max_abs8;
+                    const float scale = std::pow(2, -24) * max_abs32 / max_abs8;
 
                     size_t conv_index = 0;
 
@@ -3004,6 +2995,63 @@ namespace ngraph
                 else
                 {
                     throw ngraph_error("unsupported parameters for QuantizedAvgPool");
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedConcat)
+            {
+                auto qconcat = static_cast<const ngraph::op::QuantizedConcat*>(node);
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    std::vector<mkldnn::memory::format> inputs_format;
+                    std::vector<mkldnn::memory::desc> inputs_data_desc;
+
+                    for (size_t i = 0; i < args.size(); i++)
+                    {
+                        inputs_format.push_back(
+                            runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, i));
+                    }
+
+                    auto result_format =
+                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    for (size_t i = 0; i < args.size(); i++)
+                    {
+                        inputs_data_desc.push_back(
+                            mkldnn_emitter->build_memory_descriptor(args[i], inputs_format[i]));
+                    }
+
+                    auto result_desc =
+                        mkldnn_emitter->build_memory_descriptor(out[0], result_format);
+
+                    size_t qconcat_index = 0;
+                    size_t concat_dim = (dynamic_cast<const ngraph::op::QuantizedConcat*>(node))
+                                            ->get_concatenation_axis();
+                    qconcat_index =
+                        mkldnn_emitter->build_concat(inputs_data_desc, result_desc, concat_dim);
+
+                    vector<float> input_mins = qconcat->get_input_mins();
+                    vector<float> input_maxes = qconcat->get_input_maxes();
+
+                    auto& deps = mkldnn_emitter->get_primitive_deps(qconcat_index);
+                    size_t i;
+                    for (i = 0; i < args.size(); i++)
+                    {
+                        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[i])
+                               << ", " << args[i].get_name() << ");\n";
+                    }
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[i])
+                           << ", " << out[0].get_name() << ");\n";
+                    writer << "*(" << out[1].get_name() << ") = " << input_mins[0] << ";\n";
+                    writer << "*(" << out[2].get_name() << ") = " << input_maxes[0] << ";\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(qconcat_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("unsupported parameters for QuantizedConcat");
                 }
             }
 
