@@ -79,6 +79,11 @@ namespace ngraph
                                  const Shape& output_shape,
                                  const element::Type& output_type,
                                  const std::string& operation);
+
+            // Helper functions used in cldnn::custom_gpu_primitive kernels
+            std::vector<cldnn_arg> get_kernel_args(size_t input, size_t output);
+            std::string array_dims(const Shape& dimentions);
+            std::string access_dims(const Shape& dimentions, const AxisSet& axis = {});
         }
     }
 }
