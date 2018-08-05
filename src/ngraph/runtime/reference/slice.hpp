@@ -38,7 +38,7 @@ namespace ngraph
                 CoordinateTransform input_transform(arg_shape, lower_bounds, upper_bounds, strides);
                 CoordinateTransform output_transform(out_shape);
 
-                CoordinateTransform::Iterator output_it = output_transform.begin();
+                auto output_it = output_transform.begin();
 
                 for (const Coordinate& in_coord : input_transform)
                 {

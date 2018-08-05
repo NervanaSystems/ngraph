@@ -72,28 +72,28 @@ namespace ngraph
         const Strides& get_source_strides() const { return m_source_strides; }
         const AxisVector& get_source_axis_order() const { return m_source_axis_order; }
         const Strides& get_target_dilation_strides() const { return m_target_dilation_strides; }
-        class Iterator
-        {
-        public:
-            Iterator(const Shape& target_shape, bool is_end = false);
+        // class Iterator
+        // {
+        // public:
+        //     Iterator(const Shape& target_shape, bool is_end = false);
 
-            void operator++();
-            Iterator operator++(int);
-            void operator+=(size_t n);
-            const Coordinate& operator*() const;
-            bool operator!=(const Iterator& it);
-            bool operator==(const Iterator& it);
+        //     void operator++();
+        //     Iterator operator++(int);
+        //     void operator+=(size_t n);
+        //     const Coordinate& operator*() const;
+        //     bool operator!=(const Iterator& it);
+        //     bool operator==(const Iterator& it);
 
-        private:
-            Shape m_target_shape;
-            Shape m_axis_walk_order;
-            Coordinate m_coordinate;
-            bool m_oob;
-            bool m_empty;
-        };
+        // private:
+        //     Shape m_target_shape;
+        //     Shape m_axis_walk_order;
+        //     Coordinate m_coordinate;
+        //     bool m_oob;
+        //     bool m_empty;
+        // };
 
-        Iterator begin() noexcept { return Iterator(m_target_shape); }
-        Iterator end() noexcept { return Iterator(m_target_shape, true); }
+        std::vector<Coordinate>::iterator begin() noexcept { return m_coordinates.begin(); }
+        std::vector<Coordinate>::iterator end() noexcept { return m_coordinates.end(); }
     private:
         size_t index_source(const Coordinate& c) const;
         static Strides default_strides(size_t n_axes);
@@ -110,6 +110,7 @@ namespace ngraph
         CoordinateDiff m_target_padding_below;
         CoordinateDiff m_target_padding_above;
         Strides m_target_dilation_strides;
+        std::vector<Coordinate> m_coordinates;
 
         Shape m_target_shape;
         size_t m_n_axes;

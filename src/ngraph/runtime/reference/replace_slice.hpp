@@ -49,7 +49,7 @@ namespace ngraph
                 CoordinateTransform output_transform(
                     out_shape, lower_bounds, upper_bounds, strides);
 
-                CoordinateTransform::Iterator output_it = output_transform.begin();
+                auto output_it = output_transform.begin();
 
                 for (const Coordinate& input_coord : input_transform)
                 {
