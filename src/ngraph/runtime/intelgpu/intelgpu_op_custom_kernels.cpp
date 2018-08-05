@@ -592,3 +592,67 @@ void runtime::intelgpu::do_select_operation(cldnn::topology& topology,
                                                 {1});
     topology.add(op_select);
 }
+
+void runtime::intelgpu::do_logic_kernel(cldnn::topology& topology,
+                                        const string& inputA_name,
+                                        const Shape& inputA_shape,
+                                        const string& inputB_name,
+                                        const Shape& inputB_shape,
+                                        const string& output_name,
+                                        const Shape& output_shape,
+                                        const element::Type& output_type,
+                                        const string& operation)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string entry_point_name = "logic_" + output_name;
+    codegen::CodeWriter writer;
+
+    writer << "__kernel void " << entry_point_name << "(const __global float inputA"
+           << array_dims(inputA_shape) << ", const __global float inputB"
+           << array_dims(inputB_shape) << ", __global char output" << array_dims(output_shape)
+           << ")\n";
+
+    writer.block_begin();
+    {
+        size_t var_idx = 0;
+        // Main loops
+        for (auto const& i : output_shape)
+        {
+            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
+                   << var_idx << ")\n";
+            writer.block_begin();
+            ++var_idx;
+        }
+
+        writer << "if (inputA" << access_dims(inputA_shape) << operation << "inputB"
+               << access_dims(inputB_shape) << ")\n";
+        writer.block_begin();
+        {
+            writer << "output" << access_dims(output_shape) << " = 1;\n";
+        }
+        writer.block_end();
+        writer << "else\n";
+        writer.block_begin();
+        {
+            writer << "output" << access_dims(output_shape) << " = 0;\n";
+        }
+        writer.block_end();
+
+        // Closing brackets for main loops
+        for (auto const& i : output_shape)
+        {
+            writer.block_end();
+        }
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_logical(output_name,
+                                                 {inputA_name, inputB_name},
+                                                 {writer.get_code()},
+                                                 entry_point_name,
+                                                 get_kernel_args(2, 1),
+                                                 "",
+                                                 layout,
+                                                 {1});
+    topology.add(op_logical);
+}
