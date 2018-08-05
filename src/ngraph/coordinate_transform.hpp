@@ -72,26 +72,6 @@ namespace ngraph
         const Strides& get_source_strides() const { return m_source_strides; }
         const AxisVector& get_source_axis_order() const { return m_source_axis_order; }
         const Strides& get_target_dilation_strides() const { return m_target_dilation_strides; }
-        // class Iterator
-        // {
-        // public:
-        //     Iterator(const Shape& target_shape, bool is_end = false);
-
-        //     void operator++();
-        //     Iterator operator++(int);
-        //     void operator+=(size_t n);
-        //     const Coordinate& operator*() const;
-        //     bool operator!=(const Iterator& it);
-        //     bool operator==(const Iterator& it);
-
-        // private:
-        //     Shape m_target_shape;
-        //     Shape m_axis_walk_order;
-        //     Coordinate m_coordinate;
-        //     bool m_oob;
-        //     bool m_empty;
-        // };
-
         std::vector<Coordinate>::iterator begin() noexcept { return m_coordinates.begin(); }
         std::vector<Coordinate>::iterator end() noexcept { return m_coordinates.end(); }
     private:
