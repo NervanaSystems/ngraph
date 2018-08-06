@@ -21,6 +21,7 @@
 #include "ngraph/frontend/onnx_import/onnx.hpp"
 #include "ngraph/ngraph.hpp"
 #include "util/test_tools.hpp"
+#include "util/ndarray.hpp"
 
 TEST(onnx, model_add_abc)
 {
@@ -59,16 +60,46 @@ TEST(onnx, model_add_abc_initializers)
     EXPECT_EQ((std::vector<float>{3, 6, 9, 12}), read_vector<float>(r));
 }
 
-TEST(onnx, model_split_default)
+TEST(onnx, model_split_equal_parts_default)
 {
-    auto function{ngraph::onnx_import::import_onnx_function(
-            ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/split_default.onnx"))};
-    auto backend{ngraph::runtime::Backend::create("CPU")};
+    auto model{ngraph::onnx_import::load_onnx_model(
+            ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/split_equal_parts_default.onnx"))};
+
+    auto args = std::vector<std::vector<float>>{{1, 2, 3, 4, 5, 6}};
+    auto expected_output = std::vector<std::vector<float>> {
+        {1, 2},
+        {3, 4},
+        {5, 6},
+    };
+
+    for (std::size_t i = 0; i < expected_output.size(); ++i)
+    {
+        auto result_vectors = execute(model[i], args, "CPU");
+        EXPECT_EQ(result_vectors.size(), 1);
+        EXPECT_EQ(expected_output[i], result_vectors.front());
+    }
 }
 
-TEST(onnx, model_split)
+TEST(onnx, model_split_equal_parts_2d)
 {
-    auto function{ngraph::onnx_import::import_onnx_function(
-            ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/split.onnx"))};
-    auto backend{ngraph::runtime::Backend::create("CPU")};
+    // Split into 2 equal parts along axis=1
+    auto model{ngraph::onnx_import::load_onnx_model(
+            ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/split_equal_parts_2d.onnx"))};
+
+    auto args = std::vector<std::vector<float>>{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}};
+    auto expected_output = std::vector<std::vector<std::vector<float>>> {
+        {{0, 1, 2}, {6, 7, 8}},
+        {{3, 4, 5}, {9, 10, 11}},
+    };
+
+    for (std::size_t i = 0; i < expected_output.size(); ++i)
+    {
+        auto result_vectors = execute(model[i], args, "CPU");
+        EXPECT_EQ(result_vectors.size(), 2);
+        // EXPECT_EQ(expected_output[i], result_vectors[i]);
+        for (std::size_t j = 0; j < expected_output[i].size(); ++j)
+        {
+            EXPECT_EQ(expected_output[i][j], result_vectors[j]);
+        }
+    }
 }
