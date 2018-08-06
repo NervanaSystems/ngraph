@@ -115,7 +115,26 @@ void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
         }
         else
         {
+            // Initialize destination output by zeroes
             size_t var_idx = 0;
+            for (auto const& i : output_shape)
+            {
+                writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
+                       << var_idx << ")\n";
+                writer.block_begin();
+                ++var_idx;
+            }
+
+            writer << "output" << access_dims(output_shape) << " = 0.0f;\n";
+
+            // Closing brackets for Sum initialization loop
+            for (auto const& i : output_shape)
+            {
+                writer.block_end();
+            }
+
+            // Now do the Sum operation
+            var_idx = 0;
             for (auto const& i : input_shape)
             {
                 writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
