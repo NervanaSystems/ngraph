@@ -241,6 +241,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
 
     // get cloned bprop results
     ResultVector cloned_results;
+    NodeVector result_nodes;
     for (auto node : bprop->get_results())
     {
         auto result = std::dynamic_pointer_cast<op::Result>(fprop_cache.node_param_map->get(node));
@@ -249,6 +250,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
             throw ngraph_error("Expected op::Result values for op::Result keys in node_param_map");
         }
         cloned_results.push_back(result);
+        result_nodes.push_back(result);
     }
 
     auto get_bprop_params = [&bprop_inputs, &fprop_cache]() {
@@ -279,37 +281,8 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
         inverted_node_map[kv.second] = kv.first;
     }
 
-    auto traverse_from_results = [](ResultVector results,
-                                    std::function<void(std::shared_ptr<Node>)> f) {
-        std::unordered_set<std::shared_ptr<Node>> instances_seen;
-        std::deque<std::shared_ptr<Node>> stack;
-
-        for (auto r : results)
-        {
-            stack.push_front(r);
-        }
-
-        while (stack.size() > 0)
-        {
-            std::shared_ptr<Node> n = stack.front();
-            if (instances_seen.count(n) == 0)
-            {
-                instances_seen.insert(n);
-                f(n);
-            }
-            stack.pop_front();
-            for (auto arg : n->get_arguments())
-            {
-                if (instances_seen.count(arg) == 0)
-                {
-                    stack.push_front(arg);
-                }
-            }
-        }
-    };
-
-    traverse_from_results(
-        cloned_results,
+    ngraph::traverse_nodes(
+        result_nodes,
         [&cloned_bprop_inputs, &fprop_cache, &inverted_node_map](std::shared_ptr<Node> node) {
             auto pnode = std::dynamic_pointer_cast<op::Parameter>(node);
             if (pnode != nullptr &&
