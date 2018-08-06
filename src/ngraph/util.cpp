@@ -213,7 +213,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     });
 
     // Traverse fprop to make a map that stores parameters with the same
-    // shape and element type as the nodes in fprop iff they are in bprop 
+    // shape and element type as the nodes in fprop iff they are in bprop
     // and aren't inputs to bprop
     auto bprop_inputs = bprop->get_parameters();
     ngraph::traverse_nodes(
