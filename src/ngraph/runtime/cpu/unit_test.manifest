@@ -11,10 +11,3 @@ one_hot_vector_1_far_oob
 one_hot_vector_1_fp
 one_hot_vector_1_fp_nonint
 backwards_batch_norm_three_outputs
-# CPU backend doesn't validate inputs/outputs to avoid perf impact
-validate_call_input_count
-validate_call_input_type
-validate_call_input_shape
-validate_call_output_count
-validate_call_output_type
-validate_call_output_shape

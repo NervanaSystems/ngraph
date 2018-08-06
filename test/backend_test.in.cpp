@@ -8256,7 +8256,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_count)
     auto b = backend->create_tensor(element::f32, shape);
     auto c = backend->create_tensor(element::f32, shape);
 
-    EXPECT_ANY_THROW(backend->call(f, {c}, {a}));
+    EXPECT_ANY_THROW(backend->call<true>(f, {c}, {a}));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_type)
@@ -8273,7 +8273,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_type)
     auto b = backend->create_tensor(element::f32, shape);
     auto c = backend->create_tensor(element::f32, shape);
 
-    EXPECT_ANY_THROW(backend->call(f, {c}, {a, b}));
+    EXPECT_ANY_THROW(backend->call<true>(f, {c}, {a, b}));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_shape)
@@ -8290,7 +8290,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_shape)
     auto b = backend->create_tensor(element::f32, shape);
     auto c = backend->create_tensor(element::f32, shape);
 
-    EXPECT_ANY_THROW(backend->call(f, {c}, {a, b}));
+    EXPECT_ANY_THROW(backend->call<true>(f, {c}, {a, b}));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_count)
@@ -8308,7 +8308,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_count)
     auto c = backend->create_tensor(element::f32, shape);
     auto d = backend->create_tensor(element::f32, shape);
 
-    EXPECT_ANY_THROW(backend->call(f, {c, d}, {a, b}));
+    EXPECT_ANY_THROW(backend->call<true>(f, {c, d}, {a, b}));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_type)
@@ -8325,7 +8325,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_type)
     auto b = backend->create_tensor(element::f32, shape);
     auto c = backend->create_tensor(element::f32, shape);
 
-    EXPECT_ANY_THROW(backend->call(f, {a}, {b, c}));
+    EXPECT_ANY_THROW(backend->call<true>(f, {a}, {b, c}));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_shape)
@@ -8342,7 +8342,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_shape)
     auto b = backend->create_tensor(element::f32, shape);
     auto c = backend->create_tensor(element::f32, shape);
 
-    EXPECT_ANY_THROW(backend->call(f, {a}, {c, b}));
+    EXPECT_ANY_THROW(backend->call<true>(f, {a}, {c, b}));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, logical_and)

@@ -77,6 +77,18 @@ namespace ngraph
                               const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
                               const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) = 0;
 
+            template <bool validate = false>
+            bool call(std::shared_ptr<Function> func,
+                      const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+                      const std::vector<std::shared_ptr<runtime::TensorView>>& inputs)
+            {
+                if (validate)
+                {
+                    validate_call(func, outputs, inputs);
+                }
+                call(func, outputs, inputs);
+            }
+
             virtual void remove_compiled_function(std::shared_ptr<Function> func);
 
             virtual void enable_performance_data(std::shared_ptr<Function> func, bool enable) {}
