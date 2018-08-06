@@ -167,8 +167,8 @@ namespace ngraph
 
                     T result = 0;
 
-                    CoordinateTransform::Iterator input_it = input_batch_transform.begin();
-                    CoordinateTransform::Iterator filter_it = filter_transform.begin();
+                    auto input_it = input_batch_transform.begin();
+                    auto filter_it = filter_transform.begin();
 
                     while (input_it != input_batch_transform.end() &&
                            filter_it != filter_transform.end())

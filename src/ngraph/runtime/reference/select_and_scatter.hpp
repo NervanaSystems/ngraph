@@ -65,7 +65,7 @@ namespace ngraph
                     window_movement_strides);
 
                 CoordinateTransform source_transform(arg_source_shape);
-                CoordinateTransform::Iterator source_it = source_transform.begin();
+                auto source_it = source_transform.begin();
 
                 for (Coordinate window_start_coord : window_start_corner_transform)
                 {

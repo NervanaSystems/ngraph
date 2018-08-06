@@ -60,7 +60,7 @@ namespace ngraph
                     CoordinateTransform output_chunk_transform(
                         out_shape, out_start_coord, out_end_coord);
 
-                    CoordinateTransform::Iterator output_chunk_it = output_chunk_transform.begin();
+                    auto output_chunk_it = output_chunk_transform.begin();
 
                     for (const Coordinate& input_coord : input_transform)
                     {
