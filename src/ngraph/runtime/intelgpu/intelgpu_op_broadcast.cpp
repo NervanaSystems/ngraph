@@ -115,7 +115,26 @@ void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
         }
         else
         {
+            // Initialize destination output by zeroes
             size_t var_idx = 0;
+            for (auto const& i : output_shape)
+            {
+                writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
+                       << var_idx << ")\n";
+                writer.block_begin();
+                ++var_idx;
+            }
+
+            writer << "output" << access_dims(output_shape) << " = 0.0f;\n";
+
+            // Closing brackets for Sum initialization loop
+            for (auto const& i : output_shape)
+            {
+                writer.block_end();
+            }
+
+            // Now do the Sum operation
+            var_idx = 0;
             for (auto const& i : input_shape)
             {
                 writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
@@ -227,4 +246,76 @@ void runtime::intelgpu::do_max_min_operation(cldnn::topology& topology,
                                                  layout,
                                                  {1});
     topology.add(op_min_max);
+}
+
+void runtime::intelgpu::do_product_operation(cldnn::topology& topology,
+                                             const string& input_name,
+                                             const Shape& input_shape,
+                                             const string& output_name,
+                                             const Shape& output_shape,
+                                             const element::Type& output_type,
+                                             const AxisSet& axis)
+{
+    const string function_name = "product_" + output_name;
+    const size_t input_size = shape_size<Shape>(input_shape);
+    codegen::CodeWriter writer;
+
+    writer << "__kernel void " << function_name << "(const __global float input"
+           << array_dims(input_shape) << ", __global float output" << array_dims(output_shape)
+           << ")\n";
+
+    writer.block_begin();
+    {
+        // Initialization loop
+        size_t var_idx = 0;
+        for (auto const& i : output_shape)
+        {
+            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
+                   << var_idx << ")\n";
+            writer.block_begin();
+            ++var_idx;
+        }
+
+        writer << "output" << access_dims(output_shape) << " = 1;\n";
+
+        // Closing brackets for initialization loop
+        for (auto const& i : output_shape)
+        {
+            writer.block_end();
+        }
+
+        if (input_size && !input_shape.empty())
+        {
+            // Main operation loop
+            var_idx = 0;
+            for (auto const& i : input_shape)
+            {
+                writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
+                       << var_idx << ")\n";
+                writer.block_begin();
+                ++var_idx;
+            }
+
+            writer << "output" << access_dims(input_shape, axis) << " *= input"
+                   << access_dims(input_shape) << ";\n";
+
+            // Closing brackets for loop
+            for (auto const& i : input_shape)
+            {
+                writer.block_end();
+            }
+        }
+    } // End of function bracket
+    writer.block_end();
+
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const cldnn::custom_gpu_primitive op_product(output_name,
+                                                 {input_name},
+                                                 {writer.get_code()},
+                                                 function_name,
+                                                 get_kernel_args(1, 1),
+                                                 "",
+                                                 layout,
+                                                 {1});
+    topology.add(op_product);
 }
