@@ -34,9 +34,6 @@ namespace ngraph
                 auto& functors = external_function->get_functors();
                 auto& tensor_data = external_function->get_tensor_data();
 
-                std::cout << args[0].get_name() << std::endl;
-                std::cout << args[1].get_name() << std::endl;
-                std::cout << " args[0] " << tensor_data[args[0].get_name()] << std::endl;
                 auto& arg0_tensor = tensor_data[args[0].get_name()];
                 auto& arg1_tensor = tensor_data[args[1].get_name()];
                 auto& out0_tensor = tensor_data[out[0].get_name()];
@@ -181,7 +178,9 @@ namespace ngraph
                 CblasGemmOptions(void*& da, void*& db, void*& dc)
                     : data_a(da)
                     , data_b(db)
-                    , data_c(dc){};
+                    , data_c(dc)
+                {
+                }
 
                 std::vector<cblas::Transpose> transa_array;
                 std::vector<cblas::Transpose> transb_array;
@@ -204,9 +203,9 @@ namespace ngraph
 
                 void call(CPURuntimeContext* ctx)
                 {
-                    std::vector<float*> a_array;
-                    std::vector<float*> b_array;
-                    std::vector<float*> c_array;
+                    std::vector<float*> a_array(group_sizes[0]);
+                    std::vector<float*> b_array(group_sizes[0]);
+                    std::vector<float*> c_array(group_sizes[0]);
 
                     auto populate_array = [](std::vector<float*>& offsets_vector,
                                              void* data,
@@ -214,7 +213,7 @@ namespace ngraph
                                              size_t offset) {
                         for (size_t i = 0; i < size; ++i)
                         {
-                            offsets_vector.push_back(static_cast<float*>(data) + (i * offset));
+                            offsets_vector.at(i) = static_cast<float*>(data) + (i * offset);
                         }
                     };
 
