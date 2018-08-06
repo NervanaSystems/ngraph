@@ -47,8 +47,7 @@ namespace ngraph
                                                const std::string& op,
                                                const std::vector<std::string>& data_types);
 
-                static void get_broadcast_op(codegen::CodeWriter& writer,
-                                             const size_t rank);
+                static void get_broadcast_op(codegen::CodeWriter& writer, const size_t rank);
 
                 static void get_concat_op(codegen::CodeWriter& writer,
                                           const std::string& name,

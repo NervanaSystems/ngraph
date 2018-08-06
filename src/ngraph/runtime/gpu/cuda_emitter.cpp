@@ -1773,30 +1773,29 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const std::array<std::string, 
         writer << include_helpers();
         runtime::gpu::CudaKernelBuilder::get_kernel_signature(
             writer, kernel_name, args.get_input_signature());
-        runtime::gpu::CudaKernelBuilder::get_broadcast_op(
-            writer, result_shape.size());
+        runtime::gpu::CudaKernelBuilder::get_broadcast_op(writer, result_shape.size());
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
 
-    std::unique_ptr<gpu::primitive> broadcast(new gpu::primitive{[=](void** inputs,
-                                                                     void** outputs) mutable {
-                void** args_list = args.resolve_placeholder(0, &inputs[0])
-                    .resolve_placeholder(1, &outputs[0])
-                    .get_argument_list();
+    std::unique_ptr<gpu::primitive> broadcast(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void** args_list = args.resolve_placeholder(0, &inputs[0])
+                                   .resolve_placeholder(1, &outputs[0])
+                                   .get_argument_list();
 
-        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                      aligned_grid_size_x,
-                                      1,
-                                      1,
-                                      block_size_x,
-                                      1,
-                                      1,
-                                      0,
-                                      NULL,
-                                      args_list,
-                                      0));
-        debug_sync();
-    }});
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          aligned_grid_size_x,
+                                          1,
+                                          1,
+                                          block_size_x,
+                                          1,
+                                          1,
+                                          0,
+                                          NULL,
+                                          args_list,
+                                          0));
+            debug_sync();
+        }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(broadcast));
     m_primitive_emitter->cache(hash, primitive_index);

@@ -1192,8 +1192,8 @@ void runtime::gpu::CudaKernelBuilder::coordinate_transform_to_multi_d(codegen::C
                    << brace_open << i - 1 << brace_close << ");\n";
         }
         writer << "int " << o_coordinates << i << " = division_by_invariant_multiplication("
-               << "coordinate_product, " << i_stride_magic << brace_open << i << brace_close << ", " << i_stride_shift
-               << brace_open << i << brace_close << ");\n";
+               << "coordinate_product, " << i_stride_magic << brace_open << i << brace_close << ", "
+               << i_stride_shift << brace_open << i << brace_close << ");\n";
     }
 }
 std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_helper(
@@ -1207,8 +1207,14 @@ std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_hel
     size_t rank,
     bool register_arguments)
 {
-    coordinate_transform_to_multi_d(
-        writer, i_strides, i_stride_magic, i_stride_shift, i_thread_index, o_coordinates, rank, register_arguments);
+    coordinate_transform_to_multi_d(writer,
+                                    i_strides,
+                                    i_stride_magic,
+                                    i_stride_shift,
+                                    i_thread_index,
+                                    o_coordinates,
+                                    rank,
+                                    register_arguments);
 
     std::string brace_open = (register_arguments) ? "" : "[";
     std::string brace_close = (register_arguments) ? "" : "]";
@@ -1218,8 +1224,8 @@ std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_hel
     writer << "int " << reduced_idx << " = 0;\n";
     for (size_t i = 0; i < rank; i++)
     {
-        writer << "reduced_idx += " << o_coordinates << i << " * " << i_reduced_strides << brace_open << i
-               << brace_close << ";\n";
+        writer << "reduced_idx += " << o_coordinates << i << " * " << i_reduced_strides
+               << brace_open << i << brace_close << ";\n";
     }
 
     return reduced_idx;
