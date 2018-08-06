@@ -346,6 +346,18 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     //nv_cwi is required only by some frontends
     //in which case they should run this pass(CPUWorkspaceInsertion) explicitly
     NodeVector nv_cwi;
+    pass_manager.register_pass<ngraph::pass::NopElimination>();
+    // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
+    // failing mxnet unit tests.
+    // pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    // pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    // pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
+    // pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+    pass_manager.register_pass<ngraph::pass::CoreFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
@@ -1014,6 +1026,14 @@ void runtime::cpu::CPU_ExternalFunction::build()
     //nv_cwi is required only by some frontends
     //in which case they should run this pass(CPUWorkspaceInsertion) explicitly
     NodeVector nv_cwi;
+    pass_manager.register_pass<ngraph::pass::NopElimination>();
+    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
+    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+    pass_manager.register_pass<ngraph::pass::CoreFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
@@ -1124,6 +1144,10 @@ void runtime::cpu::CPU_ExternalFunction::build()
         auto& n = *node; // Work around a compiler warning (*node inside typeid may have effects
         // with shared pointers, which is fine here but clang doesn't like it.)
         auto handler = build_dispatcher.find(type_index(typeid(n)));
+        if (handler == build_dispatcher.end())
+        {
+            throw ngraph_error("Unhandled op during code generation : " + node->description());
+        }
         vector<TensorViewWrapper> in;
         vector<string> in_names;
         for (const descriptor::Input& input : node->get_inputs())
@@ -1240,65 +1264,91 @@ void runtime::cpu::CPU_ExternalFunction::build()
     }
 }
 
-void runtime::cpu::CPU_ExternalFunction::register_and_run_passes(bool isCompile)
-{
-    ngraph::pass::Manager pass_manager;
-
-    pass_manager.register_pass<ngraph::pass::NopElimination>();
-    // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
-    // failing mxnet unit tests.
-    // pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
-    // pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    // pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
-    // pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<ngraph::pass::CoreFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.run_passes(m_function, isCompile);
-}
-
 shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
     runtime::cpu::CPU_ExternalFunction::make_call_frame()
 {
     if (!m_is_compiled && !m_direct_execution)
     {
-        register_and_run_passes();
         compile();
     }
 
     if (!m_is_built && m_direct_execution)
     {
-        register_and_run_passes(false);
-        for (shared_ptr<Node> node : m_function->get_ordered_ops())
-        {
-            if (node->is_parameter() || node->is_constant())
-            {
-                continue;
-            }
-            auto& n = *node; // Work around a compiler warning (*node inside typeid may have effects
-            // with shared pointers, which is fine here but clang doesn't like it.)
-            auto handler = build_dispatcher.find(type_index(typeid(n)));
-            if (handler == build_dispatcher.end())
-            {
-                if (std::getenv("NGRAPH_DEX_FALLBACK") == nullptr)
-                {
-                    throw ngraph_error("Unhandled op during code generation : " +
-                                       node->description());
-                }
-                m_direct_execution = false;
-                break;
-            }
-        }
-
-        if (m_direct_execution)
+        if (std::getenv("NGRAPH_DEX_FALLBACK") == nullptr)
         {
             build();
         }
         else
         {
-            compile();
+            auto m_function_clone = clone_function(*m_function);
+
+            std::unordered_set<shared_ptr<Function>> instances_seen;
+            deque<shared_ptr<Function>> stack;
+
+            stack.push_front(m_function_clone);
+            auto count = 0;
+            while (stack.size() > 0 && count <= 1)
+            {
+                shared_ptr<Function> func = stack.front();
+                if (instances_seen.find(func) == instances_seen.end())
+                {
+                    instances_seen.insert(func);
+                    count++;
+                }
+                stack.pop_front();
+                for (shared_ptr<Node> op : func->get_ops())
+                {
+                    for (shared_ptr<Function> fp : op->get_functions())
+                    {
+                        stack.push_front(fp);
+                    }
+                }
+            }
+
+            if (count > 1)
+            {
+                m_direct_execution = false;
+            }
+            else
+            {
+                ngraph::pass::Manager pass_manager;
+
+                pass_manager.register_pass<ngraph::pass::NopElimination>();
+                pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+                pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+                pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
+                pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+                pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+                pass_manager.register_pass<ngraph::pass::CoreFusion>();
+                pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+                pass_manager.run_passes(m_function_clone, false);
+
+                for (shared_ptr<Node> node : m_function_clone->get_ordered_ops())
+                {
+                    if (node->is_parameter() || node->is_constant())
+                    {
+                        continue;
+                    }
+                    auto& n =
+                        *node; // Work around a compiler warning (*node inside typeid may have effects
+                    // with shared pointers, which is fine here but clang doesn't like it.)
+                    auto handler = build_dispatcher.find(type_index(typeid(n)));
+                    if (handler == build_dispatcher.end())
+                    {
+                        m_direct_execution = false;
+                        break;
+                    }
+                }
+            }
+
+            if (m_direct_execution)
+            {
+                build();
+            }
+            else
+            {
+                compile();
+            }
         }
     }
 
