@@ -1291,47 +1291,40 @@ size_t runtime::gpu::CUDAEmitter::build_softmax_divide(const std::vector<std::st
     GPUShape reduce_strides = row_major_strides(reduce_shape);
 
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
-    size_t input_stride_idx =
-        allocator.reserve_argspace(input_strides.data(), input_strides.size() * sizeof(uint32_t));
-    size_t reduce_stride_idx =
-        allocator.reserve_argspace(reduce_strides.data(), reduce_strides.size() * sizeof(uint32_t));
 
     //TODO: currently we set it to 64, will add tuning method later
     uint32_t block_size_x = 64;
     uint32_t aligned_grid_size_x =
         align_to_block_size(static_cast<uint32_t>(nthreads), block_size_x);
 
-    std::unique_ptr<gpu::primitive> pool(new gpu::primitive{[=](void** inputs,
-                                                                void** outputs) mutable {
-        // void* input_stride_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, input_stride_idx);
-        // void* reduce_stride_buffer =
-        //     runtime::gpu::invoke_memory_primitive(m_ctx, reduce_stride_idx);
-        std::vector<void*> arg_list;
-        arg_list.push_back(&inputs[0]);
-        arg_list.push_back(&inputs[1]);
-        arg_list.push_back(&outputs[0]);
-        for(size_t i = 0; i < input_strides.size(); i++)
-        {
-            arg_list.push_back(&input_strides[i]);
-        }
-        for(size_t i = 0; i < reduce_strides.size(); i++)
-        {
-            arg_list.push_back(&reduce_strides[i]);
-        }
-        arg_list.push_back(&nthreads);
-        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                      aligned_grid_size_x,
-                                      1,
-                                      1, // grid dim
-                                      block_size_x,
-                                      1,
-                                      1, // block dim
-                                      0,
-                                      NULL, // shared mem and stream
-                                      args_list.data(),
-                                      0)); // arguments
-        debug_sync();
-    }});
+    std::unique_ptr<gpu::primitive> pool(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            std::vector<void*> arg_list;
+            arg_list.push_back(&inputs[0]);
+            arg_list.push_back(&inputs[1]);
+            arg_list.push_back(&outputs[0]);
+            for (size_t i = 0; i < input_strides.size(); i++)
+            {
+                arg_list.push_back(&input_strides[i]);
+            }
+            for (size_t i = 0; i < reduce_strides.size(); i++)
+            {
+                arg_list.push_back(&reduce_strides[i]);
+            }
+            arg_list.push_back(&nthreads);
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          aligned_grid_size_x,
+                                          1,
+                                          1, // grid dim
+                                          block_size_x,
+                                          1,
+                                          1, // block dim
+                                          0,
+                                          NULL, // shared mem and stream
+                                          arg_list.data(),
+                                          0)); // arguments
+            debug_sync();
+        }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(pool));
     m_primitive_emitter->cache(hash, primitive_index);
