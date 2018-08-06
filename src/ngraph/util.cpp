@@ -235,25 +235,6 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
         fprop_cache.fprop_output_nodes.push_back(kv.first);
     }
 
-    // create the new outputs for fprop and the new fprop function
-    ResultVector fprop_outputs;
-
-    for (auto fpr : fprop->get_results())
-    {
-        fprop_outputs.push_back(fpr);
-    }
-
-    for (auto fpir : fprop_cache.fprop_output_nodes)
-    {
-        if (std::dynamic_pointer_cast<op::Result>(fpir))
-        {
-            throw ngraph_error("Expected op::Result in fprop->get_results()");
-        }
-        fprop_outputs.push_back(std::make_shared<op::Result>(fpir));
-    }
-
-    fprop_cache.fprop = std::make_shared<Function>(fprop_outputs, fprop->get_parameters());
-
     // clone the nodes in bprop, replacing fprop-related nodes with the
     // intermediate parameters
     ngraph::clone_nodes(bprop->get_ops(), *(fprop_cache.node_param_map));
@@ -270,23 +251,90 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
         cloned_results.push_back(result);
     }
 
-    // get clone bprop parameters
-    op::ParameterVector bprop_input_params;
-    for (auto param : bprop_inputs)
+    auto get_bprop_params = [&bprop_inputs, &fprop_cache]() {
+        // get clone bprop parameters
+        op::ParameterVector bprop_input_params;
+        for (auto param : bprop_inputs)
+        {
+            bprop_input_params.push_back(
+                std::dynamic_pointer_cast<op::Parameter>(fprop_cache.node_param_map->get(param)));
+        }
+
+        // add the cached fprop nodes as inputs to bprop
+        for (auto x : fprop_cache.fprop_output_nodes)
+        {
+            bprop_input_params.push_back(
+                std::dynamic_pointer_cast<op::Parameter>(fprop_cache.node_param_map->get(x)));
+        }
+        return bprop_input_params;
+    };
+
+    fprop_cache.fprop_output_nodes.clear();
+    auto cloned_bprop_inputs = get_bprop_params();
+
+    std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>>
+        inverted_node_map;
+    for (auto kv : fprop_cache.node_param_map->get_node_map())
     {
-        bprop_input_params.push_back(
-            std::dynamic_pointer_cast<op::Parameter>(fprop_cache.node_param_map->get(param)));
+        inverted_node_map[kv.second] = kv.first;
     }
 
-    // add the cached fprop nodes as inputs to bprop
-    for (auto x : fprop_cache.fprop_output_nodes)
+    auto traverse_from_results = [](ResultVector results,
+                                    std::function<void(std::shared_ptr<Node>)> f) {
+        std::unordered_set<std::shared_ptr<Node>> instances_seen;
+        std::deque<std::shared_ptr<Node>> stack;
+
+        for (auto r : results)
+        {
+            stack.push_front(r);
+        }
+
+        while (stack.size() > 0)
+        {
+            std::shared_ptr<Node> n = stack.front();
+            if (instances_seen.count(n) == 0)
+            {
+                instances_seen.insert(n);
+                f(n);
+            }
+            stack.pop_front();
+            for (auto arg : n->get_arguments())
+            {
+                if (instances_seen.count(arg) == 0)
+                {
+                    stack.push_front(arg);
+                }
+            }
+        }
+    };
+
+    traverse_from_results(
+        cloned_results,
+        [&cloned_bprop_inputs, &fprop_cache, &inverted_node_map](std::shared_ptr<Node> node) {
+            auto pnode = std::dynamic_pointer_cast<op::Parameter>(node);
+            if (pnode != nullptr &&
+                std::find(cloned_bprop_inputs.begin(), cloned_bprop_inputs.end(), pnode) ==
+                    cloned_bprop_inputs.end())
+            {
+                fprop_cache.fprop_output_nodes.push_back(inverted_node_map.at(node));
+            }
+        });
+
+    // create the new outputs for fprop and the new fprop function
+    ResultVector fprop_outputs = fprop->get_results();
+
+    for (auto fpir : fprop_cache.fprop_output_nodes)
     {
-        bprop_input_params.push_back(
-            std::dynamic_pointer_cast<op::Parameter>(fprop_cache.node_param_map->get(x)));
+        if (std::dynamic_pointer_cast<op::Result>(fpir))
+        {
+            throw ngraph_error("Expected op::Result in fprop->get_results()");
+        }
+        fprop_outputs.push_back(std::make_shared<op::Result>(fpir));
     }
 
-    // create the new bprop function
-    fprop_cache.bprop = std::make_shared<Function>(cloned_results, bprop_input_params);
+    // create the new functions
+    fprop_cache.fprop = std::make_shared<Function>(fprop_outputs, fprop->get_parameters());
+    fprop_cache.bprop = std::make_shared<Function>(cloned_results, get_bprop_params());
 
     return fprop_cache;
 }
