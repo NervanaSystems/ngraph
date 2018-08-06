@@ -554,7 +554,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             do_logical_operation(topology, op, " && ");
         }
-        else if ("Or" == op->description()) 
+        else if ("Or" == op->description())
         {
             do_logical_operation(topology, op, " || ");
         }

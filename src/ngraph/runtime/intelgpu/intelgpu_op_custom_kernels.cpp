@@ -617,14 +617,14 @@ void runtime::intelgpu::do_logic_kernel(cldnn::topology& topology,
     const string entry_point_name = "logic_" + output_name;
     codegen::CodeWriter writer;
 
-    if(operation == " && " || operation == " || ")
+    if (operation == " && " || operation == " || ")
     {
         writer << "__kernel void " << entry_point_name << "(const __global char inputA"
                << array_dims(inputA_shape) << ", const __global char inputB"
                << array_dims(inputB_shape) << ", __global char output" << array_dims(output_shape)
                << ")\n";
     }
-    else 
+    else
     {
         writer << "__kernel void " << entry_point_name << "(const __global float inputA"
                << array_dims(inputA_shape) << ", const __global float inputB"
@@ -646,15 +646,15 @@ void runtime::intelgpu::do_logic_kernel(cldnn::topology& topology,
 
         if (operation == " && " || operation == " || ")
         {
-            writer << "if (inputA" << access_dims(inputA_shape) << "!= 0" << operation  <<  "inputB"
+            writer << "if (inputA" << access_dims(inputA_shape) << "!= 0" << operation << "inputB"
                    << access_dims(inputB_shape) << "!= 0)\n";
         }
-        else 
+        else
         {
             writer << "if (inputA" << access_dims(inputA_shape) << operation << "inputB"
                    << access_dims(inputB_shape) << ")\n";
         }
-        
+
         writer.block_begin();
         {
             writer << "output" << access_dims(output_shape) << " = 1;\n";
@@ -666,7 +666,7 @@ void runtime::intelgpu::do_logic_kernel(cldnn::topology& topology,
             writer << "output" << access_dims(output_shape) << " = 0;\n";
         }
         writer.block_end();
-        
+
         // Closing brackets for main loops
         for (auto const& i : output_shape)
         {
