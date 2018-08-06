@@ -196,10 +196,13 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
 {
     using namespace ngraph;
 
-    // Traverse bprop to find all of the nodes in the graph
+    // Create a fprop_cache object to store the results of this analysis
+    FpropCache fprop_cache;
+    fprop_cache.node_param_map = std::make_shared<NodeMap>();
+
+    // Traverse bprop to find all of the nodes in the bprop graph
     std::unordered_set<std::shared_ptr<Node>> in_bprop;
     ngraph::traverse_nodes(bprop, [&in_bprop](std::shared_ptr<Node> node) {
-
         if (node->get_outputs().size() == 1)
         {
             if (in_bprop.count(node) == 0)
@@ -207,15 +210,12 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
                 in_bprop.insert(node);
             }
         }
-
     });
 
     // Traverse fprop to make a map that stores parameters with the same
-    // shape and element type as the nodes in fprop
-    FpropCache fprop_cache;
-    fprop_cache.node_param_map = std::make_shared<NodeMap>();
+    // shape and element type as the nodes in fprop iff they are in bprop 
+    // and aren't inputs to bprop
     auto bprop_inputs = bprop->get_parameters();
-
     ngraph::traverse_nodes(
         fprop, [&fprop_cache, &in_bprop, &bprop_inputs](std::shared_ptr<Node> node) {
             if (in_bprop.count(node) != 0 &&
@@ -227,17 +227,18 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
             }
         });
 
-    // Find all of the nodes that are intermediate values of fprop and used in
-    // bprop and store those nodes that aren't needed in bprop
-    std::vector<std::shared_ptr<Node>> unused_nodes;
+    // clone the nodes in bprop, replacing fprop-related nodes with the
+    // intermediate parameters from fprop_cache. This breaks connections in the
+    // bprop graph such that only intermediate values from fprop needed by bprop
+    // are still connected to the bprop graph as parameters
+    ngraph::clone_nodes(bprop->get_ops(), *(fprop_cache.node_param_map));
+
+    //invert the fprop_cache cloned node map for easy back and for acces.
+    std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>> inverted_node_map;
     for (auto kv : fprop_cache.node_param_map->get_node_map())
     {
-        fprop_cache.fprop_output_nodes.push_back(kv.first);
+        inverted_node_map[kv.second] = kv.first;
     }
-
-    // clone the nodes in bprop, replacing fprop-related nodes with the
-    // intermediate parameters
-    ngraph::clone_nodes(bprop->get_ops(), *(fprop_cache.node_param_map));
 
     // get cloned bprop results
     ResultVector cloned_results;
@@ -253,8 +254,9 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
         result_nodes.push_back(result);
     }
 
+    // Utility for getting bprop parameters with fprop cache.
     auto get_bprop_params = [&bprop_inputs, &fprop_cache]() {
-        // get clone bprop parameters
+        // get cloned bprop parameters
         op::ParameterVector bprop_input_params;
         for (auto param : bprop_inputs)
         {
@@ -271,16 +273,10 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
         return bprop_input_params;
     };
 
-    fprop_cache.fprop_output_nodes.clear();
+    // Traverse the graph from the cloned results of bprop. If we find a parameter
+    // that's not an original input of bprop, this is an intermediate value of
+    // fprop that needs to be returned from fprop and send to bprop
     auto cloned_bprop_inputs = get_bprop_params();
-
-    std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>>
-        inverted_node_map;
-    for (auto kv : fprop_cache.node_param_map->get_node_map())
-    {
-        inverted_node_map[kv.second] = kv.first;
-    }
-
     ngraph::traverse_nodes(
         result_nodes,
         [&cloned_bprop_inputs, &fprop_cache, &inverted_node_map](std::shared_ptr<Node> node) {
@@ -305,8 +301,9 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
         fprop_outputs.push_back(std::make_shared<op::Result>(fpir));
     }
 
-    // create the new functions
     fprop_cache.fprop = std::make_shared<Function>(fprop_outputs, fprop->get_parameters());
+
+    // Create the new bprop function with cloned results and cached parameters.
     fprop_cache.bprop = std::make_shared<Function>(cloned_results, get_bprop_params());
 
     return fprop_cache;

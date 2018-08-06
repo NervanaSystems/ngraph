@@ -61,12 +61,16 @@ void ngraph::traverse_nodes(const Function* p, std::function<void(std::shared_pt
     traverse_nodes(nodes, f);
 }
 
-void ngraph::traverse_nodes(const NodeVector& results, std::function<void(std::shared_ptr<Node>)> f)
+// This version of traverses directly from input/output nodes to perform functions on
+// graphs that are not wrapped by functions. Most useful for finding parameters of a graph
+// directly from the result nodes, not from function parameters.
+void ngraph::traverse_nodes(const NodeVector& io_nodes,
+                            std::function<void(std::shared_ptr<Node>)> f)
 {
     std::unordered_set<std::shared_ptr<Node>> instances_seen;
     std::deque<std::shared_ptr<Node>> stack;
 
-    for (auto r : results)
+    for (auto r : io_nodes)
     {
         stack.push_front(r);
     }
