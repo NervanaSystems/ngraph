@@ -17,9 +17,7 @@
 #pragma once
 
 #include <memory>
-#include <string>
-
-#include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
@@ -27,23 +25,29 @@ namespace ngraph
     {
         namespace gpu
         {
-            class CudaContextManager
+            class GPUAllocator;
+            namespace pass
             {
-            public:
-                CudaContextManager();
-                ~CudaContextManager();
-
-                CudaContextManager(CudaContextManager const&) = delete;
-                CudaContextManager(CudaContextManager&&) = delete;
-                CudaContextManager& operator=(CudaContextManager const&) = delete;
-                CudaContextManager& operator=(CudaContextManager&&) = delete;
-
-                CUcontext GetContext() { return m_context; }
-                void SetContextCurrent() { cuCtxSetCurrent(m_context); }
-            protected:
-                CUdevice m_device;
-                CUcontext m_context;
-            };
+                class TensorMemoryReservation;
+            }
         }
     }
 }
+
+class ngraph::runtime::gpu::pass::TensorMemoryReservation : public ngraph::pass::FunctionPass
+{
+public:
+    TensorMemoryReservation(std::weak_ptr<ngraph::runtime::gpu::GPUAllocator> allocator,
+                            std::weak_ptr<std::unordered_map<std::string, size_t>> buffers)
+        : ngraph::pass::FunctionPass()
+        , m_allocator(allocator)
+        , m_memory_buffers(buffers)
+    {
+    }
+
+    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
+
+private:
+    std::weak_ptr<ngraph::runtime::gpu::GPUAllocator> m_allocator;
+    std::weak_ptr<std::unordered_map<std::string, size_t>> m_memory_buffers;
+};

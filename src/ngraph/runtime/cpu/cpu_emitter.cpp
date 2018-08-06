@@ -3392,7 +3392,7 @@ namespace ngraph
                 {
                     writer << "cpu::kernel::pad_4d_float32(" << args[0].get_name() << ",\n"
                            << "                            " << out[0].get_name() << ",\n"
-                           << "                            *(" << args[1].get_name() << "),\n"
+                           << "                            " << args[1].get_name() << ",\n"
                            << "                            {" << join(arg0_shape) << "},\n"
                            << "                            {" << join(result_shape) << "},\n"
                            << "                            {" << join(pad->get_padding_below())

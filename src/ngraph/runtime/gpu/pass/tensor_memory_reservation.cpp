@@ -15,20 +15,32 @@
 *******************************************************************************/
 
 #include <memory>
-#include <string>
 
-#include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
+#include "ngraph/function.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/pass/manager_state.hpp"
+
+#include "ngraph/graph_util.hpp"
+#include "ngraph/runtime/gpu/gpu_memory_manager.hpp"
+#include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
 
 using namespace ngraph;
 
-runtime::gpu::CudaContextManager::CudaContextManager()
+bool ngraph::runtime::gpu::pass::TensorMemoryReservation::run_on_function(
+    std::shared_ptr<Function> f)
 {
-    CUDA_SAFE_CALL(cuInit(0));
-    CUDA_SAFE_CALL(cuDeviceGet(&m_device, 0));
-    CUDA_SAFE_CALL(cuDevicePrimaryCtxRetain(&m_context, m_device));
-}
+    auto allocator = m_allocator.lock();
+    auto buffers = m_memory_buffers.lock();
+    if (allocator && buffers)
+    {
+        size_t mem_pool_size = f->get_temporary_pool_size();
+        if (mem_pool_size)
+        {
+            size_t pool_idx = allocator->reserve_workspace(mem_pool_size, false);
+            buffers->insert({f->get_name(), pool_idx});
 
-runtime::gpu::CudaContextManager::~CudaContextManager()
-{
-    CUDA_SAFE_CALL_NO_THROW(cuDevicePrimaryCtxRelease(m_device));
+            return true;
+        }
+    }
+    return false;
 }
