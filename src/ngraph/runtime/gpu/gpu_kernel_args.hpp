@@ -68,38 +68,18 @@ namespace ngraph
                 }
 
                 //
+                // Retrieve the kernel argument list for use with the launch primitive.
+                //
+                void** get_argument_list() { return m_argument_list.data(); }
+                //
                 // Resolve the kernel argument list for use with the launch primitive.
                 // Its inputs are a variable number of device addresses which replace
                 // the previously added placeholder arguments.
                 //
-                template <typename... Args>
-                void** get_argument_list(Args&&... args)
-                {
-                    size_t num_args = sizeof...(args);
-                    void* arg_list[] = {args...};
+                void** get_argument_list(std::vector<void*> arg_list);
 
-                    size_t i = 0;
-                    for (size_t n = 0; n < m_argument_list.size(); n++)
-                    {
-                        if (m_placeholder_positions[n])
-                        {
-                            if (i >= num_args)
-                            {
-                                throw std::runtime_error(
-                                    "Too few kernel arguments supplied for resolving placeholder "
-                                    "parameters.");
-                            }
-                            m_argument_list[n] = arg_list[i++];
-                        }
-                    }
-                    if (i != num_args)
-                    {
-                        throw std::runtime_error(
-                            "Too many kernel arguments supplied for resolving placeholder "
-                            "parameters.");
-                    }
-                    return m_argument_list.data();
-                }
+                //void** get_argument_list(std::vector<void*> address);
+                GPUKernelArgs& resolve_placeholder(size_t arg_num, void* address);
 
                 //
                 // Retrieve the kernel parameter signature given the added kernel arguments.
@@ -107,7 +87,6 @@ namespace ngraph
                 std::string get_input_signature();
 
             private:
-
                 //
                 // Cache the host argument for persistence, add it to the argument list,
                 // and add its signature to the kernel input signature.

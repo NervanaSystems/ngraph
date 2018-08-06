@@ -90,6 +90,46 @@ runtime::gpu::GPUKernelArgs& runtime::gpu::GPUKernelArgs::add_placeholder(const 
     return *this;
 }
 
+void** runtime::gpu::GPUKernelArgs::get_argument_list(std::vector<void*> arg_list)
+{
+    size_t num_args = arg_list.size();
+    size_t i = 0;
+    for (size_t n = 0; n < m_argument_list.size(); n++)
+    {
+        if (m_placeholder_positions[n])
+        {
+            if (i >= num_args)
+            {
+                throw std::runtime_error(
+                    "Too few kernel arguments supplied for resolving placeholder "
+                    "parameters.");
+            }
+            m_argument_list[n] = arg_list[i++];
+        }
+    }
+    if (i != num_args)
+    {
+        throw std::runtime_error(
+            "Too many kernel arguments supplied for resolving placeholder "
+            "parameters.");
+    }
+    return m_argument_list.data();
+}
+
+runtime::gpu::GPUKernelArgs& runtime::gpu::GPUKernelArgs::resolve_placeholder(size_t arg_num,
+                                                                              void* address)
+{
+    if (m_placeholder_positions.at(arg_num))
+    {
+        m_argument_list[arg_num] = address;
+    }
+    else
+    {
+        throw std::runtime_error("Resolution of specified non-placeholder argument is unallowed.");
+    }
+    return *this;
+}
+
 std::string runtime::gpu::GPUKernelArgs::get_input_signature()
 {
     if (m_signature_generated == false)
