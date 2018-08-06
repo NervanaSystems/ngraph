@@ -1780,8 +1780,10 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const std::array<std::string, 
 
     std::unique_ptr<gpu::primitive> broadcast(new gpu::primitive{[=](void** inputs,
                                                                      void** outputs) mutable {
+                void** args_list = args.resolve_placeholder(0, &inputs[0])
+                    .resolve_placeholder(1, &outputs[0])
+                    .get_argument_list();
 
-        void** args_list = args.get_argument_list({&inputs[0], &outputs[0]});
         CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                       aligned_grid_size_x,
                                       1,
