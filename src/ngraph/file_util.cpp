@@ -15,23 +15,35 @@
 *******************************************************************************/
 
 #include <cassert>
+#ifdef WIN32
+#include <windows.h>
+#else
 #include <dirent.h>
+#include <ftw.h>
+#include <sys/file.h>
+#include <sys/time.h>
+#include <unistd.h>
+#endif
 #include <fcntl.h>
 #include <fstream>
-#include <ftw.h>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <string.h>
-#include <sys/file.h>
 #include <sys/stat.h>
-#include <sys/time.h>
 #include <sys/types.h>
-#include <unistd.h>
 #include <vector>
 
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
+
+#ifdef WIN32
+#define RMDIR(a) RemoveDirectoryA(a)
+#define RMFILE(a) DeleteFileA(a)
+#else
+#define RMDIR(a) rmdir(a)
+#define RMFILE(a) remove(a)
+#endif
 
 using namespace std;
 using namespace ngraph;
@@ -71,6 +83,16 @@ string file_util::get_directory(const string& s)
         rc = s.substr(0, pos);
     }
     return rc;
+}
+
+string file_util::path_join(const string& s1, const string& s2, const string& s3)
+{
+    return path_join(path_join(s1, s2), s3);
+}
+
+string file_util::path_join(const string& s1, const string& s2, const string& s3, const string& s4)
+{
+    return path_join(path_join(path_join(s1, s2), s3), s4);
 }
 
 string file_util::path_join(const string& s1, const string& s2)
@@ -125,15 +147,15 @@ void file_util::remove_directory(const string& dir)
                       [](const string& file, bool is_dir) {
                           if (is_dir)
                           {
-                              rmdir(file.c_str());
+                              RMDIR(file.c_str());
                           }
                           else
                           {
-                              remove(file.c_str());
+                              RMFILE(file.c_str());
                           }
                       },
                       true);
-        rmdir(dir.c_str());
+        RMDIR(dir.c_str());
     }
 }
 
@@ -144,6 +166,9 @@ void file_util::remove_file(const string& file)
 
 bool file_util::make_directory(const string& dir)
 {
+#ifdef WIN32
+    CreateDirectoryA(dir.c_str(), nullptr);
+#else
     if (mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH))
     {
         if (errno == EEXIST)
@@ -153,6 +178,7 @@ bool file_util::make_directory(const string& dir)
         }
         throw runtime_error("error making directory " + dir + " " + strerror(errno));
     }
+#endif
     return true;
 }
 
@@ -211,6 +237,7 @@ string file_util::read_file_to_string(const string& path)
     return ss.str();
 }
 
+#ifndef WIN32
 static void iterate_files_worker(const string& path,
                                  function<void(const string& file, bool is_dir)> func,
                                  bool recurse,
@@ -262,6 +289,7 @@ static void iterate_files_worker(const string& path,
         throw runtime_error("error enumerating file " + path);
     }
 }
+#endif
 
 void file_util::iterate_files(const string& path,
                               function<void(const string& file, bool is_dir)> func,
@@ -270,6 +298,19 @@ void file_util::iterate_files(const string& path,
 {
     vector<string> files;
     vector<string> dirs;
+#ifdef WIN32
+    string file_match = path_join(path, "*");
+    WIN32_FIND_DATA data;
+    HANDLE hFind = FindFirstFile(file_match.c_str(), &data);
+    if (hFind != INVALID_HANDLE_VALUE)
+    {
+        do
+        {
+            std::cout << data.cFileName << std::endl;
+        } while (FindNextFile(hFind, &data));
+        FindClose(hFind);
+    }
+#else
     iterate_files_worker(path,
                          [&files, &dirs](const string& file, bool is_dir) {
                              if (is_dir)
@@ -283,6 +324,7 @@ void file_util::iterate_files(const string& path,
                          },
                          recurse,
                          include_links);
+#endif
 
     for (auto f : files)
     {
@@ -296,6 +338,10 @@ void file_util::iterate_files(const string& path,
 
 string file_util::tmp_filename(const string& extension)
 {
+    string rc;
+#ifdef WIN32
+    rc = _tempnam(file_util::get_temp_directory_path().c_str(), "ngraph_");
+#else
     string tmp_template =
         file_util::path_join(file_util::get_temp_directory_path(), "ngraph_XXXXXX" + extension);
     char* tmpname = strdup(tmp_template.c_str());
@@ -303,8 +349,9 @@ string file_util::tmp_filename(const string& extension)
     // mkstemp opens the file with open() so we need to close it
     close(mkstemps(tmpname, static_cast<int>(extension.size())));
 
-    string rc = tmpname;
+    rc = tmpname;
     free(tmpname);
+#endif
     return rc;
 }
 
