@@ -69,7 +69,7 @@ static void arguments_check(const shared_ptr<Node>& op, size_t input, size_t out
 
 static void argument_type_check(const element::Type& type)
 {
-    if (type != element::f32)
+    if (type != element::f32 && type != element::boolean)
     {
         ostringstream os;
         os << "Kernel data type " << type << " is not supported";
@@ -549,6 +549,14 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         else if ("LessEq" == op->description())
         {
             do_logical_operation(topology, op, " <= ");
+        }
+        else if ("And" == op->description())
+        {
+            do_logical_operation(topology, op, " && ");
+        }
+        else if ("Or" == op->description()) 
+        {
+            do_logical_operation(topology, op, " || ");
         }
         else if ("Subtract" == op->description())
         {

@@ -82,10 +82,10 @@ cldnn::tensor runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(const Shape
 {
     vector<size_t> idx(4, 1);
     size_t index = 0;
-    const size_t total_zise = shape_size<Shape>(element_shape);
+    const size_t total_size = shape_size<Shape>(element_shape);
 
     // clDNN requires at least scalar tensor size. We can't create zero sized tensors
-    if (total_zise != 0)
+    if (total_size != 0)
     {
         for (auto i = element_shape.crbegin(); i != element_shape.crend() && index < 3;
              ++i, ++index)
