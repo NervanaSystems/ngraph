@@ -78,7 +78,9 @@ namespace ngraph
                 //
                 void** get_argument_list(std::vector<void*> arg_list);
 
-                //void** get_argument_list(std::vector<void*> address);
+                //
+                // Replace placeholder argument with specifed address.
+                //
                 GPUKernelArgs& resolve_placeholder(size_t arg_num, void* address);
 
                 //
