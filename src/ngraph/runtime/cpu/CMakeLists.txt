@@ -41,6 +41,9 @@ set(SRC
     builder/max_pool.cpp
     builder/min.cpp
     builder/one_hot.cpp
+    builder/relu.cpp
+    builder/pad.cpp
+    builder/product.cpp
     builder/reshape.cpp
     builder/reverse.cpp
     builder/reverse_sequence.cpp
