@@ -120,7 +120,6 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
-#include "ngraph/pass/result_copy_elimination.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
@@ -375,7 +374,6 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
     pass_manager.register_pass<runtime::cpu::pass::CPUShuffleFolding>();
-    pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     unordered_map<Node*, Node*> node_function_map;
     string common_function_string;
@@ -664,6 +662,11 @@ using namespace ngraph::runtime;
             }
         }
 
+        static const char* print_tm = std::getenv("NGRAPH_PRINT_TENSOR_NAME_MAPPING");
+        if (print_tm)
+        {
+            std::cout << "Tensor name mapping for " << current_function->get_name() << std::endl;
+        }
         // Add outputs to the variable name map
         for (size_t i = 0; i < current_function->get_output_size(); ++i)
         {
@@ -677,11 +680,11 @@ using namespace ngraph::runtime;
             //it should be safe to assign both descriptors to one output*
             //since needs_copy == false makes `op::Result` an nop
             auto res = std::dynamic_pointer_cast<ngraph::op::Result>(op);
-            if (!res->needs_copy())
+            auto input_node = res->get_inputs().at(0).get_output().get_node();
+            if (!input_node->is_constant() && !input_node->is_parameter())
             {
                 shared_ptr<descriptor::TensorView> itv =
                     res->get_inputs().at(0).get_output().get_tensor_view();
-
                 auto output_name = ss.str();
                 m_variable_name_map[itv->get_tensor().get_name()] = ss.str();
                 propagate_in_place_output(&(res->get_inputs().at(0).get_output()), output_name);
@@ -712,6 +715,11 @@ using namespace ngraph::runtime;
             for (const descriptor::Output& output : node->get_outputs())
             {
                 shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+                if (print_tm)
+                {
+                    std::cout << tv->get_tensor().get_name() << "(" << node->get_name() << ") -> "
+                              << m_variable_name_map[tv->get_tensor().get_name()] << std::endl;
+                }
                 out.push_back(
                     TensorViewWrapper(tv, m_variable_name_map[tv->get_tensor().get_name()]));
                 node_output_names.emplace_back(tv->get_tensor().get_name());
@@ -1038,7 +1046,13 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
                     size_t input_index = oi_pair.input;
                     auto& input_tensor = arg->get_inputs().at(input_index).get_tensor();
                     if (input_tensor.get_pool_offset() == offset &&
-                        !arg->get_inputs().at(input_index).get_output().get_node()->is_parameter())
+                        !arg->get_inputs()
+                             .at(input_index)
+                             .get_output()
+                             .get_node()
+                             ->is_parameter() &&
+                        m_variable_name_map[input_tensor.get_name()].find("out") ==
+                            std::string::npos)
                     {
                         NGRAPH_DEBUG << "Reusing " << output_name << " for "
                                      << input_tensor.get_name();
@@ -1079,7 +1093,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
     pass_manager.register_pass<runtime::cpu::pass::CPUShuffleFolding>();
-    pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment, true);
@@ -1199,6 +1212,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         }
         vector<TensorViewWrapper> out;
         vector<string> out_names;
+
         for (const descriptor::Output& output : node->get_outputs())
         {
             shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();

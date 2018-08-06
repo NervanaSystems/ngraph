@@ -4509,7 +4509,7 @@ namespace ngraph
             {
                 const ngraph::op::Result* result = static_cast<const ngraph::op::Result*>(node);
 
-                if (!result->needs_copy())
+                if (args[0].get_name() == out[0].get_name())
                 {
                     return;
                 }
