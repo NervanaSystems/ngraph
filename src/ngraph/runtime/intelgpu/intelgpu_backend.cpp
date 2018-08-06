@@ -43,8 +43,11 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/min.hpp"
 #include "ngraph/op/pad.hpp"
+#include "ngraph/op/product.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
@@ -61,6 +64,16 @@ static void arguments_check(const shared_ptr<Node>& op, size_t input, size_t out
         os << "Operation \"" << op->description() << "\" input and output sizes mismatch."
            << " Expected input size=" << op->get_input_size() << ", provided=" << input
            << ". Expected output size=" << op->get_output_size() << ", provided=" << output;
+        throw invalid_argument(os.str());
+    }
+}
+
+static void argument_type_check(const element::Type& type)
+{
+    if (type != element::f32)
+    {
+        ostringstream os;
+        os << "Kernel data type " << type << " is not supported";
         throw invalid_argument(os.str());
     }
 }
@@ -96,6 +109,33 @@ static void do_unary_operation(cldnn::topology& topology,
 
     const cldnn::activation cldnn_unary(output_name, input_name, mode, param);
     topology.add(cldnn_unary);
+}
+
+static void do_logical_operation(cldnn::topology& topology,
+                                 const shared_ptr<Node>& op,
+                                 const string& operation)
+{
+    arguments_check(op, 2, 1);
+
+    const string& inputA_name = op->get_inputs().at(0).get_tensor().get_name();
+    const Shape& inputA_shape = op->get_inputs().at(0).get_shape();
+    argument_type_check(op->get_inputs().at(0).get_tensor().get_element_type());
+    const string& inputB_name = op->get_inputs().at(1).get_tensor().get_name();
+    const Shape& inputB_shape = op->get_inputs().at(1).get_shape();
+    argument_type_check(op->get_inputs().at(1).get_tensor().get_element_type());
+    const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+    const Shape& output_shape = op->get_outputs().begin()->get_shape();
+    const element::Type& output_type = op->get_outputs().begin()->get_tensor().get_element_type();
+
+    runtime::intelgpu::do_logic_kernel(topology,
+                                       inputA_name,
+                                       inputA_shape,
+                                       inputB_name,
+                                       inputB_shape,
+                                       output_name,
+                                       output_shape,
+                                       output_type,
+                                       operation);
 }
 
 // This function needed to only change the name of the data in topology
@@ -422,6 +462,36 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                        false);
             }
         }
+        else if ("Product" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const string& input_name = op->get_inputs().begin()->get_tensor().get_name();
+            const Shape& input_shape = op->get_inputs().begin()->get_shape();
+
+            const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+            const Shape& output_shape = op->get_outputs().begin()->get_shape();
+            const element::Type& output_type =
+                op->get_outputs().begin()->get_tensor().get_element_type();
+
+            const shared_ptr<op::Product> prod = static_pointer_cast<op::Product>(op);
+            const AxisSet& axis = prod->get_reduction_axes();
+
+            if (axis.empty())
+            {
+                do_equal_propagation(topology, input_name, output_name);
+            }
+            else
+            {
+                do_product_operation(topology,
+                                     input_name,
+                                     input_shape,
+                                     output_name,
+                                     output_shape,
+                                     output_type,
+                                     axis);
+            }
+        }
         else if ("Reshape" == op->description())
         {
             arguments_check(op, 1, 1);
@@ -486,6 +556,30 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         else if ("Sigmoid" == op->description())
         {
             do_unary_operation(topology, op, activation_logistic);
+        }
+        else if ("Greater" == op->description())
+        {
+            do_logical_operation(topology, op, " > ");
+        }
+        else if ("GreaterEq" == op->description())
+        {
+            do_logical_operation(topology, op, " >= ");
+        }
+        else if ("Equal" == op->description())
+        {
+            do_logical_operation(topology, op, " == ");
+        }
+        else if ("NotEqual" == op->description())
+        {
+            do_logical_operation(topology, op, " != ");
+        }
+        else if ("Less" == op->description())
+        {
+            do_logical_operation(topology, op, " < ");
+        }
+        else if ("LessEq" == op->description())
+        {
+            do_logical_operation(topology, op, " <= ");
         }
         else if ("Subtract" == op->description())
         {
@@ -652,6 +746,54 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             const cldnn::convolution cldnn_conv(
                 conv_name, image_name, {weight_name}, strides, input_offset, dilation);
             topology.add(cldnn_conv);
+        }
+        else if ("Min" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const string& input_name = op->get_inputs().begin()->get_tensor().get_name();
+            const Shape& input_shape = op->get_inputs().begin()->get_shape();
+
+            const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+            const Shape& output_shape = op->get_outputs().begin()->get_shape();
+            const element::Type& output_type =
+                op->get_outputs().begin()->get_tensor().get_element_type();
+
+            const shared_ptr<op::Min> min_op = static_pointer_cast<op::Min>(op);
+            const AxisSet& axis = min_op->get_reduction_axes();
+
+            do_max_min_operation(topology,
+                                 input_name,
+                                 input_shape,
+                                 output_name,
+                                 output_shape,
+                                 output_type,
+                                 axis,
+                                 true);
+        }
+        else if ("Max" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const string& input_name = op->get_inputs().begin()->get_tensor().get_name();
+            const Shape& input_shape = op->get_inputs().begin()->get_shape();
+
+            const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+            const Shape& output_shape = op->get_outputs().begin()->get_shape();
+            const element::Type& output_type =
+                op->get_outputs().begin()->get_tensor().get_element_type();
+
+            const shared_ptr<op::Max> max_op = static_pointer_cast<op::Max>(op);
+            const AxisSet& axis = max_op->get_reduction_axes();
+
+            do_max_min_operation(topology,
+                                 input_name,
+                                 input_shape,
+                                 output_name,
+                                 output_shape,
+                                 output_type,
+                                 axis,
+                                 false);
         }
         else
         {

@@ -112,10 +112,10 @@ using namespace ngraph;
 static const string s_output_dir = "gpu_codegen";
 static std::mutex s_compilation;
 
-class StaticInitializers
+class GPUStaticInitializers
 {
 public:
-    StaticInitializers()
+    GPUStaticInitializers()
     {
         file_util::remove_directory(s_output_dir);
         file_util::make_directory(s_output_dir);
@@ -154,7 +154,7 @@ static string emit_string_array(const vector<string>& s, size_t max_line_length)
     return ss.str();
 }
 
-static StaticInitializers s_static_initializers;
+static GPUStaticInitializers s_static_initializers;
 
 #define TI(x) type_index(typeid(x))
 

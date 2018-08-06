@@ -72,13 +72,6 @@ namespace ngraph
                 //
                 void** get_argument_list() { return m_argument_list.data(); }
                 //
-                // Resolve the kernel argument list for use with the launch primitive.
-                // Its inputs are a variable number of device addresses which replace
-                // the previously added placeholder arguments.
-                //
-                void** get_argument_list(std::vector<void*> arg_list);
-
-                //
                 // Replace placeholder argument with specifed address.
                 //
                 GPUKernelArgs& resolve_placeholder(size_t arg_num, void* address);
@@ -149,7 +142,7 @@ namespace ngraph
                 } true_type;
                 typedef struct
                 {
-                    char x, y;
+                    char x[2];
                 } false_type;
 
                 template <typename U>

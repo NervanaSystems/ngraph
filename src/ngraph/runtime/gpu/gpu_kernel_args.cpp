@@ -34,13 +34,7 @@ const std::unordered_map<std::type_index, std::string> runtime::gpu::GPUKernelAr
     {TI(uint8_t), "uint8_t"},
     {TI(uint16_t), "uint16_t"},
     {TI(uint32_t), "uint32_t"},
-    {TI(uint64_t), "uint64_t"},
-    {TI(int), "int"},
-    {TI(long), "long"},
-    {TI(long long), "long long"},
-    {TI(unsigned int), "unsigned int"},
-    {TI(unsigned long), "unsigned long"},
-    {TI(unsigned long long), "unsigned long long"}};
+    {TI(uint64_t), "uint64_t"}};
 
 runtime::gpu::GPUKernelArgs::GPUKernelArgs(const std::shared_ptr<GPUHostParameters>& params)
     : m_signature_generated(false)
@@ -88,32 +82,6 @@ runtime::gpu::GPUKernelArgs& runtime::gpu::GPUKernelArgs::add_placeholder(const 
     m_placeholder_positions.push_back(true);
     add_to_signature(type + "*", name);
     return *this;
-}
-
-void** runtime::gpu::GPUKernelArgs::get_argument_list(std::vector<void*> arg_list)
-{
-    size_t num_args = arg_list.size();
-    size_t i = 0;
-    for (size_t n = 0; n < m_argument_list.size(); n++)
-    {
-        if (m_placeholder_positions[n])
-        {
-            if (i >= num_args)
-            {
-                throw std::runtime_error(
-                    "Too few kernel arguments supplied for resolving placeholder "
-                    "parameters.");
-            }
-            m_argument_list[n] = arg_list[i++];
-        }
-    }
-    if (i != num_args)
-    {
-        throw std::runtime_error(
-            "Too many kernel arguments supplied for resolving placeholder "
-            "parameters.");
-    }
-    return m_argument_list.data();
 }
 
 runtime::gpu::GPUKernelArgs& runtime::gpu::GPUKernelArgs::resolve_placeholder(size_t arg_num,
