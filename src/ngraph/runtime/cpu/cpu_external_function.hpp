@@ -124,6 +124,10 @@ namespace ngraph
                 // internal ops
                 void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
                                                std::string output_name);
+
+                bool is_output(const ngraph::descriptor::Tensor& tensor);
+                bool computes_result(Node* node);
+
                 void emit_debug_function_entry(codegen::CodeWriter& writer,
                                                Node* node,
                                                const std::vector<TensorViewWrapper>& in,

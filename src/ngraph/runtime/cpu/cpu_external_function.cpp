@@ -662,11 +662,6 @@ using namespace ngraph::runtime;
             }
         }
 
-        static const char* print_tm = std::getenv("NGRAPH_PRINT_TENSOR_NAME_MAPPING");
-        if (print_tm)
-        {
-            std::cout << "Tensor name mapping for " << current_function->get_name() << std::endl;
-        }
         // Add outputs to the variable name map
         for (size_t i = 0; i < current_function->get_output_size(); ++i)
         {
@@ -715,11 +710,6 @@ using namespace ngraph::runtime;
             for (const descriptor::Output& output : node->get_outputs())
             {
                 shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-                if (print_tm)
-                {
-                    std::cout << tv->get_tensor().get_name() << "(" << node->get_name() << ") -> "
-                              << m_variable_name_map[tv->get_tensor().get_name()] << std::endl;
-                }
                 out.push_back(
                     TensorViewWrapper(tv, m_variable_name_map[tv->get_tensor().get_name()]));
                 node_output_names.emplace_back(tv->get_tensor().get_name());
@@ -985,6 +975,29 @@ using namespace ngraph::runtime;
     }
 }
 
+bool runtime::cpu::CPU_ExternalFunction::is_output(const ngraph::descriptor::Tensor& tensor)
+{
+    return m_variable_name_map[tensor.get_name()].find("output") != std::string::npos;
+}
+
+bool runtime::cpu::CPU_ExternalFunction::computes_result(Node* node)
+{
+    if (node->is_output())
+    {
+        return true;
+    }
+
+    // Check if node feeds a result node that has been copy eliminated
+    for (const descriptor::Output& output : node->get_outputs())
+    {
+        if (is_output(output.get_tensor()))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 void runtime::cpu::CPU_ExternalFunction::propagate_in_place_input(
     ngraph::descriptor::Output* output, std::string input_name)
 {
@@ -1051,8 +1064,7 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
                              .get_output()
                              .get_node()
                              ->is_parameter() &&
-                        m_variable_name_map[input_tensor.get_name()].find("out") ==
-                            std::string::npos)
+                        !is_output(input_tensor))
                     {
                         NGRAPH_DEBUG << "Reusing " << output_name << " for "
                                      << input_tensor.get_name();
