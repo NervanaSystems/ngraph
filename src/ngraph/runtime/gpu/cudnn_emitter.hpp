@@ -18,6 +18,7 @@
 
 #include <functional>
 #include <vector>
+#include <memory>
 
 #include <cublas_v2.h>
 #include <cuda.h>
@@ -132,7 +133,7 @@ namespace ngraph
                 void sync();
 
             private:
-                CUDNNEmitter(GPUPrimitiveEmitter* emitter, GPURuntimeContext* ctx);
+                CUDNNEmitter(GPUPrimitiveEmitter* emitter, GPURuntimeContext* ctx, std::shared_ptr<GPUHostParameters> params);
 
                 void* get_data_by_type(cudnnDataType_t data_type, double value);
 

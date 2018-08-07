@@ -53,14 +53,14 @@ namespace ngraph
                 size_t sizeof_device_allocation() { return m_memory_manager.get_allocation_size(); }
                 GPUKernelArgs add_kernel_args() { return GPUKernelArgs(m_host_parameters); }
             private:
-                std::unique_ptr<CUDAEmitter> m_cuda_emitter;
-                std::unique_ptr<CUDNNEmitter> m_cudnn_emitter;
                 std::vector<gpu::primitive*> m_gpu_primitives;
                 std::vector<gpu::memory_primitive> m_gpu_mem_primitives;
                 std::unordered_map<std::string, size_t> m_primitive_map;
                 std::vector<std::unique_ptr<gpu::primitive>> m_managed_primitives;
                 GPUMemoryManager m_memory_manager;
                 std::shared_ptr<GPUHostParameters> m_host_parameters;
+                std::unique_ptr<CUDAEmitter> m_cuda_emitter;
+                std::unique_ptr<CUDNNEmitter> m_cudnn_emitter;
             };
         }
     }
