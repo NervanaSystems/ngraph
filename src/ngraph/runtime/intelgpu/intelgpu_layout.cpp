@@ -106,6 +106,20 @@ cldnn::tensor runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(const Shape
     return tns;
 }
 
+cldnn::tensor runtime::intelgpu::IntelGPULayout::create_cldnn_offset(const Shape& pad_below)
+{
+    vector<cldnn::tensor::value_type> offset({0, 0, 0, 0});
+    size_t ridx = 4;
+
+    for (auto i = pad_below.crbegin(); i != pad_below.crend() && ridx > 0; ++i, --ridx)
+    {
+        offset.at(ridx - 1) = -(*i);
+    }
+
+    const cldnn::tensor input_offset(offset.at(0), offset.at(1), offset.at(3), offset.at(2));
+    return input_offset;
+}
+
 cldnn::layout runtime::intelgpu::IntelGPULayout::create_cldnn_layout(
     const ngraph::element::Type& element_type, const Shape& element_shape)
 {

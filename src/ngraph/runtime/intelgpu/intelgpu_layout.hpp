@@ -51,7 +51,7 @@ public:
     static cldnn::layout create_cldnn_layout(const ngraph::element::Type& element_type,
                                              const Shape& element_shape);
     static cldnn::tensor create_cldnn_tensor(const Shape& element_shape);
-
+    static cldnn::tensor create_cldnn_offset(const Shape& pad_below);
     // This function converts Shape dimension_id into cldnn::concatenation id
     static cldnn::concatenation::concatenation_axis get_cldnn_axis(size_t tensor_channel);
 
