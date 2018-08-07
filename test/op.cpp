@@ -49,6 +49,8 @@ public:
         NGRAPH_INFO << name << ", " << t;
         return true;
     }
+
+    static runtime::Backend* create_backend(const char* config) { return new StubBackend(); }
 };
 
 TEST(op, is_op)
@@ -69,7 +71,7 @@ TEST(op, is_parameter)
 
 TEST(op, is_supported)
 {
-    runtime::BackendManager::register_backend("STUB", make_shared<StubBackend>());
+    runtime::BackendManager::register_backend("STUB", StubBackend::create_backend);
     auto backend = runtime::Backend::create("STUB");
     EXPECT_TRUE(backend->is_supported<op::Add>(element::f32));
 }
