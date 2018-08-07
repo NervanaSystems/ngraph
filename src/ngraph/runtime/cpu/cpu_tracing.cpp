@@ -73,5 +73,6 @@ void ngraph::runtime::cpu::GenerateTimeline(const std::vector<OpAttributes>& op_
 
 bool ngraph::runtime::cpu::IsTracingEnabled()
 {
-    return (std::getenv("NGRAPH_CPU_TRACING") != nullptr);
+    static bool enabled = (std::getenv("NGRAPH_CPU_TRACING") != nullptr);
+    return enabled;
 }
