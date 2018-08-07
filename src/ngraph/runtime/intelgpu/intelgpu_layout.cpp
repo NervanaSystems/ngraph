@@ -82,10 +82,10 @@ cldnn::tensor runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(const Shape
 {
     vector<size_t> idx(4, 1);
     size_t index = 0;
-    const size_t total_zise = shape_size<Shape>(element_shape);
+    const size_t total_size = shape_size<Shape>(element_shape);
 
     // clDNN requires at least scalar tensor size. We can't create zero sized tensors
-    if (total_zise != 0)
+    if (total_size != 0)
     {
         for (auto i = element_shape.crbegin(); i != element_shape.crend() && index < 3;
              ++i, ++index)
@@ -104,6 +104,20 @@ cldnn::tensor runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(const Shape
     const cldnn::tensor tns(idx.at(3), idx.at(2), idx.at(0), idx.at(1));
 
     return tns;
+}
+
+cldnn::tensor runtime::intelgpu::IntelGPULayout::create_cldnn_offset(const Shape& pad_below)
+{
+    vector<cldnn::tensor::value_type> offset({0, 0, 0, 0});
+    size_t ridx = 4;
+
+    for (auto i = pad_below.crbegin(); i != pad_below.crend() && ridx > 0; ++i, --ridx)
+    {
+        offset.at(ridx - 1) = -(*i);
+    }
+
+    const cldnn::tensor input_offset(offset.at(0), offset.at(1), offset.at(3), offset.at(2));
+    return input_offset;
 }
 
 cldnn::layout runtime::intelgpu::IntelGPULayout::create_cldnn_layout(
