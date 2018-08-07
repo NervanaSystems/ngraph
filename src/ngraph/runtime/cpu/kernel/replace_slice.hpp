@@ -93,18 +93,6 @@ namespace ngraph
                     out.stridedSlice(start_indices, stop_indices, strides)
                         .device(eigen::global_thread_pool_device) = in1;
                 }
-
-                template <typename ElementType>
-                void replace_slice_scalar(void* input0,
-                                          void* input1,
-                                          void* output,
-                                          const Shape& input0_shape,
-                                          const Shape& input1_shape,
-                                          const Coordinate& lower_bounds)
-                {
-                    replace_slice<ElementType, 0>(
-                        input0, input1, output, input0_shape, input1_shape, lower_bounds);
-                }
             }
         }
     }
