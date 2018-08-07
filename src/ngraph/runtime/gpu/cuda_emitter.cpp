@@ -1256,8 +1256,8 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::MaxPool* node)
 }
 
 size_t runtime::gpu::CUDAEmitter::build_softmax_divide(const std::vector<std::string>& dtypes,
-                                                       GPUShape input_shape,
-                                                       GPUShape reduce_shape,
+                                                       NVShape input_shape,
+                                                       NVShape reduce_shape,
                                                        std::vector<size_t> axes_flag)
 {
     std::string kernel_name =
@@ -1287,8 +1287,8 @@ size_t runtime::gpu::CUDAEmitter::build_softmax_divide(const std::vector<std::st
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
 
-    GPUShape input_strides = row_major_strides(input_shape);
-    GPUShape reduce_strides = row_major_strides(reduce_shape);
+    NVShape input_strides = row_major_strides(input_shape);
+    NVShape reduce_strides = row_major_strides(reduce_shape);
 
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
 
