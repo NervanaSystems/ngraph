@@ -125,6 +125,11 @@ namespace ngraph
             Convolution(const std::shared_ptr<Node>& data_batch,
                         const std::shared_ptr<Node>& filters);
 
+            static const std::string& get_op_name()
+            {
+                static const std::string name = "Convolution";
+                return name;
+            }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
             void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
@@ -180,6 +185,11 @@ namespace ngraph
                                     const CoordinateDiff& padding_above_forward,
                                     const Strides& data_dilation_strides_forward);
 
+            static const std::string& get_op_name()
+            {
+                static const std::string name = "ConvolutionBackpropData";
+                return name;
+            }
             void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -276,6 +286,11 @@ namespace ngraph
                                        const CoordinateDiff& padding_above_forward,
                                        const Strides& data_dilation_strides_forward);
 
+            static const std::string& get_op_name()
+            {
+                static const std::string name = "ConvolutionBackpropFilters";
+                return name;
+            }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 

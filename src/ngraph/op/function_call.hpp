@@ -32,6 +32,11 @@ namespace ngraph
             /// \param args The arguments for the function call.
             FunctionCall(std::shared_ptr<Function> function, const NodeVector& args);
 
+            static const std::string& get_op_name()
+            {
+                static const std::string name = "FunctionCall";
+                return name;
+            }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 

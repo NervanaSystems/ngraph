@@ -35,6 +35,11 @@ namespace ngraph
                             size_t batch_axis,
                             size_t seq_axis);
 
+            static const std::string& get_op_name()
+            {
+                static const std::string name = "ReverseSequence";
+                return name;
+            }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 

@@ -80,6 +80,11 @@ namespace ngraph
                       std::shared_ptr<ngraph::Node> variance,
                       bool training = false);
 
+            static const std::string& get_op_name()
+            {
+                static const std::string name = "BatchNorm";
+                return name;
+            }
             const Shape& get_inputs_shape() const { return m_bn_input_shape; }
             const Shape& get_variance_shape() const { return m_bn_variance_shape; }
             const Shape& get_mean_shape() const { return m_bn_mean_shape; }
@@ -111,6 +116,11 @@ namespace ngraph
                               std::shared_ptr<Node> variance,
                               std::shared_ptr<Node> delta);
 
+            static const std::string& get_op_name()
+            {
+                static const std::string name = "BatchNormBackprop";
+                return name;
+            }
             double get_eps_value() const { return epsilon; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

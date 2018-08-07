@@ -106,6 +106,12 @@ namespace ngraph
 
             virtual ~Constant() override;
 
+            static const std::string& get_op_name()
+            {
+                static const std::string name = "Constant";
+                return name;
+            }
+
             /// \brief Wrapper around constructing a shared_ptr of a Constant
             ///
             /// \param type The element type of the tensor constant.

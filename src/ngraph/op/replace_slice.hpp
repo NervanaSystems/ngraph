@@ -76,6 +76,11 @@ namespace ngraph
                          const Coordinate& lower_bounds,
                          const Coordinate& upper_bounds);
 
+            static const std::string& get_op_name()
+            {
+                static const std::string name = "ReplaceSlice";
+                return name;
+            }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 

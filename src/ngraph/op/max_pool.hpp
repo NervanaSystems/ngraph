@@ -55,6 +55,11 @@ namespace ngraph
             /// \param window_shape The window shape.
             MaxPool(const std::shared_ptr<Node>& arg, const Shape& window_shape);
 
+            static const std::string& get_op_name()
+            {
+                static const std::string name = "MaxPool";
+                return name;
+            }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -93,6 +98,11 @@ namespace ngraph
                             const Shape& padding_above,
                             const std::shared_ptr<op::MaxPool>& forward_op = nullptr);
 
+            static const std::string& get_op_name()
+            {
+                static const std::string name = "MaxPoolBackprop";
+                return name;
+            }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 

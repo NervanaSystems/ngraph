@@ -22,7 +22,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Abs::Abs(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Abs", arg)
+    : UnaryElementwiseArithmetic(get_op_name(), arg)
 {
 }
 

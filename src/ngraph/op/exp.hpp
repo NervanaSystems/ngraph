@@ -31,6 +31,11 @@ namespace ngraph
             /// \param arg Node that produces the input tensor.
             Exp(const std::shared_ptr<Node>& arg);
 
+            static const std::string& get_op_name()
+            {
+                static const std::string name = "Exp";
+                return name;
+            }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 

@@ -28,6 +28,11 @@ namespace ngraph
         {
         public:
             Sigmoid(std::shared_ptr<Node> arg);
+            static const std::string& get_op_name()
+            {
+                static const std::string name = "Sigmoid";
+                return name;
+            }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -44,6 +49,11 @@ namespace ngraph
             /// \param arg Node that produces the Sigmoid forward input tensor.
             SigmoidBackprop(std::shared_ptr<ngraph::Node> arg, std::shared_ptr<ngraph::Node> delta);
 
+            static const std::string& get_op_name()
+            {
+                static const std::string name = "SigmoidBackprop";
+                return name;
+            }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
         };

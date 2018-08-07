@@ -49,6 +49,11 @@ namespace ngraph
                    const std::shared_ptr<Node>& arg1,
                    const std::shared_ptr<Node>& arg2);
 
+            static const std::string& get_op_name()
+            {
+                static const std::string name = "Select";
+                return name;
+            }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 

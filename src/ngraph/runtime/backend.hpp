@@ -85,7 +85,7 @@ namespace ngraph
 
             static bool register_backend(const std::string& name, std::shared_ptr<Backend>);
 
-            template<typename OP_TYPE>
+            template <typename OP_TYPE>
             bool is_supported(element::Type t)
             {
                 return true;

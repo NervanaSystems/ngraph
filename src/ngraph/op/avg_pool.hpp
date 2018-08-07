@@ -70,6 +70,11 @@ namespace ngraph
             /// `[n]`
             AvgPool(const std::shared_ptr<Node>& arg, const Shape& window_shape);
 
+            static const std::string& get_op_name()
+            {
+                static const std::string name = "AvgPool";
+                return name;
+            }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -113,6 +118,11 @@ namespace ngraph
                             const Shape& padding_above,
                             bool include_padding_in_avg_computation);
 
+            static const std::string& get_op_name()
+            {
+                static const std::string name = "AvgPoolBackprop";
+                return name;
+            }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 

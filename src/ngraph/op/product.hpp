@@ -35,6 +35,11 @@ namespace ngraph
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
             Product(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
 
+            static const std::string& get_op_name()
+            {
+                static const std::string name = "Product";
+                return name;
+            }
             /// \return The default value for Product.
             virtual std::shared_ptr<Node> get_default_value() const override
             {

@@ -37,6 +37,11 @@ namespace ngraph
                       const Shape& shape,
                       const AxisSet& broadcast_axes);
 
+            static const std::string& get_op_name()
+            {
+                static const std::string name = "Broadcast";
+                return name;
+            }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
