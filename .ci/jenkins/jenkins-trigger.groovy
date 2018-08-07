@@ -10,11 +10,11 @@
 // ngraph-unittest parameters:
 properties( [
     parameters( [
-        string( name: 'BRANCH',             defaultValue: BRANCH_NAME ),
-        string( name: 'PR_URL',             defaultValue: CHANGE_URL ),
-        string( name: 'PR_COMMIT_AUTHOR'],  defaultValue: CHANGE_AUTHOR ),
-        string( name: 'JENKINS_BRANCH',     defaultValue: "chrisl/new-ci-trigger" ),
-        string( name: 'TIMEOUTTIME',        defaultValue: "3600" )
+        string( name: 'BRANCH',           defaultValue: BRANCH_NAME ),
+        string( name: 'PR_URL',           defaultValue: CHANGE_URL ),
+        string( name: 'PR_COMMIT_AUTHOR', defaultValue: CHANGE_AUTHOR ),
+        string( name: 'JENKINS_BRANCH',   defaultValue: "chrisl/new-ci-trigger" ),
+        string( name: 'TIMEOUTTIME',      defaultValue: "3600" )
     ] )
 ] )
 // TRIGGER_URL is no longer needed, as there is no separate merge job
