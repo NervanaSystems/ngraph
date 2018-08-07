@@ -1815,17 +1815,6 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const std::array<std::string, 
         return primitive_index;
     }
 
-    // if the kernel has not been compiled, build it
-    auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name);
-    if (compiled_kernel == nullptr)
-    {
-        codegen::CodeWriter writer;
-        writer << include_helpers();
-        runtime::gpu::CudaKernelBuilder::get_broadcast_op(
-            writer, kernel_name, dtypes, result_shape.size());
-        compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
-    }
-
     // calculate strides
     GPUShape strides = row_major_strides(result_shape);
     // precacluate invariants for integer division via multiplication
@@ -1851,15 +1840,6 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const std::array<std::string, 
         reduced_strides[axis] = 0;
     }
 
-    GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
-    size_t idx_strides = allocator.reserve_argspace(strides.data(), strides.size() * sizeof(int));
-    size_t idx_stride_magic =
-        allocator.reserve_argspace(stride_magic.data(), stride_magic.size() * sizeof(int));
-    size_t idx_stride_shift =
-        allocator.reserve_argspace(stride_shift.data(), stride_shift.size() * sizeof(int));
-    size_t idx_reduced_strides =
-        allocator.reserve_argspace(reduced_strides.data(), reduced_strides.size() * sizeof(int));
-
     // TODO: blending factors are not currently implemented
     float alpha = 1.0f;
     float beta = 0.0f;
@@ -1870,36 +1850,48 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const std::array<std::string, 
     uint32_t aligned_grid_size_x =
         align_to_block_size(static_cast<uint32_t>(nthreads), block_size_x);
 
-    std::unique_ptr<gpu::primitive> broadcast(new gpu::primitive{[=](void** inputs,
-                                                                     void** outputs) mutable {
-        void* strides_d = runtime::gpu::invoke_memory_primitive(m_ctx, idx_strides);
-        void* stride_magic_d = runtime::gpu::invoke_memory_primitive(m_ctx, idx_stride_magic);
-        void* stride_shift_d = runtime::gpu::invoke_memory_primitive(m_ctx, idx_stride_shift);
-        void* reduced_strides_d = runtime::gpu::invoke_memory_primitive(m_ctx, idx_reduced_strides);
+    auto args = this->m_primitive_emitter->add_kernel_args();
+    args.add_placeholder(dtypes[0], "in")
+        .add_placeholder(dtypes[1], "out")
+        .add("strides", strides)
+        .add("stride_magic", stride_magic)
+        .add("stride_shift", stride_shift)
+        .add("reduced_strides", reduced_strides)
+        .add("alpha", alpha)
+        .add("beta", beta)
+        .add("nthreads", nthreads);
 
-        void* args_list[] = {&inputs[0],
-                             &outputs[0],
-                             &strides_d,
-                             &stride_magic_d,
-                             &stride_shift_d,
-                             &reduced_strides_d,
-                             &alpha,
-                             &beta,
-                             &nthreads};
+    // if the kernel has not been compiled, build it
+    auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name);
+    if (compiled_kernel == nullptr)
+    {
+        codegen::CodeWriter writer;
+        writer << include_helpers();
+        runtime::gpu::CudaKernelBuilder::get_kernel_signature(
+            writer, kernel_name, args.get_input_signature());
+        runtime::gpu::CudaKernelBuilder::get_broadcast_op(writer, result_shape.size());
+        compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
+    }
 
-        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                      aligned_grid_size_x,
-                                      1,
-                                      1,
-                                      block_size_x,
-                                      1,
-                                      1,
-                                      0,
-                                      NULL,
-                                      args_list,
-                                      0));
-        debug_sync();
-    }});
+    std::unique_ptr<gpu::primitive> broadcast(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void** args_list = args.resolve_placeholder(0, &inputs[0])
+                                   .resolve_placeholder(1, &outputs[0])
+                                   .get_argument_list();
+
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          aligned_grid_size_x,
+                                          1,
+                                          1,
+                                          block_size_x,
+                                          1,
+                                          1,
+                                          0,
+                                          NULL,
+                                          args_list,
+                                          0));
+            debug_sync();
+        }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(broadcast));
     m_primitive_emitter->cache(hash, primitive_index);
