@@ -40,9 +40,9 @@ node("bdw && nogpu") {
     //      contain references to technology which has not yet been released.
     //
     echo "Calling ngraph-ci-premerge.groovy"
-    ngraphCIPreMerge = load("${JENKINS_DIR}/ngraph-ci-premerge.groovy")
-    returnValue = ngraphCIPreMerge(useMBPipelineSCM=true)
-    echo "ngraph-ci-premerge.groovy returned ${returnValue}"
+    def ngraphCIPreMerge = load("${JENKINS_DIR}/ngraph-ci-premerge.groovy")
+    ngraphCIPreMerge(true)
+    echo "ngraph-ci-premerge.groovy completed"
 
 }  // End:  node( ... )
 
