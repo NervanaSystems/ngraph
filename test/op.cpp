@@ -46,8 +46,15 @@ public:
     }
     bool is_op_supported(const std::string& name, element::Type t) const
     {
-        NGRAPH_INFO << name << ", " << t;
-        return true;
+        bool rc = false;
+        if (name == "Add")
+        {
+            if (t == element::f32)
+            {
+                rc = true;
+            }
+        }
+        return rc;
     }
 
     static runtime::Backend* create_backend(const char* config) { return new StubBackend(); }
@@ -74,4 +81,6 @@ TEST(op, is_supported)
     runtime::BackendManager::register_backend("STUB", StubBackend::create_backend);
     auto backend = runtime::Backend::create("STUB");
     EXPECT_TRUE(backend->is_supported<op::Add>(element::f32));
+    EXPECT_FALSE(backend->is_supported<op::Add>(element::i32));
+    EXPECT_FALSE(backend->is_supported<op::Multiply>(element::f32));
 }
