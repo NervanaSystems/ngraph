@@ -23,6 +23,13 @@
 #include <unordered_map>
 #include <vector>
 
+#ifdef WIN32
+#include <windows.h>
+#define DL_HANDLE HMODULE
+#else
+#define DL_HANDLE void*
+#endif
+
 namespace ngraph
 {
     namespace runtime
