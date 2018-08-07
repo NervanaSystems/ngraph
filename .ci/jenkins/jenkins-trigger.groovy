@@ -8,11 +8,15 @@
 // original script -- we only need to provide this new trigger hook.
 //
 // ngraph-unittest parameters:
-params['BRANCH'] = BRANCH_NAME
-params['PR_URL'] = CHANGE_URL
-params['PR_COMMIT_AUTHOR'] = CHANGE_AUTHOR
-params['JENKINS_BRANCH'] = "chrisl/new-ci-trigger"
-params['TIMEOUTTIME'] = 3600
+properties( [
+    parameters( [
+        string( name: 'BRANCH',             defaultValue: BRANCH_NAME ),
+        string( name: 'PR_URL',             defaultValue: CHANGE_URL ),
+        string( name: 'PR_COMMIT_AUTHOR'],  defaultValue: CHANGE_AUTHOR ),
+        string( name: 'JENKINS_BRANCH',     defaultValue: "chrisl/new-ci-trigger" ),
+        string( name: 'TIMEOUTTIME',        defaultValue: "3600" )
+    ] )
+] )
 // TRIGGER_URL is no longer needed, as there is no separate merge job
 
 // Constants
