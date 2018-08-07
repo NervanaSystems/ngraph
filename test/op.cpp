@@ -17,6 +17,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -68,7 +69,7 @@ TEST(op, is_parameter)
 
 TEST(op, is_supported)
 {
-    runtime::Backend::register_backend("STUB", make_shared<StubBackend>());
+    runtime::BackendManager::register_backend("STUB", make_shared<StubBackend>());
     auto backend = runtime::Backend::create("STUB");
     EXPECT_TRUE(backend->is_supported<op::Add>(element::f32));
 }
