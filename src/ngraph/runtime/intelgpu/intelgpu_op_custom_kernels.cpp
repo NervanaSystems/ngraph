@@ -606,8 +606,10 @@ void runtime::intelgpu::do_select_operation(cldnn::topology& topology,
 void runtime::intelgpu::do_logic_kernel(cldnn::topology& topology,
                                         const string& inputA_name,
                                         const Shape& inputA_shape,
+                                        const string& inputA_type,
                                         const string& inputB_name,
                                         const Shape& inputB_shape,
+                                        const string& inputB_type,
                                         const string& output_name,
                                         const Shape& output_shape,
                                         const element::Type& output_type,
@@ -617,8 +619,8 @@ void runtime::intelgpu::do_logic_kernel(cldnn::topology& topology,
     const string entry_point_name = "logic_" + output_name;
     codegen::CodeWriter writer;
 
-    writer << "__kernel void " << entry_point_name << "(const __global float inputA"
-           << array_dims(inputA_shape) << ", const __global float inputB"
+    writer << "__kernel void " << entry_point_name << "(const __global " << inputA_type << " inputA"
+           << array_dims(inputA_shape) << ", const __global " << inputB_type << " inputB"
            << array_dims(inputB_shape) << ", __global char output" << array_dims(output_shape)
            << ")\n";
 
@@ -636,6 +638,7 @@ void runtime::intelgpu::do_logic_kernel(cldnn::topology& topology,
 
         writer << "if (inputA" << access_dims(inputA_shape) << operation << "inputB"
                << access_dims(inputB_shape) << ")\n";
+
         writer.block_begin();
         {
             writer << "output" << access_dims(output_shape) << " = 1;\n";
