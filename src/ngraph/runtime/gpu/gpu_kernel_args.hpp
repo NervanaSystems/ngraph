@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #pragma once
+
 #include <memory>
 #include <sstream>
 #include <typeindex>
