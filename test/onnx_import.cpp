@@ -20,8 +20,8 @@
 #include "gtest/gtest.h"
 #include "ngraph/frontend/onnx_import/onnx.hpp"
 #include "ngraph/ngraph.hpp"
-#include "util/test_tools.hpp"
 #include "util/ndarray.hpp"
+#include "util/test_tools.hpp"
 
 TEST(onnx, model_add_abc)
 {
@@ -63,14 +63,10 @@ TEST(onnx, model_add_abc_initializers)
 TEST(onnx, model_split_equal_parts_default)
 {
     auto model{ngraph::onnx_import::load_onnx_model(
-            ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/split_equal_parts_default.onnx"))};
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/split_equal_parts_default.onnx"))};
 
     auto args = std::vector<std::vector<float>>{{1, 2, 3, 4, 5, 6}};
-    auto expected_output = std::vector<std::vector<float>> {
-        {1, 2},
-        {3, 4},
-        {5, 6},
-    };
+    auto expected_output = std::vector<std::vector<float>>{{1, 2}, {3, 4}, {5, 6}};
 
     for (std::size_t i = 0; i < expected_output.size(); ++i)
     {
@@ -84,12 +80,12 @@ TEST(onnx, model_split_equal_parts_2d)
 {
     // Split into 2 equal parts along axis=1
     auto model{ngraph::onnx_import::load_onnx_model(
-            ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/split_equal_parts_2d.onnx"))};
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/split_equal_parts_2d.onnx"))};
 
     auto args = std::vector<std::vector<float>>{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}};
     // each output we get as a flattened vector
-    auto expected_output = std::vector<std::vector<float>>{{0, 1, 2, 6, 7, 8},
-                                                           {3, 4, 5, 9, 10, 11}};
+    auto expected_output =
+        std::vector<std::vector<float>>{{0, 1, 2, 6, 7, 8}, {3, 4, 5, 9, 10, 11}};
 
     for (std::size_t i = 0; i < expected_output.size(); ++i)
     {
