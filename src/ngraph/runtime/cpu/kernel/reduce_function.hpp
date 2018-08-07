@@ -68,8 +68,8 @@ namespace ngraph
                         call_frame->call(outputs, inputs);
                         *R = r;
                     }
-                    float initialize() const { return initial; }
-                    float finalize(const ElementType R) const { return R; }
+                    ElementType initialize() const { return initial; }
+                    ElementType finalize(const ElementType R) const { return R; }
                 };
 
                 template <typename ElementType, unsigned int Rank, unsigned int ReductionDims>
