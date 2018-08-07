@@ -21,8 +21,8 @@
 #include <cudnn.h>
 
 #include "ngraph/log.hpp"
-#include "ngraph/runtime/gpu/gpu_util.hpp"
 #include "ngraph/runtime/gpu/gpu_host_parameters.hpp"
+#include "ngraph/runtime/gpu/gpu_util.hpp"
 
 namespace ngraph
 {
