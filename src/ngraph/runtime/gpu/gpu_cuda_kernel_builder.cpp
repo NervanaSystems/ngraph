@@ -507,10 +507,9 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_window_op(
     writer.block_end();
 }
 
-void runtime::gpu::CudaKernelBuilder::get_replace_slice_op(
-    codegen::CodeWriter& writer,
-    int nthreads_per_block,
-    const size_t rank)
+void runtime::gpu::CudaKernelBuilder::get_replace_slice_op(codegen::CodeWriter& writer,
+                                                           int nthreads_per_block,
+                                                           const size_t rank)
 {
     writer.block_begin();
     {
@@ -518,14 +517,8 @@ void runtime::gpu::CudaKernelBuilder::get_replace_slice_op(
         writer << "if (tid < nthreads)\n";
         writer.block_begin();
         {
-            coordinate_transform_to_multi_d(writer,
-                                            "dim_strides",
-                                            "dim_magic",
-                                            "dim_shift",
-                                            "tid",
-                                            "dimension",
-                                            rank,
-                                            true);
+            coordinate_transform_to_multi_d(
+                writer, "dim_strides", "dim_magic", "dim_shift", "tid", "dimension", rank, true);
             writer << "int source_di;\n";
             writer << "bool on_stride;\n";
             writer << "bool in_slice_di;\n";
@@ -534,11 +527,11 @@ void runtime::gpu::CudaKernelBuilder::get_replace_slice_op(
             for (int i = 0; i < rank; i++)
             {
                 // determine coordinate in slice
-                writer << "source_di = division_by_invariant_multiplication(dimension"
-                       << i << ", slice_magic" << i << ", slice_shift" << i << ");\n";
+                writer << "source_di = division_by_invariant_multiplication(dimension" << i
+                       << ", slice_magic" << i << ", slice_shift" << i << ");\n";
 
-                writer << "on_stride = (mod16(dimension" << i << ", source_di, slice_str" << i << ") == 0);\n";
-
+                writer << "on_stride = (mod16(dimension" << i << ", source_di, slice_str" << i
+                       << ") == 0);\n";
 
                 writer << "in_slice_di = "
                        << "(dimension" << i << " >= lower_bounds" << i << ") && "

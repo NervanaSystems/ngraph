@@ -1655,7 +1655,8 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const std::array<std::stri
                                                       GPUShape slice_strides)
 {
     // assumes NC{d1,...,dn} format
-    std::string kernel_name = "repslices_" + join(dtypes, "_") + "_r" + std::to_string(tensor_shape.size());
+    std::string kernel_name =
+        "repslices_" + join(dtypes, "_") + "_r" + std::to_string(tensor_shape.size());
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
 
     std::stringstream ss;
@@ -1670,7 +1671,6 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const std::array<std::stri
     {
         return primitive_index;
     }
-
 
     // calculate strides
     GPUShape input_strides = row_major_strides(tensor_shape);
@@ -1701,7 +1701,6 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const std::array<std::stri
     float alpha = 1.0f;
     float beta = 0.0f;
 
-
     auto args = m_primitive_emitter->add_kernel_args();
     args.add_placeholder(dtypes[0], "in")
         .add_placeholder(dtypes[1], "source")
@@ -1719,7 +1718,6 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const std::array<std::stri
         .add("src_strides", source_strides)
         .add("nthreads", nthreads);
 
-
     // if the kernel has not been compiled, build it
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name);
     if (compiled_kernel == nullptr)
@@ -1732,27 +1730,26 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const std::array<std::stri
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
 
+    std::unique_ptr<gpu::primitive> replace_slice(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void** args_list = args.resolve_placeholder(0, &inputs[0])
+                                   .resolve_placeholder(1, &inputs[1])
+                                   .resolve_placeholder(2, &outputs[0])
+                                   .get_argument_list();
 
-    std::unique_ptr<gpu::primitive> replace_slice(new gpu::primitive{[=](void** inputs,
-                                                                         void** outputs) mutable {
-        void** args_list = args.resolve_placeholder(0, &inputs[0])
-                               .resolve_placeholder(1, &inputs[1])
-                               .resolve_placeholder(2, &outputs[0])
-                               .get_argument_list();
-
-        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                      nblocks,
-                                      1,
-                                      1,
-                                      nthreads_per_block,
-                                      1,
-                                      1,
-                                      0,
-                                      NULL,
-                                      args_list,
-                                      0));
-        debug_sync();
-    }});
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          nblocks,
+                                          1,
+                                          1,
+                                          nthreads_per_block,
+                                          1,
+                                          1,
+                                          0,
+                                          NULL,
+                                          args_list,
+                                          0));
+            debug_sync();
+        }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(replace_slice));
     m_primitive_emitter->cache(hash, primitive_index);
