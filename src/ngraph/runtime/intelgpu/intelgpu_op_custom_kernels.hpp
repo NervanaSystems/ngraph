@@ -82,10 +82,20 @@ namespace ngraph
                                  const element::Type& output_type,
                                  const std::string& operation);
 
+            void do_reverse_operation(cldnn::topology& topology,
+                                      const std::string& input_name,
+                                      const Shape& input_shape,
+                                      const std::string& output_name,
+                                      const Shape& output_shape,
+                                      const element::Type& output_type,
+                                      const AxisSet& reversed_axes);
+
             // Helper functions used in cldnn::custom_gpu_primitive kernels
             std::vector<cldnn_arg> get_kernel_args(size_t input, size_t output);
             std::string array_dims(const Shape& dimentions);
-            std::string access_dims(const Shape& dimentions, const AxisSet& axis = {});
+            std::string access_dims(const Shape& dimentions,
+                                    const AxisSet& axis = {},
+                                    bool is_reversed = false);
         }
     }
 }
