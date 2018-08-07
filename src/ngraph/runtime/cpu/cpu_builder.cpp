@@ -79,10 +79,15 @@
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/kernel/abs.hpp"
+#include "ngraph/runtime/cpu/kernel/acos.hpp"
 #include "ngraph/runtime/cpu/kernel/add.hpp"
 #include "ngraph/runtime/cpu/kernel/and.hpp"
+#include "ngraph/runtime/cpu/kernel/asin.hpp"
+#include "ngraph/runtime/cpu/kernel/atan.hpp"
 #include "ngraph/runtime/cpu/kernel/broadcast.hpp"
 #include "ngraph/runtime/cpu/kernel/ceil.hpp"
+#include "ngraph/runtime/cpu/kernel/cos.hpp"
+#include "ngraph/runtime/cpu/kernel/cosh.hpp"
 #include "ngraph/runtime/cpu/kernel/cwise_pow.hpp"
 #include "ngraph/runtime/cpu/kernel/divide.hpp"
 #include "ngraph/runtime/cpu/kernel/equal.hpp"
@@ -103,8 +108,12 @@
 #include "ngraph/runtime/cpu/kernel/relu.hpp"
 #include "ngraph/runtime/cpu/kernel/result.hpp"
 #include "ngraph/runtime/cpu/kernel/sign.hpp"
+#include "ngraph/runtime/cpu/kernel/sin.hpp"
+#include "ngraph/runtime/cpu/kernel/sinh.hpp"
 #include "ngraph/runtime/cpu/kernel/sqrt.hpp"
 #include "ngraph/runtime/cpu/kernel/subtract.hpp"
+#include "ngraph/runtime/cpu/kernel/tan.hpp"
+#include "ngraph/runtime/cpu/kernel/tanh.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
@@ -243,9 +252,39 @@ namespace ngraph
             }
 
             template <>
+            void Builder::BUILDER_DECL(ngraph::op::Acos)
+            {
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::acos);
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Asin)
+            {
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::asin);
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Atan)
+            {
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::atan);
+            }
+
+            template <>
             void Builder::BUILDER_DECL(ngraph::op::Ceiling)
             {
                 BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::ceil);
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Cos)
+            {
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::cos);
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Cosh)
+            {
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::cosh);
             }
 
             template <>
@@ -303,6 +342,30 @@ namespace ngraph
             }
 
             template <>
+            void Builder::BUILDER_DECL(ngraph::op::Sin)
+            {
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::sin);
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Sinh)
+            {
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::sinh);
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Tan)
+            {
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::tan);
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Tanh)
+            {
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::tanh);
+            }
+
+            template <>
             void Builder::BUILDER_DECL(ngraph::op::Constant)
             {
                 auto& functors = external_function->get_functors();
@@ -342,7 +405,12 @@ namespace ngraph
             REGISTER_OP_BUILDER(Divide);
             REGISTER_OP_BUILDER(Power);
             REGISTER_OP_BUILDER(Abs);
+            REGISTER_OP_BUILDER(Acos);
+            REGISTER_OP_BUILDER(Asin);
+            REGISTER_OP_BUILDER(Atan);
             REGISTER_OP_BUILDER(Ceiling);
+            REGISTER_OP_BUILDER(Cos);
+            REGISTER_OP_BUILDER(Cosh)
             REGISTER_OP_BUILDER(Floor);
             REGISTER_OP_BUILDER(Negative);
             REGISTER_OP_BUILDER(Relu);
@@ -350,6 +418,10 @@ namespace ngraph
             REGISTER_OP_BUILDER(Log);
             REGISTER_OP_BUILDER(Sqrt);
             REGISTER_OP_BUILDER(Sign);
+            REGISTER_OP_BUILDER(Sin);
+            REGISTER_OP_BUILDER(Sinh);
+            REGISTER_OP_BUILDER(Tan);
+            REGISTER_OP_BUILDER(Tanh);
 
             REGISTER_OP_BUILDER(Not);
             REGISTER_OP_BUILDER(Equal);

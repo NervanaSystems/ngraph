@@ -33,6 +33,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
@@ -78,6 +79,7 @@
 #include "ngraph/runtime/reference/less.hpp"
 #include "ngraph/runtime/reference/less_eq.hpp"
 #include "ngraph/runtime/reference/log.hpp"
+#include "ngraph/runtime/reference/lrn.hpp"
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/max_pool.hpp"
 #include "ngraph/runtime/reference/maximum.hpp"
@@ -265,6 +267,22 @@ private:
                                                     reinterpret_cast<T*>(out[0]->get_data_ptr()),
                                                     args[2]->get_shape());
             }
+        }
+        else if (node_op == "BatchNormBackprop")
+        {
+            ngraph::op::BatchNormBackprop* bn_bprop =
+                dynamic_cast<ngraph::op::BatchNormBackprop*>(&node);
+            reference::batch_norm_backprop(bn_bprop->get_eps_value(),
+                                           reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                           reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                           reinterpret_cast<T*>(args[2]->get_data_ptr()),
+                                           reinterpret_cast<T*>(args[3]->get_data_ptr()),
+                                           reinterpret_cast<T*>(args[4]->get_data_ptr()),
+                                           reinterpret_cast<T*>(args[5]->get_data_ptr()),
+                                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                           reinterpret_cast<T*>(out[1]->get_data_ptr()),
+                                           reinterpret_cast<T*>(out[2]->get_data_ptr()),
+                                           args[2]->get_shape());
         }
         else if (node_op == "AvgPoolBackprop")
         {
@@ -559,6 +577,17 @@ private:
         {
             reference::log<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+        }
+        else if (node_op == "LRN")
+        {
+            const op::LRN* lrn = static_cast<const op::LRN*>(&node);
+            reference::lrn<T>(args[0]->get_data_ptr<T>(),
+                              out[0]->get_data_ptr<T>(),
+                              args[0]->get_shape(),
+                              lrn->get_alpha(),
+                              lrn->get_beta(),
+                              lrn->get_bias(),
+                              lrn->get_nsize());
         }
         else if (node_op == "Max")
         {
