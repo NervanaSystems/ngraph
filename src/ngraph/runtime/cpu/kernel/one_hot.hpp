@@ -36,8 +36,6 @@ namespace ngraph
                                     size_t one_hot_axis)
 
                 {
-                    size_t bounds = out_shape[one_hot_axis];
-
                     eigen::EigenVector<ElementType> arg_vector(
                         static_cast<ElementType*>(arg), eigen::fmt::V(shape_size(arg_shape)));
                     eigen::EigenVector<ElementType> out_vector(
@@ -45,15 +43,7 @@ namespace ngraph
 
                     out_vector.setZero();
                     auto pos_raw = arg_vector(0, 0);
-                    if (floor(pos_raw) != pos_raw)
-                    {
-                        throw(std::range_error("One-hot: non-integral value in input"));
-                    }
                     size_t pos = pos_raw;
-                    if (pos >= bounds)
-                    {
-                        throw(std::range_error("One-hot: value is out of category range"));
-                    }
                     out_vector(pos, 0) = 1;
                 }
 
@@ -66,7 +56,6 @@ namespace ngraph
                                     size_t one_hot_axis)
 
                 {
-                    size_t bounds = out_shape[one_hot_axis];
                     eigen::EigenVector<ElementType> arg_vector(
                         static_cast<ElementType*>(arg), eigen::fmt::V(shape_size(arg_shape)));
                     eigen::EigenMatrix<ElementType> out_vector(
@@ -76,15 +65,7 @@ namespace ngraph
                     for (size_t i = 0; i < arg_shape[0]; i++)
                     {
                         auto pos_raw = arg_vector(i, 0);
-                        if (floor(pos_raw) != pos_raw)
-                        {
-                            throw(std::range_error("One-hot: non-integral value in input"));
-                        }
                         size_t pos = pos_raw;
-                        if (pos >= bounds)
-                        {
-                            throw(std::range_error("One-hot: value is out of category range"));
-                        }
                         one_hot_axis == 0 ? out_vector(pos, i) = 1 : out_vector(i, pos) = 1;
                     }
                 }
