@@ -20,6 +20,7 @@
 #include "attribute.hpp"
 #include "ngraph/frontend/onnx_import/op/add.hpp"
 #include "ngraph/frontend/onnx_import/op/constant.hpp"
+#include "ngraph/frontend/onnx_import/op/conv.hpp"
 #include "ngraph/frontend/onnx_import/op/split.hpp"
 #include "ops_bridge.hpp"
 
@@ -52,6 +53,11 @@ namespace ngraph
                 return op::split(node, node.get_ng_inputs().at(0));
             }
 
+            NodeVector conv(const Node& node)
+            {
+                return op::conv(node, node.get_ng_inputs());
+            }
+
             class ops_bridge
             {
             public:
@@ -78,6 +84,7 @@ namespace ngraph
                 {
                     m_map.emplace("Add", std::bind(add, std::placeholders::_1));
                     m_map.emplace("Constant", std::bind(constant, std::placeholders::_1));
+                    m_map.emplace("Conv", std::bind(conv, std::placeholders::_1));
                     m_map.emplace("Split", std::bind(split, std::placeholders::_1));
                 }
 
