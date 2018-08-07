@@ -94,3 +94,22 @@ TEST(onnx, model_split_equal_parts_2d)
         EXPECT_EQ(expected_output[i], result_vectors[0]);
     }
 }
+
+TEST(onnx, model_split_variable_parts_2d)
+{
+    // Split into variable parts {2, 4} along axis=1
+    auto model{ngraph::onnx_import::load_onnx_model(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/split_variable_parts_2d.onnx"))};
+
+    auto args = std::vector<std::vector<float>>{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}};
+    // each output we get as a flattened vector
+    auto expected_output =
+        std::vector<std::vector<float>>{{0, 1, 6, 7}, {2, 3, 4, 5, 8, 9, 10, 11}};
+
+    for (std::size_t i = 0; i < expected_output.size(); ++i)
+    {
+        auto result_vectors = execute(model[i], args, "CPU");
+        EXPECT_EQ(result_vectors.size(), 1);
+        EXPECT_EQ(expected_output[i], result_vectors[0]);
+    }
+}
