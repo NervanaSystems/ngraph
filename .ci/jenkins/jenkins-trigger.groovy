@@ -38,11 +38,11 @@ node("bdw && nogpu") {
     deleteDir()  // Clear the workspace before starting
 
     echo "jenkins-trigger parameters:"
-    echo "BRANCH           = ${BRANCH}"
-    echo "PR_URL           = ${PR_URL}"
-    echo "PR_COMMIT_AUTHOR = ${PR_COMMIT_AUTHOR}"
-    echo "JENKINS_BRANCH   = ${JENKINS_BRANCH}"
-    echo "TIMEOUTTIME      = ${TIMEOUTTIME}"
+    echo "BRANCH           = ${params.BRANCH}"
+    echo "PR_URL           = ${params.PR_URL}"
+    echo "PR_COMMIT_AUTHOR = ${params.PR_COMMIT_AUTHOR}"
+    echo "JENKINS_BRANCH   = ${params.JENKINS_BRANCH}"
+    echo "TIMEOUTTIME      = ${params.TIMEOUTTIME}"
 
     // Clone the cje-algo directory which contains our Jenkins groovy scripts
     git(branch: JENKINS_BRANCH, changelog: false, poll: false,
