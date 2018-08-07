@@ -36,5 +36,12 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(CPUR
                                                                             size_t primitive_index)
 {
     mkldnn::stream s(mkldnn::stream::kind::eager);
-    s.submit({*ctx->mkldnn_primitives[primitive_index]}).wait();
+    try
+    {
+        s.submit({*ctx->mkldnn_primitives[primitive_index]}).wait();
+    }
+    catch (const mkldnn::error& e)
+    {
+        throw ngraph_error("Could not run mkdnn primitive " + e.message);
+    }
 }

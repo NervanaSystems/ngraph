@@ -37,6 +37,7 @@
 #include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
 
 #include "ngraph/node.hpp"
+#include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
@@ -49,6 +50,7 @@
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/reverse.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/util.hpp"
@@ -70,7 +72,7 @@ static void arguments_check(const shared_ptr<Node>& op, size_t input, size_t out
 
 static void argument_type_check(const element::Type& type)
 {
-    if (type != element::f32)
+    if (type != element::f32 && type != element::boolean)
     {
         ostringstream os;
         os << "Kernel data type " << type << " is not supported";
@@ -111,6 +113,33 @@ static void do_unary_operation(cldnn::topology& topology,
     topology.add(cldnn_unary);
 }
 
+static void do_pooling_operation(cldnn::topology& topology,
+                                 const shared_ptr<Node>& op,
+                                 const Shape& pool_shape,
+                                 const Strides& pool_strides,
+                                 const Shape& pad_below,
+                                 const Shape& pad_above,
+                                 const cldnn::pooling_mode mode)
+{
+    arguments_check(op, 1, 1);
+
+    const string& input_name = op->get_inputs().begin()->get_tensor().get_name();
+    const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+    const Shape& out_shape = op->get_outputs().begin()->get_shape();
+    const cldnn::tensor output_size =
+        runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(out_shape);
+
+    const cldnn::tensor input_offset =
+        runtime::intelgpu::IntelGPULayout::create_cldnn_offset(pad_below);
+    const cldnn::tensor size = runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(pool_shape);
+    const cldnn::tensor stride =
+        runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(pool_strides);
+
+    const cldnn::pooling cldnn_pooling(
+        output_name, input_name, mode, size, stride, input_offset, output_size);
+    topology.add(cldnn_pooling);
+}
+
 static void do_logical_operation(cldnn::topology& topology,
                                  const shared_ptr<Node>& op,
                                  const string& operation)
@@ -119,9 +148,13 @@ static void do_logical_operation(cldnn::topology& topology,
 
     const string& inputA_name = op->get_inputs().at(0).get_tensor().get_name();
     const Shape& inputA_shape = op->get_inputs().at(0).get_shape();
+    const string& inputA_type =
+        op->get_inputs().at(0).get_tensor().get_element_type().c_type_string();
     argument_type_check(op->get_inputs().at(0).get_tensor().get_element_type());
     const string& inputB_name = op->get_inputs().at(1).get_tensor().get_name();
     const Shape& inputB_shape = op->get_inputs().at(1).get_shape();
+    const string& inputB_type =
+        op->get_inputs().at(1).get_tensor().get_element_type().c_type_string();
     argument_type_check(op->get_inputs().at(1).get_tensor().get_element_type());
     const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
     const Shape& output_shape = op->get_outputs().begin()->get_shape();
@@ -130,8 +163,10 @@ static void do_logical_operation(cldnn::topology& topology,
     runtime::intelgpu::do_logic_kernel(topology,
                                        inputA_name,
                                        inputA_shape,
+                                       inputA_type,
                                        inputB_name,
                                        inputB_shape,
+                                       inputB_type,
                                        output_name,
                                        output_shape,
                                        output_type,
@@ -286,6 +321,35 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                 output_shape,
                                 output_type);
         }
+        else if ("Reverse" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const string& input_name = op->get_inputs().at(0).get_tensor().get_name();
+            const Shape& input_shape = op->get_inputs().at(0).get_shape();
+            const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+            const Shape& output_shape = op->get_outputs().begin()->get_shape();
+            const element::Type& output_type =
+                op->get_outputs().begin()->get_tensor().get_element_type();
+
+            const shared_ptr<op::Reverse> reverse_op = static_pointer_cast<op::Reverse>(op);
+            const AxisSet& reversed_axes = reverse_op->get_reversed_axes();
+
+            if (reversed_axes.empty())
+            {
+                do_equal_propagation(topology, input_name, output_name);
+            }
+            else
+            {
+                do_reverse_operation(topology,
+                                     input_name,
+                                     input_shape,
+                                     output_name,
+                                     output_shape,
+                                     output_type,
+                                     reversed_axes);
+            }
+        }
         else if ("Add" == op->description())
         {
             do_eltwise_operation(topology, op, cldnn::eltwise_mode::sum);
@@ -344,41 +408,35 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         }
         else if ("MaxPool" == op->description())
         {
-            arguments_check(op, 1, 1);
-
-            const string& input_name = op->get_inputs().begin()->get_tensor().get_name();
-            const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
-            const Shape& out_shape = op->get_outputs().begin()->get_shape();
-            const cldnn::tensor output_size =
-                runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(out_shape);
-
             const shared_ptr<op::MaxPool> max_pool = static_pointer_cast<op::MaxPool>(op);
+
             const Shape& pool_shape = max_pool->get_window_shape();
             const Strides& pool_strides = max_pool->get_window_movement_strides();
-            const Shape& pad = max_pool->get_padding_below();
+            const Shape& pad_below = max_pool->get_padding_below();
+            const Shape& pad_above = max_pool->get_padding_above();
 
-            vector<cldnn::tensor::value_type> offset({0, 0, 0, 0}); // No action by default
-            size_t ridx = 4;
-            for (auto i = pad.crbegin(); i != pad.crend() && ridx > 0; ++i, --ridx)
-            {
-                offset.at(ridx - 1) = -(*i);
-            }
+            do_pooling_operation(topology,
+                                 op,
+                                 pool_shape,
+                                 pool_strides,
+                                 pad_below,
+                                 pad_above,
+                                 cldnn::pooling_mode::max);
+        }
+        else if ("AvgPool" == op->description())
+        {
+            const shared_ptr<op::AvgPool> avg_pool = static_pointer_cast<op::AvgPool>(op);
 
-            const cldnn::tensor input_offset(
-                offset.at(0), offset.at(1), offset.at(3), offset.at(2));
-            const cldnn::tensor size =
-                runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(pool_shape);
-            const cldnn::tensor strides =
-                runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(pool_strides);
+            const Shape& pool_shape = avg_pool->get_window_shape();
+            const Strides& pool_strides = avg_pool->get_window_movement_strides();
+            const Shape& pad_below = avg_pool->get_padding_below();
+            const Shape& pad_above = avg_pool->get_padding_above();
+            const cldnn::pooling_mode mode = avg_pool->get_include_padding_in_avg_computation()
+                                                 ? cldnn::pooling_mode::average
+                                                 : cldnn::pooling_mode::average_no_padding;
 
-            const cldnn::pooling cldd_pooling(output_name,
-                                              input_name,
-                                              cldnn::pooling_mode::max,
-                                              size,
-                                              strides,
-                                              input_offset,
-                                              output_size);
-            topology.add(cldd_pooling);
+            do_pooling_operation(
+                topology, op, pool_shape, pool_strides, pad_below, pad_above, mode);
         }
         else if ("Broadcast" == op->description())
         {
@@ -580,6 +638,14 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         else if ("LessEq" == op->description())
         {
             do_logical_operation(topology, op, " <= ");
+        }
+        else if ("And" == op->description())
+        {
+            do_logical_operation(topology, op, " && ");
+        }
+        else if ("Or" == op->description())
+        {
+            do_logical_operation(topology, op, " || ");
         }
         else if ("Subtract" == op->description())
         {
