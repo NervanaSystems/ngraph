@@ -8,12 +8,12 @@
 // original script -- we only need to provide this new trigger hook.
 //
 // ngraph-unittest parameters:
-BRANCH = BRANCH_NAME
-PR_URL = CHANGE_URL
-PR_COMMIT_AUTHOR = CHANGE_AUTHOR
-// TRIGGER_URL        <- No longer needed
-JENKINS_BRANCH = "chrisl/new-ci-trigger"
-TIMEOUTTIME = 3600
+params.BRANCH = BRANCH_NAME
+params.PR_URL = CHANGE_URL
+params.PR_COMMIT_AUTHOR = CHANGE_AUTHOR
+params.JENKINS_BRANCH = "chrisl/new-ci-trigger"
+params.TIMEOUTTIME = 3600
+// TRIGGER_URL is no longer needed, as there is no separate merge job
 
 // Constants
 JENKINS_DIR="."
