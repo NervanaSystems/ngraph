@@ -193,7 +193,7 @@ mkldnn::memory::data_type
     runtime::cpu::mkldnn_utils::get_mkldnn_data_type(const ngraph::element::Type& type)
 {
     auto it = s_mkldnn_data_type_map.find(type);
-    if (it == s_mkldnn_data_type_map.end() || it->second == memory::data_type::data_undef)
+    if (it == s_mkldnn_data_type_map.end())
     {
         throw ngraph_error("No MKLDNN data type exists for the given element type");
     }
@@ -209,18 +209,211 @@ const std::string& runtime::cpu::mkldnn_utils::get_mkldnn_format_string(memory::
     return it->second;
 }
 
-mkldnn::memory::format runtime::cpu::mkldnn_utils::get_input_mkldnn_format(const Node* node,
-                                                                           size_t index)
-{
-    auto tvl = node->get_inputs()[index].get_output().get_tensor_view()->get_tensor_view_layout();
-    return dynamic_cast<runtime::cpu::LayoutDescriptor&>(*tvl).get_mkldnn_format();
-}
-
-mkldnn::memory::format runtime::cpu::mkldnn_utils::get_output_mkldnn_format(const Node* node,
+const mkldnn::memory::desc& runtime::cpu::mkldnn_utils::get_input_mkldnn_md(const Node* node,
                                                                             size_t index)
 {
+    auto cpu_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
+        node->get_inputs()[index].get_output().get_tensor_view()->get_tensor_view_layout());
+    return cpu_tvl->get_mkldnn_md();
+}
+
+const mkldnn::memory::desc& runtime::cpu::mkldnn_utils::get_output_mkldnn_md(const Node* node,
+                                                                             size_t index)
+{
     auto tvl = node->get_output_tensor_view(index)->get_tensor_view_layout();
-    return dynamic_cast<runtime::cpu::LayoutDescriptor&>(*tvl).get_mkldnn_format();
+    return dynamic_cast<runtime::cpu::LayoutDescriptor&>(*tvl).get_mkldnn_md();
+}
+
+mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_default_mkldnn_md(
+    const Node* node,
+    size_t index,
+    bool output = false,
+    mkldnn::memory::format format = mkldnn::memory::format::any)
+{
+    Shape shape;
+    mkldnn::memory::data_type et;
+    if (output)
+    {
+        shape = node->get_output_shape(index);
+        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_output_element_type(0));
+    }
+    else
+    {
+        shape = node->get_input_shape(index);
+        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0));
+    }
+
+    return memory::desc(memory::dims(shape.begin(), shape.end()), et, format);
+}
+
+bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const Shape& dims,
+                                                      const Strides& strides,
+                                                      const ngraph::element::Type type)
+{
+    auto it = s_mkldnn_data_type_map.find(type);
+    if (it == s_mkldnn_data_type_map.end() || it->second == mkldnn::memory::data_type::data_undef)
+    {
+        return false;
+    }
+    if (dims.size() > TENSOR_MAX_DIMS)
+    {
+        return false;
+    }
+    if (shape_size(dims) == 0)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool runtime::cpu::mkldnn_utils::is_perm_sorted(const Strides& a, const AxisVector& perm)
+{
+    for (size_t i = 0; i < a.size() - 1; i++)
+    {
+        if (a[perm[i]] < a[perm[i + 1]])
+            return false;
+    }
+    return true;
+}
+
+mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md(
+    const Shape& dims, const Strides& strides, const ngraph::element::Type type)
+{
+    memory::dims dim(dims.begin(), dims.end());
+    memory::dims stride(strides.begin(), strides.end());
+    memory::data_type dtype = get_mkldnn_data_type(type);
+
+    if (dims.size() == 1)
+    {
+        return memory::desc(dim, dtype, memory::format::x);
+    }
+    if (dims.size() == 2)
+    {
+        if (is_perm_sorted(strides, {0, 1}))
+        {
+            return memory::desc(dim, dtype, memory::format::nc);
+        }
+    }
+
+    if (dims.size() == 4)
+    {
+        if (is_perm_sorted(strides, {0, 1, 2, 3}))
+        {
+            return memory::desc(dim, dtype, memory::format::nchw);
+        }
+        if (is_perm_sorted(strides, {0, 2, 3, 1}))
+        {
+            return memory::desc(dim, dtype, memory::format::nhwc);
+        }
+    }
+
+    if (dims.size() == 5)
+    {
+        if (is_perm_sorted(strides, {0, 1, 2, 3, 4}))
+        {
+            return memory::desc(dim, dtype, memory::format::ncdhw);
+        }
+        if (is_perm_sorted(strides, {0, 2, 3, 4, 1}))
+        {
+            return memory::desc(dim, dtype, memory::format::ndhwc);
+        }
+    }
+
+    mkldnn_memory_desc_t md;
+    md.primitive_kind = mkldnn_memory;
+    md.ndims = static_cast<int>(dim.size());
+    md.format = mkldnn_blocked;
+    md.data_type = mkldnn::memory::convert_to_c(dtype);
+
+    for (size_t i = 0; i < dim.size(); i++)
+    {
+        md.layout_desc.blocking.block_dims[i] = 1;
+        md.layout_desc.blocking.strides[1][i] = 1;
+        md.layout_desc.blocking.strides[0][i] = stride[i];
+        md.layout_desc.blocking.padding_dims[i] = dim[i];
+        md.layout_desc.blocking.offset_padding_to_data[i] = 0;
+        md.dims[i] = dim[i];
+    }
+    md.layout_desc.blocking.offset_padding = 0;
+
+    return memory::desc(md);
+}
+
+memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& in,
+                                                           AxisVector& axis_order)
+{
+    mkldnn_memory_desc_t md;
+    md.primitive_kind = in.data.primitive_kind;
+    md.ndims = in.data.ndims;
+    md.format = mkldnn_blocked;
+    md.data_type = in.data.data_type;
+
+    for (size_t i = 0; i < in.data.ndims; i++)
+    {
+        md.layout_desc.blocking.block_dims[i] =
+            in.data.layout_desc.blocking.block_dims[axis_order[i]];
+        md.layout_desc.blocking.strides[1][i] =
+            in.data.layout_desc.blocking.strides[1][axis_order[i]];
+        md.layout_desc.blocking.strides[0][i] =
+            in.data.layout_desc.blocking.strides[0][axis_order[i]];
+        md.layout_desc.blocking.padding_dims[i] =
+            in.data.layout_desc.blocking.padding_dims[axis_order[i]];
+        md.layout_desc.blocking.offset_padding_to_data[i] =
+            in.data.layout_desc.blocking.offset_padding_to_data[axis_order[i]];
+        md.dims[i] = in.data.dims[axis_order[i]];
+    }
+    md.layout_desc.blocking.offset_padding = in.data.layout_desc.blocking.offset_padding;
+
+    auto out_md = memory::desc(md);
+
+    auto get_named_md = [](const mkldnn_memory_desc_t& blk, const mkldnn_memory_format_t format) {
+        mkldnn_memory_desc_t named_md;
+        // Could throw an exception if named `format` is not compatible with `md.dims`
+        error::wrap_c_api(
+            mkldnn_memory_desc_init(&named_md, blk.ndims, blk.dims, blk.data_type, format), "");
+        return memory::desc(named_md);
+    };
+
+    auto compare_named_md = [&](const mkldnn_memory_desc_t& blk,
+                                const mkldnn_memory_format_t format,
+                                const memory::desc& out) {
+        try
+        {
+            auto named_md = get_named_md(blk, format);
+            if (compare_mkldnn_mds(named_md, out))
+            {
+                return true;
+            }
+        }
+        catch (const mkldnn::error&)
+        {
+            // Cannot create the named descriptor compatible with `in` desc
+            return false;
+        }
+        return false;
+    };
+
+#define CANONICALIZE_MD(X)                                                                         \
+    if (compare_named_md(md, X, out_md))                                                           \
+        return get_named_md(md, X);
+    switch (md.ndims)
+    {
+    case 1: CANONICALIZE_MD(mkldnn_x); break;
+    case 2: CANONICALIZE_MD(mkldnn_nc); break;
+    case 4:
+        CANONICALIZE_MD(mkldnn_nchw);
+        CANONICALIZE_MD(mkldnn_nhwc);
+        CANONICALIZE_MD(mkldnn_nChw8c);
+        CANONICALIZE_MD(mkldnn_nChw16c);
+        break;
+    case 5:
+        CANONICALIZE_MD(mkldnn_ncdhw);
+        CANONICALIZE_MD(mkldnn_ndhwc);
+        CANONICALIZE_MD(mkldnn_nCdhw16c);
+        break;
+    default:;
+    }
+    return out_md;
 }
 
 bool runtime::cpu::mkldnn_utils::use_mkldnn_kernel(const ngraph::Node* node)
@@ -231,17 +424,24 @@ bool runtime::cpu::mkldnn_utils::use_mkldnn_kernel(const ngraph::Node* node)
                 ->is_mkldnn_op());
 }
 
-bool runtime::cpu::mkldnn_utils::compare_mkldnn_formats(mkldnn::memory::format fmt1,
-                                                        mkldnn::memory::format fmt2)
+bool runtime::cpu::mkldnn_utils::compare_mkldnn_formats(mkldnn::memory::format lhs,
+                                                        mkldnn::memory::format rhs)
 {
     std::set<mkldnn::memory::format> similar_4d_formats{mkldnn::memory::format::nchw,
                                                         mkldnn::memory::format::oihw};
-    if ((fmt1 == fmt2) || (similar_4d_formats.find(fmt1) != similar_4d_formats.end() &&
-                           similar_4d_formats.find(fmt2) != similar_4d_formats.end()))
+    if ((lhs == rhs) || (similar_4d_formats.find(lhs) != similar_4d_formats.end() &&
+                         similar_4d_formats.find(rhs) != similar_4d_formats.end()))
     {
         return true;
     }
     return false;
+}
+
+bool runtime::cpu::mkldnn_utils::compare_mkldnn_mds(const mkldnn::memory::desc& lhs,
+                                                    const mkldnn::memory::desc& rhs)
+{
+    return (memory::primitive_desc(lhs, runtime::cpu::mkldnn_utils::global_cpu_engine) ==
+            memory::primitive_desc(rhs, runtime::cpu::mkldnn_utils::global_cpu_engine));
 }
 
 bool runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(mkldnn::memory::format fmt)

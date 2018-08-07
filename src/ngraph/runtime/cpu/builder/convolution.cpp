@@ -429,15 +429,8 @@ namespace ngraph
                         window_dilation_strides_adjusted.push_back(s - 1);
                     }
 
-                    auto input_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0);
-
-                    auto output_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
-
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_data_desc =
-                        mkldnn_emitter->build_memory_descriptor(args[0], input_format);
+                    auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
 
                     Shape weights_shape_groups = convolution->get_weights_dimensions();
 
@@ -451,8 +444,7 @@ namespace ngraph
                     auto padding_above = convolution->get_padding_above();
                     auto filter_strides = convolution->get_window_movement_strides();
 
-                    auto result_desc =
-                        mkldnn_emitter->build_memory_descriptor(out[0], output_format);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     auto weights_optimized_format =
                         mkldnn_emitter->query_convolution_forward_weight_format(
