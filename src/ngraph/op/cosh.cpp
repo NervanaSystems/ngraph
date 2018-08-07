@@ -22,7 +22,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Cosh::Cosh(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Cosh", arg)
+    : UnaryElementwiseArithmetic(get_op_name(), arg)
 {
 }
 

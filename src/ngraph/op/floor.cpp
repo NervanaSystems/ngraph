@@ -20,7 +20,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Floor::Floor(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Floor", arg)
+    : UnaryElementwiseArithmetic(get_op_name(), arg)
 {
 }
 

@@ -22,7 +22,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Sinh::Sinh(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Sinh", arg)
+    : UnaryElementwiseArithmetic(get_op_name(), arg)
 {
 }
 

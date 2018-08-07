@@ -22,7 +22,7 @@ using namespace std;
 using namespace ngraph;
 
 op::StopGradient::StopGradient(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("StopGradient", arg)
+    : UnaryElementwiseArithmetic(get_op_name(), arg)
 {
 }
 

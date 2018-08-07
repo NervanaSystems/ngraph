@@ -21,7 +21,7 @@ using namespace ngraph;
 using namespace std;
 
 op::Not::Not(const shared_ptr<Node>& arg)
-    : UnaryElementwise("Not", arg->get_element_type(), arg)
+    : UnaryElementwise(get_op_name(), arg->get_element_type(), arg)
 {
 }
 

@@ -25,7 +25,7 @@ using namespace ngraph;
 op::Reshape::Reshape(const shared_ptr<Node>& arg,
                      const AxisVector& input_order,
                      const Shape& output_shape)
-    : RequiresTensorViewArgs("Reshape", {arg})
+    : RequiresTensorViewArgs(get_op_name(), {arg})
     , m_input_order(input_order)
     , m_output_shape(output_shape)
 {

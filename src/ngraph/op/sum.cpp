@@ -21,7 +21,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Sum::Sum(const shared_ptr<Node>& arg, const AxisSet& reduction_axes)
-    : ArithmeticReduction("Sum", arg, reduction_axes)
+    : ArithmeticReduction(get_op_name(), arg, reduction_axes)
 {
 }
 

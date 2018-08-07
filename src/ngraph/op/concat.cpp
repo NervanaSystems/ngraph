@@ -24,7 +24,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Concat::Concat(const NodeVector& args, size_t concatenation_axis)
-    : RequiresTensorViewArgs("Concat", args)
+    : RequiresTensorViewArgs(get_op_name(), args)
     , m_concatenation_axis(concatenation_axis)
 {
     if (m_inputs.size() < 1)

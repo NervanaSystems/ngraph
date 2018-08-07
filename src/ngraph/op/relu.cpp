@@ -21,7 +21,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Relu::Relu(shared_ptr<Node> arg)
-    : UnaryElementwiseArithmetic("Relu", {arg})
+    : UnaryElementwiseArithmetic(get_op_name(), {arg})
 {
     set_value_type_checked(arg->get_element_type(), arg->get_shape());
 }

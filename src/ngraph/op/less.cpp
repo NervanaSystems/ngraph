@@ -20,7 +20,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Less::Less(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
-    : BinaryElementwiseComparison("Less", arg0, arg1)
+    : BinaryElementwiseComparison(get_op_name(), arg0, arg1)
 {
 }
 

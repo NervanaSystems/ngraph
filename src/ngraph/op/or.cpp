@@ -20,7 +20,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Or::Or(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
-    : BinaryElementwiseLogical("Or", arg0, arg1)
+    : BinaryElementwiseLogical(get_op_name(), arg0, arg1)
 {
 }
 

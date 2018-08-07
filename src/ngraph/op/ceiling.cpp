@@ -20,7 +20,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Ceiling::Ceiling(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Ceiling", arg)
+    : UnaryElementwiseArithmetic(get_op_name(), arg)
 {
 }
 

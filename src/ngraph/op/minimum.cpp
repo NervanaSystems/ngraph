@@ -26,7 +26,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Minimum::Minimum(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
-    : BinaryElementwiseArithmetic("Minimum", arg0, arg1)
+    : BinaryElementwiseArithmetic(get_op_name(), arg0, arg1)
 {
 }
 

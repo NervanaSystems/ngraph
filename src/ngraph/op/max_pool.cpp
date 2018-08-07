@@ -30,7 +30,7 @@ op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
                      const Strides& window_movement_strides,
                      const Shape& padding_below,
                      const Shape& padding_above)
-    : RequiresTensorViewArgs("MaxPool", {arg})
+    : RequiresTensorViewArgs(get_op_name(), {arg})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)

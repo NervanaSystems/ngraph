@@ -20,7 +20,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Product::Product(const shared_ptr<Node>& arg, const AxisSet& reduction_axes)
-    : ArithmeticReduction("Product", arg, reduction_axes)
+    : ArithmeticReduction(get_op_name(), arg, reduction_axes)
 {
 }
 

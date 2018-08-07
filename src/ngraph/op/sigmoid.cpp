@@ -32,7 +32,7 @@ shared_ptr<Node> op::Sigmoid::copy_with_new_args(const NodeVector& new_args) con
 }
 
 op::Sigmoid::Sigmoid(shared_ptr<Node> arg)
-    : UnaryElementwiseArithmetic("Sigmoid", {arg})
+    : UnaryElementwiseArithmetic(get_op_name(), {arg})
 {
     set_value_type_checked(arg->get_element_type(), arg->get_shape());
 }

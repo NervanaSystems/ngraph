@@ -20,7 +20,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Negative::Negative(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Negative", arg)
+    : UnaryElementwiseArithmetic(get_op_name(), arg)
 {
 }
 

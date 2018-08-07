@@ -241,7 +241,7 @@ op::Convolution::Convolution(const shared_ptr<Node>& data_batch,
                              const CoordinateDiff& padding_below,
                              const CoordinateDiff& padding_above,
                              const Strides& data_dilation_strides)
-    : RequiresTensorViewArgs("Convolution", {data_batch, filters})
+    : RequiresTensorViewArgs(get_op_name(), {data_batch, filters})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -409,7 +409,7 @@ op::ConvolutionBackpropData::ConvolutionBackpropData(const Shape& data_batch_sha
                                                      const CoordinateDiff& padding_below_forward,
                                                      const CoordinateDiff& padding_above_forward,
                                                      const Strides& data_dilation_strides_forward)
-    : RequiresTensorViewArgs("ConvolutionBackpropData", {filters, output_delta})
+    : RequiresTensorViewArgs(get_op_name(), {filters, output_delta})
     , m_data_batch_shape(data_batch_shape)
     , m_window_movement_strides_forward(window_movement_strides_forward)
     , m_window_dilation_strides_forward(window_dilation_strides_forward)
@@ -581,7 +581,7 @@ op::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
     const CoordinateDiff& padding_below_forward,
     const CoordinateDiff& padding_above_forward,
     const Strides& data_dilation_strides_forward)
-    : RequiresTensorViewArgs("ConvolutionBackpropFilters", {data_batch, output_delta})
+    : RequiresTensorViewArgs(get_op_name(), {data_batch, output_delta})
     , m_filters_shape(filters_shape)
     , m_window_movement_strides_forward(window_movement_strides_forward)
     , m_window_dilation_strides_forward(window_dilation_strides_forward)

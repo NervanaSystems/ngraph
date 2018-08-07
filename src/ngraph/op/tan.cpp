@@ -23,7 +23,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Tan::Tan(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Tan", arg)
+    : UnaryElementwiseArithmetic(get_op_name(), arg)
 {
 }
 

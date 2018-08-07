@@ -20,7 +20,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Sign::Sign(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Sign", arg)
+    : UnaryElementwiseArithmetic(get_op_name(), arg)
 {
 }
 

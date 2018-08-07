@@ -21,7 +21,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Exp::Exp(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Exp", arg)
+    : UnaryElementwiseArithmetic(get_op_name(), arg)
 {
 }
 

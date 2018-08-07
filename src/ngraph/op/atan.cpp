@@ -31,7 +31,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Atan::Atan(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Atan", arg)
+    : UnaryElementwiseArithmetic(get_op_name(), arg)
 {
 }
 

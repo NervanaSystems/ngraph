@@ -25,7 +25,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Result::Result(const shared_ptr<Node>& arg)
-    : RequiresTensorViewArgs("Result", {arg})
+    : RequiresTensorViewArgs(get_op_name(), {arg})
 {
     if (arg->get_outputs().size() != 1)
     {

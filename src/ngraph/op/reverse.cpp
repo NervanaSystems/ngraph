@@ -24,7 +24,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Reverse::Reverse(const shared_ptr<Node>& arg, const AxisSet& reversed_axes)
-    : RequiresTensorViewArgs("Reverse", {arg})
+    : RequiresTensorViewArgs(get_op_name(), {arg})
     , m_reversed_axes(reversed_axes)
 {
     auto& input = get_inputs().at(0);

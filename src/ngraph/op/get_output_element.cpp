@@ -22,7 +22,7 @@ using namespace std;
 using namespace ngraph;
 
 op::GetOutputElement::GetOutputElement(const shared_ptr<Node>& arg, size_t n)
-    : Node("GetOutputElement", {arg})
+    : Node(get_op_name(), {arg})
     , m_n{n}
 {
     if (m_n >= arg->get_output_size())

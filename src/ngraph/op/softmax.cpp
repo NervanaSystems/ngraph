@@ -29,7 +29,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Softmax::Softmax(const shared_ptr<Node>& arg, const AxisSet& axes)
-    : UnaryElementwiseArithmetic("Softmax", arg)
+    : UnaryElementwiseArithmetic(get_op_name(), arg)
     , m_axes(axes)
 {
     for (auto axis : m_axes)

@@ -20,7 +20,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Add::Add(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
-    : BinaryElementwiseArithmetic("Add", arg0, arg1)
+    : BinaryElementwiseArithmetic(get_op_name(), arg0, arg1)
 {
 }
 

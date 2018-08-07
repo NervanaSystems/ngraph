@@ -20,7 +20,7 @@ using namespace std;
 using namespace ngraph;
 
 op::And::And(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
-    : BinaryElementwiseLogical("And", arg0, arg1)
+    : BinaryElementwiseLogical(get_op_name(), arg0, arg1)
 {
 }
 

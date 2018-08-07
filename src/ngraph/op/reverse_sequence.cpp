@@ -29,7 +29,7 @@ op::ReverseSequence::ReverseSequence(const std::shared_ptr<Node> arg,
                                      const std::shared_ptr<Node> seq_indices,
                                      size_t batch_axis,
                                      size_t seq_axis)
-    : RequiresTensorViewArgs("ReverseSequence", {arg, seq_indices})
+    : RequiresTensorViewArgs(get_op_name(), {arg, seq_indices})
     , m_batch_axis(batch_axis)
     , m_seq_axis(seq_axis)
 {

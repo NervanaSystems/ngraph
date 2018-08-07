@@ -33,7 +33,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Acos::Acos(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Acos", arg)
+    : UnaryElementwiseArithmetic(get_op_name(), arg)
 {
 }
 

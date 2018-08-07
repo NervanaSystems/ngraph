@@ -27,7 +27,7 @@ op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
                      const Shape& padding_below,
                      const Shape& padding_above,
                      bool include_padding_in_avg_computation)
-    : RequiresTensorViewArgs("AvgPool", {arg})
+    : RequiresTensorViewArgs(get_op_name(), {arg})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)

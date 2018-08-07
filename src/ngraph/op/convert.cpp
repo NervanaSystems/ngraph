@@ -22,7 +22,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Convert::Convert(const shared_ptr<Node>& arg, const element::Type& element_type)
-    : UnaryElementwise("Convert", element_type, arg)
+    : UnaryElementwise(get_op_name(), element_type, arg)
     , m_element_type(element_type)
 {
 }

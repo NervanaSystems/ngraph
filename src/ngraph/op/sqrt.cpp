@@ -22,7 +22,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Sqrt::Sqrt(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Sqrt", arg)
+    : UnaryElementwiseArithmetic(get_op_name(), arg)
 {
 }
 

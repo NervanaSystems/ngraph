@@ -24,7 +24,7 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
                                  std::shared_ptr<ngraph::Node> gamma,
                                  std::shared_ptr<ngraph::Node> beta,
                                  std::shared_ptr<ngraph::Node> input)
-    : RequiresTensorViewArgs("BatchNorm", {gamma, beta, input})
+    : RequiresTensorViewArgs(get_op_name(), {gamma, beta, input})
     , m_bn_input_shape(input->get_shape())
     , m_epsilon(eps)
     , m_training(true)
@@ -78,7 +78,7 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
                                  std::shared_ptr<ngraph::Node> mean,
                                  std::shared_ptr<ngraph::Node> variance,
                                  bool training)
-    : RequiresTensorViewArgs("BatchNorm", {gamma, beta, input, mean, variance})
+    : RequiresTensorViewArgs(get_op_name(), {gamma, beta, input, mean, variance})
     , m_bn_input_shape(input->get_shape())
     , m_bn_variance_shape(variance->get_shape())
     , m_bn_mean_shape(mean->get_shape())
@@ -183,7 +183,7 @@ ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
                                                  std::shared_ptr<ngraph::Node> mean,
                                                  std::shared_ptr<ngraph::Node> variance,
                                                  std::shared_ptr<ngraph::Node> delta)
-    : RequiresTensorViewArgs("BatchNormBackprop", {gamma, beta, input, mean, variance, delta})
+    : RequiresTensorViewArgs(get_op_name(), {gamma, beta, input, mean, variance, delta})
     , epsilon(eps)
 
 {

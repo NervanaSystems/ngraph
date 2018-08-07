@@ -21,7 +21,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Log::Log(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Log", arg)
+    : UnaryElementwiseArithmetic(get_op_name(), arg)
 {
 }
 

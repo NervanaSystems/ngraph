@@ -22,7 +22,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Tanh::Tanh(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Tanh", arg)
+    : UnaryElementwiseArithmetic(get_op_name(), arg)
 {
 }
 

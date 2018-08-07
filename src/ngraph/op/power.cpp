@@ -23,7 +23,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Power::Power(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
-    : BinaryElementwiseArithmetic("Power", arg0, arg1)
+    : BinaryElementwiseArithmetic(get_op_name(), arg0, arg1)
 {
 }
 

@@ -23,7 +23,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Cos::Cos(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Cos", arg)
+    : UnaryElementwiseArithmetic(get_op_name(), arg)
 {
 }
 

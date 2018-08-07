@@ -20,7 +20,7 @@ using namespace std;
 using namespace ngraph;
 
 op::AllReduce::AllReduce(const shared_ptr<Node>& arg)
-    : RequiresTensorViewArgs("AllReduce", {arg})
+    : RequiresTensorViewArgs(get_op_name(), {arg})
 {
     auto& input = m_inputs.at(0);
     set_value_type_checked(

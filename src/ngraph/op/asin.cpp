@@ -32,7 +32,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Asin::Asin(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Asin", arg)
+    : UnaryElementwiseArithmetic(get_op_name(), arg)
 {
 }
 

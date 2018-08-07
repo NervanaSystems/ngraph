@@ -21,7 +21,7 @@ using namespace std;
 using namespace ngraph;
 
 op::LRN::LRN(const std::shared_ptr<Node>& arg, double alpha, double beta, double bias, size_t nsize)
-    : UnaryElementwiseArithmetic("LRN", arg)
+    : UnaryElementwiseArithmetic(get_op_name(), arg)
     , m_alpha(alpha)
     , m_beta(beta)
     , m_bias(bias)

@@ -53,7 +53,7 @@ op::Dot::Dot(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
 op::Dot::Dot(const shared_ptr<Node>& arg0,
              const shared_ptr<Node>& arg1,
              size_t reduction_axes_count)
-    : RequiresTensorViewArgs("Dot", {arg0, arg1})
+    : RequiresTensorViewArgs(get_op_name(), {arg0, arg1})
     , m_reduction_axes_count(reduction_axes_count)
 {
     auto& input_0 = get_inputs().at(0);
