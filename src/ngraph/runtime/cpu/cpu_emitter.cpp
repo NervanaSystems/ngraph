@@ -2710,8 +2710,15 @@ namespace ngraph
                     auto result_desc =
                         mkldnn_emitter->build_memory_descriptor(out[0], output_format);
 
-                    float input_min_range = quantize->get_input_min();
-                    float input_max_range = quantize->get_input_max();
+                    auto min_const_op =
+                        std::dynamic_pointer_cast<ngraph::op::Constant>(quantize->get_argument(1));
+                    auto max_const_op =
+                        std::dynamic_pointer_cast<ngraph::op::Constant>(quantize->get_argument(2));
+
+                    float input_min_range =
+                        *(static_cast<float const*>(min_const_op->get_data_ptr()));
+                    float input_max_range =
+                        *(static_cast<float const*>(max_const_op->get_data_ptr()));
 
                     float min_range;
                     float max_range;
@@ -2780,8 +2787,14 @@ namespace ngraph
                     auto result_desc =
                         mkldnn_emitter->build_memory_descriptor(out[0], output_format);
 
-                    float min_range = dequantize->get_input_min();
-                    float max_range = dequantize->get_input_max();
+                    auto min_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
+                        dequantize->get_argument(1));
+                    auto max_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
+                        dequantize->get_argument(2));
+
+                    float min_range = *(static_cast<float const*>(min_const_op->get_data_ptr()));
+                    ;
+                    float max_range = *(static_cast<float const*>(max_const_op->get_data_ptr()));
 
                     const float max_abs = std::max(std::abs(min_range), std::abs(max_range));
                     bool is_signed = (dequantize->get_dequantize_et()).is_signed();
@@ -2853,12 +2866,36 @@ namespace ngraph
                     auto result_desc =
                         mkldnn_emitter->build_memory_descriptor(out[0], output_format);
 
-                    const float min_input = qconvolution->get_min_input();
-                    const float max_input = qconvolution->get_max_input();
-                    const float min_filter = qconvolution->get_min_filter();
-                    const float max_filter = qconvolution->get_max_filter();
-                    const float min_output = qconvolution->get_min_output();
-                    const float max_output = qconvolution->get_max_output();
+                    auto min_input_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
+                        qconvolution->get_argument(2));
+                    auto max_input_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
+                        qconvolution->get_argument(3));
+                    auto min_filter_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
+                        qconvolution->get_argument(4));
+                    auto max_filter_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
+                        qconvolution->get_argument(5));
+                    auto min_freezed_output_const_op =
+                        std::dynamic_pointer_cast<ngraph::op::Constant>(
+                            qconvolution->get_argument(6));
+                    auto max_freezed_output_const_op =
+                        std::dynamic_pointer_cast<ngraph::op::Constant>(
+                            qconvolution->get_argument(7));
+
+                    float min_input =
+                        *(static_cast<float const*>(min_input_const_op->get_data_ptr()));
+                    ;
+                    float max_input =
+                        *(static_cast<float const*>(max_input_const_op->get_data_ptr()));
+                    float min_filter =
+                        *(static_cast<float const*>(min_filter_const_op->get_data_ptr()));
+                    ;
+                    float max_filter =
+                        *(static_cast<float const*>(max_filter_const_op->get_data_ptr()));
+                    float min_output =
+                        *(static_cast<float const*>(min_freezed_output_const_op->get_data_ptr()));
+                    ;
+                    float max_output =
+                        *(static_cast<float const*>(max_freezed_output_const_op->get_data_ptr()));
 
                     float min_out_value;
                     float max_out_value;
@@ -2934,15 +2971,22 @@ namespace ngraph
                         qmax_pool->get_padding_below(),
                         qmax_pool->get_padding_above());
 
-                    const float min_input = qmax_pool->get_min_input();
-                    const float max_input = qmax_pool->get_max_input();
+                    auto min_const_op =
+                        std::dynamic_pointer_cast<ngraph::op::Constant>(qmax_pool->get_argument(1));
+                    auto max_const_op =
+                        std::dynamic_pointer_cast<ngraph::op::Constant>(qmax_pool->get_argument(2));
+
+                    float min = *(static_cast<float const*>(min_const_op->get_data_ptr()));
+                    ;
+                    float max = *(static_cast<float const*>(max_const_op->get_data_ptr()));
+
                     auto& deps = mkldnn_emitter->get_primitive_deps(qmax_pool_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
                            << ", " << out[0].get_name() << ");\n";
-                    writer << "*(" << out[1].get_name() << ") = " << min_input << ";\n";
-                    writer << "*(" << out[2].get_name() << ") = " << max_input << ";\n";
+                    writer << "*(" << out[1].get_name() << ") = " << min << ";\n";
+                    writer << "*(" << out[2].get_name() << ") = " << max << ";\n";
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(qmax_pool_index) << ");\n";
                 }
@@ -2979,16 +3023,22 @@ namespace ngraph
                         qavg_pool->get_padding_below(),
                         qavg_pool->get_padding_above());
 
-                    const float min_input = qavg_pool->get_min_input();
-                    const float max_input = qavg_pool->get_max_input();
+                    auto min_const_op =
+                        std::dynamic_pointer_cast<ngraph::op::Constant>(qavg_pool->get_argument(1));
+                    auto max_const_op =
+                        std::dynamic_pointer_cast<ngraph::op::Constant>(qavg_pool->get_argument(2));
+
+                    float min = *(static_cast<float const*>(min_const_op->get_data_ptr()));
+                    ;
+                    float max = *(static_cast<float const*>(max_const_op->get_data_ptr()));
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(qavg_pool_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
                            << ", " << out[0].get_name() << ");\n";
-                    writer << "*(" << out[1].get_name() << ") = " << min_input << ";\n";
-                    writer << "*(" << out[2].get_name() << ") = " << max_input << ";\n";
+                    writer << "*(" << out[1].get_name() << ") = " << min << ";\n";
+                    writer << "*(" << out[2].get_name() << ") = " << max << ";\n";
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(qavg_pool_index) << ");\n";
                 }

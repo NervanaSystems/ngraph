@@ -31,24 +31,26 @@ op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& data_batc
                                                const CoordinateDiff& padding_below,
                                                const CoordinateDiff& padding_above,
                                                const Strides& data_dilation_strides,
-                                               const float min_input,
-                                               const float max_input,
-                                               const float min_filter,
-                                               const float max_filter,
-                                               const float min_output,
-                                               const float max_output)
-    : RequiresTensorViewArgs("QuantizedConvolution", {data_batch, filters})
+                                               const std::shared_ptr<Node> min_input,
+                                               const std::shared_ptr<Node> max_input,
+                                               const std::shared_ptr<Node> min_filter,
+                                               const std::shared_ptr<Node> max_filter,
+                                               const std::shared_ptr<Node> min_freezed_output,
+                                               const std::shared_ptr<Node> max_freezed_output)
+    : RequiresTensorViewArgs("QuantizedConvolution",
+                             {data_batch,
+                              filters,
+                              min_input,
+                              max_input,
+                              min_filter,
+                              max_filter,
+                              min_freezed_output,
+                              max_freezed_output})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
     , m_data_dilation_strides(data_dilation_strides)
-    , m_min_input(min_input)
-    , m_max_input(max_input)
-    , m_min_filter(min_filter)
-    , m_max_filter(max_filter)
-    , m_min_output(min_output)
-    , m_max_output(max_output)
 {
     auto& data_batch_shape = data_batch->get_shape();
     auto& filters_shape = filters->get_shape();
@@ -75,7 +77,7 @@ op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& data_batc
 
 shared_ptr<Node> op::QuantizedConvolution::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 2)
+    if (new_args.size() != 8)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
@@ -87,10 +89,10 @@ shared_ptr<Node> op::QuantizedConvolution::copy_with_new_args(const NodeVector& 
                                                      get_padding_below(),
                                                      get_padding_above(),
                                                      get_data_dilation_strides(),
-                                                     m_min_input,
-                                                     m_max_input,
-                                                     m_min_filter,
-                                                     m_max_filter,
-                                                     m_min_output,
-                                                     m_max_output));
+                                                     new_args.at(2),
+                                                     new_args.at(3),
+                                                     new_args.at(4),
+                                                     new_args.at(5),
+                                                     new_args.at(6),
+                                                     new_args.at(7)));
 }

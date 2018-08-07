@@ -49,8 +49,8 @@ namespace ngraph
                              const Shape& padding_below,
                              const Shape& padding_above,
                              bool include_padding_in_avg_computation,
-                             const float min_input,
-                             const float max_input);
+                             const std::shared_ptr<Node> min,
+                             const std::shared_ptr<Node> max);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -67,16 +67,13 @@ namespace ngraph
             {
                 return m_include_padding_in_avg_computation;
             }
-            const float get_min_input() const { return m_min_input; }
-            const float get_max_input() const { return m_max_input; }
+
         protected:
             Shape m_window_shape;
             Strides m_window_movement_strides;
             Shape m_padding_below;
             Shape m_padding_above;
             bool m_include_padding_in_avg_computation;
-            const float m_min_input;
-            const float m_max_input;
         };
     }
 }

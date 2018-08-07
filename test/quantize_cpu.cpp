@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/runtime/cpu/op/dequantize.hpp"
 #include "ngraph/runtime/cpu/op/quantize.hpp"
@@ -43,12 +44,12 @@ using namespace ngraph;
 TEST(quantize_cpu, quantize_to_uint8_small)
 {
     vector<float> a_data = {-85.0, 0.0, 2.0, 10.0, 15.0};
-    const float input_min = -85.0f;
-    const float input_max = 15.0f;
     Shape shape_a{5};
 
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto QT = make_shared<op::Quantize>(A, input_min, input_max, element::u8);
+    auto B = op::Constant::create(element::f32, Shape{1}, {-85.0f});
+    auto C = op::Constant::create(element::f32, Shape{1}, {15.0f});
+    auto QT = make_shared<op::Quantize>(A, B, C, element::u8);
     auto output_data = std::make_shared<op::GetOutputElement>(QT, 0);
     auto output_min = std::make_shared<op::GetOutputElement>(QT, 1);
     auto output_max = std::make_shared<op::GetOutputElement>(QT, 2);
@@ -76,12 +77,12 @@ TEST(quantize_cpu, quantize_to_uint8_small)
 TEST(quantize_cpu, quantize_to_uint8)
 {
     vector<float> a_data = {-255.0, 0.0, 1.0, 1.25, 1.75, 64.0, 127.0, 500.0};
-    const float input_min = -255.0f;
-    const float input_max = 127.0f;
     Shape shape_a{8};
 
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto QT = make_shared<op::Quantize>(A, input_min, input_max, element::u8);
+    auto B = op::Constant::create(element::f32, Shape{1}, {-255.0f});
+    auto C = op::Constant::create(element::f32, Shape{1}, {127.0f});
+    auto QT = make_shared<op::Quantize>(A, B, C, element::u8);
     auto output_data = std::make_shared<op::GetOutputElement>(QT, 0);
     auto output_min = std::make_shared<op::GetOutputElement>(QT, 1);
     auto output_max = std::make_shared<op::GetOutputElement>(QT, 2);
@@ -109,12 +110,12 @@ TEST(quantize_cpu, quantize_to_uint8)
 TEST(quantize_cpu, quantize_to_int8)
 {
     vector<float> a_data = {-127.0, 0.0, 1.0, 3.0, 5.0, 64.0, 127.0, 500.0};
-    const float input_min = -127.0f;
-    const float input_max = 127.0f;
     Shape shape_a{8};
 
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto QT = make_shared<op::Quantize>(A, input_min, input_max, element::i8);
+    auto B = op::Constant::create(element::f32, Shape{1}, {-127.0f});
+    auto C = op::Constant::create(element::f32, Shape{1}, {127.0f});
+    auto QT = make_shared<op::Quantize>(A, B, C, element::i8);
     auto output_data = std::make_shared<op::GetOutputElement>(QT, 0);
     auto output_min = std::make_shared<op::GetOutputElement>(QT, 1);
     auto output_max = std::make_shared<op::GetOutputElement>(QT, 2);
@@ -147,7 +148,9 @@ void DequantizeTest(
     Shape shape_a{1};
 
     auto A = make_shared<op::Parameter>(type, shape_a);
-    auto r = make_shared<op::Dequantize>(A, min, max, type);
+    auto B = op::Constant::create(element::f32, Shape{1}, {min});
+    auto C = op::Constant::create(element::f32, Shape{1}, {max});
+    auto r = make_shared<op::Dequantize>(A, B, C, type);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
 
     auto backend = runtime::Backend::create("CPU");
@@ -188,14 +191,14 @@ TEST(quantize_cpu, quantizedConv2D_small)
     Shape shape_r{1, 1, 3, 4}; // output shape
     vector<uint8_t> a_data = {1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4};
     vector<int8_t> b_data = {1, 2, 3, 4, 5, 0, 0, 1, 2};
-    const float input_min = 0.0f;
-    const float input_max = 255.0f;
-    const float filter_min = -127.0f;
-    const float filter_max = 127.0f;
-    const float min_output = 22.0f;
-    const float max_output = 90.0f;
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
     auto B = make_shared<op::Parameter>(element::i8, shape_b);
+    auto C = op::Constant::create(element::f32, Shape{1}, {0.0f});
+    auto D = op::Constant::create(element::f32, Shape{1}, {255.0f});
+    auto E = op::Constant::create(element::f32, Shape{1}, {-127.0f});
+    auto F = op::Constant::create(element::f32, Shape{1}, {127.0f});
+    auto G = op::Constant::create(element::f32, Shape{1}, {22.0f});
+    auto H = op::Constant::create(element::f32, Shape{1}, {90.0f});
     auto CV = make_shared<op::QuantizedConvolution>(A,
                                                     B,
                                                     Strides{1, 1},        // move_strides
@@ -203,12 +206,12 @@ TEST(quantize_cpu, quantizedConv2D_small)
                                                     CoordinateDiff{1, 1}, // below_pads
                                                     CoordinateDiff{1, 1}, // above_pads
                                                     Strides{1, 1},        // data_dilation
-                                                    input_min,
-                                                    input_max,
-                                                    filter_min,
-                                                    filter_max,
-                                                    min_output,
-                                                    max_output);
+                                                    C,
+                                                    D,
+                                                    E,
+                                                    F,
+                                                    G,
+                                                    H);
 
     auto output_data = std::make_shared<op::GetOutputElement>(CV, 0);
     auto output_min = std::make_shared<op::GetOutputElement>(CV, 1);
@@ -247,15 +250,10 @@ TEST(quantize_cpu, quantize_max_pool_2d_unsigned)
     Shape padding_above{0, 0};
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
     Shape shape_r{1, 1, 2, 3};
-    const float min_input = 0.0f;
-    const float max_input = 255.0f;
-    auto QMP = make_shared<op::QuantizedMaxPool>(A,
-                                                 window_shape,
-                                                 window_movement_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 min_input,
-                                                 max_input);
+    auto B = op::Constant::create(element::f32, Shape{1}, {0.0f});
+    auto C = op::Constant::create(element::f32, Shape{1}, {255.0f});
+    auto QMP = make_shared<op::QuantizedMaxPool>(
+        A, window_shape, window_movement_strides, padding_below, padding_above, B, C);
 
     auto output_data = std::make_shared<op::GetOutputElement>(QMP, 0);
     auto output_min = std::make_shared<op::GetOutputElement>(QMP, 1);
@@ -289,15 +287,10 @@ TEST(quantize_cpu, quantize_max_pool_2d_signed)
     Shape padding_above{0, 0};
     auto A = make_shared<op::Parameter>(element::i8, shape_a);
     Shape shape_r{1, 1, 2, 3};
-    const float min_input = 0.0f;
-    const float max_input = 127.0f;
-    auto QMP = make_shared<op::QuantizedMaxPool>(A,
-                                                 window_shape,
-                                                 window_movement_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 min_input,
-                                                 max_input);
+    auto B = op::Constant::create(element::f32, Shape{1}, {0.0f});
+    auto C = op::Constant::create(element::f32, Shape{1}, {127.0f});
+    auto QMP = make_shared<op::QuantizedMaxPool>(
+        A, window_shape, window_movement_strides, padding_below, padding_above, B, C);
 
     auto output_data = std::make_shared<op::GetOutputElement>(QMP, 0);
     auto output_min = std::make_shared<op::GetOutputElement>(QMP, 1);
@@ -331,16 +324,10 @@ TEST(quantize_cpu, quantize_avg_pool_2d_unsigned)
     Shape padding_above{0, 0};
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
     Shape shape_r{1, 1, 2, 3};
-    const float min_input = 0.0f;
-    const float max_input = 255.0f;
-    auto QMP = make_shared<op::QuantizedAvgPool>(A,
-                                                 window_shape,
-                                                 window_movement_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 false,
-                                                 min_input,
-                                                 max_input);
+    auto B = op::Constant::create(element::f32, Shape{1}, {0.0f});
+    auto C = op::Constant::create(element::f32, Shape{1}, {255.0f});
+    auto QMP = make_shared<op::QuantizedAvgPool>(
+        A, window_shape, window_movement_strides, padding_below, padding_above, false, B, C);
 
     auto output_data = std::make_shared<op::GetOutputElement>(QMP, 0);
     auto output_min = std::make_shared<op::GetOutputElement>(QMP, 1);
@@ -374,16 +361,10 @@ TEST(quantize_cpu, quantize_avg_pool_2d_signed)
     Shape padding_above{0, 0};
     auto A = make_shared<op::Parameter>(element::i8, shape_a);
     Shape shape_r{1, 1, 2, 3};
-    const float min_input = 0.0f;
-    const float max_input = 127.0f;
-    auto QMP = make_shared<op::QuantizedAvgPool>(A,
-                                                 window_shape,
-                                                 window_movement_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 false,
-                                                 min_input,
-                                                 max_input);
+    auto B = op::Constant::create(element::f32, Shape{1}, {0.0f});
+    auto C = op::Constant::create(element::f32, Shape{1}, {127.0f});
+    auto QMP = make_shared<op::QuantizedAvgPool>(
+        A, window_shape, window_movement_strides, padding_below, padding_above, false, B, C);
 
     auto output_data = std::make_shared<op::GetOutputElement>(QMP, 0);
     auto output_min = std::make_shared<op::GetOutputElement>(QMP, 1);

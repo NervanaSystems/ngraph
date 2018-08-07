@@ -26,16 +26,14 @@ op::QuantizedAvgPool::QuantizedAvgPool(const shared_ptr<Node>& arg,
                                        const Shape& padding_below,
                                        const Shape& padding_above,
                                        bool include_padding_in_avg_computation,
-                                       const float min_input,
-                                       const float max_input)
-    : RequiresTensorViewArgs("QuantizedAvgPool", {arg})
+                                       const shared_ptr<Node> min,
+                                       const shared_ptr<Node> max)
+    : RequiresTensorViewArgs("QuantizedAvgPool", {arg, min, max})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
     , m_include_padding_in_avg_computation(include_padding_in_avg_computation)
-    , m_min_input(min_input)
-    , m_max_input(max_input)
 {
     auto& arg_shape = get_input_shape(0);
 
@@ -81,7 +79,7 @@ op::QuantizedAvgPool::QuantizedAvgPool(const shared_ptr<Node>& arg,
 
 shared_ptr<Node> op::QuantizedAvgPool::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
+    if (new_args.size() != 3)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
@@ -92,6 +90,6 @@ shared_ptr<Node> op::QuantizedAvgPool::copy_with_new_args(const NodeVector& new_
                                          m_padding_below,
                                          m_padding_above,
                                          m_include_padding_in_avg_computation,
-                                         m_min_input,
-                                         m_max_input);
+                                         new_args.at(1),
+                                         new_args.at(2));
 }

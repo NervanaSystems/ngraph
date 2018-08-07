@@ -405,8 +405,16 @@ namespace ngraph
                         vector<memory::format> prim_output_formats;
                         ConvolutionLayout<ngraph::op::QuantizedConvolution, false, false>(
                             node, prim_input_formats, prim_output_formats);
+
+                        prim_input_formats.push_back(memory::format::x);
+                        prim_input_formats.push_back(memory::format::x);
+                        prim_input_formats.push_back(memory::format::x);
+                        prim_input_formats.push_back(memory::format::x);
+                        prim_input_formats.push_back(memory::format::x);
+                        prim_input_formats.push_back(memory::format::x);
                         prim_output_formats.push_back(memory::format::x);
                         prim_output_formats.push_back(memory::format::x);
+
                         node =
                             insert_input_conversions(external_function, node, prim_input_formats);
                         set_output_layouts(node, prim_output_formats);
@@ -1013,6 +1021,8 @@ namespace ngraph
                         MaxPoolLayout<ngraph::op::QuantizedMaxPool, prop_kind::forward_inference>(
                             node, prim_input_formats, prim_output_formats);
 
+                        prim_input_formats.push_back(memory::format::x);
+                        prim_input_formats.push_back(memory::format::x);
                         prim_output_formats.push_back(memory::format::x);
                         prim_output_formats.push_back(memory::format::x);
 
@@ -1036,6 +1046,8 @@ namespace ngraph
                         AvgPoolLayout<ngraph::op::QuantizedAvgPool>(
                             node, prim_input_formats, prim_output_formats);
 
+                        prim_input_formats.push_back(memory::format::x);
+                        prim_input_formats.push_back(memory::format::x);
                         prim_output_formats.push_back(memory::format::x);
                         prim_output_formats.push_back(memory::format::x);
 

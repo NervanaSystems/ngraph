@@ -33,24 +33,18 @@ namespace ngraph
                                  const CoordinateDiff& padding_below,
                                  const CoordinateDiff& padding_above,
                                  const Strides& data_dilation_strides,
-                                 const float min_input,
-                                 const float max_input,
-                                 const float min_filter,
-                                 const float max_filter,
-                                 const float min_output,
-                                 const float max_output);
+                                 const std::shared_ptr<Node> min_input,
+                                 const std::shared_ptr<Node> max_input,
+                                 const std::shared_ptr<Node> min_filter,
+                                 const std::shared_ptr<Node> max_filter,
+                                 const std::shared_ptr<Node> min_freezed_output,
+                                 const std::shared_ptr<Node> max_freezed_output);
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
-            const float get_min_input() const { return m_min_input; }
-            const float get_max_input() const { return m_max_input; }
-            const float get_min_filter() const { return m_min_filter; }
-            const float get_max_filter() const { return m_max_filter; }
-            const float get_min_output() const { return m_min_output; }
-            const float get_max_output() const { return m_max_output; }
             std::shared_ptr<Node> get_filters() { return get_argument(1); }
             std::shared_ptr<Node> get_data_batch() { return get_argument(0); }
             virtual std::shared_ptr<Node>
@@ -62,12 +56,6 @@ namespace ngraph
             CoordinateDiff m_padding_below;
             CoordinateDiff m_padding_above;
             Strides m_data_dilation_strides;
-            const float m_min_input;
-            const float m_max_input;
-            const float m_min_filter;
-            const float m_max_filter;
-            const float m_min_output;
-            const float m_max_output;
         };
     }
 }
