@@ -118,9 +118,13 @@ static void do_logical_operation(cldnn::topology& topology,
 
     const string& inputA_name = op->get_inputs().at(0).get_tensor().get_name();
     const Shape& inputA_shape = op->get_inputs().at(0).get_shape();
+    const string& inputA_type =
+        op->get_inputs().at(0).get_tensor().get_element_type().c_type_string();
     argument_type_check(op->get_inputs().at(0).get_tensor().get_element_type());
     const string& inputB_name = op->get_inputs().at(1).get_tensor().get_name();
     const Shape& inputB_shape = op->get_inputs().at(1).get_shape();
+    const string& inputB_type =
+        op->get_inputs().at(1).get_tensor().get_element_type().c_type_string();
     argument_type_check(op->get_inputs().at(1).get_tensor().get_element_type());
     const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
     const Shape& output_shape = op->get_outputs().begin()->get_shape();
@@ -129,8 +133,10 @@ static void do_logical_operation(cldnn::topology& topology,
     runtime::intelgpu::do_logic_kernel(topology,
                                        inputA_name,
                                        inputA_shape,
+                                       inputA_type,
                                        inputB_name,
                                        inputB_shape,
+                                       inputB_type,
                                        output_name,
                                        output_shape,
                                        output_type,
