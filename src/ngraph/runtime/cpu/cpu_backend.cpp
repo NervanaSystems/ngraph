@@ -67,7 +67,9 @@ bool runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func)
     if (instance.m_external_function == nullptr)
     {
         instance.m_external_function = make_shared<CPU_ExternalFunction>(func);
+#if !defined(NGRAPH_DEX_ONLY)
         instance.m_external_function->m_emit_timing = instance.m_performance_counters_enabled;
+#endif
         auto cf = instance.m_external_function->make_call_frame();
         instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
     }
@@ -97,6 +99,8 @@ void runtime::cpu::CPU_Backend::remove_compiled_function(shared_ptr<Function> fu
 {
     m_function_map.erase(func);
 }
+
+#if !defined(NGRAPH_DEX_ONLY)
 
 void runtime::cpu::CPU_Backend::enable_performance_data(shared_ptr<Function> func, bool enable)
 {
@@ -141,3 +145,5 @@ vector<runtime::PerformanceCounter>
     }
     return rc;
 }
+
+#endif

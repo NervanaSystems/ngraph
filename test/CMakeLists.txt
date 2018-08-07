@@ -56,7 +56,10 @@ add_subdirectory(files)
 add_subdirectory(util)
 
 if(NGRAPH_CPU_ENABLE)
-    set(SRC ${SRC} backend_performance.cpp codegen.cpp cpu_fusion.cpp cpu_test.cpp)
+    set(SRC ${SRC} backend_performance.cpp cpu_fusion.cpp cpu_test.cpp)
+    if (NOT NGRAPH_DEX_ONLY)
+        set(SRC ${SRC} codegen.cpp)
+    endif()
 endif()
 
 if(NGRAPH_GPU_ENABLE)

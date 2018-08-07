@@ -33,9 +33,13 @@
 #pragma clang diagnostic pop
 
 #include <tbb/flow_graph.h>
+
+#if !defined(NGRAPH_DEX_ONLY)
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
+#endif
+
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
@@ -160,22 +164,32 @@
 using namespace std;
 using namespace ngraph;
 
-static const string s_output_dir = "cpu_codegen";
+const size_t runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction::s_memory_pool_alignment =
+    4096;
 
-static void
-    generate_isnan_isinf_check(codegen::CodeWriter& writer,
-                               std::shared_ptr<Node> node,
-                               const std::vector<ngraph::runtime::cpu::TensorViewWrapper>& out,
-                               const char* funcname)
+runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
+    const shared_ptr<ngraph::Function>& function, bool release_function)
+    : m_function(function)
+    , m_release_function(release_function)
+    , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+    , m_compiled_function(nullptr)
+#if !defined(NGRAPH_DEX_ONLY)
+    , m_is_compiled(false)
+    , m_emit_timing(false)
+#endif
+    , m_function_name(function->get_name())
+    , m_is_built(false)
+    , m_direct_execution(std::getenv("NGRAPH_DEX") != nullptr)
 {
-    auto ctype = node->get_element_type().c_type_string();
-    writer << "{   // A " << funcname << " for" << node->get_name() << "\n";
-    writer.indent++;
-    writer << " ngraph::check_fp_values_" << funcname << "(\"" << node->get_name() << "\", ("
-           << ctype << "*)" << out[0].get_name() << ", " << out[0].get_size() << ");\n";
-    writer.indent--;
-    writer << "}\n";
 }
+
+runtime::cpu::CPU_ExternalFunction::~CPU_ExternalFunction()
+{
+}
+
+#if !defined(NGRAPH_DEX_ONLY)
+
+static const string s_output_dir = "cpu_codegen";
 
 class StaticInitializers
 {
@@ -322,25 +336,19 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::LRN), &runtime::cpu::CPU_Emitter::emit<ngraph::op::LRN>},
 };
 
-const size_t runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction::s_memory_pool_alignment =
-    4096;
-
-runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
-    const shared_ptr<ngraph::Function>& function, bool release_function)
-    : m_function(function)
-    , m_release_function(release_function)
-    , m_is_compiled(false)
-    , m_compiled_function(nullptr)
-    , m_emit_timing(false)
-    , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
-    , m_function_name(function->get_name())
-    , m_is_built(false)
-    , m_direct_execution(std::getenv("NGRAPH_DEX") != nullptr)
+static void
+    generate_isnan_isinf_check(codegen::CodeWriter& writer,
+                               std::shared_ptr<Node> node,
+                               const std::vector<ngraph::runtime::cpu::TensorViewWrapper>& out,
+                               const char* funcname)
 {
-}
-
-runtime::cpu::CPU_ExternalFunction::~CPU_ExternalFunction()
-{
+    auto ctype = node->get_element_type().c_type_string();
+    writer << "{   // A " << funcname << " for" << node->get_name() << "\n";
+    writer.indent++;
+    writer << " ngraph::check_fp_values<" << ctype << "," << funcname << "> (\"" << node->get_name()
+           << "\", (" << ctype << "*)" << out[0].get_name() << ", " << out[0].get_size() << ");\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
 void runtime::cpu::CPU_ExternalFunction::compile()
@@ -1053,6 +1061,8 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
     } while (propagate_further);
 }
 
+#endif
+
 void runtime::cpu::CPU_ExternalFunction::build()
 {
     if (m_is_built)
@@ -1410,10 +1420,12 @@ void runtime::cpu::CPU_ExternalFunction::build()
 shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
     runtime::cpu::CPU_ExternalFunction::make_call_frame()
 {
+#if !defined(NGRAPH_DEX_ONLY)
     if (!m_is_compiled && !m_direct_execution)
     {
         compile();
     }
+#endif
 
     if (!m_is_built && m_direct_execution)
     {
@@ -1435,6 +1447,8 @@ const runtime::cpu::LayoutDescriptorPtrs&
 {
     return result_layout_descriptors;
 }
+
+#if !defined(NGRAPH_DEX_ONLY)
 
 void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(
     codegen::CodeWriter& writer,
@@ -1568,3 +1582,5 @@ string runtime::cpu::CPU_ExternalFunction::strip_comments(const string& s)
     }
     return out.str();
 }
+
+#endif

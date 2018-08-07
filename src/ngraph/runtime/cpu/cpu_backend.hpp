@@ -52,9 +52,12 @@ namespace ngraph
                           const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) override;
 
                 void remove_compiled_function(std::shared_ptr<Function> func) override;
+
+#if !defined(NGRAPH_DEX_ONLY)
                 void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;
                 std::vector<PerformanceCounter>
                     get_performance_data(std::shared_ptr<Function> func) const override;
+#endif
 
             private:
                 class FunctionInstance

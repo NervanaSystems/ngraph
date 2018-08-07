@@ -14,6 +14,8 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_subdirectory(compile_benchmark)
+if (NOT NGRAPH_DEX_ONLY)
+    add_subdirectory(compile_benchmark)
+endif()
 add_subdirectory(nbench)
 add_subdirectory(reserialize)

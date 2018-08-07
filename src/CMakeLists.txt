@@ -18,7 +18,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIN_NGRAPH_LIBRARY")
 
 include_directories(ngraph)
 
-add_subdirectory(resource)
+if (NOT NGRAPH_DEX_ONLY)
+    add_subdirectory(resource)
+endif()
+
 add_subdirectory(ngraph)
 
 if (NGRAPH_TOOLS_ENABLE)
