@@ -21,6 +21,35 @@
 using namespace std;
 using namespace ngraph;
 
+class StubBackend : public runtime::Backend
+{
+public:
+    std::shared_ptr<ngraph::runtime::TensorView>
+        create_tensor(const ngraph::element::Type& element_type, const Shape& shape)
+    {
+        return nullptr;
+    }
+
+    /// @brief Return a handle for a tensor for given mem on backend device
+    std::shared_ptr<ngraph::runtime::TensorView> create_tensor(
+        const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer)
+    {
+        return nullptr;
+    }
+    bool compile(std::shared_ptr<Function> func) { return false; }
+    bool call(std::shared_ptr<Function> func,
+              const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+              const std::vector<std::shared_ptr<runtime::TensorView>>& inputs)
+    {
+        return false;
+    }
+    bool is_op_supported(const std::string& name, element::Type t) const
+    {
+        NGRAPH_INFO << name << ", " << t;
+        return true;
+    }
+};
+
 TEST(op, is_op)
 {
     auto arg0 = make_shared<op::Parameter>(element::f32, Shape{1});
@@ -35,4 +64,11 @@ TEST(op, is_parameter)
     auto t0 = make_shared<op::Add>(arg0, arg0);
     ASSERT_NE(nullptr, t0);
     EXPECT_FALSE(t0->is_parameter());
+}
+
+TEST(op, is_supported)
+{
+    runtime::Backend::register_backend("STUB", make_shared<StubBackend>());
+    auto backend = runtime::Backend::create("STUB");
+    EXPECT_TRUE(backend->is_supported<op::Add>(element::f32));
 }

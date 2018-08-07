@@ -151,6 +151,8 @@ public:
     std::vector<PerformanceCounter>
         get_performance_data(std::shared_ptr<Function> func) const override;
 
+    bool is_op_supported(const std::string& name, element::Type t) const override;
+
 private:
     class FunctionInstance
     {

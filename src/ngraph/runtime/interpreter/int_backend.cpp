@@ -343,3 +343,8 @@ void runtime::interpreter::INTBackend::perform_nan_check(
         arg_number++;
     }
 }
+
+bool runtime::interpreter::INTBackend::is_op_supported(const string& name, element::Type t) const
+{
+    return false;
+}
