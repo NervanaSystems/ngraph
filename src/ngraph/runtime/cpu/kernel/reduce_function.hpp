@@ -22,6 +22,7 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -54,9 +55,9 @@ namespace ngraph
                     void reduce(const ElementType v, ElementType* R)
                     {
                         TensorViewPtrs inputs, outputs;
-                        ElementType p __attribute__((aligned(64))) = v;
-                        ElementType q __attribute__((aligned(64))) = *R;
-                        ElementType r __attribute__((aligned(64)));
+                        ElementType p __attribute__((aligned(CPUTensorView::BufferAlignment))) = v;
+                        ElementType q __attribute__((aligned(CPUTensorView::BufferAlignment))) = *R;
+                        ElementType r __attribute__((aligned(CPUTensorView::BufferAlignment)));
 
                         inputs.emplace_back(backend->create_tensor(
                             ngraph::element::from<ElementType>(), Shape{}, &p));

@@ -32,8 +32,6 @@ using namespace std;
 // TODO(jmenon): Refactor all the alignment specifications into
 // a single place and allow lower or no alignment when possible
 
-const size_t runtime::cpu::CPUTensorView::BufferAlignment = 64;
-
 runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
                                            const Shape& shape,
                                            void* memory_pointer,
