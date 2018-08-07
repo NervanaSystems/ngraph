@@ -20,7 +20,6 @@
 #include "gtest/gtest.h"
 #include "ngraph/frontend/onnx_import/onnx.hpp"
 #include "ngraph/ngraph.hpp"
-#include "util/ndarray.hpp"
 #include "util/test_tools.hpp"
 
 TEST(onnx, model_add_abc)
