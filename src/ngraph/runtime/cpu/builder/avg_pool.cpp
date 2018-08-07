@@ -53,10 +53,8 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_desc = mkldnn_emitter->build_memory_descriptor(
-                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
-                    auto result_desc = mkldnn_emitter->build_memory_descriptor(
-                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     size_t avg_pool_index = mkldnn_emitter->build_pooling_forward(
                         (include_padding_in_avg_computation
@@ -132,10 +130,8 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto diff_dst_desc = mkldnn_emitter->build_memory_descriptor(
-                        args[0], runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 0));
-                    auto diff_src_desc = mkldnn_emitter->build_memory_descriptor(
-                        out[0], runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0));
+                    auto diff_dst_desc = runtime::cpu::mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto diff_src_desc = runtime::cpu::mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     size_t avg_pool_index = mkldnn_emitter->build_pooling_backward(
                         (apb->get_include_padding_in_avg_computation()
@@ -159,7 +155,6 @@ namespace ngraph
                 else
                 {
                     std::function<decltype(runtime::cpu::kernel::avg_pool_backprop<float>)> kernel;
-
                     SELECT_KERNEL(
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::avg_pool_backprop);
 
