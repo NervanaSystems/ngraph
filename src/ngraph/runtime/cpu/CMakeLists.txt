@@ -41,6 +41,7 @@ set(SRC
     builder/max_pool.cpp
     builder/min.cpp
     builder/relu.cpp
+    builder/pad.cpp
     builder/product.cpp
     builder/reshape.cpp
     builder/reverse.cpp
@@ -79,7 +80,6 @@ set(SRC
     pass/cpu_rnn_fusion.cpp
     pass/cpu_mat_fusion.cpp
     pass/cpu_loop_kernel_fusion.cpp
-    pass/cpu_shuffle_folding.cpp
     pass/cpu_workspace_insertion.cpp
 )
 
