@@ -3876,15 +3876,12 @@ namespace ngraph
             {
                 auto bounded_relu_node = static_cast<const ngraph::op::BoundedRelu*>(node);
                 float alpha = bounded_relu_node->get_alpha();
+                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-
-                    size_t bounded_relu_index =
-                        mkldnn_emitter->build_bounded_relu(input_desc, result_desc, alpha);
-
+                    auto bounded_relu_index =
+                        mkldnn_emitter->build_bounded_relu<ngraph::op::BoundedRelu>(
+                            node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(bounded_relu_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";

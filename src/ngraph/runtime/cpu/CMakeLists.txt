@@ -30,6 +30,7 @@ set(SRC
     builder/avg_pool.cpp
     builder/batch_norm.cpp
     builder/broadcast.cpp
+    builder/bounded_relu.cpp
     builder/concat.cpp
     builder/convert.cpp
     builder/convert_layout.cpp
