@@ -18,6 +18,7 @@
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
+#include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
 using namespace std;
