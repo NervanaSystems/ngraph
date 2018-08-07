@@ -105,7 +105,6 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_divide_op(
 
 void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
     codegen::CodeWriter& writer,
-    const std::string& name,
     const std::string& op,
     const std::string& reduce_op,
     const std::vector<std::string>& data_types,
@@ -113,28 +112,10 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
     bool save_elementwise,
     size_t rank)
 {
-    auto num_inputs = data_types.size() - 1;
-    writer << "extern \"C\" __global__ void cuda_" << name << "(";
-    for (size_t i = 0; i < num_inputs; i++)
-    {
-        writer << data_types[i] << "* in" << i << ", ";
-    }
-    writer << data_types[num_inputs] << "* out0, ";
-
-    // multi-output to save intermediate elementwise op if requested
-    if (save_elementwise)
-    {
-        writer << data_types[num_inputs] << "* out1, ";
-    }
-    writer << "int* strides, "
-           << "int* stride_magic, "
-           << "int* stride_shift, "
-           << "int* reduced_strides, "
-           << "size_t n)\n";
     writer.block_begin();
     {
         writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x; \n";
-        writer << "if (tid < n)\n";
+        writer << "if (tid < nthreads)\n";
         writer.block_begin();
         {
             std::string reduced_idx = collective_coordinate_transform_helper(writer,
@@ -144,8 +125,10 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
                                                                              "stride_shift",
                                                                              "reduced_strides",
                                                                              "coordinate",
-                                                                             rank);
+                                                                             rank,
+                                                                             true);
             // element-wise operation
+            auto num_inputs = data_types.size() - 1;
             writer << data_types[num_inputs] << " output = " << op << "(";
             for (size_t i = 0; i < num_inputs; i++)
             {
@@ -749,17 +732,11 @@ void runtime::gpu::CudaKernelBuilder::get_avg_pool(codegen::CodeWriter& writer,
     }
     writer.block_end();
 }
-
-void runtime::gpu::CudaKernelBuilder::get_convolution_forward(
-    codegen::CodeWriter& writer,
-    const std::string& name,
-    const std::array<std::string, 3>& data_types,
-    int N,
-    int K,
-    int filter_size,
-    int rank,
-    int sm_tile_size,
-    int reg_tile_size)
+void runtime::gpu::CudaKernelBuilder::get_convolution_header(codegen::CodeWriter& writer,
+                                                             const std::string& data_type,
+                                                             int filter_size,
+                                                             int sm_tile_size,
+                                                             int reg_tile_size)
 {
     writer << "#define NUM_ROWS 8\n";
     writer << "#define FILTER_SIZE " << filter_size << "\n";
@@ -769,42 +746,16 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_forward(
     writer << "typedef union Matrix\n";
     writer.block_begin();
     {
-        writer << data_types[0] << reg_tile_size << " f" << reg_tile_size << ";\n";
-        writer << data_types[0] << " f[" << reg_tile_size << "];\n";
+        writer << data_type << reg_tile_size << " f" << reg_tile_size << ";\n";
+        writer << data_type << " f[" << reg_tile_size << "];\n";
     }
     writer.block_end();
     writer << "Matrix;\n\n";
+}
 
-    writer << "extern \"C\" __global__ void cuda_" << name << "(";
-    writer << data_types[0] << "* in, ";
-    writer << data_types[1] << "* filter, ";
-    writer << data_types[2] << "* out, ";
-    // TODO: add alpha/beta support
-    writer << "float alpha, float beta, "
-           << "int N, "
-           << "int C, "
-           << "int K, "
-           << "int input_channel_size, "
-           << "int filter_channel_size, "
-           << "int output_filter_size, "
-           << "int output_pixels, "
-           << "int output_pixels_magic, "
-           << "int output_pixels_shift, "
-           << "int* pad, "
-           << "int* data_dilation, "
-           << "int* data_dilation_magic, "
-           << "int* data_dilation_shift, "
-           << "int* filter_strides, "
-           << "int* filter_dilation, "
-           << "int* in_shape, "
-           << "int* in_shape_str, "
-           << "int* out_dim_str, "
-           << "int* out_str_magic, "
-           << "int* out_str_shift, "
-           << "int* filter_dim_str, "
-           << "int* filter_str_magic, "
-           << "int* filter_str_shift"
-           << ")\n";
+void runtime::gpu::CudaKernelBuilder::get_convolution_forward(
+    codegen::CodeWriter& writer, int N, int K, int rank, int sm_tile_size, int reg_tile_size)
+{
     writer.block_begin();
     {
         writer << "Matrix* I = reinterpret_cast<Matrix*>(in);\n";
@@ -836,7 +787,8 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_forward(
                                         "out_str_shift",
                                         "output_pixel_idx",
                                         "out_d",
-                                        rank);
+                                        rank,
+                                        true);
 
         // offset tensors by image and filter indices
         // each thread is responsible for it's own image and filter
@@ -879,8 +831,8 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_forward(
 
             for (int i = 0; i < rank; i++)
             {
-                writer << "int input_base_d" << i << " = out_d" << i << " * filter_strides[" << i
-                       << "] - pad[" << i << "];\n";
+                writer << "int input_base_d" << i << " = out_d" << i << " * filter_strides" << i
+                       << " - pad" << i << ";\n";
             }
 
             // a mask marking all threads that have tid less than the current thread
@@ -897,7 +849,8 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_forward(
                                                 "filter_str_shift",
                                                 "filter_pixel",
                                                 "filter_d",
-                                                rank);
+                                                rank,
+                                                true);
                 // transform from filter coordinate to input coordinates
                 // and check that each coordinate maps to an input element in the undilated space
                 writer << "int off_dilation_stride = 0;\n";
@@ -905,14 +858,14 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_forward(
                 for (int i = 0; i < rank; i++)
                 {
                     writer << "int input_d" << i << " = input_base_d" << i << " + filter_d" << i
-                           << " * filter_dilation[" << i << "];\n";
+                           << " * filter_dilation" << i << ";\n";
                     // determine coordinate in undilated input space
                     writer << "undilated_coordinate = division_by_invariant_multiplication(input_d"
-                           << i << ", data_dilation_magic[" << i << "], data_dilation_shift[" << i
-                           << "]);\n";
+                           << i << ", data_dilation_magic" << i << ", data_dilation_shift" << i
+                           << ");\n";
                     // if division remainder is 0, then dilated coordinate is on an input element
                     writer << "off_dilation_stride += (input_d" << i
-                           << " - undilated_coordinate * data_dilation[" << i << "]);\n";
+                           << " - undilated_coordinate * data_dilation" << i << ");\n";
                     // reassign dilated coordinate to undilated input coordinate
                     writer << "input_d" << i << " = undilated_coordinate;\n";
                 }
@@ -929,8 +882,7 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_forward(
                     // in_shape contains the full shape of the input_tensor
                     // for 2D this is: (C, H, W, N) but rank = 2 and so only [H, W] are used
                     // condition (input_d0 >=0 && input_d0 < H && input_d1 >= 0 && input_d1 < W)
-                    writer << "input_d" << i << ">= 0 && input_d" << i << " < in_shape[" << i + 1
-                           << "] ";
+                    writer << "input_d" << i << ">= 0 && input_d" << i << " < in_shape" << i + 1;
                 }
                 writer << ");\n";
 
@@ -953,7 +905,7 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_forward(
                         }
                         // skips the first and last stride which correspond
                         // to the channel and batch coordinate, respectively
-                        writer << "input_d" << i << " * in_shape_str[" << i + 1 << "] ";
+                        writer << "input_d" << i << " * in_shape_str" << i + 1;
                     }
                     writer << ")";
                     // if using register tiling, down shift

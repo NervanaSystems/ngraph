@@ -100,7 +100,6 @@ namespace ngraph
                                                const std::array<std::string, 2>& data_types);
 
                 static void get_ew_collective_op(codegen::CodeWriter& writer,
-                                                 const std::string& name,
                                                  const std::string& op,
                                                  const std::string& reduce_op,
                                                  const std::vector<std::string>& data_types,
@@ -121,12 +120,15 @@ namespace ngraph
                                          const std::array<std::string, 2>& data_types,
                                          bool include_pad);
 
+                static void get_convolution_header(codegen::CodeWriter& writer,
+                                                   const std::string& data_type,
+                                                   int filter_size,
+                                                   int sm_tile_size,
+                                                   int reg_tile_size);
+
                 static void get_convolution_forward(codegen::CodeWriter& writer,
-                                                    const std::string& name,
-                                                    const std::array<std::string, 3>& data_types,
                                                     int N,
                                                     int K,
-                                                    int filter_size,
                                                     int rank,
                                                     int sm_tile_size = 8,
                                                     int reg_tile_size = 1);
