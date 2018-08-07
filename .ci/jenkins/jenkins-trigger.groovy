@@ -8,29 +8,16 @@
 // original script -- we only need to provide this new trigger hook.
 //
 // ngraph-unittest parameters:
-properties( [
-    parameters( [
-        string( name: 'BRANCH',           defaultValue: BRANCH_NAME ),
-        string( name: 'PR_URL',           defaultValue: CHANGE_URL ),
-        string( name: 'PR_COMMIT_AUTHOR', defaultValue: CHANGE_AUTHOR ),
-        string( name: 'JENKINS_BRANCH',   defaultValue: "chrisl/new-ci-trigger" ),
-        string( name: 'TIMEOUTTIME',      defaultValue: "3600" )
-    ] )
-] )
-// TRIGGER_URL is no longer needed, as there is no separate merge job
+PR_URL = CHANGE_URL
+PR_COMMIT_AUTHOR = CHANGE_AUTHOR
+JENKINS_BRANCH = "chrisl/new-ci-trigger"
+TIMEOUTTIME = "3600"
+// BRANCH parameter is no loner needed
+// TRIGGER_URL parameter is no longer needed
 
 // Constants
 JENKINS_DIR="."
 
-// This groovy script is specifically designed as a Jenkins multi-branch
-// pipeline trigger.  This requires some of the git checkout commands to
-// be different ("checkout scm") than regular pipeline scripts (which use
-// checkout(...) with explicit parameters).  Since some of the ngraph-unittest
-// are dynamic functions shared by multiple jobs, we need a way to switch
-// between the two types of checkouts.  Nick and I decided to use an optional
-// environment variable -- if this environment variable exists when
-// runNgraphBuild() runs, then "checkout scm" is used in order to be compatible
-// with multi-branch pipeline checkouts.
 env.MB_PIPELINE_CHECKOUT = true
 
 node("bdw && nogpu") {
@@ -38,26 +25,24 @@ node("bdw && nogpu") {
     deleteDir()  // Clear the workspace before starting
 
     echo "jenkins-trigger parameters:"
-    echo "BRANCH           = ${params.BRANCH}"
-    echo "PR_URL           = ${params.PR_URL}"
-    echo "PR_COMMIT_AUTHOR = ${params.PR_COMMIT_AUTHOR}"
-    echo "JENKINS_BRANCH   = ${params.JENKINS_BRANCH}"
-    echo "TIMEOUTTIME      = ${params.TIMEOUTTIME}"
+    echo "PR_URL           = ${PR_URL}"
+    echo "PR_COMMIT_AUTHOR = ${PR_COMMIT_AUTHOR}"
+    echo "JENKINS_BRANCH   = ${JENKINS_BRANCH}"
+    echo "TIMEOUTTIME      = ${TIMEOUTTIME}"
 
     // Clone the cje-algo directory which contains our Jenkins groovy scripts
     git(branch: JENKINS_BRANCH, changelog: false, poll: false,
         url: 'https://github.intel.com/AIPG/cje-algo')
-    echo "After cloning cje-algo, workspace looks like:"
-    sh "ls -l"
 
     // Call the main job script.
     //
     // NOTE: We keep the main job script in github.intel.com because it may
     //      contain references to technology which has not yet been released.
     //
-    echo "Calling ngraph-unittest.groovy"
-    returnValue = load("${JENKINS_DIR}/ngraph-unittest.groovy")
-    echo "ngraph-unittest.groovy returned ${returnValue}"
+    echo "Calling ngraph-ci-premerge.groovy"
+    ngraphCIPreMerge = load("${JENKINS_DIR}/ngraph-ci-premerge.groovy")
+    returnValue = ngraphCIPreMerge(useMBPipelineSCM=true)
+    echo "ngraph-ci-premerge.groovy returned ${returnValue}"
 
 }  // End:  node( ... )
 
