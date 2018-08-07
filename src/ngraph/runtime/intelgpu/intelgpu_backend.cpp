@@ -50,6 +50,7 @@
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/reverse.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/util.hpp"
@@ -71,7 +72,7 @@ static void arguments_check(const shared_ptr<Node>& op, size_t input, size_t out
 
 static void argument_type_check(const element::Type& type)
 {
-    if (type != element::f32)
+    if (type != element::f32 && type != element::boolean)
     {
         ostringstream os;
         os << "Kernel data type " << type << " is not supported";
@@ -147,9 +148,13 @@ static void do_logical_operation(cldnn::topology& topology,
 
     const string& inputA_name = op->get_inputs().at(0).get_tensor().get_name();
     const Shape& inputA_shape = op->get_inputs().at(0).get_shape();
+    const string& inputA_type =
+        op->get_inputs().at(0).get_tensor().get_element_type().c_type_string();
     argument_type_check(op->get_inputs().at(0).get_tensor().get_element_type());
     const string& inputB_name = op->get_inputs().at(1).get_tensor().get_name();
     const Shape& inputB_shape = op->get_inputs().at(1).get_shape();
+    const string& inputB_type =
+        op->get_inputs().at(1).get_tensor().get_element_type().c_type_string();
     argument_type_check(op->get_inputs().at(1).get_tensor().get_element_type());
     const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
     const Shape& output_shape = op->get_outputs().begin()->get_shape();
@@ -158,8 +163,10 @@ static void do_logical_operation(cldnn::topology& topology,
     runtime::intelgpu::do_logic_kernel(topology,
                                        inputA_name,
                                        inputA_shape,
+                                       inputA_type,
                                        inputB_name,
                                        inputB_shape,
+                                       inputB_type,
                                        output_name,
                                        output_shape,
                                        output_type,
@@ -313,6 +320,35 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                 output_name,
                                 output_shape,
                                 output_type);
+        }
+        else if ("Reverse" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const string& input_name = op->get_inputs().at(0).get_tensor().get_name();
+            const Shape& input_shape = op->get_inputs().at(0).get_shape();
+            const string& output_name = op->get_outputs().begin()->get_tensor().get_name();
+            const Shape& output_shape = op->get_outputs().begin()->get_shape();
+            const element::Type& output_type =
+                op->get_outputs().begin()->get_tensor().get_element_type();
+
+            const shared_ptr<op::Reverse> reverse_op = static_pointer_cast<op::Reverse>(op);
+            const AxisSet& reversed_axes = reverse_op->get_reversed_axes();
+
+            if (reversed_axes.empty())
+            {
+                do_equal_propagation(topology, input_name, output_name);
+            }
+            else
+            {
+                do_reverse_operation(topology,
+                                     input_name,
+                                     input_shape,
+                                     output_name,
+                                     output_shape,
+                                     output_type,
+                                     reversed_axes);
+            }
         }
         else if ("Add" == op->description())
         {
@@ -602,6 +638,14 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         else if ("LessEq" == op->description())
         {
             do_logical_operation(topology, op, " <= ");
+        }
+        else if ("And" == op->description())
+        {
+            do_logical_operation(topology, op, " && ");
+        }
+        else if ("Or" == op->description())
+        {
+            do_logical_operation(topology, op, " || ");
         }
         else if ("Subtract" == op->description())
         {
