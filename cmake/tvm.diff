@@ -1,0 +1,16 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 39776d5..469a24a 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -237,6 +237,11 @@ if (INSTALL_DEV)
+     FILES_MATCHING
+     PATTERN "*.h"
+     )
++  install(
++    DIRECTORY "dmlc-core/include/." DESTINATION "include"
++    FILES_MATCHING
++    PATTERN "*.h"
++    )
+ else(INSTALL_DEV)
+   install(
+     DIRECTORY "include/tvm/runtime/." DESTINATION "include/tvm/runtime"

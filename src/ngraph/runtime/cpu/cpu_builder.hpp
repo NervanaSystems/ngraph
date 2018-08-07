@@ -23,6 +23,9 @@
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 
+#include <tvm/tvm.h>
+
+
 #define BUILDER_DECL(op_name)                                                                      \
     build<op_name>(CPU_ExternalFunction * external_function,                                       \
                    const ngraph::Node* node,                                                       \
@@ -231,6 +234,8 @@ namespace ngraph
     {
         namespace cpu
         {
+            tvm::Var tvm_test();
+
             using BuildOpFunction =
                 std::function<void(CPU_ExternalFunction* external_function,
                                    const ngraph::Node*,

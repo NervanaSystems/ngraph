@@ -32,6 +32,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
+#include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
@@ -191,3 +192,9 @@ TEST(cpu_test, mkldnn_layouts)
 
     EXPECT_EQ(vector<float>{expected_result}, rv);
 }
+
+TEST(cpu_test, tvm_simple)
+{
+    ngraph::runtime::cpu::tvm_test();
+}
+
