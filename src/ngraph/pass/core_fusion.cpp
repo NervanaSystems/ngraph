@@ -259,6 +259,79 @@ void pass::CoreFusion::construct_folded_batch_norm()
     this->add_matcher(m);
 }
 
+void pass::CoreFusion::construct_conv_affine_folding()
+{
+    Shape shape{2, 2, 1, 1};
+    auto input = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
+
+    auto pconv = std::make_shared<op::Convolution>(input,
+                                                   filters,
+                                                   Strides{1, 1},
+                                                   Strides{1, 1},
+                                                   CoordinateDiff{0, 0},
+                                                   CoordinateDiff{0, 0},
+                                                   Strides{1, 1});
+    auto pconv_label = std::make_shared<pattern::op::Label>(pconv, nullptr, NodeVector{pconv});
+
+    auto multiplier = std::make_shared<pattern::op::Label>(element::f32, Shape{2});
+    auto multiplier_bcast =
+        std::make_shared<op::Broadcast>(multiplier, Shape{2, 2, 1, 1}, AxisSet{0, 2, 3});
+    auto adder = std::make_shared<pattern::op::Label>(element::f32, Shape{2});
+    auto adder_bcast = std::make_shared<op::Broadcast>(adder, Shape{2, 2, 1, 1}, AxisSet{0, 2, 3});
+    auto multiply = std::make_shared<op::Multiply>(pconv_label, multiplier_bcast);
+    auto padd = std::make_shared<op::Add>(multiply, adder_bcast);
+
+    ngraph::pattern::graph_rewrite_callback callback =
+        [input, filters, pconv_label, multiplier, adder](pattern::Matcher& m) {
+            NGRAPH_DEBUG << "In callback for folded batch norm against node = "
+                         << m.get_match_root()->get_name();
+            auto pattern_map = m.get_pattern_map();
+
+            auto mconv = std::dynamic_pointer_cast<op::Convolution>(pattern_map[pconv_label]);
+
+            if (!mconv)
+            {
+                return false;
+            }
+
+            if (mconv->get_users().size() > 1)
+            {
+                return false;
+            }
+
+            if (mconv->get_shape().size() != 4)
+            {
+                return false;
+            }
+
+            // new weights = old weights * multiplier
+            // new biases = adder
+
+            auto new_weights = std::make_shared<op::Multiply>(
+                pattern_map[filters],
+                std::make_shared<op::Broadcast>(
+                    pattern_map[multiplier], pattern_map[filters]->get_shape(), AxisSet{1, 2, 3}));
+
+            auto conv = std::make_shared<op::Convolution>(pattern_map[input],
+                                                          new_weights,
+                                                          mconv->get_window_movement_strides(),
+                                                          mconv->get_window_dilation_strides(),
+                                                          mconv->get_padding_below(),
+                                                          mconv->get_padding_above(),
+                                                          mconv->get_data_dilation_strides());
+            auto conv_bias = conv + std::make_shared<op::Broadcast>(
+                                        pattern_map[adder], conv->get_shape(), AxisSet{0, 2, 3});
+            ngraph::replace_node(m.get_match_root(), conv_bias);
+
+            return true;
+
+        };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(padd, callback);
+    this->add_matcher(m);
+}
+
 static bool is_trivial_convolution(std::shared_ptr<op::Convolution> conv,
                                    bool skip_pad_checks = false)
 {
