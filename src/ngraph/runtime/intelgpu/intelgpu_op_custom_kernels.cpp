@@ -61,7 +61,8 @@ string runtime::intelgpu::array_dims(const Shape& dimentions)
     return buffer;
 }
 
-string runtime::intelgpu::access_dims(const Shape& dimentions, const AxisSet& axis)
+string
+    runtime::intelgpu::access_dims(const Shape& dimentions, const AxisSet& axis, bool is_reversed)
 {
     size_t var_idx = 0;
     string buffer;
@@ -72,6 +73,10 @@ string runtime::intelgpu::access_dims(const Shape& dimentions, const AxisSet& ax
         {
             buffer += "[i" + to_string(var_idx) + "]";
         }
+        else if (is_reversed)
+        {
+            buffer += "[" + to_string(i) + " - i" + to_string(var_idx) + " - 1]";
+        }
         ++var_idx;
     }
 
@@ -81,6 +86,46 @@ string runtime::intelgpu::access_dims(const Shape& dimentions, const AxisSet& ax
     }
 
     return buffer;
+}
+
+static vector<size_t> generate_loops(codegen::CodeWriter& writer, const Shape& shape, bool is_begin)
+{
+    const size_t cldnn_gws_lim = 3;
+    vector<size_t> gws;
+    size_t var_idx = 0;
+
+    for (auto const& i : shape)
+    {
+        if (var_idx < cldnn_gws_lim)
+        {
+            if (is_begin)
+            {
+                writer << "const unsigned i" << var_idx << " = get_global_id(" << var_idx << ");\n";
+                gws.push_back(i);
+            }
+        }
+        else
+        {
+            if (is_begin)
+            {
+                writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
+                       << var_idx << ")\n";
+                writer.block_begin();
+            }
+            else
+            {
+                writer.block_end();
+            }
+        }
+        ++var_idx;
+    }
+
+    if (gws.empty())
+    {
+        gws.push_back(1);
+    }
+
+    return gws;
 }
 
 static string access_dims_strided(const Shape& dimentions,
@@ -606,8 +651,10 @@ void runtime::intelgpu::do_select_operation(cldnn::topology& topology,
 void runtime::intelgpu::do_logic_kernel(cldnn::topology& topology,
                                         const string& inputA_name,
                                         const Shape& inputA_shape,
+                                        const string& inputA_type,
                                         const string& inputB_name,
                                         const Shape& inputB_shape,
+                                        const string& inputB_type,
                                         const string& output_name,
                                         const Shape& output_shape,
                                         const element::Type& output_type,
@@ -617,8 +664,8 @@ void runtime::intelgpu::do_logic_kernel(cldnn::topology& topology,
     const string entry_point_name = "logic_" + output_name;
     codegen::CodeWriter writer;
 
-    writer << "__kernel void " << entry_point_name << "(const __global float inputA"
-           << array_dims(inputA_shape) << ", const __global float inputB"
+    writer << "__kernel void " << entry_point_name << "(const __global " << inputA_type << " inputA"
+           << array_dims(inputA_shape) << ", const __global " << inputB_type << " inputB"
            << array_dims(inputB_shape) << ", __global char output" << array_dims(output_shape)
            << ")\n";
 
@@ -636,6 +683,7 @@ void runtime::intelgpu::do_logic_kernel(cldnn::topology& topology,
 
         writer << "if (inputA" << access_dims(inputA_shape) << operation << "inputB"
                << access_dims(inputB_shape) << ")\n";
+
         writer.block_begin();
         {
             writer << "output" << access_dims(output_shape) << " = 1;\n";
@@ -665,4 +713,43 @@ void runtime::intelgpu::do_logic_kernel(cldnn::topology& topology,
                                                  layout,
                                                  {1});
     topology.add(op_logical);
+}
+
+void runtime::intelgpu::do_reverse_operation(cldnn::topology& topology,
+                                             const string& input_name,
+                                             const Shape& input_shape,
+                                             const string& output_name,
+                                             const Shape& output_shape,
+                                             const element::Type& output_type,
+                                             const AxisSet& reversed_axes)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string entry_point_name = "reverse_" + output_name;
+    codegen::CodeWriter writer;
+    vector<size_t> gws;
+
+    writer << "__kernel void " << entry_point_name << "(const __global float input"
+           << array_dims(input_shape) << ", __global float output" << array_dims(output_shape)
+           << ")\n";
+
+    writer.block_begin();
+    {
+        gws = generate_loops(writer, output_shape, true);
+
+        writer << "output" << access_dims(output_shape) << " = input"
+               << access_dims(output_shape, reversed_axes, true) << ";\n";
+
+        generate_loops(writer, output_shape, false);
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_reverse(output_name,
+                                                 {input_name},
+                                                 {writer.get_code()},
+                                                 entry_point_name,
+                                                 get_kernel_args(1, 1),
+                                                 "",
+                                                 layout,
+                                                 gws);
+    topology.add(op_reverse);
 }
