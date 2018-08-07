@@ -41,7 +41,7 @@ node("bdw && nogpu") {
     //
     echo "Calling ngraph-ci-premerge.groovy"
     def ngraphCIPreMerge = load("${JENKINS_DIR}/ngraph-ci-premerge.groovy")
-    ngraphCIPreMerge(true)
+    ngraphCIPreMerge()
     echo "ngraph-ci-premerge.groovy completed"
 
 }  // End:  node( ... )
