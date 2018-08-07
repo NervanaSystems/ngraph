@@ -1186,7 +1186,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
         auto handler = build_dispatcher.find(type_index(typeid(n)));
         if (handler == build_dispatcher.end())
         {
-            throw ngraph_error("Unhandled op during code generation : " + node->description());
+            throw ngraph_error("Unhandled op during executor construction : " +
+                               node->description());
         }
         vector<TensorViewWrapper> in;
         vector<string> in_names;
