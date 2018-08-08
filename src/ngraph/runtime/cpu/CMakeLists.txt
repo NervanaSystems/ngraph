@@ -52,6 +52,7 @@ set(SRC
     builder/select.cpp
     builder/select_and_scatter.cpp
     builder/sigmoid.cpp
+    builder/slice.cpp
     builder/softmax.cpp
     builder/sum.cpp
     kernel/eigen_thread_pool.cpp
