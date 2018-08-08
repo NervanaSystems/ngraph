@@ -39,9 +39,8 @@ namespace ngraph
             {
                 namespace detail
                 {
-                    inline std::vector<size_t>
-                        get_auto_pads(const ngraph::Shape& kernel_shape,
-                                      const std::string& auto_pad)
+                    inline std::vector<size_t> get_auto_pads(const ngraph::Shape& kernel_shape,
+                                                             const std::string& auto_pad)
                     {
                         std::vector<size_t> pads;
 
@@ -106,8 +105,7 @@ namespace ngraph
          * @param kernel_shape The shape of the kernel which we retrieve strides for.
          * @return The kernel Shape object representing its dimensions (height, width, depth).
          */
-            inline ngraph::Strides get_strides(const Node& node,
-                                               const ngraph::Shape& kernel_shape)
+            inline ngraph::Strides get_strides(const Node& node, const ngraph::Shape& kernel_shape)
             {
                 return ngraph::Strides{node.get_attribute_value<std::vector<std::size_t>>(
                     "strides", std::vector<std::size_t>(kernel_shape.size(), (std::size_t)1))};
