@@ -46,6 +46,22 @@ namespace ngraph
                 }
 
                 template <typename ElementType>
+                void bounded_relu(void* input0, void* output, ElementType alpha, size_t count)
+                {
+                    Eigen::array<Eigen::Index, 1> out_dims, in_dims;
+
+                    out_dims[0] = in_dims[0] = count;
+
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> out(
+                        static_cast<ElementType*>(output), out_dims);
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> in0(
+                        static_cast<ElementType*>(input0), in_dims);
+
+                    out.device(eigen::global_thread_pool_device) =
+                        in0.cwiseMax(ElementType(0)).cwiseMin(alpha);
+                }
+
+                template <typename ElementType>
                 void relu_backprop(void* arg, void* delta_arg, void* out, size_t count)
                 {
                     reference::relu_backprop<ElementType>(static_cast<ElementType*>(arg),
