@@ -1684,7 +1684,7 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const std::array<std::stri
     GPUShape input_strides = row_major_strides(input_shape);
     GPUShape replace_strides = row_major_strides(replace_shape);
 
-    size_t pad_index = build_pad_dynamic({dtypes[0], dtypes[2]}, replace_shape, input_shape, lower_bounds, slice_strides);
+    size_t pad_index = build_pad_dynamic({{dtypes[0], dtypes[2]}}, replace_shape, input_shape, lower_bounds, slice_strides);
 
     std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](
         void** inputs, void** outputs) mutable {
