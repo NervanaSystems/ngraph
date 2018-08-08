@@ -90,7 +90,7 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
             throw runtime_error(ss.str());
         }
         function<const char*()> get_ngraph_version_string =
-            reinterpret_cast<const char* (*)()>(dlsym(handle, "get_ngraph_version_string"));
+            reinterpret_cast<const char* (*)()>(DLSYM(handle, "get_ngraph_version_string"));
         if (!get_ngraph_version_string)
         {
             CLOSE_LIBRARY(handle);
@@ -99,7 +99,7 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
         }
 
         function<runtime::Backend*(const char*)> new_backend =
-            reinterpret_cast<runtime::Backend* (*)(const char*)>(dlsym(handle, "new_backend"));
+            reinterpret_cast<runtime::Backend* (*)(const char*)>(DLSYM(handle, "new_backend"));
         if (!new_backend)
         {
             CLOSE_LIBRARY(handle);
@@ -107,7 +107,7 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
         }
 
         function<void(runtime::Backend*)> delete_backend =
-            reinterpret_cast<void (*)(runtime::Backend*)>(dlsym(handle, "delete_backend"));
+            reinterpret_cast<void (*)(runtime::Backend*)>(DLSYM(handle, "delete_backend"));
         if (!delete_backend)
         {
             CLOSE_LIBRARY(handle);
@@ -126,12 +126,16 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
 // This doodad finds the full path of the containing shared library
 static string find_my_file()
 {
+#ifdef WIN32
+    return ".";
+#else
     Dl_info dl_info;
     dladdr(reinterpret_cast<void*>(find_my_file), &dl_info);
     return dl_info.dli_fname;
+#endif
 }
 
-void* runtime::BackendManager::open_shared_library(string type)
+DL_HANDLE runtime::BackendManager::open_shared_library(string type)
 {
     string ext = SHARED_LIB_EXT;
 
