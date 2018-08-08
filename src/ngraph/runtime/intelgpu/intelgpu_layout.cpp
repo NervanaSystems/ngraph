@@ -58,7 +58,7 @@ bool runtime::intelgpu::IntelGPULayout::
 cldnn::data_types
     runtime::intelgpu::IntelGPULayout::get_cldnn_type(const element::Type& element_type)
 {
-    if (element_type == ngraph::element::i8)
+    if ((element_type == ngraph::element::i8) || (element_type == ngraph::element::boolean))
     {
         return cldnn::data_types::i8;
     }
@@ -82,22 +82,42 @@ cldnn::tensor runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(const Shape
 {
     vector<size_t> idx(4, 1);
     size_t index = 0;
+    const size_t total_size = shape_size<Shape>(element_shape);
 
-    for (auto i = element_shape.crbegin(); i != element_shape.crend() && index < 3; ++i, ++index)
+    // clDNN requires at least scalar tensor size. We can't create zero sized tensors
+    if (total_size != 0)
     {
-        idx.at(index) = *i;
-    }
+        for (auto i = element_shape.crbegin(); i != element_shape.crend() && index < 3;
+             ++i, ++index)
+        {
+            idx.at(index) = *i;
+        }
 
-    if (element_shape.size() > 3)
-    {
-        idx.at(3) =
-            accumulate(element_shape.rbegin() + 3, element_shape.rend(), 1, multiplies<size_t>());
+        if (element_shape.size() > 3)
+        {
+            idx.at(3) = accumulate(
+                element_shape.rbegin() + 3, element_shape.rend(), 1, multiplies<size_t>());
+        }
     }
 
     //Parameters for this ctor: batch, feature, spatial_x, spatial_y
     const cldnn::tensor tns(idx.at(3), idx.at(2), idx.at(0), idx.at(1));
 
     return tns;
+}
+
+cldnn::tensor runtime::intelgpu::IntelGPULayout::create_cldnn_offset(const Shape& pad_below)
+{
+    vector<cldnn::tensor::value_type> offset({0, 0, 0, 0});
+    size_t ridx = 4;
+
+    for (auto i = pad_below.crbegin(); i != pad_below.crend() && ridx > 0; ++i, --ridx)
+    {
+        offset.at(ridx - 1) = -(*i);
+    }
+
+    const cldnn::tensor input_offset(offset.at(0), offset.at(1), offset.at(3), offset.at(2));
+    return input_offset;
 }
 
 cldnn::layout runtime::intelgpu::IntelGPULayout::create_cldnn_layout(

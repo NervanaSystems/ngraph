@@ -64,6 +64,7 @@ set (SRC
     op/less.cpp
     op/less_eq.cpp
     op/log.cpp
+    op/lrn.cpp
     op/max.cpp
     op/maximum.cpp
     op/max_pool.cpp
@@ -216,7 +217,9 @@ endif()
 
 # Defines macro in C++ to load backend plugin
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
-target_link_libraries(ngraph PUBLIC dl pthread)
+if (NOT WIN32)
+    target_link_libraries(ngraph PUBLIC dl pthread)
+endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     target_sources(ngraph PRIVATE $<TARGET_OBJECTS:onnx_import_interface>)
