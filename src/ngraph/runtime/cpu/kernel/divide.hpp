@@ -20,14 +20,7 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 
 #include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
-#include <dlpack/dlpack.h>
-#include <dmlc/logging.h>
-#include <gtest/gtest.h>
-#include <tvm/tvm.h>
-#include <tvm/operation.h>
-#include <tvm/build_module.h>
-#include <topi/broadcast.h>
-#include <topi/x86/default.h>
+#include "ngraph/runtime/cpu/tvm_emitter.hpp"
 
 namespace ngraph
 {
