@@ -195,6 +195,6 @@ TEST(cpu_test, mkldnn_layouts)
 
 TEST(cpu_test, tvm_simple)
 {
-    ngraph::runtime::cpu::tvm_test();
+//    ngraph::runtime::cpu::tvm_test();
 }
 

@@ -202,6 +202,28 @@
     };                                                                                             \
     functors.emplace_back(functor);
 
+#define BUILD_TVM_BINARY_ELEMWISE_FUNCTOR(OP)                                                      \
+    auto& functors = external_function->get_functors();                                            \
+    auto& tvm_instance = external_function->get_tvm_instance();                                    \
+    auto& tensor_data = external_function->get_tensor_data();                                      \
+    std::function<tvm::PackedFunc(const std::unique_ptr<TVMInstance>&)> builder;                   \
+    std::function<void(const std::unique_ptr<TVMInstance>&,                                       \
+                       const tvm::PackedFunc&, void*, void*, void*, size_t)> kernel;               \
+                                                                                                   \
+    SELECT_KERNEL(builder, args[0].get_element_type(), OP);                                        \
+    auto tvm_func = builder(tvm_instance);                                                         \
+    SELECT_KERNEL(kernel, args[0].get_element_type(), tvm_kernel::binary_elemwise_compute);        \
+                                                                                                   \
+    auto element_count = out[0].get_size();                                                        \
+    auto& arg0_tensor = tensor_data[args[0].get_name()];                                           \
+    auto& arg1_tensor = tensor_data[args[1].get_name()];                                           \
+    auto& out0_tensor = tensor_data[out[0].get_name()];                                            \
+                                                                                                   \
+    auto functor = [&, tvm_func, kernel, element_count](CPURuntimeContext* ctx) {                  \
+        kernel(tvm_instance, tvm_func, arg0_tensor, arg1_tensor, out0_tensor, element_count);      \
+    };                                                                                             \
+    functors.emplace_back(functor);
+
 #define BUILD_BINARY_ELEMWISE_FUNCTOR(OP)                                                          \
     auto& functors = external_function->get_functors();                                            \
     std::function<void(void*, void*, void*, size_t)> kernel;                                       \
@@ -234,7 +256,7 @@ namespace ngraph
     {
         namespace cpu
         {
-            tvm::Var tvm_test();
+//            tvm::Var tvm_test();
 
             using BuildOpFunction =
                 std::function<void(CPU_ExternalFunction* external_function,

@@ -360,6 +360,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     }
 
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
+    m_tvm_intance.reset(new TVMInstance());
 
     ngraph::pass::Manager pass_manager;
 
@@ -1111,6 +1112,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
     }
 
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
+    m_tvm_instance.reset(new TVMInstance());
 
     ngraph::pass::Manager pass_manager;
 

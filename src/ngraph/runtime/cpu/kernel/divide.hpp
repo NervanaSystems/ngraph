@@ -20,7 +20,6 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 
 #include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
-#include "ngraph/runtime/cpu/tvm_emitter.hpp"
 
 namespace ngraph
 {
@@ -51,7 +50,7 @@ namespace ngraph
                 template <typename ElementType>
                 void divide(void* input0, void* input1, void* output, size_t count)
                 {
-#if 0
+#if 1
                     Eigen::array<Eigen::Index, 1> out_dims, in_dims;
 
                     out_dims[0] = in_dims[0] = count;
@@ -64,7 +63,7 @@ namespace ngraph
                         static_cast<ElementType*>(input1), in_dims);
 
                     out.device(eigen::global_thread_pool_device) = in0 / in1;
-#endif
+#else
                     tvm::Var n("n");
                     auto A = tvm::placeholder({n}, tvm::Float(32), "a");
                     auto B = tvm::placeholder({n}, tvm::Float(32), "b");
@@ -128,6 +127,7 @@ namespace ngraph
                     for (int i = 0; i < dlshape[0]; ++i) {
                       std::cout << static_cast<float*>(c->data)[i] << std::endl;
                     }
+#endif
 #endif
                 }
             }

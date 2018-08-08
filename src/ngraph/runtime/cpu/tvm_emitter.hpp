@@ -17,8 +17,13 @@
 #pragma once
 
 #include <map>
-#include <dlpack/dlpack.h>
+#include <dmlc/logging.h>
+#include <gtest/gtest.h>
 #include <tvm/tvm.h>
+#include <tvm/operation.h>
+#include <tvm/build_module.h>
+#include <topi/broadcast.h>
+#include <topi/x86/default.h>
 
 namespace ngraph
 {
@@ -26,51 +31,59 @@ namespace ngraph
     {
         namespace cpu
         {
-            namespace tvm {
-                const DLDataType DLType_Float32 {kDLFloat, 32, 1};
-            }
-            class TVMEmitter
+            class TVMInstance
             {
             public:
-                TVMEmitter();
-                ~TVMEmitter();
-                enum class TVM_OP : uint32
-                {
-                    Divide
+                TVMInstance();
+                ~TVMInstance();
+                size_t add_module(const tvm::Module& module) {
+                      m_modules.push_back(module);
+                      return m_modules.size()-1;
                 }
-
-
-            private:
-                void build_divide();
-
-                DLTensor create_dltensor(const size_t ndim,
+                const tvm::BuildConfig& config() const
+                {
+                  return m_config;
+                }
+                const tvm::Target& target() const
+                {
+                  return m_target;
+                }
+                const DLContext& context() const
+                {
+                  return m_dl_ctx;
+                }
+                DLTensor create_dltensor(const DLDataType& type,
+                                         const size_t ndim,
                                          tvm_index_t* shape,
-                                         const DLDataType type,
                                          void* data);
-
-
             private:
-                std::map<TVM_OP, tvm::PackedFunc> m_op_functors;
+                std::vector<tvm::Module> m_modules;
+                tvm::BuildConfig m_config;
+                tvm::Target m_target;
                 DLContext m_dl_ctx;
             };
 
-            namespace tvm {
+            namespace tvm_kernel {
                 template <typename ElementType>
-                void divide(void* input0, void* input1, void* output, size_t count)
+                void binary_elemwise_compute(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                             const tvm::runtime::PackedFunc& func,
+                                             void* input0, void* input1, void* output, size_t count)
                 {
-                  int ndim = 1;
-                  int64_t shape[] = {static_cast<int64_t>(count)};
-    #if 1
-                  DLTensor a = create_dltensor(dtype, ctx, ndim, shape, input0);
-                  DLTensor b = create_dltensor(dtype, ctx, ndim, shape, input1);
-                  DLTensor c = create_dltensor(dtype, ctx, ndim, shape, output);
-
-                  func(&a,&b,&c);
-                  for (int i = 0; i < dlshape[0]; ++i) {
-                    std::cout << static_cast<float*>(c.data)[i] << std::endl;
-                  }
-    #endif
+                    std::cout << "divide compute" << std::endl;
                 }
+                template <>
+                void binary_elemwise_compute<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                                    const tvm::runtime::PackedFunc& func,
+                                                    void* input0, void* input1, void* output, size_t count);
+
+                template <typename ElementType>
+                tvm::PackedFunc build_divide(const std::unique_ptr<TVMInstance>& tvm_instance)
+                {
+                    std::cout << "divide build" << std::endl;
+                }
+
+                template <>
+                tvm::PackedFunc build_divide<float>(const std::unique_ptr<TVMInstance>& tvm_instance);
             }
         }
     }
