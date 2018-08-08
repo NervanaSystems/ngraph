@@ -499,6 +499,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string
         return primitive_index;
     }
 
+    uint32_t rank = static_cast<uint32_t>(input_shape.size());
     // check if the kernel has already been compiled. if so, create
     // a launch primitive for it based on the input tensor shape
     // but do not recompile the kernel. otherwise, do it all:
@@ -508,11 +509,10 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
-        CudaKernelBuilder::get_pad_dynamic_op(writer, kernel_name.str(), dtypes);
+        CudaKernelBuilder::get_pad_dynamic_op(writer, kernel_name.str(), dtypes, rank);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
 
-    uint32_t rank = static_cast<uint32_t>(input_shape.size());
     uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
         //TODO: currently we set it to 64, will add tuning method later
     uint32_t block_size_x = 64;
