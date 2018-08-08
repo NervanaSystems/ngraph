@@ -36,6 +36,7 @@ set(SRC
     builder/convolution.cpp
     builder/dot.cpp
     builder/function_call.cpp
+    builder/lrn.cpp
     builder/matmul_bias.cpp
     builder/max.cpp
     builder/max_pool.cpp
@@ -43,6 +44,7 @@ set(SRC
     builder/relu.cpp
     builder/pad.cpp
     builder/product.cpp
+    builder/reduce_function_window.cpp
     builder/reshape.cpp
     builder/reverse.cpp
     builder/reverse_sequence.cpp
