@@ -514,6 +514,10 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string
 
     uint32_t rank = static_cast<uint32_t>(input_shape.size());
     uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
+        //TODO: currently we set it to 64, will add tuning method later
+    uint32_t block_size_x = 64;
+    uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
+
     GPUShape pad_below(input_shape.size(), 0);
     GPUShape pad_interior(input_shape.size(), 1);
 
@@ -528,40 +532,34 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string
     GPUShape input_strides = row_major_strides(input_shape);
     GPUShape output_strides = row_major_strides(output_shape);
 
-    // get an allocator for transient per kernel gpu memory
-    GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
-    size_t idx_input_strides =
-        allocator.reserve_argspace(input_strides.data(), input_strides.size() * sizeof(uint32_t));
-    size_t idx_output_strides =
-        allocator.reserve_argspace(output_strides.data(), output_strides.size() * sizeof(uint32_t));
-    size_t idx_padding_below =
-        allocator.reserve_argspace(pad_below.data(), pad_below.size() * sizeof(uint32_t));
-    size_t idx_padding_interior =
-        allocator.reserve_argspace(pad_interior.data(), pad_interior.size() * sizeof(uint32_t));
-
     // create the launch primitive
     std::unique_ptr<gpu::primitive> pad_dynamic(new gpu::primitive{[=](void** inputs,
                                                                        void** outputs) mutable {
-        void* param_input_strides = runtime::gpu::invoke_memory_primitive(m_ctx, idx_input_strides);
-        void* param_output_strides =
-            runtime::gpu::invoke_memory_primitive(m_ctx, idx_output_strides);
-        void* param_padding_below = runtime::gpu::invoke_memory_primitive(m_ctx, idx_padding_below);
-        void* param_padding_interior =
-            runtime::gpu::invoke_memory_primitive(m_ctx, idx_padding_interior);
         std::vector<void*> args_list{&inputs[0],
-                                     &outputs[0],
-                                     &param_input_strides,
-                                     &param_output_strides,
-                                     &param_padding_below,
-                                     &param_padding_interior,
-                                     &rank,
-                                     &nthreads};
+                                     &outputs[0]};
+        for(size_t i = 0; i < input_shape.size(); i++)
+        {
+            args_list.push_back(&input_strides[0]);
+        }
+        for(size_t i = 0; i < input_shape.size(); i++)
+        {
+            args_list.push_back(&output_strides[0]);
+        }
+        for(size_t i = 0; i < input_shape.size(); i++)
+        {
+            args_list.push_back(&pad_below[0]);
+        }
+        for(size_t i = 0; i < input_shape.size(); i++)
+        {
+            args_list.push_back(&pad_interior[0]);
+        }
+        args_list.push_back(&nthreads};
 
         CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                      static_cast<uint32_t>(nthreads),
+                                      aligned_grid_size_x,
                                       1,
                                       1, // grid dim
-                                      1,
+                                      block_size_x,
                                       1,
                                       1, // block dim
                                       0,

@@ -316,12 +316,28 @@ void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
 void runtime::gpu::CudaKernelBuilder::get_pad_dynamic_op(
     codegen::CodeWriter& writer,
     const std::string& name,
-    const std::array<std::string, 2>& data_types)
+    const std::array<std::string, 2>& data_types,
+    size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
-           << data_types[1] << "* out, uint32_t* input_strides, uint32_t* output_strides, "
-                               "uint32_t* padding_below, uint32_t* "
-                               "padding_interior, uint32_t rank, uint32_t n)\n";
+           << data_types[1] << "* out,"
+    for(size_t i = 0; i < rank; i++)
+    {
+        writer << "uint32_t* input_strides" << i << ", ";
+    }
+    for(size_t i = 0; i < rank; i++)
+    {
+        writer << "uint32_t* output_strides" << i << ", ";
+    }
+    for(size_t i = 0; i < rank; i++)
+    {
+        writer << "uint32_t* padding_below" << i << ", ";
+    }
+    for(size_t i = 0; i < rank; i++)
+    {
+        writer << "uint32_t* padding_interior" << i << ", ";
+    }
+    writer << "uint32_t n)\n";
     writer.block_begin();
     {
         writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
@@ -331,15 +347,12 @@ void runtime::gpu::CudaKernelBuilder::get_pad_dynamic_op(
             writer << "uint32_t output_idx = 0;\n";
             writer << "uint32_t input_idx = tid;\n";
 
-            writer << "for(uint32_t i = 0; i < rank; i++)\n";
-            writer.block_begin();
+            for(size_t i = 0; i < rank; i++
             {
-                writer << "output_idx += (input_idx / input_strides[i] * padding_interior[i]  + "
-                          "padding_below[i]) "
-                          "* output_strides[i];\n";
-                writer << "input_idx %= input_strides[i];\n";
+                writer << "output_idx += (input_idx / input_strides" i << " * padding_interior" << i << "  + "
+                          "padding_below" << i << ") * output_strides" << i << ";\n";
+                writer << "input_idx %= input_strides" << i << ";\n";
             }
-            writer.block_end();
             writer << "out[output_idx] = in[tid];\n";
         }
         writer.block_end();
