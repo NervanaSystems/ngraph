@@ -86,7 +86,7 @@ namespace ngraph
                 {
                     validate_call(func, outputs, inputs);
                 }
-                call(func, outputs, inputs);
+                return call(func, outputs, inputs);
             }
 
             virtual void remove_compiled_function(std::shared_ptr<Function> func);
