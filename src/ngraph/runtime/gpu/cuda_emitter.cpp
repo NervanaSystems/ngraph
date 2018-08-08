@@ -537,21 +537,21 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string
                                                                        void** outputs) mutable {
         std::vector<void*> args_list{&inputs[0],
                                      &outputs[0]};
-        for(size_t i = 0; i < input_shape.size(); i++)
+        for(size_t k = 0; k < input_shape.size(); k++)
         {
-            args_list.push_back(&input_strides[i]);
+            args_list.push_back(&input_strides[k]);
         }
-        for(size_t i = 0; i < input_shape.size(); i++)
+        for(size_t k = 0; k < input_shape.size(); k++)
         {
-            args_list.push_back(&output_strides[i]);
+            args_list.push_back(&output_strides[k]);
         }
-        for(size_t i = 0; i < input_shape.size(); i++)
+        for(size_t k = 0; k < input_shape.size(); k++)
         {
-            args_list.push_back(&pad_below[i]);
+            args_list.push_back(&pad_below[k]);
         }
-        for(size_t i = 0; i < input_shape.size(); i++)
+        for(size_t k = 0; k < input_shape.size(); k++)
         {
-            args_list.push_back(&pad_interior[i]);
+            args_list.push_back(&pad_interior[k]);
         }
         args_list.push_back(&nthreads);
 

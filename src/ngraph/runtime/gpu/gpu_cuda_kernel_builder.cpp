@@ -320,7 +320,7 @@ void runtime::gpu::CudaKernelBuilder::get_pad_dynamic_op(
     size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
-           << data_types[1] << "* out,"
+           << data_types[1] << "* out,";
     for(size_t i = 0; i < rank; i++)
     {
         writer << "uint32_t* input_strides" << i << ", ";
