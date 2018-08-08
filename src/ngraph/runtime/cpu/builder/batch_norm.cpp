@@ -18,6 +18,7 @@
 #include <cstring>
 
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/kernel/batchnorm.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
@@ -324,7 +325,17 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::BatchNormRelu)
+            {
+                if (!mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    throw ngraph_error("BatchNormRelu is only supported with 4-D MKLDNN kernel.");
+                }
+                build_batch_norm(external_function, node, args, out, true);
+            }
             REGISTER_OP_BUILDER(BatchNorm);
+            REGISTER_OP_BUILDER(BatchNormRelu);
             REGISTER_OP_BUILDER(BatchNormBackprop);
         }
     }
