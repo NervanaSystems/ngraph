@@ -22,6 +22,8 @@
 #include <utility>
 #include <vector>
 
+#include "ngraph/frontend/onnx_import/node.hpp"
+
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/shape.hpp"
@@ -38,8 +40,7 @@ namespace ngraph
                 namespace detail
                 {
                     inline std::vector<size_t>
-                        get_auto_pads(const std::shared_ptr<ngraph::Node>& node,
-                                      const Shape& kernel_shape,
+                        get_auto_pads(const ngraph::Shape& kernel_shape,
                                       const std::string& auto_pad)
                     {
                         std::vector<size_t> pads;
@@ -50,29 +51,29 @@ namespace ngraph
                    * SAME_UPPER and at the beginning for SAME_LOWER.
                    */
                         auto pad_value = [](size_t dim) {
-                            return (std::reinterpret_cast<float>(dim) - 1.) / 2.;
+                            return (static_cast<float>(dim) - 1.) / 2.;
                         };
 
                         if (auto_pad == "SAME_UPPER")
                         {
                             for (size_t dim : kernel_shape)
                             {
-                                pads.emplace_back{std::floor(pad_value(dim))};
+                                pads.emplace_back(std::floor(pad_value(dim)));
                             }
                             for (size_t dim : kernel_shape)
                             {
-                                pads.emplace_back{std::ceil(pad_value(dim))};
+                                pads.emplace_back(std::ceil(pad_value(dim)));
                             }
                         }
                         else if (auto_pad == "SAME_LOWER")
                         {
                             for (size_t dim : kernel_shape)
                             {
-                                pads.emplace_back{std::ceil(pad_value(dim))};
+                                pads.emplace_back(std::ceil(pad_value(dim)));
                             }
                             for (size_t dim : kernel_shape)
                             {
-                                pads.emplace_back{std::floor(pad_value(dim))};
+                                pads.emplace_back(std::floor(pad_value(dim)));
                             }
                         }
 
@@ -92,7 +93,7 @@ namespace ngraph
          * @param node The Node ptr representing Conv or Pool operation.
          * @return The kernel Shape object representing its dimensions (height, width, depth).
          */
-            inline ngraph::Shape get_kernel_shape(const std::shared_ptr<ngraph::Node>& node)
+            inline ngraph::Shape get_kernel_shape(const Node& node)
             {
                 return ngraph::Shape{
                     node.get_attribute_value<std::vector<std::size_t>>("kernel_shape", {1, 1})};
@@ -105,8 +106,8 @@ namespace ngraph
          * @param kernel_shape The shape of the kernel which we retrieve strides for.
          * @return The kernel Shape object representing its dimensions (height, width, depth).
          */
-            inline ngraph::Strides get_strides(const std::shared_ptr<ngraph::Node>& node,
-                                               const Shape& kernel_shape)
+            inline ngraph::Strides get_strides(const Node& node,
+                                               const ngraph::Shape& kernel_shape)
             {
                 return ngraph::Strides{node.get_attribute_value<std::vector<std::size_t>>(
                     "strides", std::vector<std::size_t>(kernel_shape.size(), (std::size_t)1))};
@@ -118,7 +119,7 @@ namespace ngraph
          * @param node The Node ptr representing Conv or Pool operation.
          * @return The kernel Shape object representing its dimensions (height, width, depth).
          */
-            inline ngraph::Strides get_strides(const std::shared_ptr<ngraph::Node>& node)
+            inline ngraph::Strides get_strides(const Node& node)
             {
                 return get_strides(node, get_kernel_shape(node));
             }
@@ -130,7 +131,7 @@ namespace ngraph
          * @return The Strides object containing number of pixels for filter dilation 
          *         (height, width, depth).
          */
-            inline ngraph::Strides get_dilations(const std::shared_ptr<ngraph::Node>& node)
+            inline ngraph::Strides get_dilations(const Node& node)
             {
                 const ngraph::Shape& kernel_shape = get_kernel_shape(node);
                 return ngraph::Strides{node.get_attribute_value<std::vector<std::size_t>>(
@@ -151,7 +152,7 @@ namespace ngraph
          *         pixels to pad in respective dimensions (height, width, depth).
          */
             inline std::pair<ngraph::CoordinateDiff, ngraph::CoordinateDiff>
-                get_pads(const std::shared_ptr<ngraph::Node>& node, const Shape& kernel_shape)
+                get_pads(const Node& node, const ngraph::Shape& kernel_shape)
             {
                 std::vector<std::size_t> pads;
                 try
@@ -163,7 +164,7 @@ namespace ngraph
                     std::string auto_pad{node.get_attribute_value<std::string>("auto_pad", "")};
                     if (!auto_pad.empty())
                     {
-                        pads = detail::get_auto_pads(node, kernel_shape, auto_pad);
+                        pads = detail::get_auto_pads(kernel_shape, auto_pad);
                     }
                 }
 
@@ -190,7 +191,7 @@ namespace ngraph
                 }
 
                 return std::make_pair<ngraph::CoordinateDiff, ngraph::CoordinateDiff>(
-                    padding_above, padding_below);
+                    std::move(padding_above), std::move(padding_below));
             }
 
             /**
@@ -206,7 +207,7 @@ namespace ngraph
          *         pixels to pad in respective dimensions (height, width, depth).
          */
             inline std::pair<ngraph::CoordinateDiff, ngraph::CoordinateDiff>
-                get_pads(const std::shared_ptr<ngraph::Node>& node)
+                get_pads(const Node& node)
             {
                 return get_pads(node, get_kernel_shape(node));
             }

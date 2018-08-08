@@ -48,8 +48,8 @@ namespace ngraph
                                         const std::shared_ptr<ngraph::Node>& filters,
                                         const ngraph::Strides& strides,
                                         const ngraph::Strides& dilations,
-                                        const ngrpah::CoordinateDiff& padding_below,
-                                        const ngrpah::CoordinateDiff& padding_above,
+                                        const ngraph::CoordinateDiff& padding_below,
+                                        const ngraph::CoordinateDiff& padding_above,
                                         int groups)
                 {
                     if (groups != 1)
@@ -78,10 +78,10 @@ namespace ngraph
                             auto sliced_data = std::make_shared<ngraph::op::Slice>(
                                 data, data_lower_bounds, data_upper_bounds);
                             // slice filters
-                            filters_lower_part[0] = group * filters_group_size;
-                            filters_upper_part[0] = (group + 1) * filters_group_size;
+                            filters_lower_bounds[0] = group * filters_group_size;
+                            filters_upper_bounds[0] = (group + 1) * filters_group_size;
                             auto sliced_filters = std::make_shared<ngraph::op::Slice>(
-                                filters, filters_lower_part, filters_upper_part);
+                                filters, filters_lower_bounds, filters_upper_bounds);
 
                             convolution_nodes.push_back(
                                 std::make_shared<ngraph::op::Convolution>(sliced_data,
@@ -140,7 +140,7 @@ namespace ngraph
                 // no bias param
                 if (inputs.size() < 3)
                 {
-                    return conv_node;
+                    return {conv_node};
                 }
 
                 auto bias = inputs.at(2);
