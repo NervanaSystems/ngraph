@@ -110,7 +110,7 @@
     else if (R == 16)                                                                              \
         KV = K<ET, 16>;                                                                            \
     else                                                                                           \
-        throw ngraph_error("Unsupported rank " #R " for kernel " #K);
+        throw ngraph_error("Unsupported rank " + std::to_string(R) + " for kernel " #K);
 
 // Per-type and rank kernel macro
 #define SELECT_KERNEL_BY_RANK(KV, ET, R, K)                                                        \
@@ -181,7 +181,7 @@
     else if (R == 6)                                                                               \
         KV = K<ET, 6>;                                                                             \
     else                                                                                           \
-        throw ngraph_error("Unsupported rank " #R " for kernel " #K);
+        throw ngraph_error("Unsupported rank " + std::to_string(R) + " for kernel " #K);
 
 // Partial per-type and rank kernel macro
 #define PARTIAL_SELECT_KERNEL_BY_RANK(KV, ET, R, K)                                                \
