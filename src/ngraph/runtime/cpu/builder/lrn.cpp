@@ -36,7 +36,7 @@ namespace ngraph
                 auto& tensor_data = external_function->get_tensor_data();
 
                 const ngraph::op::LRN* lrn = static_cast<const ngraph::op::LRN*>(node);
-                static function<void(CPURuntimeContext*)> functor;
+                function<void(CPURuntimeContext*)> functor;
 
                 auto& arg_tensor = tensor_data[args[0].get_name()];
                 auto& out_tensor = tensor_data[out[0].get_name()];
