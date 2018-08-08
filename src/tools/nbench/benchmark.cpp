@@ -277,7 +277,7 @@ void run_benchmark(shared_ptr<Function> f,
 
     if (warmup_iterations)
     {
-        for (size_t i = 0; i < static_cast<size_t>(warmup_iterations); i++)
+        for (int i = 0; i < warmup_iterations; i++)
         {
             backend->call(f, results, args);
         }
