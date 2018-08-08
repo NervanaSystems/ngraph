@@ -1492,8 +1492,15 @@ size_t
         {
             CudaKernelBuilder::get_device_helper(writer, op, kernel, dtypes);
         }
-        CudaKernelBuilder::get_ew_collective_op(
-            writer, kernel_name.str(), args, op, reduce_op, dtypes, reduced_tensors, save_elementwise, tensor_shape.size());
+        CudaKernelBuilder::get_ew_collective_op(writer,
+                                                kernel_name.str(),
+                                                args,
+                                                op,
+                                                reduce_op,
+                                                dtypes,
+                                                reduced_tensors,
+                                                save_elementwise,
+                                                tensor_shape.size());
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
 
@@ -1824,7 +1831,8 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const std::array<std::string, 
     {
         codegen::CodeWriter writer;
         writer << include_helpers();
-        runtime::gpu::CudaKernelBuilder::get_broadcast_op(writer, kernel_name, args, result_shape.size());
+        runtime::gpu::CudaKernelBuilder::get_broadcast_op(
+            writer, kernel_name, args, result_shape.size());
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
 
@@ -2135,8 +2143,16 @@ size_t runtime::gpu::CUDAEmitter::build_convolution(const std::array<std::string
     {
         codegen::CodeWriter writer;
         writer << include_helpers();
-        runtime::gpu::CudaKernelBuilder::get_convolution_forward(
-            writer, kernel_name, dtypes, args, N, K, rank, filter_size, sm_tile_size, reg_tile_size);
+        runtime::gpu::CudaKernelBuilder::get_convolution_forward(writer,
+                                                                 kernel_name,
+                                                                 dtypes,
+                                                                 args,
+                                                                 N,
+                                                                 K,
+                                                                 rank,
+                                                                 filter_size,
+                                                                 sm_tile_size,
+                                                                 reg_tile_size);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
 

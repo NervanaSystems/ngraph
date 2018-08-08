@@ -35,7 +35,6 @@ namespace ngraph
             class CudaKernelBuilder
             {
             public:
-
                 static void get_elementwise_op(codegen::CodeWriter& writer,
                                                const std::string& name,
                                                const std::string& op,
@@ -127,8 +126,8 @@ namespace ngraph
                                                     int K,
                                                     int rank,
                                                     int filter_size,
-                                                    int sm_tile_size=8,
-                                                    int reg_tile_size=1);
+                                                    int sm_tile_size = 8,
+                                                    int reg_tile_size = 1);
 
                 static void get_softmax_divide_op(codegen::CodeWriter& writer,
                                                   const std::string& name,
