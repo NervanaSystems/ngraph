@@ -26,7 +26,7 @@ namespace ngraph
             {
                 void pad_4d_float32(float* input,
                                     float* output,
-                                    float pad_value,
+                                    float* pad_value,
                                     const Shape& input_shape,
                                     const Shape& output_shape,
                                     const Shape& padding_below,
