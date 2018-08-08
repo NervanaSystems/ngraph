@@ -40,7 +40,6 @@
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
-#include "ngraph/runtime/cpu/tvm_emitter.hpp"
 
 namespace ngraph
 {
@@ -51,6 +50,7 @@ namespace ngraph
             class CPU_ExternalFunction;
             class CPU_Emitter;
             class CPU_CallFrame;
+            class TVMInstance;
 
 #if !defined(NGRAPH_DEX_ONLY)
 

@@ -19,13 +19,13 @@
 
 #include <dmlc/logging.h>
 #include <gtest/gtest.h>
-#include <tvm/tvm.h>
-#include <tvm/operation.h>
-#include <tvm/build_module.h>
 #include <topi/broadcast.h>
 #include <topi/x86/default.h>
+#include <tvm/build_module.h>
+#include <tvm/operation.h>
+#include <tvm/tvm.h>
 
-#include "tvm_emitter.hpp"
+#include "tvm_kernels.hpp"
 
 using namespace ngraph::runtime::cpu;
 
@@ -39,24 +39,23 @@ TVMInstance::TVMInstance()
 }
 TVMInstance::~TVMInstance()
 {
-
 }
 DLTensor TVMInstance::create_dltensor(const DLDataType& type,
-                         const size_t ndim,
-                         tvm_index_t* shape,
-                         void* data)
+                                      const size_t ndim,
+                                      tvm_index_t* shape,
+                                      void* data)
 {
-  DLTensor t;
-  t.ctx = m_dl_ctx;
-  t.ndim = ndim;
-  t.dtype = type;
-  t.shape = static_cast<int64_t*>(shape);
-  t.strides = nullptr;
-  t.byte_offset = 0;
-  t.data = data;
-  return t;
+    DLTensor t;
+    t.ctx = m_dl_ctx;
+    t.ndim = ndim;
+    t.dtype = type;
+    t.shape = static_cast<int64_t*>(shape);
+    t.strides = nullptr;
+    t.byte_offset = 0;
+    t.data = data;
+    return t;
 }
-static const DLDataType DLType_Float32 {kDLFloat, 32, 1};
+static const DLDataType DLType_Float32{kDLFloat, 32, 1};
 
 template <>
 tvm::PackedFunc tvm_kernel::build_divide<float>(const std::unique_ptr<TVMInstance>& tvm_instance)
@@ -72,7 +71,8 @@ tvm::PackedFunc tvm_kernel::build_divide<float>(const std::unique_ptr<TVMInstanc
 
     auto schedule = topi::x86::default_schedule(tvm_instance->target(), {C});
     auto lowered = tvm::lower(schedule, {A, B, C}, "func_divide", binds, tvm_instance->config());
-    auto module = tvm::build(lowered, tvm_instance->target(), tvm::Target(), tvm_instance->config());
+    auto module =
+        tvm::build(lowered, tvm_instance->target(), tvm::Target(), tvm_instance->config());
     // store module to keep its lifetime
     tvm_instance->add_module(module);
     return module->GetFunction("func_divide", false);
@@ -81,7 +81,10 @@ tvm::PackedFunc tvm_kernel::build_divide<float>(const std::unique_ptr<TVMInstanc
 template <>
 void tvm_kernel::binary_elemwise_compute<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
                                                 const tvm::PackedFunc& func,
-                                                void* input0, void* input1, void* output, size_t count)
+                                                void* input0,
+                                                void* input1,
+                                                void* output,
+                                                size_t count)
 {
     std::cout << "divide float compute" << std::endl;
     int64_t dlshape[] = {static_cast<int64_t>(count)};
@@ -89,5 +92,5 @@ void tvm_kernel::binary_elemwise_compute<float>(const std::unique_ptr<TVMInstanc
     DLTensor b = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, input1);
     DLTensor c = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, output);
 
-    func(&a,&b,&c);
+    func(&a, &b, &c);
 }

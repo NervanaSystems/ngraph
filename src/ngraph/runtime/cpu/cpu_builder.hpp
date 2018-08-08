@@ -23,9 +23,6 @@
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 
-#include <tvm/tvm.h>
-
-
 #define BUILDER_DECL(op_name)                                                                      \
     build<op_name>(CPU_ExternalFunction * external_function,                                       \
                    const ngraph::Node* node,                                                       \
@@ -207,8 +204,9 @@
     auto& tvm_instance = external_function->get_tvm_instance();                                    \
     auto& tensor_data = external_function->get_tensor_data();                                      \
     std::function<tvm::PackedFunc(const std::unique_ptr<TVMInstance>&)> builder;                   \
-    std::function<void(const std::unique_ptr<TVMInstance>&,                                       \
-                       const tvm::PackedFunc&, void*, void*, void*, size_t)> kernel;               \
+    std::function<void(                                                                            \
+        const std::unique_ptr<TVMInstance>&, const tvm::PackedFunc&, void*, void*, void*, size_t)> \
+        kernel;                                                                                    \
                                                                                                    \
     SELECT_KERNEL(builder, args[0].get_element_type(), OP);                                        \
     auto tvm_func = builder(tvm_instance);                                                         \
@@ -256,8 +254,6 @@ namespace ngraph
     {
         namespace cpu
         {
-//            tvm::Var tvm_test();
-
             using BuildOpFunction =
                 std::function<void(CPU_ExternalFunction* external_function,
                                    const ngraph::Node*,
