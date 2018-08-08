@@ -62,13 +62,13 @@ TEST(onnx, model_add_abc_initializers)
 TEST(onnx, model_split_default)
 {
     auto function{ngraph::onnx_import::import_onnx_function(
-            ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/split_default.onnx"))};
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/split_default.onnx"))};
     auto backend{ngraph::runtime::Backend::create("CPU")};
 }
 
 TEST(onnx, model_split)
 {
     auto function{ngraph::onnx_import::import_onnx_function(
-            ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/split.onnx"))};
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/split.onnx"))};
     auto backend{ngraph::runtime::Backend::create("CPU")};
 }
