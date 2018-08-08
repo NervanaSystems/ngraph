@@ -76,6 +76,18 @@ namespace ngraph
                     reverse_sequence<InputElementType, int32_t, Rank>(
                         input, output, input_shape, batch_axis, sequence_axis, sequence_lengths);
                 }
+
+                template <typename InputElementType, unsigned int Rank>
+                void reverse_sequence_slf32(void* input,
+                                            void* output,
+                                            const Shape& input_shape,
+                                            size_t batch_axis,
+                                            size_t sequence_axis,
+                                            void* sequence_lengths)
+                {
+                    reverse_sequence<InputElementType, float, Rank>(
+                        input, output, input_shape, batch_axis, sequence_axis, sequence_lengths);
+                }
             }
         }
     }
