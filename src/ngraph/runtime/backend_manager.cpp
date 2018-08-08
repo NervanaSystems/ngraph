@@ -31,7 +31,6 @@ using namespace std;
 using namespace ngraph;
 
 #ifdef WIN32
-#define OPEN_LIBRARY(a, b) LoadLibrary(a)
 #define CLOSE_LIBRARY(a) FreeLibrary(a)
 #define DLSYM(a, b) GetProcAddress(a, b)
 #else

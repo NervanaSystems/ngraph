@@ -85,13 +85,6 @@ public:
     }
 
 protected:
-    virtual bool is_op_supported(const std::string& name, element::Type t) const
-    {
-        // For now the default is that all backends implement everything
-        // This will change once backends override this method
-        return true;
-    }
-
     void validate_call(std::shared_ptr<const Function> func,
                        const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
                        const std::vector<std::shared_ptr<runtime::TensorView>>& inputs);
