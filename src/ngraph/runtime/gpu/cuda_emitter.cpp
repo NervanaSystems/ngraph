@@ -553,7 +553,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string
         {
             args_list.push_back(&pad_interior[i]);
         }
-        args_list.push_back(&nthreads};
+        args_list.push_back(&nthreads);
 
         CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                       aligned_grid_size_x,
