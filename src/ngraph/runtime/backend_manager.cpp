@@ -58,6 +58,13 @@ vector<string> runtime::BackendManager::get_registered_backends()
     {
         rc.push_back(p.first);
     }
+    for (const auto& p : get_registered_device_map())
+    {
+        if (find(rc.begin(), rc.end(), p.first) == rc.end())
+        {
+            rc.push_back(p.first);
+        }
+    }
     return rc;
 }
 
