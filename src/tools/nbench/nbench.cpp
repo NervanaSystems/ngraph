@@ -43,6 +43,8 @@ int main(int argc, char** argv)
     bool statistics = false;
     bool timing_detail = false;
     bool visualize = false;
+    bool exclude_first_iteration = false;
+
     for (size_t i = 1; i < argc; i++)
     {
         string arg = argv[i];
@@ -82,6 +84,10 @@ int main(int argc, char** argv)
         {
             directory = argv[++i];
         }
+        else if (arg == "-e" || arg == "--exclude_first_iteration")
+        {
+            exclude_first_iteration = true;
+        }
         else
         {
             cout << "Unknown option: " << arg << endl;
@@ -114,13 +120,14 @@ SYNOPSIS
         nbench [-f <filename>] [-b <backend>] [-i <iterations>]
 
 OPTIONS
-        -f|--file          Serialized model file
-        -b|--backend       Backend to use (default: CPU)
-        -d|--directory     Directory to scan for models. All models are benchmarked.
-        -i|--iterations    Iterations (default: 10)
-        -s|--statistics    Display op stastics
-        -v|--visualize     Visualize a model (WARNING: requires GraphViz installed)
-        --timing-detail    Gather detailed timing
+        -f|--file                       Serialized model file
+        -b|--backend                    Backend to use (default: CPU)
+        -d|--directory                  Directory to scan for models. All models are benchmarked.
+        -i|--iterations                 Iterations (default: 10)
+        -s|--statistics                 Display op stastics
+        -v|--visualize                  Visualize a model (WARNING: requires GraphViz installed)
+        --timing-detail                 Gather detailed timing
+        -k|--exclude_first_iteration    Exclude first iteration from timing calculations 
 )###";
         return 1;
     }
@@ -190,7 +197,7 @@ OPTIONS
                 shared_ptr<Function> f = deserialize(m);
                 cout << "Benchmarking " << m << ", " << backend << " backend, " << iterations
                      << " iterations.\n";
-                run_benchmark(f, backend, iterations, timing_detail);
+                run_benchmark(f, backend, iterations, timing_detail, exclude_first_iteration);
             }
             catch (exception e)
             {
@@ -203,7 +210,7 @@ OPTIONS
         shared_ptr<Function> f = deserialize(model);
         cout << "Benchmarking " << model << ", " << backend << " backend, " << iterations
              << " iterations.\n";
-        run_benchmark(f, backend, iterations, timing_detail);
+        run_benchmark(f, backend, iterations, timing_detail, exclude_first_iteration);
     }
 
     return 0;
