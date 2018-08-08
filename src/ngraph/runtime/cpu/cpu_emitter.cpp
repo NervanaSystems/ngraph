@@ -2465,7 +2465,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::ReplaceSlice)
             {
-                auto replace_slice = static_cast<const ngraph::op::Slice*>(node);
+                auto replace_slice = static_cast<const ngraph::op::ReplaceSlice*>(node);
                 writer.block_begin();
 #if USE_EIGEN_CORE_INLINE == 1
                 size_t arg0_rank = args[0].get_shape().size();
