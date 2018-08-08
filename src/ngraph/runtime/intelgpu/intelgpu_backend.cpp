@@ -222,37 +222,6 @@ shared_ptr<runtime::TensorView> runtime::intelgpu::IntelGPUBackend::create_tenso
         element_type, shape, *ocl_engine, memory_pointer);
 }
 
-void print_Function(shared_ptr<Function>& func)
-{
-    cout << "=============== " << func->get_name() << " ===============\n";
-
-    for (shared_ptr<Node> op : func->get_ops())
-    {
-        cout << "Operation:" << op->description() << ",\tName:" << op->get_name()
-             << ",\t Inputs:" << op->get_input_size() << ",\t Outputs:" << op->get_output_size()
-             << "\n";
-
-        for (const descriptor::Input& op_input : op->get_inputs())
-        {
-            cout << "\tINPUT:" << op_input.get_node()->get_name()
-                 << "\t idx: " << op_input.get_index()
-                 << "\t TensorName: " << op_input.get_tensor().get_name()
-                 << "\t Type:" << op_input.get_element_type().c_type_string()
-                 << "\t input Shape:" << vector_to_string(op_input.get_shape())
-                 << "\t input tensor size:" << op_input.get_tensor().size() << "\n";
-        }
-        for (const descriptor::Output& op_output : op->get_outputs())
-        {
-            cout << "\tOUTPUT:" << op_output.get_node()->get_name()
-                 << "\t idx: " << op_output.get_index()
-                 << "\t TensorName: " << op_output.get_tensor().get_name()
-                 << "\t Type:" << op_output.get_element_type().c_type_string()
-                 << "\t output Shape:" << vector_to_string(op_output.get_shape())
-                 << "\t output tensor size:" << op_output.get_tensor().size() << "\n";
-        }
-    }
-}
-
 bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 {
     FunctionInstance& instance = ocl_networks[func];
@@ -262,7 +231,6 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
     }
 
     cldnn::topology topology;
-    print_Function(func);
 
     for (shared_ptr<Node> op : func->get_ops())
     {
@@ -803,23 +771,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         }
     }
 
-#if 0
-    std::cout << "\n\nTopology contains_:\n";
-    size_t name_it_idx = 0;
-    for (auto it : topology.get_primitive_ids())
-    {
-        std::cout << name_it_idx << ": " << it << "\n";
-        ++name_it_idx;
-    }
-    std::cout << "\n\n";
-
-    const cldnn::build_options network_build_options(
-        cldnn::build_option::graph_dumps_dir("./clDNN_logs"));
-    instance.ocl_network =
-        make_shared<cldnn::network>(*ocl_engine, topology, network_build_options);
-#else
     instance.ocl_network = make_shared<cldnn::network>(*ocl_engine, topology);
-#endif
 
     return true;
 }
