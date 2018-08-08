@@ -322,9 +322,6 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::LRN), &runtime::cpu::CPU_Emitter::emit<ngraph::op::LRN>},
 };
 
-const size_t runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction::s_memory_pool_alignment =
-    4096;
-
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
     : m_function(function)
@@ -384,7 +381,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
         femitter, node_function_map, common_function_string);
     pass_manager.register_pass<ngraph::pass::Liveness>();
-    pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment, true);
+    pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
     pass_manager.run_passes(m_function);
 
     unordered_map<shared_ptr<Function>, list<shared_ptr<Node>>> function_ordered_ops;
@@ -1084,7 +1081,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
     pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
-    pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment, true);
+    pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
     pass_manager.run_passes(m_function, false);
 
     // Store layouts assigned for arguments
