@@ -106,6 +106,15 @@ namespace ngraph
                 {
                     softmax<ElementType, Rank, 1>(input, output, input_shape, softmax_axes);
                 }
+
+                template <typename ElementType>
+                void softmax_3d_2rd(void* input,
+                                    void* output,
+                                    const Shape& input_shape,
+                                    const AxisSet& softmax_axes)
+                {
+                    softmax<ElementType, 3, 2>(input, output, input_shape, softmax_axes);
+                }
             }
         }
     }
