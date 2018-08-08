@@ -18,6 +18,7 @@
 
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 
 #include "ngraph/runtime/reference/reduce_window.hpp"
 
@@ -45,9 +46,9 @@ namespace ngraph
                     auto reducer = [&](ElementType a, ElementType b) {
                         TensorViewPtrs inputs, outputs;
 
-                        ElementType p __attribute__((aligned(64))) = a;
-                        ElementType q __attribute__((aligned(64))) = b;
-                        ElementType r __attribute__((aligned(64)));
+                        ElementType p __attribute__((aligned(CPUTensorView::BufferAlignment))) = a;
+                        ElementType q __attribute__((aligned(CPUTensorView::BufferAlignment))) = b;
+                        ElementType r __attribute__((aligned(CPUTensorView::BufferAlignment)));
 
                         inputs.emplace_back(backend->create_tensor(
                             ngraph::element::from<ElementType>(), Shape{}, &p));
