@@ -1681,23 +1681,16 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const std::array<std::stri
         return primitive_index;
     }
 
-    // build composite primitive
-    auto& cudnn_emitter = m_primitive_emitter->get_cudnn_emitter();
-    auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
-
+    size_t nthreads = shape_size(input_shape);
     // calculate strides
     GPUShape input_strides = row_major_strides(input_shape);
     GPUShape replace_strides = row_major_strides(replace_shape);
 
-    // exponentiate with fused sum reduction to calculate softmax denominator
-    auto input_type = args[0].get_element_type().c_type_string();
-    auto output_type = out[0].get_element_type().c_type_string();
-
-    size_t pad_index = build_pad_dynamic({input_type, output_type}, replace_shape, input_shape, lower_bounds, slice_strides);
+    size_t pad_index = build_pad_dynamic({dtypes[0], dtypes[2]}, replace_shape, input_shape, lower_bounds, slice_strides);
 
     std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](
         void** inputs, void** outputs) mutable {
-        runtime::gpu::cuda_memcpyDtD(outputs[0], inputs[0]);
+        runtime::gpu::cuda_memcpyDtD(outputs[0], inputs[0], nthreads*4);
         runtime::gpu::invoke_primitive(m_ctx, pad_index, std::vector<void*>{inputs[1]}.data(), outputs);
     }});
 
