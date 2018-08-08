@@ -44,6 +44,7 @@ set(SRC
     builder/relu.cpp
     builder/pad.cpp
     builder/product.cpp
+    builder/reduce_function.cpp
     builder/reduce_function_window.cpp
     builder/replace_slice.cpp
     builder/reshape.cpp
@@ -52,6 +53,7 @@ set(SRC
     builder/select.cpp
     builder/select_and_scatter.cpp
     builder/sigmoid.cpp
+    builder/slice.cpp
     builder/softmax.cpp
     builder/sum.cpp
     kernel/eigen_thread_pool.cpp
