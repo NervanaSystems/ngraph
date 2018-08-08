@@ -85,7 +85,8 @@ void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
                                                const AxisSet& axis,
                                                bool is_bcast)
 {
-    const string function_name = is_bcast ? "broadcast" : "sum";
+    string function_name = is_bcast ? "broadcast" : "sum";
+    function_name += output_name;
     codegen::CodeWriter writer;
 
     writer << "__kernel void " << function_name << "(const __global float input"
