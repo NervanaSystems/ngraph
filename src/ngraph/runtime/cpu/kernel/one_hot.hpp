@@ -16,7 +16,10 @@
 
 #pragma once
 
-#include "ngraph/runtime/cpu/cpu_eigen_utils.hpp"
+#define EIGEN_USE_THREADS
+#include <unsupported/Eigen/CXX11/Tensor>
+
+#include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
 #include "ngraph/runtime/reference/one_hot.hpp"
 #include "ngraph/shape.hpp"
 
@@ -31,20 +34,20 @@ namespace ngraph
                 template <typename ElementType>
                 void one_hot_rank_0(void* arg,
                                     void* out,
-                                    const Shape& arg_shape,
                                     const Shape& out_shape,
                                     size_t one_hot_axis)
 
                 {
-                    eigen::EigenVector<ElementType> arg_vector(
-                        static_cast<ElementType*>(arg), eigen::fmt::V(shape_size(arg_shape)));
-                    eigen::EigenVector<ElementType> out_vector(
-                        static_cast<ElementType*>(out), eigen::fmt::V(shape_size(out_shape)));
+                    Eigen::array<Eigen::Index, 1> out_dims;
+                    out_dims[0] = out_shape[0];
 
-                    out_vector.setZero();
-                    auto pos_raw = arg_vector(0, 0);
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> out_tensor(
+                        static_cast<ElementType*>(out), out_dims);
+
+                    out_tensor.setZero();
+                    auto pos_raw = (static_cast<ElementType*>(arg))[0];
                     size_t pos = pos_raw;
-                    out_vector(pos, 0) = 1;
+                    out_tensor(pos) = 1;
                 }
 
                 template <typename ElementType>
@@ -56,17 +59,23 @@ namespace ngraph
                                     size_t one_hot_axis)
 
                 {
-                    eigen::EigenVector<ElementType> arg_vector(
-                        static_cast<ElementType*>(arg), eigen::fmt::V(shape_size(arg_shape)));
-                    eigen::EigenMatrix<ElementType> out_vector(
-                        static_cast<ElementType*>(out), eigen::fmt::M(out_shape, out_strides));
+                    Eigen::array<Eigen::Index, 2> out_dims;
+                    Eigen::array<Eigen::Index, 1> in_dims;
+                    out_dims[0] = out_shape[0];
+                    out_dims[1] = out_shape[1];
+                    in_dims[0] = arg_shape[0];
 
-                    out_vector.setZero();
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, 2, Eigen::RowMajor>> out_tensor(
+                        static_cast<ElementType*>(out), out_dims);
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> in_tensor(
+                        static_cast<ElementType*>(arg), in_dims);
+
+                    out_tensor.setZero();
                     for (size_t i = 0; i < arg_shape[0]; i++)
                     {
-                        auto pos_raw = arg_vector(i, 0);
+                        auto pos_raw = in_tensor(i);
                         size_t pos = pos_raw;
-                        one_hot_axis == 0 ? out_vector(pos, i) = 1 : out_vector(i, pos) = 1;
+                        one_hot_axis == 0 ? out_tensor(pos, i) = 1 : out_tensor(i, pos) = 1;
                     }
                 }
 
