@@ -539,19 +539,19 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string
                                      &outputs[0]};
         for(size_t i = 0; i < input_shape.size(); i++)
         {
-            args_list.push_back(&input_strides[0]);
+            args_list.push_back(&input_strides[i]);
         }
         for(size_t i = 0; i < input_shape.size(); i++)
         {
-            args_list.push_back(&output_strides[0]);
+            args_list.push_back(&output_strides[i]);
         }
         for(size_t i = 0; i < input_shape.size(); i++)
         {
-            args_list.push_back(&pad_below[0]);
+            args_list.push_back(&pad_below[i]);
         }
         for(size_t i = 0; i < input_shape.size(); i++)
         {
-            args_list.push_back(&pad_interior[0]);
+            args_list.push_back(&pad_interior[i]);
         }
         args_list.push_back(&nthreads};
 
