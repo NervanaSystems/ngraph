@@ -328,6 +328,10 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         }
         else if ("Concat" == op->description())
         {
+            if (op->get_inputs().empty() || op->get_outputs().empty())
+            {
+                arguments_check(op, 1, 1);
+            }
             const size_t cldnn_tensor_dims_lim = 4;
             const size_t ngraph_tensor_dims = get_input_shape(op, 0).size();
             const shared_ptr<op::Concat> concat_op = static_pointer_cast<op::Concat>(op);
@@ -346,11 +350,12 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             for (auto const& input : op->get_inputs())
             {
                 const Shape& input_shape = input.get_shape();
-                if (input_shape.at(ngraph_concat_axis) != 0)
+                if (shape_size(input_shape))
                 {
                     inputs.push_back(input.get_tensor().get_name());
                 }
             }
+
             const cldnn::concatenation cldnn_concat(get_output_name(op), inputs, cldnn_axis);
             topology.add(cldnn_concat);
         }
