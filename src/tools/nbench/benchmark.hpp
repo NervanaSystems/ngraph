@@ -32,10 +32,10 @@ void run_benchmark(std::shared_ptr<ngraph::Function> f,
                    const std::string& backend_name,
                    size_t iterations,
                    bool timing_detail,
-                   bool exclude_first_iteration);
+                   int warmup_iterations);
 
 void run_benchmark(const std::string& json_path,
                    const std::string& backend_name,
                    size_t iterations,
                    bool timing_detail = false,
-                   bool exclude_first_iteration = false);
+                   int warmup_iterations = 1);

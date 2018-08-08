@@ -43,7 +43,7 @@ int main(int argc, char** argv)
     bool statistics = false;
     bool timing_detail = false;
     bool visualize = false;
-    bool exclude_first_iteration = false;
+    int warmup_iterations = 1;
 
     for (size_t i = 1; i < argc; i++)
     {
@@ -84,9 +84,17 @@ int main(int argc, char** argv)
         {
             directory = argv[++i];
         }
-        else if (arg == "-e" || arg == "--exclude_first_iteration")
+        else if (arg == "-w" || arg == "--warmup_iterations")
         {
-            exclude_first_iteration = true;
+            try
+            {
+                warmup_iterations = stoi(argv[++i]);
+            }
+            catch (...)
+            {
+                cout << "Invalid Argument\n";
+                failed = true;
+            }
         }
         else
         {
@@ -120,14 +128,14 @@ SYNOPSIS
         nbench [-f <filename>] [-b <backend>] [-i <iterations>]
 
 OPTIONS
-        -f|--file                       Serialized model file
-        -b|--backend                    Backend to use (default: CPU)
-        -d|--directory                  Directory to scan for models. All models are benchmarked.
-        -i|--iterations                 Iterations (default: 10)
-        -s|--statistics                 Display op stastics
-        -v|--visualize                  Visualize a model (WARNING: requires GraphViz installed)
-        --timing-detail                 Gather detailed timing
-        -k|--exclude_first_iteration    Exclude first iteration from timing calculations 
+        -f|--file                 Serialized model file
+        -b|--backend              Backend to use (default: CPU)
+        -d|--directory            Directory to scan for models. All models are benchmarked.
+        -i|--iterations           Iterations (default: 10)
+        -s|--statistics           Display op stastics
+        -v|--visualize            Visualize a model (WARNING: requires GraphViz installed)
+        --timing-detail           Gather detailed timing
+        -w|--warmup_iterations    Number of warm-up iterations
 )###";
         return 1;
     }
@@ -197,7 +205,7 @@ OPTIONS
                 shared_ptr<Function> f = deserialize(m);
                 cout << "Benchmarking " << m << ", " << backend << " backend, " << iterations
                      << " iterations.\n";
-                run_benchmark(f, backend, iterations, timing_detail, exclude_first_iteration);
+                run_benchmark(f, backend, iterations, timing_detail, warmup_iterations);
             }
             catch (exception e)
             {
@@ -210,7 +218,7 @@ OPTIONS
         shared_ptr<Function> f = deserialize(model);
         cout << "Benchmarking " << model << ", " << backend << " backend, " << iterations
              << " iterations.\n";
-        run_benchmark(f, backend, iterations, timing_detail, exclude_first_iteration);
+        run_benchmark(f, backend, iterations, timing_detail, warmup_iterations);
     }
 
     return 0;

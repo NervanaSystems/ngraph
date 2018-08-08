@@ -84,7 +84,7 @@ void run_benchmark(const string& json_path,
                    const string& backend_name,
                    size_t iterations,
                    bool timing_detail,
-                   bool exclude_first_iteration)
+                   int warmup_iterations)
 {
     stopwatch timer;
     timer.start();
@@ -93,7 +93,7 @@ void run_benchmark(const string& json_path,
     shared_ptr<Function> f = deserialize(ss);
     timer.stop();
     cout << "deserialize time: " << timer.get_milliseconds() << "ms" << endl;
-    run_benchmark(f, backend_name, iterations, timing_detail, exclude_first_iteration);
+    run_benchmark(f, backend_name, iterations, timing_detail, warmup_iterations);
 }
 
 void print_times(const multimap<size_t, string>& timing)
@@ -240,7 +240,7 @@ void run_benchmark(shared_ptr<Function> f,
                    const string& backend_name,
                    size_t iterations,
                    bool timing_detail,
-                   bool exclude_first_iteration)
+                   int warmup_iterations)
 {
     stopwatch timer;
     timer.start();
@@ -275,9 +275,12 @@ void run_benchmark(shared_ptr<Function> f,
         }
     }
 
-    if (exclude_first_iteration)
+    if (warmup_iterations)
     {
-        backend->call(f, results, args);
+        for (size_t i = 0; i < static_cast<size_t>(warmup_iterations); i++)
+        {
+            backend->call(f, results, args);
+        }
     }
 
     stopwatch t1;
