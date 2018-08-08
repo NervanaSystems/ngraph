@@ -19,18 +19,12 @@ should be added after the steps needed to complete the
 
 .. literalinclude:: ../../../examples/mnist_mlp/dist_mnist_mlp.cpp
    :language: cpp
-   :lines: 188-191
+   :lines: 180-196
+   :emphasize-lines: 9-12
 
 Also since we are using OpenMPI in this example, we need to initialize and 
-finalize MPI.
-
-.. literalinclude:: ../../../examples/mnist_mlp/dist_mnist_mlp.cpp
-   :language: cpp
-   :lines: 112
-
-.. literalinclude:: ../../../examples/mnist_mlp/dist_mnist_mlp.cpp
-   :language: cpp
-   :lines: 295
+finalize MPI with ``MPI::Init();`` and ``MPI::Finalize();`` at the beginning
+and the end of the code used to deploy to devices; see the `full raw code`_. 
 
 Finally, to run the training on two nGraph devices, invoke :command:`mpirun`. 
 This will run on a single machine and launch two processes. 
@@ -41,7 +35,5 @@ This will run on a single machine and launch two processes.
    $ mpirun -np 2 dist_mnist_mlp
 
 
-
-
-
 .. _OpenMPI: https://www.open-mpi.org/software/ompi/v3.1
+.. _full raw code: https://github.com/NervanaSystems/ngraph/blob/master/doc/examples/mnist_mlp/dist_mnist_mlp.cpp 
