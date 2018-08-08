@@ -7,11 +7,11 @@
 // set these up below as global variables, so we do not need to rewrite the
 // original script -- we only need to provide this new trigger hook.
 //
-// ngraph-unittest parameters:
-PR_URL = CHANGE_URL
-PR_COMMIT_AUTHOR = CHANGE_AUTHOR
-JENKINS_BRANCH = "chrisl/new-ci-trigger"
-TIMEOUTTIME = "3600"
+// Parameters which ngraph-unittest uses:
+String  PR_URL = CHANGE_URL
+String  PR_COMMIT_AUTHOR = CHANGE_AUTHOR
+String  JENKINS_BRANCH = "chrisl/new-ci-trigger"
+Integer TIMEOUTTIME = "3600"
 // BRANCH parameter is no loner needed
 // TRIGGER_URL parameter is no longer needed
 
@@ -41,7 +41,7 @@ node("bdw && nogpu") {
     //
     echo "Calling ngraph-ci-premerge.groovy"
     def ngraphCIPreMerge = load("${JENKINS_DIR}/ngraph-ci-premerge.groovy")
-    ngraphCIPreMerge()
+    ngraphCIPreMerge(PR_URL, PR_COMMIT_AUTHOR, JENKINS_BRANCH, TIMEOUTTIME)
     echo "ngraph-ci-premerge.groovy completed"
 
 }  // End:  node( ... )
