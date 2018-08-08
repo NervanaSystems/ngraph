@@ -1492,10 +1492,8 @@ size_t
         {
             CudaKernelBuilder::get_device_helper(writer, op, kernel, dtypes);
         }
-        runtime::gpu::CudaKernelBuilder::get_kernel_signature(
-            writer, kernel_name.str(), args.get_input_signature());
         CudaKernelBuilder::get_ew_collective_op(
-            writer, op, reduce_op, dtypes, reduced_tensors, save_elementwise, tensor_shape.size());
+            writer, kernel_name.str(), args, op, reduce_op, dtypes, reduced_tensors, save_elementwise, tensor_shape.size());
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
 
@@ -1724,9 +1722,7 @@ size_t runtime::gpu::CUDAEmitter::build_replace_slice(const std::array<std::stri
     {
         codegen::CodeWriter writer;
         writer << include_helpers();
-        runtime::gpu::CudaKernelBuilder::get_kernel_signature(
-            writer, kernel_name, args.get_input_signature());
-        runtime::gpu::CudaKernelBuilder::get_replace_slice_op(writer, nthreads_per_block, rank);
+        runtime::gpu::CudaKernelBuilder::get_replace_slice_op(writer, kernel_name, args, rank);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
 
@@ -1828,9 +1824,7 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const std::array<std::string, 
     {
         codegen::CodeWriter writer;
         writer << include_helpers();
-        runtime::gpu::CudaKernelBuilder::get_kernel_signature(
-            writer, kernel_name, args.get_input_signature());
-        runtime::gpu::CudaKernelBuilder::get_broadcast_op(writer, result_shape.size());
+        runtime::gpu::CudaKernelBuilder::get_broadcast_op(writer, kernel_name, args, result_shape.size());
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
 
@@ -2141,12 +2135,8 @@ size_t runtime::gpu::CUDAEmitter::build_convolution(const std::array<std::string
     {
         codegen::CodeWriter writer;
         writer << include_helpers();
-        runtime::gpu::CudaKernelBuilder::get_convolution_header(
-            writer, dtypes.front(), filter_size, sm_tile_size, reg_tile_size);
-        runtime::gpu::CudaKernelBuilder::get_kernel_signature(
-            writer, kernel_name, args.get_input_signature());
         runtime::gpu::CudaKernelBuilder::get_convolution_forward(
-            writer, N, K, rank, sm_tile_size, reg_tile_size);
+            writer, kernel_name, dtypes, args, N, K, rank, filter_size, sm_tile_size, reg_tile_size);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
 

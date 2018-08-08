@@ -18,6 +18,7 @@
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
 #include "ngraph/runtime/gpu/type_info.hpp"
+#include "ngraph/runtime/gpu/gpu_kernel_args.hpp"
 
 using namespace ngraph;
 
@@ -105,6 +106,8 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_divide_op(
 
 void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
     codegen::CodeWriter& writer,
+    const std::string& name,
+    runtime::gpu::GPUKernelArgs& args,
     const std::string& op,
     const std::string& reduce_op,
     const std::vector<std::string>& data_types,
@@ -112,6 +115,7 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
     bool save_elementwise,
     size_t rank)
 {
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
         writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x; \n";
@@ -178,8 +182,11 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
 }
 
 void runtime::gpu::CudaKernelBuilder::get_broadcast_op(codegen::CodeWriter& writer,
+                                                       const std::string& name,
+                                                       runtime::gpu::GPUKernelArgs& args,
                                                        const size_t rank)
 {
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
         writer << "const int tid = blockDim.x*blockIdx.x + threadIdx.x;\n";
@@ -508,9 +515,11 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_window_op(
 }
 
 void runtime::gpu::CudaKernelBuilder::get_replace_slice_op(codegen::CodeWriter& writer,
-                                                           int nthreads_per_block,
+                                                           const std::string& name,
+                                                           runtime::gpu::GPUKernelArgs& args,
                                                            const size_t rank)
 {
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
         writer << "const int tid = blockDim.x*blockIdx.x + threadIdx.x;\n";
@@ -700,11 +709,18 @@ void runtime::gpu::CudaKernelBuilder::get_avg_pool(codegen::CodeWriter& writer,
     }
     writer.block_end();
 }
-void runtime::gpu::CudaKernelBuilder::get_convolution_header(codegen::CodeWriter& writer,
-                                                             const std::string& data_type,
-                                                             int filter_size,
-                                                             int sm_tile_size,
-                                                             int reg_tile_size)
+
+void runtime::gpu::CudaKernelBuilder::get_convolution_forward(
+    codegen::CodeWriter& writer,
+    const std::string& name,
+    const std::array<std::string, 3>& data_types,
+    runtime::gpu::GPUKernelArgs& args,
+    int N,
+    int K,
+    int rank,
+    int filter_size,
+    int sm_tile_size,
+    int reg_tile_size)
 {
     writer << "#define NUM_ROWS 8\n";
     writer << "#define FILTER_SIZE " << filter_size << "\n";
@@ -714,16 +730,13 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_header(codegen::CodeWriter
     writer << "typedef union Matrix\n";
     writer.block_begin();
     {
-        writer << data_type << reg_tile_size << " f" << reg_tile_size << ";\n";
-        writer << data_type << " f[" << reg_tile_size << "];\n";
+        writer << data_types[0] << reg_tile_size << " f" << reg_tile_size << ";\n";
+        writer << data_types[0] << " f[" << reg_tile_size << "];\n";
     }
     writer.block_end();
     writer << "Matrix;\n\n";
-}
 
-void runtime::gpu::CudaKernelBuilder::get_convolution_forward(
-    codegen::CodeWriter& writer, int N, int K, int rank, int sm_tile_size, int reg_tile_size)
-{
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
         writer << "Matrix* I = reinterpret_cast<Matrix*>(in);\n";

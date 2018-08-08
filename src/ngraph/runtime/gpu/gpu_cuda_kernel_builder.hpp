@@ -31,23 +31,20 @@ namespace ngraph
     {
         namespace gpu
         {
+            class GPUKernelArgs;
             class CudaKernelBuilder
             {
             public:
-                static void get_kernel_signature(codegen::CodeWriter& writer,
-                                                 const std::string& name,
-                                                 const std::string& input_signature)
-                {
-                    writer << "extern \"C\" __global__ void cuda_" << name;
-                    writer << input_signature;
-                }
 
                 static void get_elementwise_op(codegen::CodeWriter& writer,
                                                const std::string& name,
                                                const std::string& op,
                                                const std::vector<std::string>& data_types);
 
-                static void get_broadcast_op(codegen::CodeWriter& writer, const size_t rank);
+                static void get_broadcast_op(codegen::CodeWriter& writer,
+                                             const std::string& name,
+                                             GPUKernelArgs& args,
+                                             const size_t rank);
 
                 static void get_concat_op(codegen::CodeWriter& writer,
                                           const std::string& name,
@@ -73,7 +70,8 @@ namespace ngraph
                                            const std::array<std::string, 2>& data_types);
 
                 static void get_replace_slice_op(codegen::CodeWriter& writer,
-                                                 int nthreads_per_block,
+                                                 const std::string& name,
+                                                 GPUKernelArgs& args,
                                                  const size_t rank);
 
                 static void get_reduce_window_op(codegen::CodeWriter& writer,
@@ -99,6 +97,8 @@ namespace ngraph
                                                const std::array<std::string, 2>& data_types);
 
                 static void get_ew_collective_op(codegen::CodeWriter& writer,
+                                                 const std::string& name,
+                                                 GPUKernelArgs& args,
                                                  const std::string& op,
                                                  const std::string& reduce_op,
                                                  const std::vector<std::string>& data_types,
@@ -119,18 +119,16 @@ namespace ngraph
                                          const std::array<std::string, 2>& data_types,
                                          bool include_pad);
 
-                static void get_convolution_header(codegen::CodeWriter& writer,
-                                                   const std::string& data_type,
-                                                   int filter_size,
-                                                   int sm_tile_size,
-                                                   int reg_tile_size);
-
                 static void get_convolution_forward(codegen::CodeWriter& writer,
+                                                    const std::string& name,
+                                                    const std::array<std::string, 3>& data_types,
+                                                    GPUKernelArgs& args,
                                                     int N,
                                                     int K,
                                                     int rank,
-                                                    int sm_tile_size = 8,
-                                                    int reg_tile_size = 1);
+                                                    int filter_size,
+                                                    int sm_tile_size=8,
+                                                    int reg_tile_size=1);
 
                 static void get_softmax_divide_op(codegen::CodeWriter& writer,
                                                   const std::string& name,
