@@ -45,6 +45,7 @@ set(SRC
     builder/pad.cpp
     builder/product.cpp
     builder/reduce_function.cpp
+    builder/reduce_function_window.cpp
     builder/reshape.cpp
     builder/reverse.cpp
     builder/reverse_sequence.cpp
