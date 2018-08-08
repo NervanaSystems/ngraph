@@ -24,12 +24,6 @@ node("bdw && nogpu") {
 
     deleteDir()  // Clear the workspace before starting
 
-    echo "jenkins-trigger parameters:"
-    echo "PR_URL           = ${PR_URL}"
-    echo "PR_COMMIT_AUTHOR = ${PR_COMMIT_AUTHOR}"
-    echo "JENKINS_BRANCH   = ${JENKINS_BRANCH}"
-    echo "TIMEOUTTIME      = ${TIMEOUTTIME}"
-
     // Clone the cje-algo directory which contains our Jenkins groovy scripts
     git(branch: JENKINS_BRANCH, changelog: false, poll: false,
         url: 'https://github.intel.com/AIPG/cje-algo')
