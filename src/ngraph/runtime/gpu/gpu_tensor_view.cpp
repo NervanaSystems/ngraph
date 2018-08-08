@@ -22,6 +22,7 @@
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
+#include "ngraph/runtime/gpu/gpu_util.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -44,7 +45,7 @@ runtime::gpu::GPU_TensorView::GPU_TensorView(const ngraph::element::Type& elemen
     }
     else if (m_buffer_size > 0)
     {
-        cudaMalloc(static_cast<void**>(&m_allocated_buffer_pool), m_buffer_size);
+        CUDA_RT_SAFE_CALL(cudaMalloc(static_cast<void**>(&m_allocated_buffer_pool), m_buffer_size));
     }
 }
 
@@ -56,18 +57,18 @@ runtime::gpu::GPU_TensorView::GPU_TensorView(const ngraph::element::Type& elemen
 
 runtime::gpu::GPU_TensorView::~GPU_TensorView()
 {
-    if (!m_custom_memory)
+    if (!m_custom_memory && (m_allocated_buffer_pool != nullptr))
     {
-        cudaFree(m_allocated_buffer_pool);
+        CUDA_RT_SAFE_CALL_NO_THROW(cudaFree(m_allocated_buffer_pool));
     }
 }
 
 void runtime::gpu::GPU_TensorView::write(const void* source, size_t tensor_offset, size_t n)
 {
-    cudaMemcpy(m_allocated_buffer_pool, source, n, cudaMemcpyHostToDevice);
+    CUDA_RT_SAFE_CALL(cudaMemcpy(m_allocated_buffer_pool, source, n, cudaMemcpyHostToDevice));
 }
 
 void runtime::gpu::GPU_TensorView::read(void* target, size_t tensor_offset, size_t n) const
 {
-    cudaMemcpy(target, m_allocated_buffer_pool, n, cudaMemcpyDeviceToHost);
+    CUDA_RT_SAFE_CALL(cudaMemcpy(target, m_allocated_buffer_pool, n, cudaMemcpyDeviceToHost));
 }

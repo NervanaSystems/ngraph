@@ -18,7 +18,7 @@ Code formatting
 All C/C++ source code in the repository, including the test code, must
 adhere to the source-code formatting and style guidelines described
 here.  The coding style described here applies to the nGraph
-repository. Related repositories may make adjustements to better match
+repository. Related repositories may make adjustments to better match
 the coding styles of libraries they are using.
 
 
@@ -29,7 +29,7 @@ Our design philosophy is that the graph is not a script for running
 optimized kernels; rather, the graph is a specification for a
 computation composed of basic building blocks which we call
 ``ops``. Compilation should match groups of ``ops`` to appropriate
-optimal semantically equivalent grooups of kernels for the backend(s)
+optimal semantically equivalent groups of kernels for the backend(s)
 in use. Thus, we expect that adding of new Core ops should be
 infrequent and that most functionality instead gets added with new
 functions that build sub-graphs from existing core ops.

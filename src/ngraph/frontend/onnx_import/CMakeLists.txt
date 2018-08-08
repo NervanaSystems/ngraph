@@ -48,17 +48,13 @@ add_library(onnx_import STATIC
     onnx.pb.cc
     onnx-operators.pb.cc
     attribute.cpp
-    attribute.hpp
     graph.cpp
-    graph.hpp
     model.hpp
     node.cpp
-    node.hpp
     op/add.hpp
     op/constant.hpp
     op/split.hpp
     ops_bridge.cpp
-    ops_bridge.hpp
     tensor.hpp
     value_info.hpp)
 

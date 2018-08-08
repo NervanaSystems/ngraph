@@ -11,6 +11,7 @@ How to
    operator.rst
    update.rst
    derive-for-training.rst
+   distribute-train.rst
    import.rst    
 
 The "How to" articles in this section explain how to do specific tasks with 
