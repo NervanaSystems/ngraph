@@ -3879,9 +3879,7 @@ namespace ngraph
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto bounded_relu_index =
-                        mkldnn_emitter->build_bounded_relu<ngraph::op::BoundedRelu>(
-                            node, args, out);
+                    auto bounded_relu_index = mkldnn_emitter->build_bounded_relu(node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(bounded_relu_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";

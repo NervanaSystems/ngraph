@@ -47,9 +47,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto bounded_relu_index =
-                        mkldnn_emitter->build_bounded_relu<ngraph::op::BoundedRelu>(
-                            node, args, out);
+                    auto bounded_relu_index = mkldnn_emitter->build_bounded_relu(node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(bounded_relu_index);
                     auto functor = [&, bounded_relu_index](CPURuntimeContext* ctx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], input_tensor);
