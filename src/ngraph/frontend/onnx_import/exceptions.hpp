@@ -29,8 +29,7 @@ namespace ngraph
                 explicit not_supported_error(const std::string& op_name,
                                              const std::string& name,
                                              const std::string& message)
-                    : ngraph_error{op_name + " node (" + name + "): " + message +
-                                   " is not supported yet."}
+                    : ngraph_error{op_name + " node (" + name + "): " + message}
                 {
                 }
             };
