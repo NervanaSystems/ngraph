@@ -49,7 +49,7 @@ def RunDockerContainers(configurationMaps) {
                                 --name=${configMap["projectName"]} \
                                 --version=${configMap["name"]} \
                                 --container_name=${configMap["dockerContainerName"]} \
-                                --volumes="-v ${WORKSPACE}/${BUILD_NUMBER}:/logs -v ${WORKDIR}:/root"
+                                --volumes="-v ${WORKSPACE}/${BUILD_NUMBER}:/logs -v ${WORKSPACE}/${BUILD_NUMBER}/ngraph:/root"
         """
     }
     UTILS.CreateStage("Run_docker_containers", runContainerMethod, configurationMaps)
