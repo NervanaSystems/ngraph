@@ -335,7 +335,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             const size_t ngraph_tensor_dims = get_input_shape(op, 0).size();
             const shared_ptr<op::Concat> concat_op = static_pointer_cast<op::Concat>(op);
             const size_t ngraph_concat_axis = concat_op->get_concatenation_axis();
-            vector<string> inputs;
+            vector<cldnn::primitive_id> inputs;
 
             cldnn::concatenation::concatenation_axis cldnn_axis =
                 runtime::intelgpu::IntelGPULayout::get_cldnn_axis(ngraph_tensor_dims,
