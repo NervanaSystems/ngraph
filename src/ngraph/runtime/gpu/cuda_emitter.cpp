@@ -1930,16 +1930,6 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Convolution* node)
 
 size_t runtime::gpu::CUDAEmitter::build_primitive(const op::ReplaceSlice* node)
 {
-    // assumes NC{d1,...,dn} format
-    std::string kernel_name = "repslices_" + join(dtypes, "_");
-    std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
-
-    std::stringstream ss;
-    ss << kernel_name << "_s" << join(input_shape, "_") << "_ssrc" << join(replace_shape, "_")
-       << "_sll" << join(lower_bounds, "_") << "_slu" << join(upper_bounds, "_") << "_slst"
-       << join(slice_strides, "_");
-    auto hash = ss.str();
-
     auto rep_slice = static_cast<const ngraph::op::ReplaceSlice*>(node);
     auto& args = node->get_inputs();
     auto& out = node->get_outputs();
@@ -1960,6 +1950,16 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::ReplaceSlice* node)
                     slice_shape.begin(),
                     std::divides<size_t>());
 
+    // assumes NC{d1,...,dn} format
+    std::string kernel_name = "repslices_" + join(dtypes, "_");
+    std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
+
+    std::stringstream ss;
+    ss << kernel_name << "_s" << join(input_shape, "_") << "_ssrc" << join(replace_shape, "_")
+       << "_sll" << join(lower_bounds, "_") << "_slu" << join(upper_bounds, "_") << "_slst"
+       << join(slice_strides, "_");
+    auto hash = ss.str();
+    
     // check if the requested primtive is already built
     size_t primitive_index = m_primitive_emitter->lookup(hash);
     if (primitive_index != std::numeric_limits<size_t>::max())
