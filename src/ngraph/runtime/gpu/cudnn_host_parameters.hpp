@@ -64,6 +64,9 @@ namespace ngraph
                     case CUDNN_DATA_UINT8:
                     case CUDNN_DATA_UINT8x4:
 #endif
+#if CUDNN_VERSION >= 7200
+                    case CUDNN_DATA_INT8x32:
+#endif
                         std::string err = "datatype is not supported by cuDNN";
                         throw std::runtime_error(err);
                         break;
