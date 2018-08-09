@@ -58,7 +58,7 @@ namespace ngraph
                     SELECT_KERNEL(
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::bounded_relu);
 
-                    auto alpha = dynamic_cast<const op::BoundedRelu*>(node)->get_alpha();
+                    auto alpha = static_cast<const op::BoundedRelu*>(node)->get_alpha();
                     auto functor = [&, kernel, alpha, count](CPURuntimeContext* ctx) {
                         kernel(input_tensor, out_tensor, alpha, count);
                     };
