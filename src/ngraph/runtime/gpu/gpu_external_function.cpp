@@ -104,6 +104,7 @@
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
+#include "ngraph/runtime/gpu/pass/gpu_assignment.hpp"
 #include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
 
 using namespace std;
@@ -644,6 +645,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
         .register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
 
     m_pass_manager.register_pass<ngraph::pass::Liveness>();
+    m_pass_manager.register_pass<runtime::gpu::pass::GPUAssignment>(this);
 
     m_pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
 
