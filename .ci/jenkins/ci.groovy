@@ -121,7 +121,7 @@ def main(String projectName, String projectRoot, String dockerContainerName) {
         def configurationMaps = UTILS.GetDockerEnvList(projectName, dockerContainerName, projectRoot)
         BuildImage(configurationMaps)
         RunDockerContainers(configurationMaps)
-        BuildNgraph(configurationMaps)
+        PrepareEnvironment(configurationMaps)
         RunToxTests(configurationMaps)
         Cleanup(configurationMaps)
         Notify()
