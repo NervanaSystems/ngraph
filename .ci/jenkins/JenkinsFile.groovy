@@ -9,7 +9,7 @@ node('ci && onnx'){
                      branches: [[name: "$ghprbActualCommit"]],
                      doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CloneOption', timeout: 30]], submoduleCfg: [],
                      userRemoteConfigs: [[credentialsId: "f9f1f2ce-47b8-47cb-8fa1-c22d16179dce",
-                     url: "git@github.com:mchrusci/ngraph.git"]]])
+                     url: "git@github.com:NervanaSystems/ngraph.git"]]])
         }
         load "${CI_ROOT}/ci.groovy"
     }
