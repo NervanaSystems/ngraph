@@ -17,6 +17,7 @@
 #include <CPP/activation.hpp>
 #include <CPP/activation_grad.hpp>
 #include <CPP/batch_norm.hpp>
+#include <CPP/concatenation.hpp>
 #include <CPP/convolution.hpp>
 #include <CPP/data.hpp>
 #include <CPP/eltwise.hpp>
@@ -40,6 +41,7 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dot.hpp"
@@ -323,6 +325,33 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                      get_output_type(op),
                                      reversed_axes);
             }
+        }
+        else if ("Concat" == op->description())
+        {
+            if (op->get_inputs().empty() || op->get_outputs().size() != 1)
+            {
+                arguments_check(op, 1, 1);
+            }
+            const size_t ngraph_tensor_dims = get_input_shape(op, 0).size();
+            const shared_ptr<op::Concat> concat_op = static_pointer_cast<op::Concat>(op);
+            const size_t ngraph_concat_axis = concat_op->get_concatenation_axis();
+            vector<cldnn::primitive_id> inputs;
+
+            cldnn::concatenation::concatenation_axis cldnn_axis =
+                runtime::intelgpu::IntelGPULayout::get_cldnn_axis(ngraph_tensor_dims,
+                                                                  ngraph_concat_axis);
+
+            for (auto const& input : op->get_inputs())
+            {
+                const Shape& input_shape = input.get_shape();
+                if (shape_size(input_shape))
+                {
+                    inputs.push_back(input.get_tensor().get_name());
+                }
+            }
+
+            const cldnn::concatenation cldnn_concat(get_output_name(op), inputs, cldnn_axis);
+            topology.add(cldnn_concat);
         }
         else if ("Add" == op->description())
         {
