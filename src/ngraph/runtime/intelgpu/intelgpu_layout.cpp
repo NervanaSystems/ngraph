@@ -131,19 +131,23 @@ cldnn::layout runtime::intelgpu::IntelGPULayout::create_cldnn_layout(
 }
 
 cldnn::concatenation::concatenation_axis
-    runtime::intelgpu::IntelGPULayout::get_cldnn_axis(size_t tensor_channel)
+    runtime::intelgpu::IntelGPULayout::get_cldnn_axis(size_t shape_size, size_t axis)
 {
-    switch (tensor_channel)
+    const size_t t_channel = shape_size - axis - 1;
+
+    switch (t_channel)
     {
-    case 0: return cldnn::concatenation::along_b;
-    case 1: return cldnn::concatenation::along_f;
-    case 2: return cldnn::concatenation::along_y;
-    case 3: return cldnn::concatenation::along_x;
+    case 0: return cldnn::concatenation::along_x;
+    case 1: return cldnn::concatenation::along_y;
+    case 2: return cldnn::concatenation::along_f;
+    case 3:
+        if (shape_size < 5)
+        {
+            return cldnn::concatenation::along_b;
+        }
+    /* no break */
     default:
-    {
-        ostringstream os;
-        os << "IntelGPULayout::get_cldnn_axis: wrong tensor channel " << tensor_channel;
-        throw invalid_argument(os.str());
-    }
+        throw invalid_argument("IntelGPULayout::get_cldnn_axis: wrong tensor channel " +
+                               to_string(t_channel));
     }
 }
