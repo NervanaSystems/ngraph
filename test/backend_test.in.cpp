@@ -156,7 +156,29 @@ NGRAPH_TEST(${BACKEND_NAME}, parameter_as_output)
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, ab)
+NGRAPH_TEST(${BACKEND_NAME}, add)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Add>(A, B), op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> result = backend->create_tensor(element::f32, shape);
+
+    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+
+    backend->call(f, {result}, {a, b});
+    EXPECT_EQ(read_vector<float>(result),
+              (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, add_overload)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -176,6 +198,50 @@ NGRAPH_TEST(${BACKEND_NAME}, ab)
     backend->call(f, {result}, {a, b});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, multiply)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Multiply>(A, B), op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> result = backend->create_tensor(element::f32, shape);
+
+    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+
+    backend->call(f, {result}, {a, b});
+    EXPECT_EQ(read_vector<float>(result),
+              (test::NDArray<float, 2>({{5, 12}, {21, 32}})).get_vector());
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, multiply_overload)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(A * B, op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> result = backend->create_tensor(element::f32, shape);
+
+    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+
+    backend->call(f, {result}, {a, b});
+    EXPECT_EQ(read_vector<float>(result),
+              (test::NDArray<float, 2>({{5, 12}, {21, 32}})).get_vector());
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, abc)
@@ -770,6 +836,27 @@ NGRAPH_TEST(${BACKEND_NAME}, divide)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{2, 4, 8, 16});
+    auto b = backend->create_tensor(element::f32, shape);
+    copy_data(b, vector<float>{1, 2, 4, 8});
+    auto result = backend->create_tensor(element::f32, shape);
+
+    backend->call(f, {result}, {a, b});
+    EXPECT_EQ((vector<float>{2, 2, 2, 2}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, divide_overload)
+{
+    Shape shape{2, 2};
+
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(A / B, op::ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1602,6 +1689,26 @@ NGRAPH_TEST(${BACKEND_NAME}, subtract)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Subtract>(A, B), op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{2, 4, 8, 16});
+    auto b = backend->create_tensor(element::f32, shape);
+    copy_data(b, vector<float>{1, 2, 4, 8});
+    auto result = backend->create_tensor(element::f32, shape);
+
+    backend->call(f, {result}, {a, b});
+    EXPECT_EQ((vector<float>{1, 2, 4, 8}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, subtract_overload)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(A - B, op::ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

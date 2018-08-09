@@ -53,11 +53,12 @@ runtime::gpu::GPU_Backend::GPU_Backend()
 runtime::gpu::GPU_Backend::BackendContext::BackendContext()
     : m_runtime_context(new GPURuntimeContext)
     , m_primitive_emitter(new GPUPrimitiveEmitter(m_runtime_context))
+    , m_cuda_manager(new CudaContextManager)
 {
     // Create context use driver API and make it current, the runtime call will pickup the context
     // http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html
     // #interoperability-between-runtime-and-driver-apis
-    ngraph::runtime::gpu::CudaContextManager::Instance().SetContextCurrent();
+    m_cuda_manager->SetContextCurrent();
 
     m_runtime_context->cublas_handle = new cublasHandle_t;
     cublasStatus_t cublasStatus = cublasCreate(m_runtime_context->cublas_handle);
