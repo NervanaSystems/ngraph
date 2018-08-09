@@ -14,7 +14,12 @@
 * limitations under the License.
 *******************************************************************************/
 
+#pragma once
+
 #include <unsupported/Eigen/CXX11/Tensor>
+#include "ngraph/op/constant.hpp"
+
+//TF Code: Need to refer
 
 namespace ngraph
 {
@@ -51,6 +56,8 @@ namespace ngraph
                     *min_c = c_float_for_one_quant_level * c_lowest;
                     *max_c = c_float_for_one_quant_level * c_highest;
                 }
+
+                const float get_output_scale(const ngraph::Node* node);
             }
         }
     }

@@ -94,22 +94,8 @@ public:
         for (auto e : m_graphs)
         {
             auto& lkg = e.second;
-            std::unordered_set<std::shared_ptr<Node>> graph_nodes{lkg.m_nodes.begin(),
-                                                                  lkg.m_nodes.end()};
-            NodeVector member_outputs;
 
-            auto has_external_user = [&graph_nodes](std::shared_ptr<Node> u) {
-                return graph_nodes.count(u) == 0;
-            };
-
-            for (auto member : lkg.m_nodes)
-            {
-                auto member_users = member->get_users();
-                if (std::any_of(member_users.cbegin(), member_users.cend(), has_external_user))
-                {
-                    member_outputs.push_back(member);
-                }
-            }
+            NodeVector member_outputs = ngraph::get_subgraph_outputs(lkg.m_nodes, NodeVector{});
             auto lk = std::make_shared<runtime::cpu::op::LoopKernel>(
                 lkg.m_nodes, member_outputs, lkg.m_inputs);
             lks.push_back(lk);

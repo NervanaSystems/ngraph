@@ -15,10 +15,14 @@
 # ******************************************************************************
 
 set (SRC
+    axis_set.cpp
+    axis_vector.cpp
     autodiff/adjoints.cpp
     builder/autobroadcast.cpp
     builder/numpy_transpose.cpp
     builder/reduce_ops.cpp
+    coordinate.cpp
+    coordinate_diff.cpp
     coordinate_transform.cpp
     descriptor/input.cpp
     descriptor/layout/dense_tensor_view_layout.cpp
@@ -60,6 +64,7 @@ set (SRC
     op/less.cpp
     op/less_eq.cpp
     op/log.cpp
+    op/lrn.cpp
     op/max.cpp
     op/maximum.cpp
     op/max_pool.cpp
@@ -137,6 +142,8 @@ set (SRC
     runtime/host_tensor_view.cpp
     runtime/tensor_view.cpp
     serializer.cpp
+    shape.cpp
+    strides.cpp
     type/element_type.cpp
     type/type.cpp
     util.cpp
@@ -210,7 +217,9 @@ endif()
 
 # Defines macro in C++ to load backend plugin
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
-target_link_libraries(ngraph PUBLIC dl pthread)
+if (NOT WIN32)
+    target_link_libraries(ngraph PUBLIC dl pthread)
+endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     target_sources(ngraph PRIVATE $<TARGET_OBJECTS:onnx_import_interface>)

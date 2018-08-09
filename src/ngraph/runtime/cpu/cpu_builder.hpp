@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -108,7 +108,9 @@
     else if (R == 15)                                                                              \
         KV = K<ET, 15>;                                                                            \
     else if (R == 16)                                                                              \
-        KV = K<ET, 16>;
+        KV = K<ET, 16>;                                                                            \
+    else                                                                                           \
+        throw ngraph_error("Unsupported rank " + std::to_string(R) + " for kernel " #K);
 
 // Per-type and rank kernel macro
 #define SELECT_KERNEL_BY_RANK(KV, ET, R, K)                                                        \
@@ -155,7 +157,93 @@
     else if (ET == element::u64)                                                                   \
     {                                                                                              \
         SELECT_RANK(KV, uint64_t, R, K);                                                           \
+    }                                                                                              \
+    else                                                                                           \
+    {                                                                                              \
+        throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
     }
+
+// Helper macros for a partial set of element types and ranks
+// Useful for keeping compilation time and memory usage reasonable
+// when the computed expression is complex
+
+#define PARTIAL_SELECT_RANK(KV, ET, R, K)                                                          \
+    if (R == 1)                                                                                    \
+        KV = K<ET, 1>;                                                                             \
+    else if (R == 2)                                                                               \
+        KV = K<ET, 2>;                                                                             \
+    else if (R == 3)                                                                               \
+        KV = K<ET, 3>;                                                                             \
+    else if (R == 4)                                                                               \
+        KV = K<ET, 4>;                                                                             \
+    else if (R == 5)                                                                               \
+        KV = K<ET, 5>;                                                                             \
+    else if (R == 6)                                                                               \
+        KV = K<ET, 6>;                                                                             \
+    else                                                                                           \
+        throw ngraph_error("Unsupported rank " + std::to_string(R) + " for kernel " #K);
+
+// Partial per-type and rank kernel macro
+#define PARTIAL_SELECT_KERNEL_BY_RANK(KV, ET, R, K)                                                \
+    if (ET == element::f32)                                                                        \
+    {                                                                                              \
+        PARTIAL_SELECT_RANK(KV, float, R, K);                                                      \
+    }                                                                                              \
+    else if (ET == element::i8)                                                                    \
+    {                                                                                              \
+        PARTIAL_SELECT_RANK(KV, int8_t, R, K);                                                     \
+    }                                                                                              \
+    else if (ET == element::u8)                                                                    \
+    {                                                                                              \
+        PARTIAL_SELECT_RANK(KV, uint8_t, R, K);                                                    \
+    }                                                                                              \
+    else                                                                                           \
+    {                                                                                              \
+        throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
+    }
+
+#define BUILD_UNARY_ELEMWISE_FUNCTOR(OP)                                                           \
+    auto& functors = external_function->get_functors();                                            \
+    auto& tensor_data = external_function->get_tensor_data();                                      \
+    std::function<void(void*, void*, size_t)> kernel;                                              \
+                                                                                                   \
+    SELECT_KERNEL(kernel, args[0].get_element_type(), OP);                                         \
+                                                                                                   \
+    auto element_count = out[0].get_size();                                                        \
+    auto& arg0_tensor = tensor_data[args[0].get_name()];                                           \
+    auto& out0_tensor = tensor_data[out[0].get_name()];                                            \
+                                                                                                   \
+    auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {                            \
+        kernel(arg0_tensor, out0_tensor, element_count);                                           \
+    };                                                                                             \
+    functors.emplace_back(functor);
+
+#define BUILD_BINARY_ELEMWISE_FUNCTOR(OP)                                                          \
+    auto& functors = external_function->get_functors();                                            \
+    auto& tensor_data = external_function->get_tensor_data();                                      \
+    std::function<void(void*, void*, void*, size_t)> kernel;                                       \
+                                                                                                   \
+    SELECT_KERNEL(kernel, args[0].get_element_type(), OP);                                         \
+                                                                                                   \
+    auto element_count = out[0].get_size();                                                        \
+    auto& arg0_tensor = tensor_data[args[0].get_name()];                                           \
+    auto& arg1_tensor = tensor_data[args[1].get_name()];                                           \
+    auto& out0_tensor = tensor_data[out[0].get_name()];                                            \
+                                                                                                   \
+    auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {                            \
+        kernel(arg0_tensor, arg1_tensor, out0_tensor, element_count);                              \
+    };                                                                                             \
+    functors.emplace_back(functor);
+
+#define REGISTER_OP_BUILDER(OP)                                                                    \
+    static struct __register_##OP##_builder                                                        \
+    {                                                                                              \
+        __register_##OP##_builder()                                                                \
+        {                                                                                          \
+            build_dispatcher.insert({type_index(typeid(ngraph::op::OP)),                           \
+                                     &runtime::cpu::Builder::build<ngraph::op::OP>});              \
+        }                                                                                          \
+    } __register_##OP##_builder_instance;
 
 namespace ngraph
 {
@@ -171,7 +259,7 @@ namespace ngraph
 
             using BuildOpMap = std::unordered_map<std::type_index, BuildOpFunction>;
 
-            extern const BuildOpMap build_dispatcher;
+            extern BuildOpMap build_dispatcher;
 
             class Builder
             {
