@@ -21,12 +21,6 @@
 
 using namespace ngraph;
 
-runtime::gpu::CudaContextManager& runtime::gpu::CudaContextManager::Instance()
-{
-    static CudaContextManager manager;
-    return manager;
-}
-
 runtime::gpu::CudaContextManager::CudaContextManager()
 {
     CUDA_SAFE_CALL(cuInit(0));
@@ -36,5 +30,5 @@ runtime::gpu::CudaContextManager::CudaContextManager()
 
 runtime::gpu::CudaContextManager::~CudaContextManager()
 {
-    CUDA_SAFE_CALL(cuDevicePrimaryCtxRelease(m_device));
+    CUDA_SAFE_CALL_NO_THROW(cuDevicePrimaryCtxRelease(m_device));
 }

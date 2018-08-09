@@ -49,6 +49,7 @@
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
+#include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
@@ -638,6 +639,14 @@ static shared_ptr<ngraph::Function>
             {
                 node = make_shared<op::Log>(args[0]);
             }
+            else if (node_op == "LRN")
+            {
+                auto alpha = node_js.at("alpha").get<double>();
+                auto beta = node_js.at("beta").get<double>();
+                auto bias = node_js.at("bias").get<double>();
+                auto nsize = node_js.at("nsize").get<size_t>();
+                node = make_shared<op::LRN>(args[0], alpha, beta, bias, nsize);
+            }
             else if (node_op == "Max")
             {
                 auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
@@ -1141,6 +1150,14 @@ static json write(const Node& n, bool binary_constant_data)
     else if (node_op == "Log")
     {
     }
+    else if (node_op == "LRN")
+    {
+        auto tmp = dynamic_cast<const op::LRN*>(&n);
+        node["alpha"] = tmp->get_alpha();
+        node["beta"] = tmp->get_beta();
+        node["bias"] = tmp->get_bias();
+        node["nsize"] = tmp->get_nsize();
+    }
     else if (node_op == "Max")
     {
         auto tmp = dynamic_cast<const op::Max*>(&n);
@@ -1202,6 +1219,7 @@ static json write(const Node& n, bool binary_constant_data)
     {
         auto tmp = dynamic_cast<const op::Parameter*>(&n);
         node["shape"] = tmp->get_shape();
+        node["cacheable"] = tmp->get_cacheable();
         node["element_type"] = write_element_type(tmp->get_element_type());
     }
     else if (node_op == "Product")

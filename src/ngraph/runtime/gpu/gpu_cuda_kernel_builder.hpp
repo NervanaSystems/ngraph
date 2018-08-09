@@ -34,15 +34,20 @@ namespace ngraph
             class CudaKernelBuilder
             {
             public:
+                static void get_kernel_signature(codegen::CodeWriter& writer,
+                                                 const std::string& name,
+                                                 const std::string& input_signature)
+                {
+                    writer << "extern \"C\" __global__ void cuda_" << name;
+                    writer << input_signature;
+                }
+
                 static void get_elementwise_op(codegen::CodeWriter& writer,
                                                const std::string& name,
                                                const std::string& op,
                                                const std::vector<std::string>& data_types);
 
-                static void get_broadcast_op(codegen::CodeWriter& writer,
-                                             const std::string& name,
-                                             const std::array<std::string, 2>& data_types,
-                                             const size_t rank);
+                static void get_broadcast_op(codegen::CodeWriter& writer, const size_t rank);
 
                 static void get_concat_op(codegen::CodeWriter& writer,
                                           const std::string& name,
@@ -55,7 +60,8 @@ namespace ngraph
 
                 static void get_reshape_op(codegen::CodeWriter& writer,
                                            const std::string& name,
-                                           const std::array<std::string, 2>& data_types);
+                                           const std::array<std::string, 2>& data_types,
+                                           size_t rank);
 
                 static void get_slice_op(codegen::CodeWriter& writer,
                                          const std::string& name,
@@ -125,6 +131,12 @@ namespace ngraph
                                                     int sm_tile_size = 8,
                                                     int reg_tile_size = 1);
 
+                static void get_softmax_divide_op(codegen::CodeWriter& writer,
+                                                  const std::string& name,
+                                                  const std::vector<std::string>& data_types,
+                                                  std::vector<size_t> axes_flag,
+                                                  size_t rank);
+
                 static void add_pod_typedefs(codegen::CodeWriter& writer);
 
                 /// \brief Given kernel input variables i_* produce register variables o_coordinates{i}
@@ -137,14 +149,16 @@ namespace ngraph
                                                            std::string i_stride_shift,
                                                            std::string i_reduced_strides,
                                                            std::string o_coordinates,
-                                                           size_t rank);
+                                                           size_t rank,
+                                                           bool register_arguments = false);
                 static void coordinate_transform_to_multi_d(codegen::CodeWriter& writer,
                                                             std::string i_strides,
                                                             std::string i_stride_magic,
                                                             std::string i_stride_shift,
                                                             std::string i_coord_product,
                                                             std::string o_coordinates,
-                                                            size_t rank);
+                                                            size_t rank,
+                                                            bool register_arguments = false);
             };
         }
     }

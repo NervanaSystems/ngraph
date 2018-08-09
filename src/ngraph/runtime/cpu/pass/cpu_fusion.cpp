@@ -153,10 +153,10 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias()
         auto mmb = std::make_shared<op::MatmulBias>(pattern_map[W],
                                                     pattern_map[x],
                                                     m_bias,
-                                                    m_matmul->get_arg0_shape(),
-                                                    m_matmul->get_arg1_shape(),
-                                                    m_matmul->get_is_arg0_transposed(),
-                                                    m_matmul->get_is_arg1_transposed(),
+                                                    m_matmul->get_a_shape(),
+                                                    m_matmul->get_b_shape(),
+                                                    m_matmul->get_is_a_transposed(),
+                                                    m_matmul->get_is_b_transposed(),
                                                     m_broadcast->get_broadcast_axes());
 
         ngraph::replace_node(m.get_match_root(), mmb);
@@ -993,7 +993,15 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
             return false;
         }
 
-        auto conv_relu = std::shared_ptr<Node>(new op::ConvolutionBiasRelu(conv));
+        auto conv_relu = std::make_shared<op::ConvolutionBias>(conv->get_argument(0),
+                                                               conv->get_argument(1),
+                                                               conv->get_argument(2),
+                                                               conv->get_window_movement_strides(),
+                                                               conv->get_window_dilation_strides(),
+                                                               conv->get_padding_below(),
+                                                               conv->get_padding_above(),
+                                                               conv->get_data_dilation_strides(),
+                                                               true);
         ngraph::replace_node(m.get_match_root(), conv_relu);
         return true;
     };
@@ -1063,18 +1071,17 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
             return false;
         }
 
-        if (conv_m->get_users().size() > 1)
+        if (get_user_count(conv_m.get()) > 1)
         {
             NGRAPH_DEBUG << "Convolution has more than one user";
-
-            // return false;
+            return false;
         }
 
-        if (inplace_input->get_users().size() > 1)
+        if (!is_post_dominated(inplace_input.get(), add_m.get()))
         {
-            NGRAPH_DEBUG << "Add has more than one user. Convolution Add might use an in-place "
-                            "destructive kernel";
-            // return false;
+            NGRAPH_DEBUG << "Unsafe to use in-place kernel since add's in-place input has "
+                            "potential live users";
+            return false;
         }
 
         if (inplace_input->is_parameter())
@@ -1237,7 +1244,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
     auto relu = std::make_shared<op::Relu>(relu_input);
     auto iconst1 = op::Constant::create(element::f32, Shape{}, {1});
     auto alpha = std::make_shared<pattern::op::Label>(iconst1);
-    auto min = std::make_shared<op::Minimum>(relu, alpha);
+    auto broadcast_pred = [](std::shared_ptr<Node> n) {
+        return (std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr);
+    };
+    auto skip_broadcast = std::make_shared<pattern::op::Skip>(alpha, broadcast_pred);
+    auto min = std::make_shared<op::Minimum>(relu, skip_broadcast);
 
     pattern::graph_rewrite_callback callback = [relu_input, alpha](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_bounded_relu against "

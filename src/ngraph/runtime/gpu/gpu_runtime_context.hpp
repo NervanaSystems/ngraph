@@ -40,6 +40,7 @@ namespace ngraph
                 gpu::primitive* const* gpu_primitives;
                 const gpu::memory_primitive* gpu_memory_primitives;
                 CudaFunctionPool* compiled_kernel_pool;
+                StopWatchPool* stopwatch_pool = nullptr;
                 // Note that in it's current state, calling methods of CudaFunctionPool
                 // or other native compiled C++ functions in ngraph from the JIT code is
                 // unsafe and will fail if the GLIBCXX versions are diffent for the
@@ -47,6 +48,11 @@ namespace ngraph
                 // to use the GPUPrimitiveEmitter, the above pointer can be removed. It is left now
                 // for backward compatability.
             };
+
+            void start_stopwatch(GPURuntimeContext* ctx, size_t idx);
+            void stop_stopwatch(GPURuntimeContext* ctx, size_t idx);
+            size_t count_stopwatch(GPURuntimeContext* ctx, size_t idx);
+            size_t us_stopwatch(GPURuntimeContext* ctx, size_t idx);
             }
         }
     }
