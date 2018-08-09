@@ -18,11 +18,11 @@
 #include <cstring>
 
 #include "ngraph/op/batch_norm.hpp"
-#include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/kernel/batchnorm.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -33,6 +33,7 @@ namespace ngraph
     {
         namespace cpu
         {
+            template <typename OP>
             static void build_batch_norm(CPU_ExternalFunction* external_function,
                                          const ngraph::Node* node,
                                          const std::vector<TensorViewWrapper>& args,
@@ -47,8 +48,7 @@ namespace ngraph
                 auto& arg2_tensor = tensor_data[args[2].get_name()];
                 auto& out0_tensor = tensor_data[out[0].get_name()];
 
-                const ngraph::op::BatchNorm* batchnorm =
-                    static_cast<const ngraph::op::BatchNorm*>(node);
+                const OP* batchnorm = static_cast<const OP*>(node);
 
                 shared_ptr<uint8_t> stacked_weights(new uint8_t[2 * args[0].get_size()]);
 
@@ -240,7 +240,8 @@ namespace ngraph
                 }
                 else
                 {
-                    build_batch_norm(external_function, node, args, out, false);
+                    build_batch_norm<ngraph::op::BatchNorm>(
+                        external_function, node, args, out, false);
                 }
             }
 
@@ -332,7 +333,8 @@ namespace ngraph
                 {
                     throw ngraph_error("BatchNormRelu is only supported with 4-D MKLDNN kernel.");
                 }
-                build_batch_norm(external_function, node, args, out, true);
+                build_batch_norm<ngraph::op::BatchNormRelu>(
+                    external_function, node, args, out, true);
             }
             REGISTER_OP_BUILDER(BatchNorm);
             REGISTER_OP_BUILDER(BatchNormRelu);
