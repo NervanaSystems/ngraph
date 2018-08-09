@@ -328,25 +328,19 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         }
         else if ("Concat" == op->description())
         {
-            if (op->get_inputs().empty() || op->get_outputs().empty())
+            if (op->get_inputs().empty() || op->get_outputs().size() != 1)
             {
                 arguments_check(op, 1, 1);
             }
-            const size_t cldnn_tensor_dims_lim = 4;
             const size_t ngraph_tensor_dims = get_input_shape(op, 0).size();
             const shared_ptr<op::Concat> concat_op = static_pointer_cast<op::Concat>(op);
             const size_t ngraph_concat_axis = concat_op->get_concatenation_axis();
             vector<string> inputs;
 
-            if (ngraph_tensor_dims > cldnn_tensor_dims_lim)
-            {
-                throw invalid_argument("Unsupported tensor dimensions (" +
-                                       to_string(ngraph_tensor_dims) + ") for \"" +
-                                       op->description() + "\" operation");
-            }
             cldnn::concatenation::concatenation_axis cldnn_axis =
-                runtime::intelgpu::IntelGPULayout::get_cldnn_axis(
-                    cldnn_tensor_dims_lim - ngraph_tensor_dims + ngraph_concat_axis);
+                runtime::intelgpu::IntelGPULayout::get_cldnn_axis(ngraph_tensor_dims,
+                                                                  ngraph_concat_axis);
+
             for (auto const& input : op->get_inputs())
             {
                 const Shape& input_shape = input.get_shape();
