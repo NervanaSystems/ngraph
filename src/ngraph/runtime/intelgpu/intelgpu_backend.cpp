@@ -36,6 +36,7 @@
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
 
+#include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
@@ -48,6 +49,7 @@
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/pad.hpp"
+#include "ngraph/op/parameter_vector.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
@@ -544,6 +546,38 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         else if ("Tanh" == op->description())
         {
             do_unary_operation(topology, op, activation_hyperbolic_tan);
+        }
+        else if ("Sin" == op->description())
+        {
+            do_unary_operation(topology, op, activation_sin);
+        }
+        else if ("Asin" == op->description())
+        {
+            do_unary_operation(topology, op, activation_asin);
+        }
+        else if ("Sinh" == op->description())
+        {
+            do_unary_operation(topology, op, activation_sinh);
+        }
+        else if ("Cos" == op->description())
+        {
+            do_unary_operation(topology, op, activation_cos);
+        }
+        else if ("Acos" == op->description())
+        {
+            do_unary_operation(topology, op, activation_acos);
+        }
+        else if ("Cosh" == op->description())
+        {
+            do_unary_operation(topology, op, activation_cosh);
+        }
+        else if ("Log" == op->description())
+        {
+            do_unary_operation(topology, op, activation_log);
+        }
+        else if ("Exp" == op->description())
+        {
+            do_unary_operation(topology, op, activation_exp);
         }
         else if ("Sigmoid" == op->description())
         {
