@@ -20,7 +20,7 @@
 #include <gtest/gtest.h>
 #include <ngraph/except.hpp>
 #include <topi/broadcast.h>
-#include <topi/broadcast.h>
+#include <topi/elemwise.h>
 #include <tvm/build_module.h>
 #include <tvm/tvm.h>
 
@@ -57,6 +57,49 @@ namespace ngraph
 
             namespace tvm_kernel
             {
+                // Unary element wise kernels
+                typedef std::function<tvm::Tensor(const tvm::Tensor&, std::string, std::string)>
+                    UnaryElemwiseFunc;
+                typedef tvm::Tensor (*UnaryElemwiseFuncPtr)(const tvm::Tensor&,
+                                                            std::string,
+                                                            std::string);
+                template <typename ElementType>
+                void unary_elemwise_kernel(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                           const tvm::runtime::PackedFunc& func,
+                                           void* input,
+                                           void* output,
+                                           size_t count)
+                {
+                    throw ngraph_error(
+                        "tvm_kernel::unary_elemwise_kernel() instantiated with "
+                        "unsupported ElementType");
+                }
+                template <>
+                void unary_elemwise_kernel<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                                  const tvm::runtime::PackedFunc& func,
+                                                  void* input,
+                                                  void* output,
+                                                  size_t count);
+
+                // Unary element wise builders
+                template <typename ElementType>
+                tvm::PackedFunc
+                    unary_elemwise_build(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                         const UnaryElemwiseFunc& topi_func)
+                {
+                    throw ngraph_error(
+                        "tvm_kernel::unary_elemwise_build() instantiated with "
+                        "unsupported ElementType");
+                }
+
+                template <>
+                tvm::PackedFunc
+                    unary_elemwise_build<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                                const UnaryElemwiseFunc& topi_func);
+                using UnaryElemwiseBuild = std::function<decltype(unary_elemwise_build<float>)>;
+                using UnaryElemwiseKernel = std::function<decltype(unary_elemwise_kernel<float>)>;
+
+                // Binary element wise kernels
                 typedef std::function<tvm::Tensor(
                     const tvm::Tensor&, const tvm::Tensor&, std::string, std::string)>
                     BinaryElemwiseFunc;
@@ -84,6 +127,7 @@ namespace ngraph
                                                    void* output,
                                                    size_t count);
 
+                // Binary element wise builders
                 template <typename ElementType>
                 tvm::PackedFunc
                     binary_elemwise_build(const std::unique_ptr<TVMInstance>& tvm_instance,
