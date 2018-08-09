@@ -44,7 +44,7 @@ namespace ngraph
 
             NodeVector add(const Node& node) { return op::add(node); }
             NodeVector batch_norm(const Node& node)
-            { 
+            {
                 return op::batch_norm(node, node.get_ng_inputs());
             }
 
@@ -83,8 +83,8 @@ namespace ngraph
                 ops_bridge()
                 {
                     m_map.emplace("Add", std::bind(add, std::placeholders::_1));
-                    m_map.emplace(
-                        "BatchNormalization", std::bind(batch_norm, std::placeholders::_1));
+                    m_map.emplace("BatchNormalization",
+                                  std::bind(batch_norm, std::placeholders::_1));
                     m_map.emplace("Constant", std::bind(constant, std::placeholders::_1));
                     m_map.emplace("Split", std::bind(split, std::placeholders::_1));
                 }

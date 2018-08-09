@@ -49,7 +49,7 @@ namespace ngraph
                 {
                 }
             };
-        
+
             namespace op
             {
                 struct op_value_error : ngraph_error

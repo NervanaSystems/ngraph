@@ -37,7 +37,7 @@ namespace ngraph
                 auto bias = inputs.at(2);
                 std::shared_ptr<ngraph::Node> mean{nullptr};
                 std::shared_ptr<ngraph::Node> var{nullptr};
- 
+
                 int is_test{node.get_attribute_value<int>("is_test", 1)};
                 int spatial{node.get_attribute_value<int>("spatial", 1)};
                 double epsilon{node.get_attribute_value<double>("epsilon", 1e-5)};
@@ -47,13 +47,15 @@ namespace ngraph
 
                 if (!is_test)
                 {
-                    throw error::not_supported_error("BatchNormalization", node.get_name(),
-                        "only 'is_test' mode is currently supported.");
+                    throw error::not_supported_error("BatchNormalization",
+                                                     node.get_name(),
+                                                     "only 'is_test' mode is currently supported.");
                 }
                 if (!spatial)
                 {
-                    throw error::not_supported_error("BatchNormalization", node.get_name(),
-                        "only 'spatial' mode is currently supported.");
+                    throw error::not_supported_error("BatchNormalization",
+                                                     node.get_name(),
+                                                     "only 'spatial' mode is currently supported.");
                 }
 
                 if (inputs.size() >= 5)
