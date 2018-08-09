@@ -123,7 +123,7 @@ target_link_libraries(unit-test ngraph libgtest libjson pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
-    target_compile_options(unit-test PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-zero-as-null-pointer-constant)
+    target_compile_options(unit-test PRIVATE -Wno-undef -Wno-reserved-id-macro)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
