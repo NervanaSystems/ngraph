@@ -15,10 +15,15 @@
 *******************************************************************************/
 
 //#include "ngraph/runtime/cpu/kernel/avg_pool.hpp"
+#define EIGEN_USE_THREADS
+#include <unsupported/Eigen/CXX11/Tensor>
+#include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
+
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -109,8 +114,132 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
+            template <typename ElementType>
+            static Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>>
+                wrap_into_tensor_map(void* data, size_t tensor_size)
+            {
+                Eigen::array<Eigen::Index, 1> dims;
+                dims[0] = tensor_size;
+
+                Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> out(
+                    static_cast<ElementType*>(data), dims);
+                return out;
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::SigmoidMultiply)
+            {
+                auto& functors = external_function->get_functors();
+                auto& tensor_data = external_function->get_tensor_data();
+
+                auto& arg0_tensor = tensor_data[args[0].get_name()];
+                auto& arg1_tensor = tensor_data[args[1].get_name()];
+                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto tensor_size = shape_size(args[0].get_shape());
+
+                auto sigmoid_mul = static_cast<const ngraph::op::SigmoidMultiply*>(node);
+                function<void(CPURuntimeContext*)> functor;
+
+                const size_t index =
+                    static_cast<size_t>(sigmoid_mul->get_input_func_type(0)) *
+                        static_cast<size_t>(ngraph::op::SigmoidMultiply::FunctionType::NumTypes) +
+                    static_cast<size_t>(sigmoid_mul->get_input_func_type(1));
+
+                switch (index)
+                {
+                case 0 /*Logistic|Logistic*/:
+                    functor = [&, tensor_size](CPURuntimeContext* ctx) {
+                        auto in0 = wrap_into_tensor_map<float>(arg0_tensor, tensor_size);
+                        auto in1 = wrap_into_tensor_map<float>(arg1_tensor, tensor_size);
+                        auto out_tm = wrap_into_tensor_map<float>(out_tensor, tensor_size);
+                        auto c = (in0.exp() * in1.exp()) / ((in0.exp() + 1.f) * (in1.exp() + 1.f));
+                        out_tm.device(eigen::global_thread_pool_device) = c;
+                    };
+                    break;
+                case 1 /*Logistic|Tanh*/:
+                    functor = [&, tensor_size](CPURuntimeContext* ctx) {
+                        auto in0 = wrap_into_tensor_map<float>(arg0_tensor, tensor_size);
+                        auto in1 = wrap_into_tensor_map<float>(arg1_tensor, tensor_size);
+                        auto out_tm = wrap_into_tensor_map<float>(out_tensor, tensor_size);
+                        auto c = (in0.exp() * ((in1 * 2.f).exp() - 1.f)) /
+                                 ((in0.exp() + 1.f) * ((in1 * 2.f).exp() + 1.f));
+                        out_tm.device(eigen::global_thread_pool_device) = c;
+                    };
+                    break;
+                case 2 /*Logistic|Identity*/:
+                    functor = [&, tensor_size](CPURuntimeContext* ctx) {
+                        auto in0 = wrap_into_tensor_map<float>(arg0_tensor, tensor_size);
+                        auto in1 = wrap_into_tensor_map<float>(arg1_tensor, tensor_size);
+                        auto out_tm = wrap_into_tensor_map<float>(out_tensor, tensor_size);
+                        auto c = (in0.exp() * in1) / (in0.exp() + 1.f);
+                        out_tm.device(eigen::global_thread_pool_device) = c;
+                    };
+                    break;
+                case 3 /*Tanh|Logistic*/:
+                    functor = [&, tensor_size](CPURuntimeContext* ctx) {
+                        auto in0 = wrap_into_tensor_map<float>(arg0_tensor, tensor_size);
+                        auto in1 = wrap_into_tensor_map<float>(arg1_tensor, tensor_size);
+                        auto out_tm = wrap_into_tensor_map<float>(out_tensor, tensor_size);
+                        auto c = (((in0 * 2.f).exp() - 1.f) * in1.exp()) /
+                                 (((in0 * 2.f).exp() + 1.f) * (in1.exp() + 1.f));
+                        out_tm.device(eigen::global_thread_pool_device) = c;
+                    };
+                    break;
+                case 4 /*Tanh|Tanh*/:
+                    functor = [&, tensor_size](CPURuntimeContext* ctx) {
+                        auto in0 = wrap_into_tensor_map<float>(arg0_tensor, tensor_size);
+                        auto in1 = wrap_into_tensor_map<float>(arg1_tensor, tensor_size);
+                        auto out_tm = wrap_into_tensor_map<float>(out_tensor, tensor_size);
+                        auto c = (((in0 * 2.f).exp() - 1.f) * ((in1 * 2.f).exp() - 1.f)) /
+                                 (((in0 * 2.f).exp() + 1.f) * ((in1 * 2.f).exp() + 1.f));
+                        out_tm.device(eigen::global_thread_pool_device) = c;
+                    };
+                    break;
+                case 5 /*Tanh|Identity*/:
+                    functor = [&, tensor_size](CPURuntimeContext* ctx) {
+                        auto in0 = wrap_into_tensor_map<float>(arg0_tensor, tensor_size);
+                        auto in1 = wrap_into_tensor_map<float>(arg1_tensor, tensor_size);
+                        auto out_tm = wrap_into_tensor_map<float>(out_tensor, tensor_size);
+                        auto c = (((in0 * 2.f).exp() - 1.f) * in1) / ((in0 * 2.f).exp() + 1.f);
+                        out_tm.device(eigen::global_thread_pool_device) = c;
+                    };
+                    break;
+                case 6 /*Identity|Logistic*/:
+                    functor = [&, tensor_size](CPURuntimeContext* ctx) {
+                        auto in0 = wrap_into_tensor_map<float>(arg0_tensor, tensor_size);
+                        auto in1 = wrap_into_tensor_map<float>(arg1_tensor, tensor_size);
+                        auto out_tm = wrap_into_tensor_map<float>(out_tensor, tensor_size);
+                        auto c = (in0 * in1.exp()) / (in1.exp() + 1.f);
+                        out_tm.device(eigen::global_thread_pool_device) = c;
+                    };
+                    break;
+                case 7 /*Identity|Tanh*/:
+                    functor = [&, tensor_size](CPURuntimeContext* ctx) {
+                        auto in0 = wrap_into_tensor_map<float>(arg0_tensor, tensor_size);
+                        auto in1 = wrap_into_tensor_map<float>(arg1_tensor, tensor_size);
+                        auto out_tm = wrap_into_tensor_map<float>(out_tensor, tensor_size);
+                        auto c = (in0 * ((in1 * 2.f).exp() - 1.f)) / ((in1 * 2.f).exp() + 1.f);
+                        out_tm.device(eigen::global_thread_pool_device) = c;
+                    };
+                    break;
+                case 8 /*Identity|Identity*/:
+                    functor = [&, tensor_size](CPURuntimeContext* ctx) {
+                        auto in0 = wrap_into_tensor_map<float>(arg0_tensor, tensor_size);
+                        auto in1 = wrap_into_tensor_map<float>(arg1_tensor, tensor_size);
+                        auto out_tm = wrap_into_tensor_map<float>(out_tensor, tensor_size);
+                        auto c = (in0 * in1);
+                        out_tm.device(eigen::global_thread_pool_device) = c;
+                    };
+                    break;
+                default: throw ngraph_error("unsupported combination for SigmoidMultiply");
+                }
+
+                functors.emplace_back(functor);
+            }
+
             REGISTER_OP_BUILDER(Sigmoid);
             REGISTER_OP_BUILDER(SigmoidBackprop);
+            REGISTER_OP_BUILDER(SigmoidMultiply);
         }
     }
 }
