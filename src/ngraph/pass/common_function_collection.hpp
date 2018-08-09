@@ -45,7 +45,7 @@ public:
                              std::unordered_map<Node*, Node*>& result_map,
                              std::string& emitted_functions);
 
-    virtual ~CommonFunctionCollection();
+    virtual ~CommonFunctionCollection() override;
 
     bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) override;
 
