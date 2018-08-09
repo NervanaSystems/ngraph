@@ -59,11 +59,11 @@ namespace ngraph
             namespace tvm_kernel
             {
                 // Unary element wise kernels
-                typedef std::function<tvm::Tensor(const tvm::Tensor&, std::string, std::string)>
-                    UnaryElemwiseFunc;
-                typedef tvm::Tensor (*UnaryElemwiseFuncPtr)(const tvm::Tensor&,
-                                                            std::string,
-                                                            std::string);
+                using UnaryElemwiseFunc =
+                    std::function<tvm::Tensor(const tvm::Tensor&, std::string, std::string)>;
+                using UnaryElemwiseFuncPtr = tvm::Tensor (*)(const tvm::Tensor&,
+                                                             std::string,
+                                                             std::string);
                 template <typename ElementType>
                 void unary_elemwise_kernel(const std::unique_ptr<TVMInstance>& tvm_instance,
                                            const tvm::runtime::PackedFunc& func,
@@ -101,13 +101,12 @@ namespace ngraph
                 using UnaryElemwiseKernel = std::function<decltype(unary_elemwise_kernel<float>)>;
 
                 // Binary element wise kernels
-                typedef std::function<tvm::Tensor(
-                    const tvm::Tensor&, const tvm::Tensor&, std::string, std::string)>
-                    BinaryElemwiseFunc;
-                typedef tvm::Tensor (*BinaryElemwiseFuncPtr)(const tvm::Tensor&,
-                                                             const tvm::Tensor&,
-                                                             std::string,
-                                                             std::string);
+                using BinaryElemwiseFunc = std::function<tvm::Tensor(
+                    const tvm::Tensor&, const tvm::Tensor&, std::string, std::string)>;
+                using BinaryElemwiseFuncPtr = tvm::Tensor (*)(const tvm::Tensor&,
+                                                              const tvm::Tensor&,
+                                                              std::string,
+                                                              std::string);
                 template <typename ElementType>
                 void binary_elemwise_kernel(const std::unique_ptr<TVMInstance>& tvm_instance,
                                             const tvm::runtime::PackedFunc& func,

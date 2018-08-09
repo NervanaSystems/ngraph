@@ -102,8 +102,6 @@
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
-#include <tvm/tvm.h>
-
 #ifdef NGRAPH_DISTRIBUTED
 #include <mpi.h>
 #include "ngraph/op/allreduce.hpp"

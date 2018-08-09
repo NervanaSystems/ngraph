@@ -230,13 +230,11 @@ include(cmake/external_gtest.cmake)
 include(cmake/external_json.cmake)
 include(cmake/external_eigen.cmake)
 include(cmake/external_mkldnn.cmake)
-
 if (NGRAPH_USE_PREBUILT_LLVM OR DEFINED LLVM_TARBALL_URL)
     include(cmake/external_llvm_prebuilt.cmake)
 else()
     include(cmake/external_llvm.cmake)
 endif()
-
 include(cmake/external_tbb.cmake)
 include(cmake/external_tvm.cmake)
 
