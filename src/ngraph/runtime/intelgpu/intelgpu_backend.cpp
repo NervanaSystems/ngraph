@@ -17,6 +17,7 @@
 #include <CPP/activation.hpp>
 #include <CPP/activation_grad.hpp>
 #include <CPP/batch_norm.hpp>
+#include <CPP/concatenation.hpp>
 #include <CPP/convolution.hpp>
 #include <CPP/data.hpp>
 #include <CPP/eltwise.hpp>
@@ -36,10 +37,12 @@
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
 
+#include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dot.hpp"
@@ -48,6 +51,7 @@
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/pad.hpp"
+#include "ngraph/op/parameter_vector.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
@@ -324,6 +328,33 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                      reversed_axes);
             }
         }
+        else if ("Concat" == op->description())
+        {
+            if (op->get_inputs().empty() || op->get_outputs().size() != 1)
+            {
+                arguments_check(op, 1, 1);
+            }
+            const size_t ngraph_tensor_dims = get_input_shape(op, 0).size();
+            const shared_ptr<op::Concat> concat_op = static_pointer_cast<op::Concat>(op);
+            const size_t ngraph_concat_axis = concat_op->get_concatenation_axis();
+            vector<cldnn::primitive_id> inputs;
+
+            cldnn::concatenation::concatenation_axis cldnn_axis =
+                runtime::intelgpu::IntelGPULayout::get_cldnn_axis(ngraph_tensor_dims,
+                                                                  ngraph_concat_axis);
+
+            for (auto const& input : op->get_inputs())
+            {
+                const Shape& input_shape = input.get_shape();
+                if (shape_size(input_shape))
+                {
+                    inputs.push_back(input.get_tensor().get_name());
+                }
+            }
+
+            const cldnn::concatenation cldnn_concat(get_output_name(op), inputs, cldnn_axis);
+            topology.add(cldnn_concat);
+        }
         else if ("Add" == op->description())
         {
             do_eltwise_operation(topology, op, cldnn::eltwise_mode::sum);
@@ -544,6 +575,38 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         else if ("Tanh" == op->description())
         {
             do_unary_operation(topology, op, activation_hyperbolic_tan);
+        }
+        else if ("Sin" == op->description())
+        {
+            do_unary_operation(topology, op, activation_sin);
+        }
+        else if ("Asin" == op->description())
+        {
+            do_unary_operation(topology, op, activation_asin);
+        }
+        else if ("Sinh" == op->description())
+        {
+            do_unary_operation(topology, op, activation_sinh);
+        }
+        else if ("Cos" == op->description())
+        {
+            do_unary_operation(topology, op, activation_cos);
+        }
+        else if ("Acos" == op->description())
+        {
+            do_unary_operation(topology, op, activation_acos);
+        }
+        else if ("Cosh" == op->description())
+        {
+            do_unary_operation(topology, op, activation_cosh);
+        }
+        else if ("Log" == op->description())
+        {
+            do_unary_operation(topology, op, activation_log);
+        }
+        else if ("Exp" == op->description())
+        {
+            do_unary_operation(topology, op, activation_exp);
         }
         else if ("Sigmoid" == op->description())
         {
