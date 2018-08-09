@@ -30,7 +30,8 @@ RUN pip install tox
 COPY . /root/ngraph
 RUN mkdir /root/ngraph/build
 WORKDIR /root/ngraph/build
-RUN cmake .. -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE
+RUN cmake .. -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE \
+             -DCMAKE_INSTALL_PREFIX="~/ngraph_dist"
 RUN make style-check
 RUN make 
 RUN make install
