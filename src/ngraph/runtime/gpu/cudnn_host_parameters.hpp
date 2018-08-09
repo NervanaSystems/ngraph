@@ -14,8 +14,6 @@
 * limitations under the License.
 *******************************************************************************/
 #pragma once
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wcovered-switch-default -Wswitch-enum"
 
 #include <list>
 #include <memory>
@@ -74,5 +72,3 @@ namespace ngraph
         }
     }
 }
-
-#pragma clang diagnostic pop
