@@ -72,3 +72,20 @@ TEST(onnx, model_split)
             ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/split.onnx"))};
     auto backend{ngraph::runtime::Backend::create("CPU")};
 }
+
+TEST(onnx, model_batchnorm_default)
+{
+    // Batch Normalization with default parameters
+    auto function{ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/batchnorm_default.onnx"))};
+
+    // std::vector<std::vector<float>> inputs;
+    // inputs.emplace_back{read_tensor_proto_data_file<float>(
+    //     ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/batchnorm_default_input_0.pb"))};
+
+    // auto expected_output = read_tensor_proto_data_file<float>(
+    //     ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/batchnorm_default_output_0.pb"));
+
+    // auto result_vectors = execute(function, inputs, "CPU");
+    // EXPECT_EQ(expected_output, result_vectors.front());
+}
