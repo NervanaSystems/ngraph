@@ -59,8 +59,8 @@ static const DLDataType DLType_Float32{kDLFloat, 32, 1};
 
 template <>
 tvm::PackedFunc
-    tvm_kernel::unary_elemwise_build<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
-                                            const UnaryElemwiseFunc& topi_func)
+    tvm_kernel::unary_elemwise_builder<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                              const UnaryElemwiseFunc& topi_func)
 {
     tvm::Var n("n");
     auto A = tvm::placeholder({n}, tvm::Float(32), "a");
@@ -94,8 +94,8 @@ void tvm_kernel::unary_elemwise_kernel<float>(const std::unique_ptr<TVMInstance>
 
 template <>
 tvm::PackedFunc
-    tvm_kernel::binary_elemwise_build<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
-                                             const BinaryElemwiseFunc& topi_func)
+    tvm_kernel::binary_elemwise_builder<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                               const BinaryElemwiseFunc& topi_func)
 {
     tvm::Var n("n");
     auto A = tvm::placeholder({n}, tvm::Float(32), "a");
@@ -128,4 +128,23 @@ void tvm_kernel::binary_elemwise_kernel<float>(const std::unique_ptr<TVMInstance
     DLTensor r = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, output);
 
     func(&a, &b, &r);
+}
+
+template <>
+tvm::PackedFunc tvm_kernel::relu_builder<float>(const std::unique_ptr<TVMInstance>& tvm_instance)
+{
+    tvm::Var n("n");
+    auto A = tvm::placeholder({n}, tvm::Float(32), "a");
+
+    auto R = topi::relu<float>(A);
+
+    std::unordered_map<tvm::Tensor, tvm::Buffer> binds;
+
+    auto schedule = topi::x86::default_schedule(tvm_instance->target(), {R});
+    auto lowered = tvm::lower(schedule, {A, R}, "func", binds, tvm_instance->config());
+    auto module =
+        tvm::build(lowered, tvm_instance->target(), tvm::Target(), tvm_instance->config());
+    // store module to keep its lifetime
+    tvm_instance->add_module(module);
+    return module->GetFunction("func", false);
 }

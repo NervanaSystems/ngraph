@@ -21,6 +21,7 @@
 #include <ngraph/except.hpp>
 #include <topi/broadcast.h>
 #include <topi/elemwise.h>
+#include <topi/nn.h>
 #include <tvm/build_module.h>
 #include <tvm/tvm.h>
 
@@ -84,19 +85,19 @@ namespace ngraph
                 // Unary element wise builders
                 template <typename ElementType>
                 tvm::PackedFunc
-                    unary_elemwise_build(const std::unique_ptr<TVMInstance>& tvm_instance,
-                                         const UnaryElemwiseFunc& topi_func)
+                    unary_elemwise_builder(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                           const UnaryElemwiseFunc& topi_func)
                 {
                     throw ngraph_error(
-                        "tvm_kernel::unary_elemwise_build() instantiated with "
+                        "tvm_kernel::unary_elemwise_builder() instantiated with "
                         "unsupported ElementType");
                 }
 
                 template <>
                 tvm::PackedFunc
-                    unary_elemwise_build<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
-                                                const UnaryElemwiseFunc& topi_func);
-                using UnaryElemwiseBuild = std::function<decltype(unary_elemwise_build<float>)>;
+                    unary_elemwise_builder<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                                  const UnaryElemwiseFunc& topi_func);
+                using UnaryElemwiseBuilder = std::function<decltype(unary_elemwise_builder<float>)>;
                 using UnaryElemwiseKernel = std::function<decltype(unary_elemwise_kernel<float>)>;
 
                 // Binary element wise kernels
@@ -130,20 +131,58 @@ namespace ngraph
                 // Binary element wise builders
                 template <typename ElementType>
                 tvm::PackedFunc
-                    binary_elemwise_build(const std::unique_ptr<TVMInstance>& tvm_instance,
-                                          const BinaryElemwiseFunc& topi_func)
+                    binary_elemwise_builder(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                            const BinaryElemwiseFunc& topi_func)
                 {
                     throw ngraph_error(
-                        "tvm_kernel::binary_elemwise_build() instantiated with "
+                        "tvm_kernel::binary_elemwise_builder() instantiated with "
                         "unsupported ElementType");
                 }
 
                 template <>
                 tvm::PackedFunc
-                    binary_elemwise_build<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
-                                                 const BinaryElemwiseFunc& topi_func);
-                using BinaryElemwiseBuild = std::function<decltype(binary_elemwise_build<float>)>;
+                    binary_elemwise_builder<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                                   const BinaryElemwiseFunc& topi_func);
+                using BinaryElemwiseBuilder =
+                    std::function<decltype(binary_elemwise_builder<float>)>;
                 using BinaryElemwiseKernel = std::function<decltype(binary_elemwise_kernel<float>)>;
+
+                // Relu
+                using ReluFunc = std::function<decltype(topi::relu<float>)>;
+                using ReluFuncPtr = decltype(&topi::relu<float>);
+
+                template <typename ElementType>
+                tvm::PackedFunc relu_builder(const std::unique_ptr<TVMInstance>& tvm_instance)
+                {
+                    throw ngraph_error(
+                        "tvm_kernel::unary_elemwise_builder() instantiated with "
+                        "unsupported ElementType");
+                }
+
+                template <>
+                tvm::PackedFunc
+                    relu_builder<float>(const std::unique_ptr<TVMInstance>& tvm_instance);
+                using ReluBuilder = std::function<decltype(relu_builder<float>)>;
+
+#define BUILD_TVM_RELU_FUNCTOR                                                                     \
+    auto& functors = external_function->get_functors();                                            \
+    auto& tvm_instance = external_function->get_tvm_instance();                                    \
+    auto& tensor_data = external_function->get_tensor_data();                                      \
+    tvm_kernel::ReluBuilder builder;                                                               \
+    tvm_kernel::UnaryElemwiseKernel kernel;                                                        \
+                                                                                                   \
+    SELECT_KERNEL(builder, args[0].get_element_type(), tvm_kernel::relu_builder);                  \
+    auto tvm_func = builder(tvm_instance);                                                         \
+    SELECT_KERNEL(kernel, args[0].get_element_type(), tvm_kernel::unary_elemwise_kernel);          \
+                                                                                                   \
+    auto element_count = out[0].get_size();                                                        \
+    auto& arg0_tensor = tensor_data[args[0].get_name()];                                           \
+    auto& out0_tensor = tensor_data[out[0].get_name()];                                            \
+                                                                                                   \
+    auto functor = [&, tvm_func, kernel, element_count](CPURuntimeContext* ctx) {                  \
+        kernel(tvm_instance, tvm_func, arg0_tensor, out0_tensor, element_count);                   \
+    };                                                                                             \
+    functors.emplace_back(functor);
             }
         }
     }

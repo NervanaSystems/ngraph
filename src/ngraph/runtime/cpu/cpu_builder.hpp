@@ -203,12 +203,11 @@
     auto& functors = external_function->get_functors();                                            \
     auto& tvm_instance = external_function->get_tvm_instance();                                    \
     auto& tensor_data = external_function->get_tensor_data();                                      \
-    tvm_kernel::UnaryElemwiseBuild builder;                                                        \
+    tvm_kernel::UnaryElemwiseBuilder builder;                                                      \
     tvm_kernel::UnaryElemwiseKernel kernel;                                                        \
                                                                                                    \
-    SELECT_KERNEL(builder, args[0].get_element_type(), tvm_kernel::unary_elemwise_build);          \
-    auto tvm_func =                                                                                \
-        builder(tvm_instance, static_cast<const tvm_kernel::UnaryElemwiseFuncPtr&>(OP));           \
+    SELECT_KERNEL(builder, args[0].get_element_type(), tvm_kernel::unary_elemwise_builder);        \
+    auto tvm_func = builder(tvm_instance, static_cast<tvm_kernel::UnaryElemwiseFuncPtr>(OP));      \
     SELECT_KERNEL(kernel, args[0].get_element_type(), tvm_kernel::unary_elemwise_kernel);          \
                                                                                                    \
     auto element_count = out[0].get_size();                                                        \
@@ -224,12 +223,11 @@
     auto& functors = external_function->get_functors();                                            \
     auto& tvm_instance = external_function->get_tvm_instance();                                    \
     auto& tensor_data = external_function->get_tensor_data();                                      \
-    tvm_kernel::BinaryElemwiseBuild builder;                                                       \
+    tvm_kernel::BinaryElemwiseBuilder builder;                                                     \
     tvm_kernel::BinaryElemwiseKernel kernel;                                                       \
                                                                                                    \
-    SELECT_KERNEL(builder, args[0].get_element_type(), tvm_kernel::binary_elemwise_build);         \
-    auto tvm_func =                                                                                \
-        builder(tvm_instance, static_cast<const tvm_kernel::BinaryElemwiseFuncPtr&>(OP));          \
+    SELECT_KERNEL(builder, args[0].get_element_type(), tvm_kernel::binary_elemwise_builder);       \
+    auto tvm_func = builder(tvm_instance, static_cast<tvm_kernel::BinaryElemwiseFuncPtr>(OP));     \
     SELECT_KERNEL(kernel, args[0].get_element_type(), tvm_kernel::binary_elemwise_kernel);         \
                                                                                                    \
     auto element_count = out[0].get_size();                                                        \
