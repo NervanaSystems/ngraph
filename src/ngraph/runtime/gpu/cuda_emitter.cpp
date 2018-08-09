@@ -1937,7 +1937,7 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::ReplaceSlice* node)
     auto& replace_shape = args[1].get_shape();
     auto& lower_bounds = rep_slice->get_lower_bounds();
     auto& upper_bounds = rep_slice->get_upper_bounds();
-    auto& strides = rep_slice->get_strides();
+    auto& slice_strides = rep_slice->get_strides();
     Shape slice_shape(upper_bounds.size(), 0);
     std::transform(upper_bounds.begin(),
                     upper_bounds.end(),
@@ -1946,12 +1946,16 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::ReplaceSlice* node)
                     std::minus<size_t>());
     std::transform(slice_shape.begin(),
                     slice_shape.end(),
-                    strides.begin(),
+                    slice_strides.begin(),
                     slice_shape.begin(),
                     std::divides<size_t>());
 
+    auto input_type = args[0].get_element_type().c_type_string();
+    auto replace_type = args[1].get_element_type().c_type_string();
+    auto output_type = out[0].get_element_type().c_type_string();
+
     // assumes NC{d1,...,dn} format
-    std::string kernel_name = "repslices_" + join(dtypes, "_");
+    std::string kernel_name = "repslices_" + input_type + "_" + replace_type + "_" + output_type;
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
 
     std::stringstream ss;
@@ -1967,16 +1971,20 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::ReplaceSlice* node)
         return primitive_index;
     }
 
-    size_t nthreads = shape_size(input_shape);
+    NGRAPH_INFO << args[0].get_tensor().get_name();
+    NGRAPH_INFO << args[1].get_tensor().get_name();
+
+    //size_t nthreads = shape_size(input_shape);
+    //size_t size = nthreads * args[1].get_element_type().size();
     // calculate strides
     Shape input_strides = row_major_strides(input_shape);
     Shape replace_strides = row_major_strides(replace_shape);
 
-    size_t pad_index = build_pad_dynamic({{dtypes[0], dtypes[2]}}, replace_shape, input_shape, lower_bounds, slice_strides);
+    size_t pad_index = build_pad_dynamic({{input_type, output_type}}, replace_shape, input_shape, lower_bounds, slice_strides);
 
     std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](
         void** inputs, void** outputs) mutable {
-        runtime::gpu::cuda_memcpyDtD(outputs[0], inputs[0], nthreads * args[1].get_element_type().size());
+        //runtime::gpu::cuda_memcpyDtD(outputs[0], inputs[0], size);
         runtime::gpu::invoke_primitive(m_ctx, pad_index, std::vector<void*>{inputs[1]}.data(), outputs);
     }});
 

@@ -25,6 +25,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/softmax.hpp"
+#include "ngraph/op/replace_slice.hpp"
 
 namespace ngraph
 {

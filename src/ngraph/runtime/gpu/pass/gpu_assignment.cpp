@@ -40,9 +40,9 @@ namespace ngraph
                 template <>
                 void GPUAssignment::ASSIGN_DECL(ngraph::op::ReplaceSlice)
                 {
-                    auto rep_slice = static_cast<const ngraph::op::ReplaceSlice*>(node);
+                    auto rep_slice = static_cast<ngraph::op::ReplaceSlice*>(node);
 
-                    auto op_annotations = reshape->get_op_annotations();
+                    auto op_annotations = rep_slice->get_op_annotations();
                             if (op_annotations)
                             {
                                 // pass-through
