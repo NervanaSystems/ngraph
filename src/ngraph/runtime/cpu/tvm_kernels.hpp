@@ -18,6 +18,8 @@
 
 #include <dmlc/logging.h>
 #include <gtest/gtest.h>
+#include <ngraph/except.hpp>
+#include <topi/broadcast.h>
 #include <topi/broadcast.h>
 #include <tvm/build_module.h>
 #include <tvm/tvm.h>
@@ -55,19 +57,27 @@ namespace ngraph
 
             namespace tvm_kernel
             {
+                typedef std::function<tvm::Tensor(
+                    const tvm::Tensor&, const tvm::Tensor&, std::string, std::string)>
+                    BinaryElemwiseFunc;
+                typedef tvm::Tensor (*BinaryElemwiseFuncPtr)(const tvm::Tensor&,
+                                                             const tvm::Tensor&,
+                                                             std::string,
+                                                             std::string);
                 template <typename ElementType>
-                void binary_elemwise_compute(const std::unique_ptr<TVMInstance>& tvm_instance,
-                                             const tvm::runtime::PackedFunc& func,
-                                             void* input0,
-                                             void* input1,
-                                             void* output,
-                                             size_t count)
+                void binary_elemwise_kernel(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                            const tvm::runtime::PackedFunc& func,
+                                            void* input0,
+                                            void* input1,
+                                            void* output,
+                                            size_t count)
                 {
-                    std::cout << "divide compute" << std::endl;
+                    throw ngraph_error(
+                        "tvm_kernel::binary_elemwise_kernel() instantiated with "
+                        "unsupported ElementType");
                 }
                 template <>
-                void
-                    binary_elemwise_compute<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
+                void binary_elemwise_kernel<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
                                                    const tvm::runtime::PackedFunc& func,
                                                    void* input0,
                                                    void* input1,
@@ -75,14 +85,21 @@ namespace ngraph
                                                    size_t count);
 
                 template <typename ElementType>
-                tvm::PackedFunc build_divide(const std::unique_ptr<TVMInstance>& tvm_instance)
+                tvm::PackedFunc
+                    binary_elemwise_build(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                          const BinaryElemwiseFunc& topi_func)
                 {
-                    std::cout << "divide build" << std::endl;
+                    throw ngraph_error(
+                        "tvm_kernel::binary_elemwise_build() instantiated with "
+                        "unsupported ElementType");
                 }
 
                 template <>
                 tvm::PackedFunc
-                    build_divide<float>(const std::unique_ptr<TVMInstance>& tvm_instance);
+                    binary_elemwise_build<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                                 const BinaryElemwiseFunc& topi_func);
+                using BinaryElemwiseBuild = std::function<decltype(binary_elemwise_build<float>)>;
+                using BinaryElemwiseKernel = std::function<decltype(binary_elemwise_kernel<float>)>;
             }
         }
     }

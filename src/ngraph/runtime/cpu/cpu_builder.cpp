@@ -118,10 +118,11 @@ namespace ngraph
     {
         namespace cpu
         {
-            tvm::Var tvm_test(){
-                using namespace tvm;
-                auto n = var("n");
-                return n;
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Add)
+            {
+                //                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::add);
+                BUILD_TVM_BINARY_ELEMWISE_FUNCTOR(topi::add);
             }
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Subtract)
@@ -139,7 +140,7 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::Divide)
             {
                 //                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::divide);
-                BUILD_TVM_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::tvm_kernel::build_divide);
+                BUILD_TVM_BINARY_ELEMWISE_FUNCTOR(topi::divide);
             }
 
             template <>
