@@ -15,7 +15,7 @@
 *******************************************************************************/
 #pragma once
 #pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wcovered-switch-default"
+#pragma clang diagnostic ignored "-Wcovered-switch-default -Wswitch-enum"
 
 #include <list>
 #include <memory>
