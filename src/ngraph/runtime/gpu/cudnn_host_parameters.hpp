@@ -61,7 +61,8 @@ namespace ngraph
                         r = m_host_parameters->cache(static_cast<int32_t>(value));
                         break;
                     default:
-                        throw std::runtime_error("Encountered unhandled cudnnDataType_t during compilation.");
+                        throw std::runtime_error(
+                            "Encountered unhandled cudnnDataType_t during compilation.");
                         break;
                     }
                     return r;
