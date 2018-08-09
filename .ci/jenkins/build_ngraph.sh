@@ -22,7 +22,6 @@ set -x
 cd /root
 mkdir -p ./build
 cd ./build
-echo "$(env | grep proxy)"
 cmake ../ -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DCMAKE_INSTALL_PREFIX=/root/ngraph_dist
 make -j $(lscpu --parse=CORE | grep -v '#' | sort | uniq | wc -l)
 make install
@@ -31,6 +30,6 @@ make install
 cd /root/python
 git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
 
-export PYBIND_HEADERS_PATH="/root/ngraph/python/pybind11"
+export PYBIND_HEADERS_PATH="/root/python/pybind11"
 export NGRAPH_CPP_BUILD_PATH="/root/ngraph_dist"
 python3 setup.py bdist_wheel
