@@ -31,6 +31,7 @@ using namespace ngraph::runtime::cpu;
 
 TVMInstance::TVMInstance()
 {
+    std::cout << "Creating TVMInstance" << std::endl;
     m_config = tvm::build_config();
     m_target = tvm::target::llvm();
     m_dl_ctx.device_type = static_cast<DLDeviceType>(kDLCPU);

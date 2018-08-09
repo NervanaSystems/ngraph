@@ -147,6 +147,7 @@ namespace ngraph
                 using BinaryElemwiseKernel = std::function<decltype(binary_elemwise_kernel<float>)>;
 
                 // Relu
+                // XXX lfeng: topi::relu is templatized, we need to change this for more general types.
                 using ReluFunc = std::function<decltype(topi::relu<float>)>;
                 using ReluFuncPtr = decltype(&topi::relu<float>);
 

@@ -24,7 +24,6 @@ set(SRC
     cpu_tensor_view_wrapper.cpp
     cpu_tensor_view.cpp
     cpu_tracing.cpp
-    tvm_kernels.cpp
     builder/avg_pool.cpp
     builder/batch_norm.cpp
     builder/broadcast.cpp
@@ -90,6 +89,12 @@ set(SRC
     pass/cpu_workspace_insertion.cpp
 )
 
+if (NGRAPH_USE_TVM_ENABLE)
+    set(SRC
+        ${SRC}
+        tvm_kernels.cpp
+        )
+endif()
 if (NOT NGRAPH_DEX_ONLY)
     set(SRC
         ${SRC}
@@ -132,6 +137,13 @@ if (NGRAPH_CPU_ENABLE)
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
     add_library(cpu_backend SHARED ${SRC})
+    add_dependencies(cpu_backend ext_mkldnn ext_eigen)
+    if (NGRAPH_USE_TVM_ENABLE)
+        add_definitions(-DNGRAPH_USE_TVM)
+        add_dependencies(cpu_backend ext_mkldnn ext_eigen ext_tvm)
+        target_link_libraries(cpu_backend PRIVATE libtvm)
+        target_include_directories(cpu_backend SYSTEM PUBLIC INTERFACE libtvm)
+    endif()
     set_target_properties(cpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
     if (NGRAPH_DEX_ONLY)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
@@ -145,8 +157,11 @@ if (NGRAPH_CPU_ENABLE)
         target_link_libraries(cpu_backend PRIVATE ${MPI_CXX_LIBRARIES})
     endif()
 
-    target_link_libraries(cpu_backend PUBLIC ngraph codegen libmkldnn libeigen libjson libtbb libtvm)
-    target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn libtvm)
+    target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libeigen libjson libtbb)
+    if (NOT NGRAPH_DEX_ONLY)
+        target_link_libraries(cpu_backend PUBLIC codegen)
+    endif()
+    target_include_directories(cpu_backend SYSTEM PUBLIC INTERFACE libmkldnn)
     set_target_properties(cpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
     install(TARGETS cpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})

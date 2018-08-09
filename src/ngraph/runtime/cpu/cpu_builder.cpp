@@ -98,7 +98,9 @@
 #include "ngraph/runtime/cpu/kernel/tan.hpp"
 #include "ngraph/runtime/cpu/kernel/tanh.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#ifdef NGRAPH_USE_TVM
 #include "ngraph/runtime/cpu/tvm_kernels.hpp"
+#endif
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -119,8 +121,11 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Add)
             {
-                //                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::add);
+#ifdef NGRAPH_USE_TVM
                 BUILD_TVM_BINARY_ELEMWISE_FUNCTOR(topi::add);
+#else
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::add);
+#endif
             }
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Subtract)
@@ -137,8 +142,11 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Divide)
             {
-                //                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::divide);
+#ifdef NGRAPH_USE_TVM
                 BUILD_TVM_BINARY_ELEMWISE_FUNCTOR(topi::divide);
+#else
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::divide);
+#endif
             }
 
             template <>
@@ -285,8 +293,11 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Relu)
             {
-                //BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::relu);
+#ifdef NGRAPH_USE_TVM
                 BUILD_TVM_RELU_FUNCTOR;
+#else
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::relu);
+#endif
             }
 
             template <>
@@ -304,8 +315,11 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Exp)
             {
-                //BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::exp);
+#ifdef NGRAPH_USE_TVM
                 BUILD_TVM_UNARY_ELEMWISE_FUNCTOR(topi::exp);
+#else
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::exp);
+#endif
             }
 
             template <>

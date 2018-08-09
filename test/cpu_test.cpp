@@ -192,8 +192,3 @@ TEST(cpu_test, mkldnn_layouts)
 
     EXPECT_EQ(vector<float>{expected_result}, rv);
 }
-
-TEST(cpu_test, tvm_simple)
-{
-    //    ngraph::runtime::cpu::tvm_test();
-}

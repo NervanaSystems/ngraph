@@ -32,9 +32,11 @@ set(HEADER_SEARCH_DEFINES
     "MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\""
     "CLANG_BUILTIN_HEADERS_PATH=\"${CLANG_INCLUDE_DIR}\""
     "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
-    "TVM_HEADERS_PATH=\"${TVM_INCLUDE_DIR}\""
 )
 
+#if (NGRAPH_USE_TVM_ENABLE)
+#    list(APPEND HEADER_SEARCH_DEFINES "TVM_HEADERS_PATH=\"${TVM_INCLUDE_DIR}\"")
+#endif()
 if(NGRAPH_TBB_ENABLE)
     list(APPEND HEADER_SEARCH_DEFINES "TBB_HEADERS_PATH=\"${TBB_ROOT}/include\"")
     list(APPEND HEADER_SEARCH_DEFINES "NGRAPH_TBB_ENABLE")
@@ -51,6 +53,9 @@ endif()
 
 add_executable(resource_generator EXCLUDE_FROM_ALL ${SRC})
 add_dependencies(resource_generator ext_llvm ext_eigen ext_mkldnn ext_tvm)
+#if (NGRAPH_USE_TVM_ENABLE)
+#    add_dependencies(resource_generator ext_tvm)
+#endif()
 
 set_source_files_properties(main.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
 

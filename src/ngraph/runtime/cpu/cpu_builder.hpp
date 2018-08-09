@@ -199,6 +199,7 @@
     };                                                                                             \
     functors.emplace_back(functor);
 
+#ifdef NGRAPH_USE_TVM
 #define BUILD_TVM_UNARY_ELEMWISE_FUNCTOR(OP)                                                       \
     auto& functors = external_function->get_functors();                                            \
     auto& tvm_instance = external_function->get_tvm_instance();                                    \
@@ -239,7 +240,7 @@
         kernel(tvm_instance, tvm_func, arg0_tensor, arg1_tensor, out0_tensor, element_count);      \
     };                                                                                             \
     functors.emplace_back(functor);
-
+#endif
 #define BUILD_BINARY_ELEMWISE_FUNCTOR(OP)                                                          \
     auto& functors = external_function->get_functors();                                            \
     std::function<void(void*, void*, void*, size_t)> kernel;                                       \

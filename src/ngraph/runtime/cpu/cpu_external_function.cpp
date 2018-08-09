@@ -156,7 +156,9 @@
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
+#ifdef NGRAPH_USE_TVM
 #include "ngraph/runtime/cpu/tvm_kernels.hpp"
+#endif
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/op/allreduce.hpp"
@@ -361,7 +363,9 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     }
 
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
+#ifdef NGRAPH_USE_TVM
     m_tvm_intance.reset(new TVMInstance());
+#endif
 
     ngraph::pass::Manager pass_manager;
 
@@ -1113,7 +1117,9 @@ void runtime::cpu::CPU_ExternalFunction::build()
     }
 
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
+#ifdef NGRAPH_USE_TVM
     m_tvm_instance.reset(new TVMInstance());
+#endif
 
     ngraph::pass::Manager pass_manager;
 

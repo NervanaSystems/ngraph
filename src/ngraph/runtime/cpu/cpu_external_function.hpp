@@ -50,7 +50,9 @@ namespace ngraph
             class CPU_ExternalFunction;
             class CPU_Emitter;
             class CPU_CallFrame;
+#ifdef NGRAPH_USE_TVM
             class TVMInstance;
+#endif
 
 #if !defined(NGRAPH_DEX_ONLY)
 
@@ -107,10 +109,12 @@ namespace ngraph
                 {
                     return m_mkldnn_emitter;
                 }
+#ifdef NGRAPH_USE_TVM
                 const std::unique_ptr<TVMInstance>& get_tvm_instance() const
                 {
                     return m_tvm_instance;
                 }
+#endif
 
                 const std::string& get_function_name() const { return m_function_name; }
                 const std::shared_ptr<ngraph::Function> get_function() { return m_function; }
@@ -230,7 +234,9 @@ namespace ngraph
                 std::unordered_map<std::string, std::shared_ptr<CPU_ExternalFunction>> callees;
                 bool m_is_built;
                 bool m_direct_execution;
+#ifdef NGRAPH_USE_TVM
                 std::unique_ptr<TVMInstance> m_tvm_instance;
+#endif
             };
         }
     }
