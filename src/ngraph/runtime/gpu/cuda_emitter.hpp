@@ -45,6 +45,7 @@ namespace ngraph
                 size_t build_primitive(const op::Softmax* node);
                 size_t build_primitive(const op::Convolution* node);
                 size_t build_primitive(const op::MaxPool* node);
+                size_t build_primitive(const op::ReplaceSlice* node);
 
             public:
                 size_t build_pad(const std::array<std::string, 2>& dtypes,
