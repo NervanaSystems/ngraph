@@ -53,6 +53,13 @@ namespace ngraph
                                           arg_shape.size(),
                                           runtime::cpu::kernel::reverse_sequence_sli32);
                 }
+                else if (args[1].get_element_type() == element::f32)
+                {
+                    SELECT_KERNEL_BY_RANK(kernel,
+                                          args[0].get_element_type(),
+                                          arg_shape.size(),
+                                          runtime::cpu::kernel::reverse_sequence_slf32);
+                }
                 else
                 {
                     throw ngraph_error("Unsupported sequence length type " +
