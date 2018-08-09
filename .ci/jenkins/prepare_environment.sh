@@ -18,7 +18,7 @@
 
 set -x
 
-# Install nGraph in /root/ngraph
+# Install nGraph in /root
 cd /root
 mkdir -p ./build
 cd ./build
@@ -33,3 +33,14 @@ git clone --recursive -b allow-nonconstructible-holders https://github.com/jager
 export PYBIND_HEADERS_PATH="/root/python/pybind11"
 export NGRAPH_CPP_BUILD_PATH="/root/ngraph_dist"
 python3 setup.py bdist_wheel
+
+# Go to mounted directory and pull NGraph-Onnx if needed
+cd /home
+if [ -e ./ngraph-onnx ]; then
+    cd ./ngraph-onnx
+    git checkout master
+    git pull origin master
+else
+    # clone master branch
+    git clone --single-branch https://github.com/NervanaSystems/ngraph-onnx.git -b master
+fi

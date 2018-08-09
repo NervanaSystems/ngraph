@@ -49,28 +49,28 @@ def RunDockerContainers(configurationMaps) {
                                 --name=${configMap["projectName"]} \
                                 --version=${configMap["name"]} \
                                 --container_name=${configMap["dockerContainerName"]} \
-                                --volumes="-v ${WORKSPACE}/${BUILD_NUMBER}:/logs -v ${WORKSPACE}/${BUILD_NUMBER}/ngraph:/root"
+                                --volumes="-v ${WORKSPACE}/${BUILD_NUMBER}:/logs -v ${HOME}/NGRAPH_CI:/home -v ${WORKSPACE}/${BUILD_NUMBER}/ngraph:/root"
         """
     }
     UTILS.CreateStage("Run_docker_containers", runContainerMethod, configurationMaps)
 }
 
-def BuildNgraph(configurationMaps) {
-    Closure buildNgraphMethod = { configMap ->
+def PrepareEnvironment(configurationMaps) {
+    Closure prepareEnvironmentMethod = { configMap ->
         UTILS.PropagateStatus("Run_docker_containers", configMap["dockerContainerName"])
         sh """
             docker exec ${configMap["dockerContainerName"]} ./root/${CI_ROOT}/build_ngraph.sh
         """
     }
-    UTILS.CreateStage("Build_NGraph", buildNgraphMethod, configurationMaps)
+    UTILS.CreateStage("Prepare_environment", prepareEnvironmentMethod, configurationMaps)
 }
 
 def RunToxTests(configurationMaps) {
     Closure runToxTestsMethod = { configMap ->
-        UTILS.PropagateStatus("Build_NGraph", configMap["dockerContainerName"])
+        UTILS.PropagateStatus("Prepare_environment", configMap["dockerContainerName"])
         sh """
-            NGRAPH_WHL=\$(docker exec ${configMap["dockerContainerName"]} find /root/ngraph/python/dist/ -name 'ngraph*.whl')
-            docker exec -e TOX_INSTALL_NGRAPH_FROM=\${NGRAPH_WHL} ${configMap["dockerContainerName"]} tox -c /root
+            NGRAPH_WHL=\$(docker exec ${configMap["dockerContainerName"]} find /root/python/dist/ -name 'ngraph*.whl')
+            docker exec -e TOX_INSTALL_NGRAPH_FROM=\${NGRAPH_WHL} ${configMap["dockerContainerName"]} tox -c /home/ngraph-onnx/tox.ini
         """
     }
     UTILS.CreateStage("Run_tox_tests", runToxTestsMethod, configurationMaps)
