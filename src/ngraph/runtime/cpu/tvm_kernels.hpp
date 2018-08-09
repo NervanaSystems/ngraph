@@ -155,7 +155,7 @@ namespace ngraph
                 tvm::PackedFunc relu_builder(const std::unique_ptr<TVMInstance>& tvm_instance)
                 {
                     throw ngraph_error(
-                        "tvm_kernel::unary_elemwise_builder() instantiated with "
+                        "tvm_kernel::relu_builder() instantiated with "
                         "unsupported ElementType");
                 }
 

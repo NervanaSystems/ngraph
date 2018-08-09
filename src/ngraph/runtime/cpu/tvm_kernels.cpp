@@ -86,6 +86,7 @@ void tvm_kernel::unary_elemwise_kernel<float>(const std::unique_ptr<TVMInstance>
                                               void* output,
                                               size_t count)
 {
+    std::cout << "running tvm_kernel::unary_elemwise_kernel" << std::endl;
     int64_t dlshape[] = {static_cast<int64_t>(count)};
     DLTensor a = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, input);
     DLTensor r = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, output);
@@ -123,6 +124,7 @@ void tvm_kernel::binary_elemwise_kernel<float>(const std::unique_ptr<TVMInstance
                                                void* output,
                                                size_t count)
 {
+    std::cout << "running tvm_kernel::binary_elemwise_kernel" << std::endl;
     int64_t dlshape[] = {static_cast<int64_t>(count)};
     DLTensor a = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, input0);
     DLTensor b = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, input1);
