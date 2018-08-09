@@ -70,6 +70,7 @@ namespace ngraph
                         break;
                     default:
                         throw std::runtime_error("Encountered unhandled cudnnDataType_t");
+                        break;
                     }
                     return r;
                 }
