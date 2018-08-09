@@ -14,6 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 #pragma once
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
 
 #include <list>
 #include <memory>
@@ -58,17 +60,8 @@ namespace ngraph
                     case CUDNN_DATA_INT32:
                         r = m_host_parameters->cache(static_cast<int32_t>(value));
                         break;
-                    case CUDNN_DATA_HALF:
-                    case CUDNN_DATA_INT8x4:
-#if CUDNN_VERSION >= 7100
-                    case CUDNN_DATA_UINT8:
-                    case CUDNN_DATA_UINT8x4:
-#endif
-#if CUDNN_VERSION >= 7200
-                    case CUDNN_DATA_INT8x32:
-#endif
-                        std::string err = "datatype is not supported by cuDNN";
-                        throw std::runtime_error(err);
+                    default:
+                        throw std::runtime_error("Encountered unhandled cudnnDataType_t during compilation.");
                         break;
                     }
                     return r;
@@ -80,3 +73,5 @@ namespace ngraph
         }
     }
 }
+
+#pragma clang diagnostic pop
