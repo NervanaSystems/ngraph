@@ -67,6 +67,9 @@ namespace ngraph
 #endif
                         std::string err = "datatype is not supported by cuDNN";
                         throw std::runtime_error(err);
+                        break;
+                    default:
+                        throw std::runtime_error("Encountered unhandled cudnnDataType_t");
                     }
                     return r;
                 }
