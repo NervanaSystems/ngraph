@@ -66,7 +66,7 @@ bool pass::MemoryVisualize::run_on_module(vector<shared_ptr<ngraph::Function>>& 
             size_t temp_max_size = 0;
             for (shared_ptr<Node> node : nodes)
             {
-                tensors.insert(node->liveness_live_list.begin(), node->liveness_live_list.end());
+                tensors.insert(node->liveness_new_list.begin(), node->liveness_new_list.end());
             }
             for (descriptor::Tensor* tensor : tensors)
             {
@@ -95,89 +95,87 @@ bool pass::MemoryVisualize::run_on_module(vector<shared_ptr<ngraph::Function>>& 
     return false;
 }
 
-shared_ptr<Node> pass::MemoryVisualize::find_largest_op(const list<shared_ptr<Node>>& nodes)
+unordered_set<const descriptor::Tensor*>
+    pass::MemoryVisualize::find_largest_op(const list<shared_ptr<Node>>& nodes)
 {
-    shared_ptr<Node> largest_op = nullptr;
     size_t largest_size = 0;
+    unordered_set<const descriptor::Tensor*> liveness_list;
+    unordered_set<const descriptor::Tensor*> largest_live_list;
     for (shared_ptr<Node> exop : nodes)
     {
         size_t size = 0;
-        for (const descriptor::Tensor* tensor : exop->liveness_live_list)
+        for (const descriptor::Tensor* tensor : exop->liveness_new_list)
+        {
+            liveness_list.insert(tensor);
+            size += tensor->size();
+        }
+        for (const descriptor::Tensor* tensor : liveness_list)
         {
             size += tensor->size();
         }
         if (size > largest_size)
         {
             largest_size = size;
-            largest_op = exop;
+            largest_live_list = liveness_list;
         }
     }
-    return largest_op;
+    return largest_live_list;
 }
 
 void pass::MemoryVisualize::draw_tensor_weight(ostream& file, const list<shared_ptr<Node>>& nodes)
 {
-    shared_ptr<Node> largest_op = find_largest_op(nodes);
+    unordered_set<const descriptor::Tensor*> largest_live_list = find_largest_op(nodes);
 
-    if (largest_op)
+    unordered_map<const descriptor::Tensor*, size_t> age_list;
+    vector<const descriptor::Tensor*> tensor_set;
+    unordered_map<const descriptor::Tensor*, shared_ptr<Node>> generator_op;
+    file << "<table>\n";
+    file << "    <tr>";
+    file << "<th align=\"left\">tensor</th>";
+    file << "<th align=\"right\">size</th>";
+    file << "<th align=\"right\">age</th>";
+    file << "<th align=\"right\">generator weight</th>";
+    file << "</tr>\n";
+    size_t i = 0;
+    for (shared_ptr<Node> exop : nodes)
     {
-        unordered_set<descriptor::Tensor*> largest_live;
-        for (descriptor::Tensor* tensor : largest_op->liveness_live_list)
+        for (const descriptor::Tensor* tensor : exop->liveness_new_list)
         {
-            largest_live.insert(tensor);
+            age_list[tensor] = i;
+            generator_op[tensor] = exop;
         }
-
-        unordered_map<const descriptor::Tensor*, size_t> age_list;
-        vector<const descriptor::Tensor*> tensor_set;
-        unordered_map<const descriptor::Tensor*, shared_ptr<Node>> generator_op;
-        file << "<table>\n";
-        file << "    <tr>";
-        file << "<th align=\"left\">tensor</th>";
-        file << "<th align=\"right\">size</th>";
-        file << "<th align=\"right\">age</th>";
-        file << "<th align=\"right\">generator weight</th>";
-        file << "</tr>\n";
-        size_t i = 0;
-        for (shared_ptr<Node> exop : nodes)
+        for (const descriptor::Tensor* tensor : exop->liveness_free_list)
         {
-            for (const descriptor::Tensor* tensor : exop->liveness_new_list)
-            {
-                age_list[tensor] = i;
-                generator_op[tensor] = exop;
-            }
-            for (const descriptor::Tensor* tensor : exop->liveness_free_list)
-            {
-                size_t start = age_list[tensor];
-                age_list[tensor] = (i - start);
-                tensor_set.push_back(tensor);
-            }
-            i++;
+            size_t start = age_list[tensor];
+            age_list[tensor] = (i - start);
+            tensor_set.push_back(tensor);
         }
-        sort(tensor_set.begin(),
-             tensor_set.end(),
-             [](const descriptor::Tensor* t1, const descriptor::Tensor* t2) {
-                 return t1->size() < t2->size();
-             });
-        for (const descriptor::Tensor* tensor : tensor_set)
-        {
-            int generator_weight = compute_op_weight(generator_op[tensor]);
-            if (contains(largest_live, tensor))
-            {
-                file << "    <tr style=\"background-color: #f0c0f0\">";
-            }
-            else
-            {
-                file << "    <tr>";
-            }
-            file << "<td>" << tensor->get_name() << "</td>";
-            file << "<td align=\"right\">" << tensor->size() << "</td>";
-            file << "<td align=\"right\">" << age_list[tensor] << "</td>";
-            file << "<td align=\"right\">" << generator_weight << "/td>";
-            file << "</tr>\n";
-        }
-
-        file << "</table>\n";
+        i++;
     }
+    sort(tensor_set.begin(),
+         tensor_set.end(),
+         [](const descriptor::Tensor* t1, const descriptor::Tensor* t2) {
+             return t1->size() < t2->size();
+         });
+    for (const descriptor::Tensor* tensor : tensor_set)
+    {
+        int generator_weight = compute_op_weight(generator_op[tensor]);
+        if (contains(largest_live_list, tensor))
+        {
+            file << "    <tr style=\"background-color: #f0c0f0\">";
+        }
+        else
+        {
+            file << "    <tr>";
+        }
+        file << "<td>" << tensor->get_name() << "</td>";
+        file << "<td align=\"right\">" << tensor->size() << "</td>";
+        file << "<td align=\"right\">" << age_list[tensor] << "</td>";
+        file << "<td align=\"right\">" << generator_weight << "/td>";
+        file << "</tr>\n";
+    }
+
+    file << "</table>\n";
 }
 
 void pass::MemoryVisualize::draw_histogram(ostream& file, const list<shared_ptr<Node>>& nodes)
@@ -187,7 +185,7 @@ void pass::MemoryVisualize::draw_histogram(ostream& file, const list<shared_ptr<
     size_t offset = 200;
     size_t width = 1000;
     size_t scale = width - offset;
-    size_t line_spacing = stroke_width * 1.5;
+    size_t line_spacing = static_cast<size_t>(stroke_width * 1.5);
     size_t line_count = 0;
     for (shared_ptr<Node> node : nodes)
     {
@@ -205,7 +203,7 @@ void pass::MemoryVisualize::draw_histogram(ostream& file, const list<shared_ptr<
         float footprint = float(MemoryVisualize::memory_footprint(node));
         y += line_spacing;
         size_t x1 = offset;
-        size_t x2 = ((usage / memory_footprint) * scale) + offset;
+        size_t x2 = static_cast<size_t>(((usage / memory_footprint) * scale) + offset);
         file << "<text x=\"" << 0 << "\" y=\"" << y + text_offset << "\" fill=\""
              << "black"
              << "\">" << node->get_name() << "</text>\n";
@@ -213,7 +211,7 @@ void pass::MemoryVisualize::draw_histogram(ostream& file, const list<shared_ptr<
              << "\"";
         file << " style=\"stroke:forestgreen;stroke-width:" << stroke_width << "\" />\n";
         x1 = x2;
-        x2 = ((footprint / memory_footprint) * scale) + offset;
+        x2 = static_cast<size_t>(((footprint / memory_footprint) * scale) + offset);
         file << "<line x1=\"" << x1 << "\" y1=\"" << y << "\" x2=\"" << x2 << "\" y2=\"" << y
              << "\"";
         file << " style=\"stroke:firebrick;stroke-width:" << stroke_width << "\" />\n";
@@ -243,11 +241,11 @@ int pass::MemoryVisualize::compute_op_weight(const shared_ptr<Node> exop)
     int mass = 0;
     for (const descriptor::Tensor* tensor : exop->liveness_new_list)
     {
-        mass += tensor->size();
+        mass += static_cast<int>(tensor->size());
     }
     for (const descriptor::Tensor* tensor : exop->liveness_free_list)
     {
-        mass -= tensor->size();
+        mass -= static_cast<int>(tensor->size());
     }
     return mass;
 }

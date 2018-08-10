@@ -87,7 +87,8 @@ namespace ngraph
                 template <typename T>
                 inline T get_valid_array_index(T left, T right)
                 {
-                    return (left >= 0) ? std::min(left, right) : std::max((T)0, right + left);
+                    return (left >= 0) ? std::min(left, right)
+                                       : std::max(static_cast<T>(0), right + left);
                 }
 
                 inline std::shared_ptr<ngraph::op::Slice>
@@ -97,7 +98,7 @@ namespace ngraph
                                   std::vector<std::size_t> ends)
                 {
                     std::vector<std::size_t> upper_bounds{node->get_shape()};
-                    std::vector<std::size_t> lower_bounds{upper_bounds.size()};
+                    std::vector<std::size_t> lower_bounds(upper_bounds.size());
                     for (std::size_t index{0}; index < axes.size(); ++index)
                     {
                         std::size_t axis{axes.at(index)};

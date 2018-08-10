@@ -108,8 +108,10 @@ namespace ngraph
                 return matched;
             }
 
-            bool process_match(graph_rewrite_callback callback = nullptr);
+            bool is_contained_match(const NodeVector& exclusions = {}, bool ignore_unused = true);
 
+            bool process_match(graph_rewrite_callback callback = nullptr);
+            NodeVector get_matched_nodes() { return m_matched_list; }
             void reset() {}
             std::string get_name() { return m_name; }
             std::shared_ptr<Node> get_pattern() { return m_pattern_node; }
@@ -124,6 +126,16 @@ namespace ngraph
             friend op::Label; //TODO: refine to match_class
 
         protected:
+            void add_node(std::shared_ptr<Node> node) { m_matched_list.push_back(node); }
+            bool abort_match(size_t watermark, bool matched)
+            {
+                if (!matched)
+                {
+                    m_matched_list.erase(m_matched_list.begin() + watermark, m_matched_list.end());
+                }
+                return matched;
+            }
+
             bool virtual match_node(const std::shared_ptr<Node>& pattern_node,
                                     const std::shared_ptr<Node>& graph_node,
                                     PatternMap& pattern_map);
@@ -135,6 +147,7 @@ namespace ngraph
             std::shared_ptr<Node> m_match_root;
             std::shared_ptr<Node> m_pattern_node;
             PatternMap m_pattern_map;
+            NodeVector m_matched_list;
 
         private:
             static std::string pad(size_t num) { return std::string(num, ' '); }
