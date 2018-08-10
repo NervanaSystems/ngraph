@@ -2603,7 +2603,7 @@ static void check_bounded_relu(Shape param_shape, float constant_val)
 
     auto cpu_f = make_function(param_shape, constant_val);
     auto int_f = make_function(param_shape, constant_val);
-    test::Uniform<float> rng(0.0f, 1.0f);
+    test::Uniform<float> rng(-10.0f, 10.0f);
     vector<vector<float>> args;
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
