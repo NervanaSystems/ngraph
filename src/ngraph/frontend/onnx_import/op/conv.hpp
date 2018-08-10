@@ -18,16 +18,16 @@
 
 #include "ngraph/frontend/onnx_import/exceptions.hpp"
 #include "ngraph/frontend/onnx_import/node.hpp"
+#include "ngraph/frontend/onnx_import/util/broadcasting.hpp"
 #include "ngraph/frontend/onnx_import/util/conv_pool.hpp"
 
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/strides.hpp"
-
-// #include "ngraph/op/add.hpp"
-// #include "ngraph/op/broadcast.hpp"
 
 namespace ngraph
 {
@@ -87,15 +87,11 @@ namespace ngraph
                 }
 
                 auto bias = inputs.at(2);
-                // const Shape& new_shape = conv_node->get_shape();
+                const Shape& new_shape = conv_node->get_shape();
 
-                throw error::not_supported_error("Conv", node.get_name(), "bias input");
-
-                // auto broadcasted_bias = std::make_shared<ngraph::op::Broadcast>(bias, new_shape,
-                //      get_broadcast_axes(new_shape, bias->get_shape(), 1)
-                // // TODO impl get_broadcast_axes
-                // conv_node = std::make_shared<ngraph::op::Add>(conv_node, );
-                // return conv_node;
+                auto broadcasted_bias = std::make_shared<ngraph::op::Broadcast>(
+                    bias, new_shape, util::get_broadcast_axes(new_shape, bias->get_shape(), 1));
+                return NodeVector{std::make_shared<ngraph::op::Add>(conv_node, broadcasted_bias)};
             }
 
         } // namespace op

@@ -182,3 +182,22 @@ TEST_F(ONNXConv2DTest, model_conv_with_strides_and_assymmetric_padding)
     auto result_vectors = execute(function, m_args, "CPU");
     EXPECT_EQ(expected_output, result_vectors.front());
 }
+
+TEST_F(ONNXConv2DTest, model_conv_with_strides_padding_bias)
+{
+    // Convolution with strides=2 and padding=1 and bias=2
+    // auto function{ngraph::onnx_import::import_onnx_function(
+    //     ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/conv_with_strides_padding_bias.onnx"))};
+
+    // std::vector<std::vector<float>> args{m_args};
+    // args.emplace_back(std::vector<float>{2.});
+
+    // // (1, 1, 4, 3)
+    // auto expected_output =
+    //     ngraph::test::NDArray<float, 4>(
+    //         {{{{14., 29., 26.}, {65., 110., 83.}, {125., 200., 143.}, {114., 179., 126.}}}})
+    //         .get_vector();
+
+    // auto result_vectors = execute(function, args, "CPU");
+    // EXPECT_EQ(expected_output, result_vectors.front());
+}
