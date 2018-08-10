@@ -34,22 +34,6 @@ namespace ngraph
                 }
             };
 
-            struct file_open : ngraph_error
-            {
-                explicit file_open(const std::string& path)
-                    : ngraph_error{"failure opening file:" + path}
-                {
-                }
-            };
-
-            struct stream_parse : ngraph_error
-            {
-                explicit stream_parse(std::istream&)
-                    : ngraph_error{"failure parsing data from the stream"}
-                {
-                }
-            };
-
             namespace op
             {
                 struct op_value_error : ngraph_error
