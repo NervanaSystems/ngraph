@@ -35,15 +35,68 @@ namespace ngraph
                 auto& functors = external_function->get_functors();
                 auto& tensor_data = external_function->get_tensor_data();
 
+                auto broadcast = static_cast<const ngraph::op::Broadcast*>(node);
+                auto broadcast_axes = broadcast->get_broadcast_axes();
+
                 auto& arg_tensor = tensor_data[args[0].get_name()];
                 auto& out_tensor = tensor_data[out[0].get_name()];
 
                 auto arg_shape = args[0].get_shape();
                 auto out_shape = out[0].get_shape();
+
+                // TODO(jmenon): Shape transformations, rank reduction etc. needs to be general
+                // and not in any one builder. Move this to the Halide analysis phase.
+
+                auto squeezed_out_shape = Shape{};
+                for (int i = 0; i < out_shape.size(); i++)
+                {
+                    if (out_shape[i] != 1)
+                    {
+                        squeezed_out_shape.push_back(out_shape[i]);
+                    }
+                    else
+                    {
+                        broadcast_axes.erase(i);
+                    }
+                }
+                out_shape = squeezed_out_shape;
+
+                if (broadcast_axes.size() > 1)
+                {
+                    auto innermost_axis = broadcast_axes.end();
+                    advance(innermost_axis, -1);
+                    auto reduced = Shape{};
+                    if (broadcast_axes.size() == (*innermost_axis - *broadcast_axes.begin() + 1))
+                    {
+                        size_t reduced_count = 1;
+                        for (auto axis : broadcast_axes)
+                        {
+                            reduced_count *= out_shape[axis];
+                        }
+
+                        bool done = false;
+                        for (int i = 0; i < out_shape.size(); i++)
+                        {
+                            if (!broadcast_axes.count(i))
+                            {
+                                reduced.push_back(out_shape[i]);
+                            }
+                            else
+                            {
+                                if (!done)
+                                {
+                                    reduced.push_back(reduced_count);
+                                    done = true;
+                                }
+                            }
+                        }
+                        broadcast_axes = AxisSet{*broadcast_axes.begin()};
+                        out_shape = reduced;
+                    }
+                }
+
                 auto arg_rank = arg_shape.size();
                 auto out_rank = out_shape.size();
-
-                auto broadcast = static_cast<const ngraph::op::Broadcast*>(node);
 
                 if (broadcast->get_broadcast_axes().empty())
                 {
@@ -60,18 +113,18 @@ namespace ngraph
                     arg_rank = 1;
                     arg_shape = Shape{1};
                 }
-                auto new_shape = Shape(out_rank, 1);
-                const auto& broadcast_axes = broadcast->get_broadcast_axes();
+
+                auto expanded_input_shape = Shape(out_rank, 1);
                 size_t i = 0;
                 for (size_t j = 0; j < out_rank; j++)
                 {
                     if (broadcast_axes.count(j))
                     {
-                        new_shape[j] = 1;
+                        expanded_input_shape[j] = 1;
                     }
                     else
                     {
-                        new_shape[j] = arg_shape[i++];
+                        expanded_input_shape[j] = arg_shape[i++];
                     }
                 }
 
@@ -80,8 +133,8 @@ namespace ngraph
                 SELECT_KERNEL_BY_RANK(
                     kernel, args[0].get_element_type(), out_rank, runtime::cpu::kernel::broadcast);
 
-                auto functor = [&, kernel, new_shape, out_shape](CPURuntimeContext* ctx) {
-                    kernel(arg_tensor, out_tensor, new_shape, out_shape);
+                auto functor = [&, kernel, expanded_input_shape, out_shape](CPURuntimeContext* ctx) {
+                    kernel(arg_tensor, out_tensor, expanded_input_shape, out_shape);
                 };
                 functors.emplace_back(functor);
             }
