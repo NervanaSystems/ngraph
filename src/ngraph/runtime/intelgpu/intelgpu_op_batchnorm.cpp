@@ -216,6 +216,7 @@ void runtime::intelgpu::do_batch_norm_operation(cldnn::topology& topology,
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
     const string entry_point_name = "batch_norm_" + output_name;
     codegen::CodeWriter writer;
+    vector<size_t> gws;
 
     writer << "__kernel void " << entry_point_name << "( const __global float input"
            << array_dims(input_shape) << ", const __global float gamma" << array_dims(gamma_shape)
@@ -227,45 +228,17 @@ void runtime::intelgpu::do_batch_norm_operation(cldnn::topology& topology,
     writer.block_begin();
     { // Main function body
 
-        // Loop for Channel axis 1
-        writer << "for (uint i" << channel_axis << " = 0; i" << channel_axis << " < "
-               << output_shape.at(channel_axis) << "; ++i" << channel_axis << ")\n";
-        writer.block_begin();
-        {
-            size_t var_idx = 0;
-            // Main loops
-            for (auto const& i : output_shape)
-            {
-                if (var_idx != channel_axis)
-                {
-                    writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i
-                           << "; ++i" << var_idx << ")\n";
-                    writer.block_begin();
-                }
-                ++var_idx;
-            }
+        gws = generate_loops(writer, output_shape, true);
 
-            writer << "float normalized = (input" << access_dims(input_shape) << " - mean[i"
-                   << channel_axis << "]) / ("
-                   << "sqrt(variance[i" << channel_axis << "] + " << eps << ")"
-                   << ");\n";
+        writer << "float normalized = (input" << access_dims(input_shape) << " - mean[i"
+               << channel_axis << "]) / ("
+               << "sqrt(variance[i" << channel_axis << "] + " << eps << ")"
+               << ");\n";
 
-            writer << "output" << access_dims(output_shape) << " = normalized * gamma[i"
-                   << channel_axis << "] + beta[i" << channel_axis << "];\n";
+        writer << "output" << access_dims(output_shape) << " = normalized * gamma[i" << channel_axis
+               << "] + beta[i" << channel_axis << "];\n";
 
-            var_idx = 0;
-            // Closing brackets for main loops
-            for (auto const& i : output_shape)
-            {
-                if (var_idx != channel_axis)
-                {
-                    writer.block_end();
-                }
-                ++var_idx;
-            }
-
-        } // Closing brackets for Channel axis loop
-        writer.block_end();
+        generate_loops(writer, output_shape, false);
 
     } // Main function body
     writer.block_end();
@@ -279,6 +252,6 @@ void runtime::intelgpu::do_batch_norm_operation(cldnn::topology& topology,
                                                     get_kernel_args(5, 1),
                                                     "",
                                                     layout,
-                                                    {1});
+                                                    gws);
     topology.add(op_batch_norm);
 }
