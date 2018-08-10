@@ -44,10 +44,63 @@ Alphabetical list of Core ``ops``
 
 Not currently a comprehensive list.  
 
-.. tabularcolumns:: column spec
+.. hlist:: 
+   :columns: 3
+
+   * :doc:`abs`
+   * :doc:`acos`
+   * :doc:`add`
+   * :doc:`allreduce`
+   * :doc:`and`
+   * :doc:`asin`
+   * :doc:`atan`
+   * :doc:`avg_pool`
+   * :doc:`avg_pool_backprop`
+   * :doc:`batch_norm`
+   * :doc:`broadcast`
+   * :doc:`ceiling`
+   * :doc:`concat`
+   * :doc:`constant`
+   * :doc:`convert`
+   * :doc:`convolution`
+   * :doc:`cos`
+   * :doc:`cosh`
+   * :doc:`divide`
+   * :doc:`dot`
+   * :doc:`equal`
+   * :doc:`exp`
+   * :doc:`floor`
+   * :doc:`function_call`
+   * :doc:`get_output_element`
+   * :doc:`greater_eq`
+   * :doc:`greater`
+   * :doc:`less_eq`
+   * :doc:`less`
+   * :doc:`log`
+   * :doc:`max`
+   * :doc:`maximum`
+   * :doc:`max_pool` 
+   * :doc:`min`
+   * :doc:`minimum`
+   * :doc:`multiply`
+   * :doc:`negative`
+   * :doc:`not_equal`
+   * :doc:`not`
+   * :doc:`one_hot`
+   * :doc:`or`
+   * :doc:`pad`
+   * :doc:`parameter`
+   * :doc:`power`
+   * :doc:`product`
+   * :doc:`relu`
+   * :doc:`sigmoid`
+   * :doc:`softmax`
+   * :doc:`tanh`
+
+
 
 .. toctree::
-   :maxdepth: 1
+   :hidden:
 
    abs.rst
    acos.rst

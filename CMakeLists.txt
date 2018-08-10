@@ -159,6 +159,10 @@ if (NGRAPH_USE_GOLD)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fuse-ld=gold")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=gold")
 endif()
+if(WIN32)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNOMINMAX")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_CRT_SECURE_NO_WARNINGS")
+endif()
 
 include(unit_test_control)
 set(UNIT_TEST_CONFIG_LIST "" CACHE INTERNAL "")
@@ -217,6 +221,13 @@ else()
     include(cmake/external_llvm.cmake)
 endif()
 include(cmake/external_tbb.cmake)
+
+if (NGRAPH_HALIDE)
+    message(WARNING "Halide build system integration is currently using an older LLVM release \
+                     and is not expected to work across most build environments. Consider \
+                     disabling it till this message goes away")
+    include(cmake/external_halide.cmake)
+endif()
 
 add_subdirectory(src)
 

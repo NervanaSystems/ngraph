@@ -44,6 +44,8 @@ namespace ngraph
                         std::function<void(std::shared_ptr<Node>)> f);
     void traverse_nodes(const Function* p, std::function<void(std::shared_ptr<Node>)> f);
 
+    void traverse_nodes(const NodeVector& io_nodes, std::function<void(std::shared_ptr<Node>)> f);
+
     void traverse_functions(std::shared_ptr<Function> p,
                             std::function<void(std::shared_ptr<Function>)> f);
 

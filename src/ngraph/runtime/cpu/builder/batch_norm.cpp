@@ -22,6 +22,7 @@
 #include "ngraph/runtime/cpu/kernel/batchnorm.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -32,6 +33,7 @@ namespace ngraph
     {
         namespace cpu
         {
+            template <typename OP>
             static void build_batch_norm(CPU_ExternalFunction* external_function,
                                          const ngraph::Node* node,
                                          const std::vector<TensorViewWrapper>& args,
@@ -46,10 +48,7 @@ namespace ngraph
                 auto& arg2_tensor = tensor_data[args[2].get_name()];
                 auto& out0_tensor = tensor_data[out[0].get_name()];
 
-                const ngraph::op::BatchNorm* batchnorm =
-                    static_cast<const ngraph::op::BatchNorm*>(node);
-
-                shared_ptr<uint8_t> stacked_weights(new uint8_t[2 * args[0].get_size()]);
+                const OP* batchnorm = static_cast<const OP*>(node);
 
 // Kill clang diagnostics bug
 #pragma clang diagnostic push
@@ -60,6 +59,8 @@ namespace ngraph
                     args[1].get_size() * args[1].get_element_type().size()};
 
 #pragma clang diagnostic pop
+
+                shared_ptr<uint8_t> stacked_weights(new uint8_t[weight_sizes[0] + weight_sizes[1]]);
 
                 const float ops_scale = 1.f;
                 const float ops_alpha = -0.f; // relu negative slope
@@ -239,7 +240,8 @@ namespace ngraph
                 }
                 else
                 {
-                    build_batch_norm(external_function, node, args, out, false);
+                    build_batch_norm<ngraph::op::BatchNorm>(
+                        external_function, node, args, out, false);
                 }
             }
 
@@ -263,9 +265,6 @@ namespace ngraph
                 auto& out1_tensor = tensor_data[out[1].get_name()];
                 auto& out2_tensor = tensor_data[out[2].get_name()];
 
-                shared_ptr<uint8_t> stacked_weights(new uint8_t[2 * args[0].get_size()]);
-                shared_ptr<uint8_t> stacked_dweights(new uint8_t[2 * args[0].get_size()]);
-
 // Kill clang diagnostics bug
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-braces"
@@ -275,6 +274,9 @@ namespace ngraph
                     args[1].get_size() * args[1].get_element_type().size()};
 
 #pragma clang diagnostic pop
+                shared_ptr<uint8_t> stacked_weights(new uint8_t[weight_sizes[0] + weight_sizes[1]]);
+                shared_ptr<uint8_t> stacked_dweights(
+                    new uint8_t[weight_sizes[0] + weight_sizes[1]]);
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto weights_shape = Shape{2, args[0].get_size()};
@@ -324,7 +326,18 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::BatchNormRelu)
+            {
+                if (!mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    throw ngraph_error("BatchNormRelu is only supported with 4-D MKLDNN kernel.");
+                }
+                build_batch_norm<ngraph::op::BatchNormRelu>(
+                    external_function, node, args, out, true);
+            }
             REGISTER_OP_BUILDER(BatchNorm);
+            REGISTER_OP_BUILDER(BatchNormRelu);
             REGISTER_OP_BUILDER(BatchNormBackprop);
         }
     }

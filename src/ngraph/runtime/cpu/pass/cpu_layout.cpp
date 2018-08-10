@@ -33,6 +33,7 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/relu.hpp"
@@ -1119,15 +1120,15 @@ namespace ngraph
                             auto op_annotations = reshape->get_op_annotations();
                             if (op_annotations)
                             {
-                                std::map<size_t, size_t> oi_pairs = {{0, 0}};
-                                op_annotations->set_in_place_oi_pairs(oi_pairs);
+                                // pass-through
+                                op_annotations->add_in_place_oi_pair({0, 0, false});
                             }
                             else
                             {
                                 op_annotations =
                                     std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                                std::map<size_t, size_t> oi_pairs = {{0, 0}};
-                                op_annotations->set_in_place_oi_pairs(oi_pairs);
+                                // pass-through
+                                op_annotations->add_in_place_oi_pair({0, 0, false});
                                 reshape->set_op_annotations(op_annotations);
                             }
                         }
@@ -1149,6 +1150,22 @@ namespace ngraph
                     }
                     else
                     {
+                        // Shape change only, tensor in native layout can be
+                        // forwarded to output
+                        auto op_annotations = reshape->get_op_annotations();
+                        if (op_annotations)
+                        {
+                            // pass-through
+                            op_annotations->add_in_place_oi_pair({0, 0, false});
+                        }
+                        else
+                        {
+                            op_annotations =
+                                std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                            // pass-through
+                            op_annotations->add_in_place_oi_pair({0, 0, false});
+                            reshape->set_op_annotations(op_annotations);
+                        }
                         set_native_layouts(external_function, node);
                     }
                 }
@@ -1176,6 +1193,22 @@ namespace ngraph
                 void CPULayout::LAYOUT_DECL(ngraph::op::Relu)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        vector<memory::desc> o_mds;
+                        o_mds.push_back(input_md);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        set_native_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::LRN)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         vector<memory::desc> o_mds;
@@ -1405,6 +1438,7 @@ namespace ngraph
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         auto concat = static_cast<const ngraph::op::Concat*>(node.get());
+
                         size_t concat_dim = concat->get_concatenation_axis();
                         auto result_desc = mkldnn_utils::create_default_mkldnn_md(
                             node.get(), 0, true, memory::format::any);
@@ -1548,6 +1582,7 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormBackprop>},
     {TI(ngraph::op::GetOutputElement),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::GetOutputElement>},
+    {TI(ngraph::op::LRN), &runtime::cpu::pass::CPULayout::layout<ngraph::op::LRN>},
     {TI(ngraph::op::Relu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Relu>},
     {TI(ngraph::op::Reshape), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Reshape>},
     {TI(ngraph::op::Result), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Result>},

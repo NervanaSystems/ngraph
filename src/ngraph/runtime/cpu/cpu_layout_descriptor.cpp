@@ -21,6 +21,8 @@
 
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+
 namespace ngraph
 {
     namespace runtime
