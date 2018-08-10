@@ -49,6 +49,7 @@ add_library(onnx_import STATIC
     onnx-operators.pb.cc
     attribute.cpp
     attribute.hpp
+    exceptions.hpp
     graph.cpp
     graph.hpp
     model.hpp
