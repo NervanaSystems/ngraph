@@ -28,9 +28,9 @@ RUN pip install tox
 COPY . /root/ngraph
 RUN mkdir /root/ngraph/build
 WORKDIR /root/ngraph/build
-RUN cmake ../ -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DCMAKE_INSTALL_PREFIX="~/ngraph_dist"
+RUN cmake ../ -DNGRAPH_CPU_ENABLE=FALSE -DNGRAPH_UNIT_TEST_ENABLE=FALSE -DDNGRAPH_TOOLS_ENABLE=FALSE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DCMAKE_INSTALL_PREFIX="~/ngraph_dist"
 RUN make style-check
-RUN make 
+RUN make
 RUN make install
 
 # Prepare nGraph Python API
