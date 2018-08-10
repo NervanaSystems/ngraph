@@ -20,11 +20,8 @@
 
 #include "ngraph/frontend/onnx_import/op/conv.hpp"
 
-#include "ngraph/coordinate_diff.hpp"
-#include "ngraph/strides.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
-#include "ngraph/op/op.hpp"
 #include "ngraph/op/slice.hpp"
 
 namespace ngraph
@@ -35,7 +32,7 @@ namespace ngraph
         {
             namespace detail
             {
-                inline std::shared_ptr<ngraph::op::Op>
+                std::shared_ptr<ngraph::op::Op>
                     make_ng_convolution(const std::shared_ptr<ngraph::Node>& data,
                                         const std::shared_ptr<ngraph::Node>& filters,
                                         const ngraph::Strides& strides,
@@ -96,7 +93,7 @@ namespace ngraph
 
             } // namespace  detail
 
-            } // namespace op
+        } // namespace op
 
     } // namespace onnx_import
 
