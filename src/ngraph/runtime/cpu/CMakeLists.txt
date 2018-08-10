@@ -27,6 +27,7 @@ set(SRC
     cpu_tensor_view_wrapper.cpp
     cpu_tensor_view.cpp
     cpu_tracing.cpp
+    builder/add.cpp
     builder/avg_pool.cpp
     builder/batch_norm.cpp
     builder/broadcast.cpp
