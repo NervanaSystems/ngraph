@@ -139,6 +139,7 @@ set (SRC
     pattern/matcher.cpp
     runtime/aligned_buffer.cpp
     runtime/backend.cpp
+    runtime/backend_manager.cpp
     runtime/host_tensor_view.cpp
     runtime/tensor_view.cpp
     serializer.cpp
