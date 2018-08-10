@@ -27,34 +27,68 @@ constexpr const uint32_t initial_buffer_size = 10 * 1024 * 1024;
 runtime::gpu::GPUMemoryManager::GPUMemoryManager(GPUPrimitiveEmitter* emitter)
     : m_buffer_offset(0)
     , m_buffered_mem(initial_buffer_size)
-    , m_workspace_manager(alignment)
-    , m_argspace(nullptr)
-    , m_workspace(nullptr)
-    , m_allocation_size(0)
+    , m_workspace_manager(runtime::gpu::GPUMemoryManager::alignment)
+    , m_argspace_mem(1, {nullptr, 0})
+    , m_workspace_mem(1, {nullptr, 0})
     , m_primitive_emitter(emitter)
 {
 }
 
+size_t runtime::gpu::GPUMemoryManager::get_allocation_size() const
+{
+    size_t allocation_size = 0;
+    for (auto const& alloc : m_argspace_mem)
+    {
+        allocation_size += alloc.size;
+    }
+    for (auto const& alloc : m_workspace_mem)
+    {
+        allocation_size += alloc.size;
+    }
+    return allocation_size;
+}
+
 runtime::gpu::GPUMemoryManager::~GPUMemoryManager()
 {
-    runtime::gpu::free_gpu_buffer(m_argspace);
-    runtime::gpu::free_gpu_buffer(m_workspace);
+    for (auto& alloc : m_argspace_mem)
+    {
+        runtime::gpu::free_gpu_buffer(alloc.ptr);
+    }
+    for (auto& alloc : m_workspace_mem)
+    {
+        runtime::gpu::free_gpu_buffer(alloc.ptr);
+    }
 }
 
 void runtime::gpu::GPUMemoryManager::allocate()
 {
+    if (m_workspace_manager.get_node_list().size() != 1)
+    {
+        throw std::runtime_error(
+            "Attempt to allocate memory while reservations are inprogress. Ensure all "
+            "GPUAllocators are closed before allocating.");
+    }
     if (m_buffer_offset)
     {
-        m_buffer_offset = pass::MemoryManager::align(m_buffer_offset, alignment);
-        m_argspace = runtime::gpu::create_gpu_buffer(m_buffer_offset);
-        runtime::gpu::cuda_memcpyHtD(m_argspace, m_buffered_mem.data(), m_buffer_offset);
-        m_allocation_size += m_buffer_offset;
+        m_buffer_offset = ngraph::pass::MemoryManager::align(
+            m_buffer_offset, runtime::gpu::GPUMemoryManager::alignment);
+        // the back most node is always empty, fill it here
+        m_argspace_mem.back().ptr = runtime::gpu::create_gpu_buffer(m_buffer_offset);
+        m_argspace_mem.back().size = m_buffer_offset;
+        // copy buffered kernel arguments to device
+        runtime::gpu::cuda_memcpyHtD(
+            m_argspace_mem.back().ptr, m_buffered_mem.data(), m_buffer_offset);
+        // add an empty node to the end of the list and zero offset
+        m_argspace_mem.push_back({nullptr, 0});
+        m_buffer_offset = 0;
     }
+
     auto workspace_size = m_workspace_manager.max_allocated();
     if (workspace_size)
     {
-        m_workspace = runtime::gpu::create_gpu_buffer(workspace_size);
-        m_allocation_size += workspace_size;
+        m_workspace_mem.back().ptr = runtime::gpu::create_gpu_buffer(workspace_size);
+        m_workspace_mem.back().size = workspace_size;
+        m_workspace_mem.push_back({nullptr, 0});
     }
 }
 
@@ -75,6 +109,11 @@ size_t runtime::gpu::GPUMemoryManager::queue_for_transfer(const void* data, size
     return offset;
 }
 
+runtime::gpu::GPUAllocator::GPUAllocator(GPUMemoryManager* mgr)
+    : m_manager(mgr)
+{
+}
+
 runtime::gpu::GPUAllocator::GPUAllocator(const GPUAllocator& g)
 {
     m_manager = g.m_manager;
@@ -84,19 +123,18 @@ runtime::gpu::GPUAllocator::GPUAllocator(const GPUAllocator& g)
 size_t runtime::gpu::GPUAllocator::reserve_argspace(const void* data, size_t size)
 {
     // add parameter data to host buffer that will be transfered to device
-    size = pass::MemoryManager::align(size, runtime::gpu::GPUMemoryManager::alignment);
+    size = ngraph::pass::MemoryManager::align(size, runtime::gpu::GPUMemoryManager::alignment);
     size_t offset = m_manager->queue_for_transfer(data, size);
-    // required to capture m_manager pointer
-    // directly rather than `this` pointer
-    auto manager = m_manager;
+    auto local = std::prev(m_manager->m_argspace_mem.end());
     // return a lambda that will yield the gpu memory address. this
     // should only be evaluated by the runtime invoked primitive
     gpu::memory_primitive mem_primitive = [=]() {
-        if (manager->m_argspace == nullptr)
+        void* argspace = (*local).ptr;
+        if (argspace == nullptr)
         {
             throw std::runtime_error("An attempt was made to use unallocated device memory.");
         }
-        auto gpu_mem = static_cast<uint8_t*>(manager->m_argspace);
+        auto gpu_mem = static_cast<uint8_t*>(argspace);
         return static_cast<void*>(gpu_mem + offset);
     };
     return m_manager->m_primitive_emitter->insert(mem_primitive);
@@ -106,32 +144,35 @@ size_t runtime::gpu::GPUAllocator::reserve_workspace(size_t size, bool zero_init
 {
     size_t offset = m_manager->m_workspace_manager.allocate(size);
     m_active.push(offset);
-    // required to capture m_manager pointer
-    // directly rather than `this` pointer
-    auto manager = m_manager;
+    auto local = std::prev(m_manager->m_workspace_mem.end());
     // return a lambda that will yield the gpu memory address. this
     // should only be evaluated by the runtime invoked primitive
     gpu::memory_primitive mem_primitive = [=]() {
-        if (manager->m_workspace == nullptr)
+        void* workspace = (*local).ptr;
+        if (workspace == nullptr)
         {
             throw std::runtime_error("An attempt was made to use unallocated device memory.");
         }
-        auto gpu_mem = static_cast<uint8_t*>(manager->m_workspace);
-        auto workspace = static_cast<void*>(gpu_mem + offset);
+        auto gpu_mem = static_cast<uint8_t*>(workspace);
+        auto workspace_ptr = static_cast<void*>(gpu_mem + offset);
         if (zero_initialize)
         {
-            runtime::gpu::cuda_memset(workspace, 0, size);
+            runtime::gpu::cuda_memset(workspace_ptr, 0, size);
         }
-        return workspace;
+        return workspace_ptr;
     };
     return m_manager->m_primitive_emitter->insert(mem_primitive);
 }
 
-runtime::gpu::GPUAllocator::~GPUAllocator()
+void runtime::gpu::GPUAllocator::close()
 {
     while (!m_active.empty())
     {
         m_manager->m_workspace_manager.free(m_active.top());
         m_active.pop();
     }
+}
+runtime::gpu::GPUAllocator::~GPUAllocator()
+{
+    this->close();
 }

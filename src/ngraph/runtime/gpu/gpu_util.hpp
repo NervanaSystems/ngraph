@@ -18,74 +18,12 @@
 
 #include <iostream>
 #include <memory>
-#include <sstream>
-#include <stdexcept>
-#include <stdint.h>
 #include <string>
 #include <tuple>
 #include <vector>
 
-#include <cublas_v2.h>
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <cudnn.h>
-#include <nvrtc.h>
+#include "ngraph/runtime/gpu/cuda_error_check.hpp"
 #include "ngraph/util.hpp"
-
-//why use "do...while.."
-//https://stackoverflow.com/questions/154136/why-use-apparently-meaningless-do-while-and-if-else-statements-in-macros
-#define NVRTC_SAFE_CALL(x)                                                                         \
-    do                                                                                             \
-    {                                                                                              \
-        nvrtcResult result = x;                                                                    \
-        if (result != NVRTC_SUCCESS)                                                               \
-        {                                                                                          \
-            throw std::runtime_error("\nerror: " #x " failed with error " +                        \
-                                     std::string(nvrtcGetErrorString(result)));                    \
-        }                                                                                          \
-    } while (0)
-
-#define CUDA_SAFE_CALL(x)                                                                          \
-    do                                                                                             \
-    {                                                                                              \
-        CUresult result = x;                                                                       \
-        if (result != CUDA_SUCCESS)                                                                \
-        {                                                                                          \
-            const char* msg;                                                                       \
-            cuGetErrorName(result, &msg);                                                          \
-            std::stringstream safe_call_ss;                                                        \
-            safe_call_ss << "\nerror: " #x " failed with error"                                    \
-                         << "\nfile: " << __FILE__ << "\nline: " << __LINE__ << "\nmsg: " << msg;  \
-            throw std::runtime_error(safe_call_ss.str());                                          \
-        }                                                                                          \
-    } while (0)
-
-#define CUDNN_SAFE_CALL(func)                                                                      \
-    do                                                                                             \
-    {                                                                                              \
-        cudnnStatus_t e = (func);                                                                  \
-        if (e != CUDNN_STATUS_SUCCESS)                                                             \
-        {                                                                                          \
-            auto msg = cudnnGetErrorString(e);                                                     \
-            std::stringstream safe_call_ss;                                                        \
-            safe_call_ss << "\nerror: " #func " failed with error"                                 \
-                         << "\nfile: " << __FILE__ << "\nline: " << __LINE__ << "\nmsg: " << msg;  \
-            throw std::runtime_error(safe_call_ss.str());                                          \
-        }                                                                                          \
-    } while (0)
-
-#define CUBLAS_SAFE_CALL(func)                                                                     \
-    do                                                                                             \
-    {                                                                                              \
-        cublasStatus_t e = (func);                                                                 \
-        if (e != CUBLAS_STATUS_SUCCESS)                                                            \
-        {                                                                                          \
-            std::stringstream safe_call_ss;                                                        \
-            safe_call_ss << "\nerror: " #func " failed with error"                                 \
-                         << "\nfile: " << __FILE__ << "\nline: " << __LINE__ << "\nmsg: " << e;    \
-            throw std::runtime_error(safe_call_ss.str());                                          \
-        }                                                                                          \
-    } while (0)
 
 namespace ngraph
 {
@@ -113,6 +51,41 @@ namespace ngraph
                 cuda_memcpyDtH(local.data(), p, size_in_bytes);
                 std::cout << "{" << ngraph::join(local) << "}" << std::endl;
             }
+
+            class StopWatch
+            {
+            public:
+                void start();
+                void stop();
+                size_t get_call_count();
+                size_t get_total_seconds();
+                size_t get_total_milliseconds();
+                size_t get_total_microseconds();
+                size_t get_total_nanoseconds();
+
+            private:
+                std::vector<cudaEvent_t> starts;
+                std::vector<cudaEvent_t> stops;
+                size_t m_total_count = 0;
+                size_t m_total_time_in_ns = 0;
+                bool m_active = false;
+            };
+
+            class StopWatchPool
+            {
+            public:
+                void allocate(size_t num)
+                {
+                    for (size_t i = 0; i < num; i++)
+                    {
+                        pool.push_back(StopWatch());
+                    }
+                }
+                StopWatch& get(size_t idx) { return pool[idx]; }
+                size_t size() { return pool.size(); }
+            private:
+                std::vector<StopWatch> pool;
+            };
         }
     }
 }

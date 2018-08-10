@@ -117,15 +117,16 @@ Right now the minimal version of Sphinx needed to build the documentation is
 Sphinx v. 1.6.5.  This can be installed with :command:`pip3`, either to a virtual 
 environment, or to your base system if you plan to contribute much core code or
 documentation. For C++ API docs that contain inheritance diagrams and collaboration
-diagrams which are helpful for framework integratons, or for building bridge code, 
-be sure you have a system capable of running `doxygen`_.   
+diagrams which are helpful for framework integratons, building bridge code, or 
+creating a backend UI for your own custom framework, be sure you have a system 
+capable of running `doxygen`_.   
 
 To build documentation locally, run: 
 
    .. code-block:: console
 
       $ pip3 install [-I] Sphinx==1.6.5 [--user] 
-      $ pip3 install [-I] breathe [--user]
+      $ pip3 install [-I] breathe numpy [--user]
       $ cd doc/sphinx/
       $ make html
       $ cd build/html
@@ -139,7 +140,7 @@ To build documentation in a python3 virtualenv, run:
 
       $ python3 -m venv py3doc
       $ . py3doc/bin/activate
-      (py3doc)$ pip install sphinx breathe
+      (py3doc)$ pip install sphinx breathe numpy
       (py3doc)$ cd doc/sphinx
       (py3doc)$ make html
       (py3doc)$ cd build/html

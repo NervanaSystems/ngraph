@@ -20,6 +20,7 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 
 #include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
+#include "ngraph/runtime/reference/pad.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -31,9 +32,9 @@ namespace ngraph
             namespace kernel
             {
                 template <typename ElementType, unsigned int Rank>
-                void pad(ElementType* input,
-                         ElementType* output,
-                         ElementType pad_value,
+                void pad(void* input,
+                         void* output,
+                         void* pad_value,
                          const Shape& input_shape,
                          const Shape& output_shape,
                          const Shape& padding_below,
@@ -49,11 +50,32 @@ namespace ngraph
                         padding[i] = {padding_below[i], padding_above[i]};
                     }
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> out(
-                        output, out_dims);
-                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(input,
-                                                                                           in_dims);
+                        static_cast<ElementType*>(output), out_dims);
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(
+                        static_cast<ElementType*>(input), in_dims);
 
-                    out.device(eigen::global_thread_pool_device) = in.pad(padding, pad_value);
+                    out.device(eigen::global_thread_pool_device) =
+                        in.pad(padding, *static_cast<ElementType*>(pad_value));
+                }
+
+                template <typename ElementType>
+                void pad(const void* arg0,
+                         const void* arg1,
+                         void* out,
+                         const Shape& arg0_shape,
+                         const Shape& out_shape,
+                         const Shape& padding_below,
+                         const Shape& padding_above,
+                         const Shape& padding_interior)
+                {
+                    reference::pad(static_cast<const ElementType*>(arg0),
+                                   static_cast<const ElementType*>(arg1),
+                                   static_cast<ElementType*>(out),
+                                   arg0_shape,
+                                   out_shape,
+                                   padding_below,
+                                   padding_above,
+                                   padding_interior);
                 }
             }
         }

@@ -40,6 +40,11 @@ namespace ngraph
         // @param s1 Left side of path
         // @param s2 Right side of path
         std::string path_join(const std::string& s1, const std::string& s2);
+        std::string path_join(const std::string& s1, const std::string& s2, const std::string& s3);
+        std::string path_join(const std::string& s1,
+                              const std::string& s2,
+                              const std::string& s3,
+                              const std::string& s4);
 
         // @brief Returns the size in bytes of filename
         // @param filename The name of the file
@@ -79,7 +84,8 @@ namespace ngraph
         // @param recurse Optional parameter to enable recursing through path
         void iterate_files(const std::string& path,
                            std::function<void(const std::string& file, bool is_dir)> func,
-                           bool recurse = false);
+                           bool recurse = false,
+                           bool include_links = false);
 
         // @brief Create a temporary file
         // @param extension Optional extension for the temporary file
