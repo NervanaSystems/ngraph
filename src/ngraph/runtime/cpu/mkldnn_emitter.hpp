@@ -26,7 +26,9 @@
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/shape.hpp"
@@ -387,6 +389,85 @@ namespace ngraph
                                                 const mkldnn::memory::desc& dweights_desc,
                                                 const double eps);
 
+                template <typename OP>
+                size_t build_rnn(const ngraph::Node* node,
+                                 const std::vector<TensorViewWrapper>& args,
+                                 const std::vector<TensorViewWrapper>& out)
+                {
+                    auto rnn_node = static_cast<const OP*>(node);
+                    auto src_sequence_length_max =
+                        static_cast<unsigned long>(rnn_node->get_src_sequence_length());
+                    auto direction = static_cast<unsigned long>(rnn_node->get_direction());
+                    auto num_fused_layers =
+                        static_cast<unsigned long>(rnn_node->get_num_fused_layers());
+                    auto feature_size =
+                        static_cast<unsigned long>(rnn_node->get_src_iter_feature_size());
+                    auto batch = static_cast<unsigned long>(rnn_node->get_batch_size());
+                    auto rnn_cell_n_gates =
+                        static_cast<unsigned long>(rnn_node->get_gates_per_cell());
+                    auto rnn_cell_n_states =
+                        static_cast<unsigned long>(rnn_node->get_num_cell_states());
+
+                    if (out[0].get_shape().size() == 2 && (out[0].get_shape()[1] != feature_size))
+                    {
+                        throw ngraph_error(
+                            "input slc{ht} feature size is not equal to output dlc{ht} feature "
+                            "size ");
+                    }
+
+                    if (out[1].get_shape().size() == 2 && (out[1].get_shape()[1] != feature_size) &&
+                        rnn_node->get_num_timesteps() != 1)
+                    {
+                        throw ngraph_error(
+                            "input sic{ht_1|ct_1} feature size is not equal to output "
+                            "dlc{ht_1|ct_1} "
+                            "feature size ");
+                    }
+
+                    Shape src_layer_tz{
+                        src_sequence_length_max,
+                        batch,
+                        static_cast<unsigned long>(rnn_node->get_src_layer_feature_size())};
+                    Shape src_iter_tz{
+                        num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
+                    Shape wei_layer_tz{
+                        num_fused_layers,
+                        direction,
+                        static_cast<unsigned long>(rnn_node->get_src_layer_feature_size()),
+                        rnn_cell_n_gates,
+                        feature_size};
+                    Shape wei_iter_tz{
+                        num_fused_layers, direction, feature_size, rnn_cell_n_gates, feature_size};
+                    Shape bias_tz{num_fused_layers, direction, rnn_cell_n_gates, feature_size};
+                    Shape dst_layer_tz{src_sequence_length_max, batch, feature_size};
+                    Shape dst_iter_tz{
+                        num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
+
+                    // We create the memory descriptors used by the user
+                    auto src_layer_md = build_memory_descriptor(
+                        src_layer_tz, args[0].get_element_type(), mkldnn::memory::format::tnc);
+                    auto src_iter_md = build_memory_descriptor(
+                        src_iter_tz, args[1].get_element_type(), mkldnn::memory::format::ldsnc);
+                    auto wei_layer_md = build_memory_descriptor(
+                        wei_layer_tz, args[2].get_element_type(), mkldnn::memory::format::ldigo);
+                    auto wei_iter_md = build_memory_descriptor(
+                        wei_iter_tz, args[3].get_element_type(), mkldnn::memory::format::ldigo);
+                    auto bias_md = build_memory_descriptor(
+                        bias_tz, args[4].get_element_type(), mkldnn::memory::format::ldgo);
+                    auto dst_layer_md = build_memory_descriptor(
+                        dst_layer_tz, out[0].get_element_type(), mkldnn::memory::format::tnc);
+                    auto dst_iter_md = build_memory_descriptor(
+                        dst_iter_tz, out[1].get_element_type(), mkldnn::memory::format::ldsnc);
+
+                    return build_rnn_forward(src_layer_md,
+                                             src_iter_md,
+                                             wei_layer_md,
+                                             wei_iter_md,
+                                             bias_md,
+                                             dst_layer_md,
+                                             dst_iter_md);
+                }
+
                 size_t build_rnn_forward(const mkldnn::memory::desc& src_layer_desc,
                                          const mkldnn::memory::desc& src_iter_desc,
                                          const mkldnn::memory::desc& weights_layer_desc,
@@ -402,6 +483,18 @@ namespace ngraph
                 size_t build_softmax_forward(const mkldnn::memory::desc& input_desc,
                                              const mkldnn::memory::desc& result_desc,
                                              int softmax_axis);
+
+                size_t build_bounded_relu(const ngraph::Node* node,
+                                          const std::vector<TensorViewWrapper>& args,
+                                          const std::vector<TensorViewWrapper>& out)
+                {
+                    auto bounded_relu_node = static_cast<const ngraph::op::BoundedRelu*>(node);
+                    float alpha = bounded_relu_node->get_alpha();
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    return build_bounded_relu(input_desc, result_desc, alpha);
+                }
 
                 size_t build_bounded_relu(const mkldnn::memory::desc& input_desc,
                                           const mkldnn::memory::desc& result_desc,
