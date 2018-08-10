@@ -106,6 +106,8 @@
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
+#include "ngraph/runtime/gpu/pass/gpu_rnn_fusion.hpp"
+#include "ngraph/runtime/gpu/pass/gpu_concat_inputs.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -641,6 +643,11 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 
     auto allocator = std::make_shared<runtime::gpu::GPUAllocator>(
         m_shared_context->m_primitive_emitter->get_memory_allocator());
+
+    // recurrent network fusion
+    m_pass_manager.register_pass<runtime::gpu::pass::LSTMFusion>();
+
+    m_pass_manager.register_pass<runtime::gpu::pass::ConcatInputs>();
 
     m_pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
 

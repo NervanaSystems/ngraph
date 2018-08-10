@@ -40,6 +40,10 @@ set(SRC
     type_info.cpp
     pass/tensor_memory_reservation.cpp
     gpu_kernel_args.cpp
+    pass/gpu_rnn_fusion.cpp
+    pass/gpu_concat_inputs.cpp
+    ../cpu/op/lstm.cpp
+    ../cpu/op/rnn.cpp
     )
 
 if (NGRAPH_GPU_ENABLE)
