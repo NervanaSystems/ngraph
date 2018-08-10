@@ -98,7 +98,7 @@ namespace ngraph
                 auto arg_rank = arg_shape.size();
                 auto out_rank = out_shape.size();
 
-                if (broadcast->get_broadcast_axes().empty())
+                if (broadcast_axes.empty())
                 {
                     size_t size = out[0].get_size() * out[0].get_element_type().size();
                     auto functor = [&, size](CPURuntimeContext* ctx) {
