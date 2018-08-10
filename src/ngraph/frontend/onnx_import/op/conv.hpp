@@ -61,8 +61,8 @@ namespace ngraph
                 auto filters = inputs.at(1);
 
                 int groups{node.get_attribute_value<int>("group", 1)};
-                // TODO validate groups value
-                if (groups <= 0)
+                if (groups < 0 || groups > data->get_shape().at(1) ||
+                    groups > filters->get_shape().at(0))
                 {
                     throw error::op::op_value_error("Conv",
                                                     node.get_name(),

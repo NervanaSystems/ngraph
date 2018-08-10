@@ -41,7 +41,7 @@ namespace ngraph
                                         const ngraph::CoordinateDiff& padding_above,
                                         int groups)
                 {
-                    if (groups != 1)
+                    if (groups > 1)
                     {
                         // Split one convolution op to N ops where N is the number of groups
                         // and concat results after computation.
