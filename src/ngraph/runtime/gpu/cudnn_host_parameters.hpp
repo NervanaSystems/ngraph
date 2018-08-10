@@ -61,7 +61,6 @@ namespace ngraph
                     default:
                         throw std::runtime_error(
                             "Encountered unhandled cudnnDataType_t during compilation.");
-                        break;
                     }
                     return r;
                 }
