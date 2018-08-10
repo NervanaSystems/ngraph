@@ -30,7 +30,7 @@ Integer TIMEOUTTIME = "3600"
 // TRIGGER_URL parameter is no longer needed
 
 // Constants
-JENKINS_DIR = env.WORKSPACE
+JENKINS_DIR = '.'
 
 env.MB_PIPELINE_CHECKOUT = true
 
