@@ -17,7 +17,7 @@ import pytest
 
 
 def pytest_addoption(parser):
-    parser.addoption('--backend', default='CPU',
+    parser.addoption('--backend', default='INTERPRETER',
                      choices=['INTERPRETER', 'CPU', 'GPU', 'NNP'],
                      help='Select from available backends')
 
