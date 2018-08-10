@@ -30,29 +30,31 @@ Integer TIMEOUTTIME = "3600"
 // TRIGGER_URL parameter is no longer needed
 
 // Constants
-JENKINS_DIR="."
+JENKINS_DIR = env.WORKSPACE
 
 env.MB_PIPELINE_CHECKOUT = true
 
-node("bdw && nogpu") {
+timestamps {
+    node("trigger") {
 
-    deleteDir()  // Clear the workspace before starting
+        deleteDir()  // Clear the workspace before starting
 
-    // Clone the cje-algo directory which contains our Jenkins groovy scripts
-    git(branch: JENKINS_BRANCH, changelog: false, poll: false,
-        url: 'https://github.intel.com/AIPG/cje-algo')
+        // Clone the cje-algo directory which contains our Jenkins groovy scripts
+        git(branch: JENKINS_BRANCH, changelog: false, poll: false,
+            url: 'https://github.intel.com/AIPG/cje-algo')
 
-    // Call the main job script.
-    //
-    // NOTE: We keep the main job script in github.intel.com because it may
-    //      contain references to technology which has not yet been released.
-    //
-    echo "Calling ngraph-ci-premerge.groovy"
-    def ngraphCIPreMerge = load("${JENKINS_DIR}/ngraph-ci-premerge.groovy")
-    ngraphCIPreMerge(PR_URL, PR_COMMIT_AUTHOR, JENKINS_BRANCH, TIMEOUTTIME)
-    echo "ngraph-ci-premerge.groovy completed"
+        // Call the main job script.
+        //
+        // NOTE: We keep the main job script in github.intel.com because it may
+        //      contain references to technology which has not yet been released.
+        //
+        echo "Calling ngraph-ci-premerge.groovy"
+        def ngraphCIPreMerge = load("${JENKINS_DIR}/ngraph-ci-premerge.groovy")
+        ngraphCIPreMerge(PR_URL, PR_COMMIT_AUTHOR, JENKINS_BRANCH, TIMEOUTTIME)
+        echo "ngraph-ci-premerge.groovy completed"
 
-}  // End:  node( ... )
+    }  // End:  node
+}  // End:  timestamps
 
 echo "Done"
 
