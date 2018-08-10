@@ -18,7 +18,7 @@
 
 #include <onnx.pb.h>
 #include "ngraph/except.hpp"
-#include "onnx.pb.h"
+#include <onnx.pb.h>
 #include "tensor.hpp"
 
 #define likely(__x) __builtin_expect(!!(__x), 1)
