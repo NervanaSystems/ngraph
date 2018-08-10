@@ -164,7 +164,7 @@ def test_bad_data_shape():
     A = ng.parameter(shape=[2, 2], name='A', dtype=np.float32)
     B = ng.parameter(shape=[2, 2], name='B')
     model = (A + B)
-    runtime = ng.runtime(backend_name='CPU')
+    runtime = ng.runtime(backend_name='INTERPRETER')
     computation = runtime.computation(model, A, B)
 
     value_a = np.array([[1, 2]], dtype=np.float32)
