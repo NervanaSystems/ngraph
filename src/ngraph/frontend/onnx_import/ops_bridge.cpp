@@ -53,7 +53,7 @@ namespace ngraph
                 return op::split(node, node.get_ng_inputs().at(0));
             }
 
-            NodeVector conv(const Node& node) { return op::conv(node, node.get_ng_inputs()); }
+            NodeVector conv(const Node& node) { return op::conv(node); }
             class ops_bridge
             {
             public:

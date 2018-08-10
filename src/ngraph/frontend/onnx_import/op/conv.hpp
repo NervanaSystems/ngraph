@@ -48,15 +48,16 @@ namespace ngraph
             }
 
             /**
-             * @brief [brief description]
+             * @brief Performs ONNX Conv operation.
              * 
-             * @param node [description]
-             * @param inputs [description]
+             * @param node   The ONNX node object representing this operation.
              * 
-             * @return [description]
+             * @return The vector containing Ngraph nodes producing output of ONNX convolution 
+             *         operation.
              */
-            inline NodeVector conv(const Node& node, const NodeVector& inputs)
+            inline NodeVector conv(const Node& node)
             {
+                const NodeVector& inputs = node.get_ng_inputs();
                 auto data = inputs.at(0);
                 auto filters = inputs.at(1);
 
