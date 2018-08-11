@@ -32,17 +32,12 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::BoundedRelu)
             {
-                if (!runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
-                {
-                    throw ngraph_error(
-                        "BoundedRelu is supported only through MKLDNN and doesnt have reference "
-                        "INTERPRETER implementation");
-                }
                 auto& functors = external_function->get_functors();
                 auto& tensor_data = external_function->get_tensor_data();
 
                 auto& input_tensor = tensor_data[args[0].get_name()];
                 auto& out_tensor = tensor_data[out[0].get_name()];
+                size_t count = out[0].get_size();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -53,6 +48,19 @@ namespace ngraph
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], input_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, bounded_relu_index);
+                    };
+                    functors.emplace_back(functor);
+                }
+                else
+                {
+                    std::function<decltype(runtime::cpu::kernel::bounded_relu<float>)> kernel;
+
+                    SELECT_KERNEL(
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::bounded_relu);
+
+                    auto alpha = static_cast<const op::BoundedRelu*>(node)->get_alpha();
+                    auto functor = [&, kernel, alpha, count](CPURuntimeContext* ctx) {
+                        kernel(input_tensor, out_tensor, alpha, count);
                     };
                     functors.emplace_back(functor);
                 }

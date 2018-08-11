@@ -88,6 +88,7 @@
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/select_and_scatter.hpp"
+#include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
 #include "ngraph/op/sinh.hpp"
@@ -236,6 +237,9 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::ReluBackprop),
      &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::ReluBackprop>},
     {TI(ngraph::op::Softmax), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Softmax>},
+    {TI(ngraph::op::Sigmoid), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sigmoid>},
+    {TI(ngraph::op::SigmoidBackprop),
+     &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::SigmoidBackprop>},
     {TI(ngraph::op::And), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::And>},
     {TI(ngraph::op::Or), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Or>}};
 
