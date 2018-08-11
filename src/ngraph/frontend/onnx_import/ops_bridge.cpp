@@ -54,6 +54,7 @@ namespace ngraph
             }
 
             NodeVector conv(const Node& node) { return op::conv(node); }
+
             class ops_bridge
             {
             public:

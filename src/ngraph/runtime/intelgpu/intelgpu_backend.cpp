@@ -328,6 +328,25 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                      reversed_axes);
             }
         }
+        else if ("Convert" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            if (get_input_type(op) == get_output_type(op))
+            {
+                do_equal_propagation(topology, get_input_name(op), get_output_name(op));
+            }
+            else
+            {
+                do_convert_operation(topology,
+                                     get_input_name(op),
+                                     get_input_shape(op),
+                                     get_input_type(op),
+                                     get_output_name(op),
+                                     get_output_shape(op),
+                                     get_output_type(op));
+            }
+        }
         else if ("Concat" == op->description())
         {
             if (op->get_inputs().empty() || op->get_outputs().size() != 1)
