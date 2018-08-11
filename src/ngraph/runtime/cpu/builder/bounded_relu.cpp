@@ -33,10 +33,9 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::BoundedRelu)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& input_tensor = tensor_data[args[0].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto& input_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
                 size_t count = out[0].get_size();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
