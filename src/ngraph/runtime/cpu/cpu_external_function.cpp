@@ -1035,8 +1035,9 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
                 {
                     size_t input_index = oi_pair.input;
                     auto& input_tensor = arg->get_inputs().at(input_index).get_tensor();
-                    if (input_tensor.get_pool_offset() == offset &&
-                        !arg->get_inputs().at(input_index).get_output().get_node()->is_parameter())
+                    auto tmp_node = arg->get_inputs().at(input_index).get_output().get_node();
+                    if (input_tensor.get_pool_offset() == offset && !tmp_node->is_parameter() &&
+                        !tmp_node->is_constant())
                     {
                         NGRAPH_DEBUG << "Reusing " << output_name << " for "
                                      << input_tensor.get_name();
