@@ -145,10 +145,6 @@ if (NGRAPH_GPU_ENABLE)
     target_link_libraries(unit-test gpu_backend)
 endif()
 
-add_custom_target(style-check
-    COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh
-)
-
 add_custom_target(unit-test-check
     COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
     DEPENDS unit-test
