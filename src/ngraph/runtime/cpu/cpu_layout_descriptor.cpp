@@ -18,63 +18,46 @@
 #include <algorithm>
 #include <numeric>
 
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+
 namespace ngraph
 {
     namespace runtime
     {
         namespace cpu
         {
-            const AxisVector LayoutDescriptor::Native2DAxisOrder{0, 1};
-            const AxisVector LayoutDescriptor::Native4DAxisOrder{0, 1, 2, 3};
-            const AxisVector LayoutDescriptor::CHWNAxisOrder{1, 2, 3, 0};
+            const mkldnn::memory::desc
+                LayoutDescriptor::DummyDesc(mkldnn::memory::dims(TENSOR_MAX_DIMS),
+                                            mkldnn::memory::f32,
+                                            mkldnn::memory::format::format_undef);
 
-            AxisVector LayoutDescriptor::create_native_axis_order(size_t rank)
-            {
-                AxisVector native_axis_order(rank);
-                std::iota(native_axis_order.begin(), native_axis_order.end(), 0);
-                return native_axis_order;
-            }
-
-            LayoutDescriptor::LayoutDescriptor(const ngraph::descriptor::TensorView& tv,
-                                               const AxisVector& tv_axis_order)
+            LayoutDescriptor::LayoutDescriptor(const ngraph::descriptor::TensorView& tv)
                 : TensorViewLayout(tv)
-                , axis_order(tv_axis_order)
-                , offset(0)
-                , size(ngraph::shape_size(tv.get_tensor_view_type()->get_shape()))
-                , mkldnn_format(mkldnn::memory::format::format_undef)
+                , m_offset(0)
+                , m_size(ngraph::shape_size(tv.get_tensor_view_type()->get_shape()))
+                , m_mkldnn_md(LayoutDescriptor::DummyDesc)
             {
                 auto shape = get_shape();
                 size_t s = 1;
 
-                if (tv_axis_order.size() != shape.size())
+                for (size_t i = 0; i < shape.size(); i++)
                 {
-                    throw ngraph_error("Axis order is incomplete");
+                    m_strides.emplace_back(s);
+                    s *= shape[shape.size() - (i + 1)];
                 }
-
-                for (auto it = tv_axis_order.crbegin(); it != tv_axis_order.crend(); it++)
-                {
-                    if (*it >= shape.size())
-                    {
-                        throw ngraph_error("Axis is out of bounds");
-                    }
-
-                    strides.emplace_back(s);
-                    s *= shape[*it];
-                }
-                std::reverse(strides.begin(), strides.end());
+                std::reverse(m_strides.begin(), m_strides.end());
             }
 
-            void LayoutDescriptor::set_axis_order(const AxisVector& perm) { axis_order = perm; }
             size_t LayoutDescriptor::get_index_offset(const std::vector<size_t>& indices)
             {
-                if (indices.size() != strides.size())
+                if (indices.size() != m_strides.size())
                 {
                     throw ngraph_error("Indices have incorrect rank");
                 }
                 size_t result = 0;
                 for (int i = 0; i < indices.size(); i++)
                 {
-                    result += strides[i] + indices[i];
+                    result += m_strides[i] * indices[i];
                 }
                 return result;
             }
@@ -93,12 +76,22 @@ namespace ngraph
                     return false;
                 }
 
-                if (strides != p_other->strides)
+                if (p_other->is_mkldnn_layout())
+                {
+                    if (!is_mkldnn_layout())
+                    {
+                        return false;
+                    }
+                    return runtime::cpu::mkldnn_utils::compare_mkldnn_mds(m_mkldnn_md,
+                                                                          p_other->get_mkldnn_md());
+                }
+
+                if (m_strides != p_other->m_strides)
                 {
                     return false;
                 }
 
-                if (offset != p_other->offset)
+                if (m_offset != p_other->m_offset)
                 {
                     return false;
                 }

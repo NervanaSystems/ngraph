@@ -155,7 +155,6 @@
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_shuffle_folding.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED
@@ -382,7 +381,6 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUShuffleFolding>();
     pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     unordered_map<Node*, Node*> node_function_map;
@@ -394,7 +392,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
         femitter, node_function_map, common_function_string);
     pass_manager.register_pass<ngraph::pass::Liveness>();
-    pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment, true);
+    pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
     pass_manager.run_passes(m_function);
 
     unordered_map<shared_ptr<Function>, list<shared_ptr<Node>>> function_ordered_ops;
@@ -985,20 +983,24 @@ using namespace ngraph::runtime;
     }
 }
 
+#endif
+
 void runtime::cpu::CPU_ExternalFunction::propagate_in_place_input(
     ngraph::descriptor::Output* output, std::string input_name)
 {
-    auto it = output;
-    auto propagate_further = false;
-    do
+    std::deque<ngraph::descriptor::Output*> stack;
+    stack.push_front(output);
+
+    while (stack.size() > 0)
     {
-        propagate_further = false;
+        ngraph::descriptor::Output* it = stack.front();
+        stack.pop_front();
         for (auto input : it->get_inputs())
         {
             auto c_op = std::dynamic_pointer_cast<ngraph::op::Op>(input->get_node());
             if (!c_op || c_op->is_output())
             {
-                break;
+                continue;
             }
 
             if (auto op_annotations = c_op->get_op_annotations())
@@ -1011,13 +1013,14 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_input(
                         auto& output_tensor = c_op->get_outputs().at(output_index).get_tensor();
 
                         m_variable_name_map[output_tensor.get_name()] = input_name;
-                        it = &c_op->get_outputs().at(output_index);
-                        propagate_further = true;
+                        NGRAPH_DEBUG << "CPU codegen: Forwarding " << input_name << " through "
+                                     << output_tensor.get_name();
+                        stack.push_back(&c_op->get_outputs().at(output_index));
                     }
                 }
             }
         }
-    } while (propagate_further);
+    }
 }
 
 void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
@@ -1045,8 +1048,9 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
                 {
                     size_t input_index = oi_pair.input;
                     auto& input_tensor = arg->get_inputs().at(input_index).get_tensor();
-                    if (input_tensor.get_pool_offset() == offset &&
-                        !arg->get_inputs().at(input_index).get_output().get_node()->is_parameter())
+                    auto tmp_node = arg->get_inputs().at(input_index).get_output().get_node();
+                    if (input_tensor.get_pool_offset() == offset && !tmp_node->is_parameter() &&
+                        !tmp_node->is_constant())
                     {
                         NGRAPH_DEBUG << "Reusing " << output_name << " for "
                                      << input_tensor.get_name();
@@ -1059,8 +1063,6 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
         }
     } while (propagate_further);
 }
-
-#endif
 
 void runtime::cpu::CPU_ExternalFunction::build()
 {
@@ -1077,10 +1079,13 @@ void runtime::cpu::CPU_ExternalFunction::build()
     //in which case they should run this pass(CPUWorkspaceInsertion) explicitly
     NodeVector nv_cwi;
     pass_manager.register_pass<ngraph::pass::NopElimination>();
-    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
+    // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
+    // failing mxnet unit tests.
+    //pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    //pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    //pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
@@ -1088,11 +1093,10 @@ void runtime::cpu::CPU_ExternalFunction::build()
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUShuffleFolding>();
     pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
-    pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment, true);
+    pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
     pass_manager.run_passes(m_function, false);
 
     // Store layouts assigned for arguments
@@ -1139,7 +1143,9 @@ void runtime::cpu::CPU_ExternalFunction::build()
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
             shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_view(i);
-            function_input_index[tv->get_tensor().get_name()] = arg_index;
+            function_input_index.emplace_back(tensor_data[tv->get_tensor().get_name()],
+                                              arg_index,
+                                              tensor_stale[tv->get_tensor().get_name()]);
             arg_index++;
         }
     }
@@ -1149,14 +1155,14 @@ void runtime::cpu::CPU_ExternalFunction::build()
     {
         shared_ptr<Node> op = m_function->get_output_op(i);
         shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
-        function_output_index[tv->get_tensor().get_name()] = i;
+        function_output_index.emplace_back(tensor_data[tv->get_tensor().get_name()], i);
 
         auto res = std::dynamic_pointer_cast<ngraph::op::Result>(op);
         if (!res->needs_copy())
         {
             shared_ptr<descriptor::TensorView> itv =
                 res->get_inputs().at(0).get_output().get_tensor_view();
-            function_output_index[itv->get_tensor().get_name()] = i;
+            function_output_index.emplace_back(tensor_data[itv->get_tensor().get_name()], i);
         }
     }
 
@@ -1169,7 +1175,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
         {
             for (auto tensor : node->liveness_new_list)
             {
-                intermediates_offsets[tensor->get_name()] = tensor->get_pool_offset();
+                intermediates_offsets.emplace_back(tensor_data[tensor->get_name()],
+                                                   tensor->get_pool_offset());
             }
         }
     }
@@ -1196,7 +1203,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
         auto handler = build_dispatcher.find(type_index(typeid(n)));
         if (handler == build_dispatcher.end())
         {
-            throw ngraph_error("Unhandled op during code generation : " + node->description());
+            throw ngraph_error("Unhandled op during executor construction : " +
+                               node->description());
         }
         vector<TensorViewWrapper> in;
         vector<string> in_names;
@@ -1222,21 +1230,47 @@ void runtime::cpu::CPU_ExternalFunction::build()
         handler->second(this, node.get(), in, out);
 
         bool disable_caching = computes_result(node.get()) || possibly_overwritten(node.get());
-        auto enable = [&, in_names, out_names, disable_caching](CPURuntimeContext* ctx) -> bool {
-            bool en = false;
-            for (const auto& name : in_names)
-            {
-                if (tensor_stale[name] || disable_caching)
+
+        vector<reference_wrapper<bool>> in_stale, out_stale;
+        for (const auto& name : in_names)
+        {
+            in_stale.emplace_back(tensor_stale[name]);
+        }
+        for (const auto& name : out_names)
+        {
+            out_stale.emplace_back(tensor_stale[name]);
+        }
+
+        function<bool(CPURuntimeContext*)> enable;
+        if (disable_caching)
+        {
+            enable = [in_stale, out_stale](CPURuntimeContext* ctx) -> bool {
+                for (auto& stale : out_stale)
                 {
-                    en = true;
+                    stale.get() = true;
                 }
-            }
-            for (const auto& name : out_names)
-            {
-                tensor_stale[name] = en;
-            }
-            return en;
-        };
+                return true;
+            };
+        }
+        else
+        {
+            enable = [in_stale, out_stale](CPURuntimeContext* ctx) -> bool {
+                bool en = false;
+                for (const auto& stale : in_stale)
+                {
+                    if (stale)
+                    {
+                        en = true;
+                        break;
+                    }
+                }
+                for (auto& stale : out_stale)
+                {
+                    stale.get() = en;
+                }
+                return en;
+            };
+        }
 
         enables.emplace_back(make_pair(enable, functors.size() - functor_count));
         enable_nodename_list.emplace_back(make_pair(enable, node->get_name()));
@@ -1250,20 +1284,19 @@ void runtime::cpu::CPU_ExternalFunction::build()
         {
             for (auto& p : intermediates_offsets)
             {
-                tensor_data[p.first] =
-                    static_cast<uint8_t*>(ctx->memory_buffers[0]->get_ptr()) + p.second;
+                p.first.get() = static_cast<uint8_t*>(ctx->memory_buffers[0]->get_ptr()) + p.second;
             }
         }
 
         for (const auto& p : function_input_index)
         {
-            tensor_data[p.first] = inputs[p.second];
-            tensor_stale[p.first] = ctx->p_en[p.second];
+            get<0>(p).get() = inputs[get<1>(p)];
+            get<2>(p).get() = ctx->p_en[get<1>(p)];
         }
 
         for (const auto& p : function_output_index)
         {
-            tensor_data[p.first] = outputs[p.second];
+            p.first.get() = outputs[p.second];
         }
 
         auto functor = functors.begin();

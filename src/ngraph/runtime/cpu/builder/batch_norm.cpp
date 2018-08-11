@@ -22,6 +22,7 @@
 #include "ngraph/runtime/cpu/kernel/batchnorm.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -32,6 +33,7 @@ namespace ngraph
     {
         namespace cpu
         {
+            template <typename OP>
             static void build_batch_norm(CPU_ExternalFunction* external_function,
                                          const ngraph::Node* node,
                                          const std::vector<TensorViewWrapper>& args,
@@ -46,10 +48,7 @@ namespace ngraph
                 auto& arg2_tensor = tensor_data[args[2].get_name()];
                 auto& out0_tensor = tensor_data[out[0].get_name()];
 
-                const ngraph::op::BatchNorm* batchnorm =
-                    static_cast<const ngraph::op::BatchNorm*>(node);
-
-                shared_ptr<uint8_t> stacked_weights(new uint8_t[2 * args[0].get_size()]);
+                const OP* batchnorm = static_cast<const OP*>(node);
 
 // Kill clang diagnostics bug
 #pragma clang diagnostic push
@@ -60,6 +59,8 @@ namespace ngraph
                     args[1].get_size() * args[1].get_element_type().size()};
 
 #pragma clang diagnostic pop
+
+                shared_ptr<uint8_t> stacked_weights(new uint8_t[weight_sizes[0] + weight_sizes[1]]);
 
                 const float ops_scale = 1.f;
                 const float ops_alpha = -0.f; // relu negative slope
@@ -77,26 +78,14 @@ namespace ngraph
                     auto& out1_tensor = tensor_data[out[1].get_name()];
                     auto& out2_tensor = tensor_data[out[2].get_name()];
 
-                    auto input_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2);
-                    auto result_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
-                    auto mean_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 1);
-                    auto variance_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 2);
-
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
                     auto weights_shape = Shape{2, args[0].get_size()};
-                    auto input_desc =
-                        mkldnn_emitter->build_memory_descriptor(args[2], input_format);
                     auto weights_desc = mkldnn_emitter->build_memory_descriptor(
                         weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
-                    auto results_desc =
-                        mkldnn_emitter->build_memory_descriptor(out[0], result_format);
-                    auto mean_desc = mkldnn_emitter->build_memory_descriptor(out[1], mean_format);
-                    auto variance_desc =
-                        mkldnn_emitter->build_memory_descriptor(out[2], variance_format);
+                    auto results_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                    auto mean_desc = mkldnn_utils::get_output_mkldnn_md(node, 1);
+                    auto variance_desc = mkldnn_utils::get_output_mkldnn_md(node, 2);
 
                     auto batchnorm_index =
                         mkldnn_emitter->build_batchnorm_forward(input_desc,
@@ -131,24 +120,14 @@ namespace ngraph
                     auto& arg3_tensor = tensor_data[args[3].get_name()];
                     auto& arg4_tensor = tensor_data[args[4].get_name()];
 
-                    auto input_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2);
-                    auto mean_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 3);
-                    auto variance_format =
-                        runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 4);
-                    auto result_format =
-                        runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto weights_shape = Shape{2, args[0].get_size()};
-                    auto input_desc =
-                        mkldnn_emitter->build_memory_descriptor(args[2], input_format);
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
                     auto weights_desc = mkldnn_emitter->build_memory_descriptor(
                         weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
-                    auto mean_desc = mkldnn_emitter->build_memory_descriptor(args[3], mean_format);
-                    auto variance_desc =
-                        mkldnn_emitter->build_memory_descriptor(args[4], variance_format);
-                    auto results_desc =
-                        mkldnn_emitter->build_memory_descriptor(out[0], result_format);
+                    auto mean_desc = mkldnn_utils::get_input_mkldnn_md(node, 3);
+                    auto variance_desc = mkldnn_utils::get_input_mkldnn_md(node, 4);
+                    auto results_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     auto batchnorm_index =
                         mkldnn_emitter->build_batchnorm_forward(input_desc,
@@ -261,7 +240,8 @@ namespace ngraph
                 }
                 else
                 {
-                    build_batch_norm(external_function, node, args, out, false);
+                    build_batch_norm<ngraph::op::BatchNorm>(
+                        external_function, node, args, out, false);
                 }
             }
 
@@ -285,9 +265,6 @@ namespace ngraph
                 auto& out1_tensor = tensor_data[out[1].get_name()];
                 auto& out2_tensor = tensor_data[out[2].get_name()];
 
-                shared_ptr<uint8_t> stacked_weights(new uint8_t[2 * args[0].get_size()]);
-                shared_ptr<uint8_t> stacked_dweights(new uint8_t[2 * args[0].get_size()]);
-
 // Kill clang diagnostics bug
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-braces"
@@ -297,23 +274,19 @@ namespace ngraph
                     args[1].get_size() * args[1].get_element_type().size()};
 
 #pragma clang diagnostic pop
-
-                auto input_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 2);
-                auto mean_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 3);
-                auto variance_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 4);
-                auto delta_format = runtime::cpu::mkldnn_utils::get_input_mkldnn_format(node, 5);
-                auto dinput_format = runtime::cpu::mkldnn_utils::get_output_mkldnn_format(node, 0);
+                shared_ptr<uint8_t> stacked_weights(new uint8_t[weight_sizes[0] + weight_sizes[1]]);
+                shared_ptr<uint8_t> stacked_dweights(
+                    new uint8_t[weight_sizes[0] + weight_sizes[1]]);
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto weights_shape = Shape{2, args[0].get_size()};
                 auto weights_desc = mkldnn_emitter->build_memory_descriptor(
                     weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
-                auto input_desc = mkldnn_emitter->build_memory_descriptor(args[2], input_format);
-                auto mean_desc = mkldnn_emitter->build_memory_descriptor(args[3], mean_format);
-                auto variance_desc =
-                    mkldnn_emitter->build_memory_descriptor(args[4], variance_format);
-                auto delta_desc = mkldnn_emitter->build_memory_descriptor(args[5], delta_format);
-                auto dinput_desc = mkldnn_emitter->build_memory_descriptor(out[0], dinput_format);
+                auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+                auto mean_desc = mkldnn_utils::get_input_mkldnn_md(node, 3);
+                auto variance_desc = mkldnn_utils::get_input_mkldnn_md(node, 4);
+                auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 5);
+                auto dinput_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                 auto dweights_desc = mkldnn_emitter->build_memory_descriptor(
                     weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
 
@@ -353,7 +326,18 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::BatchNormRelu)
+            {
+                if (!mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    throw ngraph_error("BatchNormRelu is only supported with 4-D MKLDNN kernel.");
+                }
+                build_batch_norm<ngraph::op::BatchNormRelu>(
+                    external_function, node, args, out, true);
+            }
             REGISTER_OP_BUILDER(BatchNorm);
+            REGISTER_OP_BUILDER(BatchNormRelu);
             REGISTER_OP_BUILDER(BatchNormBackprop);
         }
     }

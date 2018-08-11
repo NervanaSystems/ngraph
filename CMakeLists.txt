@@ -194,6 +194,10 @@ if (NOT DEFINED NGRAPH_TBB_ENABLE)
     set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
 endif()
 
+add_custom_target(style-check
+    COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh
+)
+
 #-----------------------------------------------------------------------------------------------
 # enable or disable output from NGRAPH_DEBUG statements
 #-----------------------------------------------------------------------------------------------
@@ -230,6 +234,13 @@ if (NOT NGRAPH_DEX_ONLY)
 endif()
 
 include(cmake/external_tbb.cmake)
+
+if (NGRAPH_HALIDE)
+    message(WARNING "Halide build system integration is currently using an older LLVM release \
+                     and is not expected to work across most build environments. Consider \
+                     disabling it till this message goes away")
+    include(cmake/external_halide.cmake)
+endif()
 
 add_subdirectory(src)
 
