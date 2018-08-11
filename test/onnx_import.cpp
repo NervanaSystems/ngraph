@@ -140,13 +140,6 @@ TEST(onnx, model_batchnorm_default)
                                {{{{-0.999995, 0., 0.999995}}, {{-0.22474074, 1., 2.2247407}}}})
                                .get_vector();
 
-    // std::vector<std::vector<float>> inputs;
-    // inputs.emplace_back(read_tensor_proto_data_file<float>(
-    //     ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/batchnorm_default_input_0.pb")));
-
-    // auto expected_output = read_tensor_proto_data_file<float>(
-    //     ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/batchnorm_default_output_0.pb"));
-
     auto result_vectors = execute(function, inputs, "CPU");
     EXPECT_EQ(expected_output, result_vectors.front());
 }
