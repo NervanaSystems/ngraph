@@ -732,3 +732,44 @@ void runtime::intelgpu::do_reverse_operation(cldnn::topology& topology,
                                                  gws);
     topology.add(op_reverse);
 }
+
+void runtime::intelgpu::do_convert_operation(cldnn::topology& topology,
+                                             const string& input_name,
+                                             const Shape& input_shape,
+                                             const element::Type& input_type,
+                                             const string& output_name,
+                                             const Shape& output_shape,
+                                             const element::Type& output_type)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string entry_point_name = "convert_" + output_name;
+    const string& input_type_name = input_type.c_type_string();
+    const string& output_type_name = output_type.c_type_string();
+    codegen::CodeWriter writer;
+    vector<size_t> gws;
+
+    writer << "__kernel void " << entry_point_name << "(const __global " << input_type_name
+           << " input" << array_dims(input_shape) << ", __global " << output_type_name << " output"
+           << array_dims(output_shape) << ")\n";
+
+    writer.block_begin();
+    {
+        gws = generate_loops(writer, output_shape, true);
+
+        writer << "output" << access_dims(output_shape) << " = convert_" << output_type_name
+               << "(input" << access_dims(output_shape) << ");\n";
+
+        generate_loops(writer, output_shape, false);
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_convert(output_name,
+                                                 {input_name},
+                                                 {writer.get_code()},
+                                                 entry_point_name,
+                                                 get_kernel_args(1, 1),
+                                                 "",
+                                                 layout,
+                                                 gws);
+    topology.add(op_convert);
+}

@@ -46,7 +46,6 @@ broadcast_vector_rowwise_int64
 ceiling
 concat_matrix_int64
 constant_multi_use
-convert_float32_bool
 convert_int32_bool
 convert_int32_float32
 convolution_2d_1item
