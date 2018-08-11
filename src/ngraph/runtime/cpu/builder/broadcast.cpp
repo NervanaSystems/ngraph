@@ -47,20 +47,6 @@ namespace ngraph
                 // TODO(jmenon): Shape transformations, rank reduction etc. needs to be general
                 // and not in any one builder. Move this to the Halide analysis phase.
 
-                auto squeezed_out_shape = Shape{};
-                for (int i = 0; i < out_shape.size(); i++)
-                {
-                    if (out_shape[i] != 1)
-                    {
-                        squeezed_out_shape.push_back(out_shape[i]);
-                    }
-                    else
-                    {
-                        broadcast_axes.erase(i);
-                    }
-                }
-                out_shape = squeezed_out_shape;
-
                 if (broadcast_axes.size() > 1)
                 {
                     auto innermost_axis = broadcast_axes.end();
@@ -94,6 +80,20 @@ namespace ngraph
                         out_shape = reduced;
                     }
                 }
+
+                auto squeezed_out_shape = Shape{};
+                for (int i = 0; i < out_shape.size(); i++)
+                {
+                    if (out_shape[i] != 1)
+                    {
+                        squeezed_out_shape.push_back(out_shape[i]);
+                    }
+                    else
+                    {
+                        broadcast_axes.erase(i);
+                    }
+                }
+                out_shape = squeezed_out_shape;
 
                 auto arg_rank = arg_shape.size();
                 auto out_rank = out_shape.size();
@@ -133,9 +133,10 @@ namespace ngraph
                 SELECT_KERNEL_BY_RANK(
                     kernel, args[0].get_element_type(), out_rank, runtime::cpu::kernel::broadcast);
 
-                auto functor = [&, kernel, expanded_input_shape, out_shape](CPURuntimeContext* ctx) {
-                    kernel(arg_tensor, out_tensor, expanded_input_shape, out_shape);
-                };
+                auto functor =
+                    [&, kernel, expanded_input_shape, out_shape](CPURuntimeContext* ctx) {
+                        kernel(arg_tensor, out_tensor, expanded_input_shape, out_shape);
+                    };
                 functors.emplace_back(functor);
             }
 
