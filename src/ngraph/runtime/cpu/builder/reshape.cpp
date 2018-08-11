@@ -21,6 +21,9 @@
 #include "ngraph/runtime/cpu/kernel/reshape.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#ifdef NGRAPH_USE_TVM
+#include "ngraph/runtime/cpu/tvm_kernels.hpp"
+#endif
 
 using namespace std;
 using namespace ngraph;
@@ -54,18 +57,20 @@ namespace ngraph
                     return false;
                 };
 
-                if (can_skip_reshape())
-                {
-                    size_t size = out[0].get_size() * out[0].get_element_type().size();
-                    auto functor = [&, size](CPURuntimeContext* ctx) {
-                        if (out_tensor != arg_tensor)
-                        {
-                            memcpy(out_tensor, arg_tensor, size);
-                        }
-                    };
-                    functors.emplace_back(functor);
-                    return;
-                }
+                // XXX lfeng: commented out to test tvm
+//                if (can_skip_reshape())
+//                {
+//                    std::cout << "can skip" << std::endl;
+//                    size_t size = out[0].get_size() * out[0].get_element_type().size();
+//                    auto functor = [&, size](CPURuntimeContext* ctx) {
+//                        if (out_tensor != arg_tensor)
+//                        {
+//                            memcpy(out_tensor, arg_tensor, size);
+//                        }
+//                    };
+//                    functors.emplace_back(functor);
+//                    return;
+//                }
 
                 auto arg_shape = args[0].get_shape();
                 auto arg_rank = arg_shape.size();
@@ -80,16 +85,32 @@ namespace ngraph
 
                 auto result_size = shape_size(result_shape);
 
-                if (same_layout || result_size < 2)
-                {
-                    size_t size = out[0].get_size() * out[0].get_element_type().size();
-                    auto functor = [&, size](CPURuntimeContext* ctx) {
-                        memcpy(out_tensor, arg_tensor, size);
-                    };
-                    functors.emplace_back(functor);
-                    return;
-                }
+                // XXX lfeng: commented out to test tvm
+//                if (same_layout || result_size < 2)
+//                {
+//                    size_t size = out[0].get_size() * out[0].get_element_type().size();
+//                    auto functor = [&, size](CPURuntimeContext* ctx) {
+//                        memcpy(out_tensor, arg_tensor, size);
+//                    };
+//                    functors.emplace_back(functor);
+//                    return;
+//                }
 
+#ifdef NGRAPH_USE_TVM
+
+                 auto& tvm_instance = external_function->get_tvm_instance();
+                 tvm_kernel::TransposeBuilder builder;
+                 tvm_kernel::TransposeKernel kernel;
+                 SELECT_KERNEL(builder, args[0].get_element_type(), tvm_kernel::transpose_builder);
+                 auto tvm_func = builder(tvm_instance, arg_rank, arg_shape, result_rank, input_order);
+                 SELECT_KERNEL(kernel, args[0].get_element_type(), tvm_kernel::transpose_kernel);
+
+                 auto functor =
+                    [&, tvm_func, kernel, arg_shape, result_shape](CPURuntimeContext* ctx) {
+                        kernel(tvm_instance, tvm_func, arg_tensor, out_tensor, arg_shape, result_shape);
+                    };
+
+#else
                 std::function<decltype(runtime::cpu::kernel::reshape_1d<float, 2>)> kernel;
                 if (arg_rank == 1)
                 {
@@ -129,6 +150,7 @@ namespace ngraph
                     [&, kernel, arg_shape, input_order, result_shape](CPURuntimeContext* ctx) {
                         kernel(arg_tensor, out_tensor, arg_shape, input_order, result_shape);
                     };
+#endif
                 functors.emplace_back(functor);
             }
 

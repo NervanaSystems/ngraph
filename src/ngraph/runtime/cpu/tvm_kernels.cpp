@@ -24,6 +24,7 @@
 #include <tvm/build_module.h>
 #include <tvm/operation.h>
 #include <tvm/tvm.h>
+#include <ngraph/util.hpp>
 
 #include "tvm_kernels.hpp"
 
@@ -150,4 +151,80 @@ tvm::PackedFunc tvm_kernel::relu_builder<float>(const std::unique_ptr<TVMInstanc
     // store module to keep its lifetime
     tvm_instance->add_module(module);
     return module->GetFunction("func", false);
+}
+
+template <>
+tvm::PackedFunc tvm_kernel::transpose_builder<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                  const size_t in_rank,
+                                  const std::vector<size_t>& in_shape,
+                                  const size_t out_rank,
+                                  const std::vector<size_t>& axes)
+{
+    std::cout << in_rank << " " << out_rank << " axes: " << axes.size() << std::endl;
+
+    tvm::Array<tvm::Expr> in_dlshape;
+    for (size_t i = 0; i < in_rank; ++i) {
+        tvm::Var n("n_"+std::to_string(i));
+        in_dlshape.push_back(n);
+    }
+    std::cout << ngraph::vector_to_string(axes) << std::endl;
+    tvm::Array<tvm::Expr> out_axes;
+    for (size_t i = 0; i < out_rank; ++i) {
+        std::cout << "axes[i]: " << axes[i] << std::endl;
+        out_axes.push_back(axes[i]);
+    }
+    auto A = tvm::placeholder(in_dlshape, tvm::Float(32), "a");
+
+    auto R = topi::transpose(A, out_axes);
+
+    std::unordered_map<tvm::Tensor, tvm::Buffer> binds;
+
+    auto schedule = topi::x86::default_schedule(tvm_instance->target(), {R});
+    auto lowered = tvm::lower(schedule, {A, R}, "func", binds, tvm_instance->config());
+    auto module =
+        tvm::build(lowered, tvm_instance->target(), tvm::Target(), tvm_instance->config());
+    // store module to keep its lifetime
+    tvm_instance->add_module(module);
+    return module->GetFunction("func", false);
+}
+
+template <>
+void tvm_kernel::transpose_kernel<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                         const tvm::PackedFunc& func,
+                                         void* input,
+                                         void* output,
+                                         Shape input_shape,
+                                         Shape output_shape)
+{
+    std::cout << "running tvm_kernel::transpose_kernel" << std::endl;
+
+    std::cout << ngraph::vector_to_string(input_shape) << std::endl;
+    std::cout << ngraph::vector_to_string(output_shape) << std::endl;
+//    int64_t* in_dlshape = reinterpret_cast<int64_t*>(&input_shape[0]);
+//    int64_t* out_dlshape = reinterpret_cast<int64_t*>(&output_shape[0]);
+
+    std::vector<int64_t> in_dlshape(input_shape.size());
+    for (int i = 0; i < input_shape.size(); ++i) {
+      in_dlshape[i] = (int64_t)input_shape[i];
+    }
+    std::vector<int64_t> out_dlshape(output_shape.size());
+    for (int i = 0; i < output_shape.size(); ++i) {
+      out_dlshape[i] = (int64_t)output_shape[i];
+    }
+    std::cout << ngraph::vector_to_string(in_dlshape) << std::endl;
+    std::cout << ngraph::vector_to_string(out_dlshape) << std::endl;
+
+    DLTensor a = tvm_instance->create_dltensor(DLType_Float32, in_dlshape.size(), &in_dlshape[0], input);
+    DLTensor r = tvm_instance->create_dltensor(DLType_Float32, out_dlshape.size(), &out_dlshape[0], output);
+
+    func(&a, &r);
+    std::cout << "tvm reshape output: " << std::endl;
+    for (int i = 0; i < ngraph::shape_size(out_dlshape); ++i) {
+      std::cout << static_cast<float*>(r.data)[i] << " ";
+    }
+    std::cout << std::endl;
+    for (int i = 0; i < ngraph::shape_size(out_dlshape); ++i) {
+      std::cout << static_cast<float*>(output)[i] << " ";
+    }
+    std::cout << std::endl;
 }
