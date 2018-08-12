@@ -37,7 +37,7 @@ WORKDIR /root/ngraph/build
 RUN if  [ "$buildtype" = "interpreter" ] ; then \
         cmake .. -DNGRAPH_CPU_ENABLE=FALSE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE\
                  -DCMAKE_INSTALL_PREFIX="~/ngraph_dist";\
-    else
+    else \
         cmake ..  -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="~/ngraph_dist" ;\
     fi
 
