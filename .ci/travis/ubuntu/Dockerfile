@@ -31,10 +31,9 @@ COPY . /root/ngraph
 RUN mkdir /root/ngraph/build
 WORKDIR /root/ngraph/build
 
-RUN cmake .. -DNGRAPH_CPU_ENABLE=FALSE -DNGRAPH_UNIT_TEST_ENABLE=FALSE -DNGRAPH_TOOLS_ENABLE=FALSE \
-             -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="~/ngraph_dist"
+RUN cmake .. -DNGRAPH_CPU_ENABLE=FALSE -DNGRAPH_USE_PREBUILT_LLVM=TRUE \
+             -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="~/ngraph_dist"
 
-RUN make style-check
 RUN make
 RUN make install
 
@@ -45,7 +44,7 @@ ENV NGRAPH_CPP_BUILD_PATH /root/ngraph_dist
 ENV LD_LIBRARY_PATH /root/ngraph_dist/lib
 ENV PYBIND_HEADERS_PATH /root/ngraph/python/pybind11
 
-RUN df -k 
+RUN df -k
 
 # Test nGraph and nGraph Python API
-CMD cd /root/ngraph/build && make check ; cd /root/ngraph/python && tox
+CMD cd /root/ngraph/build && make unit-test-check ; cd /root/ngraph/python && tox
