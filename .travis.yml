@@ -14,7 +14,12 @@ env:
   - TASK=python3_test
 
 before_install:
-  - docker build -t test_ngraph -f .ci/travis/ubuntu/Dockerfile .
+  - |
+    if [ "TASK" == "cpp_test" ]; then 
+      docker build -t test_ngraph -f .ci/travis/ubuntu/Dockerfile .
+    else
+      docker build -t test_ngraph -f .ci/travis/ubuntu/Dockerfile --build-arg buildtype=interpreter .
+    fi
 
 install: true
 
