@@ -1,5 +1,8 @@
 FROM ubuntu:16.04
 
+#buildtype argument
+ARG buildtype=regular
+
 # nGraph dependencies
 RUN apt-get update && apt-get install -y \
   build-essential \
@@ -31,7 +34,12 @@ COPY . /root/ngraph
 RUN mkdir /root/ngraph/build
 WORKDIR /root/ngraph/build
 
-RUN cmake .. -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="~/ngraph_dist"
+RUN if  [ "$buildtype" = "interpreter" ] ; then \
+        cmake .. -DNGRAPH_CPU_ENABLE=FALSE -DNGRAPH_UNIT_TEST_ENABLE=FALSE -DNGRAPH_TOOLS_ENABLE=FALSE \
+             -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="~/ngraph_dist";\
+    else \
+        cmake ..  -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="~/ngraph_dist" ;\
+    fi
 
 RUN make style-check
 RUN make
