@@ -4,7 +4,7 @@ set -e
 echo "TASK:" ${TASK}
 
 if [ ${TASK} == "cpp_test" ]; then
-    docker run -w '/root/ngraph/build' test_ngraph make check
+    docker run -w '/root/ngraph/build' test_ngraph make unit-test-check
 fi
 
 if [ ${TASK} == "python2_test" ]; then
