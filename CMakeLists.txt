@@ -189,6 +189,10 @@ if (NOT DEFINED NGRAPH_TBB_ENABLE)
     set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
 endif()
 
+add_custom_target(style-check
+    COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh
+)
+
 #-----------------------------------------------------------------------------------------------
 # enable or disable output from NGRAPH_DEBUG statements
 #-----------------------------------------------------------------------------------------------

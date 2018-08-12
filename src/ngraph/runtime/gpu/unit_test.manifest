@@ -24,11 +24,6 @@ select_and_scatter_with_overlap
 select_and_scatter_without_overlap
 #custom_mem is not implemented on GPU
 tensorview_custom_mem
-#sigmoid not implemented
-sigmoid_n1c1h2w2
-sigmoid_n1c1h4
-sigmoid_bprop_n1c1h4
-backwards_sigmoid
 #integer is not supported by cuDNN on backward pooling
 backwards_maxpool_n4_c1_hw4_2x2_max
 backwards_maxpool_n2_c1_hw5_3x3_str2_max
