@@ -45,7 +45,6 @@ void runtime::cpu::CPU_CallFrame::call(
     vector<void*> inputs;
     vector<void*> outputs;
 
-    propagate_layouts(input_tvs, m_external_function->get_parameter_layout_descriptors());
     propagate_layouts(output_tvs, m_external_function->get_result_layout_descriptors());
 
     for (size_t i = 0; i < input_tvs.size(); i++)
