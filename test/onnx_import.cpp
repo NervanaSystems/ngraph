@@ -26,7 +26,7 @@ TEST(onnx, model_add_abc)
 {
     auto model{ngraph::onnx_import::load_onnx_model(
         ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc.onnx"))};
-    auto backend{ngraph::runtime::Backend::create("CPU")};
+    auto backend{ngraph::runtime::Backend::create("INTERPRETER")};
 
     ngraph::Shape shape{1};
     auto a{backend->create_tensor(ngraph::element::f32, shape)};
@@ -46,7 +46,7 @@ TEST(onnx, model_add_abc_initializers)
 {
     auto model{ngraph::onnx_import::load_onnx_model(
         ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc_initializers.onnx"))};
-    auto backend{ngraph::runtime::Backend::create("CPU")};
+    auto backend{ngraph::runtime::Backend::create("INTERPRETER")};
 
     ngraph::Shape shape{2, 2};
 
@@ -69,7 +69,7 @@ TEST(onnx, model_split_equal_parts_default)
 
     for (std::size_t i = 0; i < expected_output.size(); ++i)
     {
-        auto result_vectors = execute(model[i], args, "CPU");
+        auto result_vectors = execute(model[i], args, "INTERPRETER");
         EXPECT_EQ(result_vectors.size(), 1);
         EXPECT_EQ(expected_output[i], result_vectors.front());
     }
@@ -88,7 +88,7 @@ TEST(onnx, model_split_equal_parts_2d)
 
     for (std::size_t i = 0; i < expected_output.size(); ++i)
     {
-        auto result_vectors = execute(model[i], args, "CPU");
+        auto result_vectors = execute(model[i], args, "INTERPRETER");
         EXPECT_EQ(result_vectors.size(), 1);
         EXPECT_EQ(expected_output[i], result_vectors[0]);
     }
@@ -107,7 +107,7 @@ TEST(onnx, model_split_variable_parts_2d)
 
     for (std::size_t i = 0; i < expected_output.size(); ++i)
     {
-        auto result_vectors = execute(model[i], args, "CPU");
+        auto result_vectors = execute(model[i], args, "INTERPRETER");
         EXPECT_EQ(result_vectors.size(), 1);
         EXPECT_EQ(expected_output[i], result_vectors[0]);
     }
