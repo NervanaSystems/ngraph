@@ -132,13 +132,6 @@ namespace ngraph
                                                         save_elementwise);
                 }
 
-                size_t build_replace_slice(const std::array<std::string, 3>& dtypes,
-                                           NVShape tensor_shape,
-                                           NVShape source_shape,
-                                           NVShape lower_bounds,
-                                           NVShape upper_bounds,
-                                           NVShape slice_stride);
-
                 size_t build_broadcast(const std::array<std::string, 2>& dtypes,
                                        NVShape result_shape,
                                        const std::set<size_t>& bcast_axes);
