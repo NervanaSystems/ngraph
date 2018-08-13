@@ -644,7 +644,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     m_pass_manager
         .register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
 
-    m_pass_manager.register_pass<runtime::gpu::pass::GPUAssignment>(this);
+    m_pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
     m_pass_manager.register_pass<ngraph::pass::Liveness>();
 
     m_pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
