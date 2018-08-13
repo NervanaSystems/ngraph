@@ -42,7 +42,7 @@ void regclass_pyngraph_runtime_Backend(py::module m)
                     std::shared_ptr<ngraph::Function>,
                     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>&,
                     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>&)) &
-                    ngraph::runtime::Backend::call<false>);
+                    ngraph::runtime::Backend::call);
     backend.def("remove_compiled_function",
                 (void (ngraph::runtime::Backend::*)(std::shared_ptr<ngraph::Function>)) &
                     ngraph::runtime::Backend::remove_compiled_function);

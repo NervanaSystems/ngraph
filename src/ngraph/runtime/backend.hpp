@@ -94,15 +94,11 @@ public:
     ///     compile it. Optionally validates the inputs and outputs against the function graph.
     /// @param func The function to execute
     /// @returns true if iteration is successful, false otherwise
-    template <bool validate = false>
-    bool call(std::shared_ptr<Function> func,
-              const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
-              const std::vector<std::shared_ptr<runtime::TensorView>>& inputs)
+    bool call_with_validate(std::shared_ptr<Function> func,
+                            const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+                            const std::vector<std::shared_ptr<runtime::TensorView>>& inputs)
     {
-        if (validate)
-        {
-            validate_call(func, outputs, inputs);
-        }
+        validate_call(func, outputs, inputs);
         return call(func, outputs, inputs);
     }
 
