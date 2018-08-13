@@ -53,7 +53,6 @@
 #include "ngraph/op/or.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
-#include "ngraph/op/relu.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
@@ -90,7 +89,6 @@
 #include "ngraph/runtime/cpu/kernel/not.hpp"
 #include "ngraph/runtime/cpu/kernel/not_equal.hpp"
 #include "ngraph/runtime/cpu/kernel/or.hpp"
-#include "ngraph/runtime/cpu/kernel/relu.hpp"
 #include "ngraph/runtime/cpu/kernel/result.hpp"
 #include "ngraph/runtime/cpu/kernel/sign.hpp"
 #include "ngraph/runtime/cpu/kernel/sin.hpp"
@@ -279,12 +277,6 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Relu)
-            {
-                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::relu);
-            }
-
-            template <>
             void Builder::BUILDER_DECL(ngraph::op::Sqrt)
             {
                 BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::sqrt);
@@ -391,7 +383,6 @@ namespace ngraph
             REGISTER_OP_BUILDER(Cosh)
             REGISTER_OP_BUILDER(Floor);
             REGISTER_OP_BUILDER(Negative);
-            REGISTER_OP_BUILDER(Relu);
             REGISTER_OP_BUILDER(Exp);
             REGISTER_OP_BUILDER(Log);
             REGISTER_OP_BUILDER(Sqrt);
