@@ -52,11 +52,17 @@ namespace ngraph
             public:
                 TVMInstance();
                 ~TVMInstance();
-                size_t add_module(const tvm::Module& module)
+                size_t add_module(tvm::Module& module)
                 {
                     m_modules.push_back(module);
                     return m_modules.size() - 1;
                 }
+                size_t add_module(tvm::Module&& module)
+                {
+                    m_modules.push_back(module);
+                    return m_modules.size() - 1;
+                }
+                tvm::Module& get_module(size_t index) { return m_modules[index]; }
                 const tvm::BuildConfig& config() const { return m_config; }
                 const tvm::Target& target() const { return m_target; }
                 const DLContext& context() const { return m_dl_ctx; }

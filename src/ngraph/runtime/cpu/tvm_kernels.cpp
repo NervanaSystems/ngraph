@@ -247,30 +247,29 @@ tvm_func divide(const std::unique_ptr<TVMInstance>& tvm_instance,
                 const std::vector<TensorViewWrapper>& out,
                 std::unordered_map<std::string, void*>& tensor_data)
 {
+    // create tvm module
     tvm::Var n("n");
     auto A = tvm::placeholder({n}, tvm::Float(32), "a");
     auto B = tvm::placeholder({n}, tvm::Float(32), "b");
     auto R = topi::divide(A, B, "tensor", topi::kBroadcast);
-
     std::unordered_map<tvm::Tensor, tvm::Buffer> binds;
-
     auto schedule = topi::x86::default_schedule(tvm_instance->target(), {R});
     auto lowered = tvm::lower(schedule, {A, B, R}, "func", binds, tvm_instance->config());
-    auto module =
-        tvm::build(lowered, tvm_instance->target(), tvm::Target(), tvm_instance->config());
-    // store module to keep its lifetime
-    tvm_instance->add_module(module);
-    const auto& kernel = module->GetFunction("func", false);
+    auto mod_index = tvm_instance->add_module(std::move(
+        tvm::build(lowered, tvm_instance->target(), tvm::Target(), tvm_instance->config())));
+    auto func = tvm_instance->get_module(mod_index)->GetFunction("func", false);
+
+    // get tensor_data ptrs
     auto& at = tensor_data[args[0].get_name()];
     auto& bt = tensor_data[args[1].get_name()];
     auto& rt = tensor_data[out[0].get_name()];
     auto size = out[0].get_size();
-    return [&](CPURuntimeContext* ctx) {
+    return [&, func, size](CPURuntimeContext* ctx) {
         int64_t dlshape[] = {static_cast<int64_t>(size)};
         DLTensor a = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, at);
         DLTensor b = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, bt);
         DLTensor r = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, rt);
-        kernel(&a, &b, &r);
+        func(&a, &b, &r);
     };
 }
 std::unordered_map<std::type_index,
