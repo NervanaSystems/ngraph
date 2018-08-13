@@ -18,7 +18,6 @@
 #include <CPP/custom_gpu_primitive.hpp>
 #include <CPP/reshape.hpp>
 
-#include "ngraph/runtime/intelgpu/code_writer.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
 
@@ -88,7 +87,9 @@ string
     return buffer;
 }
 
-static vector<size_t> generate_loops(codegen::CodeWriter& writer, const Shape& shape, bool is_begin)
+vector<size_t> runtime::intelgpu::generate_loops(codegen::CodeWriter& writer,
+                                                 const Shape& shape,
+                                                 bool is_begin)
 {
     const size_t cldnn_gws_lim = 3;
     vector<size_t> gws;
@@ -170,6 +171,7 @@ void runtime::intelgpu::do_pad_operation(cldnn::topology& topology,
 {
     const string entry_point_name = "op_pad_kernel_" + output_name;
     codegen::CodeWriter writer;
+    vector<size_t> gws;
 
     // The kernel name and parameters
     writer << "__kernel void " << entry_point_name << "(const __global float input"
@@ -179,26 +181,16 @@ void runtime::intelgpu::do_pad_operation(cldnn::topology& topology,
     writer.block_begin();
     {
         // Loop for Broadcast scalar over full output tensor
-        size_t var_idx = 0;
-        for (auto const& i : output_shape)
-        {
-            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
-                   << var_idx << ")\n";
-            writer.block_begin();
-            ++var_idx;
-        }
+        gws = runtime::intelgpu::generate_loops(writer, output_shape, true);
 
         writer << "output" << access_dims(output_shape) << " = scalar[0];\n";
 
         // Closing brackets for Broadcast loop
-        for (auto const& i : output_shape)
-        {
-            writer.block_end();
-        }
+        runtime::intelgpu::generate_loops(writer, output_shape, false);
 
         // Loop for Copy input matrix into output matrix with padding.
         // Padding include "pad_below" and "pad_interior" according nGraph documentation
-        var_idx = 0;
+        size_t var_idx = 0;
         for (auto const& i : input_shape)
         {
             writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
@@ -220,15 +212,15 @@ void runtime::intelgpu::do_pad_operation(cldnn::topology& topology,
     writer.block_end();
 
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
-    const cldnn::custom_gpu_primitive op_scalar(output_name,
-                                                {input_name, scalar_name},
-                                                {writer.get_code()},
-                                                entry_point_name,
-                                                get_kernel_args(2, 1),
-                                                "",
-                                                layout,
-                                                {1});
-    topology.add(op_scalar);
+    const cldnn::custom_gpu_primitive op_pad(output_name,
+                                             {input_name, scalar_name},
+                                             {writer.get_code()},
+                                             entry_point_name,
+                                             get_kernel_args(2, 1),
+                                             "",
+                                             layout,
+                                             gws);
+    topology.add(op_pad);
 }
 
 static void do_1d_scalar_mul(codegen::CodeWriter& writer,
@@ -256,14 +248,15 @@ static void do_1d_scalar_mul(codegen::CodeWriter& writer,
     writer.block_end();
 }
 
-static void do_2d_2d_mul(codegen::CodeWriter& writer,
-                         string& kernel_name,
-                         const Shape& shapeA,
-                         const Shape& shapeB,
-                         const Shape& shapeZ)
+static vector<size_t> do_2d_2d_mul(codegen::CodeWriter& writer,
+                                   string& kernel_name,
+                                   const Shape& shapeA,
+                                   const Shape& shapeB,
+                                   const Shape& shapeZ)
 {
     const size_t colrow = shapeA.at(1);
     kernel_name += "_do_2d_2d_mul";
+    vector<size_t> gws;
 
     writer << "__kernel void " << kernel_name << "(const __global float inputA"
            << runtime::intelgpu::array_dims(shapeA) << ", const __global float inputB"
@@ -273,13 +266,7 @@ static void do_2d_2d_mul(codegen::CodeWriter& writer,
     {
         size_t var_idx = 0;
         // Main loops
-        for (auto const& i : shapeZ)
-        {
-            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
-                   << var_idx << ")\n";
-            writer.block_begin();
-            ++var_idx;
-        }
+        gws = runtime::intelgpu::generate_loops(writer, shapeZ, true);
 
         // Inner loop
         writer << "float sum = 0.0f;\n";
@@ -292,22 +279,22 @@ static void do_2d_2d_mul(codegen::CodeWriter& writer,
         writer << "output[i0][i1] = sum;\n";
 
         // Closing brackets for main loops
-        for (auto const& i : shapeZ)
-        {
-            writer.block_end();
-        }
+        runtime::intelgpu::generate_loops(writer, shapeZ, false);
     }
     writer.block_end();
+
+    return gws;
 }
 
-static void do_3d_3d_mul(codegen::CodeWriter& writer,
-                         string& kernel_name,
-                         const Shape& shapeA,
-                         const Shape& shapeB,
-                         const Shape& shapeZ)
+static vector<size_t> do_3d_3d_mul(codegen::CodeWriter& writer,
+                                   string& kernel_name,
+                                   const Shape& shapeA,
+                                   const Shape& shapeB,
+                                   const Shape& shapeZ)
 {
     const size_t colrow = shapeA.back();
     kernel_name += "_do_3d_3d_mul";
+    vector<size_t> gws;
 
     writer << "__kernel void " << kernel_name << "(const __global float inputA"
            << runtime::intelgpu::array_dims(shapeA) << ", const __global float inputB"
@@ -317,13 +304,7 @@ static void do_3d_3d_mul(codegen::CodeWriter& writer,
     {
         size_t var_idx = 0;
         // Main loops
-        for (auto const& i : shapeZ)
-        {
-            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
-                   << var_idx << ")\n";
-            writer.block_begin();
-            ++var_idx;
-        }
+        gws = runtime::intelgpu::generate_loops(writer, shapeZ, true);
 
         // Inner loop
         writer << "float sum = 0.0f;\n";
@@ -336,22 +317,22 @@ static void do_3d_3d_mul(codegen::CodeWriter& writer,
         writer << "output[i0][i1][i2][i3] = sum;\n";
 
         // Closing brackets for main loops
-        for (auto const& i : shapeZ)
-        {
-            writer.block_end();
-        }
+        runtime::intelgpu::generate_loops(writer, shapeZ, false);
     }
     writer.block_end();
+
+    return gws;
 }
 
-static void do_3d_2d_mul(codegen::CodeWriter& writer,
-                         string& kernel_name,
-                         const Shape& shapeA,
-                         const Shape& shapeB,
-                         const Shape& shapeZ)
+static vector<size_t> do_3d_2d_mul(codegen::CodeWriter& writer,
+                                   string& kernel_name,
+                                   const Shape& shapeA,
+                                   const Shape& shapeB,
+                                   const Shape& shapeZ)
 {
     const size_t colrow = shapeA.back();
     kernel_name += "_do_3d_2d_mul";
+    vector<size_t> gws;
 
     writer << "__kernel void " << kernel_name << "(const __global float inputA"
            << runtime::intelgpu::array_dims(shapeA) << ", const __global float inputB"
@@ -361,13 +342,7 @@ static void do_3d_2d_mul(codegen::CodeWriter& writer,
     {
         size_t var_idx = 0;
         // Main loops
-        for (auto const& i : shapeZ)
-        {
-            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
-                   << var_idx << ")\n";
-            writer.block_begin();
-            ++var_idx;
-        }
+        gws = runtime::intelgpu::generate_loops(writer, shapeZ, true);
 
         // Inner loop
         writer << "float sum = 0.0f;\n";
@@ -380,44 +355,48 @@ static void do_3d_2d_mul(codegen::CodeWriter& writer,
         writer << "output[i0][i1][i2] = sum;\n";
 
         // Closing brackets for main loops
-        for (auto const& i : shapeZ)
-        {
-            writer.block_end();
-        }
+        runtime::intelgpu::generate_loops(writer, shapeZ, false);
     }
     writer.block_end();
+
+    return gws;
 }
 
-static void do_2d_1d_mul(codegen::CodeWriter& writer,
-                         string& kernel_name,
-                         const Shape& shapeA,
-                         const Shape& shapeB)
+static vector<size_t> do_2d_1d_mul(codegen::CodeWriter& writer,
+                                   string& kernel_name,
+                                   const Shape& shapeA,
+                                   const Shape& shapeB,
+                                   const Shape& shapeZ)
 {
-    const size_t rows = shapeA.at(0);
     const size_t colrow = shapeA.at(1);
     kernel_name += "_do_2d_1d_mul";
+    vector<size_t> gws;
 
     writer << "__kernel void " << kernel_name << "(const __global float inputA"
            << runtime::intelgpu::array_dims(shapeA) << ", const __global float inputB"
            << runtime::intelgpu::array_dims(shapeB) << ", __global float output"
-           << runtime::intelgpu::array_dims({rows}) << ")\n";
+           << runtime::intelgpu::array_dims(shapeZ) << ")\n";
     writer.block_begin();
     {
-        writer << "for (uint i0 = 0; i0 < " << rows << "; ++i0)\n";
+        // Main loops
+        gws = runtime::intelgpu::generate_loops(writer, shapeZ, true);
+
+        writer << "float sum = 0.0f;\n";
+        // Inner loop
+        writer << "for (uint i1 = 0; i1 < " << colrow << "; ++i1)\n";
         writer.block_begin();
         {
-            writer << "float sum = 0.0f;\n";
-            writer << "for (uint i1 = 0; i1 < " << colrow << "; ++i1)\n";
-            writer.block_begin();
-            {
-                writer << "sum += inputA[i0][i1] * inputB[i1];\n";
-            }
-            writer.block_end();
-            writer << "output[i0] = sum;\n";
+            writer << "sum += inputA[i0][i1] * inputB[i1];\n";
         }
         writer.block_end();
+        writer << "output[i0] = sum;\n";
+
+        // Closing brackets for main loops
+        runtime::intelgpu::generate_loops(writer, shapeZ, false);
     }
     writer.block_end();
+
+    return gws;
 }
 
 static void do_scalar_scalar_mul(codegen::CodeWriter& writer, string& kernel_name)
@@ -473,6 +452,7 @@ void runtime::intelgpu::do_dot_operation(cldnn::topology& topology,
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
     string entry_point_name = "dot_" + output_name;
     codegen::CodeWriter writer;
+    vector<size_t> gws = {1};
 
     const bool A_is_scalar = inputA_shape.empty();
     const bool B_is_scalar = inputB_shape.empty();
@@ -494,19 +474,19 @@ void runtime::intelgpu::do_dot_operation(cldnn::topology& topology,
     {
         if (inputA_shape.size() == 2 && inputB_shape.size() == 1)
         {
-            do_2d_1d_mul(writer, entry_point_name, inputA_shape, inputB_shape);
+            gws = do_2d_1d_mul(writer, entry_point_name, inputA_shape, inputB_shape, output_shape);
         }
         else if (inputA_shape.size() == 2 && inputB_shape.size() == 2)
         {
-            do_2d_2d_mul(writer, entry_point_name, inputA_shape, inputB_shape, output_shape);
+            gws = do_2d_2d_mul(writer, entry_point_name, inputA_shape, inputB_shape, output_shape);
         }
         else if (inputA_shape.size() == 3 && inputB_shape.size() == 3)
         {
-            do_3d_3d_mul(writer, entry_point_name, inputA_shape, inputB_shape, output_shape);
+            gws = do_3d_3d_mul(writer, entry_point_name, inputA_shape, inputB_shape, output_shape);
         }
         else if (inputA_shape.size() == 3 && inputB_shape.size() == 2)
         {
-            do_3d_2d_mul(writer, entry_point_name, inputA_shape, inputB_shape, output_shape);
+            gws = do_3d_2d_mul(writer, entry_point_name, inputA_shape, inputB_shape, output_shape);
         }
         else
         {
@@ -518,7 +498,6 @@ void runtime::intelgpu::do_dot_operation(cldnn::topology& topology,
         do_dot_operation_error(inputA_shape, inputB_shape, output_shape);
     }
 
-    //cout << writer.get_code() << endl;
     const cldnn::custom_gpu_primitive op_dot(output_name,
                                              {inputA_name, inputB_name},
                                              {writer.get_code()},
@@ -526,7 +505,7 @@ void runtime::intelgpu::do_dot_operation(cldnn::topology& topology,
                                              get_kernel_args(2, 1),
                                              "",
                                              layout,
-                                             {1});
+                                             gws);
     topology.add(op_dot);
 }
 
@@ -752,4 +731,45 @@ void runtime::intelgpu::do_reverse_operation(cldnn::topology& topology,
                                                  layout,
                                                  gws);
     topology.add(op_reverse);
+}
+
+void runtime::intelgpu::do_convert_operation(cldnn::topology& topology,
+                                             const string& input_name,
+                                             const Shape& input_shape,
+                                             const element::Type& input_type,
+                                             const string& output_name,
+                                             const Shape& output_shape,
+                                             const element::Type& output_type)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string entry_point_name = "convert_" + output_name;
+    const string& input_type_name = input_type.c_type_string();
+    const string& output_type_name = output_type.c_type_string();
+    codegen::CodeWriter writer;
+    vector<size_t> gws;
+
+    writer << "__kernel void " << entry_point_name << "(const __global " << input_type_name
+           << " input" << array_dims(input_shape) << ", __global " << output_type_name << " output"
+           << array_dims(output_shape) << ")\n";
+
+    writer.block_begin();
+    {
+        gws = generate_loops(writer, output_shape, true);
+
+        writer << "output" << access_dims(output_shape) << " = convert_" << output_type_name
+               << "(input" << access_dims(output_shape) << ");\n";
+
+        generate_loops(writer, output_shape, false);
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_convert(output_name,
+                                                 {input_name},
+                                                 {writer.get_code()},
+                                                 entry_point_name,
+                                                 get_kernel_args(1, 1),
+                                                 "",
+                                                 layout,
+                                                 gws);
+    topology.add(op_convert);
 }
