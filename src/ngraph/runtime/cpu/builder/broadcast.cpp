@@ -47,6 +47,9 @@ namespace ngraph
                 // TODO(jmenon): Shape transformations, rank reduction etc. needs to be general
                 // and not in any one builder. Move this to the Halide analysis phase.
 
+                // Transform output shape - ex. [4, 1, 2, 2] -> [4, 1, 4]
+                // if we're not broadcasting along axes 2 and 3
+
                 if (broadcast_axes.size() > 1)
                 {
                     auto innermost_axis = broadcast_axes.end();
@@ -81,6 +84,9 @@ namespace ngraph
                     }
                 }
 
+                // Squeeze output shape
+                // Ex. [2, 1, 1, 2] -> [2, 2]
+
                 auto squeezed_out_shape = Shape{};
                 for (int i = 0; i < out_shape.size(); i++)
                 {
@@ -113,6 +119,10 @@ namespace ngraph
                     arg_rank = 1;
                     arg_shape = Shape{1};
                 }
+
+                // Eigen broadcasts do not reshape their inputs
+                // so expand as needed
+                // Ex. [2] -> [2, 1] for output shape [2, 4]
 
                 auto expanded_input_shape = Shape(out_rank, 1);
                 size_t i = 0;
