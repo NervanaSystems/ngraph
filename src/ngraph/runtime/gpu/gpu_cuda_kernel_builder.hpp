@@ -93,6 +93,7 @@ namespace ngraph
 
                 static void get_pad_dynamic_op(codegen::CodeWriter& writer,
                                                const std::string& name,
+                                               GPUKernelArgs& args,
                                                const std::array<std::string, 2>& data_types,
                                                size_t rank);
 

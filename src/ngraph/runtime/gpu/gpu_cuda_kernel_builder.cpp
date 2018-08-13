@@ -306,28 +306,11 @@ void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
 void runtime::gpu::CudaKernelBuilder::get_pad_dynamic_op(
     codegen::CodeWriter& writer,
     const std::string& name,
+    GPUKernelArgs& args,
     const std::array<std::string, 2>& data_types,
     size_t rank)
 {
-    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
-           << data_types[1] << "* out,";
-    for (size_t i = 0; i < rank; i++)
-    {
-        writer << "uint32_t input_strides" << i << ", ";
-    }
-    for (size_t i = 0; i < rank; i++)
-    {
-        writer << "uint32_t output_strides" << i << ", ";
-    }
-    for (size_t i = 0; i < rank; i++)
-    {
-        writer << "uint32_t padding_below" << i << ", ";
-    }
-    for (size_t i = 0; i < rank; i++)
-    {
-        writer << "uint32_t padding_interior" << i << ", ";
-    }
-    writer << "uint32_t n)\n";
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
         writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
