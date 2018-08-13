@@ -101,8 +101,8 @@ public:
     }
 
     bool call_with_validate(const shared_ptr<Function>& func,
-              const vector<shared_ptr<runtime::TensorView>>& outputs,
-              const vector<shared_ptr<runtime::TensorView>>& inputs)
+                            const vector<shared_ptr<runtime::TensorView>>& outputs,
+                            const vector<shared_ptr<runtime::TensorView>>& inputs)
     {
         // Get FunctionInstance
         bool rc = true;

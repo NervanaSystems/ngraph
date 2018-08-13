@@ -765,13 +765,13 @@ TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
     auto result_variance_bnr = backend->create_tensor(element::f32, var_shape);
 
     backend->call_with_validate(f,
-                  {bn_output,
-                   result_mean,
-                   result_variance,
-                   bn_output_bnr,
-                   result_mean_bnr,
-                   result_variance_bnr},
-                  {input_t, gamma_t, beta_t});
+                                {bn_output,
+                                 result_mean,
+                                 result_variance,
+                                 bn_output_bnr,
+                                 result_mean_bnr,
+                                 result_variance_bnr},
+                                {input_t, gamma_t, beta_t});
 
     EXPECT_TRUE(test::all_close(read_vector<float>(bn_output), read_vector<float>(bn_output_bnr)));
     EXPECT_TRUE(
@@ -1675,7 +1675,8 @@ TEST(cpu_fusion, group_convolution)
         backend->create_tensor(element::f32, shape_ur, erv.data()));
     auto upper_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(
         backend->create_tensor(element::f32, shape_ur, erv.data() + erv.size() / 2));
-    backend->call_with_validate(f, {group_result, lower_result, upper_result}, {a_, b_, c_, d_, e_, f_});
+    backend->call_with_validate(
+        f, {group_result, lower_result, upper_result}, {a_, b_, c_, d_, e_, f_});
     ASSERT_EQ(rv, erv);
 }
 
@@ -1735,9 +1736,10 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     copy_data(weights_iter_t, vector<float>(400 * 100, 1));
     copy_data(biases_t, vector<float>(400, 1));
 
-    backend->call_with_validate(func,
-                  {result_ht, result_ct},
-                  {src_layer_t, src_iter_t, weights_layer_t, weights_iter_t, biases_t});
+    backend->call_with_validate(
+        func,
+        {result_ht, result_ct},
+        {src_layer_t, src_iter_t, weights_layer_t, weights_iter_t, biases_t});
     vector<float> expected_ht(10 * 100, 0.964028f);
     vector<float> expected_ct;
     for (size_t i = 0; i < 20 * 100; i++)
