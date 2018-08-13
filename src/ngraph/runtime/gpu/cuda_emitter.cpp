@@ -518,8 +518,8 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string
     uint32_t block_size_x = 64;
     uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
 
-    GPUShape pad_below(input_shape.size(), 0);
-    GPUShape pad_interior(input_shape.size(), 1);
+    NVShape pad_below(input_shape.size(), 0);
+    NVShape pad_interior(input_shape.size(), 1);
 
     int64_t i = padding_below.size() - 1;
     int64_t j = input_shape.size() - 1;
