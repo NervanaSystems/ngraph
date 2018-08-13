@@ -204,7 +204,7 @@ OPTIONS
             {
                 shared_ptr<Function> f = deserialize(m);
                 cout << "Benchmarking " << m << ", " << backend << " backend, " << iterations
-                     << " iterations.\n";
+                     << " iterations, " << warmup_iterations << " warmups.\n";
                 run_benchmark(f, backend, iterations, timing_detail, warmup_iterations);
             }
             catch (exception e)
@@ -217,7 +217,7 @@ OPTIONS
     {
         shared_ptr<Function> f = deserialize(model);
         cout << "Benchmarking " << model << ", " << backend << " backend, " << iterations
-             << " iterations.\n";
+             << " iterations, " << warmup_iterations << " warmups.\n";
         run_benchmark(f, backend, iterations, timing_detail, warmup_iterations);
     }
 

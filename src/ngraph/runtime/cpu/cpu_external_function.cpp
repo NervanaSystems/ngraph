@@ -1136,9 +1136,12 @@ void runtime::cpu::CPU_ExternalFunction::build()
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
-    pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
+    if (std::getenv("NGRAPH_USE_TVM") == nullptr)
+    {
+        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+        pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
+        pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
+    }
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
     pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
@@ -1146,6 +1149,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
     pass_manager.run_passes(m_function, false);
+    for (shared_ptr<Node> node : m_function->get_ordered_ops())
+        std::cout << "Op: " << node->get_friendly_name() << " " << node->get_shape() << std::endl;
 
     // Store layouts assigned for arguments
     for (const auto& parameter : m_function->get_parameters())

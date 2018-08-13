@@ -206,6 +206,9 @@ void pass::CoreFusion::construct_folded_batch_norm()
 
     ngraph::pattern::graph_rewrite_callback callback = [input, filters, mean, var, gamma, beta](
         pattern::Matcher& m) {
+
+        if (std::getenv("NGRAPH_USE_TVM") != nullptr)
+            return false;
         NGRAPH_DEBUG << "In callback for folded batch norm against node = "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();

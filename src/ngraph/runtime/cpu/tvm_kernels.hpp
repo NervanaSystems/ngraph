@@ -30,6 +30,13 @@
 #include <tvm/operation.h>
 #include <tvm/tvm.h>
 #include <ngraph/shape.hpp>
+#include "ngraph/node.hpp"
+#include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
+
+#define CHECK_BUILD_TVM_FUNCTOR                                                                    \
+    (std::getenv("NGRAPH_USE_TVM") != nullptr && args[0].get_element_type() == element::f32 &&     \
+     build_tvm_functor(external_function, node, args, out))
 
 namespace ngraph
 {
@@ -37,6 +44,10 @@ namespace ngraph
     {
         namespace cpu
         {
+            bool build_tvm_functor(CPU_ExternalFunction* external_function,
+                                   const ngraph::Node* node,
+                                   const std::vector<TensorViewWrapper>& args,
+                                   const std::vector<TensorViewWrapper>& out);
             class TVMInstance
             {
             public:

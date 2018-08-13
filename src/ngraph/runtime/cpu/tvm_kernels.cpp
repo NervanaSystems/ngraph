@@ -16,6 +16,8 @@
 
 #include <memory>
 #include <string>
+#include <typeindex>
+#include <typeinfo>
 
 #include <dmlc/logging.h>
 #include <gtest/gtest.h>
@@ -25,11 +27,11 @@
 #include <tvm/operation.h>
 #include <tvm/tvm.h>
 #include <ngraph/util.hpp>
+#include "ngraph/op/divide.hpp"
 
 #include "tvm_kernels.hpp"
 
 using namespace ngraph::runtime::cpu;
-
 TVMInstance::TVMInstance()
 {
     std::cout << "Creating TVMInstance" << std::endl;
@@ -227,4 +229,66 @@ void tvm_kernel::transpose_kernel<float>(const std::unique_ptr<TVMInstance>& tvm
       std::cout << static_cast<float*>(output)[i] << " ";
     }
     std::cout << std::endl;
+}
+
+#define TI(x) std::type_index(typeid(x))
+using tvm_func = std::function<void(CPURuntimeContext* ctx)>;
+tvm_func divide(const std::unique_ptr<TVMInstance>& tvm_instance,
+                const ngraph::Node* node,
+                const std::vector<TensorViewWrapper>& args,
+                const std::vector<TensorViewWrapper>& out,
+                std::unordered_map<std::string, void*>& tensor_data)
+{
+    tvm::Var n("n");
+    auto A = tvm::placeholder({n}, tvm::Float(32), "a");
+    auto B = tvm::placeholder({n}, tvm::Float(32), "b");
+    auto R = topi::divide(A, B);
+    auto& at = tensor_data[args[0].get_name()];
+    auto& bt = tensor_data[args[1].get_name()];
+    auto& rt = tensor_data[out[0].get_name()];
+    int64_t dlshape[] = {static_cast<int64_t>(out[0].get_size())};
+    DLTensor a = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, at);
+    DLTensor b = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, bt);
+    DLTensor r = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, rt);
+
+    std::unordered_map<tvm::Tensor, tvm::Buffer> binds;
+
+    auto schedule = topi::x86::default_schedule(tvm_instance->target(), {R});
+    auto lowered = tvm::lower(schedule, {A, B, R}, "func", binds, tvm_instance->config());
+    auto module =
+        tvm::build(lowered, tvm_instance->target(), tvm::Target(), tvm_instance->config());
+    // store module to keep its lifetime
+    tvm_instance->add_module(module);
+    auto kernel = module->GetFunction("func", false);
+    return [&](CPURuntimeContext* ctx) {
+        a.data = at;
+        b.data = bt;
+        r.data = rt;
+        kernel(&a, &b, &r);
+    };
+}
+std::unordered_map<std::type_index,
+                   std::function<tvm_func(const std::unique_ptr<TVMInstance>&,
+                                          const ngraph::Node*,
+                                          const std::vector<TensorViewWrapper>&,
+                                          const std::vector<TensorViewWrapper>&,
+                                          std::unordered_map<std::string, void*>&)>>
+    tvm_funcs = {{TI(ngraph::op::Divide), divide}};
+
+bool build_tvm_functor(CPU_ExternalFunction* external_function,
+                       const ngraph::Node* node,
+                       const std::vector<TensorViewWrapper>& args,
+                       const std::vector<TensorViewWrapper>& out)
+{
+    auto key = TI(*node);
+    if (tvm_funcs.find(key) == tvm_funcs.end())
+    {
+        return false;
+    }
+    auto& functors = external_function->get_functors();
+    auto& tvm_instance = external_function->get_tvm_instance();
+    auto& tensor_data = external_function->get_tensor_data();
+    auto func = tvm_funcs[key](tvm_instance, node, args, out, tensor_data);
+    functors.emplace_back(func);
+    return true;
 }
