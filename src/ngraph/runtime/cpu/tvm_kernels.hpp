@@ -21,6 +21,7 @@
 #include <dmlc/logging.h>
 #include <gtest/gtest.h>
 #include <ngraph/except.hpp>
+#include <ngraph/shape.hpp>
 #include <topi/broadcast.h>
 #include <topi/elemwise.h>
 #include <topi/nn.h>
@@ -29,7 +30,6 @@
 #include <tvm/build_module.h>
 #include <tvm/operation.h>
 #include <tvm/tvm.h>
-#include <ngraph/shape.hpp>
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
@@ -201,7 +201,6 @@ namespace ngraph
     };                                                                                             \
     functors.emplace_back(functor);
 
-
                 // Transpose
                 template <typename ElementType>
                 tvm::PackedFunc transpose_builder(const std::unique_ptr<TVMInstance>& tvm_instance,
@@ -215,19 +214,20 @@ namespace ngraph
                         "unsupported ElementType");
                 }
                 template <>
-                tvm::PackedFunc transpose_builder<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
-                                                  const size_t in_rank,
-                                                  const std::vector<size_t>& in_shape,
-                                                  const size_t out_rank,
-                                                  const std::vector<size_t>& axes);
+                tvm::PackedFunc
+                    transpose_builder<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                             const size_t in_rank,
+                                             const std::vector<size_t>& in_shape,
+                                             const size_t out_rank,
+                                             const std::vector<size_t>& axes);
 
                 template <typename ElementType>
                 void transpose_kernel(const std::unique_ptr<TVMInstance>& tvm_instance,
-                                                         const tvm::PackedFunc& func,
-                                                         void* input,
-                                                         void* output,
-                                                         Shape input_shape,
-                                                         Shape output_shape)
+                                      const tvm::PackedFunc& func,
+                                      void* input,
+                                      void* output,
+                                      Shape input_shape,
+                                      Shape output_shape)
                 {
                     throw ngraph_error(
                         "tvm_kernel::transpose_kernel() instantiated with "
@@ -236,11 +236,11 @@ namespace ngraph
 
                 template <>
                 void transpose_kernel<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
-                                                         const tvm::PackedFunc& func,
-                                                         void* input,
-                                                         void* output,
-                                                         ngraph::Shape input_shape,
-                                                         ngraph::Shape output_shape);
+                                             const tvm::PackedFunc& func,
+                                             void* input,
+                                             void* output,
+                                             ngraph::Shape input_shape,
+                                             ngraph::Shape output_shape);
 #if 0
 
                 template <unsigned int InRank, unsigned int OutRank>
@@ -273,7 +273,6 @@ namespace ngraph
 #endif
                 using TransposeBuilder = std::function<decltype(transpose_builder<float>)>;
                 using TransposeKernel = std::function<decltype(transpose_kernel<float>)>;
-
             }
         }
     }
