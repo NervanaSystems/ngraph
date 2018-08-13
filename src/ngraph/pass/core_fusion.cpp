@@ -336,9 +336,9 @@ void pass::CoreFusion::construct_conv_affine_folding()
                 }
                 if (bcast->get_argument(0)->get_shape().size() == 2)
                 {
-                    Shape shape{bcast->get_argument(0)->get_shape()[1]};
+                    Shape bshape{bcast->get_argument(0)->get_shape()[1]};
                     return static_pointer_cast<ngraph::Node>(std::make_shared<op::Reshape>(
-                        bcast->get_argument(0), AxisVector{0, 1}, shape));
+                        bcast->get_argument(0), AxisVector{0, 1}, bshape));
                 }
                 throw ngraph_error("Unexpected shape for bcast input");
             };
