@@ -246,7 +246,7 @@ NGRAPH_TEST (${BACKEND_NAME}, %s)
 
     vector<float> expected_result{%s};
 
-    backend->call(function, {result}, {a, b});
+    backend->call_with_validate(function, {result}, {a, b});
     EXPECT_TRUE(test::all_close<float>(vector<float>{expected_result}, read_vector<float>(result), 1.0e-4f, 1.0e-6f));
     // only test backprop for certain cases as it takes significant compute resources
     if(%s) {

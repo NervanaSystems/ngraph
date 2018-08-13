@@ -26,8 +26,6 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
@@ -51,27 +49,15 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/not.hpp"
 #include "ngraph/op/not_equal.hpp"
-#include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/or.hpp"
-#include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
-#include "ngraph/op/product.hpp"
-#include "ngraph/op/reduce.hpp"
-#include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/relu.hpp"
-#include "ngraph/op/remainder.hpp"
-#include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/result.hpp"
-#include "ngraph/op/reverse_sequence.hpp"
-#include "ngraph/op/select.hpp"
-#include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
 #include "ngraph/op/sinh.hpp"
-#include "ngraph/op/slice.hpp"
-#include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/tan.hpp"
@@ -80,7 +66,6 @@
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/kernel/abs.hpp"
 #include "ngraph/runtime/cpu/kernel/acos.hpp"
-#include "ngraph/runtime/cpu/kernel/add.hpp"
 #include "ngraph/runtime/cpu/kernel/and.hpp"
 #include "ngraph/runtime/cpu/kernel/asin.hpp"
 #include "ngraph/runtime/cpu/kernel/atan.hpp"
@@ -132,12 +117,6 @@ namespace ngraph
     {
         namespace cpu
         {
-            template <>
-            void Builder::BUILDER_DECL(ngraph::op::Add)
-            {
-                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::add);
-            }
-
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Subtract)
             {
@@ -399,7 +378,6 @@ namespace ngraph
 
             REGISTER_OP_BUILDER(Constant);
             REGISTER_OP_BUILDER(Result);
-            REGISTER_OP_BUILDER(Add);
             REGISTER_OP_BUILDER(Subtract);
             REGISTER_OP_BUILDER(Multiply);
             REGISTER_OP_BUILDER(Divide);

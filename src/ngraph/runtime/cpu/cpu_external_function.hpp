@@ -24,6 +24,7 @@
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "ngraph/codegen/code_writer.hpp"
@@ -93,7 +94,7 @@ namespace ngraph
                 const std::string& get_function_name() const { return m_function_name; }
                 const std::shared_ptr<ngraph::Function> get_function() { return m_function; }
                 // Temporary Memory Pool alignment
-                static const size_t s_memory_pool_alignment;
+                static constexpr size_t s_memory_pool_alignment = 4096;
 
                 std::list<std::function<void(CPURuntimeContext*)>>& get_functors()
                 {
@@ -178,8 +179,11 @@ namespace ngraph
                     executor;
                 std::unordered_map<std::string, void*> tensor_data;
                 std::unordered_map<std::string, bool> tensor_stale;
-                std::unordered_map<std::string, size_t> intermediates_offsets;
-                std::unordered_map<std::string, size_t> function_input_index, function_output_index;
+                std::list<std::pair<std::reference_wrapper<void*>, size_t>> intermediates_offsets;
+                std::list<
+                    std::tuple<std::reference_wrapper<void*>, size_t, std::reference_wrapper<bool>>>
+                    function_input_index;
+                std::list<std::pair<std::reference_wrapper<void*>, size_t>> function_output_index;
                 std::unordered_map<std::string, std::shared_ptr<CPU_ExternalFunction>> callees;
                 bool m_is_built;
                 bool m_direct_execution;

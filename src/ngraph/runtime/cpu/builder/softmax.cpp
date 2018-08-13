@@ -98,6 +98,19 @@ namespace ngraph
                         };
                         functors.emplace_back(functor);
                     }
+                    else if (arg_shape.size() == 3 && axes.size() == 2)
+                    {
+                        std::function<decltype(runtime::cpu::kernel::softmax_3d_2rd<float>)> kernel;
+
+                        SELECT_KERNEL(kernel,
+                                      args[0].get_element_type(),
+                                      runtime::cpu::kernel::softmax_3d_2rd);
+
+                        auto functor = [&, kernel, arg_shape, axes](CPURuntimeContext* ctx) {
+                            kernel(arg_tensor, out_tensor, arg_shape, axes);
+                        };
+                        functors.emplace_back(functor);
+                    }
                     else
                     {
                         throw ngraph_error("Unsupported Softmax");

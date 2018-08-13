@@ -475,7 +475,7 @@ namespace ngraph
                 auto axis = concat->get_concatenation_axis();
 
                 std::vector<std::string> dtypes;
-                std::vector<GPUShape> input_shapes;
+                std::vector<NVShape> input_shapes;
                 for (auto arg : args)
                 {
                     dtypes.push_back(arg.get_type());
