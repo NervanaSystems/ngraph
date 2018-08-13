@@ -345,8 +345,11 @@ void runtime::gpu::CudaKernelBuilder::get_pad_dynamic_op(
         writer.block_begin();
         {
             writer << "uint32_t output_idx = 0;\n";
-            writer << "uint32_t input_idx = tid;\n";
 
+            if (rank > 0)
+            {
+                writer << "uint32_t input_idx = tid;\n";
+            }
             for (size_t i = 0; i < rank; i++)
             {
                 writer << "output_idx += (input_idx / input_strides" << i << " * padding_interior"

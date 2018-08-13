@@ -53,7 +53,6 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
                     if (node->liveness_free_list.count(input) != 0 &&
                         node->liveness_new_list.count(output) != 0)
                     {
-                        NGRAPH_INFO << "pass through";
                         in_place_outputs.insert({output, input});
                         reused_inputs.insert(input);
                     }

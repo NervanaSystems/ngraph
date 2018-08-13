@@ -40,7 +40,7 @@ namespace ngraph
                 template <>
                 void GPULayout::LAYOUT_DECL(ngraph::op::ReplaceSlice)
                 {
-                    auto rep_slice = static_cast<ngraph::op::ReplaceSlice*>(node);
+                    auto rep_slice = static_cast<ngraph::op::ReplaceSlice*>(node.get());
 
                     auto op_annotations = rep_slice->get_op_annotations();
                     if (op_annotations)
@@ -64,7 +64,8 @@ namespace ngraph
 #define TI(x) type_index(typeid(x))
 
 static const runtime::gpu::pass::LayoutOpMap s_dispatcher{
-    {TI(ngraph::op::ReplaceSlice), &runtime::gpu::pass::GPULayout::layout<ngraph::op::ReplaceSlice>},
+    {TI(ngraph::op::ReplaceSlice),
+     &runtime::gpu::pass::GPULayout::layout<ngraph::op::ReplaceSlice>},
 };
 
 bool runtime::gpu::pass::GPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
@@ -76,10 +77,6 @@ bool runtime::gpu::pass::GPULayout::run_on_call_graph(const std::list<std::share
         if (handler != s_dispatcher.end())
         {
             handler->second(m_external_function, node);
-        }
-        else
-        {
-            set_native_layouts(m_external_function, node);
         }
     }
 
