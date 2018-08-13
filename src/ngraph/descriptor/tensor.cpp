@@ -29,12 +29,6 @@ descriptor::Tensor::Tensor(const element::Type& element_type,
     , m_name{name}
     , m_next_view_id{0}
 {
-    size_t size = 1;
-    for (size_t s : primary_tensor_view->get_tensor_view_type()->get_shape())
-    {
-        size *= s;
-    }
-    m_size = size * m_element_type.size();
 }
 
 string descriptor::Tensor::make_tensor_name(const Node* node, size_t value_index)
@@ -45,11 +39,6 @@ string descriptor::Tensor::make_tensor_name(const Node* node, size_t value_index
 string descriptor::Tensor::get_next_view_name()
 {
     return m_name + "_TV" + to_string(m_next_view_id++);
-}
-
-size_t descriptor::Tensor::size() const
-{
-    return m_size;
 }
 
 void descriptor::Tensor::set_pool_offset(size_t offset)

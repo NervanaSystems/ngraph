@@ -43,7 +43,7 @@ endif()
 
 # This section sets up MKL as an external project to be used later by MKLDNN
 
-set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/v0.14/")
+set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/v0.15/")
 set(MKLVERSION "2018.0.3.20180406")
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     set(MKLPACKAGE "mklml_lnx_${MKLVERSION}.tgz")
@@ -82,7 +82,7 @@ foreach(LIB ${MKL_LIBS})
 endforeach()
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
-set(MKLDNN_GIT_TAG "0e7ca73")
+set(MKLDNN_GIT_TAG "64e03a1")
 
 # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
 if(${CMAKE_VERSION} VERSION_LESS 3.2)

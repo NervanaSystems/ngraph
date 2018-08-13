@@ -54,18 +54,16 @@ private:
 
 public:
     const std::string& get_name() const { return m_name; }
-    size_t size() const;
     void set_pool_offset(size_t);
     size_t get_pool_offset() const;
     const element::Type& get_element_type() const { return m_element_type; }
     static std::string make_tensor_name(const Node* node, size_t value_index);
-
+    PrimaryTensorView* get_primary_tensor_view() const { return m_primary_tensor_view; }
 protected:
     const element::Type m_element_type;
     PrimaryTensorView* m_primary_tensor_view;
     std::string m_name;
     size_t m_next_view_id;
-    size_t m_size;
     size_t m_pool_offset;
 };
 
