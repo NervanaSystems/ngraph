@@ -20,7 +20,6 @@
 #include <typeinfo>
 
 #include <dmlc/logging.h>
-#include <gtest/gtest.h>
 #include <ngraph/util.hpp>
 #include <topi/broadcast.h>
 #include <topi/x86/default.h>

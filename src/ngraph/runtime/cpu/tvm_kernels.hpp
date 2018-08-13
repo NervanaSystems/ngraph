@@ -19,7 +19,6 @@
 #include <iostream>
 
 #include <dmlc/logging.h>
-#include <gtest/gtest.h>
 #include <ngraph/except.hpp>
 #include <ngraph/shape.hpp>
 #include <topi/broadcast.h>
