@@ -544,7 +544,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string
     std::unique_ptr<gpu::primitive> pad_dynamic(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
             void** args_list = args.resolve_placeholder(0, &inputs[0])
-                                   .resolve_placeholder(2, &outputs[0])
+                                   .resolve_placeholder(1, &outputs[0])
                                    .get_argument_list();
 
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
