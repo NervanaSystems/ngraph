@@ -97,6 +97,18 @@ namespace ngraph
                     else
                     {
                         broadcast_axes.erase(i);
+                        // TODO(jmenon): This needs to be rewritten
+                        // when it gets moved to the analysis pass
+                        // that doesn't use AxisSet
+                        auto new_bcast_axes = AxisSet{};
+                        for (auto axis : broadcast_axes)
+                        {
+                            if (axis > i)
+                                new_bcast_axes.insert(axis - 1);
+                            else
+                                new_bcast_axes.insert(axis);
+                        }
+                        broadcast_axes = new_bcast_axes;
                     }
                 }
                 out_shape = squeezed_out_shape;
