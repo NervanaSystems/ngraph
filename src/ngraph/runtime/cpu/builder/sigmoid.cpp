@@ -237,9 +237,175 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::SigmoidMultiplyBackprop)
+            {
+                auto& functors = external_function->get_functors();
+                auto& tensor_data = external_function->get_tensor_data();
+
+                auto& arg0_tensor = tensor_data[args[0].get_name()];
+                auto& arg1_tensor = tensor_data[args[1].get_name()];
+                auto& arg2_tensor = tensor_data[args[2].get_name()];
+                auto& out0_tensor = tensor_data[out[0].get_name()];
+                auto& out1_tensor = tensor_data[out[1].get_name()];
+                auto tensor_size = shape_size(args[0].get_shape());
+
+                auto sigmoid_mul = static_cast<const ngraph::op::SigmoidMultiplyBackprop*>(node);
+                function<void(CPURuntimeContext*)> functor;
+
+                const size_t index =
+                    static_cast<size_t>(sigmoid_mul->get_input_func_type(0)) *
+                        static_cast<size_t>(ngraph::op::SigmoidMultiply::FunctionType::NumTypes) +
+                    static_cast<size_t>(sigmoid_mul->get_input_func_type(1));
+
+                switch (index)
+                {
+                case 0 /*Logistic|Logistic*/:
+                    functor = [&, tensor_size](CPURuntimeContext* ctx) {
+                        auto in0 = wrap_into_tensor_map<float>(arg0_tensor, tensor_size);
+                        auto in1 = wrap_into_tensor_map<float>(arg1_tensor, tensor_size);
+                        auto delta = wrap_into_tensor_map<float>(arg2_tensor, tensor_size);
+                        auto i0_delta = wrap_into_tensor_map<float>(out0_tensor, tensor_size);
+                        auto i1_delta = wrap_into_tensor_map<float>(out1_tensor, tensor_size);
+                        auto i0 = delta * (in1.exp() * in0.exp()) /
+                                  ((in1.exp() + 1.f) * ((in0.exp() + 1.f) * (in0.exp() + 1.f)));
+                        auto i1 = delta * (in0.exp() * in1.exp()) /
+                                  ((in0.exp() + 1.f) * ((in1.exp() + 1.f) * (in1.exp() + 1.f)));
+                        i0_delta.device(eigen::global_thread_pool_device) = i0;
+                        i1_delta.device(eigen::global_thread_pool_device) = i1;
+                    };
+                    break;
+                case 1 /*Logistic|Tanh*/:
+
+                    functor = [&, tensor_size](CPURuntimeContext* ctx) {
+                        auto in0 = wrap_into_tensor_map<float>(arg0_tensor, tensor_size);
+                        auto in1 = wrap_into_tensor_map<float>(arg1_tensor, tensor_size);
+                        auto delta = wrap_into_tensor_map<float>(arg2_tensor, tensor_size);
+                        auto i0_delta = wrap_into_tensor_map<float>(out0_tensor, tensor_size);
+                        auto i1_delta = wrap_into_tensor_map<float>(out1_tensor, tensor_size);
+                        auto i0 =
+                            delta * (((in1 * 2.f).exp() - 1.f) * in0.exp()) /
+                            (((in1 * 2.f).exp() + 1.f) * ((in0.exp() + 1.f) * (in0.exp() + 1.f)));
+                        auto i1 = delta * (in0.exp() * (4.f * (in1 * 2.f).exp())) /
+                                  ((in0.exp() + 1.f) *
+                                   (((in1 * 2.f).exp() + 1.f) * ((in1 * 2.f).exp() + 1.f)));
+                        i0_delta.device(eigen::global_thread_pool_device) = i0;
+                        i1_delta.device(eigen::global_thread_pool_device) = i1;
+                    };
+                    break;
+                case 2 /*Logistic|Identity*/:
+                    functor = [&, tensor_size](CPURuntimeContext* ctx) {
+                        auto in0 = wrap_into_tensor_map<float>(arg0_tensor, tensor_size);
+                        auto in1 = wrap_into_tensor_map<float>(arg1_tensor, tensor_size);
+                        auto delta = wrap_into_tensor_map<float>(arg2_tensor, tensor_size);
+                        auto i0_delta = wrap_into_tensor_map<float>(out0_tensor, tensor_size);
+                        auto i1_delta = wrap_into_tensor_map<float>(out1_tensor, tensor_size);
+                        auto i0 =
+                            delta * (in1 * in0.exp()) / ((in0.exp() + 1.f) * (in0.exp() + 1.f));
+                        auto i1 = delta * in0.exp() / ((in0.exp() + 1.f));
+                        i0_delta.device(eigen::global_thread_pool_device) = i0;
+                        i1_delta.device(eigen::global_thread_pool_device) = i1;
+                    };
+                    break;
+                case 3 /*Tanh|Logistic*/:
+                    functor = [&, tensor_size](CPURuntimeContext* ctx) {
+                        auto in0 = wrap_into_tensor_map<float>(arg0_tensor, tensor_size);
+                        auto in1 = wrap_into_tensor_map<float>(arg1_tensor, tensor_size);
+                        auto delta = wrap_into_tensor_map<float>(arg2_tensor, tensor_size);
+                        auto i0_delta = wrap_into_tensor_map<float>(out0_tensor, tensor_size);
+                        auto i1_delta = wrap_into_tensor_map<float>(out1_tensor, tensor_size);
+                        auto i0 = delta * (in1.exp() * (4.f * (in0 * 2.f).exp())) /
+                                  ((in1.exp() + 1.f) * ((in0 * 2.f).exp() + 1.f) *
+                                   ((in0 * 2.f).exp() + 1.f));
+                        auto i1 =
+                            delta * (((in0 * 2.f).exp() - 1.f) * in1.exp()) /
+                            (((in0 * 2.f).exp() + 1.f) * ((in1.exp() + 1.f) * (in1.exp() + 1.f)));
+                        i0_delta.device(eigen::global_thread_pool_device) = i0;
+                        i1_delta.device(eigen::global_thread_pool_device) = i1;
+                    };
+                    break;
+                case 4 /*Tanh|Tanh*/:
+                    functor = [&, tensor_size](CPURuntimeContext* ctx) {
+                        auto in0 = wrap_into_tensor_map<float>(arg0_tensor, tensor_size);
+                        auto in1 = wrap_into_tensor_map<float>(arg1_tensor, tensor_size);
+                        auto delta = wrap_into_tensor_map<float>(arg2_tensor, tensor_size);
+                        auto i0_delta = wrap_into_tensor_map<float>(out0_tensor, tensor_size);
+                        auto i1_delta = wrap_into_tensor_map<float>(out1_tensor, tensor_size);
+                        auto i0 = delta * (((in1 * 2.f).exp() - 1.f) * (4.f * (in0 * 2.f).exp())) /
+                                  (((in1 * 2.f).exp() + 1.f) *
+                                   (((in0 * 2.f).exp() + 1.f) * ((in0 * 2.f).exp() + 1.f)));
+                        auto i1 = delta * (((in0 * 2.f).exp() - 1.f) * (4.f * (in1 * 2.f).exp())) /
+                                  (((in0 * 2.f).exp() + 1.f) *
+                                   (((in1 * 2.f).exp() + 1.f) * ((in1 * 2.f).exp() + 1.f)));
+                        i0_delta.device(eigen::global_thread_pool_device) = i0;
+                        i1_delta.device(eigen::global_thread_pool_device) = i1;
+                    };
+                    break;
+                case 5 /*Tanh|Identity*/:
+                    functor = [&, tensor_size](CPURuntimeContext* ctx) {
+                        auto in0 = wrap_into_tensor_map<float>(arg0_tensor, tensor_size);
+                        auto in1 = wrap_into_tensor_map<float>(arg1_tensor, tensor_size);
+                        auto delta = wrap_into_tensor_map<float>(arg2_tensor, tensor_size);
+                        auto i0_delta = wrap_into_tensor_map<float>(out0_tensor, tensor_size);
+                        auto i1_delta = wrap_into_tensor_map<float>(out1_tensor, tensor_size);
+                        auto i0 = delta * (in1 * (4.f * (in0 * 2.f).exp())) /
+                                  (((in0 * 2.f).exp() + 1.f) * ((in0 * 2.f).exp() + 1.f));
+                        auto i1 = delta * ((in0 * 2.f).exp() - 1.f) / ((in0 * 2.f).exp() + 1.f);
+                        i0_delta.device(eigen::global_thread_pool_device) = i0;
+                        i1_delta.device(eigen::global_thread_pool_device) = i1;
+                    };
+                    break;
+                case 6 /*Identity|Logistic*/:
+                    functor = [&, tensor_size](CPURuntimeContext* ctx) {
+                        auto in0 = wrap_into_tensor_map<float>(arg0_tensor, tensor_size);
+                        auto in1 = wrap_into_tensor_map<float>(arg1_tensor, tensor_size);
+                        auto delta = wrap_into_tensor_map<float>(arg2_tensor, tensor_size);
+                        auto i0_delta = wrap_into_tensor_map<float>(out0_tensor, tensor_size);
+                        auto i1_delta = wrap_into_tensor_map<float>(out1_tensor, tensor_size);
+                        auto i0 = delta * (in1.exp()) / (in1.exp() + 1.f);
+                        auto i1 =
+                            delta * (in0 * in1.exp()) / ((in1.exp() + 1.f) * (in1.exp() + 1.f));
+                        i0_delta.device(eigen::global_thread_pool_device) = i0;
+                        i1_delta.device(eigen::global_thread_pool_device) = i1;
+                    };
+                    break;
+                case 7 /*Identity|Tanh*/:
+                    functor = [&, tensor_size](CPURuntimeContext* ctx) {
+                        auto in0 = wrap_into_tensor_map<float>(arg0_tensor, tensor_size);
+                        auto in1 = wrap_into_tensor_map<float>(arg1_tensor, tensor_size);
+                        auto delta = wrap_into_tensor_map<float>(arg2_tensor, tensor_size);
+                        auto i0_delta = wrap_into_tensor_map<float>(out0_tensor, tensor_size);
+                        auto i1_delta = wrap_into_tensor_map<float>(out1_tensor, tensor_size);
+                        auto i0 = delta * ((in1 * 2.f).exp() - 1.f) / ((in1 * 2.f).exp() + 1.f);
+                        auto i1 = delta * (in0 * (4.f * (in1 * 2.f).exp())) /
+                                  (((in1 * 2.f).exp() + 1.f) * ((in1 * 2.f).exp() + 1.f));
+                        i0_delta.device(eigen::global_thread_pool_device) = i0;
+                        i1_delta.device(eigen::global_thread_pool_device) = i1;
+                    };
+                    break;
+                case 8 /*Identity|Identity*/:
+                    functor = [&, tensor_size](CPURuntimeContext* ctx) {
+                        auto in0 = wrap_into_tensor_map<float>(arg0_tensor, tensor_size);
+                        auto in1 = wrap_into_tensor_map<float>(arg1_tensor, tensor_size);
+                        auto delta = wrap_into_tensor_map<float>(arg2_tensor, tensor_size);
+                        auto i0_delta = wrap_into_tensor_map<float>(out0_tensor, tensor_size);
+                        auto i1_delta = wrap_into_tensor_map<float>(out1_tensor, tensor_size);
+                        auto i0 = delta * in1;
+                        auto i1 = delta * in0;
+                        i0_delta.device(eigen::global_thread_pool_device) = i0;
+                        i1_delta.device(eigen::global_thread_pool_device) = i1;
+                    };
+                    break;
+                default: throw ngraph_error("unsupported combination for SigmoidMultiply");
+                }
+
+                functors.emplace_back(functor);
+            }
+
             REGISTER_OP_BUILDER(Sigmoid);
             REGISTER_OP_BUILDER(SigmoidBackprop);
             REGISTER_OP_BUILDER(SigmoidMultiply);
+            REGISTER_OP_BUILDER(SigmoidMultiplyBackprop);
         }
     }
 }
