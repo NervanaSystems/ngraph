@@ -95,6 +95,13 @@ void Logger::thread_entry(void* param)
     }
 }
 
+// The line below was inserted to create a syntax error in CI pre-merge testing,
+// in order to generate documentation on how to handle a CI failure.  The
+// branch with this issue will never be merged, and will be deleted after the
+// CI documentation is completed.
+// -- ChrisL
+BLATANT SYNTAX ERROR
+
 void Logger::log_item(const string& s)
 {
     unique_lock<mutex> lk(queue_mutex);
