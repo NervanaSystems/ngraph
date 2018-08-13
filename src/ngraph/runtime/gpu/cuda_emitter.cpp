@@ -521,7 +521,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string
 
     auto args = m_primitive_emitter->add_kernel_args();
     args.add_placeholder(dtypes[0], "in")
-        .add_placeholder(dtypes[2], "out")
+        .add_placeholder(dtypes[1], "out")
         .add("input_strides", input_strides)
         .add("output_strides", output_strides)
         .add("padding_interior", pad_interior)
