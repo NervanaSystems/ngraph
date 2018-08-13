@@ -1475,18 +1475,19 @@ namespace ngraph
             {
                 // assumes NC{d1,d2,...} format
                 auto rep_slice = static_cast<const ngraph::op::ReplaceSlice*>(node);
+                bool in_place_op = (args[0].get_name() == out[0].get_name());
                 writer.block_begin();
                 {
-                        auto& cuda_emitter =
-                            external_function->get_primitive_emitter()->get_cuda_emitter();
+                    auto& cuda_emitter =
+                        external_function->get_primitive_emitter()->get_cuda_emitter();
 
-                        auto index = cuda_emitter->build_primitive(rep_slice);
+                    auto index = cuda_emitter->build_primitive(rep_slice, in_place_op);
 
-                        writer << "gpu::invoke_primitive(ctx, " << index << ", ";
-                        writer << "std::vector<void*>{" << args[0].get_name() << ", "
-                               << args[1].get_name() << "}.data(), ";
-                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                        writer << ");\n";
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
+                    writer << "std::vector<void*>{" << args[0].get_name() << ", "
+                           << args[1].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                    writer << ");\n";
                 }
                 writer.block_end();
             }

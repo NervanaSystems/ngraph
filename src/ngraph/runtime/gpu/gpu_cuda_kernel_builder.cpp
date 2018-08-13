@@ -321,19 +321,19 @@ void runtime::gpu::CudaKernelBuilder::get_pad_dynamic_op(
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
            << data_types[1] << "* out,";
-    for(size_t i = 0; i < rank; i++)
+    for (size_t i = 0; i < rank; i++)
     {
         writer << "uint32_t input_strides" << i << ", ";
     }
-    for(size_t i = 0; i < rank; i++)
+    for (size_t i = 0; i < rank; i++)
     {
         writer << "uint32_t output_strides" << i << ", ";
     }
-    for(size_t i = 0; i < rank; i++)
+    for (size_t i = 0; i < rank; i++)
     {
         writer << "uint32_t padding_below" << i << ", ";
     }
-    for(size_t i = 0; i < rank; i++)
+    for (size_t i = 0; i < rank; i++)
     {
         writer << "uint32_t padding_interior" << i << ", ";
     }
@@ -347,10 +347,12 @@ void runtime::gpu::CudaKernelBuilder::get_pad_dynamic_op(
             writer << "uint32_t output_idx = 0;\n";
             writer << "uint32_t input_idx = tid;\n";
 
-            for(size_t i = 0; i < rank; i++)
+            for (size_t i = 0; i < rank; i++)
             {
-                writer << "output_idx += (input_idx / input_strides" << i << " * padding_interior" << i << "  + "
-                          "padding_below" << i << ") * output_strides" << i << ";\n";
+                writer << "output_idx += (input_idx / input_strides" << i << " * padding_interior"
+                       << i << "  + "
+                               "padding_below"
+                       << i << ") * output_strides" << i << ";\n";
                 writer << "input_idx %= input_strides" << i << ";\n";
             }
             writer << "out[output_idx] = in[tid];\n";

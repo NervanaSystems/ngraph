@@ -43,19 +43,18 @@ namespace ngraph
                     auto rep_slice = static_cast<ngraph::op::ReplaceSlice*>(node);
 
                     auto op_annotations = rep_slice->get_op_annotations();
-                            if (op_annotations)
-                            {
-                                // pass-through
-                                op_annotations->add_in_place_oi_pair({0, 0, false});
-                            }
-                            else
-                            {
-                                op_annotations =
-                                    std::make_shared<ngraph::runtime::gpu::GPUOpAnnotations>();
-                                // pass-through
-                                op_annotations->add_in_place_oi_pair({0, 0, false});
-                                rep_slice->set_op_annotations(op_annotations);
-                            }
+                    if (op_annotations)
+                    {
+                        // pass-through
+                        op_annotations->add_in_place_oi_pair({0, 0, false});
+                    }
+                    else
+                    {
+                        op_annotations = std::make_shared<ngraph::runtime::gpu::GPUOpAnnotations>();
+                        // pass-through
+                        op_annotations->add_in_place_oi_pair({0, 0, false});
+                        rep_slice->set_op_annotations(op_annotations);
+                    }
                 }
             }
         }
@@ -65,7 +64,8 @@ namespace ngraph
 #define TI(x) type_index(typeid(x))
 
 static const runtime::gpu::pass::AssignOpMap s_dispatcher{
-    {TI(ngraph::op::ReplaceSlice), &runtime::gpu::pass::GPUAssignment::assign<ngraph::op::ReplaceSlice>},
+    {TI(ngraph::op::ReplaceSlice),
+     &runtime::gpu::pass::GPUAssignment::assign<ngraph::op::ReplaceSlice>},
 };
 
 bool runtime::gpu::pass::GPUAssignment::run_on_call_graph(
