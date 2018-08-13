@@ -20,6 +20,8 @@
 #include <unordered_set>
 
 #include "memory_visualize.hpp"
+#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
@@ -70,7 +72,8 @@ bool pass::MemoryVisualize::run_on_module(vector<shared_ptr<ngraph::Function>>& 
             }
             for (descriptor::Tensor* tensor : tensors)
             {
-                temp_max_size += tensor->size();
+                temp_max_size +=
+                    tensor->get_primary_tensor_view()->get_tensor_view_layout()->size();
             }
 
             // file << "<table>\n";
@@ -107,11 +110,11 @@ unordered_set<const descriptor::Tensor*>
         for (const descriptor::Tensor* tensor : exop->liveness_new_list)
         {
             liveness_list.insert(tensor);
-            size += tensor->size();
+            size += tensor->get_primary_tensor_view()->get_tensor_view_layout()->size();
         }
         for (const descriptor::Tensor* tensor : liveness_list)
         {
-            size += tensor->size();
+            size += tensor->get_primary_tensor_view()->get_tensor_view_layout()->size();
         }
         if (size > largest_size)
         {
@@ -155,7 +158,8 @@ void pass::MemoryVisualize::draw_tensor_weight(ostream& file, const list<shared_
     sort(tensor_set.begin(),
          tensor_set.end(),
          [](const descriptor::Tensor* t1, const descriptor::Tensor* t2) {
-             return t1->size() < t2->size();
+             return t1->get_primary_tensor_view()->get_tensor_view_layout()->size() <
+                    t2->get_primary_tensor_view()->get_tensor_view_layout()->size();
          });
     for (const descriptor::Tensor* tensor : tensor_set)
     {
@@ -169,7 +173,8 @@ void pass::MemoryVisualize::draw_tensor_weight(ostream& file, const list<shared_
             file << "    <tr>";
         }
         file << "<td>" << tensor->get_name() << "</td>";
-        file << "<td align=\"right\">" << tensor->size() << "</td>";
+        file << "<td align=\"right\">"
+             << tensor->get_primary_tensor_view()->get_tensor_view_layout()->size() << "</td>";
         file << "<td align=\"right\">" << age_list[tensor] << "</td>";
         file << "<td align=\"right\">" << generator_weight << "/td>";
         file << "</tr>\n";
@@ -241,11 +246,11 @@ int pass::MemoryVisualize::compute_op_weight(const shared_ptr<Node> exop)
     int mass = 0;
     for (const descriptor::Tensor* tensor : exop->liveness_new_list)
     {
-        mass += static_cast<int>(tensor->size());
+        mass += tensor->get_primary_tensor_view()->get_tensor_view_layout()->size();
     }
     for (const descriptor::Tensor* tensor : exop->liveness_free_list)
     {
-        mass -= static_cast<int>(tensor->size());
+        mass -= tensor->get_primary_tensor_view()->get_tensor_view_layout()->size();
     }
     return mass;
 }

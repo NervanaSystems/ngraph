@@ -23,6 +23,7 @@
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
+#include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
@@ -359,7 +360,10 @@ namespace ngraph
                     }
                 }
                 auto& src = tensor_data[node->get_output_tensor(0).get_name()];
-                auto size = node->get_output_tensor(0).size();
+                auto size = node->get_output_tensor(0)
+                                .get_primary_tensor_view()
+                                ->get_tensor_view_layout()
+                                ->size();
                 auto functor = [&, dest, src, size](CPURuntimeContext* ctx) {
                     for (auto p : dest)
                     {

@@ -17,6 +17,9 @@
 #include "cpu_layout_descriptor.hpp"
 #include <algorithm>
 #include <numeric>
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
@@ -46,6 +49,9 @@ namespace ngraph
                     s *= shape[shape.size() - (i + 1)];
                 }
                 std::reverse(m_strides.begin(), m_strides.end());
+                auto tvt = tv.get_tensor_view_type();
+                m_mkldnn_memory_size =
+                    shape_size(tvt->get_shape()) * tvt->get_element_type().size();
             }
 
             size_t LayoutDescriptor::get_index_offset(const std::vector<size_t>& indices)
@@ -97,6 +103,22 @@ namespace ngraph
                 }
 
                 return true;
+            }
+
+            void LayoutDescriptor::compute_mkldnn_memory_size(const mkldnn::memory::desc mem_desc)
+            {
+                try
+                {
+                    auto mem_prim_desc =
+                        mkldnn::memory::primitive_desc(mem_desc, mkldnn_utils::global_cpu_engine);
+                    m_mkldnn_memory_size = mem_prim_desc.get_size();
+                }
+                catch (const mkldnn::error& e)
+                {
+                    throw ngraph_error(
+                        "error in computing mkldnn memory size from memory primitive desc: " +
+                        e.message);
+                }
             }
         }
     }
