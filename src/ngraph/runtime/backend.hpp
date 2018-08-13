@@ -90,6 +90,18 @@ public:
                       const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
                       const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) = 0;
 
+    /// @brief Executes a single iteration of a Function. If func is not compiled the call will
+    ///     compile it. Optionally validates the inputs and outputs against the function graph.
+    /// @param func The function to execute
+    /// @returns true if iteration is successful, false otherwise
+    bool call_with_validate(std::shared_ptr<Function> func,
+                            const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
+                            const std::vector<std::shared_ptr<runtime::TensorView>>& inputs)
+    {
+        validate_call(func, outputs, inputs);
+        return call(func, outputs, inputs);
+    }
+
     /// @brief Compiled functions may be cached. This function removes a compiled function
     ///     from the cache.
     /// @param func The function to execute
