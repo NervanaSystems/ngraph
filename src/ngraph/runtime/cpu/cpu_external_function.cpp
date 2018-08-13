@@ -322,9 +322,6 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::LRN), &runtime::cpu::CPU_Emitter::emit<ngraph::op::LRN>},
 };
 
-const size_t runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction::s_memory_pool_alignment =
-    4096;
-
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
     : m_function(function)
@@ -384,7 +381,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
         femitter, node_function_map, common_function_string);
     pass_manager.register_pass<ngraph::pass::Liveness>();
-    pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment, true);
+    pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
     pass_manager.run_passes(m_function);
 
     unordered_map<shared_ptr<Function>, list<shared_ptr<Node>>> function_ordered_ops;
@@ -1038,8 +1035,9 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
                 {
                     size_t input_index = oi_pair.input;
                     auto& input_tensor = arg->get_inputs().at(input_index).get_tensor();
-                    if (input_tensor.get_pool_offset() == offset &&
-                        !arg->get_inputs().at(input_index).get_output().get_node()->is_parameter())
+                    auto tmp_node = arg->get_inputs().at(input_index).get_output().get_node();
+                    if (input_tensor.get_pool_offset() == offset && !tmp_node->is_parameter() &&
+                        !tmp_node->is_constant())
                     {
                         NGRAPH_DEBUG << "Reusing " << output_name << " for "
                                      << input_tensor.get_name();
@@ -1068,10 +1066,13 @@ void runtime::cpu::CPU_ExternalFunction::build()
     //in which case they should run this pass(CPUWorkspaceInsertion) explicitly
     NodeVector nv_cwi;
     pass_manager.register_pass<ngraph::pass::NopElimination>();
-    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
+    // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
+    // failing mxnet unit tests.
+    //pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    //pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    //pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
@@ -1082,7 +1083,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
     pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
-    pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment, true);
+    pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
     pass_manager.run_passes(m_function, false);
 
     // Store layouts assigned for arguments
