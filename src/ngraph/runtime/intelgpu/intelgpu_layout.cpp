@@ -82,10 +82,10 @@ cldnn::tensor runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(const Shape
 {
     vector<size_t> idx(4, 1);
     size_t index = 0;
-    const size_t total_zise = shape_size<Shape>(element_shape);
+    const size_t total_size = shape_size<Shape>(element_shape);
 
     // clDNN requires at least scalar tensor size. We can't create zero sized tensors
-    if (total_zise != 0)
+    if (total_size != 0)
     {
         for (auto i = element_shape.crbegin(); i != element_shape.crend() && index < 3;
              ++i, ++index)
@@ -106,6 +106,20 @@ cldnn::tensor runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(const Shape
     return tns;
 }
 
+cldnn::tensor runtime::intelgpu::IntelGPULayout::create_cldnn_offset(const Shape& pad_below)
+{
+    vector<cldnn::tensor::value_type> offset({0, 0, 0, 0});
+    size_t ridx = 4;
+
+    for (auto i = pad_below.crbegin(); i != pad_below.crend() && ridx > 0; ++i, --ridx)
+    {
+        offset.at(ridx - 1) = -(*i);
+    }
+
+    const cldnn::tensor input_offset(offset.at(0), offset.at(1), offset.at(3), offset.at(2));
+    return input_offset;
+}
+
 cldnn::layout runtime::intelgpu::IntelGPULayout::create_cldnn_layout(
     const ngraph::element::Type& element_type, const Shape& element_shape)
 {
@@ -117,19 +131,23 @@ cldnn::layout runtime::intelgpu::IntelGPULayout::create_cldnn_layout(
 }
 
 cldnn::concatenation::concatenation_axis
-    runtime::intelgpu::IntelGPULayout::get_cldnn_axis(size_t tensor_channel)
+    runtime::intelgpu::IntelGPULayout::get_cldnn_axis(size_t shape_size, size_t axis)
 {
-    switch (tensor_channel)
+    const size_t t_channel = shape_size - axis - 1;
+
+    switch (t_channel)
     {
-    case 0: return cldnn::concatenation::along_b;
-    case 1: return cldnn::concatenation::along_f;
-    case 2: return cldnn::concatenation::along_y;
-    case 3: return cldnn::concatenation::along_x;
+    case 0: return cldnn::concatenation::along_x;
+    case 1: return cldnn::concatenation::along_y;
+    case 2: return cldnn::concatenation::along_f;
+    case 3:
+        if (shape_size < 5)
+        {
+            return cldnn::concatenation::along_b;
+        }
+    /* no break */
     default:
-    {
-        ostringstream os;
-        os << "IntelGPULayout::get_cldnn_axis: wrong tensor channel " << tensor_channel;
-        throw invalid_argument(os.str());
-    }
+        throw invalid_argument("IntelGPULayout::get_cldnn_axis: wrong tensor channel " +
+                               to_string(t_channel));
     }
 }

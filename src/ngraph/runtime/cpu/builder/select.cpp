@@ -31,13 +31,12 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::Select)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& arg2_tensor = tensor_data[args[2].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
 
-                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 auto element_count = args[0].get_size();
 

@@ -27,15 +27,19 @@ set(SRC
     cpu_tensor_view_wrapper.cpp
     cpu_tensor_view.cpp
     cpu_tracing.cpp
+    builder/add.cpp
     builder/avg_pool.cpp
     builder/batch_norm.cpp
     builder/broadcast.cpp
+    builder/bounded_relu.cpp
     builder/concat.cpp
     builder/convert.cpp
     builder/convert_layout.cpp
     builder/convolution.cpp
     builder/dot.cpp
     builder/function_call.cpp
+    builder/lstm.cpp
+    builder/lrn.cpp
     builder/matmul_bias.cpp
     builder/max.cpp
     builder/max_pool.cpp
@@ -44,12 +48,18 @@ set(SRC
     builder/relu.cpp
     builder/pad.cpp
     builder/product.cpp
+    builder/reduce_function.cpp
+    builder/reduce_function_window.cpp
+    builder/replace_slice.cpp
     builder/reshape.cpp
     builder/reverse.cpp
     builder/reverse_sequence.cpp
+    builder/rnn.cpp
     builder/select.cpp
     builder/select_and_scatter.cpp
     builder/sigmoid.cpp
+    builder/slice.cpp
+    builder/softmax.cpp
     builder/sum.cpp
     kernel/eigen_thread_pool.cpp
     kernel/pad.cpp
@@ -80,7 +90,6 @@ set(SRC
     pass/cpu_rnn_fusion.cpp
     pass/cpu_mat_fusion.cpp
     pass/cpu_loop_kernel_fusion.cpp
-    pass/cpu_shuffle_folding.cpp
     pass/cpu_workspace_insertion.cpp
 )
 

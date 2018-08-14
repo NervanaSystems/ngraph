@@ -80,8 +80,6 @@ bool runtime::cpu::CPU_Backend::call(shared_ptr<Function> func,
 {
     bool rc = true;
 
-    validate_call(func, outputs, inputs);
-
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_external_function == nullptr)
     {

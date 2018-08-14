@@ -32,47 +32,14 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::runtime::cpu::op::ConvertLayout)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& arg_tensor = tensor_data[args[0].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
-
-                auto input_tvl =
-                    node->get_inputs()[0].get_output().get_tensor_view()->get_tensor_view_layout();
-                auto input_cpu_tvl =
-                    dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(input_tvl);
-                auto input_format = input_cpu_tvl->get_mkldnn_format();
-
-                // Reorder input shape if needed
-                auto input_axis_order = input_cpu_tvl->get_axis_order();
-                Shape input_shape(input_axis_order.size());
-                for (size_t idx = 0; idx < input_axis_order.size(); idx++)
-                {
-                    input_shape[idx] = args[0].get_shape()[input_axis_order[idx]];
-                }
-
-                auto output_tvl = node->get_output_tensor_view(0)->get_tensor_view_layout();
-                auto output_format =
-                    dynamic_cast<runtime::cpu::LayoutDescriptor&>(*output_tvl).get_mkldnn_format();
-
-                // MKLDNN relies on format names for selecting optimized kernel implementations
-                // Hacky way to deal with this until they move to using canonicalized layouts
-                if (input_format == mkldnn::memory::format::nchw &&
-                    runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(output_format))
-                {
-                    input_format = mkldnn::memory::format::oihw;
-                }
-                if (output_format == mkldnn::memory::format::nchw &&
-                    runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(input_format))
-                {
-                    output_format = mkldnn::memory::format::oihw;
-                }
+                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
 
-                auto input_desc = mkldnn_emitter->build_memory_descriptor(
-                    input_shape, args[0].get_element_type(), input_format);
-                auto result_desc = mkldnn_emitter->build_memory_descriptor(out[0], output_format);
+                auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                 size_t reorder_index = mkldnn_emitter->build_reorder(input_desc, result_desc);
 

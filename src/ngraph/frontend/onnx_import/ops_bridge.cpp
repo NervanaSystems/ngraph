@@ -20,6 +20,7 @@
 #include "attribute.hpp"
 #include "ngraph/frontend/onnx_import/op/add.hpp"
 #include "ngraph/frontend/onnx_import/op/constant.hpp"
+#include "ngraph/frontend/onnx_import/op/split.hpp"
 #include "ops_bridge.hpp"
 
 namespace ngraph
@@ -44,6 +45,11 @@ namespace ngraph
             NodeVector constant(const Node& node)
             {
                 return {op::constant(node.get_attribute_value<Tensor>("value"))};
+            }
+
+            NodeVector split(const Node& node)
+            {
+                return op::split(node, node.get_ng_inputs().at(0));
             }
 
             class ops_bridge
@@ -72,6 +78,7 @@ namespace ngraph
                 {
                     m_map.emplace("Add", std::bind(add, std::placeholders::_1));
                     m_map.emplace("Constant", std::bind(constant, std::placeholders::_1));
+                    m_map.emplace("Split", std::bind(split, std::placeholders::_1));
                 }
 
                 NodeVector operator()(const Node& node) const
@@ -80,7 +87,7 @@ namespace ngraph
                     {
                         return m_map.at(node.op_type())(node);
                     }
-                    catch (const std::exception&)
+                    catch (const std::out_of_range&)
                     {
                         throw detail::error::unknown_operation{node.op_type()};
                     }

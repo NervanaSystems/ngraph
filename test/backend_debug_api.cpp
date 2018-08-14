@@ -48,7 +48,7 @@ TEST(INTERPRETER, nan_check_input)
     auto result = backend->create_tensor(element::f32, shape);
 
     ibackend->set_nan_check(f, true);
-    EXPECT_ANY_THROW(ibackend->call(f, {result}, {a, b}));
+    EXPECT_ANY_THROW(ibackend->call_with_validate(f, {result}, {a, b}));
 }
 
 TEST(INTERPRETER, nan_check_output)
@@ -71,5 +71,5 @@ TEST(INTERPRETER, nan_check_output)
     auto result = backend->create_tensor(element::f32, shape);
 
     ibackend->set_nan_check(f, true);
-    EXPECT_ANY_THROW(ibackend->call(f, {result}, {a, b}));
+    EXPECT_ANY_THROW(ibackend->call_with_validate(f, {result}, {a, b}));
 }
