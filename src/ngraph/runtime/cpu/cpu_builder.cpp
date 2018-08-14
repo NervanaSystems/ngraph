@@ -173,12 +173,11 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::And)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
                 auto element_count = out[0].get_size();
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& out0_tensor = tensor_data[out[0].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 auto functor = [&, element_count](CPURuntimeContext* ctx) {
                     runtime::cpu::kernel::logical_and(
@@ -191,12 +190,11 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::Or)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
                 auto element_count = out[0].get_size();
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& out0_tensor = tensor_data[out[0].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 auto functor = [&, element_count](CPURuntimeContext* ctx) {
                     runtime::cpu::kernel::logical_or(
@@ -340,17 +338,18 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::Constant)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
                 vector<void**> dest;
                 for (auto& result : external_function->get_function()->get_results())
                 {
                     if (result.get() == node)
                     {
-                        dest.push_back(&tensor_data[result->get_output_tensor(0).get_name()]);
+                        dest.push_back(&external_function->get_tensor_data(
+                            result->get_output_tensor(0).get_name()));
                     }
                 }
-                auto& src = tensor_data[node->get_output_tensor(0).get_name()];
+                auto& src =
+                    external_function->get_tensor_data(node->get_output_tensor(0).get_name());
                 auto size = node->get_output_tensor(0).size();
                 auto functor = [&, dest, src, size](CPURuntimeContext* ctx) {
                     for (auto p : dest)

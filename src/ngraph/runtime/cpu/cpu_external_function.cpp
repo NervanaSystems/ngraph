@@ -654,7 +654,7 @@ using namespace ngraph::runtime;
                 ss << "((" << type << "*)(inputs[" << arg_index << "]))";
                 m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
                 param_index_map[tv->get_tensor().get_name()] = arg_index;
-                propagate_in_place_input(&param->get_outputs().at(i), ss.str());
+                propagate_in_place_input(&param->get_outputs().at(i), ss.str(), false);
                 arg_index++;
             }
         }
@@ -679,7 +679,8 @@ using namespace ngraph::runtime;
 
                 auto output_name = ss.str();
                 m_variable_name_map[itv->get_tensor().get_name()] = ss.str();
-                propagate_in_place_output(&(res->get_inputs().at(0).get_output()), output_name);
+                propagate_in_place_output(
+                    &(res->get_inputs().at(0).get_output()), output_name, false);
             }
         }
 
@@ -973,7 +974,7 @@ using namespace ngraph::runtime;
 }
 
 void runtime::cpu::CPU_ExternalFunction::propagate_in_place_input(
-    ngraph::descriptor::Output* output, std::string input_name)
+    ngraph::descriptor::Output* output, std::string input_name, bool dex)
 {
     std::deque<ngraph::descriptor::Output*> stack;
     stack.push_front(output);
@@ -999,7 +1000,15 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_input(
                         size_t output_index = oi_pair.output;
                         auto& output_tensor = c_op->get_outputs().at(output_index).get_tensor();
 
-                        m_variable_name_map[output_tensor.get_name()] = input_name;
+                        if (dex)
+                        {
+                            tensor_alias[output_tensor.get_name()] = input_name;
+                        }
+                        else
+                        {
+                            m_variable_name_map[output_tensor.get_name()] = input_name;
+                        }
+
                         NGRAPH_DEBUG << "CPU codegen: Forwarding " << input_name << " through "
                                      << output_tensor.get_name();
                         stack.push_back(&c_op->get_outputs().at(output_index));
@@ -1011,7 +1020,7 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_input(
 }
 
 void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
-    ngraph::descriptor::Output* res_src_output, std::string output_name)
+    ngraph::descriptor::Output* res_src_output, std::string output_name, bool dex)
 {
     //we start with a particular output
     //which is an argument to a given op::Result
@@ -1041,7 +1050,16 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
                     {
                         NGRAPH_DEBUG << "Reusing " << output_name << " for "
                                      << input_tensor.get_name();
-                        m_variable_name_map[input_tensor.get_name()] = output_name;
+
+                        if (dex)
+                        {
+                            tensor_alias[input_tensor.get_name()] = output_name;
+                        }
+                        else
+                        {
+                            m_variable_name_map[input_tensor.get_name()] = output_name;
+                        }
+
                         it = &arg->get_inputs().at(input_index).get_output();
                         propagate_further = true;
                     }
@@ -1133,6 +1151,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
             function_input_index.emplace_back(tensor_data[tv->get_tensor().get_name()],
                                               arg_index,
                                               tensor_stale[tv->get_tensor().get_name()]);
+            propagate_in_place_input(
+                &param->get_outputs().at(i), tv->get_tensor().get_name(), true);
             arg_index++;
         }
     }
@@ -1150,6 +1170,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
             shared_ptr<descriptor::TensorView> itv =
                 res->get_inputs().at(0).get_output().get_tensor_view();
             function_output_index.emplace_back(tensor_data[itv->get_tensor().get_name()], i);
+            propagate_in_place_output(
+                &(res->get_inputs().at(0).get_output()), tv->get_tensor().get_name(), true);
         }
     }
 
@@ -1434,6 +1456,18 @@ void runtime::cpu::CPU_ExternalFunction::build()
     if (m_release_function && !m_use_tbb)
     {
         release_function();
+    }
+}
+
+void*& runtime::cpu::CPU_ExternalFunction::get_tensor_data(const std::string& name)
+{
+    if (tensor_alias.count(name))
+    {
+        return tensor_data[tensor_alias[name]];
+    }
+    else
+    {
+        return tensor_data[name];
     }
 }
 
