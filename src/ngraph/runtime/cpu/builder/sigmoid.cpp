@@ -14,11 +14,6 @@
 * limitations under the License.
 *******************************************************************************/
 
-//#include "ngraph/runtime/cpu/kernel/avg_pool.hpp"
-#define EIGEN_USE_THREADS
-#include <unsupported/Eigen/CXX11/Tensor>
-#include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
-
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/kernel/sigmoid_multiply.hpp"
@@ -113,18 +108,6 @@ namespace ngraph
                     cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, sigmoid_index);
                 };
                 functors.emplace_back(functor);
-            }
-
-            template <typename ElementType>
-            static Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>>
-                wrap_into_tensor_map(void* data, size_t tensor_size)
-            {
-                Eigen::array<Eigen::Index, 1> dims;
-                dims[0] = tensor_size;
-
-                Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> out(
-                    static_cast<ElementType*>(data), dims);
-                return out;
             }
 
             template <>
