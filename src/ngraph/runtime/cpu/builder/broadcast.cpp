@@ -113,6 +113,17 @@ namespace ngraph
                 }
                 out_shape = squeezed_out_shape;
 
+                // Squeeze input shape
+                auto squeezed_arg_shape = Shape{};
+                for (int i = 0; i < arg_shape.size(); i++)
+                {
+                    if (arg_shape[i] != 1)
+                    {
+                        squeezed_arg_shape.push_back(arg_shape[i]);
+                    }
+                }
+                arg_shape = squeezed_arg_shape;
+
                 auto arg_rank = arg_shape.size();
                 auto out_rank = out_shape.size();
 
