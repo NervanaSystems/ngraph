@@ -43,13 +43,18 @@ vector<cldnn_arg> runtime::intelgpu::get_kernel_args(size_t input, size_t output
     return result;
 }
 
-string runtime::intelgpu::array_dims(const Shape& dimentions)
+string runtime::intelgpu::array_dims(const Shape& dimentions, const AxisSet& axis)
 {
+    size_t var_idx = 0;
     string buffer;
 
     for (auto const& dim : dimentions)
     {
-        buffer += "[" + to_string(dim) + "]";
+        if (axis.find(var_idx) == axis.end())
+        {
+            buffer += "[" + to_string(dim) + "]";
+        }
+        ++var_idx;
     }
 
     if (buffer.empty())
