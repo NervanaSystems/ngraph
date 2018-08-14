@@ -35,13 +35,12 @@ namespace ngraph
                 auto avg_pool = static_cast<const ngraph::op::AvgPool*>(node);
 
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
                 auto arg0_shape = args[0].get_shape();
                 auto out_shape = out[0].get_shape();
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 auto window_shape = avg_pool->get_window_shape();
                 auto window_movement_strides = avg_pool->get_window_movement_strides();
@@ -112,13 +111,12 @@ namespace ngraph
                 auto apb = static_cast<const ngraph::op::AvgPoolBackprop*>(node);
 
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
                 auto delta_shape = args[0].get_shape();
                 auto out_shape = out[0].get_shape();
 
-                auto& delta_tensor = tensor_data[args[0].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto& delta_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 auto window_shape = apb->get_window_shape();
                 auto window_movement_strides = apb->get_window_movement_strides();
