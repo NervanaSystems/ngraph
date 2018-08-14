@@ -355,7 +355,7 @@ namespace ngraph
                                 .get_primary_tensor_view()
                                 ->get_tensor_view_layout()
                                 ->size();
-                
+
                 auto functor = [&, dest, src, size](CPURuntimeContext* ctx) {
                     for (auto p : dest)
                     {
