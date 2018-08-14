@@ -22,6 +22,7 @@
 #include "ngraph/runtime/cpu/kernel/batchnorm.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -32,6 +33,7 @@ namespace ngraph
     {
         namespace cpu
         {
+            template <typename OP>
             static void build_batch_norm(CPU_ExternalFunction* external_function,
                                          const ngraph::Node* node,
                                          const std::vector<TensorViewWrapper>& args,
@@ -39,17 +41,13 @@ namespace ngraph
                                          bool append_relu)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& arg2_tensor = tensor_data[args[2].get_name()];
-                auto& out0_tensor = tensor_data[out[0].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
-                const ngraph::op::BatchNorm* batchnorm =
-                    static_cast<const ngraph::op::BatchNorm*>(node);
-
-                shared_ptr<uint8_t> stacked_weights(new uint8_t[2 * args[0].get_size()]);
+                const OP* batchnorm = static_cast<const OP*>(node);
 
 // Kill clang diagnostics bug
 #pragma clang diagnostic push
@@ -60,6 +58,8 @@ namespace ngraph
                     args[1].get_size() * args[1].get_element_type().size()};
 
 #pragma clang diagnostic pop
+
+                shared_ptr<uint8_t> stacked_weights(new uint8_t[weight_sizes[0] + weight_sizes[1]]);
 
                 const float ops_scale = 1.f;
                 const float ops_alpha = -0.f; // relu negative slope
@@ -74,8 +74,8 @@ namespace ngraph
 
                 if (batchnorm->get_training_flag() && args.size() == 3)
                 {
-                    auto& out1_tensor = tensor_data[out[1].get_name()];
-                    auto& out2_tensor = tensor_data[out[2].get_name()];
+                    auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
+                    auto& out2_tensor = external_function->get_tensor_data(out[2].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
@@ -116,8 +116,8 @@ namespace ngraph
                 }
                 else
                 {
-                    auto& arg3_tensor = tensor_data[args[3].get_name()];
-                    auto& arg4_tensor = tensor_data[args[4].get_name()];
+                    auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
+                    auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto weights_shape = Shape{2, args[0].get_size()};
@@ -170,7 +170,6 @@ namespace ngraph
                     if (batchnorm->get_training_flag() && args.size() == 3)
                     {
                         auto& functors = external_function->get_functors();
-                        auto& tensor_data = external_function->get_tensor_data();
 
                         std::function<decltype(
                             runtime::cpu::kernel::batch_norm_three_outputs<float>)>
@@ -181,13 +180,13 @@ namespace ngraph
                                       runtime::cpu::kernel::batch_norm_three_outputs);
 
                         auto arg2_shape = args[2].get_shape();
-                        auto& arg0_tensor = tensor_data[args[0].get_name()];
-                        auto& arg1_tensor = tensor_data[args[1].get_name()];
-                        auto& arg2_tensor = tensor_data[args[2].get_name()];
+                        auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                        auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                        auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
 
-                        auto& out0_tensor = tensor_data[out[0].get_name()];
-                        auto& out1_tensor = tensor_data[out[1].get_name()];
-                        auto& out2_tensor = tensor_data[out[2].get_name()];
+                        auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
+                        auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
+                        auto& out2_tensor = external_function->get_tensor_data(out[2].get_name());
                         auto eps = batchnorm->get_eps_value();
 
                         auto functor = [&, kernel, arg2_shape, eps](CPURuntimeContext* ctx) {
@@ -205,7 +204,6 @@ namespace ngraph
                     else
                     {
                         auto& functors = external_function->get_functors();
-                        auto& tensor_data = external_function->get_tensor_data();
 
                         std::function<decltype(runtime::cpu::kernel::batch_norm_one_output<float>)>
                             kernel;
@@ -215,13 +213,13 @@ namespace ngraph
                                       runtime::cpu::kernel::batch_norm_one_output);
 
                         auto arg2_shape = args[2].get_shape();
-                        auto& arg0_tensor = tensor_data[args[0].get_name()];
-                        auto& arg1_tensor = tensor_data[args[1].get_name()];
-                        auto& arg2_tensor = tensor_data[args[2].get_name()];
-                        auto& arg3_tensor = tensor_data[args[3].get_name()];
-                        auto& arg4_tensor = tensor_data[args[4].get_name()];
+                        auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                        auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                        auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                        auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
+                        auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
 
-                        auto& out0_tensor = tensor_data[out[0].get_name()];
+                        auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
                         auto eps = batchnorm->get_eps_value();
 
                         auto functor = [&, kernel, arg2_shape, eps](CPURuntimeContext* ctx) {
@@ -239,7 +237,8 @@ namespace ngraph
                 }
                 else
                 {
-                    build_batch_norm(external_function, node, args, out, false);
+                    build_batch_norm<ngraph::op::BatchNorm>(
+                        external_function, node, args, out, false);
                 }
             }
 
@@ -250,21 +249,17 @@ namespace ngraph
                     static_cast<const ngraph::op::BatchNormBackprop*>(node);
 
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& arg2_tensor = tensor_data[args[2].get_name()];
-                auto& arg3_tensor = tensor_data[args[3].get_name()];
-                auto& arg4_tensor = tensor_data[args[4].get_name()];
-                auto& arg5_tensor = tensor_data[args[5].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
+                auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
+                auto& arg5_tensor = external_function->get_tensor_data(args[5].get_name());
 
-                auto& out0_tensor = tensor_data[out[0].get_name()];
-                auto& out1_tensor = tensor_data[out[1].get_name()];
-                auto& out2_tensor = tensor_data[out[2].get_name()];
-
-                shared_ptr<uint8_t> stacked_weights(new uint8_t[2 * args[0].get_size()]);
-                shared_ptr<uint8_t> stacked_dweights(new uint8_t[2 * args[0].get_size()]);
+                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
+                auto& out2_tensor = external_function->get_tensor_data(out[2].get_name());
 
 // Kill clang diagnostics bug
 #pragma clang diagnostic push
@@ -275,6 +270,9 @@ namespace ngraph
                     args[1].get_size() * args[1].get_element_type().size()};
 
 #pragma clang diagnostic pop
+                shared_ptr<uint8_t> stacked_weights(new uint8_t[weight_sizes[0] + weight_sizes[1]]);
+                shared_ptr<uint8_t> stacked_dweights(
+                    new uint8_t[weight_sizes[0] + weight_sizes[1]]);
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto weights_shape = Shape{2, args[0].get_size()};
@@ -324,7 +322,18 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::BatchNormRelu)
+            {
+                if (!mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    throw ngraph_error("BatchNormRelu is only supported with 4-D MKLDNN kernel.");
+                }
+                build_batch_norm<ngraph::op::BatchNormRelu>(
+                    external_function, node, args, out, true);
+            }
             REGISTER_OP_BUILDER(BatchNorm);
+            REGISTER_OP_BUILDER(BatchNormRelu);
             REGISTER_OP_BUILDER(BatchNormBackprop);
         }
     }

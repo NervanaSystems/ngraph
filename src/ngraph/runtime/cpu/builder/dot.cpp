@@ -13,6 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *******************************************************************************/
+
 #include <cstring>
 
 #include "ngraph/op/dot.hpp"
@@ -34,15 +35,14 @@ namespace ngraph
                 auto dot = static_cast<const ngraph::op::Dot*>(node);
 
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
                 auto arg0_shape = args[0].get_shape();
                 auto arg1_shape = args[1].get_shape();
                 auto result_shape = out[0].get_shape();
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 auto reduction_axes_count = dot->get_reduction_axes_count();
 
@@ -68,8 +68,8 @@ namespace ngraph
                     auto first = (arg0_shape.empty() ? args[0] : args[1]);
                     auto second = (arg0_shape.empty() ? args[1] : args[0]);
 
-                    auto& first_tensor = tensor_data[first.get_name()];
-                    auto& second_tensor = tensor_data[second.get_name()];
+                    auto& first_tensor = external_function->get_tensor_data(first.get_name());
+                    auto& second_tensor = external_function->get_tensor_data(second.get_name());
 
                     std::function<decltype(runtime::cpu::kernel::dot_scalar<float>)> kernel;
 

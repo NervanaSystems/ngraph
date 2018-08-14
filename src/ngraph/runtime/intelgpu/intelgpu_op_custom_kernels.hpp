@@ -18,6 +18,8 @@
 
 #include <CPP/topology.hpp>
 
+#include "ngraph/runtime/intelgpu/code_writer.hpp"
+
 #include "ngraph/axis_set.hpp"
 #include "ngraph/coordinate.hpp"
 #include "ngraph/shape.hpp"
@@ -90,12 +92,22 @@ namespace ngraph
                                       const element::Type& output_type,
                                       const AxisSet& reversed_axes);
 
+            void do_convert_operation(cldnn::topology& topology,
+                                      const std::string& input_name,
+                                      const Shape& input_shape,
+                                      const element::Type& input_type,
+                                      const std::string& output_name,
+                                      const Shape& output_shape,
+                                      const element::Type& output_type);
+
             // Helper functions used in cldnn::custom_gpu_primitive kernels
             std::vector<cldnn_arg> get_kernel_args(size_t input, size_t output);
-            std::string array_dims(const Shape& dimentions);
+            std::string array_dims(const Shape& dimentions, const AxisSet& axis = {});
             std::string access_dims(const Shape& dimentions,
                                     const AxisSet& axis = {},
                                     bool is_reversed = false);
+            std::vector<size_t>
+                generate_loops(codegen::CodeWriter& writer, const Shape& shape, bool is_begin);
         }
     }
 }
