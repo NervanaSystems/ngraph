@@ -849,18 +849,8 @@ void runtime::intelgpu::do_one_hot_operation(cldnn::topology& topology,
                 }
             }
 
-            writer << "if (input" << access_dims(input_shape) << " == i)\n";
-            writer.block_begin();
-            {
-                writer << "output" << buffer << " = 1;\n";
-            }
-            writer.block_end();
-            writer << "else\n";
-            writer.block_begin();
-            {
-                writer << "output" << buffer << " = 0;\n";
-            }
-            writer.block_end();
+            writer << "output" << buffer << " = input" << access_dims(input_shape)
+                   << " == i ? 1 : 0;\n";
 
             for (auto const& i : input_shape)
             {
