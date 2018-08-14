@@ -126,7 +126,7 @@ std::vector<std::vector<T>> execute(std::shared_ptr<ngraph::Function> f,
             backend->create_tensor(results.at(i)->get_element_type(), results.at(i)->get_shape());
     }
 
-    backend->call(f, result_tensors, arg_tensors);
+    backend->call_with_validate(f, result_tensors, arg_tensors);
 
     std::vector<std::vector<T>> result_vectors;
     for (auto rt : result_tensors)
