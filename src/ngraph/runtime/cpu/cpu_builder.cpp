@@ -144,13 +144,12 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Divide)
             {
-                /* #if 0 */
-                /*                 BUILD_TVM_BINARY_ELEMWISE_FUNCTOR(topi::divide); */
-                /* #else */
+#ifdef NGRAPH_USE_TVM
                 if (CHECK_BUILD_TVM_FUNCTOR)
                 {
                     return;
                 }
+#endif
                 BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::divide);
             }
 
@@ -298,12 +297,13 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Relu)
             {
-/* #ifdef NGRAPH_USE_TVM */
-#if 0
-                BUILD_TVM_RELU_FUNCTOR;
-#else
-                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::relu);
+#ifdef NGRAPH_USE_TVM
+                if (CHECK_BUILD_TVM_FUNCTOR)
+                {
+                    return;
+                }
 #endif
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::relu);
             }
 
             template <>
