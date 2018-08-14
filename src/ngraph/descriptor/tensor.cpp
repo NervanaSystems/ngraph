@@ -29,6 +29,8 @@ descriptor::Tensor::Tensor(const element::Type& element_type,
     , m_name{name}
     , m_next_view_id{0}
 {
+    auto tvt = primary_tensor_view->get_tensor_view_type();
+    m_size = shape_size(tvt->get_shape()) * m_element_type.size();
 }
 
 string descriptor::Tensor::make_tensor_name(const Node* node, size_t value_index)
@@ -49,6 +51,11 @@ void descriptor::Tensor::set_pool_offset(size_t offset)
 size_t descriptor::Tensor::get_pool_offset() const
 {
     return m_pool_offset;
+}
+
+size_t descriptor::Tensor::logical_size() const
+{
+    return m_size;
 }
 
 ostream& operator<<(ostream& out, const descriptor::Tensor& tensor)
