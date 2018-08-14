@@ -753,3 +753,125 @@ void runtime::intelgpu::do_reverse_operation(cldnn::topology& topology,
                                                  gws);
     topology.add(op_reverse);
 }
+
+void runtime::intelgpu::do_not_operation(cldnn::topology& topology,
+                                         const string& input_name,
+                                         const Shape& input_shape,
+                                         const string& output_name,
+                                         const Shape& output_shape,
+                                         const element::Type& output_type)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string entry_point_name = "logic_" + output_name;
+    codegen::CodeWriter writer;
+
+    writer << "__kernel void " << entry_point_name << "(const __global char input"
+           << array_dims(input_shape) << ", __global char output" << array_dims(output_shape) << ")\n";
+
+    writer.block_begin();
+    {
+        size_t var_idx = 0;
+        for (auto const& i : output_shape)
+        {
+            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i" << var_idx << ")\n";
+            writer.block_begin();
+            ++var_idx;
+        }
+
+        writer << "output" << access_dims(output_shape) << " = !input" << access_dims(input_shape) << ";\n";
+
+        for (auto const& i : output_shape)
+        {
+            writer.block_end();
+        }
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_not(output_name,
+                                             {input_name},
+                                             {writer.get_code()},
+                                             entry_point_name,
+                                             get_kernel_args(1, 1),
+                                             "",
+                                             layout,
+                                             {1});
+    topology.add(op_not);
+}
+
+void runtime::intelgpu::do_one_hot_operation(cldnn::topology& topology,
+                                             const std::string& input_name, 
+                                             const Shape& input_shape,  
+                                             const element::Type& input_type,
+                                             const std::string& output_name,
+                                             const Shape& output_shape,
+                                             const element::Type& output_type,
+                                             const size_t one_hot_axis)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string entry_point_name = "one_hot_" + output_name;
+    codegen::CodeWriter writer;
+
+    writer << "__kernel void " << entry_point_name << "(const __global " << input_type.c_type_string() << " input"
+           << array_dims(input_shape) << ", __global " << output_type.c_type_string()  << " output" << array_dims(output_shape) << ")\n";
+
+    writer.block_begin();
+    {
+        size_t var_idx = 0;
+
+        writer << "for (uint i = 0; i < " << output_shape.at(one_hot_axis) << "; ++i)\n";
+        writer.block_begin();
+        {
+            for (auto const& i : input_shape)
+            {
+                writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i" << var_idx << ")\n";
+                writer.block_begin();
+                ++var_idx;   
+            }
+
+            size_t current_input = 0;
+            string buffer;
+            size_t output_shape_size = output_shape.size();
+            for(uint j = 0; j < output_shape_size; j++)
+            {
+                if(j == one_hot_axis)
+                {
+                    buffer += "[i]"; 
+                } else 
+                {
+                    buffer += "[i" + to_string(current_input) + "]";
+                    ++current_input;
+                }
+            }
+
+            writer << "if (input" << access_dims(input_shape) << " == i)\n";
+            writer.block_begin();
+            {
+                writer << "output" << buffer << " = 1;\n";
+            }
+            writer.block_end();
+            writer << "else\n";
+            writer.block_begin();
+            {
+                writer << "output" << buffer << " = 0;\n";
+            }
+            writer.block_end();
+
+            for (auto const& i : input_shape)
+            {
+                writer.block_end();
+            }
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_one_hot(output_name,
+                                                 {input_name},
+                                                 {writer.get_code()},
+                                                 entry_point_name,
+                                                 get_kernel_args(1, 1),
+                                                 "",
+                                                 layout,
+                                                 {1});
+    topology.add(op_one_hot);
+}

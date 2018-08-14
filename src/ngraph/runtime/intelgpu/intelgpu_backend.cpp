@@ -47,6 +47,7 @@
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
+#include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -340,6 +341,10 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             do_eltwise_operation(topology, op, cldnn::eltwise_mode::max);
         }
+        else if ("Minimum" == op->description())
+        {
+            do_eltwise_operation(topology, op, cldnn::eltwise_mode::min);
+        }
         else if ("Constant" == op->description())
         {
             arguments_check(op, 0, 1);
@@ -548,6 +553,12 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         else if ("Sigmoid" == op->description())
         {
             do_unary_operation(topology, op, activation_logistic);
+        }
+        else if ("Not" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            do_not_operation(topology, get_input_name(op), get_input_shape(op), get_output_name(op), get_output_shape(op), get_output_type(op));
         }
         else if ("Greater" == op->description())
         {
@@ -764,6 +775,15 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                  get_output_type(op),
                                  axis,
                                  false);
+        }
+        else if ("OneHot" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const shared_ptr<op::OneHot> one_hot_op = static_pointer_cast<op::OneHot>(op);
+            const size_t one_hot_axis = one_hot_op->get_one_hot_axis();
+
+            do_one_hot_operation(topology, get_input_name(op), get_input_shape(op), get_input_type(op), get_output_name(op), get_output_shape(op), get_output_type(op), one_hot_axis);
         }
         else
         {
