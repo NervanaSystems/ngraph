@@ -23,6 +23,7 @@
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
+#include "ngraph/runtime/cpu/tvm_kernels.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -162,11 +163,20 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::BatchNorm)
             {
+                const ngraph::op::BatchNorm* batchnorm =
+                    static_cast<const ngraph::op::BatchNorm*>(node);
+
+                if (!batchnorm->get_training_flag() && args.size() == 5 &&
+                    args[2].get_shape().size() == 4)
+                {
+                    if (CHECK_BUILD_TVM_FUNCTOR)
+                    {
+                        return;
+                    }
+                }
+
                 if (!mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    const ngraph::op::BatchNorm* batchnorm =
-                        static_cast<const ngraph::op::BatchNorm*>(node);
-
                     if (batchnorm->get_training_flag() && args.size() == 3)
                     {
                         auto& functors = external_function->get_functors();

@@ -22,11 +22,14 @@
 #include <dmlc/logging.h>
 #include <ngraph/util.hpp>
 #include <topi/broadcast.h>
+#include <topi/nn/batch_norm.h>
 #include <topi/x86/default.h>
 #include <tvm/build_module.h>
 #include <tvm/operation.h>
 #include <tvm/tvm.h>
+#include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/divide.hpp"
+#include "ngraph/op/get_output_element.hpp"
 
 #include "tvm_kernels.hpp"
 
@@ -42,6 +45,7 @@ TVMInstance::TVMInstance()
 TVMInstance::~TVMInstance()
 {
 }
+
 DLTensor TVMInstance::create_dltensor(const DLDataType& type,
                                       const size_t ndim,
                                       tvm_index_t* shape,
@@ -255,6 +259,7 @@ tvm_func divide(const std::unique_ptr<TVMInstance>& tvm_instance,
     std::unordered_map<tvm::Tensor, tvm::Buffer> binds;
     auto schedule = topi::x86::default_schedule(tvm_instance->target(), {R});
     auto lowered = tvm::lower(schedule, {A, B, R}, "func", binds, tvm_instance->config());
+
     auto mod_index = tvm_instance->add_module(std::move(
         tvm::build(lowered, tvm_instance->target(), tvm::Target(), tvm_instance->config())));
     auto func = tvm_instance->get_module(mod_index)->GetFunction("func", false);
@@ -272,13 +277,75 @@ tvm_func divide(const std::unique_ptr<TVMInstance>& tvm_instance,
         func(&a, &b, &r);
     };
 }
+tvm_func batch_norm(const std::unique_ptr<TVMInstance>& tvm_instance,
+                    const ngraph::Node* node,
+                    const std::vector<TensorViewWrapper>& args,
+                    const std::vector<TensorViewWrapper>& out,
+                    std::unordered_map<std::string, void*>& tensor_data)
+{
+    const ngraph::op::BatchNorm* batchnorm = static_cast<const ngraph::op::BatchNorm*>(node);
+    // create tvm module
+    tvm::Var n("n");
+    tvm::Var c("c");
+    tvm::Var h("h");
+    tvm::Var w("w");
+    auto x = tvm::placeholder({n, c, h, w}, tvm::Float(32), "x");
+    auto gamma = tvm::placeholder({c}, tvm::Float(32), "gamma");
+    auto beta = tvm::placeholder({c}, tvm::Float(32), "beta");
+    auto mean = tvm::placeholder({c}, tvm::Float(32), "mean");
+    auto var = tvm::placeholder({c}, tvm::Float(32), "var");
+    auto eps = batchnorm->get_eps_value();
+
+    auto R = topi::nn::batch_norm_inference(x, gamma, beta, mean, var, eps, false);
+    std::unordered_map<tvm::Tensor, tvm::Buffer> binds;
+
+    auto schedule = topi::x86::default_schedule(tvm_instance->target(), {R});
+    auto lowered =
+        tvm::lower(schedule, {x, gamma, beta, mean, var, R}, "func", binds, tvm_instance->config());
+
+    auto mod_index = tvm_instance->add_module(std::move(
+        tvm::build(lowered, tvm_instance->target(), tvm::Target(), tvm_instance->config())));
+    auto func = tvm_instance->get_module(mod_index)->GetFunction("func", false);
+
+    // get tensor_data ptrs
+    auto& xt = tensor_data[args[2].get_name()];
+    auto& gammat = tensor_data[args[0].get_name()];
+    auto& betat = tensor_data[args[1].get_name()];
+    auto& meant = tensor_data[args[3].get_name()];
+    auto& vart = tensor_data[args[4].get_name()];
+    auto& rt = tensor_data[out[0].get_name()];
+
+    return [&, func, args, out](CPURuntimeContext* ctx) {
+        std::vector<int64_t> x_shape(args[2].get_shape().begin(), args[2].get_shape().end());
+        std::vector<int64_t> gamma_shape(args[0].get_shape().begin(), args[0].get_shape().end());
+        std::vector<int64_t> beta_shape(args[1].get_shape().begin(), args[1].get_shape().end());
+        std::vector<int64_t> mean_shape(args[3].get_shape().begin(), args[3].get_shape().end());
+        std::vector<int64_t> var_shape(args[4].get_shape().begin(), args[4].get_shape().end());
+        std::vector<int64_t> r_shape(out[0].get_shape().begin(), out[0].get_shape().end());
+
+        DLTensor x = tvm_instance->create_dltensor(DLType_Float32, x_shape.size(), &x_shape[0], xt);
+        DLTensor gamma = tvm_instance->create_dltensor(
+            DLType_Float32, gamma_shape.size(), &gamma_shape[0], gammat);
+        DLTensor beta =
+            tvm_instance->create_dltensor(DLType_Float32, beta_shape.size(), &beta_shape[0], betat);
+        DLTensor mean =
+            tvm_instance->create_dltensor(DLType_Float32, mean_shape.size(), &mean_shape[0], meant);
+        DLTensor var =
+            tvm_instance->create_dltensor(DLType_Float32, var_shape.size(), &var_shape[0], vart);
+        DLTensor r = tvm_instance->create_dltensor(DLType_Float32, r_shape.size(), &r_shape[0], rt);
+
+        func(&x, &gamma, &beta, &mean, &var, &r);
+    };
+}
 std::unordered_map<std::type_index,
                    std::function<tvm_func(const std::unique_ptr<TVMInstance>&,
                                           const ngraph::Node*,
                                           const std::vector<TensorViewWrapper>&,
                                           const std::vector<TensorViewWrapper>&,
                                           std::unordered_map<std::string, void*>&)>>
-    tvm_funcs = {{TI(ngraph::op::Divide), divide}};
+    tvm_funcs = {
+        {TI(ngraph::op::Divide), divide}, {TI(ngraph::op::BatchNorm), batch_norm},
+};
 
 bool ngraph::runtime::cpu::build_tvm_functor(CPU_ExternalFunction* external_function,
                                              const ngraph::Node* node,

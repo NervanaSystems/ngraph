@@ -1149,8 +1149,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
     pass_manager.run_passes(m_function, false);
-    for (shared_ptr<Node> node : m_function->get_ordered_ops())
-        std::cout << "Op: " << node->get_friendly_name() << " " << node->get_shape() << std::endl;
+    //for (shared_ptr<Node> node : m_function->get_ordered_ops())
+    //    std::cout << "Op: " << node->get_friendly_name() << " " << node->get_shape() << std::endl;
 
     // Store layouts assigned for arguments
     for (const auto& parameter : m_function->get_parameters())
