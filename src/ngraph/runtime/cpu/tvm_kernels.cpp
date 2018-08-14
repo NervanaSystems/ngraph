@@ -21,13 +21,11 @@
 
 #include <dmlc/logging.h>
 #include <ngraph/util.hpp>
-#include "ngraph/op/divide.hpp"
-#include "ngraph/op/add.hpp"
 #include <topi/nn/batch_norm.h>
-#include "ngraph/op/divide.hpp"
-#include "ngraph/op/batch_norm.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/divide.hpp"
+#include "ngraph/op/get_output_element.hpp"
 
 #include "tvm_kernels.hpp"
 
@@ -349,11 +347,9 @@ std::unordered_map<std::type_index,
                                           const std::vector<TensorViewWrapper>&,
                                           const std::vector<TensorViewWrapper>&,
                                           std::unordered_map<std::string, void*>&)>>
-    tvm_funcs = {
-      {TI(ngraph::op::Divide), TVM_BINARY_FUNC(topi::divide)},
-      {TI(ngraph::op::Add), TVM_BINARY_FUNC(topi::add)},
-      {TI(ngraph::op::BatchNorm), batch_norm}
-    };
+    tvm_funcs = {{TI(ngraph::op::Divide), TVM_BINARY_FUNC(topi::divide)},
+                 {TI(ngraph::op::Add), TVM_BINARY_FUNC(topi::add)},
+                 {TI(ngraph::op::BatchNorm), batch_norm}};
 
 bool ngraph::runtime::cpu::build_tvm_functor(CPU_ExternalFunction* external_function,
                                              const ngraph::Node* node,
