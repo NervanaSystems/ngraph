@@ -24,6 +24,7 @@
 #include <topi/nn.h>
 #include <topi/nn/batch_norm.h>
 #include <topi/nn/pooling.h>
+#include <topi/transform.h>
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
@@ -32,6 +33,7 @@
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/reshape.hpp"
 
 #include "tvm_kernels.hpp"
 
@@ -140,6 +142,8 @@ void tvm_kernel::binary_elemwise_kernel<float>(const std::unique_ptr<TVMInstance
 
     func(&a, &b, &r);
 }
+
+
 
 template <>
 tvm::PackedFunc
@@ -290,6 +294,68 @@ tvm_func tvm_unary_func(const tvm::Array<tvm::Tensor>& G,
         func(&a, &r);
     };
 }
+
+tvm_func reshape(const std::unique_ptr<TVMInstance>& tvm_instance,
+                 const ngraph::Node* node,
+                 const std::vector<TensorViewWrapper>& args,
+                 const std::vector<TensorViewWrapper>& out,
+                 std::unordered_map<std::string, void*>& tensor_data)
+{
+    auto reshape = static_cast<const ngraph::op::Reshape*>(node);
+    auto input_order = reshape->get_input_order();
+
+    tvm::Array<tvm::Expr> in_dlshape;
+    for (size_t i = 0; i < args[0].get_shape().size(); ++i)
+    {
+        tvm::Var n("n_" + std::to_string(i));
+        in_dlshape.push_back(n);
+    }
+    
+    tvm::Array<tvm::Expr> out_axes;
+    for (size_t i = 0; i < args[0].get_shape().size(); ++i)
+    {
+        out_axes.push_back(input_order[i]);
+    }
+
+    tvm::Array<tvm::Expr> out_dlshape;
+    for (size_t i = 0; i < (out[0].get_shape().size() < 1 ? 1 : out[0].get_shape().size()); ++i)
+    {
+        tvm::Var n("o_" + std::to_string(i));
+        out_dlshape.push_back(n);
+    }
+
+    auto A = tvm::placeholder(in_dlshape, tvm::Float(32), "a");
+
+    tvm::Tensor R;
+    if (reshape->get_is_transpose()) {
+        R = topi::transpose(A, out_axes);
+    } else {
+        R = topi::reshape(A, out_dlshape);
+    }
+
+    std::unordered_map<tvm::Tensor, tvm::Buffer> binds;
+
+    auto schedule = topi::x86::default_schedule(tvm_instance->target(), {R});
+    auto lowered = tvm::lower(schedule, {A, R}, "func", binds, tvm_instance->config());
+    // create tvm func
+    auto func = tvm_instance->get_func(lowered);
+
+    // get tensor_data ptrs
+    auto& at = tensor_data[args[0].get_name()];
+    auto& rt = tensor_data[out[0].get_name()];
+    return [&, func, args, out](CPURuntimeContext* ctx) {
+        std::vector<int64_t> a_shape(args[0].get_shape().begin(), args[0].get_shape().end());
+        std::vector<int64_t> r_shape(out[0].get_shape().begin(), out[0].get_shape().end());
+        if (r_shape.size() == 0)
+        {
+            r_shape.push_back(1);
+        }
+        DLTensor a = tvm_instance->create_dltensor(DLType_Float32, a_shape.size(), &a_shape[0], at);
+        DLTensor r = tvm_instance->create_dltensor(DLType_Float32, r_shape.size(), &r_shape[0], rt);
+        func(&a, &r);
+    };
+}
+
 tvm_func batch_norm(const std::unique_ptr<TVMInstance>& tvm_instance,
                     const ngraph::Node* node,
                     const std::vector<TensorViewWrapper>& args,
@@ -482,6 +548,7 @@ std::unordered_map<std::type_index,
                  {TI(ngraph::op::Dot), matmul},
                  {TI(ngraph::op::AvgPool), pool_avg},
                  {TI(ngraph::op::MaxPool), pool_max},
+                 {TI(ngraph::op::Reshape), reshape},
                  {TI(ngraph::op::Relu), relu}};
 
 bool ngraph::runtime::cpu::build_tvm_functor(CPU_ExternalFunction* external_function,

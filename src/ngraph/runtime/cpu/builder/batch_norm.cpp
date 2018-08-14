@@ -168,7 +168,6 @@ namespace ngraph
                 const ngraph::op::BatchNorm* batchnorm =
                     static_cast<const ngraph::op::BatchNorm*>(node);
 
-#ifdef NGRAPH_USE_TVM
                 if (!batchnorm->get_training_flag() && args.size() == 5 &&
                     args[2].get_shape().size() == 4)
                 {
@@ -177,7 +176,6 @@ namespace ngraph
                         return;
                     }
                 }
-#endif
 
                 if (!mkldnn_utils::use_mkldnn_kernel(node))
                 {

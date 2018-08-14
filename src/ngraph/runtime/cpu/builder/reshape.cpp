@@ -44,34 +44,6 @@ namespace ngraph
 
                 auto reshape = static_cast<const ngraph::op::Reshape*>(node);
 
-                auto can_skip_reshape = [&]() {
-                    if (!reshape->get_is_transpose())
-                    {
-                        return true;
-                    }
-                    auto annotation = reshape->get_op_annotations();
-                    if (annotation && annotation->get_in_place_oi_pairs().size() > 0)
-                    {
-                        return true;
-                    }
-                    return false;
-                };
-
-                // XXX lfeng: commented out to test tvm
-                //                if (can_skip_reshape())
-                //                {
-                //                    std::cout << "can skip" << std::endl;
-                //                    size_t size = out[0].get_size() * out[0].get_element_type().size();
-                //                    auto functor = [&, size](CPURuntimeContext* ctx) {
-                //                        if (out_tensor != arg_tensor)
-                //                        {
-                //                            memcpy(out_tensor, arg_tensor, size);
-                //                        }
-                //                    };
-                //                    functors.emplace_back(functor);
-                //                    return;
-                //                }
-
                 auto arg_shape = args[0].get_shape();
                 auto arg_rank = arg_shape.size();
 
@@ -85,33 +57,64 @@ namespace ngraph
 
                 auto result_size = shape_size(result_shape);
 
-// XXX lfeng: commented out to test tvm
-//                if (same_layout || result_size < 2)
-//                {
-//                    size_t size = out[0].get_size() * out[0].get_element_type().size();
-//                    auto functor = [&, size](CPURuntimeContext* ctx) {
-//                        memcpy(out_tensor, arg_tensor, size);
-//                    };
-//                    functors.emplace_back(functor);
-//                    return;
-//                }
+                bool both_reshape_transpose = false;
 
-#ifdef NGRAPH_USE_TVM
 
-                auto& tvm_instance = external_function->get_tvm_instance();
-                tvm_kernel::TransposeBuilder builder;
-                tvm_kernel::TransposeKernel kernel;
-                SELECT_KERNEL(builder, args[0].get_element_type(), tvm_kernel::transpose_builder);
-                auto tvm_func =
-                    builder(tvm_instance, arg_rank, arg_shape, result_rank, input_order);
-                SELECT_KERNEL(kernel, args[0].get_element_type(), tvm_kernel::transpose_kernel);
+                if (reshape->get_is_transpose()) {
+                    if (arg_rank != result_rank) {
+                        both_reshape_transpose = true;
+                    }
+                    if (!both_reshape_transpose) {
+                        for (size_t i=0; i < arg_rank; ++i){
+                            if (arg_shape[input_order[i]] != result_shape[i]) {
+                                both_reshape_transpose = true;
+                                break;
+                            }
+                        }
+                    }
+                }      
 
-                auto functor = [&, tvm_func, kernel, arg_shape, result_shape](
-                    CPURuntimeContext* ctx) {
-                    kernel(tvm_instance, tvm_func, arg_tensor, out_tensor, arg_shape, result_shape);
+                if (!both_reshape_transpose && (arg_rank <= 2 || result_rank <= 2) && CHECK_BUILD_TVM_FUNCTOR)
+                {
+                    return;
+                }
+
+                auto can_skip_reshape = [&]() {
+                    if (!reshape->get_is_transpose())
+                    {
+                        return true;
+                    }
+                    auto annotation = reshape->get_op_annotations();
+                    if (annotation && annotation->get_in_place_oi_pairs().size() > 0)
+                    {
+                        return true;
+                    }
+                    return false;
                 };
 
-#else
+                if (can_skip_reshape())
+                {
+                    size_t size = out[0].get_size() * out[0].get_element_type().size();
+                    auto functor = [&, size](CPURuntimeContext* ctx) {
+                        if (out_tensor != arg_tensor)
+                        {
+                            memcpy(out_tensor, arg_tensor, size);
+                        }
+                    };
+                    functors.emplace_back(functor);
+                    return;
+                }
+
+                if (same_layout || result_size < 2)
+                {
+                    size_t size = out[0].get_size() * out[0].get_element_type().size();
+                    auto functor = [&, size](CPURuntimeContext* ctx) {
+                        memcpy(out_tensor, arg_tensor, size);
+                    };
+                    functors.emplace_back(functor);
+                    return;
+                }
+
                 std::function<decltype(runtime::cpu::kernel::reshape_1d<float, 2>)> kernel;
                 if (arg_rank == 1)
                 {
@@ -151,7 +154,6 @@ namespace ngraph
                     [&, kernel, arg_shape, input_order, result_shape](CPURuntimeContext* ctx) {
                         kernel(arg_tensor, out_tensor, arg_shape, input_order, result_shape);
                     };
-#endif
                 functors.emplace_back(functor);
             }
 
