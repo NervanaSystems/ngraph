@@ -26,6 +26,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/divide.hpp"
+#include "ngraph/op/dot.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/relu.hpp"
 
@@ -231,9 +232,13 @@ using tvm_func = std::function<void(CPURuntimeContext* ctx)>;
        const std::vector<TensorViewWrapper>& args,                                                 \
        const std::vector<TensorViewWrapper>& out,                                                  \
        std::unordered_map<std::string, void*>& tensor_data) {                                      \
-        tvm::Var n;                                                                                \
-        auto A = tvm::placeholder({n}, tvm::Float(32), "a");                                       \
-        auto B = tvm::placeholder({n}, tvm::Float(32), "b");                                       \
+        tvm::Array<tvm::Expr> ae, be;                                                              \
+        for (auto& v : args[0].get_shape())                                                        \
+            ae.push_back(tvm::make_const(tvm::Int(32), v));                                        \
+        for (auto& v : args[1].get_shape())                                                        \
+            be.push_back(tvm::make_const(tvm::Int(32), v));                                        \
+        auto A = tvm::placeholder(ae, tvm::Float(32), "a");                                        \
+        auto B = tvm::placeholder(be, tvm::Float(32), "b");                                        \
         auto R = OP(A, B, "tensor", topi::kBroadcast);                                             \
         return tvm_binary_func({A, B, R}, tvm_instance, node, args, out, tensor_data);             \
     }
@@ -251,12 +256,13 @@ tvm_func tvm_binary_func(const tvm::Array<tvm::Tensor>& G,
     auto& at = tensor_data[args[0].get_name()];
     auto& bt = tensor_data[args[1].get_name()];
     auto& rt = tensor_data[out[0].get_name()];
-    auto size = out[0].get_size();
-    return [&, func, size](CPURuntimeContext* ctx) {
-        int64_t dlshape[] = {static_cast<int64_t>(size)};
-        DLTensor a = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, at);
-        DLTensor b = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, bt);
-        DLTensor r = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, rt);
+    return [&, func, args, out](CPURuntimeContext* ctx) {
+        std::vector<int64_t> a_shape(args[0].get_shape().begin(), args[0].get_shape().end());
+        std::vector<int64_t> b_shape(args[1].get_shape().begin(), args[1].get_shape().end());
+        std::vector<int64_t> r_shape(out[0].get_shape().begin(), out[0].get_shape().end());
+        DLTensor a = tvm_instance->create_dltensor(DLType_Float32, a_shape.size(), &a_shape[0], at);
+        DLTensor b = tvm_instance->create_dltensor(DLType_Float32, b_shape.size(), &b_shape[0], bt);
+        DLTensor r = tvm_instance->create_dltensor(DLType_Float32, r_shape.size(), &r_shape[0], rt);
         func(&a, &b, &r);
     };
 }
@@ -273,11 +279,11 @@ tvm_func tvm_unary_func(const tvm::Array<tvm::Tensor>& G,
     // get tensor_data ptrs
     auto& at = tensor_data[args[0].get_name()];
     auto& rt = tensor_data[out[0].get_name()];
-    auto size = out[0].get_size();
-    return [&, func, size](CPURuntimeContext* ctx) {
-        int64_t dlshape[] = {static_cast<int64_t>(size)};
-        DLTensor a = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, at);
-        DLTensor r = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, rt);
+    return [&, func, args, out](CPURuntimeContext* ctx) {
+        std::vector<int64_t> a_shape(args[0].get_shape().begin(), args[0].get_shape().end());
+        std::vector<int64_t> r_shape(out[0].get_shape().begin(), out[0].get_shape().end());
+        DLTensor a = tvm_instance->create_dltensor(DLType_Float32, a_shape.size(), &a_shape[0], at);
+        DLTensor r = tvm_instance->create_dltensor(DLType_Float32, r_shape.size(), &r_shape[0], rt);
         func(&a, &r);
     };
 }
@@ -344,9 +350,13 @@ tvm_func convolution(const std::unique_ptr<TVMInstance>& tvm_instance,
 {
     auto convolution = static_cast<const ngraph::op::Convolution*>(node);
     // create tvm module
-    tvm::Var n, c, h, w;
-    auto I = tvm::placeholder({n, c, h, w}, tvm::Float(32), "I");
-    auto W = tvm::placeholder({n, c, h, w}, tvm::Float(32), "W");
+    tvm::Array<tvm::Expr> ae, be;
+    for (auto& v : args[0].get_shape())
+        ae.push_back(tvm::make_const(tvm::Int(32), v));
+    for (auto& v : args[1].get_shape())
+        be.push_back(tvm::make_const(tvm::Int(32), v));
+    auto I = tvm::placeholder(ae, tvm::Float(32), "I");
+    auto W = tvm::placeholder(be, tvm::Float(32), "W");
     auto s = convolution->get_window_movement_strides();
     auto p = convolution->get_padding_above();
     auto R = topi::conv2d_nchw(I, W, p[0], p[1], s[0], s[1], "tensor", topi::kConv2dNCHW);
@@ -377,12 +387,25 @@ tvm_func relu(const std::unique_ptr<TVMInstance>& tvm_instance,
               const std::vector<TensorViewWrapper>& out,
               std::unordered_map<std::string, void*>& tensor_data)
 {
-    tvm::Var n;
-    auto A = tvm::placeholder({n}, tvm::Float(32), "a");
+    tvm::Array<tvm::Expr> ae;
+    for (auto& v : args[0].get_shape())
+        ae.push_back(tvm::make_const(tvm::Int(32), v));
+    auto A = tvm::placeholder(ae, tvm::Float(32), "a");
     auto R = topi::relu<float>(A);
     return tvm_unary_func({A, R}, tvm_instance, node, args, out, tensor_data);
 }
-
+tvm_func matmul(const std::unique_ptr<TVMInstance>& tvm_instance,
+                const ngraph::Node* node,
+                const std::vector<TensorViewWrapper>& args,
+                const std::vector<TensorViewWrapper>& out,
+                std::unordered_map<std::string, void*>& tensor_data)
+{
+    tvm::Var n, c;
+    auto A = tvm::placeholder({n, c}, tvm::Float(32), "a");
+    auto B = tvm::placeholder({n, c}, tvm::Float(32), "b");
+    auto R = topi::matmul(A, B, false, false, "tensor", topi::kMatMul);
+    return tvm_binary_func({A, B, R}, tvm_instance, node, args, out, tensor_data);
+}
 std::unordered_map<std::type_index,
                    std::function<tvm_func(const std::unique_ptr<TVMInstance>&,
                                           const ngraph::Node*,
@@ -393,6 +416,7 @@ std::unordered_map<std::type_index,
                  {TI(ngraph::op::Add), TVM_BINARY_FUNC(topi::add)},
                  {TI(ngraph::op::BatchNorm), batch_norm},
                  {TI(ngraph::op::Convolution), convolution},
+                 {TI(ngraph::op::Dot), matmul},
                  {TI(ngraph::op::Relu), relu}};
 
 bool ngraph::runtime::cpu::build_tvm_functor(CPU_ExternalFunction* external_function,
