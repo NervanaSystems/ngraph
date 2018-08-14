@@ -37,7 +37,6 @@ namespace ngraph
                 auto function = reduce->get_functions()[0];
 
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
                 auto& callees = external_function->get_callees();
 
                 if (!callees.count(function->get_name()))
@@ -46,9 +45,9 @@ namespace ngraph
                 }
                 auto& reducer_external_function = callees[function->get_name()];
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 auto arg0_shape = args[0].get_shape();
                 auto out_shape = out[0].get_shape();
