@@ -28,6 +28,7 @@
 #include <CPP/reorder.hpp>
 #include <CPP/reshape.hpp>
 #include <CPP/scale.hpp>
+#include <CPP/softmax.hpp>
 #include <CPP/topology.hpp>
 
 #include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
@@ -36,6 +37,7 @@
 #include "ngraph/runtime/intelgpu/intelgpu_op_broadcast.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_convolution.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_op_softmax.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
 
 #include "ngraph/function.hpp"
@@ -57,6 +59,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/util.hpp"
 
@@ -374,6 +377,50 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
             const cldnn::concatenation cldnn_concat(get_output_name(op), inputs, cldnn_axis);
             topology.add(cldnn_concat);
+        }
+        else if ("Softmax" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const shared_ptr<op::Softmax> softmax_op = static_pointer_cast<op::Softmax>(op);
+            const AxisSet& axes = softmax_op->get_axes();
+            const size_t axes_size = axes.size();
+            const size_t shape_dim_count = get_input_shape(op, 0).size();
+
+            // clDNN has limited support for Softmax operation
+            // following are the checks to go with custom kernel
+            if ((shape_dim_count > 3) || ((shape_dim_count == 3) && (axes_size == 2)))
+            {
+                do_softmax_operation(topology,
+                                     get_input_name(op),
+                                     get_input_shape(op),
+                                     get_input_type(op),
+                                     get_output_name(op),
+                                     get_output_shape(op),
+                                     get_output_type(op),
+                                     axes);
+            }
+            else
+            {
+                cldnn::softmax::dimension_t dimension = cldnn::softmax::normalize_fyx;
+                if (axes_size == 1)
+                {
+                    size_t axes_idx = shape_dim_count - *(axes.begin()) - 1;
+                    switch (axes_idx)
+                    {
+                    case 0: dimension = cldnn::softmax::normalize_x; break;
+                    case 1: dimension = cldnn::softmax::normalize_y; break;
+                    case 2: dimension = cldnn::softmax::normalize_f; break;
+                    default:
+                        throw invalid_argument("Softmax operation: wrong axis " +
+                                               to_string(axes_idx));
+                    }
+                }
+
+                const cldnn::softmax cldnn_softmax(
+                    get_output_name(op), get_input_name(op), dimension);
+                topology.add(cldnn_softmax);
+            }
         }
         else if ("Add" == op->description())
         {
