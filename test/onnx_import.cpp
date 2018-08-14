@@ -143,6 +143,6 @@ TEST(onnx, model_batchnorm_default)
                                                              {{-0.22474074f, 1.f, 2.2247407f}}}})
                                .get_vector();
 
-    auto result_vectors = execute(function, inputs, "CPU");
+    auto result_vectors = execute(function, inputs, "INTERPRETER");
     EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
 }
