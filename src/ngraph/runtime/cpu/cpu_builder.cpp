@@ -119,12 +119,13 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Add)
             {
-/* #ifdef NGRAPH_USE_TVM */
-#if 0
-                BUILD_TVM_BINARY_ELEMWISE_FUNCTOR(topi::add);
-#else
-                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::add);
+#ifdef NGRAPH_USE_TVM
+                if (CHECK_BUILD_TVM_FUNCTOR)
+                {
+                    return;
+                }
 #endif
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::add);
             }
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Subtract)

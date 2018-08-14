@@ -62,6 +62,13 @@ namespace ngraph
                     m_modules.push_back(module);
                     return m_modules.size() - 1;
                 }
+                const tvm::runtime::PackedFunc get_func(tvm::Array<tvm::LoweredFunc>& lowered,
+                                                        std::string func = "func")
+                {
+                    m_modules.push_back(
+                        std::move(tvm::build(lowered, m_target, tvm::Target(), m_config)));
+                    return m_modules[m_modules.size() - 1]->GetFunction(func, false);
+                }
                 tvm::Module& get_module(size_t index) { return m_modules[index]; }
                 const tvm::BuildConfig& config() const { return m_config; }
                 const tvm::Target& target() const { return m_target; }
