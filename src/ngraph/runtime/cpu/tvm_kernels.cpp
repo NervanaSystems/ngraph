@@ -21,6 +21,7 @@
 
 #include <dmlc/logging.h>
 #include <ngraph/util.hpp>
+#include <topi/nn.h>
 #include <topi/nn/batch_norm.h>
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/batch_norm.hpp"
@@ -242,6 +243,21 @@ void tvm_kernel::transpose_kernel<float>(const std::unique_ptr<TVMInstance>& tvm
 #define TI(x) std::type_index(typeid(x))
 using tvm_func = std::function<void(CPURuntimeContext* ctx)>;
 
+#define TVM_BINARY_FUNC(OP)                                                                        \
+    [](const std::unique_ptr<TVMInstance>& tvm_instance,                                           \
+       const ngraph::Node* node,                                                                   \
+       const std::vector<TensorViewWrapper>& args,                                                 \
+       const std::vector<TensorViewWrapper>& out,                                                  \
+       std::unordered_map<std::string, void*>& tensor_data) {                                      \
+        tvm::Var n("n");                                                                           \
+        auto A = tvm::placeholder({n}, tvm::Float(32), "a");                                       \
+        auto B = tvm::placeholder({n}, tvm::Float(32), "b");                                       \
+        auto R = OP(A, B, "tensor", topi::kBroadcast);                                             \
+        std::unordered_map<tvm::Tensor, tvm::Buffer> binds;                                        \
+        auto schedule = topi::x86::default_schedule(tvm_instance->target(), {R});                  \
+        auto lowered = tvm::lower(schedule, {A, B, R}, "func", binds, tvm_instance->config());     \
+        return tvm_binary_func(lowered, tvm_instance, node, args, out, tensor_data);               \
+    }
 tvm_func tvm_binary_func(tvm::Array<tvm::LoweredFunc>& lowered,
                          const std::unique_ptr<TVMInstance>& tvm_instance,
                          const ngraph::Node* node,
@@ -265,6 +281,7 @@ tvm_func tvm_binary_func(tvm::Array<tvm::LoweredFunc>& lowered,
         func(&a, &b, &r);
     };
 }
+
 tvm_func batch_norm(const std::unique_ptr<TVMInstance>& tvm_instance,
                     const ngraph::Node* node,
                     const std::vector<TensorViewWrapper>& args,
@@ -290,10 +307,7 @@ tvm_func batch_norm(const std::unique_ptr<TVMInstance>& tvm_instance,
     auto schedule = topi::x86::default_schedule(tvm_instance->target(), {R});
     auto lowered =
         tvm::lower(schedule, {x, gamma, beta, mean, var, R}, "func", binds, tvm_instance->config());
-
-    auto mod_index = tvm_instance->add_module(std::move(
-        tvm::build(lowered, tvm_instance->target(), tvm::Target(), tvm_instance->config())));
-    auto func = tvm_instance->get_module(mod_index)->GetFunction("func", false);
+    auto func = tvm_instance->get_func(lowered);
 
     // get tensor_data ptrs
     auto& xt = tensor_data[args[2].get_name()];
@@ -325,21 +339,44 @@ tvm_func batch_norm(const std::unique_ptr<TVMInstance>& tvm_instance,
         func(&x, &gamma, &beta, &mean, &var, &r);
     };
 }
-#define TVM_BINARY_FUNC(OP)                                                                        \
-    [](const std::unique_ptr<TVMInstance>& tvm_instance,                                           \
-       const ngraph::Node* node,                                                                   \
-       const std::vector<TensorViewWrapper>& args,                                                 \
-       const std::vector<TensorViewWrapper>& out,                                                  \
-       std::unordered_map<std::string, void*>& tensor_data) {                                      \
-        tvm::Var n("n");                                                                           \
-        auto A = tvm::placeholder({n}, tvm::Float(32), "a");                                       \
-        auto B = tvm::placeholder({n}, tvm::Float(32), "b");                                       \
-        auto R = OP(A, B, "tensor", topi::kBroadcast);                                             \
-        std::unordered_map<tvm::Tensor, tvm::Buffer> binds;                                        \
-        auto schedule = topi::x86::default_schedule(tvm_instance->target(), {R});                  \
-        auto lowered = tvm::lower(schedule, {A, B, R}, "func", binds, tvm_instance->config());     \
-        return tvm_binary_func(lowered, tvm_instance, node, args, out, tensor_data);               \
-    }
+
+tvm_func convolution(const std::unique_ptr<TVMInstance>& tvm_instance,
+                     const ngraph::Node* node,
+                     const std::vector<TensorViewWrapper>& args,
+                     const std::vector<TensorViewWrapper>& out,
+                     std::unordered_map<std::string, void*>& tensor_data)
+{
+    auto convolution = static_cast<const ngraph::op::Convolution*>(node);
+    // create tvm module
+    tvm::Var n("n");
+    tvm::Var c("c");
+    tvm::Var h("h");
+    tvm::Var w("w");
+    auto I = tvm::placeholder({n, c, h, w}, tvm::Float(32), "I");
+    auto W = tvm::placeholder({n, c, h, w}, tvm::Float(32), "W");
+    auto s = convolution->get_window_movement_strides();
+    auto p = convolution->get_padding_above();
+    auto R = topi::conv2d_nchw(I, W, p[0], p[1], s[0], s[1], "tensor", topi::kConv2dNCHW);
+
+    std::unordered_map<tvm::Tensor, tvm::Buffer> binds;
+    auto schedule = topi::x86::default_schedule(tvm_instance->target(), {R});
+    auto lowered = tvm::lower(schedule, {I, W, R}, "func", binds, tvm_instance->config());
+    auto func = tvm_instance->get_func(lowered);
+
+    // get tensor_data ptrs
+    auto& it = tensor_data[args[0].get_name()];
+    auto& wt = tensor_data[args[1].get_name()];
+    auto& rt = tensor_data[out[0].get_name()];
+    return [&, func, args, out](CPURuntimeContext* ctx) {
+        std::vector<int64_t> i_shape(args[0].get_shape().begin(), args[0].get_shape().end());
+        DLTensor i = tvm_instance->create_dltensor(DLType_Float32, i_shape.size(), &i_shape[0], it);
+        std::vector<int64_t> w_shape(args[1].get_shape().begin(), args[1].get_shape().end());
+        DLTensor w = tvm_instance->create_dltensor(DLType_Float32, w_shape.size(), &w_shape[0], wt);
+        std::vector<int64_t> r_shape(out[0].get_shape().begin(), out[0].get_shape().end());
+        DLTensor r = tvm_instance->create_dltensor(DLType_Float32, r_shape.size(), &r_shape[0], rt);
+        func(&i, &w, &r);
+    };
+}
 
 std::unordered_map<std::type_index,
                    std::function<tvm_func(const std::unique_ptr<TVMInstance>&,
@@ -349,7 +386,8 @@ std::unordered_map<std::type_index,
                                           std::unordered_map<std::string, void*>&)>>
     tvm_funcs = {{TI(ngraph::op::Divide), TVM_BINARY_FUNC(topi::divide)},
                  {TI(ngraph::op::Add), TVM_BINARY_FUNC(topi::add)},
-                 {TI(ngraph::op::BatchNorm), batch_norm}};
+                 {TI(ngraph::op::BatchNorm), batch_norm},
+                 {TI(ngraph::op::Convolution), convolution}};
 
 bool ngraph::runtime::cpu::build_tvm_functor(CPU_ExternalFunction* external_function,
                                              const ngraph::Node* node,

@@ -22,6 +22,9 @@
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
+#ifdef NGRAPH_USE_TVM
+#include "ngraph/runtime/cpu/tvm_kernels.hpp"
+#endif
 
 using namespace std;
 using namespace ngraph;
@@ -36,6 +39,16 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::Convolution)
             {
                 auto convolution = static_cast<const ngraph::op::Convolution*>(node);
+
+#ifdef NGRAPH_USE_TVM
+                if (args[0].get_shape().size() == 4)
+                {
+                    if (CHECK_BUILD_TVM_FUNCTOR)
+                    {
+                        return;
+                    }
+                }
+#endif
 
                 auto& functors = external_function->get_functors();
 

@@ -98,7 +98,9 @@
 #include "ngraph/runtime/cpu/kernel/tan.hpp"
 #include "ngraph/runtime/cpu/kernel/tanh.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#ifdef NGRAPH_USE_TVM
 #include "ngraph/runtime/cpu/tvm_kernels.hpp"
+#endif
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 

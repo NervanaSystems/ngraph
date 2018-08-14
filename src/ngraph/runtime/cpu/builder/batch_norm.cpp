@@ -23,7 +23,9 @@
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
+#ifdef NGRAPH_USE_TVM
 #include "ngraph/runtime/cpu/tvm_kernels.hpp"
+#endif
 
 using namespace std;
 using namespace ngraph;
@@ -166,6 +168,7 @@ namespace ngraph
                 const ngraph::op::BatchNorm* batchnorm =
                     static_cast<const ngraph::op::BatchNorm*>(node);
 
+#ifdef NGRAPH_USE_TVM
                 if (!batchnorm->get_training_flag() && args.size() == 5 &&
                     args[2].get_shape().size() == 4)
                 {
@@ -174,6 +177,7 @@ namespace ngraph
                         return;
                     }
                 }
+#endif
 
                 if (!mkldnn_utils::use_mkldnn_kernel(node))
                 {
