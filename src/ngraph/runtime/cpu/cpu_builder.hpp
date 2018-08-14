@@ -204,14 +204,13 @@
 
 #define BUILD_UNARY_ELEMWISE_FUNCTOR(OP)                                                           \
     auto& functors = external_function->get_functors();                                            \
-    auto& tensor_data = external_function->get_tensor_data();                                      \
     std::function<void(void*, void*, size_t)> kernel;                                              \
                                                                                                    \
     SELECT_KERNEL(kernel, args[0].get_element_type(), OP);                                         \
                                                                                                    \
     auto element_count = out[0].get_size();                                                        \
-    auto& arg0_tensor = tensor_data[args[0].get_name()];                                           \
-    auto& out0_tensor = tensor_data[out[0].get_name()];                                            \
+    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());                    \
+    auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());                     \
                                                                                                    \
     auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {                            \
         kernel(arg0_tensor, out0_tensor, element_count);                                           \
@@ -220,15 +219,14 @@
 
 #define BUILD_BINARY_ELEMWISE_FUNCTOR(OP)                                                          \
     auto& functors = external_function->get_functors();                                            \
-    auto& tensor_data = external_function->get_tensor_data();                                      \
     std::function<void(void*, void*, void*, size_t)> kernel;                                       \
                                                                                                    \
     SELECT_KERNEL(kernel, args[0].get_element_type(), OP);                                         \
                                                                                                    \
     auto element_count = out[0].get_size();                                                        \
-    auto& arg0_tensor = tensor_data[args[0].get_name()];                                           \
-    auto& arg1_tensor = tensor_data[args[1].get_name()];                                           \
-    auto& out0_tensor = tensor_data[out[0].get_name()];                                            \
+    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());                    \
+    auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());                    \
+    auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());                     \
                                                                                                    \
     auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {                            \
         kernel(arg0_tensor, arg1_tensor, out0_tensor, element_count);                              \
