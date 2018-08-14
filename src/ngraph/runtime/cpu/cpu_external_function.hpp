@@ -109,6 +109,7 @@ namespace ngraph
                     return functors;
                 }
                 std::unordered_map<std::string, void*>& get_tensor_data() { return tensor_data; }
+                void*& get_tensor_data(const std::string& name);
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>&
                     get_executor()
                 {
@@ -133,14 +134,15 @@ namespace ngraph
                 // For non-destructive passthrough kernels, propagate function
                 // input buffers to internal ops
                 void propagate_in_place_input(ngraph::descriptor::Output* output,
-                                              std::string input_name);
+                                              std::string input_name,
+                                              bool dex);
                 // For in-place kernels, propagate function output buffers to
                 // internal ops
                 void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
-                                               std::string output_name);
+                                               std::string output_name,
+                                               bool dex);
 
 #if !defined(NGRAPH_DEX_ONLY)
-
                 void emit_debug_function_entry(codegen::CodeWriter& writer,
                                                Node* node,
                                                const std::vector<TensorViewWrapper>& in,
@@ -203,6 +205,7 @@ namespace ngraph
                     executor;
                 std::unordered_map<std::string, void*> tensor_data;
                 std::unordered_map<std::string, bool> tensor_stale;
+                std::unordered_map<std::string, std::string> tensor_alias;
                 std::list<std::pair<std::reference_wrapper<void*>, size_t>> intermediates_offsets;
                 std::list<
                     std::tuple<std::reference_wrapper<void*>, size_t, std::reference_wrapper<bool>>>
