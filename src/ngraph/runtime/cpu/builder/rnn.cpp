@@ -39,15 +39,14 @@ namespace ngraph
                 }
 
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& src_layer_tensor = tensor_data[args[0].get_name()];
-                auto& src_iter_tensor = tensor_data[args[1].get_name()];
-                auto& weights_layer_tensor = tensor_data[args[2].get_name()];
-                auto& weights_iter_tensor = tensor_data[args[3].get_name()];
-                auto& bias_tensor = tensor_data[args[4].get_name()];
-                auto& dst_layer_tensor = tensor_data[out[0].get_name()];
-                auto& dst_iter_tensor = tensor_data[out[1].get_name()];
+                auto& src_layer_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& src_iter_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& weights_layer_tensor = external_function->get_tensor_data(args[2].get_name());
+                auto& weights_iter_tensor = external_function->get_tensor_data(args[3].get_name());
+                auto& bias_tensor = external_function->get_tensor_data(args[4].get_name());
+                auto& dst_layer_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& dst_iter_tensor = external_function->get_tensor_data(out[1].get_name());
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto rnn_index = mkldnn_emitter->build_rnn<ngraph::op::Rnn>(node, args, out);

@@ -33,11 +33,10 @@ namespace ngraph
                 auto rev_seq = static_cast<const ngraph::op::ReverseSequence*>(node);
 
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& arg_tensor = tensor_data[args[0].get_name()];
-                auto& seq_len_tensor = tensor_data[args[1].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& seq_len_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 auto arg_shape = args[0].get_shape();
 
