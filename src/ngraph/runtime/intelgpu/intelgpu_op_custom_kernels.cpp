@@ -766,19 +766,22 @@ void runtime::intelgpu::do_not_operation(cldnn::topology& topology,
     codegen::CodeWriter writer;
 
     writer << "__kernel void " << entry_point_name << "(const __global char input"
-           << array_dims(input_shape) << ", __global char output" << array_dims(output_shape) << ")\n";
+           << array_dims(input_shape) << ", __global char output" << array_dims(output_shape)
+           << ")\n";
 
     writer.block_begin();
     {
         size_t var_idx = 0;
         for (auto const& i : output_shape)
         {
-            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i" << var_idx << ")\n";
+            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
+                   << var_idx << ")\n";
             writer.block_begin();
             ++var_idx;
         }
 
-        writer << "output" << access_dims(output_shape) << " = !input" << access_dims(input_shape) << ";\n";
+        writer << "output" << access_dims(output_shape) << " = !input" << access_dims(input_shape)
+               << ";\n";
 
         for (auto const& i : output_shape)
         {
@@ -799,8 +802,8 @@ void runtime::intelgpu::do_not_operation(cldnn::topology& topology,
 }
 
 void runtime::intelgpu::do_one_hot_operation(cldnn::topology& topology,
-                                             const std::string& input_name, 
-                                             const Shape& input_shape,  
+                                             const std::string& input_name,
+                                             const Shape& input_shape,
                                              const element::Type& input_type,
                                              const std::string& output_name,
                                              const Shape& output_shape,
@@ -811,8 +814,9 @@ void runtime::intelgpu::do_one_hot_operation(cldnn::topology& topology,
     const string entry_point_name = "one_hot_" + output_name;
     codegen::CodeWriter writer;
 
-    writer << "__kernel void " << entry_point_name << "(const __global " << input_type.c_type_string() << " input"
-           << array_dims(input_shape) << ", __global " << output_type.c_type_string()  << " output" << array_dims(output_shape) << ")\n";
+    writer << "__kernel void " << entry_point_name << "(const __global "
+           << input_type.c_type_string() << " input" << array_dims(input_shape) << ", __global "
+           << output_type.c_type_string() << " output" << array_dims(output_shape) << ")\n";
 
     writer.block_begin();
     {
@@ -823,20 +827,22 @@ void runtime::intelgpu::do_one_hot_operation(cldnn::topology& topology,
         {
             for (auto const& i : input_shape)
             {
-                writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i" << var_idx << ")\n";
+                writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
+                       << var_idx << ")\n";
                 writer.block_begin();
-                ++var_idx;   
+                ++var_idx;
             }
 
             size_t current_input = 0;
             string buffer;
             size_t output_shape_size = output_shape.size();
-            for(uint j = 0; j < output_shape_size; j++)
+            for (uint j = 0; j < output_shape_size; j++)
             {
-                if(j == one_hot_axis)
+                if (j == one_hot_axis)
                 {
-                    buffer += "[i]"; 
-                } else 
+                    buffer += "[i]";
+                }
+                else
                 {
                     buffer += "[i" + to_string(current_input) + "]";
                     ++current_input;

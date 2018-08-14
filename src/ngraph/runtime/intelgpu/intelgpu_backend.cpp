@@ -558,7 +558,12 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             arguments_check(op, 1, 1);
 
-            do_not_operation(topology, get_input_name(op), get_input_shape(op), get_output_name(op), get_output_shape(op), get_output_type(op));
+            do_not_operation(topology,
+                             get_input_name(op),
+                             get_input_shape(op),
+                             get_output_name(op),
+                             get_output_shape(op),
+                             get_output_type(op));
         }
         else if ("Greater" == op->description())
         {
@@ -783,7 +788,14 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             const shared_ptr<op::OneHot> one_hot_op = static_pointer_cast<op::OneHot>(op);
             const size_t one_hot_axis = one_hot_op->get_one_hot_axis();
 
-            do_one_hot_operation(topology, get_input_name(op), get_input_shape(op), get_input_type(op), get_output_name(op), get_output_shape(op), get_output_type(op), one_hot_axis);
+            do_one_hot_operation(topology,
+                                 get_input_name(op),
+                                 get_input_shape(op),
+                                 get_input_type(op),
+                                 get_output_name(op),
+                                 get_output_shape(op),
+                                 get_output_type(op),
+                                 one_hot_axis);
         }
         else
         {

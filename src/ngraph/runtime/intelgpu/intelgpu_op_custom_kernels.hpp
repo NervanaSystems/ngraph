@@ -96,14 +96,14 @@ namespace ngraph
                                   const std::string& output_name,
                                   const Shape& output_shape,
                                   const element::Type& output_type);
-            
-            void do_one_hot_operation(cldnn::topology& topology, 
-                                      const std::string& input_name, 
+
+            void do_one_hot_operation(cldnn::topology& topology,
+                                      const std::string& input_name,
                                       const Shape& input_shape,
                                       const element::Type& input_type,
                                       const std::string& output_name,
                                       const Shape& output_shape,
-                                      const element::Type& output_type, 
+                                      const element::Type& output_type,
                                       const size_t one_hot_axis);
             // Helper functions used in cldnn::custom_gpu_primitive kernels
             std::vector<cldnn_arg> get_kernel_args(size_t input, size_t output);
