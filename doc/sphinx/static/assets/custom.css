@@ -1,0 +1,23 @@
+
+@import url(http://fonts.googleapis.com/css?family=Open+Sans)
+@import url(../fonts/NeoSansIntel.ttf)
+
+html {
+	font-family: NeoSansIntel, "Open Sans", sans;
+}
+
+a {
+  color: #5c8583;
+  text-decoration: none;
+  cursor: pointer;
+}
+a:hover {
+  color: #5c8583;
+  background-color: #dce7e6;
+
+}
+a:visited {
+  color: #5c8583;
+}
+
+
