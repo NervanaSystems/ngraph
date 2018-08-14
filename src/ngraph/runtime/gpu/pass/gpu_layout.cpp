@@ -20,8 +20,6 @@
 #include <typeindex>
 #include <typeinfo>
 
-#include <mkldnn.hpp>
-
 #include "gpu_layout.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/runtime/gpu/gpu_op_annotations.hpp"
