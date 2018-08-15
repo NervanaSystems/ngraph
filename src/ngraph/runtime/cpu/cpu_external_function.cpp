@@ -1275,8 +1275,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
             }
             else
             {
-            in_stale.emplace_back(tensor_stale[name]);
-        }
+                in_stale.emplace_back(tensor_stale[name]);
+            }
         }
         for (const auto& name : out_names)
         {
