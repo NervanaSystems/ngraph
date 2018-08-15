@@ -14,11 +14,14 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/runtime/cpu/kernel/avg_pool.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
+#include "ngraph/runtime/cpu/kernel/avg_pool.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#ifdef NGRAPH_USE_TVM
+#include "ngraph/runtime/cpu/tvm_kernels.hpp"
+#endif
 
 using namespace std;
 using namespace ngraph;
@@ -33,6 +36,16 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::AvgPool)
             {
                 auto avg_pool = static_cast<const ngraph::op::AvgPool*>(node);
+
+#ifdef NGRAPH_USE_TVM
+                if (args[0].get_shape().size() == 4)
+                {
+                    if (CHECK_BUILD_TVM_FUNCTOR)
+                    {
+                        return;
+                    }
+                }
+#endif
 
                 auto& functors = external_function->get_functors();
 

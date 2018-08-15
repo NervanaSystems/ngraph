@@ -36,15 +36,6 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Dot)
             {
-#ifdef NGRAPH_USE_TVM
-                if (args[0].get_shape().size() == 2)
-                {
-                    if (CHECK_BUILD_TVM_FUNCTOR)
-                    {
-                        return;
-                    }
-                }
-#endif
                 auto dot = static_cast<const ngraph::op::Dot*>(node);
 
                 auto& functors = external_function->get_functors();
@@ -98,6 +89,18 @@ namespace ngraph
                     return;
                 }
 
+#ifdef NGRAPH_USE_TVM
+                if ((arg0_shape.size() == 2) &&
+                    std::find(arg0_shape.begin(), arg0_shape.end(), 0) == arg0_shape.end() &&
+                    (arg1_shape.size() == 2) &&
+                    std::find(arg1_shape.begin(), arg1_shape.end(), 0) == arg1_shape.end())
+                {
+                    if (CHECK_BUILD_TVM_FUNCTOR)
+                    {
+                        return;
+                    }
+                }
+#endif
                 if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1) &&
                     reduction_axes_count == 1)
                 {

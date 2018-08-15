@@ -23,11 +23,14 @@
 #include <ngraph/util.hpp>
 #include <topi/nn.h>
 #include <topi/nn/batch_norm.h>
+#include <topi/nn/pooling.h>
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/relu.hpp"
 
 #include "tvm_kernels.hpp"
@@ -380,7 +383,61 @@ tvm_func convolution(const std::unique_ptr<TVMInstance>& tvm_instance,
         func(&i, &w, &r);
     };
 }
+tvm_func pool_max(const std::unique_ptr<TVMInstance>& tvm_instance,
+                  const ngraph::Node* node,
+                  const std::vector<TensorViewWrapper>& args,
+                  const std::vector<TensorViewWrapper>& out,
+                  std::unordered_map<std::string, void*>& tensor_data)
+{
+    auto pool = static_cast<const ngraph::op::MaxPool*>(node);
+    tvm::Array<tvm::Expr> ae;
+    for (auto& v : args[0].get_shape())
+        ae.push_back(tvm::make_const(tvm::Int(32), v));
+    auto I = tvm::placeholder(ae, tvm::Float(32), "i");
 
+    auto k = pool->get_window_shape();
+    auto s = pool->get_window_movement_strides();
+    auto pb = pool->get_padding_below();
+    auto pa = pool->get_padding_above();
+    auto R = topi::nn::pool(I,
+                            {k[0], k[1]},
+                            {s[0], s[1]},
+                            {pa[0], pa[1], pa[0], pa[1]},
+                            topi::nn::kMaxPool,
+                            false,
+                            "NCHW",
+                            false);
+    return tvm_unary_func(
+        tvm::Array<tvm::Tensor>(I, R), tvm_instance, node, args, out, tensor_data);
+}
+tvm_func pool_avg(const std::unique_ptr<TVMInstance>& tvm_instance,
+                  const ngraph::Node* node,
+                  const std::vector<TensorViewWrapper>& args,
+                  const std::vector<TensorViewWrapper>& out,
+                  std::unordered_map<std::string, void*>& tensor_data)
+{
+    auto pool = static_cast<const ngraph::op::AvgPool*>(node);
+    tvm::Array<tvm::Expr> ae;
+    for (auto& v : args[0].get_shape())
+        ae.push_back(tvm::make_const(tvm::Int(32), v));
+    auto I = tvm::placeholder(ae, tvm::Float(32), "i");
+
+    auto k = pool->get_window_shape();
+    auto s = pool->get_window_movement_strides();
+    auto pb = pool->get_padding_below();
+    auto pa = pool->get_padding_above();
+    auto count_include_pad = pool->get_include_padding_in_avg_computation();
+    auto R = topi::nn::pool(I,
+                            {k[0], k[1]},
+                            {s[0], s[1]},
+                            {pa[0], pa[1], pa[0], pa[1]},
+                            topi::nn::kMaxPool,
+                            false,
+                            "NCHW",
+                            count_include_pad);
+    return tvm_unary_func(
+        tvm::Array<tvm::Tensor>(I, R), tvm_instance, node, args, out, tensor_data);
+}
 tvm_func relu(const std::unique_ptr<TVMInstance>& tvm_instance,
               const ngraph::Node* node,
               const std::vector<TensorViewWrapper>& args,
@@ -400,9 +457,13 @@ tvm_func matmul(const std::unique_ptr<TVMInstance>& tvm_instance,
                 const std::vector<TensorViewWrapper>& out,
                 std::unordered_map<std::string, void*>& tensor_data)
 {
-    tvm::Var n, c;
-    auto A = tvm::placeholder({n, c}, tvm::Float(32), "a");
-    auto B = tvm::placeholder({n, c}, tvm::Float(32), "b");
+    tvm::Array<tvm::Expr> ae, be;
+    for (auto& v : args[0].get_shape())
+        ae.push_back(tvm::make_const(tvm::Int(32), v));
+    for (auto& v : args[1].get_shape())
+        be.push_back(tvm::make_const(tvm::Int(32), v));
+    auto A = tvm::placeholder(ae, tvm::Float(32), "a");
+    auto B = tvm::placeholder(be, tvm::Float(32), "b");
     auto R = topi::matmul(A, B, false, false, "tensor", topi::kMatMul);
     return tvm_binary_func({A, B, R}, tvm_instance, node, args, out, tensor_data);
 }
@@ -417,6 +478,8 @@ std::unordered_map<std::type_index,
                  {TI(ngraph::op::BatchNorm), batch_norm},
                  {TI(ngraph::op::Convolution), convolution},
                  {TI(ngraph::op::Dot), matmul},
+                 {TI(ngraph::op::AvgPool), pool_avg},
+                 {TI(ngraph::op::MaxPool), pool_max},
                  {TI(ngraph::op::Relu), relu}};
 
 bool ngraph::runtime::cpu::build_tvm_functor(CPU_ExternalFunction* external_function,

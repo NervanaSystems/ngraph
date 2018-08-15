@@ -14,12 +14,15 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/runtime/cpu/kernel/max_pool.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
+#include "ngraph/runtime/cpu/kernel/max_pool.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#ifdef NGRAPH_USE_TVM
+#include "ngraph/runtime/cpu/tvm_kernels.hpp"
+#endif
 
 using namespace std;
 using namespace ngraph;
@@ -35,6 +38,15 @@ namespace ngraph
             {
                 auto max_pool = static_cast<const ngraph::op::MaxPool*>(node);
 
+#ifdef NGRAPH_USE_TVM
+                if (args[0].get_shape().size() == 4)
+                {
+                    if (CHECK_BUILD_TVM_FUNCTOR)
+                    {
+                        return;
+                    }
+                }
+#endif
                 auto& functors = external_function->get_functors();
 
                 auto arg0_shape = args[0].get_shape();
