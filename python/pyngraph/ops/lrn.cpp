@@ -30,9 +30,5 @@ void regclass_pyngraph_op_LRN(py::module m)
         lrn(m, "LRN");
     lrn.doc() = "ngraph.impl.op.LRN wraps ngraph::op::LRN";
 
-    lrn.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                     double&,
-                     double&,
-                     double&,
-                     size_t&>());
+    lrn.def(py::init<const std::shared_ptr<ngraph::Node>&, double&, double&, double&, size_t&>());
 }
