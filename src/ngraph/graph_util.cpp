@@ -581,7 +581,7 @@ bool ngraph::possibly_overwritten(Node* node)
                 {
                     for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                     {
-                        if (input->get_index() == oi_pair.input)
+                        if (input->get_index() == oi_pair.input && oi_pair.destructive)
                         {
                             return true;
                         }
