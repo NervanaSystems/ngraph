@@ -482,8 +482,9 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string
                                                     NVShape padding_below,
                                                     NVShape padding_interior)
 {
+    uint32_t rank = static_cast<uint32_t>(input_shape.size());
     std::stringstream kernel_name;
-    kernel_name << "pad_dynamic_" << join(dtypes, "_");
+    kernel_name << "pad_dynamic_" << join(dtypes, "_") + std::to_string(rank);
 
     std::string hash = kernel_name.str() + "pad_i" + join(input_shape, "_") + "pad_o" +
                        join(output_shape) + "_pb" + join(padding_below, "_") + "_pi" +
@@ -499,7 +500,6 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string
         return primitive_index;
     }
 
-    uint32_t rank = static_cast<uint32_t>(input_shape.size());
     uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
     //TODO: currently we set it to 64, will add tuning method later
     uint32_t block_size_x = 64;
@@ -1898,11 +1898,11 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::ReplaceSlice* node, 
     auto output_type = out[0].get_element_type().c_type_string();
 
     // assumes NC{d1,...,dn} format
-    std::string kernel_name = "repslices_" + input_type + "_" + replace_type + "_" + output_type;
-    std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
+    std::string type_str = input_type + "_" + replace_type + "_" + output_type;
+    std::replace(type_str.begin(), type_str.end(), ' ', '_');
 
     std::stringstream ss;
-    ss << kernel_name << "_s" << join(input_shape, "_") << "_ssrc" << join(replace_shape, "_")
+    ss << "rep_slices_" << type_str << "_s" << join(input_shape, "_") << "_ssrc" << join(replace_shape, "_")
        << "_sll" << join(lower_bounds, "_") << "_slu" << join(upper_bounds, "_") << "_slst"
        << join(slice_strides, "_") << in_place_op;
     auto hash = ss.str();
