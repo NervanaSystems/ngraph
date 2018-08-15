@@ -145,7 +145,8 @@ bool runtime::cpu::pass::CPUCollapseDims::run_on_function(std::shared_ptr<ngraph
             {
                 NGRAPH_DEBUG << "CollapseDims: Replaced broadcast " << input_shape << " "
                              << operated_axes << " " << output_shape << " with "
-                             << AxisSet(cdims.axis_set) << " " << Shape(cdims.output_shape);
+                             << Shape(cdims.input_shape) << " " << AxisSet(cdims.axis_set) << " "
+                             << Shape(cdims.output_shape);
             }
         }
     }
