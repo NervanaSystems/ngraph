@@ -1874,14 +1874,13 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Convolution* node)
 
 size_t runtime::gpu::CUDAEmitter::build_primitive(const op::ReplaceSlice* node, bool in_place_op)
 {
-    auto rep_slice = static_cast<const ngraph::op::ReplaceSlice*>(node);
     auto& args = node->get_inputs();
     auto& out = node->get_outputs();
     auto& input_shape = args[0].get_shape();
     auto& replace_shape = args[1].get_shape();
-    auto& lower_bounds = rep_slice->get_lower_bounds();
-    auto& upper_bounds = rep_slice->get_upper_bounds();
-    auto& slice_strides = rep_slice->get_strides();
+    auto& lower_bounds = node->get_lower_bounds();
+    auto& upper_bounds = node->get_upper_bounds();
+    auto& slice_strides = node->get_strides();
     Shape slice_shape(upper_bounds.size(), 0);
     std::transform(upper_bounds.begin(),
                    upper_bounds.end(),
