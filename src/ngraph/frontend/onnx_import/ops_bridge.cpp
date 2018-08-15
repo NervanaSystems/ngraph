@@ -19,6 +19,7 @@
 
 #include "attribute.hpp"
 #include "ngraph/frontend/onnx_import/op/add.hpp"
+#include "ngraph/frontend/onnx_import/op/batch_norm.hpp"
 #include "ngraph/frontend/onnx_import/op/constant.hpp"
 #include "ngraph/frontend/onnx_import/op/split.hpp"
 #include "ops_bridge.hpp"
@@ -42,6 +43,11 @@ namespace ngraph
             } // namespace error
 
             NodeVector add(const Node& node) { return op::add(node); }
+            NodeVector batch_norm(const Node& node)
+            {
+                return op::batch_norm(node, node.get_ng_inputs());
+            }
+
             NodeVector constant(const Node& node)
             {
                 return {op::constant(node.get_attribute_value<Tensor>("value"))};
@@ -77,6 +83,8 @@ namespace ngraph
                 ops_bridge()
                 {
                     m_map.emplace("Add", std::bind(add, std::placeholders::_1));
+                    m_map.emplace("BatchNormalization",
+                                  std::bind(batch_norm, std::placeholders::_1));
                     m_map.emplace("Constant", std::bind(constant, std::placeholders::_1));
                     m_map.emplace("Split", std::bind(split, std::placeholders::_1));
                 }
