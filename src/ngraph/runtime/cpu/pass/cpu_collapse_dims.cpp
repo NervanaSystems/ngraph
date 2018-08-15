@@ -54,7 +54,7 @@ static void collapse_dims(std::vector<size_t>& output_shape,
     size_t collapse_size = 1;
     bool operated_axes_run = false;
     bool collapsing = false;
-    for (int output_idx = output_shape.size() - 1; output_idx >= 0; output_idx--)
+    for (int output_idx = static_cast<int>(output_shape.size()) - 1; output_idx >= 0; output_idx--)
     {
         auto is_operated_axis = operated_axes.count(output_idx) == 1;
         auto end_run = (operated_axes_run != is_operated_axis) ||
