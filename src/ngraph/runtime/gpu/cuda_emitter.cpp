@@ -1902,9 +1902,9 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::ReplaceSlice* node, 
     std::replace(type_str.begin(), type_str.end(), ' ', '_');
 
     std::stringstream ss;
-    ss << "rep_slices_" << type_str << "_s" << join(input_shape, "_") << "_ssrc" << join(replace_shape, "_")
-       << "_sll" << join(lower_bounds, "_") << "_slu" << join(upper_bounds, "_") << "_slst"
-       << join(slice_strides, "_") << in_place_op;
+    ss << "rep_slices_" << type_str << "_s" << join(input_shape, "_") << "_ssrc"
+       << join(replace_shape, "_") << "_sll" << join(lower_bounds, "_") << "_slu"
+       << join(upper_bounds, "_") << "_slst" << join(slice_strides, "_") << in_place_op;
     auto hash = ss.str();
 
     // check if the requested primtive is already built
