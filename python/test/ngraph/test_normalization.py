@@ -44,8 +44,6 @@ def test_lrn():
                                   [[0.00322708],
                                    [0.00235574]]]], dtype=np.float32))
 
-    from IPython import embed; embed()
-
     # Test LRN default parameter values
     model = ng.lrn(ng.constant(input_image))
     computation = runtime.computation(model)

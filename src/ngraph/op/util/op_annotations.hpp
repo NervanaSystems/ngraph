@@ -14,8 +14,6 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/except.hpp"
-
 #pragma once
 
 #include "ngraph/assertion.hpp"
