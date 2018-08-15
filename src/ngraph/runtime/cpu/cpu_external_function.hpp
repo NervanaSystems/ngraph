@@ -171,6 +171,8 @@ namespace ngraph
                 bool m_use_tbb;
 
                 EntryPoint m_compiled_function;
+                std::unordered_map<std::string, std::string> m_variable_name_map;
+
 #if !defined(NGRAPH_DEX_ONLY)
 
                 bool m_is_compiled;
@@ -178,7 +180,6 @@ namespace ngraph
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
                 bool m_emit_timing;
 
-                std::unordered_map<std::string, std::string> m_variable_name_map;
                 std::map<std::string, size_t> m_name_index_map;
 
                 // Because we are directly accessing the constant data stored in the
