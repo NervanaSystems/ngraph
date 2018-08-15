@@ -33,6 +33,7 @@ namespace ngraph
             class GPU_CallFrame;
             class GPUPrimitiveEmitter;
             struct GPURuntimeContext;
+            class CudaContextManager;
 
             class GPU_Backend : public Backend
             {
@@ -71,6 +72,9 @@ namespace ngraph
 
                     std::unique_ptr<GPURuntimeContext> m_runtime_context;
                     std::unique_ptr<GPUPrimitiveEmitter> m_primitive_emitter;
+
+                private:
+                    std::unique_ptr<CudaContextManager> m_cuda_manager;
                 };
 
             private:

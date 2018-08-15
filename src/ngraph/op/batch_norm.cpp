@@ -272,6 +272,14 @@ void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
         auto goes = op::get_output_elements(shared_from_this());
         mean = goes.at(1);
         var = goes.at(2);
+        if (!mean)
+        {
+            throw ngraph_error("GetOutputElement for mean is missing");
+        };
+        if (!var)
+        {
+            throw ngraph_error("GetOutputElement for variance is missing");
+        }
     }
     else // BatchNorm Training with global stats
     {

@@ -48,6 +48,29 @@ namespace ngraph
                                                      padding_above,
                                                      include_padding_in_avg_computation);
                 }
+
+                template <typename ElementType>
+                void avg_pool_backprop(void* delta,
+                                       void* out,
+                                       const Shape& delta_shape,
+                                       const Shape& out_shape,
+                                       const Shape& window_shape,
+                                       const Strides& window_movement_strides,
+                                       const Shape& padding_below,
+                                       const Shape& padding_above,
+                                       bool include_padding_in_avg_computation)
+                {
+                    reference::avg_pool_backprop<ElementType>(
+                        static_cast<const ElementType*>(delta),
+                        static_cast<ElementType*>(out),
+                        delta_shape,
+                        out_shape,
+                        window_shape,
+                        window_movement_strides,
+                        padding_below,
+                        padding_above,
+                        include_padding_in_avg_computation);
+                }
             }
         }
     }
