@@ -21,7 +21,6 @@ set(SRC
     build_graph.cpp
     constant_folding.cpp
     copy.cpp
-    core_fusion.cpp
     cpio.cpp
     cse.cpp
     element_type.cpp
@@ -53,6 +52,10 @@ endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
     set(SRC ${SRC} backend_debug_api.cpp builder.cpp backend_api.cpp)
+endif()
+
+if (NGRAPH_CPU_ENABLE)
+    set(SRC ${SRC} core_fusion.cpp)
 endif()
 
 add_subdirectory(models)
@@ -144,10 +147,6 @@ endif()
 if (NGRAPH_GPU_ENABLE)
     target_link_libraries(unit-test gpu_backend)
 endif()
-
-add_custom_target(style-check
-    COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh
-)
 
 add_custom_target(unit-test-check
     COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
