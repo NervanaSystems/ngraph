@@ -547,28 +547,6 @@ size_t ngraph::get_user_count(Node* node)
     return count;
 }
 
-bool ngraph::computes_result(Node* node)
-{
-    if (node->is_output())
-    {
-        return true;
-    }
-
-    // Check if node feeds a result node that has been copy eliminated
-    for (const descriptor::Output& output : node->get_outputs())
-    {
-        for (const descriptor::Input* input : output.get_inputs())
-        {
-            auto res = std::dynamic_pointer_cast<ngraph::op::Result>(input->get_node());
-            if (res && !res->needs_copy())
-            {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 bool ngraph::possibly_overwritten(Node* node)
 {
     for (const descriptor::Output& output : node->get_outputs())
