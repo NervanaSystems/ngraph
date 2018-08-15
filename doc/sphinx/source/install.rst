@@ -183,7 +183,7 @@ according to those conventions. These scripts require the command
 
 .. code-block:: bash
 
-   $ brew install llvm@3.9
+   $ brew install llvm@3.9 automake
    $ mkdir -p $HOME/bin
    $ ln -s /usr/local/opt/llvm@3.9/bin/clang-format $HOME/bin/clang-format-3.9
    $ echo 'export PATH=$HOME/bin:$PATH' >> $HOME/.bash_profile
