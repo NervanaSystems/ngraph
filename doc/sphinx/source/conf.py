@@ -106,10 +106,10 @@ todo_include_todos = True
 html_theme = "classic"
 html_theme_options = {
     "rightsidebar": "true",
-    "sidebarwidth": '42%',
+    "sidebarwidth": '41.3%',
     "sidebarbgcolor": "#EFEEED",
     "sidebartextcolor": "#2D2324",
-    "sidebarlinkcolor": "#20435C", 
+    "sidebarlinkcolor": "#20435C",
     "relbarbgcolor": "#84AEAD",
     "codebgcolor": "#edf0f2",
     "codetextcolor": "#959595",
@@ -137,7 +137,7 @@ html_static_path = ['../static/assets']
 # html_theme_path = ["../"]
 
 
-html_css_files = ['custom.css',
+html_css_files = ['../static/assets/custom.css',
                   ('print.css', {'media': 'print'})]
 
 # Custom sidebar templates, must be a dictionary that maps document names
