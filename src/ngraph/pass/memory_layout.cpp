@@ -68,10 +68,9 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
             auto tv_desc = tensor->get_primary_tensor_view();
             auto tv_layout = tv_desc->get_tensor_view_layout();
 
-            size_t offset =
-                in_place_outputs.count(tensor)
-                    ? in_place_outputs.at(tensor)->get_pool_offset()
-                    : mm.allocate(tv_layout ? tv_layout->size() : tensor->logical_size());
+            size_t offset = in_place_outputs.count(tensor)
+                                ? in_place_outputs.at(tensor)->get_pool_offset()
+                                : mm.allocate(tv_layout ? tv_layout->size() : tensor->size());
 
             tensor->set_pool_offset(offset);
         }

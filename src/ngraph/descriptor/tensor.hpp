@@ -55,7 +55,7 @@ private:
 public:
     const std::string& get_name() const { return m_name; }
     void set_pool_offset(size_t);
-    size_t logical_size() const;
+    size_t size() const;
     size_t get_pool_offset() const;
     const element::Type& get_element_type() const { return m_element_type; }
     static std::string make_tensor_name(const Node* node, size_t value_index);

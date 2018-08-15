@@ -53,7 +53,7 @@ size_t descriptor::Tensor::get_pool_offset() const
     return m_pool_offset;
 }
 
-size_t descriptor::Tensor::logical_size() const
+size_t descriptor::Tensor::size() const
 {
     return m_size;
 }
