@@ -20,7 +20,11 @@
 #include "gtest/gtest.h"
 #include "ngraph/frontend/onnx_import/onnx.hpp"
 #include "ngraph/ngraph.hpp"
+#include "util/all_close_f.hpp"
+#include "util/ndarray.hpp"
 #include "util/test_tools.hpp"
+
+using namespace ngraph;
 
 TEST(onnx, model_add_abc)
 {
@@ -39,7 +43,7 @@ TEST(onnx, model_add_abc)
     auto r{backend->create_tensor(ngraph::element::f32, shape)};
 
     backend->call(model.front(), {r}, {a, b, c});
-    EXPECT_EQ((std::vector<float>{6}), read_vector<float>(r));
+    EXPECT_TRUE(test::all_close_f((std::vector<float>{6}), read_vector<float>(r)));
 }
 
 TEST(onnx, model_add_abc_initializers)
@@ -56,7 +60,7 @@ TEST(onnx, model_add_abc_initializers)
     auto r{backend->create_tensor(ngraph::element::f32, shape)};
 
     backend->call(model.front(), {r}, {c});
-    EXPECT_EQ((std::vector<float>{3, 6, 9, 12}), read_vector<float>(r));
+    EXPECT_TRUE(test::all_close_f((std::vector<float>{3, 6, 9, 12}), read_vector<float>(r)));
 }
 
 TEST(onnx, model_split_equal_parts_default)
@@ -71,7 +75,7 @@ TEST(onnx, model_split_equal_parts_default)
     {
         auto result_vectors = execute(model[i], args, "INTERPRETER");
         EXPECT_EQ(result_vectors.size(), 1);
-        EXPECT_EQ(expected_output[i], result_vectors.front());
+        EXPECT_TRUE(test::all_close_f(expected_output[i], result_vectors.front()));
     }
 }
 
@@ -90,7 +94,7 @@ TEST(onnx, model_split_equal_parts_2d)
     {
         auto result_vectors = execute(model[i], args, "INTERPRETER");
         EXPECT_EQ(result_vectors.size(), 1);
-        EXPECT_EQ(expected_output[i], result_vectors[0]);
+        EXPECT_TRUE(test::all_close_f(expected_output[i], result_vectors[0]));
     }
 }
 
@@ -109,6 +113,36 @@ TEST(onnx, model_split_variable_parts_2d)
     {
         auto result_vectors = execute(model[i], args, "INTERPRETER");
         EXPECT_EQ(result_vectors.size(), 1);
-        EXPECT_EQ(expected_output[i], result_vectors[0]);
+        EXPECT_TRUE(test::all_close_f(expected_output[i], result_vectors[0]));
     }
+}
+
+TEST(onnx, model_batchnorm_default)
+{
+    // Batch Normalization with default parameters
+    auto function{ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/batchnorm_default.onnx"))};
+
+    std::vector<std::vector<float>> inputs;
+
+    // input data shape (1, 2, 1, 3)
+    inputs.emplace_back(
+        ngraph::test::NDArray<float, 4>({{{{-1., 0., 1.}}, {{2., 3., 4.}}}}).get_vector());
+
+    // scale (3)
+    inputs.emplace_back(std::vector<float>{1., 1.5});
+    // bias (3)
+    inputs.emplace_back(std::vector<float>{0., 1.});
+    // mean (3)
+    inputs.emplace_back(std::vector<float>{0., 3});
+    // var (3)
+    inputs.emplace_back(std::vector<float>{1., 1.5});
+
+    // shape (1, 2, 1, 3)
+    auto expected_output = ngraph::test::NDArray<float, 4>({{{{-0.999995f, 0.f, 0.999995f}},
+                                                             {{-0.22474074f, 1.f, 2.2247407f}}}})
+                               .get_vector();
+
+    auto result_vectors = execute(function, inputs, "INTERPRETER");
+    EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
 }
