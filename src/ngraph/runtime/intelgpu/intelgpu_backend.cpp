@@ -28,13 +28,16 @@
 #include <CPP/reorder.hpp>
 #include <CPP/reshape.hpp>
 #include <CPP/scale.hpp>
+#include <CPP/softmax.hpp>
 #include <CPP/topology.hpp>
 
 #include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_broadcast.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_op_convolution.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_op_softmax.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
 
 #include "ngraph/function.hpp"
@@ -56,6 +59,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/util.hpp"
 
@@ -328,6 +332,25 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                      reversed_axes);
             }
         }
+        else if ("Convert" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            if (get_input_type(op) == get_output_type(op))
+            {
+                do_equal_propagation(topology, get_input_name(op), get_output_name(op));
+            }
+            else
+            {
+                do_convert_operation(topology,
+                                     get_input_name(op),
+                                     get_input_shape(op),
+                                     get_input_type(op),
+                                     get_output_name(op),
+                                     get_output_shape(op),
+                                     get_output_type(op));
+            }
+        }
         else if ("Concat" == op->description())
         {
             if (op->get_inputs().empty() || op->get_outputs().size() != 1)
@@ -354,6 +377,50 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
             const cldnn::concatenation cldnn_concat(get_output_name(op), inputs, cldnn_axis);
             topology.add(cldnn_concat);
+        }
+        else if ("Softmax" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const shared_ptr<op::Softmax> softmax_op = static_pointer_cast<op::Softmax>(op);
+            const AxisSet& axes = softmax_op->get_axes();
+            const size_t axes_size = axes.size();
+            const size_t shape_dim_count = get_input_shape(op, 0).size();
+
+            // clDNN has limited support for Softmax operation
+            // following are the checks to go with custom kernel
+            if ((shape_dim_count > 3) || ((shape_dim_count == 3) && (axes_size == 2)))
+            {
+                do_softmax_operation(topology,
+                                     get_input_name(op),
+                                     get_input_shape(op),
+                                     get_input_type(op),
+                                     get_output_name(op),
+                                     get_output_shape(op),
+                                     get_output_type(op),
+                                     axes);
+            }
+            else
+            {
+                cldnn::softmax::dimension_t dimension = cldnn::softmax::normalize_fyx;
+                if (axes_size == 1)
+                {
+                    size_t axes_idx = shape_dim_count - *(axes.begin()) - 1;
+                    switch (axes_idx)
+                    {
+                    case 0: dimension = cldnn::softmax::normalize_x; break;
+                    case 1: dimension = cldnn::softmax::normalize_y; break;
+                    case 2: dimension = cldnn::softmax::normalize_f; break;
+                    default:
+                        throw invalid_argument("Softmax operation: wrong axis " +
+                                               to_string(axes_idx));
+                    }
+                }
+
+                const cldnn::softmax cldnn_softmax(
+                    get_output_name(op), get_input_name(op), dimension);
+                topology.add(cldnn_softmax);
+            }
         }
         else if ("Add" == op->description())
         {
@@ -739,62 +806,112 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             arguments_check(op, 2, 1);
 
             const shared_ptr<op::Convolution> conv_op = static_pointer_cast<op::Convolution>(op);
-            const Strides& conv_stride = conv_op->get_window_movement_strides();
-            const Strides& conv_dilation = conv_op->get_window_dilation_strides();
-            const CoordinateDiff& conv_padding_below = conv_op->get_padding_below();
-            const CoordinateDiff& conv_padding_above = conv_op->get_padding_above();
-            const Strides& conv_data_dilation = conv_op->get_data_dilation_strides();
+            const Strides& win_stride = conv_op->get_window_movement_strides();
+            const Strides& win_dilation = conv_op->get_window_dilation_strides();
+            const Strides& data_dilation = conv_op->get_data_dilation_strides();
+            const CoordinateDiff& pad_below = conv_op->get_padding_below();
+            const CoordinateDiff& pad_above = conv_op->get_padding_above();
 
-            if (conv_stride.size() > 2)
+            // clDNN failed with filter size 1
+            const Shape filter_data(get_input_shape(op, 1).cbegin() + 2,
+                                    get_input_shape(op, 1).cend());
+            const size_t filter_size = shape_size(filter_data);
+
+            // clDNN has quite limited support for Convolution operation
+            // following are the checks to go with workaround
+            if ((win_stride.size() > 2) || (pad_below.size() > 2 || pad_above.size() > 2) ||
+                (pad_below.at(0) != pad_above.at(0) || pad_below.at(1) != pad_above.at(1)) ||
+                (win_dilation.size() > 2) || (filter_size < 2) ||
+                (data_dilation.size() > 2 || data_dilation.at(0) != 1 || data_dilation.at(1) != 1))
             {
-                ostringstream os;
-                os << "Unsupported strides for \"" << op->description() << '\"';
-                throw std::invalid_argument(os.str());
+                do_convolution_operation(topology,
+                                         get_input_name(op, 0),
+                                         get_input_shape(op, 0),
+                                         get_input_name(op, 1),
+                                         get_input_shape(op, 1),
+                                         get_output_name(op),
+                                         get_output_shape(op),
+                                         get_output_type(op),
+                                         conv_op->get_padding_below(),
+                                         conv_op->get_window_movement_strides(),
+                                         conv_op->get_window_dilation_strides(),
+                                         conv_op->get_data_dilation_strides(),
+                                         0,
+                                         1,
+                                         1,
+                                         "input[batch][input_channel]",
+                                         "filter[output_channel][input_channel]",
+                                         "output[batch][output_channel]",
+                                         false);
             }
-
-            if (conv_padding_below.size() > 2 || conv_padding_above.size() > 2)
+            else
             {
-                ostringstream os;
-                os << "Unsupported padding for \"" << op->description() << '\"';
-                throw std::invalid_argument(os.str());
+                const cldnn::tensor input_offset(0, 0, -pad_below.at(1), -pad_below.at(0));
+                const cldnn::tensor strides(1, 1, win_stride.at(1), win_stride.at(0));
+                const cldnn::tensor dilation(1, 1, win_dilation.at(1), win_dilation.at(0));
+
+                const cldnn::convolution cldnn_conv(get_output_name(op),
+                                                    get_input_name(op, 0),
+                                                    {get_input_name(op, 1)},
+                                                    strides,
+                                                    input_offset,
+                                                    dilation);
+                topology.add(cldnn_conv);
             }
+        }
+        else if ("ConvolutionBackpropFilters" == op->description())
+        {
+            arguments_check(op, 2, 1);
 
-            //TODO: Further clDNN version will work with different paddings above and below
-            if (conv_padding_below.at(0) != conv_padding_above.at(0) ||
-                conv_padding_below.at(1) != conv_padding_above.at(1))
-            {
-                ostringstream os;
-                os << "Paddings above and below are different for \"" << op->description() << '\"';
-                throw std::invalid_argument(os.str());
-            }
+            const shared_ptr<op::ConvolutionBackpropFilters> conv_op =
+                static_pointer_cast<op::ConvolutionBackpropFilters>(op);
 
-            if (conv_dilation.size() > 2)
-            {
-                ostringstream os;
-                os << "Unsupported dilation for \"" << op->description() << '\"';
-                throw std::invalid_argument(os.str());
-            }
+            do_convolution_operation(topology,
+                                     get_input_name(op, 0),
+                                     get_input_shape(op, 0),
+                                     get_input_name(op, 1),
+                                     get_input_shape(op, 1),
+                                     get_output_name(op),
+                                     get_output_shape(op),
+                                     get_output_type(op),
+                                     conv_op->get_padding_below_backward(),
+                                     conv_op->get_window_movement_strides_backward(),
+                                     conv_op->get_window_dilation_strides_backward(),
+                                     conv_op->get_data_dilation_strides_backward(),
+                                     1,
+                                     0,
+                                     0,
+                                     "input[input_channel][batch]",
+                                     "filter[input_channel][output_channel]",
+                                     "output[output_channel][batch]",
+                                     false);
+        }
+        else if ("ConvolutionBackpropData" == op->description())
+        {
+            arguments_check(op, 2, 1);
 
-            if (conv_data_dilation.size() > 2 || conv_data_dilation.at(0) != 1 ||
-                conv_data_dilation.at(1) != 1)
-            {
-                ostringstream os;
-                os << "Unsupported data dilation for \"" << op->description() << '\"';
-                throw std::invalid_argument(os.str());
-            }
+            const shared_ptr<op::ConvolutionBackpropData> conv_op =
+                static_pointer_cast<op::ConvolutionBackpropData>(op);
 
-            const cldnn::tensor input_offset(
-                0, 0, -conv_padding_below.at(1), -conv_padding_below.at(0));
-            const cldnn::tensor strides(1, 1, conv_stride.at(1), conv_stride.at(0));
-            const cldnn::tensor dilation(1, 1, conv_dilation.at(1), conv_dilation.at(0));
-
-            const cldnn::convolution cldnn_conv(get_output_name(op),
-                                                get_input_name(op, 0),
-                                                {get_input_name(op, 1)},
-                                                strides,
-                                                input_offset,
-                                                dilation);
-            topology.add(cldnn_conv);
+            do_convolution_operation(topology,
+                                     get_input_name(op, 1),
+                                     get_input_shape(op, 1),
+                                     get_input_name(op, 0),
+                                     get_input_shape(op, 0),
+                                     get_output_name(op),
+                                     get_output_shape(op),
+                                     get_output_type(op),
+                                     conv_op->get_padding_below_backward(),
+                                     conv_op->get_window_movement_strides_backward(),
+                                     conv_op->get_window_dilation_strides_backward(),
+                                     conv_op->get_data_dilation_strides_backward(),
+                                     0,
+                                     1,
+                                     1,
+                                     "input[batch][input_channel]",
+                                     "filter[input_channel][output_channel]",
+                                     "output[batch][output_channel]",
+                                     true);
         }
         else if ("Min" == op->description())
         {
@@ -834,7 +951,10 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         }
     }
 
-    instance.ocl_network = make_shared<cldnn::network>(*ocl_engine, topology);
+    cldnn::build_options network_build_options(cldnn::build_option::optimize_data(true));
+
+    instance.ocl_network =
+        make_shared<cldnn::network>(*ocl_engine, topology, network_build_options);
 
     return true;
 }

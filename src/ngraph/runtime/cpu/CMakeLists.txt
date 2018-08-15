@@ -27,6 +27,7 @@ set(SRC
     cpu_tensor_view_wrapper.cpp
     cpu_tensor_view.cpp
     cpu_tracing.cpp
+    builder/add.cpp
     builder/avg_pool.cpp
     builder/batch_norm.cpp
     builder/broadcast.cpp
@@ -43,6 +44,7 @@ set(SRC
     builder/max.cpp
     builder/max_pool.cpp
     builder/min.cpp
+    builder/one_hot.cpp
     builder/relu.cpp
     builder/pad.cpp
     builder/product.cpp
