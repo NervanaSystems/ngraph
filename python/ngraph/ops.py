@@ -931,14 +931,23 @@ def batch_norm(eps,             # type: float
 
 @nameable_op
 def lrn(data,       # type: Node
-        alpha,      # type: float
-        beta,       # type: float
-        bias,       # type: float
-        size,       # type: int
+        alpha=1,    # type: float
+        beta=0.5,   # type: float
+        bias=1,     # type: float
+        size=5,     # type: int
         name=None,  # type: str
         ):
     # type: (...) -> Node
-    """Return LRN node."""
+    """Return a node which performs element-wise Local Response Normalization (LRN) operation.
+
+    :param data: Input data.
+    :param alpha: A scale factor (usually positive).
+    :param beta: An exponent.
+    :param bias: An offset (usually positive) to avoid dividing by 0.
+    :param size: Width of the 1-D normalization window.
+    :param name: An optional name of the output node.
+    :return: The new node which performs LRN.
+    """
     return LRN(data, alpha, beta, bias, size)
 
 
