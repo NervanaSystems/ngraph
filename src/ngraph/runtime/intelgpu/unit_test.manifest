@@ -17,6 +17,7 @@ backwards_dot_scalar_tensor
 backwards_dot_tensor3_tensor3
 backwards_dot_tensor_scalar
 backwards_dot_tensor_vector
+backwards_exp
 backwards_floor
 backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2
 backwards_maxpool_n2_c1_hw5_3x3_str2_max
