@@ -1180,11 +1180,11 @@ void runtime::cpu::CPU_ExternalFunction::build()
     // Constants
     for (auto& node : m_function->get_ordered_ops())
     {
-        const auto c = dynamic_cast<ngraph::op::Constant*>(node.get());
-        if (c)
+        if (node->is_constant())
         {
             auto tv = node->get_outputs()[0].get_tensor_view();
-            tensor_data[tv->get_tensor().get_name()] = const_cast<void*>(c->get_data_ptr());
+            tensor_data[tv->get_tensor().get_name()] =
+                const_cast<void*>(static_pointer_cast<ngraph::op::Constant>(node)->get_data_ptr());
             m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::CONSTANT;
         }
     }
