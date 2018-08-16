@@ -59,22 +59,27 @@ namespace ngraph
 
                 bool both_reshape_transpose = false;
 
-
-                if (reshape->get_is_transpose()) {
-                    if (arg_rank != result_rank) {
+                if (reshape->get_is_transpose())
+                {
+                    if (arg_rank != result_rank)
+                    {
                         both_reshape_transpose = true;
                     }
-                    if (!both_reshape_transpose) {
-                        for (size_t i=0; i < arg_rank; ++i){
-                            if (arg_shape[input_order[i]] != result_shape[i]) {
+                    if (!both_reshape_transpose)
+                    {
+                        for (size_t i = 0; i < arg_rank; ++i)
+                        {
+                            if (arg_shape[input_order[i]] != result_shape[i])
+                            {
                                 both_reshape_transpose = true;
                                 break;
                             }
                         }
                     }
-                }      
+                }
 
-                if (!both_reshape_transpose && (arg_rank <= 2 || result_rank <= 2) && CHECK_BUILD_TVM_FUNCTOR)
+                if (!both_reshape_transpose && (arg_rank <= 2 || result_rank <= 2) &&
+                    CHECK_BUILD_TVM_FUNCTOR)
                 {
                     return;
                 }

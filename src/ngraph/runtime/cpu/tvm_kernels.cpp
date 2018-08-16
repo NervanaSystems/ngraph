@@ -40,7 +40,7 @@
 using namespace ngraph::runtime::cpu;
 TVMInstance::TVMInstance()
 {
-    NGRAPH_DEBUG << "Creating TVMInstance";
+    NGRAPH_INFO << "Creating TVMInstance";
     m_config = tvm::build_config();
     m_target = tvm::target::llvm();
     m_dl_ctx.device_type = static_cast<DLDeviceType>(kDLCPU);
@@ -142,8 +142,6 @@ void tvm_kernel::binary_elemwise_kernel<float>(const std::unique_ptr<TVMInstance
 
     func(&a, &b, &r);
 }
-
-
 
 template <>
 tvm::PackedFunc
@@ -310,7 +308,7 @@ tvm_func reshape(const std::unique_ptr<TVMInstance>& tvm_instance,
         tvm::Var n("n_" + std::to_string(i));
         in_dlshape.push_back(n);
     }
-    
+
     tvm::Array<tvm::Expr> out_axes;
     for (size_t i = 0; i < args[0].get_shape().size(); ++i)
     {
@@ -327,9 +325,12 @@ tvm_func reshape(const std::unique_ptr<TVMInstance>& tvm_instance,
     auto A = tvm::placeholder(in_dlshape, tvm::Float(32), "a");
 
     tvm::Tensor R;
-    if (reshape->get_is_transpose()) {
+    if (reshape->get_is_transpose())
+    {
         R = topi::transpose(A, out_axes);
-    } else {
+    }
+    else
+    {
         R = topi::reshape(A, out_dlshape);
     }
 
@@ -561,7 +562,7 @@ bool ngraph::runtime::cpu::build_tvm_functor(CPU_ExternalFunction* external_func
     {
         return false;
     }
-    NGRAPH_DEBUG << "TVM kernel registered for ngraph op: " << node->get_friendly_name();
+    NGRAPH_INFO << "TVM kernel registered for ngraph op: " << node->get_friendly_name();
     auto& functors = external_function->get_functors();
     auto& tvm_instance = external_function->get_tvm_instance();
     auto& tensor_data = external_function->get_tensor_data();
