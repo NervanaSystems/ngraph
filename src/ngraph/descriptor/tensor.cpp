@@ -15,8 +15,8 @@
 *******************************************************************************/
 
 #include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/node.hpp"
 
 using namespace ngraph;
