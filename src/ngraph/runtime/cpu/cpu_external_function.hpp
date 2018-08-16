@@ -74,6 +74,14 @@ namespace ngraph
                 friend class CPU_Backend;
 
             public:
+                enum class CPUTensorRole
+                {
+                    INPUT,
+                    CONSTANT,
+                    OUTPUT,
+                    INTERMEDIATE
+                };
+
                 CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                      bool release_function = true);
                 ~CPU_ExternalFunction();
@@ -128,6 +136,9 @@ namespace ngraph
                 void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
                                                std::string output_name,
                                                bool dex);
+
+                bool computes_result(Node* node);
+
                 void emit_debug_function_entry(codegen::CodeWriter& writer,
                                                Node* node,
                                                const std::vector<TensorViewWrapper>& in,
@@ -164,6 +175,8 @@ namespace ngraph
                 // Constant ops we need to keep a list of shared_ptr to each Constant
                 // so they don't get freed before we are done with them
                 std::vector<std::shared_ptr<Node>> m_active_constants;
+
+                std::unordered_map<std::string, CPUTensorRole> m_tensor_roles;
 
                 LayoutDescriptorPtrs parameter_layout_descriptors;
                 LayoutDescriptorPtrs result_layout_descriptors;
