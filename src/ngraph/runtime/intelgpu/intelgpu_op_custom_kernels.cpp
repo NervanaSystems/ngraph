@@ -228,6 +228,182 @@ void runtime::intelgpu::do_pad_operation(cldnn::topology& topology,
     topology.add(op_pad);
 }
 
+void runtime::intelgpu::do_max_pool_backprop_operation(cldnn::topology& topology,
+                                                       const string& input_name,
+                                                       const Shape& input_shape,
+                                                       const string& delta_name,
+                                                       const Shape& delta_shape,
+                                                       const string& output_name,
+                                                       const Shape& output_shape,
+                                                       const element::Type& output_type,
+                                                       const Shape& win_shape,
+                                                       const Shape& win_stride,
+                                                       const Shape& pad_below)
+{
+    const string entry_point_name = "op_max_pool_backprop_" + output_name;
+    const Shape delta_data(delta_shape.cbegin() + 2, delta_shape.cend());
+    const Shape output_data(output_shape.cbegin() + 2, output_shape.cend());
+    codegen::CodeWriter writer;
+    vector<size_t> gws;
+
+    // The kernel name and parameters
+    writer << "__kernel void " << entry_point_name << "(const __global float input"
+           << array_dims(input_shape) << ", const __global float delta" << array_dims(delta_shape)
+           << ", __global float output" << array_dims(output_shape) << ")\n";
+
+    writer.block_begin();
+    {
+        // Main loop over delta input array.
+        writer << "const uint i0 = get_global_id(0);";
+        gws.push_back(delta_shape.at(0));
+        writer << "// for (uint i0 = 0; i0 < " << delta_shape.at(0) << "; ++i0)\n";
+        writer.block_begin();
+        {
+            writer << "const uint i1 = get_global_id(1);";
+            gws.push_back(delta_shape.at(1));
+            writer << "// for (uint i1 = 0; i1 < " << delta_shape.at(1) << "; ++i1)\n";
+            writer.block_begin();
+            {
+                // Initialization output
+                size_t var_idx = 0;
+                for (auto const& i : output_data)
+                {
+                    writer << "for (uint j" << var_idx << " = 0; j" << var_idx << " < " << i
+                           << "; ++j" << var_idx << ")\n";
+                    writer.block_begin();
+                    ++var_idx;
+                }
+
+                writer << "output[i0][i1]";
+                // Additional dimentions for output
+                for (size_t i = 0; i < output_data.size(); ++i)
+                {
+                    writer << "[j" << i << "]";
+                }
+                writer << " = 0.0f;\n";
+
+                // Closing brackets for Initialization loop
+                for (auto const& i : output_data)
+                {
+                    writer.block_end();
+                }
+                // End of output initialization
+
+                // Loops over other output dimensions
+                var_idx = 2;
+                for (auto const& i : delta_data)
+                {
+                    writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i
+                           << "; ++i" << var_idx << ")\n";
+                    writer.block_begin();
+                    ++var_idx;
+                }
+
+                // Create variables to save coordinates
+                for (size_t i = 0; i < delta_data.size(); ++i)
+                {
+                    writer << "uint save_i" << i + 2 << " = 0;\n";
+                }
+                writer << "float max_elem = FLT_MIN;\n"
+                       << "uint elem_exists = 0;\n";
+
+                // Loop over window shape
+                var_idx = 0;
+                for (auto const& i : win_shape)
+                {
+                    writer << "for (uint w" << var_idx << " = 0; w" << var_idx << " < " << i
+                           << "; ++w" << var_idx << ")\n";
+                    writer.block_begin();
+                    writer << "const uint win_idx" << var_idx << " = (i" << var_idx + 2 << " * "
+                           << win_stride.at(var_idx) << " /*win_stride*/)"
+                           << " + w" << var_idx << " - " << pad_below.at(var_idx)
+                           << " /*pad_below*/;\n";
+                    ++var_idx;
+                }
+
+                // input coordinate condition
+                writer << "if (";
+                // Generate input coordinate condition
+                for (size_t i = 0; i < win_shape.size(); ++i)
+                {
+                    if (i)
+                    {
+                        writer << " && ";
+                    }
+                    writer << "(win_idx" << i << " < " << input_shape.at(i + 2) << ")";
+                }
+                writer << ")\n";
+                writer.block_begin();
+                {
+                    writer << "const float max_local = input[i0][i1]";
+                    // additional dimensions for input
+                    for (size_t i = 0; i < win_shape.size(); ++i)
+                    {
+                        writer << "[win_idx" << i << "]";
+                    }
+                    writer << ";\n";
+
+                    // find maximum condition
+                    writer << "if (max_local > max_elem)\n";
+                    writer.block_begin();
+                    {
+                        writer << "max_elem = max_local;\n"
+                               << "elem_exists = 1;\n";
+
+                        // Save coordinates
+                        for (size_t i = 0; i < delta_data.size(); ++i)
+                        {
+                            writer << "save_i" << i + 2 << " = win_idx" << i << ";\n";
+                        }
+                    } // End of find maximum condition
+                    writer.block_end();
+
+                } // End of input coordinate condition
+                writer.block_end();
+                // Closing brackets for window shape loop
+                for (auto const& i : win_shape)
+                {
+                    writer.block_end();
+                }
+
+                // Elem_exists condition
+                writer << "if (elem_exists)\n";
+                writer.block_begin();
+                {
+                    writer << "output[i0][i1]";
+                    // Additional dimentions for output
+                    for (size_t i = 0; i < delta_data.size(); ++i)
+                    {
+                        writer << "[save_i" << i + 2 << "]";
+                    }
+                    writer << " += delta" << access_dims(delta_shape) << ";\n";
+                } // End of elem_exists condition
+                writer.block_end();
+                // Closing brackets for delta loop
+                for (auto const& i : delta_data)
+                {
+                    writer.block_end();
+                }
+            } // End of loop over i1
+            writer.block_end();
+        } // End of loop over i0
+        writer.block_end();
+
+    } // End of function bracket
+    writer.block_end();
+
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const cldnn::custom_gpu_primitive op_max_pool_backprop(output_name,
+                                                           {input_name, delta_name},
+                                                           {writer.get_code()},
+                                                           entry_point_name,
+                                                           get_kernel_args(2, 1),
+                                                           "",
+                                                           layout,
+                                                           gws);
+    topology.add(op_max_pool_backprop);
+}
+
 static void do_1d_scalar_mul(codegen::CodeWriter& writer,
                              string& kernel_name,
                              const Shape& shapeA,
@@ -736,6 +912,124 @@ void runtime::intelgpu::do_reverse_operation(cldnn::topology& topology,
                                                  layout,
                                                  gws);
     topology.add(op_reverse);
+}
+
+void runtime::intelgpu::do_not_operation(cldnn::topology& topology,
+                                         const string& input_name,
+                                         const Shape& input_shape,
+                                         const string& output_name,
+                                         const Shape& output_shape,
+                                         const element::Type& output_type)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string entry_point_name = "logic_" + output_name;
+    codegen::CodeWriter writer;
+
+    writer << "__kernel void " << entry_point_name << "(const __global char input"
+           << array_dims(input_shape) << ", __global char output" << array_dims(output_shape)
+           << ")\n";
+
+    writer.block_begin();
+    {
+        size_t var_idx = 0;
+        for (auto const& i : output_shape)
+        {
+            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
+                   << var_idx << ")\n";
+            writer.block_begin();
+            ++var_idx;
+        }
+
+        writer << "output" << access_dims(output_shape) << " = !input" << access_dims(input_shape)
+               << ";\n";
+
+        for (auto const& i : output_shape)
+        {
+            writer.block_end();
+        }
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_not(output_name,
+                                             {input_name},
+                                             {writer.get_code()},
+                                             entry_point_name,
+                                             get_kernel_args(1, 1),
+                                             "",
+                                             layout,
+                                             {1});
+    topology.add(op_not);
+}
+
+void runtime::intelgpu::do_one_hot_operation(cldnn::topology& topology,
+                                             const std::string& input_name,
+                                             const Shape& input_shape,
+                                             const element::Type& input_type,
+                                             const std::string& output_name,
+                                             const Shape& output_shape,
+                                             const element::Type& output_type,
+                                             const size_t one_hot_axis)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string entry_point_name = "one_hot_" + output_name;
+    codegen::CodeWriter writer;
+
+    writer << "__kernel void " << entry_point_name << "(const __global "
+           << input_type.c_type_string() << " input" << array_dims(input_shape) << ", __global "
+           << output_type.c_type_string() << " output" << array_dims(output_shape) << ")\n";
+
+    writer.block_begin();
+    {
+        size_t var_idx = 0;
+
+        writer << "for (uint i = 0; i < " << output_shape.at(one_hot_axis) << "; ++i)\n";
+        writer.block_begin();
+        {
+            for (auto const& i : input_shape)
+            {
+                writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
+                       << var_idx << ")\n";
+                writer.block_begin();
+                ++var_idx;
+            }
+
+            size_t current_input = 0;
+            string buffer;
+            const size_t output_shape_size = output_shape.size();
+            for (uint j = 0; j < output_shape_size; j++)
+            {
+                if (j == one_hot_axis)
+                {
+                    buffer += "[i]";
+                }
+                else
+                {
+                    buffer += "[i" + to_string(current_input) + "]";
+                    ++current_input;
+                }
+            }
+
+            writer << "output" << buffer << " = input" << access_dims(input_shape)
+                   << " == i ? 1 : 0;\n";
+
+            for (auto const& i : input_shape)
+            {
+                writer.block_end();
+            }
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_one_hot(output_name,
+                                                 {input_name},
+                                                 {writer.get_code()},
+                                                 entry_point_name,
+                                                 get_kernel_args(1, 1),
+                                                 "",
+                                                 layout,
+                                                 {1});
+    topology.add(op_one_hot);
 }
 
 void runtime::intelgpu::do_convert_operation(cldnn::topology& topology,
