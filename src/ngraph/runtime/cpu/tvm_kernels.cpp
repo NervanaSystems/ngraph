@@ -68,166 +68,6 @@ DLTensor TVMInstance::create_dltensor(const DLDataType& type,
 
 static const DLDataType DLType_Float32{kDLFloat, 32, 1};
 
-template <>
-tvm::PackedFunc
-    tvm_kernel::unary_elemwise_builder<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
-                                              const UnaryElemwiseFunc& topi_func)
-{
-    tvm::Var n("n");
-    auto A = tvm::placeholder({n}, tvm::Float(32), "a");
-
-    auto R = topi_func(A, "tensor", topi::kElementWise);
-
-    std::unordered_map<tvm::Tensor, tvm::Buffer> binds;
-
-    auto schedule = topi::x86::default_schedule(tvm_instance->target(), {R});
-    auto lowered = tvm::lower(schedule, {A, R}, "func", binds, tvm_instance->config());
-    auto module =
-        tvm::build(lowered, tvm_instance->target(), tvm::Target(), tvm_instance->config());
-    // store module to keep its lifetime
-    tvm_instance->add_module(module);
-    return module->GetFunction("func", false);
-}
-
-template <>
-void tvm_kernel::unary_elemwise_kernel<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
-                                              const tvm::PackedFunc& func,
-                                              void* input,
-                                              void* output,
-                                              size_t count)
-{
-    std::cout << "running tvm_kernel::unary_elemwise_kernel" << std::endl;
-    int64_t dlshape[] = {static_cast<int64_t>(count)};
-    DLTensor a = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, input);
-    DLTensor r = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, output);
-
-    func(&a, &r);
-}
-
-template <>
-tvm::PackedFunc
-    tvm_kernel::binary_elemwise_builder<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
-                                               const BinaryElemwiseFunc& topi_func)
-{
-    tvm::Var n("n");
-    auto A = tvm::placeholder({n}, tvm::Float(32), "a");
-    auto B = tvm::placeholder({n}, tvm::Float(32), "b");
-
-    auto R = topi_func(A, B, "tensor", topi::kBroadcast);
-
-    std::unordered_map<tvm::Tensor, tvm::Buffer> binds;
-
-    auto schedule = topi::x86::default_schedule(tvm_instance->target(), {R});
-    auto lowered = tvm::lower(schedule, {A, B, R}, "func", binds, tvm_instance->config());
-    auto module =
-        tvm::build(lowered, tvm_instance->target(), tvm::Target(), tvm_instance->config());
-    // store module to keep its lifetime
-    tvm_instance->add_module(module);
-    return module->GetFunction("func", false);
-}
-
-template <>
-void tvm_kernel::binary_elemwise_kernel<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
-                                               const tvm::PackedFunc& func,
-                                               void* input0,
-                                               void* input1,
-                                               void* output,
-                                               size_t count)
-{
-    std::cout << "running tvm_kernel::binary_elemwise_kernel" << std::endl;
-    int64_t dlshape[] = {static_cast<int64_t>(count)};
-    DLTensor a = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, input0);
-    DLTensor b = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, input1);
-    DLTensor r = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, output);
-
-    func(&a, &b, &r);
-}
-
-template <>
-tvm::PackedFunc
-    tvm_kernel::transpose_builder<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
-                                         const size_t in_rank,
-                                         const std::vector<size_t>& in_shape,
-                                         const size_t out_rank,
-                                         const std::vector<size_t>& axes)
-{
-    std::cout << in_rank << " " << out_rank << " axes: " << axes.size() << std::endl;
-
-    tvm::Array<tvm::Expr> in_dlshape;
-    for (size_t i = 0; i < in_rank; ++i)
-    {
-        tvm::Var n("n_" + std::to_string(i));
-        in_dlshape.push_back(n);
-    }
-    std::cout << ngraph::vector_to_string(axes) << std::endl;
-    tvm::Array<tvm::Expr> out_axes;
-    for (size_t i = 0; i < out_rank; ++i)
-    {
-        std::cout << "axes[i]: " << axes[i] << std::endl;
-        out_axes.push_back(axes[i]);
-    }
-    auto A = tvm::placeholder(in_dlshape, tvm::Float(32), "a");
-
-    auto R = topi::transpose(A, out_axes);
-
-    std::unordered_map<tvm::Tensor, tvm::Buffer> binds;
-
-    auto schedule = topi::x86::default_schedule(tvm_instance->target(), {R});
-    auto lowered = tvm::lower(schedule, {A, R}, "func", binds, tvm_instance->config());
-    auto module =
-        tvm::build(lowered, tvm_instance->target(), tvm::Target(), tvm_instance->config());
-    // store module to keep its lifetime
-    tvm_instance->add_module(module);
-    return module->GetFunction("func", false);
-}
-
-template <>
-void tvm_kernel::transpose_kernel<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
-                                         const tvm::PackedFunc& func,
-                                         void* input,
-                                         void* output,
-                                         Shape input_shape,
-                                         Shape output_shape)
-{
-    std::cout << "running tvm_kernel::transpose_kernel" << std::endl;
-
-    std::cout << ngraph::vector_to_string(input_shape) << std::endl;
-    std::cout << ngraph::vector_to_string(output_shape) << std::endl;
-    //    int64_t* in_dlshape = reinterpret_cast<int64_t*>(&input_shape[0]);
-    //    int64_t* out_dlshape = reinterpret_cast<int64_t*>(&output_shape[0]);
-
-    std::vector<int64_t> in_dlshape(input_shape.size());
-    for (int i = 0; i < input_shape.size(); ++i)
-    {
-        in_dlshape[i] = (int64_t)input_shape[i];
-    }
-    std::vector<int64_t> out_dlshape(output_shape.size());
-    for (int i = 0; i < output_shape.size(); ++i)
-    {
-        out_dlshape[i] = (int64_t)output_shape[i];
-    }
-    std::cout << ngraph::vector_to_string(in_dlshape) << std::endl;
-    std::cout << ngraph::vector_to_string(out_dlshape) << std::endl;
-
-    DLTensor a =
-        tvm_instance->create_dltensor(DLType_Float32, in_dlshape.size(), &in_dlshape[0], input);
-    DLTensor r =
-        tvm_instance->create_dltensor(DLType_Float32, out_dlshape.size(), &out_dlshape[0], output);
-
-    func(&a, &r);
-    std::cout << "tvm reshape output: " << std::endl;
-    for (int i = 0; i < ngraph::shape_size(out_dlshape); ++i)
-    {
-        std::cout << static_cast<float*>(r.data)[i] << " ";
-    }
-    std::cout << std::endl;
-    for (int i = 0; i < ngraph::shape_size(out_dlshape); ++i)
-    {
-        std::cout << static_cast<float*>(output)[i] << " ";
-    }
-    std::cout << std::endl;
-}
-
 #define TI(x) std::type_index(typeid(x))
 using tvm_func = std::function<void(CPURuntimeContext* ctx)>;
 
@@ -302,59 +142,29 @@ tvm_func reshape(const std::unique_ptr<TVMInstance>& tvm_instance,
     auto reshape = static_cast<const ngraph::op::Reshape*>(node);
     auto input_order = reshape->get_input_order();
 
-    tvm::Array<tvm::Expr> in_dlshape;
-    for (size_t i = 0; i < args[0].get_shape().size(); ++i)
-    {
-        tvm::Var n("n_" + std::to_string(i));
-        in_dlshape.push_back(n);
-    }
+    tvm::Array<tvm::Expr> ae;
+    for (auto& v : args[0].get_shape())
+        ae.push_back(tvm::make_const(tvm::Int(32), v));
+    auto A = tvm::placeholder(ae, tvm::Float(32), "a");
 
-    tvm::Array<tvm::Expr> out_axes;
-    for (size_t i = 0; i < args[0].get_shape().size(); ++i)
-    {
-        out_axes.push_back(input_order[i]);
-    }
-
-    tvm::Array<tvm::Expr> out_dlshape;
-    for (size_t i = 0; i < (out[0].get_shape().size() < 1 ? 1 : out[0].get_shape().size()); ++i)
-    {
-        tvm::Var n("o_" + std::to_string(i));
-        out_dlshape.push_back(n);
-    }
-
-    auto A = tvm::placeholder(in_dlshape, tvm::Float(32), "a");
-
+    tvm::Array<tvm::Expr> newshape;
     tvm::Tensor R;
     if (reshape->get_is_transpose())
     {
-        R = topi::transpose(A, out_axes);
+        // topi axes
+        for (auto& v : input_order)
+            newshape.push_back(tvm::make_const(tvm::Int(32), v));
+        R = topi::transpose(A, newshape);
     }
     else
     {
-        R = topi::reshape(A, out_dlshape);
+        // output shape
+        for (auto& v : out[0].get_shape())
+            newshape.push_back(tvm::make_const(tvm::Int(32), v));
+        R = topi::reshape(A, newshape);
     }
 
-    std::unordered_map<tvm::Tensor, tvm::Buffer> binds;
-
-    auto schedule = topi::x86::default_schedule(tvm_instance->target(), {R});
-    auto lowered = tvm::lower(schedule, {A, R}, "func", binds, tvm_instance->config());
-    // create tvm func
-    auto func = tvm_instance->get_func(lowered);
-
-    // get tensor_data ptrs
-    auto& at = tensor_data[args[0].get_name()];
-    auto& rt = tensor_data[out[0].get_name()];
-    return [&, func, args, out](CPURuntimeContext* ctx) {
-        std::vector<int64_t> a_shape(args[0].get_shape().begin(), args[0].get_shape().end());
-        std::vector<int64_t> r_shape(out[0].get_shape().begin(), out[0].get_shape().end());
-        if (r_shape.size() == 0)
-        {
-            r_shape.push_back(1);
-        }
-        DLTensor a = tvm_instance->create_dltensor(DLType_Float32, a_shape.size(), &a_shape[0], at);
-        DLTensor r = tvm_instance->create_dltensor(DLType_Float32, r_shape.size(), &r_shape[0], rt);
-        func(&a, &r);
-    };
+    return tvm_unary_func({A, R}, tvm_instance, node, args, out, tensor_data);
 }
 
 tvm_func batch_norm(const std::unique_ptr<TVMInstance>& tvm_instance,
@@ -432,7 +242,10 @@ tvm_func convolution(const std::unique_ptr<TVMInstance>& tvm_instance,
     auto R = topi::conv2d_nchw(I, W, int(p[0]), int(p[1]), int(s[0]), int(s[1]));
 
     std::unordered_map<tvm::Tensor, tvm::Buffer> binds;
+
+    // use default schedule
     auto schedule = topi::x86::default_schedule(tvm_instance->target(), {R});
+
     auto lowered = tvm::lower(schedule, {I, W, R}, "func", binds, tvm_instance->config());
     auto func = tvm_instance->get_func(lowered);
 
@@ -442,10 +255,10 @@ tvm_func convolution(const std::unique_ptr<TVMInstance>& tvm_instance,
     auto& rt = tensor_data[out[0].get_name()];
     return [&, func, args, out](CPURuntimeContext* ctx) {
         std::vector<int64_t> i_shape(args[0].get_shape().begin(), args[0].get_shape().end());
-        DLTensor i = tvm_instance->create_dltensor(DLType_Float32, i_shape.size(), &i_shape[0], it);
         std::vector<int64_t> w_shape(args[1].get_shape().begin(), args[1].get_shape().end());
-        DLTensor w = tvm_instance->create_dltensor(DLType_Float32, w_shape.size(), &w_shape[0], wt);
         std::vector<int64_t> r_shape(out[0].get_shape().begin(), out[0].get_shape().end());
+        DLTensor i = tvm_instance->create_dltensor(DLType_Float32, i_shape.size(), &i_shape[0], it);
+        DLTensor w = tvm_instance->create_dltensor(DLType_Float32, w_shape.size(), &w_shape[0], wt);
         DLTensor r = tvm_instance->create_dltensor(DLType_Float32, r_shape.size(), &r_shape[0], rt);
         func(&i, &w, &r);
     };
