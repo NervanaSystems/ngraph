@@ -49,6 +49,7 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Less(m_op);
     regclass_pyngraph_op_LessEq(m_op);
     regclass_pyngraph_op_Log(m_op);
+    regclass_pyngraph_op_LRN(m_op);
     regclass_pyngraph_op_MaxPool(m_op);
     regclass_pyngraph_op_MaxPoolBackprop(m_op);
     regclass_pyngraph_op_Maximum(m_op);

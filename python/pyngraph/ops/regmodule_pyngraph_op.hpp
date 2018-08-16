@@ -42,6 +42,7 @@
 #include "pyngraph/ops/less.hpp"
 #include "pyngraph/ops/less_eq.hpp"
 #include "pyngraph/ops/log.hpp"
+#include "pyngraph/ops/lrn.hpp"
 #include "pyngraph/ops/max_pool.hpp"
 #include "pyngraph/ops/maximum.hpp"
 #include "pyngraph/ops/minimum.hpp"
