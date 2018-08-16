@@ -35,10 +35,9 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& functors = external_function->get_functors();
-                    auto& tensor_data = external_function->get_tensor_data();
 
-                    auto& arg_tensor = tensor_data[args[0].get_name()];
-                    auto& out_tensor = tensor_data[out[0].get_name()];
+                    auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
+                    auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
