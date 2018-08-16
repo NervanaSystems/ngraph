@@ -117,6 +117,93 @@ TEST(onnx, model_split_variable_parts_2d)
     }
 }
 
+class ONNXConv2DTest : public ::testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        // data (1, 1, 7, 5) input tensor
+        m_args.emplace_back(ngraph::test::NDArray<float, 4>({{{{0., 1., 2., 3., 4.},
+                                                               {5., 6., 7., 8., 9.},
+                                                               {10., 11., 12., 13., 14.},
+                                                               {15., 16., 17., 18., 19.},
+                                                               {20., 21., 22., 23., 24.},
+                                                               {25., 26., 27., 28., 29.},
+                                                               {30., 31., 32., 33., 34.}}}})
+                                .get_vector());
+
+        // filters (1, 1, 3, 3) aka convolution weights
+        m_args.emplace_back(
+            ngraph::test::NDArray<float, 4>({{{{1., 1., 1.}, {1., 1., 1.}, {1., 1., 1.}}}})
+                .get_vector());
+    }
+
+    std::vector<std::vector<float>> m_args;
+};
+
+TEST_F(ONNXConv2DTest, model_conv_with_strides_padding)
+{
+    // Convolution with strides=2 and padding=1
+    auto function{ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/conv_with_strides_padding.onnx"))};
+
+    // (1, 1, 4, 3)
+    auto expected_output =
+        ngraph::test::NDArray<float, 4>(
+            {{{{12., 27., 24.}, {63., 108., 81.}, {123., 198., 141.}, {112., 177., 124.}}}})
+            .get_vector();
+
+    auto result_vectors = execute(function, m_args, "CPU");
+    EXPECT_EQ(expected_output, result_vectors.front());
+}
+
+TEST_F(ONNXConv2DTest, model_conv_with_strides_no_padding)
+{
+    // Convolution with strides=2 and padding=1
+    auto function{ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/conv_with_strides_no_padding.onnx"))};
+
+    // (1, 1, 3, 2)
+    auto expected_output =
+        ngraph::test::NDArray<float, 4>({{{{54., 72.}, {144., 162.}, {234., 252.}}}}).get_vector();
+
+    auto result_vectors = execute(function, m_args, "CPU");
+    EXPECT_EQ(expected_output, result_vectors.front());
+}
+
+TEST_F(ONNXConv2DTest, model_conv_with_strides_and_assymmetric_padding)
+{
+    // Convolution with strides=2 and padding=1
+    auto function{ngraph::onnx_import::import_onnx_function(ngraph::file_util::path_join(
+        SERIALIZED_ZOO, "onnx/conv_with_strides_and_assymmetric_padding.onnx"))};
+
+    // (1, 1, 4, 2)
+    auto expected_output =
+        ngraph::test::NDArray<float, 4>({{{{21., 33.}, {99., 117.}, {189., 207.}, {171., 183.}}}})
+            .get_vector();
+
+    auto result_vectors = execute(function, m_args, "CPU");
+    EXPECT_EQ(expected_output, result_vectors.front());
+}
+
+TEST_F(ONNXConv2DTest, model_conv_with_strides_padding_bias)
+{
+    // Convolution with strides=2 and padding=1 and bias=2
+    // auto function{ngraph::onnx_import::import_onnx_function(
+    //     ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/conv_with_strides_padding_bias.onnx"))};
+
+    // std::vector<std::vector<float>> args{m_args};
+    // args.emplace_back(std::vector<float>{2.});
+
+    // // (1, 1, 4, 3)
+    // auto expected_output =
+    //     ngraph::test::NDArray<float, 4>(
+    //         {{{{14., 29., 26.}, {65., 110., 83.}, {125., 200., 143.}, {114., 179., 126.}}}})
+    //         .get_vector();
+
+    // auto result_vectors = execute(function, args, "CPU");
+    // EXPECT_EQ(expected_output, result_vectors.front());
+
 TEST(onnx, model_batchnorm_default)
 {
     // Batch Normalization with default parameters
@@ -145,4 +232,5 @@ TEST(onnx, model_batchnorm_default)
 
     auto result_vectors = execute(function, inputs, "INTERPRETER");
     EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
+
 }
