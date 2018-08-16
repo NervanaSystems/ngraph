@@ -89,7 +89,8 @@ exclude_patterns = []
 
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+#pygments_style = 'sphinx'
+# this is defined in the theme.conf
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
@@ -101,20 +102,22 @@ todo_include_todos = True
 # a list of builtin themes.
 #
 
-## html_theme = 'ngraph_theme'
+# html_theme = 'ngt'
 
-html_theme = "classic"
-html_theme_options = {
-    "rightsidebar": "true",
-    "sidebarwidth": '41.3%',
-    "sidebarbgcolor": "#EFEEED",
-    "sidebartextcolor": "#2D2324",
-    "sidebarlinkcolor": "#20435C",
-    "relbarbgcolor": "#84AEAD",
-    "codebgcolor": "#edf0f2",
-    "codetextcolor": "#959595",
-    "headfont": "NeoSansIntel",
-}
+html_theme_path = ["../ngt"]
+
+#html_theme = "classic"
+#html_theme_options = {
+#    "rightsidebar": "true",
+#    "sidebarwidth": '41.3%',
+#    "sidebarbgcolor": "#EFEEED",
+#    "sidebartextcolor": "#2D2324",
+#    "sidebarlinkcolor": "#20435C",
+#    "relbarbgcolor": "#84AEAD",
+#    "codebgcolor": "#edf0f2",
+#    "codetextcolor": "#959595",
+#    "headfont": "NeoSansIntel",
+#}
 
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -132,9 +135,6 @@ html_favicon = '../static/assets/favicon.ico'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['../static/assets']
-
-# Add any paths that contain custom themes here, relative to this directory.
-# html_theme_path = ["../"]
 
 
 html_css_files = ['../static/assets/custom.css',
