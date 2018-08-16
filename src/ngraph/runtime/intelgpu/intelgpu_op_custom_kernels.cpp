@@ -819,7 +819,7 @@ void runtime::intelgpu::do_one_hot_operation(cldnn::topology& topology,
 
             size_t current_input = 0;
             string buffer;
-            size_t output_shape_size = output_shape.size();
+            const size_t output_shape_size = output_shape.size();
             for (uint j = 0; j < output_shape_size; j++)
             {
                 if (j == one_hot_axis)
@@ -854,6 +854,7 @@ void runtime::intelgpu::do_one_hot_operation(cldnn::topology& topology,
                                                  layout,
                                                  {1});
     topology.add(op_one_hot);
+}
 
 void runtime::intelgpu::do_convert_operation(cldnn::topology& topology,
                                              const string& input_name,
