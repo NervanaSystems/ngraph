@@ -173,10 +173,12 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
 #if !defined(NGRAPH_DEX_ONLY)
     , m_is_compiled(false)
     , m_emit_timing(false)
+    , m_direct_execution(std::getenv("NGRAPH_DEX") != nullptr)
+#else
+    , m_direct_execution(true)
 #endif
     , m_function_name(function->get_name())
     , m_is_built(false)
-    , m_direct_execution(std::getenv("NGRAPH_DEX") != nullptr)
 {
 }
 
