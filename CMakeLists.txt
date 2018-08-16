@@ -17,7 +17,6 @@
 cmake_minimum_required (VERSION 3.1)
 
 include(cmake/Modules/git_tags.cmake)
-include(CMakeDependentOption)
 
 NGRAPH_GET_VERSION_LABEL()
 
@@ -92,9 +91,7 @@ option(NGRAPH_INTERPRETER_ENABLE "Control the building of the INTERPRETER backen
 option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
-
-cmake_dependent_option(NGRAPH_DEX_ONLY "Remove codegen from the build" FALSE
-                       "NOT NGRAPH_INTELGPU_ENABLE;NOT NGRAPH_GPU_ENABLE;NOT NGRAPH_DISTRIBUTED_ENABLE" FALSE)
+option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
@@ -225,12 +222,10 @@ include(cmake/external_json.cmake)
 include(cmake/external_eigen.cmake)
 include(cmake/external_mkldnn.cmake)
 
-if (NOT NGRAPH_DEX_ONLY)
-    if (NGRAPH_USE_PREBUILT_LLVM OR DEFINED LLVM_TARBALL_URL)
-        include(cmake/external_llvm_prebuilt.cmake)
-    else()
-        include(cmake/external_llvm.cmake)
-    endif()
+if (NGRAPH_USE_PREBUILT_LLVM OR DEFINED LLVM_TARBALL_URL)
+    include(cmake/external_llvm_prebuilt.cmake)
+else()
+    include(cmake/external_llvm.cmake)
 endif()
 
 include(cmake/external_tbb.cmake)
