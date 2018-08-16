@@ -136,6 +136,7 @@ if (NGRAPH_CPU_ENABLE)
         target_link_libraries(cpu_backend PRIVATE ${MPI_CXX_LIBRARIES})
     endif()
 
+    add_dependencies(cpu_backend ext_mkldnn ext_eigen)
     target_link_libraries(cpu_backend PUBLIC ngraph codegen libmkldnn libeigen libjson libtbb)
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
     set_target_properties(cpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
