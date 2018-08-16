@@ -54,6 +54,21 @@
                                                                                                    \
     if (reduction_axes.size() == 1)                                                                \
     {                                                                                              \
+        if (*reduction_axes.begin() == arg_rank - 1)                                               \
+        {                                                                                          \
+            std::function<decltype(runtime::cpu::kernel::reduce_##K##_innermost_1rd<float, 2>)>    \
+                kernel;                                                                            \
+            SELECT_KERNEL_BY_RANK(kernel,                                                          \
+                                  result_element_type,                                             \
+                                  arg_rank,                                                        \
+                                  runtime::cpu::kernel::reduce_##K##_innermost_1rd);               \
+            auto functor = [&, kernel, arg_shape, result_shape](CPURuntimeContext* ctx) {          \
+                kernel(arg_tensor, out_tensor, arg_shape, result_shape);                           \
+            };                                                                                     \
+            functors.emplace_back(functor);                                                        \
+            return;                                                                                \
+        }                                                                                          \
+                                                                                                   \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_1rd<float, 2>)> kernel;          \
         SELECT_KERNEL_BY_RANK(                                                                     \
             kernel, result_element_type, arg_rank, runtime::cpu::kernel::reduce_##K##_1rd);        \
