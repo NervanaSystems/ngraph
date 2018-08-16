@@ -104,6 +104,22 @@ namespace ngraph
                                       const element::Type& output_type,
                                       const AxisSet& reversed_axes);
 
+            void do_not_operation(cldnn::topology& topology,
+                                  const std::string& input_name,
+                                  const Shape& input_shape,
+                                  const std::string& output_name,
+                                  const Shape& output_shape,
+                                  const element::Type& output_type);
+
+            void do_one_hot_operation(cldnn::topology& topology,
+                                      const std::string& input_name,
+                                      const Shape& input_shape,
+                                      const element::Type& input_type,
+                                      const std::string& output_name,
+                                      const Shape& output_shape,
+                                      const element::Type& output_type,
+                                      const size_t one_hot_axis);
+
             void do_convert_operation(cldnn::topology& topology,
                                       const std::string& input_name,
                                       const Shape& input_shape,
