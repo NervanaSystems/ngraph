@@ -242,6 +242,7 @@ void runtime::intelgpu::do_max_pool_backprop_operation(cldnn::topology& topology
 {
     const string entry_point_name = "op_max_pool_backprop_" + output_name;
     const Shape delta_data(delta_shape.cbegin() + 2, delta_shape.cend());
+    const Shape output_data(output_shape.cbegin() + 2, output_shape.cend());
     codegen::CodeWriter writer;
     vector<size_t> gws;
 
@@ -263,14 +264,38 @@ void runtime::intelgpu::do_max_pool_backprop_operation(cldnn::topology& topology
             writer << "// for (uint i1 = 0; i1 < " << delta_shape.at(1) << "; ++i1)\n";
             writer.block_begin();
             {
+                // Initialization output
+                size_t var_idx = 0;
+                for (auto const& i : output_data)
+                {
+                    writer << "for (uint j" << var_idx << " = 0; j" << var_idx << " < " << i
+                           << "; ++j" << var_idx << ")\n";
+                    writer.block_begin();
+                    ++var_idx;
+                }
+
+                writer << "output[i0][i1]";
+                // Additional dimentions for output
+                for (size_t i = 0; i < output_data.size(); ++i)
+                {
+                    writer << "[j" << i << "]";
+                }
+                writer << " = 0.0f;\n";
+
+                // Closing brackets for Initialization loop
+                for (auto const& i : output_data)
+                {
+                    writer.block_end();
+                }
+                // End of output initialization
+
                 // Loops over other output dimensions
-                size_t var_idx = 2;
+                var_idx = 2;
                 for (auto const& i : delta_data)
                 {
                     writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i
                            << "; ++i" << var_idx << ")\n";
                     writer.block_begin();
-
                     ++var_idx;
                 }
 
