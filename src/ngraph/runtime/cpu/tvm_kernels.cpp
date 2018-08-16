@@ -362,7 +362,7 @@ tvm_func convolution(const std::unique_ptr<TVMInstance>& tvm_instance,
     auto W = tvm::placeholder(be, tvm::Float(32), "W");
     auto s = convolution->get_window_movement_strides();
     auto p = convolution->get_padding_above();
-    auto R = topi::conv2d_nchw(I, W, p[0], p[1], s[0], s[1], "tensor", topi::kConv2dNCHW);
+    auto R = topi::conv2d_nchw(I, W, int(p[0]), int(p[1]), int(s[0]), int(s[1]));
 
     std::unordered_map<tvm::Tensor, tvm::Buffer> binds;
     auto schedule = topi::x86::default_schedule(tvm_instance->target(), {R});
@@ -399,16 +399,17 @@ tvm_func pool_max(const std::unique_ptr<TVMInstance>& tvm_instance,
     auto s = pool->get_window_movement_strides();
     auto pb = pool->get_padding_below();
     auto pa = pool->get_padding_above();
-    auto R = topi::nn::pool(I,
-                            {k[0], k[1]},
-                            {s[0], s[1]},
-                            {pa[0], pa[1], pa[0], pa[1]},
-                            topi::nn::kMaxPool,
-                            false,
-                            "NCHW",
-                            false);
-    return tvm_unary_func(
-        tvm::Array<tvm::Tensor>(I, R), tvm_instance, node, args, out, tensor_data);
+    tvm::Array<tvm::Expr> ke, se, pe;
+    for (auto& v : k)
+        ke.push_back(tvm::make_const(tvm::Int(32), v));
+    for (auto& v : s)
+        se.push_back(tvm::make_const(tvm::Int(32), v));
+    for (auto& v : pb)
+        pe.push_back(tvm::make_const(tvm::Int(32), v));
+    for (auto& v : pa)
+        pe.push_back(tvm::make_const(tvm::Int(32), v));
+    auto R = topi::nn::pool(I, ke, se, pe, topi::nn::kMaxPool, false);
+    return tvm_unary_func({I, R}, tvm_instance, node, args, out, tensor_data);
 }
 tvm_func pool_avg(const std::unique_ptr<TVMInstance>& tvm_instance,
                   const ngraph::Node* node,
@@ -426,17 +427,18 @@ tvm_func pool_avg(const std::unique_ptr<TVMInstance>& tvm_instance,
     auto s = pool->get_window_movement_strides();
     auto pb = pool->get_padding_below();
     auto pa = pool->get_padding_above();
+    tvm::Array<tvm::Expr> ke, se, pe;
+    for (auto& v : k)
+        ke.push_back(tvm::make_const(tvm::Int(32), v));
+    for (auto& v : s)
+        se.push_back(tvm::make_const(tvm::Int(32), v));
+    for (auto& v : pb)
+        pe.push_back(tvm::make_const(tvm::Int(32), v));
+    for (auto& v : pa)
+        pe.push_back(tvm::make_const(tvm::Int(32), v));
     auto count_include_pad = pool->get_include_padding_in_avg_computation();
-    auto R = topi::nn::pool(I,
-                            {k[0], k[1]},
-                            {s[0], s[1]},
-                            {pa[0], pa[1], pa[0], pa[1]},
-                            topi::nn::kMaxPool,
-                            false,
-                            "NCHW",
-                            count_include_pad);
-    return tvm_unary_func(
-        tvm::Array<tvm::Tensor>(I, R), tvm_instance, node, args, out, tensor_data);
+    auto R = topi::nn::pool(I, ke, se, pe, topi::nn::kAvgPool, false, "NCHW", count_include_pad);
+    return tvm_unary_func({I, R}, tvm_instance, node, args, out, tensor_data);
 }
 tvm_func relu(const std::unique_ptr<TVMInstance>& tvm_instance,
               const ngraph::Node* node,
