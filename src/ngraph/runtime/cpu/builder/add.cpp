@@ -37,7 +37,6 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& functors = external_function->get_functors();
-                    auto& tensor_data = external_function->get_tensor_data();
 
                     vector<float> scale_vector(2, 1);
                     vector<mkldnn::memory::primitive_desc> inputs_pd;
@@ -55,9 +54,9 @@ namespace ngraph
                         input0_data_desc, input1_data_desc, result_desc, scale_vector, inputs_pd);
                     auto& deps = mkldnn_emitter->get_primitive_deps(add_index);
 
-                    auto& arg0_tensor = tensor_data[args[0].get_name()];
-                    auto& arg1_tensor = tensor_data[args[1].get_name()];
-                    auto& out_tensor = tensor_data[out[0].get_name()];
+                    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                    auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                    auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                     auto functor = [&, add_index](CPURuntimeContext* ctx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
