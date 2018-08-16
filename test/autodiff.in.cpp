@@ -111,6 +111,47 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max_pad1x2_2x3)
+{
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    Shape shape_a{1, 5, 5, 2}; //in CHWN
+    Shape maxpool_shape{1, 2, 4, 5};
+
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto reshape = make_shared<op::Reshape>(
+        A, AxisVector{0, 3, 1, 2}, Shape{1, 2, 5, 5}); //convert CHWN to CNHW
+    Shape window_shape{3, 3};
+    auto window_movement_strides = Strides{2, 2};
+    Shape pad_below{1, 2};
+    Shape pad_above{3, 4};
+    auto maxpool = make_shared<op::MaxPool>(
+        reshape, window_shape, window_movement_strides, pad_below, pad_above);
+    auto f = make_shared<Function>(maxpool, op::ParameterVector{A});
+
+    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::f32, maxpool_shape);
+    vector<float> dataEp(shape_size(maxpool_shape), 4);
+
+    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::f32, shape_a);
+    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::f32, shape_a);
+
+    vector<float> dataInput{58, 15, 51, 35, 18, 47, 31, 32, 52, 21, 36, 38, 57, 54, 25, 45, 23,
+                            30, 16, 27, 48, 20, 41, 37, 43, 39, 22, 28, 33, 29, 12, 17, 44, 42,
+                            19, 40, 10, 46, 34, 53, 26, 55, 50, 13, 24, 14, 49, 56, 59, 11};
+
+    vector<float> expected{//delta
+                           8, 0, 0, 0, 0, 4,  0, 0, 8, 0, 0, 8, 4, 8, 0, 0, 0,
+                           0, 0, 4, 4, 0, 0,  0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0, 0, 0, 0, 4, 12, 4, 8, 4, 0, 0, 0, 0, 4, 8, 0};
+    copy_data(ep, dataEp);
+    copy_data(input, dataInput);
+
+    auto C = make_shared<op::Parameter>(element::f32, maxpool_shape);
+    auto df = autodiff::backprop_function(f);
+    backend->call_with_validate(df, {output}, {input, ep});
+    EXPECT_EQ(expected, read_vector<float>(output));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
