@@ -23,9 +23,9 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, Atan, AvgPool, BatchNorm, Broadcast, \
     Ceiling, Concat, Constant, Convert, Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, \
     Dot, Equal, Exp, Floor, FunctionCall, GetOutputElement, Greater, GreaterEq, Less, LessEq, \
-    Log, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, \
-    Parameter, Product, Power, Reduce, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, \
-    Sinh, Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh
+    Log, LRN, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, \
+    Pad, Parameter, Product, Power, Reduce, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, \
+    Sin, Sinh, Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh
 
 from typing import Callable, Iterable, List, Union
 
@@ -927,6 +927,28 @@ def batch_norm(eps,             # type: float
         return BatchNorm(eps, gamma, beta, data)
     else:
         return BatchNorm(eps, gamma, beta, data, mean, variance, training)
+
+
+@nameable_op
+def lrn(data,       # type: Node
+        alpha=1,    # type: float
+        beta=0.5,   # type: float
+        bias=1,     # type: float
+        size=5,     # type: int
+        name=None,  # type: str
+        ):
+    # type: (...) -> Node
+    """Return a node which performs element-wise Local Response Normalization (LRN) operation.
+
+    :param data: Input data.
+    :param alpha: A scale factor (usually positive).
+    :param beta: An exponent.
+    :param bias: An offset (usually positive) to avoid dividing by 0.
+    :param size: Width of the 1-D normalization window.
+    :param name: An optional name of the output node.
+    :return: The new node which performs LRN.
+    """
+    return LRN(data, alpha, beta, bias, size)
 
 
 @nameable_op

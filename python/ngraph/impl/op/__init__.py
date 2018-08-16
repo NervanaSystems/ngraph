@@ -76,6 +76,7 @@ from _pyngraph.op import GreaterEq
 from _pyngraph.op import Less
 from _pyngraph.op import LessEq
 from _pyngraph.op import Log
+from _pyngraph.op import LRN
 from _pyngraph.op import Max
 from _pyngraph.op import Maximum
 from _pyngraph.op import MaxPool
