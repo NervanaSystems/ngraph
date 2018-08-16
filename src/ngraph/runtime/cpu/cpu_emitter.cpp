@@ -22,7 +22,6 @@
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
-#include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
@@ -1544,9 +1543,7 @@ namespace ngraph
                     {
                         const descriptor::Tensor& tensor = node->get_output_tensor(0);
                         writer << "memcpy(outputs[" << output_index << "], " << tensor.get_name()
-                               << ", "
-                               << tensor.get_primary_tensor_view()->get_tensor_view_layout()->size()
-                               << ");\n";
+                               << ", " << tensor.size() << ");\n";
                     }
                     output_index++;
                 }

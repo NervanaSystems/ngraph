@@ -105,12 +105,17 @@ namespace ngraph
                 return true;
             }
 
-            void LayoutDescriptor::compute_mkldnn_memory_size(const mkldnn::memory::desc mem_desc)
+            void LayoutDescriptor::set_mkldnn_md(const mkldnn::memory::desc md)
             {
+                m_mkldnn_md = md;
+
+                // Since MKLDNN could internally pad the tensor to make blocked layouts
+                // we need to compute MKLDNN memory requirement based on its memory desc
+                // http://intel.github.io/mkl-dnn/understanding_memory_formats.html
                 try
                 {
                     auto mem_prim_desc =
-                        mkldnn::memory::primitive_desc(mem_desc, mkldnn_utils::global_cpu_engine);
+                        mkldnn::memory::primitive_desc(md, mkldnn_utils::global_cpu_engine);
                     m_mkldnn_memory_size = mem_prim_desc.get_size();
                 }
                 catch (const mkldnn::error& e)

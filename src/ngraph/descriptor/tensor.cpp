@@ -16,6 +16,7 @@
 
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
+#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/node.hpp"
 
 using namespace ngraph;
@@ -55,7 +56,14 @@ size_t descriptor::Tensor::get_pool_offset() const
 
 size_t descriptor::Tensor::size() const
 {
-    return m_size;
+    if (auto tvl = m_primary_tensor_view->get_tensor_view_layout())
+    {
+        return tvl->size();
+    }
+    else
+    {
+        return m_size;
+    }
 }
 
 ostream& operator<<(ostream& out, const descriptor::Tensor& tensor)
