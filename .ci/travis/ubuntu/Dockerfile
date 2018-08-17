@@ -11,11 +11,13 @@ RUN apt-get update && apt-get install -y \
   clang-format-3.9 \
   git \
   curl \
-  protobuf-compiler \
-  libprotoc-dev \
   zlib1g \
   zlib1g-dev \
-  libtinfo-dev && \
+  libtinfo-dev \
+  unzip \
+  autoconf \
+  automake \
+  libtool && \
   apt-get clean autoclean && apt-get autoremove -y
 
 # Python dependencies
