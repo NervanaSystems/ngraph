@@ -46,9 +46,9 @@ namespace ngraph
                     auto reducer = [&](ElementType a, ElementType b) {
                         TensorViewPtrs inputs, outputs;
 
-                        ElementType p __attribute__((aligned(CPUTensorView::BufferAlignment))) = a;
-                        ElementType q __attribute__((aligned(CPUTensorView::BufferAlignment))) = b;
-                        ElementType r __attribute__((aligned(CPUTensorView::BufferAlignment)));
+                        ElementType p __attribute__((aligned(NGRAPH_CPU_ALIGNMENT))) = a;
+                        ElementType q __attribute__((aligned(NGRAPH_CPU_ALIGNMENT))) = b;
+                        ElementType r __attribute__((aligned(NGRAPH_CPU_ALIGNMENT)));
 
                         inputs.emplace_back(backend->create_tensor(
                             ngraph::element::from<ElementType>(), Shape{}, &p));
