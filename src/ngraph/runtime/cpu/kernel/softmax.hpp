@@ -99,6 +99,38 @@ namespace ngraph
                 }
 
                 template <typename ElementType, unsigned int Rank>
+                void softmax_innermost_1rd(void* input, void* output, const Shape& input_shape)
+                {
+                    Eigen::array<Eigen::Index, Rank> in_dims, rdims, bcast;
+                    Eigen::IndexList<Eigen::type2index<Rank - 1>> axis;
+                    rdims.fill(1);
+
+                    for (int i = 0; i < Rank; i++)
+                    {
+                        in_dims[i] = input_shape[i];
+                    }
+
+                    for (int i = 0; i < Rank - 1; i++)
+                    {
+                        rdims[i] = in_dims[i];
+                    }
+
+                    for (int i = 0; i < Rank; i++)
+                    {
+                        bcast[i] = in_dims[i] / rdims[i];
+                    }
+
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> out(
+                        static_cast<ElementType *>(output), in_dims),
+                        in(static_cast<ElementType *>(input), in_dims);
+
+                    out.device(eigen::global_thread_pool_device) =
+                        (in - in.maximum(axis).eval().reshape(rdims).broadcast(bcast)).exp();
+                    out.device(eigen::global_thread_pool_device) =
+                        out * out.sum(axis).inverse().eval().reshape(rdims).broadcast(bcast);
+                }
+
+                template <typename ElementType, unsigned int Rank>
                 void softmax_1rd(void* input,
                                  void* output,
                                  const Shape& input_shape,
