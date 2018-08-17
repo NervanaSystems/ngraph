@@ -291,6 +291,10 @@ else()
 endif()
 
 include(cmake/external_tbb.cmake)
+if (NGRAPH_DISTRIBUTED_ENABLE)
+    include(cmake/external_mlsl.cmake)
+endif()
+
 
 if (NGRAPH_HALIDE)
     message(WARNING "Halide build system integration is currently using an older LLVM release \

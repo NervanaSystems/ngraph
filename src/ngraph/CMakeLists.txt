@@ -175,10 +175,10 @@ endif()
 add_library(ngraph SHARED ${SRC})
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
-    find_package(MPI REQUIRED)
+    target_sources(ngraph PRIVATE distributed.cpp)
     target_compile_definitions(ngraph PRIVATE NGRAPH_DISTRIBUTED)
-    target_include_directories(ngraph SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-    target_link_libraries(ngraph PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    target_include_directories(ngraph SYSTEM PRIVATE libmlsl)
+    target_link_libraries(ngraph PRIVATE libmlsl)
 endif()
 
 add_subdirectory(frontend)
