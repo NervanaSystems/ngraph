@@ -137,6 +137,9 @@ if (NGRAPH_CPU_ENABLE)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
     endif()
 
+    target_compile_definitions(cpu_backend PRIVATE EIGEN_OPENMP)
+    target_compile_options(cpu_backend PRIVATE "-fopenmp")
+
     if(NGRAPH_DISTRIBUTED_ENABLE)
         find_package(MPI REQUIRED)
         add_definitions(-DNGRAPH_DISTRIBUTED)
