@@ -14,6 +14,5 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_subdirectory(compile_benchmark)
 add_subdirectory(nbench)
 add_subdirectory(reserialize)
