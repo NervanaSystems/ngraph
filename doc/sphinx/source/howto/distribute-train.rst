@@ -13,8 +13,8 @@ To use this mode of training, first install a supported version of `OpenMPI`_
 
 Next, create an nGraph build with the cmake flag ``-DNGRAPH_DISTRIBUTED_ENABLE=TRUE``.  
 
-To deploy data-parallel training on multi-node/device, the ``AllReduce`` op 
-should be added after the steps needed to complete the 
+To deploy data-parallel training on backends supported by nGraph API, the 
+``AllReduce`` op should be added after the steps needed to complete the 
 :doc:`backpropagation <../howto/derive-for-training>`.
 
 .. literalinclude:: ../../../examples/mnist_mlp/dist_mnist_mlp.cpp
@@ -26,8 +26,8 @@ Also since we are using OpenMPI in this example, we need to initialize and
 finalize MPI with ``MPI::Init();`` and ``MPI::Finalize();`` at the beginning
 and the end of the code used to deploy to devices; see the `full raw code`_. 
 
-Finally, to run the training on two nGraph devices, invoke :command:`mpirun`. 
-This will run on a single machine and launch two processes. 
+Finally, to run the training using two nGraph devices, invoke :command:`mpirun`. 
+This will launch two nGraph CPU backends.
 
 
 .. code-block:: console 

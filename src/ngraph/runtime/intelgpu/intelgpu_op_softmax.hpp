@@ -16,33 +16,25 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
+#include <CPP/topology.hpp>
+
+#include "ngraph/shape.hpp"
+#include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace runtime
     {
-        class CoreFusion;
+        namespace intelgpu
+        {
+            void do_softmax_operation(cldnn::topology& topology,
+                                      const std::string& input_name,
+                                      const Shape& input_shape,
+                                      const element::Type& input_type,
+                                      const std::string& output_name,
+                                      const Shape& output_shape,
+                                      const element::Type& output_type,
+                                      const AxisSet& axes);
+        }
     }
 }
-
-class ngraph::pass::CoreFusion : public ngraph::pass::GraphRewrite
-{
-public:
-    CoreFusion()
-        : GraphRewrite()
-    {
-        construct_relu();
-        construct_folded_batch_norm();
-        construct_conv_affine_folding();
-        construct_sigmoid();
-        construct_sigmoid_bprop();
-        construct_optimized_strided_conv();
-    }
-    void construct_relu();
-    void construct_folded_batch_norm();
-    void construct_conv_affine_folding();
-    void construct_sigmoid();
-    void construct_sigmoid_bprop();
-    void construct_optimized_strided_conv();
-};

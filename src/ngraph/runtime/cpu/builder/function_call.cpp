@@ -36,7 +36,6 @@ namespace ngraph
                 auto backend = runtime::Backend::create("CPU");
 
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
                 auto& callees = external_function->get_callees();
 
                 // Note: We bypass the completely broken ngraph "backend" API here
@@ -48,14 +47,14 @@ namespace ngraph
                 {
                     arg_shapes.emplace_back(arg.get_shape());
                     arg_types.emplace_back(arg.get_element_type());
-                    arg_tensors.emplace_back(tensor_data[arg.get_name()]);
+                    arg_tensors.emplace_back(external_function->get_tensor_data(arg.get_name()));
                 }
 
                 for (const auto& result : out)
                 {
                     out_shapes.emplace_back(result.get_shape());
                     out_types.emplace_back(result.get_element_type());
-                    out_tensors.emplace_back(tensor_data[result.get_name()]);
+                    out_tensors.emplace_back(external_function->get_tensor_data(result.get_name()));
                 }
 
                 if (!callees.count(function->get_name()))

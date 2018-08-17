@@ -16,33 +16,8 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
+#include <pybind11/pybind11.h>
 
-namespace ngraph
-{
-    namespace pass
-    {
-        class CoreFusion;
-    }
-}
+namespace py = pybind11;
 
-class ngraph::pass::CoreFusion : public ngraph::pass::GraphRewrite
-{
-public:
-    CoreFusion()
-        : GraphRewrite()
-    {
-        construct_relu();
-        construct_folded_batch_norm();
-        construct_conv_affine_folding();
-        construct_sigmoid();
-        construct_sigmoid_bprop();
-        construct_optimized_strided_conv();
-    }
-    void construct_relu();
-    void construct_folded_batch_norm();
-    void construct_conv_affine_folding();
-    void construct_sigmoid();
-    void construct_sigmoid_bprop();
-    void construct_optimized_strided_conv();
-};
+void regclass_pyngraph_op_LRN(py::module m);

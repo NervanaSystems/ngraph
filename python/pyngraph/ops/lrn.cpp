@@ -14,35 +14,21 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-#include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/op/lrn.hpp"
+#include "pyngraph/ops/lrn.hpp"
 
-namespace ngraph
+namespace py = pybind11;
+
+void regclass_pyngraph_op_LRN(py::module m)
 {
-    namespace pass
-    {
-        class CoreFusion;
-    }
+    py::class_<ngraph::op::LRN,
+               std::shared_ptr<ngraph::op::LRN>,
+               ngraph::op::util::RequiresTensorViewArgs>
+        lrn(m, "LRN");
+    lrn.doc() = "ngraph.impl.op.LRN wraps ngraph::op::LRN";
+
+    lrn.def(py::init<const std::shared_ptr<ngraph::Node>&, double&, double&, double&, size_t&>());
 }
-
-class ngraph::pass::CoreFusion : public ngraph::pass::GraphRewrite
-{
-public:
-    CoreFusion()
-        : GraphRewrite()
-    {
-        construct_relu();
-        construct_folded_batch_norm();
-        construct_conv_affine_folding();
-        construct_sigmoid();
-        construct_sigmoid_bprop();
-        construct_optimized_strided_conv();
-    }
-    void construct_relu();
-    void construct_folded_batch_norm();
-    void construct_conv_affine_folding();
-    void construct_sigmoid();
-    void construct_sigmoid_bprop();
-    void construct_optimized_strided_conv();
-};

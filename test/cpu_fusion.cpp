@@ -1561,6 +1561,63 @@ TEST(cpu_fusion, batch_norm_folding)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
+TEST(cpu_fusion, affine_folding)
+{
+    Shape shape_input{1, 8, 3, 3};
+    Shape shape_weights{2, 8, 1, 1};
+    Shape shape_norm{2};
+
+    auto make_function = [shape_input, shape_weights, shape_norm]() {
+        auto input = std::make_shared<op::Parameter>(element::f32, shape_input);
+        auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
+
+        auto a = std::make_shared<op::Parameter>(element::f32, shape_norm);
+        auto b = std::make_shared<op::Parameter>(element::f32, shape_norm);
+        auto conv = std::make_shared<op::Convolution>(input, weights, Strides{1, 1}, Strides{1, 1});
+        auto out = std::make_shared<op::Add>(
+            std::make_shared<op::Multiply>(
+                conv, std::make_shared<op::Broadcast>(a, conv->get_shape(), AxisSet{0, 2, 3})),
+            std::make_shared<op::Broadcast>(b, conv->get_shape(), AxisSet{0, 2, 3}));
+        auto f = make_shared<Function>(NodeVector{out}, op::ParameterVector{input, weights, a, b});
+        return f;
+    };
+
+    auto int_f = make_function();
+    auto cpu_f = make_function();
+
+    vector<vector<float>> args{
+        {1.25f,  2.25f, 5.25f, 6.25f,  -1.25f, -1.25f, 3.25f, -4.25f, 7.25f,  8.25f,  -1.25f,
+         -1.25f, 1.25f, 2.25f, -3.25f, 2.25f,  4.25f,  4.25f, 1.25f,  2.25f,  -4.25f, 2.25f,
+         4.25f,  4.25f, 0.f,   0.f,    -1.f,   0.f,    2.f,   2.f,    0.f,    0.f,    0.f,
+         0.f,    2.f,   2.f,   1.25f,  2.25f,  5.25f,  6.25f, 1.25f,  1.25f,  3.25f,  4.25f,
+         -7.25f, 8.25f, 1.25f, -1.25f, -1.25f, 2.25f,  3.25f, 2.25f,  -4.25f, -4.25f, -1.25f,
+         -2.25f, 4.25f, 2.25f, 4.25f,  4.25f,  0.f,    0.f,   1.f,    0.f,    -2.f,   2.f,
+         0.f,    0.f,   0.f,   0.f,    -2.f,   -2.f},
+        {1.25f,
+         2.25f,
+         5.25f,
+         6.25f,
+         -1.25f,
+         -1.25f,
+         3.25f,
+         -4.25f,
+         7.25f,
+         8.25f,
+         -1.25f,
+         0.f,
+         0.f,
+         0.f,
+         0.f,
+         -2.f},
+        {-0.9384f, 0.01875f},
+        {11.0f, 1.3f},
+    };
+
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+}
+
 TEST(cpu_fusion, group_convolution_fusion)
 {
     Shape shape_a{1, 32, 2, 2};
