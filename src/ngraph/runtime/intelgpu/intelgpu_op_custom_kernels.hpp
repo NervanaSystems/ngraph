@@ -136,11 +136,12 @@ namespace ngraph
                                     bool is_reversed = false);
             std::vector<size_t>
                 generate_loops(codegen::CodeWriter& writer, const Shape& shape, bool is_begin);
-            void generate_function_definition(codegen::CodeWriter& writer,
-                                              const std::string& entry_point_name,
-                                              const std::vector<std::string>& inputs,
-                                              const std::string& output_type,
-                                              const Shape& output_shape);
+            void gen_func_def(codegen::CodeWriter& writer,
+                              const std::string& entry_point_name,
+                              const std::vector<std::string>& input_types,
+                              const std::vector<Shape>& input_shapes,
+                              const std::string& output_type,
+                              const Shape& output_shape);
         }
     }
 }
