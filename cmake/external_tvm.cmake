@@ -90,3 +90,5 @@ target_include_directories(libtvm SYSTEM INTERFACE
                            ${EXTERNAL_PROJECTS_ROOT}/tvm/include
                            ${EXTERNAL_PROJECTS_ROOT}/tvm/include/HalideIR)
 target_link_libraries(libtvm INTERFACE ${TVM_LINK_LIBS})
+
+install(DIRECTORY ${EXTERNAL_PROJECTS_ROOT}/tvm/lib/ DESTINATION ${NGRAPH_INSTALL_LIB} OPTIONAL)
