@@ -119,7 +119,7 @@ namespace ngraph
                 const std::string& get_function_name() const { return m_function_name; }
                 const std::shared_ptr<ngraph::Function> get_function() { return m_function; }
                 // Temporary Memory Pool alignment
-                static const size_t s_memory_pool_alignment;
+                static constexpr size_t s_memory_pool_alignment = 4096;
 
                 std::list<std::function<void(CPURuntimeContext*)>>& get_functors()
                 {

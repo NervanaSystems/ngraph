@@ -375,7 +375,8 @@ bool ngraph::runtime::cpu::build_tvm_functor(CPU_ExternalFunction* external_func
     {
         return false;
     }
-    NGRAPH_INFO << "TVM kernel registered for ngraph op: " << node->get_friendly_name();
+    NGRAPH_INFO << "TVM kernel registered for ngraph op: " << node->description() << " "
+                << node->get_output_shape(0);
     auto& functors = external_function->get_functors();
     auto& tvm_instance = external_function->get_tvm_instance();
     auto& tensor_data = external_function->get_tensor_data();

@@ -22,7 +22,7 @@ include(ExternalProject)
 #------------------------------------------------------------------------------
 
 SET(TVM_GIT_REPO_URL https://github.com/dmlc/tvm.git)
-SET(TVM_GIT_LABEL v0.3)
+SET(TVM_GIT_LABEL master)
 
 # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
 if (${CMAKE_VERSION} VERSION_LESS 3.2)
@@ -49,13 +49,17 @@ else()
     ExternalProject_Add(
         ext_tvm
         PREFIX tvm
+        DEPENDS ext_llvm
         GIT_REPOSITORY ${TVM_GIT_REPO_URL}
         GIT_TAG ${TVM_GIT_LABEL}
         UPDATE_COMMAND ""
+        PATCH_COMMAND patch ${EXTERNAL_PROJECTS_ROOT}/tvm/src/CMakeLists.txt --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/tvm.diff || exit 0
         CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                    -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/tvm
                    -DINSTALL_DEV=ON
+                   -DUSE_SORT=ON
+                   -DUSE_LLVM=${EXTERNAL_PROJECTS_ROOT}/ext_llvm-prefix/src/ext_llvm/bin/llvm-config
                    -DCMAKE_CXX_FLAGS="-fPIC"
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/tvm/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/tvm/stamp"

@@ -14,11 +14,14 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/runtime/cpu/kernel/relu.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
+#include "ngraph/runtime/cpu/kernel/relu.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#ifdef NGRAPH_USE_TVM
+#include "ngraph/runtime/cpu/tvm_kernels.hpp"
+#endif
 
 using namespace std;
 using namespace ngraph;
@@ -32,6 +35,12 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Relu)
             {
+#ifdef NGRAPH_USE_TVM
+                if (CHECK_BUILD_TVM_FUNCTOR)
+                {
+                    return;
+                }
+#endif
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& functors = external_function->get_functors();
