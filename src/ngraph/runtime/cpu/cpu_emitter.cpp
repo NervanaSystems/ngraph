@@ -28,6 +28,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/arg_minmax.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -2289,6 +2290,21 @@ namespace ngraph
                 writer << out[0].get_name() << "[i] = atan(" << args[0].get_name() << "[i]);\n";
                 writer.block_end();
 #endif
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::ArgMin)
+            {
+                auto argmin = static_cast<const ngraph::op::ArgMin*>(node);
+                const char* index_type = argmin->is_int64() ? "int64_t" : "int32_t";
+                writer.block_begin();
+                writer << "reference::argmin<" << args[0].get_type() << ", " << index_type << ">("
+                       << args[0].get_name() << ",\n";
+                writer << "                   " << out[0].get_name() << ",\n";
+                writer << "                   {" << join(args[0].get_shape()) << "},\n";
+                writer << "                   {" << join(out[0].get_shape()) << "},\n";
+                writer << "                   " << argmin->get_axis() << ");\n";
                 writer.block_end();
             }
 
