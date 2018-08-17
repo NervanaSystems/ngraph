@@ -1372,10 +1372,17 @@ void runtime::cpu::CPU_ExternalFunction::build()
                 auto it = enable_nodename_list.begin();
                 for (const auto& p : enables)
                 {
+                    std::vector<std::function<void(CPURuntimeContext*)>> ftrs;
+                    for (size_t j = 0; j < p.second; j++)
+                    {
+                        ftrs.push_back(*functor);
+                        std::advance(functor, 1);
+                    }
+
                     tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>*
                         flowgraph_node = new tbb::flow::continue_node<tbb::flow::continue_msg,
                                                                       tbb::flow::lightweight>(
-                            *(ctx->G), [&](const tbb::flow::continue_msg& msg) {
+                            *(ctx->G), [&, ftrs](const tbb::flow::continue_msg& msg) {
                                 if (p.first(ctx) || ctx->first_iteration)
                                 {
                                     for (size_t j = 0; j < p.second; j++)
@@ -1384,7 +1391,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
                                         {
                                             start_ts = cpu::Clock::now();
                                         }
-                                        (*functor)(ctx);
+                                        ftrs[j](ctx);
                                         if (runtime::cpu::IsTracingEnabled())
                                         {
                                             ctx->op_durations[profiler_count++] =
@@ -1392,8 +1399,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
                                                      cpu::Clock::now() - start_ts))
                                                     .count();
                                         }
-
-                                        std::advance(functor, 1);
                                     }
                                 }
                                 else
@@ -1405,7 +1410,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
                                             ctx->op_durations[profiler_count++] = 0;
                                         }
                                     }
-                                    std::advance(functor, p.second);
                                 }
                             });
                     nodename_tbbnode_map.insert({it->second, flowgraph_node});
