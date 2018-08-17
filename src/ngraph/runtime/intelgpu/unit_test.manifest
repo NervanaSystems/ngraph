@@ -21,12 +21,9 @@ backwards_exp
 backwards_floor
 backwards_maxpool_n2_c1_hw5_3x3_str2_max
 backwards_maxpool_n4_c1_hw4_2x2_max
-backwards_minimum
 backwards_replace_slice
 backwards_reverse_sequence_n3_c2_h3
 backwards_reverse_sequence_n4d2c3h2w2
-backwards_select
-backwards_select_nested
 backwards_sigmoid
 backwards_sign
 backwards_slice
