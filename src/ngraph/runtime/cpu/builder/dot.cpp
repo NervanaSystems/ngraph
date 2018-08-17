@@ -172,8 +172,7 @@ namespace ngraph
                         const int64_t group_size = shape_a[0];
 
                         auto functor =
-                            [&, offset_a, offset_b, offset_c, m, n, k, group_size, group_count](
-                                CPURuntimeContext* ctx) {
+                            [&, offset_a, offset_c, m, n, k, group_size](CPURuntimeContext* ctx) {
                                 cblas::Transpose transpose = cblas::Transpose::None;
                                 float alpha = 1.0f;
 
