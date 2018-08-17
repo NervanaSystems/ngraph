@@ -14,6 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <algorithm>
 #include <cstring>
 
 #include "ngraph/op/dot.hpp"
@@ -171,8 +172,7 @@ namespace ngraph
                         const int64_t group_size = shape_a[0];
 
                         auto functor =
-                            [&, offset_a, offset_b, offset_c, m, n, k, group_size, group_count](
-                                CPURuntimeContext* ctx) {
+                            [&, offset_a, offset_c, m, n, k, group_size](CPURuntimeContext* ctx) {
                                 cblas::Transpose transpose = cblas::Transpose::None;
                                 float alpha = 1.0f;
 
@@ -183,7 +183,7 @@ namespace ngraph
                                                    i * offset_a);
                                 }
                                 const float** a_array = a.data();
-                                int64_t lda_array = std::max(1L, k);
+                                int64_t lda_array = std::max(static_cast<int64_t>(1), k);
 
                                 vector<const float*> b;
                                 for (size_t i = 0; i < group_size; i++)
@@ -192,7 +192,7 @@ namespace ngraph
                                                    i * offset_b);
                                 }
                                 const float** b_array = b.data();
-                                const int64_t ldb_array = std::max(1L, n);
+                                const int64_t ldb_array = std::max(static_cast<int64_t>(1), n);
                                 float beta = 0.0f;
 
                                 vector<float*> c;
@@ -201,7 +201,7 @@ namespace ngraph
                                     c.emplace_back(static_cast<float*>(out_tensor) + i * offset_c);
                                 }
                                 float** c_array = c.data();
-                                const int64_t ldc_array = std::max(1L, n);
+                                const int64_t ldc_array = std::max(static_cast<int64_t>(1), n);
 
                                 cblas_sgemm_batch(cblas::Layout::RowMajor,
                                                   &transpose,
