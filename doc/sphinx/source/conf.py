@@ -104,7 +104,7 @@ todo_include_todos = True
 
 # html_theme = 'ngt'
 
-html_theme_path = ["../ngt"]
+html_theme_path = ["../ngth"]
 
 #html_theme = "classic"
 #html_theme_options = {
@@ -124,20 +124,20 @@ html_theme_path = ["../ngt"]
 # further.  For a list of options available for each theme, see the
 # documentation.
 # html_theme_options = {}
-html_logo = '../static/assets/favicon.ico'
+html_logo = '../ngth/assets/favicon.ico'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = '../static/assets/favicon.ico'
+html_favicon = '../ngth/assets/favicon.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['../static/assets']
+html_static_path = ['../ngth/assets']
 
 
-html_css_files = ['../static/assets/custom.css',
+html_css_files = ['../ngth/assets/custom.css',
                   ('print.css', {'media': 'print'})]
 
 # Custom sidebar templates, must be a dictionary that maps document names
