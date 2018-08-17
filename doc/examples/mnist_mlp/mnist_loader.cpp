@@ -82,8 +82,8 @@ void MNistLoader::open()
     m_file = fopen(m_filename.c_str(), "rb");
     if (m_file == nullptr)
     {
-        throw std::runtime_error(std::string("File") + m_filename +
-                                 "couldn't be opened. Make sure the file "
+        throw std::runtime_error(std::string("File ") + m_filename +
+                                 " couldn't be opened. Make sure the file "
                                  "exists in the current directory");
     }
     read_header();

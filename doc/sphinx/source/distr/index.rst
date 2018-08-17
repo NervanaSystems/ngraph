@@ -28,7 +28,7 @@ How? (Generic frameworks)
 
 To synchronize gradients across all workers, the essential operation for data 
 parallel training, due to its simplicity and scalability over parameter servers, 
-is “allreduce”. The AllReduce op is one of the nGraph Library’s core ops. To 
+is ``allreduce``. The AllReduce op is one of the nGraph Library’s core ops. To 
 enable gradient synchronization for a network, we simply inject the AllReduce op 
 into the computation graph, connecting the graph for the autodiff computation 
 and optimizer update (which then becomes part of the nGraph graph). The 
@@ -64,7 +64,7 @@ MXNet
 We implemented a KVStore in MXNet\* (KVStore is unique to MXNet) to modify 
 the SGD update op so the nGraph graph will contain the allreduce op and generate
 corresponding collective communication kernels for different backends. We are 
-using OpenMPI for CPU backends and plan to integrate `Intel MLSL`_ in future. 
+using `Intel MLSL`_ for CPU backends.
 
 The figure below shows a bar chart with preliminary results from a Resnet-50 
 I1K training in MXNet 1, 2, 4, (and 8 if available) nodes, x-axis is the number 

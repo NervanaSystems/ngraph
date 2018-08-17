@@ -40,12 +40,8 @@ set(HEADER_SEARCH_DEFINES
 )
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
-    find_package(MPI REQUIRED)
-    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-
-    string(REPLACE ";" "\\;" MPI_C_INCLUDE_PATH "${MPI_C_INCLUDE_PATH}")
-    add_definitions("-DMPI_HEADER_PATH=\"${MPI_C_INCLUDE_PATH}\"")
+    get_target_property(MLSL_INCLUDE_DIR libmlsl INTERFACE_INCLUDE_DIRECTORIES)
+    list(APPEND HEADER_SEARCH_DEFINES "MLSL_HEADER_PATH=\"${MLSL_INCLUDE_DIR}\"")
     add_definitions(-DNGRAPH_DISTRIBUTED)
 endif()
 

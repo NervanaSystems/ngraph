@@ -101,11 +101,6 @@
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
-#ifdef NGRAPH_DISTRIBUTED
-#include <mpi.h>
-#include "ngraph/op/allreduce.hpp"
-#endif
-
 using namespace std;
 using namespace ngraph;
 

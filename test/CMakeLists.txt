@@ -120,18 +120,15 @@ if(NGRAPH_ADDRESS_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
 endif()
 
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    find_package(MPI REQUIRED)
-    add_definitions(-DNGRAPH_DISTRIBUTED)
-    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-    link_libraries(${MPI_CXX_LIBRARIES})
-endif()
-
 add_executable(unit-test ${SRC})
 target_link_libraries(unit-test ngraph_test_util)
 target_link_libraries(unit-test ngraph libgtest libjson pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
+
+if(NGRAPH_DISTRIBUTED_ENABLE)
+    add_definitions(-DNGRAPH_DISTRIBUTED)
+    target_link_libraries(unit-test libmlsl)
+endif()
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(unit-test PRIVATE -Wno-undef -Wno-reserved-id-macro)

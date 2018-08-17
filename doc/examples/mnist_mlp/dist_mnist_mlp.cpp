@@ -20,7 +20,7 @@
 #include <list>
 #include <math.h>
 #include <memory>
-#include <mpi.h>
+#include <mlsl.hpp>
 #include <random>
 #include <set>
 #include <stdexcept>
@@ -34,6 +34,18 @@
 #include "tensor_utils.hpp"
 
 using namespace ngraph;
+
+struct MlslInitilalizer
+{
+    MlslInitilalizer(int* argc, char** argv[])
+    {
+        MLSL::Environment::GetEnv().Init(argc, argv);
+    }
+    ~MlslInitilalizer()
+    {
+        MLSL::Environment::GetEnv().Finalize();
+    }
+};
 
 size_t
     accuracy_count(const std::shared_ptr<runtime::TensorView>& t_softmax,
@@ -107,10 +119,9 @@ float test_accuracy(MNistDataLoader& loader,
            static_cast<float>(sample_count);
 }
 
-int main(int argc, const char* argv[])
+int main(int argc, char* argv[])
 {
-    MPI::Init();
-
+    MlslInitilalizer mlsl{&argc, &argv};
     size_t epochs = 5;
     size_t batch_size = 128;
     size_t output_size = 10;
@@ -290,8 +301,6 @@ int main(int argc, const char* argv[])
                       << std::endl;
         }
     }
-
-    MPI::Finalize();
 
     return 0;
 }
