@@ -1,0 +1,34 @@
+#int64 is not supprted by cuDNN
+abc_int64
+batch_norm_one_output
+batch_norm_three_outputs
+backwards_batch_norm_three_outputs
+#need to check
+computation_reuse
+#int64 is not supprted
+concat_matrix_int64
+divide_by_zero_int32
+#int64 is not supprted by cuDNN
+dot_matrix_vector_int64
+#no mkldnn on GPU
+#error throw is not the same on GPU, not supported yet
+lrn
+one_hot_scalar_fp_nonint_in_3
+one_hot_scalar_oob_in_3
+one_hot_vector_1_barely_oob
+one_hot_vector_1_far_oob
+one_hot_vector_1_fp_nonint
+#select_and_scatter is deprecated
+select_and_scatter_3d_without_overlap
+select_and_scatter_with_overlap
+select_and_scatter_without_overlap
+#custom_mem is not implemented on GPU
+tensorview_custom_mem
+#integer is not supported by cuDNN on backward pooling
+backwards_maxpool_n4_c1_hw4_2x2_max
+backwards_maxpool_n2_c1_hw5_3x3_str2_max
+backwards_avgpool_n1_c1_hw2x2
+backwards_avgpool_n1_c1_hw4x4
+backwards_avgpool_n2_c2_hw4x4
+max_pool_3d
+avg_pool_3d
