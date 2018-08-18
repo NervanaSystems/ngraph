@@ -46,7 +46,6 @@ unordered_map<string, runtime::new_backend_t>& runtime::BackendManager::get_regi
 
 void runtime::BackendManager::register_backend(const string& name, new_backend_t new_backend)
 {
-    NGRAPH_INFO;
     get_registry()[name] = new_backend;
 }
 
