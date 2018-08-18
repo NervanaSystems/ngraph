@@ -1109,6 +1109,12 @@ void runtime::cpu::CPU_ExternalFunction::build()
     {
         return;
     }
+    // stream writer to dump the debug manifest for the DEX
+    static const string s_debug_dir = "/dataset/ngraph/build_master/debug";
+    codegen::CodeWriter writer;
+
+    file_util::make_directory(s_debug_dir);
+    string filename = file_util::path_join(s_debug_dir, m_function_name + "_debug.txt");
 
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
 
@@ -1176,6 +1182,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
 
     // Build executor
     // Intermediates
+    writer << "\n// Intermediates \n";
     if (m_function->get_temporary_pool_size())
     {
         m_memory_buffer_sizes.push_back(m_function->get_temporary_pool_size());
@@ -1187,11 +1194,14 @@ void runtime::cpu::CPU_ExternalFunction::build()
                 intermediates_offsets.emplace_back(tensor_data[tensor->get_name()],
                                                    tensor->get_pool_offset());
                 m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
+                writer << tensor->get_name() << ", " << tensor_data[tensor->get_name()] << ", "
+                       << "tensor_role: CPUTensorRole::INTERMEDIATE\n";
             }
         }
     }
 
     // Constants
+    writer << "\n// Constants \n";
     for (auto& node : m_function->get_ordered_ops())
     {
         if (node->is_constant())
@@ -1200,11 +1210,15 @@ void runtime::cpu::CPU_ExternalFunction::build()
             tensor_data[tv->get_tensor().get_name()] =
                 const_cast<void*>(static_pointer_cast<ngraph::op::Constant>(node)->get_data_ptr());
             m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::CONSTANT;
+            writer << tv->get_tensor().get_name() << ", "
+                   << tensor_data[tv->get_tensor().get_name()] << ", "
+                   << "tensor_role: CPUTensorRole::CONSTANT\n";
         }
     }
 
     // Inputs
     size_t arg_index = 0;
+    writer << "\n// Parameters \n";
     for (auto& param : m_function->get_parameters())
     {
         for (size_t i = 0; i < param->get_output_size(); ++i)
@@ -1214,6 +1228,9 @@ void runtime::cpu::CPU_ExternalFunction::build()
                                               arg_index,
                                               tensor_stale[tv->get_tensor().get_name()]);
             m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::INPUT;
+            writer << tv->get_tensor().get_name() << ", "
+                   << "tensor_stale " << tensor_stale[tv->get_tensor().get_name()] << ", "
+                   << "tensor_role: CPUTensorRole::INPUT\n";
             propagate_in_place_input(
                 &param->get_outputs().at(i), tv->get_tensor().get_name(), true);
             arg_index++;
@@ -1223,11 +1240,14 @@ void runtime::cpu::CPU_ExternalFunction::build()
     // Outputs
     for (size_t i = 0; i < m_function->get_output_size(); ++i)
     {
+        writer << "\n// Outputs \n";
         shared_ptr<Node> op = m_function->get_output_op(i);
         shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
         function_output_index.emplace_back(tensor_data[tv->get_tensor().get_name()], i);
         m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::OUTPUT;
 
+        writer << tv->get_tensor().get_name() << " "
+               << "tensor_role: CPUTensorRole::OUTPUT\n";
         auto res = std::dynamic_pointer_cast<ngraph::op::Result>(op);
         if (!res->needs_copy())
         {
@@ -1272,6 +1292,11 @@ void runtime::cpu::CPU_ExternalFunction::build()
             out.push_back(TensorViewWrapper(tv, tv->get_tensor().get_name()));
             out_names.push_back(tv->get_tensor().get_name());
         }
+        writer << "\n" << node->get_name() << "(";
+        vector<string> parameter_nodes = in_names;
+        parameter_nodes.insert(parameter_nodes.end(), out_names.begin(), out_names.end());
+        writer << join(parameter_nodes);
+        writer << ")";
 
         m_op_attrs.emplace_back(node->description(), out_names, in_names);
 
@@ -1331,6 +1356,11 @@ void runtime::cpu::CPU_ExternalFunction::build()
         enables.emplace_back(make_pair(enable, functors.size() - functor_count));
         enable_nodename_list.emplace_back(make_pair(enable, node->get_name()));
     }
+
+    ofstream out(filename);
+    string code = writer.get_code();
+    out << code;
+    out.close();
 
     executor = [&](CPURuntimeContext* ctx, vector<void*>& inputs, vector<void*>& outputs) {
         cpu::Timestamp start_ts;
