@@ -23,7 +23,7 @@ add_executable(nbench ${SRC})
 
 target_link_libraries(nbench ngraph)
 if (NGRAPH_CPU_ENABLE)
-    target_link_libraries(nbench cpu_backend)
+    target_link_libraries(nbench -Wl,--whole-archive cpu_backend -Wl,--no-whole-archive)
 endif()
 if (NGRAPH_INTELGPU_ENABLE)
     target_link_libraries(nbench intelgpu_backend)

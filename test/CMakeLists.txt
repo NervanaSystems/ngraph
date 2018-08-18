@@ -131,7 +131,7 @@ endif()
 
 if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for graph_partition, convolution, and backwards unit tests
-    target_link_libraries(unit-test cpu_backend interpreter_backend)
+    target_link_libraries(unit-test -Wl,--whole-archive cpu_backend -Wl,--no-whole-archive interpreter_backend)
     target_link_libraries(unit-test libmkldnn)
 endif()
 
