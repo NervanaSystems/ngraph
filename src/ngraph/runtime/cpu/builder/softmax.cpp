@@ -85,17 +85,38 @@ namespace ngraph
                     }
                     else if (axes.size() == 1)
                     {
-                        std::function<decltype(runtime::cpu::kernel::softmax_1rd<float, 1>)> kernel;
+                        if (*axes.begin() == (arg_shape.size() - 1))
+                        {
+                            std::function<decltype(
+                                runtime::cpu::kernel::softmax_innermost_1rd<float, 1>)>
+                                kernel;
 
-                        PARTIAL_SELECT_KERNEL_BY_RANK(kernel,
-                                                      args[0].get_element_type(),
-                                                      args[0].get_shape().size(),
-                                                      runtime::cpu::kernel::softmax_1rd);
+                            PARTIAL_SELECT_KERNEL_BY_RANK(
+                                kernel,
+                                args[0].get_element_type(),
+                                args[0].get_shape().size(),
+                                runtime::cpu::kernel::softmax_innermost_1rd);
 
-                        auto functor = [&, kernel, arg_shape, axes](CPURuntimeContext* ctx) {
-                            kernel(arg_tensor, out_tensor, arg_shape, axes);
-                        };
-                        functors.emplace_back(functor);
+                            auto functor = [&, kernel, arg_shape](CPURuntimeContext* ctx) {
+                                kernel(arg_tensor, out_tensor, arg_shape);
+                            };
+                            functors.emplace_back(functor);
+                        }
+                        else
+                        {
+                            std::function<decltype(runtime::cpu::kernel::softmax_1rd<float, 1>)>
+                                kernel;
+
+                            PARTIAL_SELECT_KERNEL_BY_RANK(kernel,
+                                                          args[0].get_element_type(),
+                                                          args[0].get_shape().size(),
+                                                          runtime::cpu::kernel::softmax_1rd);
+
+                            auto functor = [&, kernel, arg_shape, axes](CPURuntimeContext* ctx) {
+                                kernel(arg_tensor, out_tensor, arg_shape, axes);
+                            };
+                            functors.emplace_back(functor);
+                        }
                     }
                     else if (arg_shape.size() == 3 && axes.size() == 2)
                     {
