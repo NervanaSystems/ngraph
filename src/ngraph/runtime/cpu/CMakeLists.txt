@@ -133,6 +133,7 @@ if (NGRAPH_CPU_ENABLE)
 
     add_library(cpu_backend STATIC ${SRC})
     set_target_properties(cpu_backend PROPERTIES VERSION ${NGRAPH_VERSION})
+    target_compile_options(cpu_backend PRIVATE -fPIC)
     if (NGRAPH_DEX_ONLY)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
     endif()

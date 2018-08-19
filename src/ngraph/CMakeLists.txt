@@ -229,9 +229,9 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
 endif()
 
 add_library(ngraph SHARED)
-target_link_libraries(ngraph PUBLIC ngraph_core)
+target_link_libraries(ngraph PUBLIC -Wl,--whole-archive ngraph_core -Wl,--no-whole-archive)
 if (NGRAPH_CPU_ENABLE)
-    target_link_libraries(ngraph PUBLIC cpu_backend)
+    target_link_libraries(ngraph PUBLIC -Wl,--whole-archive cpu_backend -Wl,--no-whole-archive)
 endif()
 
 #-----------------------------------------------------------------------------------------------
