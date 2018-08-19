@@ -48,9 +48,10 @@ namespace ngraph
                                 const Shape& output_shape,
                                 const element::Type& output_type,
                                 const std::string& input_name,
-                                const Shape& input_shape);
+                                const Shape& input_shape,
+                                bool backward);
 
-            // This creates mean of the input matrix by Channel axis
+            // This creates variance of the input matrix by Channel axis
             void do_create_variance(cldnn::topology& topology,
                                     const std::string& output_name,
                                     const Shape& output_shape,
@@ -58,6 +59,35 @@ namespace ngraph
                                     const std::string& input_name,
                                     const Shape& input_shape,
                                     const std::string& mean_name);
+
+            // This creates variance backprop of the input matrix by Channel axis
+            void do_create_variance_back(cldnn::topology& topology,
+                                         const std::string& output_name,
+                                         const Shape& small_shape,
+                                         const element::Type& output_type,
+                                         double eps,
+                                         const std::string& input_name,
+                                         const Shape& big_shape,
+                                         const std::string& mean_name,
+                                         const std::string& variance_name,
+                                         const std::string& delta_name);
+
+            // This function uses "shape" parameter as input or output Shape
+            // Shape of all other calculated as first axis from the left
+            // Example: output[ 4, 3, 2, 8 ] means out_gamma[ 3 ]
+            void do_batch_norm_backprop_operation(cldnn::topology& topology,
+                                                  const Shape& shape,
+                                                  const element::Type& type,
+                                                  const std::string& gamma_name,
+                                                  const std::string& beta_name,
+                                                  const std::string& input_name,
+                                                  const std::string& mean_name,
+                                                  const std::string& variance_name,
+                                                  const std::string& delta_name,
+                                                  double eps,
+                                                  const std::string& output_name,
+                                                  const std::string& output_gamma_name,
+                                                  const std::string& output_beta_name);
         }
     }
 }
