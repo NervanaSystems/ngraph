@@ -203,6 +203,7 @@ TEST_F(ONNXConv2DTest, model_conv_with_strides_padding_bias)
 
     // auto result_vectors = execute(function, args, "CPU");
     // EXPECT_EQ(expected_output, result_vectors.front());
+}
 
 TEST(onnx, model_batchnorm_default)
 {
