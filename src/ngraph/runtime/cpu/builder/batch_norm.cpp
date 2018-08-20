@@ -41,12 +41,11 @@ namespace ngraph
                                          bool append_relu)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& arg2_tensor = tensor_data[args[2].get_name()];
-                auto& out0_tensor = tensor_data[out[0].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 const OP* batchnorm = static_cast<const OP*>(node);
 
@@ -75,8 +74,8 @@ namespace ngraph
 
                 if (batchnorm->get_training_flag() && args.size() == 3)
                 {
-                    auto& out1_tensor = tensor_data[out[1].get_name()];
-                    auto& out2_tensor = tensor_data[out[2].get_name()];
+                    auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
+                    auto& out2_tensor = external_function->get_tensor_data(out[2].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
@@ -117,8 +116,8 @@ namespace ngraph
                 }
                 else
                 {
-                    auto& arg3_tensor = tensor_data[args[3].get_name()];
-                    auto& arg4_tensor = tensor_data[args[4].get_name()];
+                    auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
+                    auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto weights_shape = Shape{2, args[0].get_size()};
@@ -171,7 +170,6 @@ namespace ngraph
                     if (batchnorm->get_training_flag() && args.size() == 3)
                     {
                         auto& functors = external_function->get_functors();
-                        auto& tensor_data = external_function->get_tensor_data();
 
                         std::function<decltype(
                             runtime::cpu::kernel::batch_norm_three_outputs<float>)>
@@ -182,13 +180,13 @@ namespace ngraph
                                       runtime::cpu::kernel::batch_norm_three_outputs);
 
                         auto arg2_shape = args[2].get_shape();
-                        auto& arg0_tensor = tensor_data[args[0].get_name()];
-                        auto& arg1_tensor = tensor_data[args[1].get_name()];
-                        auto& arg2_tensor = tensor_data[args[2].get_name()];
+                        auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                        auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                        auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
 
-                        auto& out0_tensor = tensor_data[out[0].get_name()];
-                        auto& out1_tensor = tensor_data[out[1].get_name()];
-                        auto& out2_tensor = tensor_data[out[2].get_name()];
+                        auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
+                        auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
+                        auto& out2_tensor = external_function->get_tensor_data(out[2].get_name());
                         auto eps = batchnorm->get_eps_value();
 
                         auto functor = [&, kernel, arg2_shape, eps](CPURuntimeContext* ctx) {
@@ -206,7 +204,6 @@ namespace ngraph
                     else
                     {
                         auto& functors = external_function->get_functors();
-                        auto& tensor_data = external_function->get_tensor_data();
 
                         std::function<decltype(runtime::cpu::kernel::batch_norm_one_output<float>)>
                             kernel;
@@ -216,13 +213,13 @@ namespace ngraph
                                       runtime::cpu::kernel::batch_norm_one_output);
 
                         auto arg2_shape = args[2].get_shape();
-                        auto& arg0_tensor = tensor_data[args[0].get_name()];
-                        auto& arg1_tensor = tensor_data[args[1].get_name()];
-                        auto& arg2_tensor = tensor_data[args[2].get_name()];
-                        auto& arg3_tensor = tensor_data[args[3].get_name()];
-                        auto& arg4_tensor = tensor_data[args[4].get_name()];
+                        auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                        auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                        auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                        auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
+                        auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
 
-                        auto& out0_tensor = tensor_data[out[0].get_name()];
+                        auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
                         auto eps = batchnorm->get_eps_value();
 
                         auto functor = [&, kernel, arg2_shape, eps](CPURuntimeContext* ctx) {
@@ -252,18 +249,17 @@ namespace ngraph
                     static_cast<const ngraph::op::BatchNormBackprop*>(node);
 
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& arg2_tensor = tensor_data[args[2].get_name()];
-                auto& arg3_tensor = tensor_data[args[3].get_name()];
-                auto& arg4_tensor = tensor_data[args[4].get_name()];
-                auto& arg5_tensor = tensor_data[args[5].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
+                auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
+                auto& arg5_tensor = external_function->get_tensor_data(args[5].get_name());
 
-                auto& out0_tensor = tensor_data[out[0].get_name()];
-                auto& out1_tensor = tensor_data[out[1].get_name()];
-                auto& out2_tensor = tensor_data[out[2].get_name()];
+                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
+                auto& out2_tensor = external_function->get_tensor_data(out[2].get_name());
 
 // Kill clang diagnostics bug
 #pragma clang diagnostic push

@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2018 Intel Corporation
+* Copyright 2017-2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,24 +14,21 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-#include "ngraph/pass/pass.hpp"
+#include "ngraph/op/lrn.hpp"
+#include "pyngraph/ops/lrn.hpp"
 
-namespace ngraph
+namespace py = pybind11;
+
+void regclass_pyngraph_op_LRN(py::module m)
 {
-    namespace runtime
-    {
-        namespace cpu
-        {
-            namespace pass
-            {
-                class CPUShuffleFolding : public ngraph::pass::FunctionPass
-                {
-                public:
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-                };
-            }
-        }
-    }
+    py::class_<ngraph::op::LRN,
+               std::shared_ptr<ngraph::op::LRN>,
+               ngraph::op::util::RequiresTensorViewArgs>
+        lrn(m, "LRN");
+    lrn.doc() = "ngraph.impl.op.LRN wraps ngraph::op::LRN";
+
+    lrn.def(py::init<const std::shared_ptr<ngraph::Node>&, double&, double&, double&, size_t&>());
 }

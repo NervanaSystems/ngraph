@@ -53,7 +53,6 @@
 #include "ngraph/op/or.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
-#include "ngraph/op/relu.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
@@ -90,7 +89,6 @@
 #include "ngraph/runtime/cpu/kernel/not.hpp"
 #include "ngraph/runtime/cpu/kernel/not_equal.hpp"
 #include "ngraph/runtime/cpu/kernel/or.hpp"
-#include "ngraph/runtime/cpu/kernel/relu.hpp"
 #include "ngraph/runtime/cpu/kernel/result.hpp"
 #include "ngraph/runtime/cpu/kernel/sign.hpp"
 #include "ngraph/runtime/cpu/kernel/sin.hpp"
@@ -175,12 +173,11 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::And)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
                 auto element_count = out[0].get_size();
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& out0_tensor = tensor_data[out[0].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 auto functor = [&, element_count](CPURuntimeContext* ctx) {
                     runtime::cpu::kernel::logical_and(
@@ -193,12 +190,11 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::Or)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
                 auto element_count = out[0].get_size();
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& out0_tensor = tensor_data[out[0].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 auto functor = [&, element_count](CPURuntimeContext* ctx) {
                     runtime::cpu::kernel::logical_or(
@@ -279,12 +275,6 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Relu)
-            {
-                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::relu);
-            }
-
-            template <>
             void Builder::BUILDER_DECL(ngraph::op::Sqrt)
             {
                 BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::sqrt);
@@ -348,17 +338,18 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::Constant)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
                 vector<void**> dest;
                 for (auto& result : external_function->get_function()->get_results())
                 {
                     if (result.get() == node)
                     {
-                        dest.push_back(&tensor_data[result->get_output_tensor(0).get_name()]);
+                        dest.push_back(&external_function->get_tensor_data(
+                            result->get_output_tensor(0).get_name()));
                     }
                 }
-                auto& src = tensor_data[node->get_output_tensor(0).get_name()];
+                auto& src =
+                    external_function->get_tensor_data(node->get_output_tensor(0).get_name());
                 auto size = node->get_output_tensor(0).size();
                 auto functor = [&, dest, src, size](CPURuntimeContext* ctx) {
                     for (auto p : dest)
@@ -391,7 +382,6 @@ namespace ngraph
             REGISTER_OP_BUILDER(Cosh)
             REGISTER_OP_BUILDER(Floor);
             REGISTER_OP_BUILDER(Negative);
-            REGISTER_OP_BUILDER(Relu);
             REGISTER_OP_BUILDER(Exp);
             REGISTER_OP_BUILDER(Log);
             REGISTER_OP_BUILDER(Sqrt);

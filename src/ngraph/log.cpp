@@ -28,78 +28,10 @@
 using namespace std;
 using namespace ngraph;
 
-namespace ngraph
-{
-    class ThreadStarter;
-}
-
-string Logger::m_log_path;
-deque<string> Logger::m_queue;
-static mutex queue_mutex;
-static condition_variable queue_condition;
-static unique_ptr<thread> queue_thread;
-static bool active = false;
-
-class ngraph::ThreadStarter
-{
-public:
-    ThreadStarter() { Logger::start(); }
-    virtual ~ThreadStarter() { Logger::stop(); }
-};
-
-static ThreadStarter s_starter;
-
 ostream& ngraph::get_nil_stream()
 {
     static stringstream nil;
     return nil;
-}
-
-void Logger::set_log_path(const string& path)
-{
-    m_log_path = path;
-}
-
-void Logger::start()
-{
-    active = true;
-    queue_thread = unique_ptr<thread>(new thread(&thread_entry, nullptr));
-}
-
-void Logger::stop()
-{
-    {
-        unique_lock<mutex> lk(queue_mutex);
-        active = false;
-        queue_condition.notify_one();
-    }
-    queue_thread->join();
-}
-
-void Logger::process_event(const string& s)
-{
-    cout << s << "\n";
-}
-
-void Logger::thread_entry(void* param)
-{
-    unique_lock<mutex> lk(queue_mutex);
-    while (active)
-    {
-        queue_condition.wait(lk);
-        while (!m_queue.empty())
-        {
-            process_event(m_queue.front());
-            m_queue.pop_front();
-        }
-    }
-}
-
-void Logger::log_item(const string& s)
-{
-    unique_lock<mutex> lk(queue_mutex);
-    m_queue.push_back(s);
-    queue_condition.notify_one();
 }
 
 void ngraph::default_logger_handler_func(const string& s)

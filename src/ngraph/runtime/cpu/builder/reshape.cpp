@@ -35,10 +35,9 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::Reshape)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& arg_tensor = tensor_data[args[0].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 auto reshape = static_cast<const ngraph::op::Reshape*>(node);
 

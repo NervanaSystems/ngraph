@@ -84,6 +84,7 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
@@ -906,6 +907,10 @@ static shared_ptr<ngraph::Function>
             else if (node_op == "Tanh")
             {
                 node = make_shared<op::Tanh>(args[0]);
+            }
+            else if (node_op == "StopGradient")
+            {
+                node = make_shared<op::StopGradient>(args[0]);
             }
             else
             {

@@ -52,6 +52,33 @@ namespace ngraph
                     out.device(eigen::global_thread_pool_device) = in.maximum();
                 }
 
+                template <typename ElementType, unsigned int Rank>
+                void reduce_max_innermost_1rd(void* input,
+                                              void* output,
+                                              const Shape& input_shape,
+                                              const Shape& output_shape)
+                {
+                    Eigen::array<Eigen::Index, Rank> in_dims;
+                    Eigen::array<Eigen::Index, Rank - 1> out_dims;
+                    Eigen::IndexList<Eigen::type2index<Rank - 1>> reduction_dim;
+
+                    for (int i = 0; i < Rank; i++)
+                    {
+                        in_dims[i] = input_shape[i];
+                    }
+
+                    for (int i = 0; i < Rank - 1; i++)
+                    {
+                        out_dims[i] = output_shape[i];
+                    }
+
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank - 1, Eigen::RowMajor>> out(
+                        static_cast<ElementType*>(output), out_dims);
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(
+                        static_cast<ElementType*>(input), in_dims);
+                    out.device(eigen::global_thread_pool_device) = in.maximum(reduction_dim);
+                }
+
                 template <typename ElementType, unsigned int Rank, unsigned int ReductionDims>
                 void reduce_max(void* input,
                                 void* output,

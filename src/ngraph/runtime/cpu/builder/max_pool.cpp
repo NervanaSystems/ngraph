@@ -36,13 +36,12 @@ namespace ngraph
                 auto max_pool = static_cast<const ngraph::op::MaxPool*>(node);
 
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
                 auto arg0_shape = args[0].get_shape();
                 auto out_shape = out[0].get_shape();
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 auto window_shape = max_pool->get_window_shape();
                 auto window_movement_strides = max_pool->get_window_movement_strides();
@@ -106,15 +105,14 @@ namespace ngraph
                 auto mpb = static_cast<const ngraph::op::MaxPoolBackprop*>(node);
 
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
                 auto arg_fwd_shape = args[0].get_shape();
                 auto delta_shape = args[1].get_shape();
                 auto out_shape = out[0].get_shape();
 
-                auto& arg_fwd_tensor = tensor_data[args[0].get_name()];
-                auto& delta_tensor = tensor_data[args[1].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto& arg_fwd_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& delta_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 auto window_shape = mpb->get_window_shape();
                 auto window_movement_strides = mpb->get_window_movement_strides();
@@ -198,11 +196,10 @@ namespace ngraph
                 auto max_pool = static_cast<const ngraph::op::MaxPoolWithIndices*>(node);
 
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& out0_tensor = tensor_data[out[0].get_name()];
-                auto& out1_tensor = tensor_data[out[1].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto input_desc = runtime::cpu::mkldnn_utils::get_input_mkldnn_md(node, 0);
@@ -237,11 +234,10 @@ namespace ngraph
                 }
 
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& arg2_tensor = tensor_data[args[2].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 auto mpb = static_cast<const ngraph::op::MaxPoolWithIndicesBackprop*>(node);
 

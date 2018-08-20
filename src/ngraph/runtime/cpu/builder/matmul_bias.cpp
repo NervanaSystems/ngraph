@@ -32,11 +32,10 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::MatmulBias)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& out0_tensor = tensor_data[out[0].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 const ngraph::op::MatmulBias* mm = static_cast<const ngraph::op::MatmulBias*>(node);
 
@@ -91,7 +90,7 @@ namespace ngraph
 
                 if (args.size() > 2)
                 {
-                    auto& arg2_tensor = tensor_data[args[2].get_name()];
+                    auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
 
                     auto axes = mm->get_broadcast_axes();
                     if (axes.size() == 1)
@@ -316,11 +315,10 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::BatchDot)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& mat_a = tensor_data[args[0].get_name()];
-                auto& mat_b = tensor_data[args[1].get_name()];
-                auto& mat_c = tensor_data[out[0].get_name()];
+                auto& mat_a = external_function->get_tensor_data(args[0].get_name());
+                auto& mat_b = external_function->get_tensor_data(args[1].get_name());
+                auto& mat_c = external_function->get_tensor_data(out[0].get_name());
 
                 const auto* cg = static_cast<const ngraph::op::BatchDot*>(node);
 

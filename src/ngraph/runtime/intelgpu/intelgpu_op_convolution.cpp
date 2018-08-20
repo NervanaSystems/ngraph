@@ -59,34 +59,35 @@ static string array_dim(const Shape& dimentions, const string& var = "i", bool i
 // input channel axes for both input data and filters are 1
 // output channel axes for filters is 0
 // output channel axis for output data is 1
+//
 // Example (Convolution):
-//   data[ 2, 1, 3, 5, 8 ]
-// filter[ 2, 1, 2, 2, 3 ]
-// output[ 2, 2, 2, 4, 6 ]
+//           data[ 2, 1, 3, 5, 8 ]
+//         filter[ 2, 1, 2, 2, 3 ]
+//         output[ 2, 2, 2, 4, 6 ]
 // it is like
-//   data[          batch,   data_channel, 3, 5, 8 ]
-// filter[ output_channel,   data_channel, 2, 2, 3 ]
-// output[          batch, output_channel, 2, 4, 6 ]
+//           data[          batch,   data_channel, 3, 5, 8 ]
+//         filter[ output_channel,   data_channel, 2, 2, 3 ]
+//         output[          batch, output_channel, 2, 4, 6 ]
 //
 // Example (ConvolutionBackpropFilters):
-//   data[ 2, 1, 3, 5 ]
-// filter[ 2, 2, 2, 4 ]
-// output[ 2, 1, 2, 2 ]
+//           data[ 2, 1, 3, 5 ]
+//         filter[ 2, 2, 2, 4 ]
+//         output[ 2, 1, 2, 2 ]
 // it is like
-//   data[   data_channel,          batch, 3, 5 ]
-// filter[   data_channel, output_channel, 2, 4 ]
-// output[ output_channel,          batch, 2, 2 ]
+//           data[   data_channel,          batch, 3, 5 ]
+//         filter[   data_channel, output_channel, 2, 4 ]
+//         output[ output_channel,          batch, 2, 2 ]
 //
 // Example (ConvolutionBackpropData):
-//   data[ 2, 2, 2, 4 ]
-// filter[ 2, 1, 2, 2 ]
-// output[ 2, 1, 3, 5 ]
-// pad_below[ 1, 1 ]
-// pad_above[ 1, 1 ]
+//           data[ 2, 2, 2, 4 ]
+//         filter[ 2, 1, 2, 2 ]
+//         output[ 2, 1, 3, 5 ]
+//      pad_below[ 1, 1 ]
+//      pad_above[ 1, 1 ]
 // it is like
-//   data[         batch,   data_channel, 2, 4 ]
-// filter[  data_channel, output_channel, 2, 2 ]
-// output[         batch, output_channel, 3, 5 ]
+//           data[         batch,   data_channel, 2, 4 ]
+//         filter[  data_channel, output_channel, 2, 2 ]
+//         output[         batch, output_channel, 3, 5 ]
 void runtime::intelgpu::do_convolution_operation(cldnn::topology& topology,
                                                  const string& input_name,
                                                  const Shape& input_shape,
@@ -107,7 +108,6 @@ void runtime::intelgpu::do_convolution_operation(cldnn::topology& topology,
                                                  const string& output_order,
                                                  bool reverse_filter)
 {
-    const string& default_pad_value = "0.0f";
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
     const string entry_point_name = "convolution_" + output_name;
     const Shape input_data(input_shape.cbegin() + 2, input_shape.cend());
@@ -148,12 +148,12 @@ void runtime::intelgpu::do_convolution_operation(cldnn::topology& topology,
                         writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << *i
                                << "; ++i" << var_idx << ")\n";
                         writer.block_begin();
+
                         ++var_idx;
                     }
 
-                    writer << "float result = 0.0f;\n";
-
-                    writer << "\n// Loop over input_channel\n"
+                    writer << "float result = 0.0f;\n\n"
+                           << "// Loop over input_channel\n"
                            << "for (uint input_channel = 0; input_channel < "
                            << input_shape.at(input_channel_axis_data) << "; ++input_channel)\n";
                     writer.block_begin();
@@ -168,16 +168,19 @@ void runtime::intelgpu::do_convolution_operation(cldnn::topology& topology,
                             writer << "for (uint f" << var_idx << " = 0; f" << var_idx << " < " << i
                                    << "; ++f" << var_idx << ")\n";
                             writer.block_begin();
-                            writer << "int input_idx" << var_idx << " = (i" << var_idx << " * "
+
+                            writer << "uint input_idx" << var_idx << " = (i" << var_idx << " * "
                                    << win_stride.at(var_idx) << " /*win_stride*/"
                                    << ") + (f" << var_idx << " * " << win_dilation.at(var_idx)
-                                   << " /*win_dilation*/) - " << pad_below.at(var_idx)
-                                   << " /*pad_below*/;\n";
+                                   << " /*win_dilation*/)"
+                                   << " - " << pad_below.at(var_idx) << " /*pad_below*/;\n";
+
+                            writer << "uint input_idx_data_dilation" << var_idx << " = input_idx"
+                                   << var_idx << " / " << data_dilation.at(var_idx)
+                                   << " /*data_dilation*/;\n";
+
                             ++var_idx;
                         }
-
-                        // Get the input value
-                        writer << "float input_pad = " << default_pad_value << ";\n";
 
                         // Generate dilation conditionals
                         writer << "if (";
@@ -189,8 +192,9 @@ void runtime::intelgpu::do_convolution_operation(cldnn::topology& topology,
                                 writer << " && ";
                             }
 
-                            writer << "(((i" << var_idx << " + f" << var_idx << ") % "
-                                   << data_dilation.at(var_idx) << ") == 0)";
+                            writer << "(((input_idx" << var_idx << ") % "
+                                   << data_dilation.at(var_idx) << " /*data_dilation*/) == 0)";
+
                             ++var_idx;
                         }
                         writer << ")  /*data_dilation. If we are in a dilation gap"
@@ -198,7 +202,9 @@ void runtime::intelgpu::do_convolution_operation(cldnn::topology& topology,
                         writer.block_begin();
                         {
                             // Generate other conditionals
-                            writer << "if (";
+                            writer << "//Since we use unsigned indexes we don't need "
+                                   << "(input_idx_data_dilationX >= 0) extra check\n"
+                                   << "if (";
                             var_idx = 0;
                             for (auto const& i : input_data)
                             {
@@ -207,25 +213,26 @@ void runtime::intelgpu::do_convolution_operation(cldnn::topology& topology,
                                     writer << " && ";
                                 }
 
-                                writer << "((input_idx" << var_idx << " >= 0) && (input_idx"
-                                       << var_idx << " < " << i << "))";
+                                writer << "(input_idx_data_dilation" << var_idx << " < " << i
+                                       << ")";
+
                                 ++var_idx;
                             }
                             writer << ")\n";
                             writer.block_begin();
                             {
-                                writer << "input_pad = " << input_order
-                                       << array_dim(input_data, "input_idx") << ";\n";
+                                writer << "float input_elem = " << input_order
+                                       << array_dim(input_data, "input_idx_data_dilation") << ";\n";
+
+                                // Output element calculation
+                                writer << "result += input_elem * " << filter_order
+                                       << array_dim(filter_data, "f", reverse_filter) << ";\n";
                             }
                             writer.block_end();
                             //End of other conditional generation
                         }
                         writer.block_end();
                         //End of dilation conditional generation
-
-                        // Output element calculation
-                        writer << "result += input_pad * " << filter_order
-                               << array_dim(filter_data, "f", reverse_filter) << ";\n";
 
                         // Closing brackets for filter loop
                         for (auto const& i : filter_data)
