@@ -51,8 +51,8 @@ namespace ngraph
 
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
-    std::list<std::shared_ptr<Node>>
-        topological_sort(const std::list<std::shared_ptr<Node>>& nodes);
+    std::list<std::shared_ptr<Node>> topological_sort(const std::list<std::shared_ptr<Node>>& nodes,
+                                                      bool include_control_deps = false);
 
     // Check if all paths from X to a result go through Y
     bool is_post_dominated(Node* X, Node* Y);

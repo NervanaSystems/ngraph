@@ -102,7 +102,15 @@ autodiff::Adjoints::Adjoints(const NodeVector& ys, const NodeVector& cs)
         {
             continue;
         }
-        for (auto arg : node->get_arguments())
+        NodeVector node_args_and_deps{node->get_arguments()};
+        if (m_include_control_deps)
+        {
+            node_args_and_deps.insert(node_args_and_deps.end(),
+                                      node->get_control_dependencies().begin(),
+                                      node->get_control_dependencies().end());
+        }
+
+        for (auto arg : node_args_and_deps)
         {
             auto count_it = parent_counts.find(arg);
             if (count_it == parent_counts.end())
@@ -134,7 +142,14 @@ autodiff::Adjoints::Adjoints(const NodeVector& ys, const NodeVector& cs)
         auto node = nodes_to_check.front();
         nodes_to_check.pop_front();
         // Look for nodes that will be available when this node is done
-        for (auto arg : node->get_arguments())
+        NodeVector node_args_and_deps{node->get_arguments()};
+        if (m_include_control_deps)
+        {
+            node_args_and_deps.insert(node_args_and_deps.end(),
+                                      node->get_control_dependencies().begin(),
+                                      node->get_control_dependencies().end());
+        }
+        for (auto arg : node_args_and_deps)
         {
             auto count_it = parent_counts.find(arg);
             count_it->second--;

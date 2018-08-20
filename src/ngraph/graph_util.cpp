@@ -152,17 +152,32 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
 }
 
 std::list<std::shared_ptr<ngraph::Node>>
-    ngraph::topological_sort(const std::list<std::shared_ptr<Node>>& nodes)
+    ngraph::topological_sort(const std::list<std::shared_ptr<Node>>& nodes,
+                             bool include_control_deps)
 {
     deque<ngraph::Node*> independent_nodes;
     unordered_map<const ngraph::Node*, size_t> node_dependency_count;
     unordered_map<ngraph::Node*, shared_ptr<ngraph::Node>> node_map;
 
+    unordered_map<ngraph::Node*, std::set<Node*>> control_deps_users;
+
     for (auto node : nodes)
     {
+        //build an equivalent of node->get_users() but for control dependencies
+        size_t control_deps_count = 0;
+        if (include_control_deps)
+        {
+            for (auto cd : node->get_control_dependencies())
+            {
+                control_deps_users[cd.get()].insert(node.get());
+            }
+            control_deps_count = node->get_control_dependencies().size();
+        }
+
         node_map[node.get()] = node;
-        node_dependency_count[node.get()] = node->get_arguments().size();
-        if (node->get_arguments().size() == 0)
+        size_t deps_count = node->get_arguments().size() + control_deps_count;
+        node_dependency_count[node.get()] = deps_count;
+        if (deps_count == 0)
         {
             independent_nodes.push_back(node.get());
         }
@@ -175,12 +190,27 @@ std::list<std::shared_ptr<ngraph::Node>>
         result_list.push_back(node_map[independent_node]);
         independent_nodes.pop_front();
 
+        std::set<Node*> worklist;
         for (auto user_sp : independent_node->get_users())
         {
             Node* user = user_sp.get();
             node_dependency_count[user] -= 1;
-            size_t count = node_dependency_count[user];
-            if (count == 0)
+            worklist.insert(user);
+        }
+        if (include_control_deps)
+        {
+            auto cdit = control_deps_users.find(independent_node);
+            if (cdit != control_deps_users.end())
+                for (auto cd_user : cdit->second)
+                {
+                    node_dependency_count[cd_user] -= 1;
+                    worklist.insert(cd_user);
+                }
+        }
+
+        for (auto user : worklist)
+        {
+            if (node_dependency_count[user] == 0)
             {
                 independent_nodes.push_back(user);
             }

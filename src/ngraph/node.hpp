@@ -125,6 +125,9 @@ namespace ngraph
         // TODO: Remove from unit tests.
         const std::deque<descriptor::Output>& get_outputs() const;
 
+        /// Get control dependencies registered on the node
+        std::set<std::shared_ptr<Node>> get_control_dependencies() const;
+
         /// Returns the number of outputs on the for the node.
         size_t get_output_size() const;
 
@@ -196,6 +199,7 @@ namespace ngraph
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
     protected:
         void add_output(const element::Type& element_type, const Shape& shape);
+        std::set<std::shared_ptr<Node>> m_control_dependencies;
 
         std::string m_node_type;
         size_t m_instance_id;

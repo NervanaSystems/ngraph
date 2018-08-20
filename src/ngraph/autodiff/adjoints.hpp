@@ -80,6 +80,7 @@ namespace ngraph
 
         protected:
             std::map<Node*, NodeVector> m_adjoint_map;
+            bool m_include_control_deps{false};
         };
     }
 }
