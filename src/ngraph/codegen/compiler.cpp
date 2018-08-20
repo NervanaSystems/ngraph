@@ -412,7 +412,6 @@ void codegen::CompilerCore::configure_search_path()
     add_header_search_path(MKLDNN_HEADERS_PATH);
     add_header_search_path(TBB_HEADERS_PATH);
     add_header_search_path(NGRAPH_HEADERS_PATH);
-    add_header_search_path(INSTALLED_HEADERS_PATH);
     add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
 
     add_header_search_path("/Library/Developer/CommandLineTools/usr/include/c++/v1");
@@ -423,6 +422,10 @@ void codegen::CompilerCore::configure_search_path()
     // Instead of re-implementing all of that functionality in a custom toolchain
     // just hardcode the paths relevant to frequently used build/test machines for now
     add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
+    add_header_search_path(EIGEN_HEADERS_PATH);
+    add_header_search_path(MKLDNN_HEADERS_PATH);
+    add_header_search_path(TBB_HEADERS_PATH);
+    add_header_search_path(NGRAPH_HEADERS_PATH);
 
     string header_version = find_header_version("/usr/include/c++");
     string os_specific_path =
@@ -444,12 +447,6 @@ void codegen::CompilerCore::configure_search_path()
         file_util::path_join("/usr/lib/gcc/x86_64-linux-gnu/", header_version, "/include-fixed"));
     add_header_search_path("/usr/include/x86_64-linux-gnu");
     add_header_search_path("/usr/include");
-
-    add_header_search_path(EIGEN_HEADERS_PATH);
-    add_header_search_path(MKLDNN_HEADERS_PATH);
-    add_header_search_path(TBB_HEADERS_PATH);
-    add_header_search_path(NGRAPH_HEADERS_PATH);
-    add_header_search_path(INSTALLED_HEADERS_PATH);
 #endif
 
 #ifdef CUDA_HEADER_PATHS
