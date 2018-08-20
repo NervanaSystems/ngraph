@@ -2297,6 +2297,11 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::ArgMin)
             {
                 auto argmin = static_cast<const ngraph::op::ArgMin*>(node);
+                if (out[0].get_element_type() != element::i64 &&
+                    out[0].get_element_type() != element::i32)
+                {
+                    throw ngraph_error("Unsupported index element type");
+                }
                 writer.block_begin();
                 writer << "reference::argmin<" << args[0].get_type() << ", "
                        << out[0].get_element_type().c_type_string() << ">(" << args[0].get_name()
