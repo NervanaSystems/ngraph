@@ -59,14 +59,13 @@ namespace ngraph
                                            const std::array<std::string, 2>& data_types,
                                            size_t rank);
 
-                static void get_reduce_op(
-                            codegen::CodeWriter& writer,
-                            const std::string& name,
-                            runtime::gpu::GPUKernelArgs& args,
-                            const std::vector<std::string>& data_types,
-                            const std::string& reduce_op,
-                            size_t out_rank,
-                            size_t reduce_rank);
+                static void get_reduce_op(codegen::CodeWriter& writer,
+                                          const std::string& name,
+                                          runtime::gpu::GPUKernelArgs& args,
+                                          const std::vector<std::string>& data_types,
+                                          const std::string& reduce_op,
+                                          size_t out_rank,
+                                          size_t reduce_rank);
 
                 static void get_slice_op(codegen::CodeWriter& writer,
                                          const std::string& name,
