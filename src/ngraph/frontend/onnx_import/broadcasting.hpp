@@ -30,12 +30,14 @@ namespace ngraph
          *          elements from the input tensor as needed to fill the new dimensions.
          *          Function calculate which of the output axes are added in this way.
          *
-         * @param output_shape The new shape for the output tensor.
-         * @param input_shape  The shape of input tensor.
-         * @param axis         The axis along which we want to replicate elements. The starting
-         *                     axis position (0-based) int the output shape from which the
-         *                     current shape of the tensor matches the desired new shape.
-         * @return             The indices of added axes.
+         * @param output_shape      The new shape for the output tensor.
+         * @param input_shape       The shape of input tensor.
+         * @param start_match_axis  The axis along which we want to replicate elements.
+         *                          The starting axis position (0-based) int the output
+         *                          shape from which the current shape of the tensor
+         *                          matches the desired new shape.
+         *
+         * @return The indices of added axes.
          */
         AxisSet calculate_broadcast_axes(const Shape& output_shape,
                                          const Shape& input_shape,
@@ -54,6 +56,7 @@ namespace ngraph
          *
          * @param output_shape The new shape for the output tensor.
          * @param input_shape  The shape of input tensor.
+         *
          * @return             The indices of added axes.
          */
         inline AxisSet calculate_broadcast_axes(const Shape& output_shape, const Shape& input_shape)

@@ -129,7 +129,7 @@ namespace ngraph
              */
             inline Shape get_kernel_shape(const Node& node)
             {
-                return node.get_attribute_value<Shape>("kernel_shape", {1, 1});
+                return node.get_attribute_value<std::vector<std::size_t>>("kernel_shape", {1, 1});
             }
 
             namespace detail
@@ -138,7 +138,7 @@ namespace ngraph
                                                   const std::string& name,
                                                   const Shape& kernel_shape)
                 {
-                    return node.get_attribute_value<Strides>(name, {kernel_shape.size(), 1UL});
+                    return node.get_attribute_value<std::vector<std::size_t>>(name, {kernel_shape.size(), 1UL});
                 }
             } // namespace detail
 

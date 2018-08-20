@@ -30,7 +30,7 @@ namespace ngraph
                     CoordinateDiff pads;
 
                     // Add padding to the input to match the size of output size.
-                    auto pad_value = [](size_t dim) { return (static_cast<float>(dim) - 1.) / 2.; };
+                    auto pad_value = [](size_t dim) { return (static_cast<float>(dim) - 1.f) / 2.f; };
 
                     if (auto_pad == "SAME_UPPER")
                     {
@@ -65,7 +65,7 @@ namespace ngraph
                 CoordinateDiff pads;
                 try
                 {
-                    pads = node.get_attribute_value<CoordinateDiff>("pads");
+                    pads = node.get_attribute_value<std::vector<int64_t>>("pads");
                 }
                 catch (const error::node::UnknownAttribute&)
                 {
