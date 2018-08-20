@@ -113,6 +113,15 @@ namespace ngraph
                         dtypes, tensor_shape, CudaOpMap<T>::op, CudaOpMap<T>::math_kernel);
                 }
 
+                template <typename T>
+                size_t build_reduce(const std::vector<std::string>& dtypes,
+                                         NVShape tensor_shape,
+                                         NVShape reduce_axis)
+                {
+                    return build_reduce(
+                        dtypes, tensor_shape, reduce_axis, CudaOpMap<T>::op, CudaOpMap<T>::math_kernel);
+                }
+
                 template <typename ELEMENTWISE_OP_TYPE, typename REDUCE_OP_TYPE = ngraph::op::Nop>
                 size_t build_elementwise_collective(const std::vector<std::string>& dtypes,
                                                     NVShape tensor_shape,
@@ -186,7 +195,12 @@ namespace ngraph
                                                     const char* kernel,
                                                     const char* reduce_op,
                                                     bool save_elementwise);
-
+                size_t build_reduce(
+                        const std::vector<std::string>& dtypes,
+                        NVShape tensor_shape,
+                        NVShape reduce_axis,
+                        const char* op,
+                        const char* kernel);
                 GPUPrimitiveEmitter* m_primitive_emitter;
                 GPURuntimeContext* m_ctx;
             };
