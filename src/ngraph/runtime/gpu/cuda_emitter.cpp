@@ -1340,7 +1340,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(
 {
     // assumes NC{d1,...,dn} format
     std::string kernel_name =
-        "reduce_" + join(dtypes, "_") + "_ri_" + std::to_string(input_shape.size()) + "_rr_" << std::to_string(reduce_axis.size());
+        "reduce_" + join(dtypes, "_") + "_ri_" + std::to_string(input_shape.size()) + "_rr_" + std::to_string(reduce_axis.size());
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
 
     std::stringstream ss;
@@ -1354,7 +1354,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(
         return primitive_index;
     }
 
-    size_t rank - input_shape.size();
+    size_t rank = input_shape.size();
     size_t reduce_rank = reduce_axis.size();
     size_t out_rank = rank - reduce_rank;
     NVShape reduce_shape;
@@ -1363,14 +1363,14 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(
     {
         reduce_flag[a] = 1;
     }
-    NVShape out_shape;
+    NVShape output_shape;
     NVShape non_reduce_in_strides;
     NVShape reduce_shape;
     NVShape reduce_strides;
     NVShape input_strides = row_major_strides(input_shape);
     for(int i = 0; i < rank; i++)
     {
-        if(reduce_flag)
+        if(reduce_flag[i] != 0)
         {
             reduce_shape.push_back(input_shape[i]);
             reduce_strides.push_back(input_strides[i]);
@@ -1378,7 +1378,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(
         else
         {
             non_reduce_in_strides.push_back(input_strides[i]);
-            out_shape.push_back(input_shape[i]);
+            output_shape.push_back(input_shape[i]);
         }
     }
     NVShape output_strides = row_major_strides(output_shape); 
@@ -1420,10 +1420,10 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(
                                    .get_argument_list();
 
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          nblocks,
+                                          aligned_grid_size_x,
                                           1,
                                           1,
-                                          nthreads_per_block,
+                                          block_size_x,
                                           1,
                                           1,
                                           0,
