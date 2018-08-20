@@ -58,10 +58,11 @@ public:
     void set_pool_offset(size_t);
     size_t get_pool_offset() const;
     const element::Type& get_element_type() const { return m_element_type; }
+    void set_element_type(const element::Type& element_type);
     static std::string make_tensor_name(const Node* node, size_t value_index);
 
 protected:
-    const element::Type m_element_type;
+    element::Type m_element_type;
     PrimaryTensorView* m_primary_tensor_view;
     std::string m_name;
     size_t m_next_view_id;

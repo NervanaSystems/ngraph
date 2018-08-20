@@ -62,6 +62,11 @@ size_t descriptor::Tensor::get_pool_offset() const
     return m_pool_offset;
 }
 
+void descriptor::Tensor::set_element_type(const element::Type& element_type)
+{
+    m_element_type = element_type;
+}
+
 ostream& operator<<(ostream& out, const descriptor::Tensor& tensor)
 {
     out << "Tensor(" << tensor.get_name() << ")";
