@@ -181,14 +181,13 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
     return;
 }
 
-void runtime::gpu::CudaKernelBuilder::get_reduce_op(
-    codegen::CodeWriter& writer,
-    const std::string& name,
-    runtime::gpu::GPUKernelArgs& args,
-    const std::vector<std::string>& data_types,
-    const std::string& reduce_op,
-    size_t out_rank,
-    size_t reduce_rank)
+void runtime::gpu::CudaKernelBuilder::get_reduce_op(codegen::CodeWriter& writer,
+                                                    const std::string& name,
+                                                    runtime::gpu::GPUKernelArgs& args,
+                                                    const std::vector<std::string>& data_types,
+                                                    const std::string& reduce_op,
+                                                    size_t out_rank,
+                                                    size_t reduce_rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -203,27 +202,28 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_op(
             size_t i = 0;
             for (; i < out_rank - 1; i++)
             {
-                writer << "in_idx += (out_idx / out_strides" << i
-                           << ") * non_reduce_in_strides" << i << ";\n";
+                writer << "in_idx += (out_idx / out_strides" << i << ") * non_reduce_in_strides"
+                       << i << ";\n";
                 writer << "out_idx %= out_strides" << i << ";\n";
             }
-            writer << "in_idx += (out_idx / out_strides" << i << ") * non_reduce_in_strides"
-                    << i << ";\n";
+            writer << "in_idx += (out_idx / out_strides" << i << ") * non_reduce_in_strides" << i
+                   << ";\n";
 
-            for(size_t j = 0; j < reduce_rank; j++)
+            for (size_t j = 0; j < reduce_rank; j++)
             {
-                writer << "for(int idx" << j << " = 0; idx" << j << "< reduce_shape" << j << "; idx" << j << "++)\n";
+                writer << "for(int idx" << j << " = 0; idx" << j << "< reduce_shape" << j << "; idx"
+                       << j << "++)\n";
                 writer.block_begin();
             }
             {
                 writer << "uint32_t reduce_idx = 0;\n";
-                for(size_t j = 0; j < reduce_rank; j++)
+                for (size_t j = 0; j < reduce_rank; j++)
                 {
                     writer << "reduce_idx += idx" << j << " * reduce_strides" << j << ";\n";
                 }
                 writer << "r = " << reduce_op << "(r , in[reduce_idx + in_idx]);\n";
             }
-            for(size_t j = 0; j < reduce_rank; j++)
+            for (size_t j = 0; j < reduce_rank; j++)
             {
                 writer.block_end();
             }

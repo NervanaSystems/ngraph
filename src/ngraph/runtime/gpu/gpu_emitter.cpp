@@ -856,11 +856,10 @@ namespace ngraph
                         {
                             auto& cuda_emitter =
                                 external_function->get_primitive_emitter()->get_cuda_emitter();
-                            auto sum_index =
-                                cuda_emitter->build_reduce<ngraph::op::Add>({{args[0].get_type(),
-                                                                    out[0].get_type()}},
-                                                                    args[0].get_shape(),
-                                                                    sum->get_reduction_axes());
+                            auto sum_index = cuda_emitter->build_reduce<ngraph::op::Add>(
+                                {{args[0].get_type(), out[0].get_type()}},
+                                args[0].get_shape(),
+                                sum->get_reduction_axes());
 
                             writer << "gpu::invoke_primitive(ctx, " << sum_index << ", ";
                             writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";

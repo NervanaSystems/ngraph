@@ -1331,12 +1331,11 @@ size_t runtime::gpu::CUDAEmitter::build_softmax_divide(const std::vector<std::st
     return primitive_index;
 }
 
-size_t runtime::gpu::CUDAEmitter::build_reduce(
-        const std::vector<std::string>& dtypes,
-        NVShape input_shape,
-        NVShape reduce_axis,
-        const char* op,
-        const char* kernel)
+size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& dtypes,
+                                               NVShape input_shape,
+                                               NVShape reduce_axis,
+                                               const char* op,
+                                               const char* kernel)
 {
     // assumes NC{d1,...,dn} format
     std::string kernel_name =
@@ -1359,7 +1358,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(
     size_t out_rank = rank - reduce_rank;
     NVShape reduce_shape;
     NVShape reduce_flag(rank, 0);
-    for(auto a:reduce_axis)
+    for (auto a : reduce_axis)
     {
         reduce_flag[a] = 1;
     }
@@ -1368,7 +1367,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(
     NVShape reduce_shape;
     NVShape reduce_strides;
     NVShape input_strides = row_major_strides(input_shape);
-    for(int i = 0; i < rank; i++)
+    for (int i = 0; i < rank; i++)
     {
         if(reduce_flag[i] != 0)
         {
@@ -1381,13 +1380,12 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(
             output_shape.push_back(input_shape[i]);
         }
     }
-    NVShape output_strides = row_major_strides(output_shape); 
+    NVShape output_strides = row_major_strides(output_shape);
 
     uint32_t nthreads = static_cast<uint32_t>(shape_size(output_shape));
     //TODO: currently we set it to 64, will add tuning method later
     uint32_t block_size_x = 64;
     uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
-
 
     auto args = m_primitive_emitter->add_kernel_args();
     args.add_placeholder(dtypes[0], "in")
@@ -1409,7 +1407,8 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(
         {
             CudaKernelBuilder::get_device_helper(writer, op, kernel, dtypes);
         }
-        runtime::gpu::CudaKernelBuilder::get_reduce_op(writer, kernel_name, args, dtypes, op, out_rank, reduce_rank);
+        runtime::gpu::CudaKernelBuilder::get_reduce_op(
+            writer, kernel_name, args, dtypes, op, out_rank, reduce_rank);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
 
@@ -1437,7 +1436,6 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }
-
 
 size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Softmax* node)
 {
