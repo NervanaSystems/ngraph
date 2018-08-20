@@ -25,7 +25,7 @@
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/op/arg_minmax.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/serializer.hpp"
@@ -8935,7 +8935,7 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_trivial)
     Shape rshape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
-        make_shared<Function>(make_shared<op::ArgMin>(A, 0, false, false), op::ParameterVector{A});
+        make_shared<Function>(make_shared<op::ArgMin>(A, 0, element::i32), op::ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

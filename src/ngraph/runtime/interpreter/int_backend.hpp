@@ -25,7 +25,7 @@
 #include "ngraph/runtime/host_tensor_view.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
-#include "ngraph/op/arg_minmax.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
@@ -57,7 +57,7 @@
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
 #include "ngraph/runtime/reference/and.hpp"
-#include "ngraph/runtime/reference/arg_minmax.hpp"
+#include "ngraph/runtime/reference/argmin.hpp"
 #include "ngraph/runtime/reference/asin.hpp"
 #include "ngraph/runtime/reference/atan.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
@@ -214,7 +214,7 @@ private:
         else if (node_op == "ArgMin")
         {
             const op::ArgMin* argmin = static_cast<const op::ArgMin*>(&node);
-            if (argmin->is_int64())
+            if (out[0]->get_element_type() == element::i64)
             {
                 reference::argmin<T, int64_t>(args[0]->get_data_ptr<T>(),
                                               out[0]->get_data_ptr<int64_t>(),
@@ -222,13 +222,17 @@ private:
                                               out[0]->get_shape(),
                                               argmin->get_axis());
             }
-            else
+            else if (out[0]->get_element_type() == element::i32)
             {
                 reference::argmin<T, int32_t>(args[0]->get_data_ptr<T>(),
                                               out[0]->get_data_ptr<int32_t>(),
                                               args[0]->get_shape(),
                                               out[0]->get_shape(),
                                               argmin->get_axis());
+            }
+            else
+            {
+                throw ngraph_error("Unexpected type");
             }
         }
         else if (node_op == "Asin")

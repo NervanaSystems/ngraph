@@ -25,7 +25,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
-#include "ngraph/op/arg_minmax.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -389,10 +389,9 @@ static shared_ptr<ngraph::Function>
             }
             else if (node_op == "ArgMin")
             {
-                auto keep_dimensions = node_js.at("keep_dimensions").get<bool>();
-                auto is_int64 = node_js.at("axis").get<bool>();
                 auto axis = node_js.at("axis").get<size_t>();
-                node = make_shared<op::ArgMin>(args[0], axis, keep_dimensions, is_int64);
+                auto target_type = read_element_type(node_js.at("index_element_type"));
+                node = make_shared<op::ArgMin>(args[0], axis, target_type);
             }
             else if (node_op == "Asin")
             {
@@ -1018,8 +1017,7 @@ static json write(const Node& n, bool binary_constant_data)
     {
         auto tmp = dynamic_cast<const op::ArgMin*>(&n);
         node["axis"] = tmp->get_axis();
-        node["is_int64"] = tmp->is_int64();
-        node["keep_dimensions"] = tmp->get_argument(0)->get_shape() == tmp->get_shape();
+        node["index_element_type"] = write_element_type(tmp->get_element_type());
     }
     else if (node_op == "AllReduce")
     {

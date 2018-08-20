@@ -40,7 +40,7 @@ set (SRC
     op/add.cpp
     op/allreduce.cpp
     op/and.cpp
-    op/arg_minmax.cpp
+    op/argmin.cpp
     op/asin.cpp
     op/atan.cpp
     op/avg_pool.cpp
@@ -110,6 +110,7 @@ set (SRC
     op/util/binary_elementwise_comparison.cpp
     op/util/binary_elementwise_logical.cpp
     op/util/binary_elementwise.cpp
+    op/util/index_reduction.cpp
     op/util/requires_tensor_view_args.cpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise.cpp

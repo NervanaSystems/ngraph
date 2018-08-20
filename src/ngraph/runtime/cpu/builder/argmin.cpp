@@ -16,9 +16,9 @@
 
 #include <cstring>
 
-#include "ngraph/op/arg_minmax.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/reference/arg_minmax.hpp"
+#include "ngraph/runtime/reference/argmin.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -40,7 +40,7 @@ namespace ngraph
 
                 auto& arg_tensor = tensor_data[args[0].get_name()];
                 auto& out_tensor = tensor_data[out[0].get_name()];
-                bool is_int64 = argmin->is_int64();
+                bool is_int64 = out[0].get_element_type() == element::i64;
                 auto axis = argmin->get_axis();
                 auto in_shape = args[0].get_shape();
                 auto out_shape = out[0].get_shape();
@@ -51,7 +51,6 @@ namespace ngraph
                     if (is_int64)
                     {
                         functor = [&, in_shape, out_shape, axis](CPURuntimeContext* ctx) {
-
                             ngraph::runtime::reference::argmin<float, int64_t>(
                                 static_cast<float*>(arg_tensor),
                                 static_cast<int64_t*>(out_tensor),
@@ -63,7 +62,6 @@ namespace ngraph
                     else
                     {
                         functor = [&, in_shape, out_shape, axis](CPURuntimeContext* ctx) {
-
                             ngraph::runtime::reference::argmin<float, int32_t>(
                                 static_cast<float*>(arg_tensor),
                                 static_cast<int*>(out_tensor),
@@ -78,7 +76,6 @@ namespace ngraph
                     if (is_int64)
                     {
                         functor = [&, in_shape, out_shape, axis](CPURuntimeContext* ctx) {
-
                             ngraph::runtime::reference::argmin<double, int64_t>(
                                 static_cast<double*>(arg_tensor),
                                 static_cast<int64_t*>(out_tensor),
@@ -90,7 +87,6 @@ namespace ngraph
                     else
                     {
                         functor = [&, in_shape, out_shape, axis](CPURuntimeContext* ctx) {
-
                             ngraph::runtime::reference::argmin<double, int32_t>(
                                 static_cast<double*>(arg_tensor),
                                 static_cast<int*>(out_tensor),

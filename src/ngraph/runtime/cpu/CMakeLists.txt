@@ -29,7 +29,7 @@ set(SRC
     cpu_tracing.cpp
     builder/add.cpp
     builder/avg_pool.cpp
-    builder/arg_minmax.cpp
+    builder/argmin.cpp
     builder/batch_norm.cpp
     builder/broadcast.cpp
     builder/bounded_relu.cpp
