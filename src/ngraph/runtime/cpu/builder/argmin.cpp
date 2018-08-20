@@ -41,7 +41,7 @@ namespace ngraph
                 auto& arg_tensor = tensor_data[args[0].get_name()];
                 auto& out_tensor = tensor_data[out[0].get_name()];
                 bool is_int64 = out[0].get_element_type() == element::i64;
-                auto axis = argmin->get_axis();
+                auto axis = argmin->get_reduction_axis();
                 auto in_shape = args[0].get_shape();
                 auto out_shape = out[0].get_shape();
 

@@ -27,7 +27,7 @@ namespace ngraph
             class IndexReduction : public util::RequiresTensorViewArgs
             {
             public:
-                size_t get_axis() const { return m_axis; }
+                size_t get_reduction_axis() const { return m_axis; }
                 element::Type get_index_element_type() const { return m_index_element_type; }
                 IndexReduction(const std::string& node_type,
                                const std::shared_ptr<Node>& arg,

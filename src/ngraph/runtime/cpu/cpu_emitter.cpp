@@ -2304,7 +2304,7 @@ namespace ngraph
                 writer << "                   " << out[0].get_name() << ",\n";
                 writer << "                   {" << join(args[0].get_shape()) << "},\n";
                 writer << "                   {" << join(out[0].get_shape()) << "},\n";
-                writer << "                   " << argmin->get_axis() << ");\n";
+                writer << "                   " << argmin->get_reduction_axis() << ");\n";
                 writer.block_end();
             }
 

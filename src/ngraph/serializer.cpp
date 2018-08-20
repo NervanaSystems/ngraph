@@ -1016,7 +1016,7 @@ static json write(const Node& n, bool binary_constant_data)
     else if (node_op == "ArgMin")
     {
         auto tmp = dynamic_cast<const op::ArgMin*>(&n);
-        node["axis"] = tmp->get_axis();
+        node["axis"] = tmp->get_reduction_axis();
         node["index_element_type"] = write_element_type(tmp->get_element_type());
     }
     else if (node_op == "AllReduce")

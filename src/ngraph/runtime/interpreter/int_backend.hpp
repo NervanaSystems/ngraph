@@ -220,7 +220,7 @@ private:
                                               out[0]->get_data_ptr<int64_t>(),
                                               args[0]->get_shape(),
                                               out[0]->get_shape(),
-                                              argmin->get_axis());
+                                              argmin->get_reduction_axis());
             }
             else if (out[0]->get_element_type() == element::i32)
             {
@@ -228,7 +228,7 @@ private:
                                               out[0]->get_data_ptr<int32_t>(),
                                               args[0]->get_shape(),
                                               out[0]->get_shape(),
-                                              argmin->get_axis());
+                                              argmin->get_reduction_axis());
             }
             else
             {
