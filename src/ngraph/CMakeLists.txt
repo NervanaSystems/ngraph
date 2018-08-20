@@ -229,9 +229,18 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
 endif()
 
 add_library(ngraph SHARED)
-target_link_libraries(ngraph PUBLIC -Wl,--whole-archive ngraph_core -Wl,--no-whole-archive)
+if (APPLE)
+    target_link_libraries(ngraph PUBLIC -Wl,-force_load  ngraph_core)
+else()
+    target_link_libraries(ngraph PUBLIC -Wl,--whole-archive ngraph_core -Wl,--no-whole-archive)
+endif()
+
 if (NGRAPH_CPU_ENABLE)
-    target_link_libraries(ngraph PUBLIC -Wl,--whole-archive cpu_backend -Wl,--no-whole-archive)
+    if (APPLE)
+        target_link_libraries(ngraph PUBLIC -Wl,-force_load cpu_backend)
+    else()
+        target_link_libraries(ngraph PUBLIC -Wl,--whole-archive cpu_backend -Wl,--no-whole-archive)
+    endif()
 endif()
 
 #-----------------------------------------------------------------------------------------------
