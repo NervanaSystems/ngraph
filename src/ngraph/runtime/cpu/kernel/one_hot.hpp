@@ -23,6 +23,8 @@
 #include "ngraph/runtime/reference/one_hot.hpp"
 #include "ngraph/shape.hpp"
 
+using namespace std;
+
 namespace ngraph
 {
     namespace runtime
@@ -38,16 +40,10 @@ namespace ngraph
                                     size_t one_hot_axis)
 
                 {
-                    Eigen::array<Eigen::Index, 1> out_dims;
-                    out_dims[0] = out_shape[0];
-
-                    Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> out_tensor(
-                        static_cast<ElementType*>(out), out_dims);
-
-                    out_tensor.setZero();
+                    memset(out, 0, sizeof(ElementType) * shape_size(out_shape));
                     auto pos_raw = (static_cast<ElementType*>(arg))[0];
                     size_t pos = pos_raw;
-                    out_tensor(pos) = 1;
+                    (static_cast<ElementType*>(out))[pos] = 1;
                 }
 
                 template <typename ElementType>
@@ -55,7 +51,6 @@ namespace ngraph
                                     void* out,
                                     const Shape& arg_shape,
                                     const Shape& out_shape,
-                                    const Strides& out_strides,
                                     size_t one_hot_axis)
 
                 {
@@ -67,16 +62,21 @@ namespace ngraph
 
                     Eigen::TensorMap<Eigen::Tensor<ElementType, 2, Eigen::RowMajor>> out_tensor(
                         static_cast<ElementType*>(out), out_dims);
+
                     Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> in_tensor(
                         static_cast<ElementType*>(arg), in_dims);
 
-                    out_tensor.setZero();
-                    for (size_t i = 0; i < arg_shape[0]; i++)
-                    {
-                        auto pos_raw = in_tensor(i);
-                        size_t pos = pos_raw;
-                        one_hot_axis == 0 ? out_tensor(pos, i) = 1 : out_tensor(i, pos) = 1;
-                    }
+                    auto generator = [&](const Eigen::array<Eigen::DenseIndex, 2>& idx) {
+                        if ((one_hot_axis == 0 && idx[0] == in_tensor(idx[1])) ||
+                            (one_hot_axis == 1 && idx[1] == in_tensor(idx[0])))
+                        {
+                            return 1;
+                        }
+                        return 0;
+                    };
+
+                    out_tensor.device(eigen::global_thread_pool_device) =
+                        out_tensor.generate(generator);
                 }
 
                 template <typename ElementType>

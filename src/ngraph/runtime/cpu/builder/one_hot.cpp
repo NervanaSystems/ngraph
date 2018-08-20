@@ -58,15 +58,10 @@ namespace ngraph
                     std::function<decltype(runtime::cpu::kernel::one_hot_rank_1<float>)> kernel;
                     SELECT_KERNEL(
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::one_hot_rank_1);
-                    auto functor = [&, kernel, arg_shape, out_shape, out_strides, one_hot_axis](
-                        CPURuntimeContext* ctx) {
-                        kernel(arg_tensor,
-                               out_tensor,
-                               arg_shape,
-                               out_shape,
-                               out_strides,
-                               one_hot_axis);
-                    };
+                    auto functor =
+                        [&, kernel, arg_shape, out_shape, one_hot_axis](CPURuntimeContext* ctx) {
+                            kernel(arg_tensor, out_tensor, arg_shape, out_shape, one_hot_axis);
+                        };
 
                     functors.emplace_back(functor);
                 }
