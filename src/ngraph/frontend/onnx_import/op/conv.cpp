@@ -30,7 +30,7 @@ namespace ngraph
     {
         namespace op
         {
-            namespace detail
+            namespace
             {
                 std::shared_ptr<ngraph::op::Op>
                     make_ng_convolution(const std::shared_ptr<ngraph::Node>& data,
@@ -46,11 +46,11 @@ namespace ngraph
                         // Split one convolution op to N ops where N is the number of groups
                         // and concat results after computation.
                         // reference: https://github.com/NervanaSystems/ngraph-mxnet/blob/fdd692/src/ngraph/ngraph_emitter.cc#L822-L856
-                        const std::size_t n_data_channels = data->get_shape().at(1);
-                        const std::size_t n_filters_channels = filters->get_shape().at(0);
+                        std::size_t n_data_channels{data->get_shape().at(1)};
+                        std::size_t n_filters_channels{filters->get_shape().at(0)};
                         // TODO: ensure n_data_channels % groups = 0
-                        const std::size_t data_group_size = n_data_channels / groups;
-                        const std::size_t filters_group_size = n_filters_channels / groups;
+                        std::size_t data_group_size{n_data_channels / groups};
+                        std::size_t filters_group_size{n_filters_channels / groups};
                         NodeVector convolution_nodes;
 
                         // initial bounds for splice
@@ -91,7 +91,48 @@ namespace ngraph
                     }
                 }
 
-            } // namespace  detail
+            } // namespace
+
+            NodeVector conv(const Node& node)
+            {
+                const NodeVector& inputs = node.get_ng_inputs();
+                auto data = inputs.at(0);
+                auto filters = inputs.at(1);
+
+                int groups{node.get_attribute_value<int>("group", 1)};
+
+                // TODO: update to ASSERTION CHECK
+                if (groups < 0 || groups > data->get_shape().at(1) ||
+                    groups > filters->get_shape().at(0))
+                {
+                    throw error::parameter::Value{"Conv",
+                                                  node.get_name(),
+                                                  "incorrect value of 'group' attribute: " +
+                                                      std::to_string(groups)};
+                }
+
+                auto strides{attribute::get_strides(node)};
+                auto dilations{attribute::get_dilations(node)};
+                auto paddings{attribute::get_pads(node)};
+                const auto& padding_below{paddings.first};
+                const auto& padding_above{paddings.second};
+
+                auto conv_node{make_ng_convolution(
+                    data, filters, strides, dilations, padding_below, padding_above, groups)};
+
+                // no bias param
+                if (inputs.size() < 3)
+                {
+                    return {conv_node};
+                }
+
+                auto bias{inputs.at(2)};
+                const Shape& new_shape = conv_node->get_shape();
+
+                auto broadcasted_bias{std::make_shared<ngraph::op::Broadcast>(
+                    bias, new_shape, calculate_broadcast_axes(new_shape, bias->get_shape(), 1))};
+                return {std::make_shared<ngraph::op::Add>(conv_node, broadcasted_bias)};
+            }
 
         } // namespace op
 

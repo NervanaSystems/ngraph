@@ -1,18 +1,18 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+ * Copyright 2017-2018 Intel Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 
 #pragma once
 
@@ -118,6 +118,64 @@ namespace ngraph
         {
             return (outs << "<Node(" << node.op_type() << "): " << node.get_name() << ">");
         }
+
+        namespace attribute
+        {
+            /**
+             * @brief Get shape of kernel (filter) in pixels.
+             *
+             * @param node The Node ptr representing Conv or Pool operation.
+             * @return The kernel Shape object representing its dimensions (height, width, depth).
+             */
+            inline Shape get_kernel_shape(const Node& node)
+            {
+                return node.get_attribute_value<Shape>("kernel_shape", {1, 1});
+            }
+
+            namespace detail
+            {
+                inline Strides get_strides_helper(const Node& node,
+                                                  const std::string& name,
+                                                  const Shape& kernel_shape)
+                {
+                    return node.get_attribute_value<Strides>(name, {kernel_shape.size(), 1UL});
+                }
+            } // namespace detail
+
+            /**
+             * @brief  Get number of pixels to stride operation by in each direction.
+             *
+             * @param node The Node ptr representing Conv or Pool operation.
+             * @param kernel_shape The shape of the kernel which we retrieve strides for.
+             * @return The kernel Shape object representing its dimensions (height, width, depth).
+             */
+            inline Strides get_strides(const Node& node, const Shape& kernel_shape)
+            {
+                return detail::get_strides_helper(node, "strides", kernel_shape);
+            }
+            /**
+             * @brief  Get number of pixels to stride operation by in each direction.
+             *
+             * @param node The Node ptr representing Conv or Pool operation.
+             * @return The kernel Shape object representing its dimensions (height, width, depth).
+             */
+            inline Strides get_strides(const Node& node)
+            {
+                return get_strides(node, get_kernel_shape(node));
+            }
+
+            /**
+             * @brief Get number of pixels for filter dilation in each direction.
+             *
+             * @param node The Node ptr representing ONNX operation.
+             * @return The Strides object containing number of pixels for filter dilation
+             *         (height, width, depth).
+             */
+            inline Strides get_dilations(const Node& node)
+            {
+                return detail::get_strides_helper(node, "dilations", get_kernel_shape(node));
+            }
+        } // namespace attribute
 
     } // namespace onnx_import
 

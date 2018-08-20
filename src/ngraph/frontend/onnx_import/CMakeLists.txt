@@ -35,10 +35,16 @@ add_library(onnx_import_interface OBJECT
 add_library(onnx_import STATIC
         onnx.pb.cc
         attribute.cpp
+        attribute.hpp
+        broadcasting.cpp
+        convpool.cpp
+        convpool.hpp
         exceptions.hpp
         graph.cpp
+        graph.hpp
         model.hpp
         node.cpp
+        node.hpp
         op/add.hpp
         op/batch_norm.hpp
         op/constant.hpp

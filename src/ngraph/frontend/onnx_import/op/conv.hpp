@@ -16,10 +16,10 @@
 
 #pragma once
 
+#include "ngraph/frontend/onnx_import/broadcasting.hpp"
+#include "ngraph/frontend/onnx_import/convpool.hpp"
 #include "ngraph/frontend/onnx_import/exceptions.hpp"
 #include "ngraph/frontend/onnx_import/node.hpp"
-#include "ngraph/frontend/onnx_import/util/broadcasting.hpp"
-#include "ngraph/frontend/onnx_import/util/conv_pool.hpp"
 
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
@@ -49,50 +49,13 @@ namespace ngraph
 
             /**
              * @brief Performs ONNX Conv operation.
-             * 
+             *
              * @param node   The ONNX node object representing this operation.
-             * 
-             * @return The vector containing Ngraph nodes producing output of ONNX convolution 
+             *
+             * @return The vector containing Ngraph nodes producing output of ONNX convolution
              *         operation.
              */
-            inline NodeVector conv(const Node& node)
-            {
-                const NodeVector& inputs = node.get_ng_inputs();
-                auto data = inputs.at(0);
-                auto filters = inputs.at(1);
-
-                int groups{node.get_attribute_value<int>("group", 1)};
-                if (groups < 0 || groups > data->get_shape().at(1) ||
-                    groups > filters->get_shape().at(0))
-                {
-                    throw error::op::op_value_error("Conv",
-                                                    node.get_name(),
-                                                    "incorrect value of 'group' attribute: " +
-                                                        std::to_string(groups));
-                }
-
-                auto strides = util::get_strides(node);
-                auto dilations = util::get_dilations(node);
-                auto paddings = util::get_pads(node);
-                auto padding_below = paddings.first;
-                auto padding_above = paddings.second;
-
-                auto conv_node = detail::make_ng_convolution(
-                    data, filters, strides, dilations, padding_below, padding_above, groups);
-
-                // no bias param
-                if (inputs.size() < 3)
-                {
-                    return NodeVector{conv_node};
-                }
-
-                auto bias = inputs.at(2);
-                const Shape& new_shape = conv_node->get_shape();
-
-                auto broadcasted_bias = std::make_shared<ngraph::op::Broadcast>(
-                    bias, new_shape, util::get_broadcast_axes(new_shape, bias->get_shape(), 1));
-                return NodeVector{std::make_shared<ngraph::op::Add>(conv_node, broadcasted_bias)};
-            }
+            NodeVector conv(const Node& node);
 
         } // namespace op
 
