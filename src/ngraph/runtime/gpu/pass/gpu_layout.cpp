@@ -44,13 +44,13 @@ namespace ngraph
                     if (op_annotations)
                     {
                         // pass-through
-                        op_annotations->add_in_place_oi_pair({0, 0, false});
+                        op_annotations->add_in_place_oi_pair({0, 0, true});
                     }
                     else
                     {
                         op_annotations = std::make_shared<ngraph::runtime::gpu::GPUOpAnnotations>();
                         // pass-through
-                        op_annotations->add_in_place_oi_pair({0, 0, false});
+                        op_annotations->add_in_place_oi_pair({0, 0, true});
                         rep_slice->set_op_annotations(op_annotations);
                     }
                 }
