@@ -38,3 +38,9 @@ Tensor& PrimaryTensorView::get_tensor()
 {
     return m_tensor;
 }
+
+void PrimaryTensorView::set_tensor_view_type(const element::Type& element_type, const Shape& shape)
+{
+    TensorView::set_tensor_view_type(element_type, shape);
+    m_tensor.set_element_type(element_type);
+}
