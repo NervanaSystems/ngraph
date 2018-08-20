@@ -777,7 +777,6 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
             do_create_mean(topology,
                            get_output_name(op, 2), // d_beta
-                           get_output_shape(op, 2),
                            get_output_type(op, 2),
                            get_input_name(op, 5), // delta
                            get_input_shape(op, 5),
@@ -785,7 +784,6 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
             do_create_variance_back(topology,
                                     get_output_name(op, 1), // d_gamma
-                                    get_output_shape(op, 1),
                                     get_output_type(op, 1),
                                     eps,
                                     get_input_name(op, 2), // input
@@ -829,7 +827,6 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
                 do_create_mean(topology,
                                mean_name,
-                               get_input_shape(op),
                                get_output_type(op),
                                get_input_name(op, 2),
                                get_input_shape(op, 2),
@@ -837,7 +834,6 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
                 do_create_variance(topology,
                                    variance_name,
-                                   get_input_shape(op),
                                    get_output_type(op),
                                    get_input_name(op, 2),
                                    get_input_shape(op, 2),
@@ -856,13 +852,11 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
                 do_batch_norm_operation(topology,
                                         get_output_name(op),
-                                        get_output_shape(op),
                                         get_output_type(op),
                                         eps,
                                         get_input_name(op, 2),
                                         get_input_shape(op, 2),
                                         get_input_name(op, 0),
-                                        get_input_shape(op, 0),
                                         get_input_name(op, 1),
                                         mean_name,
                                         variance_name);
