@@ -80,13 +80,14 @@ set(SRC
     op/rnn.cpp
     op/sigmoid_mul.cpp
     pass/cpu_assignment.cpp
+    pass/cpu_collapse_dims.cpp
     pass/cpu_concat_inputs.cpp
     pass/cpu_fusion.cpp
     pass/cpu_layout.cpp
+    pass/cpu_loop_kernel_fusion.cpp
+    pass/cpu_mat_fusion.cpp
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
-    pass/cpu_mat_fusion.cpp
-    pass/cpu_loop_kernel_fusion.cpp
     pass/cpu_workspace_insertion.cpp
 )
 

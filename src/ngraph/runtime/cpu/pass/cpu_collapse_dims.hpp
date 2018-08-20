@@ -26,7 +26,7 @@ namespace ngraph
         {
             namespace pass
             {
-                class CPUShuffleFolding : public ngraph::pass::FunctionPass
+                class CPUCollapseDims : public ngraph::pass::FunctionPass
                 {
                 public:
                     bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
