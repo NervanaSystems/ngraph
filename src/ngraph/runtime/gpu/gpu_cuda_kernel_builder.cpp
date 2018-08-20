@@ -199,17 +199,16 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_op(codegen::CodeWriter& writer,
             writer << "uint32_t out_idx = tid;\n";
             writer << "uint32_t in_idx = 0;\n";
             writer << data_types[1] << " r = 0;\n";
-            size_t i = 0;
-            for (; i < out_rank - 1; i++)
+
+            int64_t i = 0;
+            for (; i < static_cast<int64_t>(out_rank); i++)
             {
                 writer << "in_idx += (out_idx / out_strides" << i << ") * non_reduce_in_strides"
                        << i << ";\n";
                 writer << "out_idx %= out_strides" << i << ";\n";
             }
-            writer << "in_idx += (out_idx / out_strides" << i << ") * non_reduce_in_strides" << i
-                   << ";\n";
 
-            for (size_t j = 0; j < reduce_rank; j++)
+            for (int64_t j = 0; j < static_cast<int64_t>(reduce_rank); j++)
             {
                 writer << "for(int idx" << j << " = 0; idx" << j << "< reduce_shape" << j << "; idx"
                        << j << "++)\n";
@@ -217,13 +216,13 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_op(codegen::CodeWriter& writer,
             }
             {
                 writer << "uint32_t reduce_idx = 0;\n";
-                for (size_t j = 0; j < reduce_rank; j++)
+            for (int64_t j = 0; j < static_cast<int64_t>(reduce_rank); j++)
                 {
                     writer << "reduce_idx += idx" << j << " * reduce_strides" << j << ";\n";
                 }
                 writer << "r = " << reduce_op << "(r , in[reduce_idx + in_idx]);\n";
             }
-            for (size_t j = 0; j < reduce_rank; j++)
+            for (int64_t j = 0; j < static_cast<int64_t>(reduce_rank); j++)
             {
                 writer.block_end();
             }

@@ -1356,7 +1356,6 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
     size_t rank = input_shape.size();
     size_t reduce_rank = reduce_axis.size();
     size_t out_rank = rank - reduce_rank;
-    NVShape reduce_shape;
     NVShape reduce_flag(rank, 0);
     for (auto a : reduce_axis)
     {
@@ -1405,7 +1404,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
         writer << include_helpers();
         if (kernel)
         {
-            CudaKernelBuilder::get_device_helper(writer, op, kernel, dtypes);
+            CudaKernelBuilder::get_device_helper(writer, op, kernel, {{dtypes[0], dtypes[0], dtypes[1]}});
         }
         runtime::gpu::CudaKernelBuilder::get_reduce_op(
             writer, kernel_name, args, dtypes, op, out_rank, reduce_rank);
