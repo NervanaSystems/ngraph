@@ -49,23 +49,22 @@ private:
     Tensor(const element::Type& element_type,
            PrimaryTensorView* tensor_view,
            const std::string& name);
-
     std::string get_next_view_name();
 
 public:
     const std::string& get_name() const { return m_name; }
-    size_t size() const;
     void set_pool_offset(size_t);
+    size_t size() const;
     size_t get_pool_offset() const;
     const element::Type& get_element_type() const { return m_element_type; }
+    void set_element_type(const element::Type& element_type);
     static std::string make_tensor_name(const Node* node, size_t value_index);
-
+    PrimaryTensorView* get_primary_tensor_view() const { return m_primary_tensor_view; }
 protected:
-    const element::Type m_element_type;
+    element::Type m_element_type;
     PrimaryTensorView* m_primary_tensor_view;
     std::string m_name;
     size_t m_next_view_id;
-    size_t m_size;
     size_t m_pool_offset;
 };
 

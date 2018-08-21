@@ -27,6 +27,7 @@ if (NGRAPH_INTERPRETER_ENABLE)
     set_target_properties(interpreter_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
     target_link_libraries(interpreter_backend PUBLIC ngraph)
     set_target_properties(interpreter_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+    target_compile_options(interpreter_backend PRIVATE -fPIC)
 
     install(TARGETS interpreter_backend
         LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"

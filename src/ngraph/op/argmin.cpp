@@ -14,21 +14,16 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
+#include "ngraph/op/argmin.hpp"
 
-#include "ngraph/node_vector.hpp"
-#include "ngraph/op/constant.hpp"
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+shared_ptr<Node> op::ArgMin::copy_with_new_args(const NodeVector& new_args) const
 {
-    namespace onnx_import
+    if (new_args.size() != 1)
     {
-        namespace op
-        {
-            NodeVector constant(const Node& node);
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<ArgMin>(new_args.at(0), m_axis, this->get_element_type());
+}
