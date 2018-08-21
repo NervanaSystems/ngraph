@@ -17,6 +17,7 @@
 #include <iostream>
 #include <limits>
 #include <ostream>
+#include <string>
 #include <vector>
 
 #include "ngraph/codegen/code_writer.hpp"
