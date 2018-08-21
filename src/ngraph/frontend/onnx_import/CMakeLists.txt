@@ -46,7 +46,7 @@ add_library(onnx_import STATIC
         op/split.hpp
         ops_bridge.cpp
         tensor.hpp
-        value_info.hpp)
+        value_info.hpp op/constant.cpp)
 
 add_dependencies(onnx_import onnx_import_interface)
 

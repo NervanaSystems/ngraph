@@ -43,22 +43,6 @@ namespace ngraph
 
             } // namespace error
 
-//            NodeVector add(const Node& node) { return op::add(node); }
-//            NodeVector batch_norm(const Node& node)
-//            {
-//                return op::batch_norm(node, node.get_ng_inputs());
-//            }
-
-//            NodeVector constant(const Node& node)
-//            {
-//                return {op::constant(node.get_attribute_value<Tensor>("value"))};
-//            }
-
-//            NodeVector split(const Node& node)
-//            {
-//                return op::split(node, node.get_ng_inputs().at(0));
-//            }
-//            NodeVector relu(const Node& node) { return op::relu(node); }
             class ops_bridge
             {
             public:
