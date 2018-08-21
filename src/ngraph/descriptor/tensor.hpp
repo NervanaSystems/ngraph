@@ -49,7 +49,6 @@ private:
     Tensor(const element::Type& element_type,
            PrimaryTensorView* tensor_view,
            const std::string& name);
-    size_t m_size;
     std::string get_next_view_name();
 
 public:
