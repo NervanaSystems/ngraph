@@ -23,8 +23,6 @@
 #include "ngraph/runtime/reference/one_hot.hpp"
 #include "ngraph/shape.hpp"
 
-using namespace std;
-
 namespace ngraph
 {
     namespace runtime
@@ -67,8 +65,8 @@ namespace ngraph
                         static_cast<ElementType*>(arg), in_dims);
 
                     auto generator = [&](const Eigen::array<Eigen::DenseIndex, 2>& idx) {
-                        if ((one_hot_axis == 0 && idx[0] == in_tensor(idx[1])) ||
-                            (one_hot_axis == 1 && idx[1] == in_tensor(idx[0])))
+                        if ((one_hot_axis == 0 && idx[0] == static_cast<int>(in_tensor(idx[1]))) ||
+                            (one_hot_axis == 1 && idx[1] == static_cast<int>(in_tensor(idx[0]))))
                         {
                             return 1;
                         }
