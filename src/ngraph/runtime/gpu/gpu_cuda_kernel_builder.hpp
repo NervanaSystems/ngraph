@@ -107,7 +107,9 @@ namespace ngraph
 
                 static void get_pad_dynamic_op(codegen::CodeWriter& writer,
                                                const std::string& name,
-                                               const std::array<std::string, 2>& data_types);
+                                               GPUKernelArgs& args,
+                                               const std::array<std::string, 2>& data_types,
+                                               size_t rank);
 
                 static void get_ew_collective_op(codegen::CodeWriter& writer,
                                                  const std::string& name,

@@ -22,9 +22,6 @@ set (SRC
 add_executable(nbench ${SRC})
 
 target_link_libraries(nbench ngraph)
-if (NGRAPH_CPU_ENABLE)
-    target_link_libraries(nbench cpu_backend)
-endif()
 if (NGRAPH_INTELGPU_ENABLE)
     target_link_libraries(nbench intelgpu_backend)
 endif()
