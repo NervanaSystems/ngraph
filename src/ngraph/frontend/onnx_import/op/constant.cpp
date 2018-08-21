@@ -87,17 +87,17 @@ namespace ngraph
 
                 inline std::shared_ptr<ngraph::op::Constant> make_constant(const Tensor& tensor)
                 {
-#define _make_ng_constant(_data_type)                                                              \
-    case _data_type: return make_ng_constant<_data_type>(tensor)
+#define MAKE_NG_CONSTANT(data_type_)                                                               \
+    case data_type_: return make_ng_constant<data_type_>(tensor)
 
                     switch (tensor.get_type())
                     {
-                        _make_ng_constant(Tensor::Type::float16);
-                        _make_ng_constant(Tensor::Type::float32);
-                        _make_ng_constant(Tensor::Type::float64);
-                        _make_ng_constant(Tensor::Type::int32);
-                        _make_ng_constant(Tensor::Type::uint32);
-                        _make_ng_constant(Tensor::Type::uint64);
+                        MAKE_NG_CONSTANT(Tensor::Type::float16);
+                        MAKE_NG_CONSTANT(Tensor::Type::float32);
+                        MAKE_NG_CONSTANT(Tensor::Type::float64);
+                        MAKE_NG_CONSTANT(Tensor::Type::int32);
+                        MAKE_NG_CONSTANT(Tensor::Type::uint32);
+                        MAKE_NG_CONSTANT(Tensor::Type::uint64);
                     default: throw error::tensor::invalid_data_type{tensor};
                     }
                 }
