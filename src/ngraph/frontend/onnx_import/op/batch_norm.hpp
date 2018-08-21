@@ -30,8 +30,9 @@ namespace ngraph
     {
         namespace op
         {
-            inline NodeVector batch_norm(const Node& node, const NodeVector& inputs)
+            inline NodeVector batch_norm(const Node& node)
             {
+                NodeVector inputs{node.get_ng_inputs()};
                 auto x = inputs.at(0);
                 auto scale = inputs.at(1);
                 auto bias = inputs.at(2);
