@@ -3701,7 +3701,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_vector)
 
 NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_scalar)
 {
-    Shape shape_a{4, 3, 3};
+    Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
     auto f =
@@ -3711,15 +3711,13 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_scalar)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(a,
-              vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 18,
-                            19, 20, 21, 22, 23, 24, 25, 26, 27, 1,  2,  3,  4,  5,  6,  7,  8,  9});
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+                               15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     backend->call_with_validate(f, {result}, {a});
     EXPECT_EQ((vector<float>{1 + 10 + 19 + 4 + 13 + 22 + 7 + 16 + 25 + 2 + 11 + 20 + 5 + 14 + 23 +
-                             8 + 17 + 26 + 3 + 12 + 21 + 6 + 15 + 24 + 9 + 18 + 27 + 1 + 2 + 3 + 4 +
-                             5 + 6 + 7 + 8 + 9}),
+                             8 + 17 + 26 + 3 + 12 + 21 + 6 + 15 + 24 + 9 + 18 + 27}),
               read_vector<float>(result));
 }
 
