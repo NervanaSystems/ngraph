@@ -21,6 +21,7 @@
 #include "ngraph/frontend/onnx_import/op/add.hpp"
 #include "ngraph/frontend/onnx_import/op/batch_norm.hpp"
 #include "ngraph/frontend/onnx_import/op/constant.hpp"
+#include "ngraph/frontend/onnx_import/op/relu.hpp"
 #include "ngraph/frontend/onnx_import/op/split.hpp"
 #include "ops_bridge.hpp"
 
@@ -57,7 +58,7 @@ namespace ngraph
             {
                 return op::split(node, node.get_ng_inputs().at(0));
             }
-
+            NodeVector relu(const Node& node) { return op::relu(node); }
             class ops_bridge
             {
             public:
@@ -86,6 +87,7 @@ namespace ngraph
                     m_map.emplace("BatchNormalization",
                                   std::bind(batch_norm, std::placeholders::_1));
                     m_map.emplace("Constant", std::bind(constant, std::placeholders::_1));
+                    m_map.emplace("Relu", std::bind(relu, std::placeholders::_1));
                     m_map.emplace("Split", std::bind(split, std::placeholders::_1));
                 }
 
