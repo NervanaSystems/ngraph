@@ -146,3 +146,16 @@ TEST(onnx, model_batchnorm_default)
     auto result_vectors = execute(function, inputs, "INTERPRETER");
     EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
 }
+
+TEST(onnx, model_relu)
+{
+    // Simple ReLU test
+    auto function{ngraph::onnx_import::import_onnx_function(
+            ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/relu.onnx"))};
+
+    auto inputs = std::vector<std::vector<float>>{{-1, -2, 0, 1, 2, 3}};
+    auto expected_output = std::vector<std::vector<float>>{{0, 0, 0, 1, 2, 3}};
+
+    auto result_vectors = execute(function, inputs, "INTERPRETER");
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), result_vectors.front()));
+}
