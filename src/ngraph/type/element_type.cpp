@@ -15,11 +15,13 @@
 *******************************************************************************/
 
 #include <cmath>
+#include <iostream>
 
 #include "ngraph/type/element_type.hpp"
 
 using namespace ngraph;
 
+const element::Type element::unspecified(0, false, false, "unspecified");
 const element::Type element::boolean(8, false, true, "char");
 const element::Type element::f32(32, true, true, "float");
 const element::Type element::f64(64, true, true, "double");
@@ -48,20 +50,21 @@ std::vector<const element::Type*> element::Type::get_known_types()
     return rc;
 }
 
-element::Type::Type()
-    : m_bitwidth{0}
-    , m_is_real{0}
-    , m_is_signed{0}
-    , m_cname{}
-{
-}
-
 element::Type::Type(size_t bitwidth, bool is_real, bool is_signed, const std::string& cname)
     : m_bitwidth{bitwidth}
     , m_is_real{is_real}
     , m_is_signed{is_signed}
     , m_cname{cname}
 {
+}
+
+element::Type& element::Type::operator=(const element::Type& t)
+{
+    m_bitwidth = t.m_bitwidth;
+    m_is_real = t.m_is_real;
+    m_is_signed = t.m_is_signed;
+    m_cname = t.m_cname;
+    return *this;
 }
 
 const std::string& element::Type::c_type_string() const
@@ -170,7 +173,7 @@ namespace ngraph
 
 std::ostream& element::operator<<(std::ostream& out, const element::Type& obj)
 {
-    out << "element::Type(" << obj.m_bitwidth << ", " << obj.m_is_real << ", " << obj.m_is_signed
-        << ")";
+    out << "element::Type{" << obj.m_bitwidth << ", " << obj.m_is_real << ", " << obj.m_is_signed
+        << "," << obj.m_cname << "}";
     return out;
 }
