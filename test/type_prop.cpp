@@ -6470,7 +6470,7 @@ TEST(type_prop, index_reduction_scalar)
     }
     catch (const TypeCheckError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "Tensor's rank should be at least 1");
+        EXPECT_HAS_SUBSTRING(error.what(), "Tensor's rank must be at least 1");
     }
     catch (...)
     {
@@ -6508,7 +6508,7 @@ TEST(type_prop, index_reduction_invalid_index_type)
     }
     catch (const TypeCheckError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "Index element type should be");
+        EXPECT_HAS_SUBSTRING(error.what(), "Index element type must be");
     }
     catch (...)
     {
