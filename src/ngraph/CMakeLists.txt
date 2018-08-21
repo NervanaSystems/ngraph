@@ -229,6 +229,7 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
 endif()
 
 add_library(ngraph SHARED)
+set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
 if (APPLE)
     target_link_libraries(ngraph PUBLIC -Wl,-force_load  ngraph_core)
 else()
