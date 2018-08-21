@@ -79,7 +79,7 @@ void op::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
             shape.push_back(1);
         }
     }
-    auto order = ngraph::get_default_order(zsum->get_shape().size());
+    auto order = ngraph::get_default_order(zsum->get_shape());
     auto zreshape = make_shared<op::Reshape>(zsum, order, shape);
 
     auto adjoint =

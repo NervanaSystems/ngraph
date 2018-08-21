@@ -94,7 +94,7 @@ namespace ngraph
                 reshape[i] = 1;
             }
 
-            ngraph::AxisVector order = ngraph::get_default_order(mu->get_shape().size());
+            ngraph::AxisVector order = ngraph::get_default_order(mu->get_shape());
 
             mu = std::make_shared<op::Reshape>(mu, order, reshape);
 

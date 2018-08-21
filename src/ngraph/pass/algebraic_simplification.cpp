@@ -117,8 +117,7 @@ static bool simplify_concat(std::shared_ptr<Node> n)
         {
             if (auto rcarg = std::dynamic_pointer_cast<op::Reshape>(carg))
             {
-                auto default_shape =
-                    ngraph::get_default_order(rcarg->get_argument(0)->get_shape().size());
+                auto default_shape = ngraph::get_default_order(rcarg->get_argument(0)->get_shape());
                 if (default_shape != rcarg->get_input_order())
                 {
                     NGRAPH_DEBUG << carg->get_name() << " reshape also does transposes";

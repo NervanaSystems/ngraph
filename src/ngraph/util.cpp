@@ -450,6 +450,10 @@ void ngraph::check_fp_values_isnan(const char* name, const double* array, size_t
         }
     }
 }
+AxisVector ngraph::get_default_order(const Shape& shape)
+{
+    return get_default_order(shape.size());
+}
 
 AxisVector ngraph::get_default_order(size_t rank)
 {

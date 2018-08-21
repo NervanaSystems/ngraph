@@ -167,7 +167,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
         const auto& data_shape = data_node->get_shape();
         // construct new op nodes
-        auto data_order = ngraph::get_default_order(data_node->get_shape().size());
+        auto data_order = ngraph::get_default_order(data_node->get_shape());
         auto data_reshape_node = std::make_shared<op::Reshape>(
             data_node, data_order, Shape{data_shape[0] * data_shape[1], data_shape[2]});
 

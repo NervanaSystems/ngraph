@@ -162,7 +162,7 @@ namespace ngraph
             if (node->get_shape() != node_shape_after_possible_reshaping)
             {
                 // tell reshape to examine input dimensions in order
-                ngraph::AxisVector order = ngraph::get_default_order(node->get_shape().size());
+                ngraph::AxisVector order = ngraph::get_default_order(node->get_shape());
                 return_node = std::make_shared<ngraph::op::Reshape>(
                     return_node, order, node_shape_after_possible_reshaping);
             }
