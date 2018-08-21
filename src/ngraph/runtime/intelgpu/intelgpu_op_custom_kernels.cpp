@@ -128,7 +128,8 @@ vector<size_t> runtime::intelgpu::generate_loops(codegen::CodeWriter& writer,
         {
             if (is_begin)
             {
-                writer << "const unsigned i" << var_idx << " = get_global_id(" << var_idx << ");\n";
+                writer << "const unsigned i" << var_idx << " = get_global_id(" << var_idx
+                       << "); /*trip count " << i << "*/\n";
                 gws.push_back(i);
             }
         }
