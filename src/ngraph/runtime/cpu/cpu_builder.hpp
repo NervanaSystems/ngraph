@@ -91,24 +91,6 @@
         KV = K<ET, 6>;                                                                             \
     else if (R == 7)                                                                               \
         KV = K<ET, 7>;                                                                             \
-    else if (R == 8)                                                                               \
-        KV = K<ET, 8>;                                                                             \
-    else if (R == 9)                                                                               \
-        KV = K<ET, 9>;                                                                             \
-    else if (R == 10)                                                                              \
-        KV = K<ET, 10>;                                                                            \
-    else if (R == 11)                                                                              \
-        KV = K<ET, 11>;                                                                            \
-    else if (R == 12)                                                                              \
-        KV = K<ET, 12>;                                                                            \
-    else if (R == 13)                                                                              \
-        KV = K<ET, 13>;                                                                            \
-    else if (R == 14)                                                                              \
-        KV = K<ET, 14>;                                                                            \
-    else if (R == 15)                                                                              \
-        KV = K<ET, 15>;                                                                            \
-    else if (R == 16)                                                                              \
-        KV = K<ET, 16>;                                                                            \
     else                                                                                           \
         throw ngraph_error("Unsupported rank " + std::to_string(R) + " for kernel " #K);
 

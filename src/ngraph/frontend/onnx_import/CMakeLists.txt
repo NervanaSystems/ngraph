@@ -23,7 +23,7 @@ if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/onnx.proto")
 endif()
 
 add_custom_command(OUTPUT onnx.pb.cc onnx.pb.h
-        COMMAND ${PROTOBUF_PROTOC_EXECUTABLE} --cpp_out ${CMAKE_CURRENT_BINARY_DIR} --proto_path ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/onnx.proto
+        COMMAND protobuf::protoc --cpp_out ${CMAKE_CURRENT_BINARY_DIR} --proto_path ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/onnx.proto
         DEPENDS onnx.proto)
 
 add_library(onnx_import_interface OBJECT
@@ -35,10 +35,12 @@ add_library(onnx_import_interface OBJECT
 add_library(onnx_import STATIC
         onnx.pb.cc
         attribute.cpp
+        exceptions.hpp
         graph.cpp
         model.hpp
         node.cpp
         op/add.hpp
+        op/batch_norm.hpp
         op/constant.hpp
         op/split.hpp
         ops_bridge.cpp
@@ -47,12 +49,18 @@ add_library(onnx_import STATIC
 
 add_dependencies(onnx_import onnx_import_interface)
 
+if (NOT NGRAPH_USE_SYSTEM_PROTOBUF)
+    add_dependencies(onnx_import_interface protobuf::libprotobuf)    
+    add_dependencies(onnx_import protobuf::libprotobuf)
+endif()
+
 set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_include_directories(onnx_import PUBLIC ${CMAKE_CURRENT_BINARY_DIR} PRIVATE ${NGRAPH_INCLUDE_PATH})
-target_link_libraries(onnx_import PRIVATE ${PROTOBUF_LIBRARIES})
+target_include_directories(onnx_import PUBLIC ${CMAKE_CURRENT_BINARY_DIR} PRIVATE ${NGRAPH_INCLUDE_PATH} ${Protobuf_INCLUDE_DIR})
+target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES})
 
 set_property(TARGET onnx_import_interface PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_include_directories(onnx_import_interface PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${NGRAPH_INCLUDE_PATH})
+target_include_directories(onnx_import_interface PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+    ${NGRAPH_INCLUDE_PATH} ${Protobuf_INCLUDE_DIR})
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(onnx_import PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum

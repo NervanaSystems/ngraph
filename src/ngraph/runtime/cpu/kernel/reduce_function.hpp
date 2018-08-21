@@ -55,9 +55,9 @@ namespace ngraph
                     void reduce(const ElementType v, ElementType* R)
                     {
                         TensorViewPtrs inputs, outputs;
-                        ElementType p __attribute__((aligned(CPUTensorView::BufferAlignment))) = v;
-                        ElementType q __attribute__((aligned(CPUTensorView::BufferAlignment))) = *R;
-                        ElementType r __attribute__((aligned(CPUTensorView::BufferAlignment)));
+                        ElementType p __attribute__((aligned(NGRAPH_CPU_ALIGNMENT))) = v;
+                        ElementType q __attribute__((aligned(NGRAPH_CPU_ALIGNMENT))) = *R;
+                        ElementType r __attribute__((aligned(NGRAPH_CPU_ALIGNMENT)));
 
                         inputs.emplace_back(backend->create_tensor(
                             ngraph::element::from<ElementType>(), Shape{}, &p));
