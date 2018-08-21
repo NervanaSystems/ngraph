@@ -42,7 +42,8 @@ void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
     codegen::CodeWriter writer;
     vector<size_t> gws;
 
-    runtime::intelgpu::gen_func_def(writer, function_name, {"float"}, {input_shape}, "float", output_shape);
+    runtime::intelgpu::gen_func_def(
+        writer, function_name, {"float"}, {input_shape}, "float", output_shape);
     writer.block_begin();
     {
         if (is_bcast)
