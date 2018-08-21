@@ -258,11 +258,11 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_1d_op(codegen::CodeWriter& writ
             writer << "r = " << reduce_op << "(r , in[in_idx]);\n";
         }
         writer.block_end();
-        writer << "r = " << reduce_op << "(r, __shfl_down(r, 16));\n";
-        writer << "r = " << reduce_op << "(r, __shfl_down(r, 8));\n";
-        writer << "r = " << reduce_op << "(r, __shfl_down(r, 4));\n";
-        writer << "r = " << reduce_op << "(r, __shfl_down(r, 2));\n";
-        writer << "r = " << reduce_op << "(r, __shfl_down(r, 1));\n";
+        writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 16, 32));\n";
+        writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 8, 32));\n";
+        writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 4, 32));\n";
+        writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 2, 32));\n";
+        writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 1, 32));\n";
         writer << "if(tid == 0)\n";
         writer.block_begin();
         {

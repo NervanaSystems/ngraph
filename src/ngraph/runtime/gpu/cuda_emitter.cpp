@@ -1346,7 +1346,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
     std::stringstream ss;
     ss << kernel_name << "_s_" << join(input_shape, "_") << "_axis_" << join(reduce_axis, "_");
     auto hash = ss.str();
-
+    NGRAPH_INFO << hash;
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash);
     if (primitive_index != std::numeric_limits<size_t>::max())
@@ -1382,13 +1382,14 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
     }
     NVShape output_strides = row_major_strides(output_shape);
 
-    uint32_t nthreads = static_cast<uint32_t>(shape_size(output_shape));
-    //TODO: currently we set it to 64, will add tuning method later
-    uint32_t block_size_x = 32;
-    uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
-
-    if (nthreads < 32 || out_rank != 0)
+    NGRAPH_INFO << shape_size(input_shape);
+    NGRAPH_INFO << out_rank;
+    if (shape_size(input_shape) < 32 || out_rank != 0)
     {
+        uint32_t nthreads = static_cast<uint32_t>(shape_size(output_shape));
+        //TODO: currently we set it to 64, will add tuning method later
+        uint32_t block_size_x = 64;
+        uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
         auto args = m_primitive_emitter->add_kernel_args();
         args.add_placeholder(dtypes[0], "in")
             .add_placeholder(dtypes[1], "out")
@@ -1439,6 +1440,9 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
     }
     else
     {
+        uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
+        //TODO: currently we set it to 64, will add tuning method later
+        uint32_t block_size_x = 32;
         auto args = m_primitive_emitter->add_kernel_args();
         args.add_placeholder(dtypes[0], "in")
             .add_placeholder(dtypes[1], "out")
