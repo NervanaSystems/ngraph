@@ -39,6 +39,8 @@ namespace ngraph
 
             virtual const Tensor& get_tensor() const override;
             virtual Tensor& get_tensor() override;
+            void set_tensor_view_type(const element::Type& element_type,
+                                      const Shape& shape) override;
 
         protected:
             Tensor m_tensor;

@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2018 Intel Corporation
+* Copyright 2017-2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,22 +16,20 @@
 
 #pragma once
 
-#include "ngraph/pass/pass.hpp"
+#include "ngraph/op/util/op_annotations.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace cpu
+        namespace gpu
         {
-            namespace pass
+            /// \brief Annotations added to graph ops by GPU backend passes
+            class GPUOpAnnotations : public ngraph::op::util::OpAnnotations
             {
-                class CPUShuffleFolding : public ngraph::pass::FunctionPass
-                {
-                public:
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-                };
-            }
+            public:
+                GPUOpAnnotations() {}
+            };
         }
     }
 }

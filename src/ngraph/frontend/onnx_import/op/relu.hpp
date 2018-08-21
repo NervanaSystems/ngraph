@@ -16,8 +16,9 @@
 
 #pragma once
 
+#include "ngraph/frontend/onnx_import/node.hpp"
 #include "ngraph/node_vector.hpp"
-#include "ngraph/op/constant.hpp"
+#include "ngraph/op/relu.hpp"
 
 namespace ngraph
 {
@@ -25,7 +26,11 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector constant(const Node& node);
+            inline NodeVector relu(const Node& node)
+            {
+                NodeVector ng_inputs{node.get_ng_inputs()};
+                return {std::make_shared<ngraph::op::Relu>(ng_inputs.at(0))};
+            }
 
         } // namespace op
 
