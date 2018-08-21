@@ -26,6 +26,7 @@ set(SRC
     cpu_tracing.cpp
     builder/add.cpp
     builder/avg_pool.cpp
+    builder/argmin.cpp
     builder/batch_norm.cpp
     builder/broadcast.cpp
     builder/bounded_relu.cpp
@@ -132,8 +133,9 @@ endif()
 if (NGRAPH_CPU_ENABLE)
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
-    add_library(cpu_backend SHARED ${SRC})
-    set_target_properties(cpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
+    add_library(cpu_backend STATIC ${SRC})
+    set_target_properties(cpu_backend PROPERTIES VERSION ${NGRAPH_VERSION})
+    target_compile_options(cpu_backend PRIVATE -fPIC)
     if (NGRAPH_DEX_ONLY)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
     endif()
@@ -147,12 +149,9 @@ if (NGRAPH_CPU_ENABLE)
     endif()
 
     add_dependencies(cpu_backend ext_mkldnn ext_eigen)
-    target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libeigen libjson libtbb)
+    target_link_libraries(cpu_backend PUBLIC ngraph_core libmkldnn libeigen libjson libtbb)
     if (NOT NGRAPH_DEX_ONLY)
         target_link_libraries(cpu_backend PUBLIC codegen)
     endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
-    set_target_properties(cpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-
-    install(TARGETS cpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()
