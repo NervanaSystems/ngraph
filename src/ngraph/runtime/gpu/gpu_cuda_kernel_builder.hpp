@@ -68,10 +68,10 @@ namespace ngraph
                                           size_t reduce_rank);
 
                 static void get_reduce_1d_op(codegen::CodeWriter& writer,
-                                                    const std::string& name,
-                                                    runtime::gpu::GPUKernelArgs& args,
-                                                    const std::vector<std::string>& data_types,
-                                                    const std::string& reduce_op);
+                                             const std::string& name,
+                                             runtime::gpu::GPUKernelArgs& args,
+                                             const std::vector<std::string>& data_types,
+                                             const std::string& reduce_op);
 
                 static void get_slice_op(codegen::CodeWriter& writer,
                                          const std::string& name,

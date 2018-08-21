@@ -216,7 +216,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_op(codegen::CodeWriter& writer,
             }
             {
                 writer << "uint32_t reduce_idx = 0;\n";
-            for (int64_t j = 0; j < static_cast<int64_t>(reduce_rank); j++)
+                for (int64_t j = 0; j < static_cast<int64_t>(reduce_rank); j++)
                 {
                     writer << "reduce_idx += idx" << j << " * reduce_strides" << j << ";\n";
                 }
@@ -235,10 +235,10 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_op(codegen::CodeWriter& writer,
 }
 
 void runtime::gpu::CudaKernelBuilder::get_reduce_1d_op(codegen::CodeWriter& writer,
-                                                    const std::string& name,
-                                                    runtime::gpu::GPUKernelArgs& args,
-                                                    const std::vector<std::string>& data_types,
-                                                    const std::string& reduce_op)
+                                                       const std::string& name,
+                                                       runtime::gpu::GPUKernelArgs& args,
+                                                       const std::vector<std::string>& data_types,
+                                                       const std::string& reduce_op)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -254,7 +254,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_1d_op(codegen::CodeWriter& writ
         writer << "in_idx += 32;\n";
         writer << "for(; in_idx < nthreads; in_idx += 32)\n";
         writer.block_begin();
-        {   
+        {
             writer << "r = " << reduce_op << "(r , in[in_idx]);\n";
         }
         writer.block_end();

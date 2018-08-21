@@ -856,9 +856,9 @@ namespace ngraph
                         {
                             ngraph::AxisVector axes_vec;
                             auto axes_set = sum->get_reduction_axes();
-                            for(auto a:axes_set)
+                            for (auto a : axes_set)
                             {
-                               axes_vec.push_back(a);
+                                axes_vec.push_back(a);
                             }
                             std::vector<std::string> dtypes;
                             dtypes.push_back(args[0].get_type());
@@ -866,9 +866,7 @@ namespace ngraph
                             auto& cuda_emitter =
                                 external_function->get_primitive_emitter()->get_cuda_emitter();
                             auto sum_index = cuda_emitter->build_reduce<ngraph::op::Add>(
-                                dtypes,
-                                args[0].get_shape(),
-                                axes_vec);
+                                dtypes, args[0].get_shape(), axes_vec);
 
                             writer << "gpu::invoke_primitive(ctx, " << sum_index << ", ";
                             writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
