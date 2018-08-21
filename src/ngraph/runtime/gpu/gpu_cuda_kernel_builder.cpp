@@ -207,22 +207,43 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_op(codegen::CodeWriter& writer,
                        << i << ";\n";
                 writer << "out_idx %= out_strides" << i << ";\n";
             }
-
-            for (int64_t j = 0; j < static_cast<int64_t>(reduce_rank); j++)
+            int64_t rr = static_cast<int64_t>(reduce_rank);
+            for (int64_t j = 0; j < rr - 1; j++)
             {
                 writer << "for(int idx" << j << " = 0; idx" << j << "< reduce_shape" << j << "; idx"
                        << j << "++)\n";
                 writer.block_begin();
             }
             {
-                writer << "uint32_t reduce_idx = 0;\n";
-                for (int64_t j = 0; j < static_cast<int64_t>(reduce_rank); j++)
+                writer << "uint32_t reduce_idx = in_idx;\n";
+                for (int64_t j = 0; j < rr - 1; j++)
                 {
                     writer << "reduce_idx += idx" << j << " * reduce_strides" << j << ";\n";
                 }
-                writer << "r = " << reduce_op << "(r , in[reduce_idx + in_idx]);\n";
+                writer << "int idx" << rr - 1 << " = 0;\n";
+                writer << "uint32_t step = reduce_strides" << rr - 1 << ";\n";
+                writer << "for(; idx" << rr - 1 << "< (reduce_shape" << rr - 1 << " >> 3); idx"
+                       << rr - 1 << "++)\n";
+                writer.block_begin();
+                {
+                    for (int k = 0; k < 8; k++)
+                    {
+                        writer << "r = " << reduce_op << "(r , in[reduce_idx]);\n";
+                        writer << "reduce_idx += step;\n";
+                    }
+                }
+                writer.block_end();
+                writer << "idx" << rr - 1 << " <<= 3;\n";
+                writer << "for(; idx" << rr - 1 << "< reduce_shape" << rr - 1 << "; idx" << rr - 1
+                       << "++)\n";
+                writer.block_begin();
+                {
+                    writer << "r = " << reduce_op << "(r , in[reduce_idx]);\n";
+                    writer << "reduce_idx += step;\n";
+                }
+                writer.block_end();
             }
-            for (int64_t j = 0; j < static_cast<int64_t>(reduce_rank); j++)
+            for (int64_t j = 0; j < rr - 1; j++)
             {
                 writer.block_end();
             }
