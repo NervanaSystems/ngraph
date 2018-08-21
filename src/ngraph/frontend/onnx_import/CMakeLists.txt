@@ -41,6 +41,7 @@ add_library(onnx_import STATIC
         node.cpp
         op/add.hpp
         op/batch_norm.hpp
+        op/constant.cpp
         op/constant.hpp
         op/relu.hpp
         op/split.hpp
