@@ -41,12 +41,13 @@ add_library(onnx_import STATIC
         node.cpp
         op/add.hpp
         op/batch_norm.hpp
+        op/constant.cpp
         op/constant.hpp
         op/relu.hpp
         op/split.hpp
         ops_bridge.cpp
         tensor.hpp
-        value_info.hpp op/constant.cpp)
+        value_info.hpp)
 
 add_dependencies(onnx_import onnx_import_interface)
 
