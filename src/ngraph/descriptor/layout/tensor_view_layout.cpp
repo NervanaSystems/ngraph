@@ -43,3 +43,8 @@ void descriptor::layout::TensorViewLayout::set_tensor_view_type(const element::T
     m_element_type = element_type;
     m_shape = shape;
 }
+
+size_t descriptor::layout::TensorViewLayout::get_allocated_size()
+{
+    return get_size() * get_element_type().size();
+}

@@ -17,7 +17,6 @@
 #include "cpu_layout_descriptor.hpp"
 #include <algorithm>
 #include <numeric>
-
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
 namespace ngraph
@@ -46,6 +45,9 @@ namespace ngraph
                     s *= shape[shape.size() - (i + 1)];
                 }
                 std::reverse(m_strides.begin(), m_strides.end());
+                auto tvt = tv.get_tensor_view_type();
+                m_mkldnn_memory_size =
+                    shape_size(tvt->get_shape()) * tvt->get_element_type().size();
             }
 
             size_t LayoutDescriptor::get_index_offset(const std::vector<size_t>& indices)
@@ -97,6 +99,27 @@ namespace ngraph
                 }
 
                 return true;
+            }
+
+            void LayoutDescriptor::set_mkldnn_md(const mkldnn::memory::desc md)
+            {
+                m_mkldnn_md = md;
+
+                // Since MKLDNN could internally pad the tensor to make blocked layouts
+                // we need to compute MKLDNN memory requirement based on its memory desc
+                // http://intel.github.io/mkl-dnn/understanding_memory_formats.html
+                try
+                {
+                    auto mem_prim_desc =
+                        mkldnn::memory::primitive_desc(md, mkldnn_utils::global_cpu_engine);
+                    m_mkldnn_memory_size = mem_prim_desc.get_size();
+                }
+                catch (const mkldnn::error& e)
+                {
+                    throw ngraph_error(
+                        "error in computing mkldnn memory size from memory primitive desc: " +
+                        e.message);
+                }
             }
         }
     }
