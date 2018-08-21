@@ -47,8 +47,10 @@ add_library(onnx_import STATIC
         node.hpp
         op/add.hpp
         op/batch_norm.hpp
+        op/constant.cpp
         op/constant.hpp
         op/conv.cpp
+        op/relu.hpp
         op/split.hpp
         ops_bridge.cpp
         tensor.hpp

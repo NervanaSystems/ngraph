@@ -38,6 +38,7 @@ set(SRC
     gpu_tensor_view.cpp
     gpu_util.cpp
     type_info.cpp
+    pass/gpu_layout.cpp
     pass/tensor_memory_reservation.cpp
     gpu_kernel_args.cpp
     )

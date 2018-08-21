@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,19 +16,22 @@
 
 #pragma once
 
-#include "ngraph/node_vector.hpp"
-#include "ngraph/op/constant.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    namespace onnx_import
+    namespace runtime
     {
-        namespace op
+        namespace cpu
         {
-            NodeVector constant(const Node& node);
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            namespace pass
+            {
+                class CPUCollapseDims : public ngraph::pass::FunctionPass
+                {
+                public:
+                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                };
+            }
+        }
+    }
+}
