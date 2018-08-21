@@ -59,7 +59,6 @@ namespace ngraph
                 return op::split(node, node.get_ng_inputs().at(0));
             }
             NodeVector relu(const Node& node) { return op::relu(node); }
-
             class ops_bridge
             {
             public:
