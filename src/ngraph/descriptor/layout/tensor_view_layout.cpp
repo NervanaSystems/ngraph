@@ -24,8 +24,6 @@ using namespace ngraph;
 descriptor::layout::TensorViewLayout::TensorViewLayout(const descriptor::TensorView& tensor_view)
     : m_tensor_view_type(tensor_view.get_tensor_view_type())
 {
-    m_size =
-        shape_size(m_tensor_view_type->get_shape()) * m_tensor_view_type->get_element_type().size();
 }
 
 const element::Type& descriptor::layout::TensorViewLayout::get_element_type() const
@@ -38,7 +36,7 @@ const Shape& descriptor::layout::TensorViewLayout::get_shape() const
     return m_tensor_view_type->get_shape();
 }
 
-size_t descriptor::layout::TensorViewLayout::size()
+size_t descriptor::layout::TensorViewLayout::get_allocated_size()
 {
-    return m_size;
+    return get_size() * m_tensor_view_type->get_element_type().size();
 }

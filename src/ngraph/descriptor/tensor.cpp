@@ -30,8 +30,6 @@ descriptor::Tensor::Tensor(const element::Type& element_type,
     , m_name{name}
     , m_next_view_id{0}
 {
-    auto tvt = primary_tensor_view->get_tensor_view_type();
-    m_size = shape_size(tvt->get_shape()) * m_element_type.size();
 }
 
 string descriptor::Tensor::make_tensor_name(const Node* node, size_t value_index)
@@ -58,11 +56,12 @@ size_t descriptor::Tensor::size() const
 {
     if (auto tvl = m_primary_tensor_view->get_tensor_view_layout())
     {
-        return tvl->size();
+        return tvl->get_allocated_size();
     }
     else
     {
-        return m_size;
+        auto tvt = primary_tensor_view->get_tensor_view_type();
+        return shape_size(tvt->get_shape()) * m_element_type.size();
     }
 }
 
