@@ -20,6 +20,7 @@
 #include <forward_list>
 #include <iomanip>
 #include <map>
+#include <numeric>
 #include <unordered_set>
 
 #include "ngraph/function.hpp"
