@@ -16,19 +16,20 @@
 
 #pragma once
 
-#include "ngraph/node_vector.hpp"
-#include "ngraph/op/constant.hpp"
+#include "ngraph/op/util/op_annotations.hpp"
 
 namespace ngraph
 {
-    namespace onnx_import
+    namespace runtime
     {
-        namespace op
+        namespace gpu
         {
-            NodeVector constant(const Node& node);
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            /// \brief Annotations added to graph ops by GPU backend passes
+            class GPUOpAnnotations : public ngraph::op::util::OpAnnotations
+            {
+            public:
+                GPUOpAnnotations() {}
+            };
+        }
+    }
+}

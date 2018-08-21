@@ -112,8 +112,9 @@ namespace ngraph
 
             } // namespace detail
 
-            inline NodeVector split(const Node& node, const std::shared_ptr<ngraph::Node>& input)
+            inline NodeVector split(const Node& node)
             {
+                std::shared_ptr<ngraph::Node> input = node.get_ng_inputs().at(0);
                 std::size_t count_outputs{node.get_output_names().size()};
                 int64_t axis{node.get_attribute_value<int64_t>("axis", 0)};
                 std::size_t axis_to_split{static_cast<std::size_t>(axis)};
