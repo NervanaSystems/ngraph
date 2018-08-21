@@ -43,22 +43,22 @@ namespace ngraph
 
             } // namespace error
 
-            NodeVector add(const Node& node) { return op::add(node); }
-            NodeVector batch_norm(const Node& node)
-            {
-                return op::batch_norm(node, node.get_ng_inputs());
-            }
+//            NodeVector add(const Node& node) { return op::add(node); }
+//            NodeVector batch_norm(const Node& node)
+//            {
+//                return op::batch_norm(node, node.get_ng_inputs());
+//            }
 
-            NodeVector constant(const Node& node)
-            {
-                return {op::constant(node.get_attribute_value<Tensor>("value"))};
-            }
+//            NodeVector constant(const Node& node)
+//            {
+//                return {op::constant(node.get_attribute_value<Tensor>("value"))};
+//            }
 
-            NodeVector split(const Node& node)
-            {
-                return op::split(node, node.get_ng_inputs().at(0));
-            }
-            NodeVector relu(const Node& node) { return op::relu(node); }
+//            NodeVector split(const Node& node)
+//            {
+//                return op::split(node, node.get_ng_inputs().at(0));
+//            }
+//            NodeVector relu(const Node& node) { return op::relu(node); }
             class ops_bridge
             {
             public:
@@ -83,12 +83,12 @@ namespace ngraph
 
                 ops_bridge()
                 {
-                    m_map.emplace("Add", std::bind(add, std::placeholders::_1));
+                    m_map.emplace("Add", std::bind(op::add, std::placeholders::_1));
                     m_map.emplace("BatchNormalization",
-                                  std::bind(batch_norm, std::placeholders::_1));
-                    m_map.emplace("Constant", std::bind(constant, std::placeholders::_1));
-                    m_map.emplace("Relu", std::bind(relu, std::placeholders::_1));
-                    m_map.emplace("Split", std::bind(split, std::placeholders::_1));
+                                  std::bind(op::batch_norm, std::placeholders::_1));
+                    m_map.emplace("Constant", std::bind(op::constant, std::placeholders::_1));
+                    m_map.emplace("Relu", std::bind(op::relu, std::placeholders::_1));
+                    m_map.emplace("Split", std::bind(op::split, std::placeholders::_1));
                 }
 
                 NodeVector operator()(const Node& node) const
