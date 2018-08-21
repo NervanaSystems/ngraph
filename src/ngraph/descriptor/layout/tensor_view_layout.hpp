@@ -62,8 +62,11 @@ namespace ngraph
                 /// @brief Return true if this and other have the same element interpretation
                 virtual bool operator==(const TensorViewLayout& other) const = 0;
                 bool operator!=(const TensorViewLayout& other) const { return !(*this == other); }
+                void set_tensor_view_type(const element::Type& element_type, const Shape& shape);
+
             protected:
-                std::shared_ptr<const TensorViewType> m_tensor_view_type;
+                element::Type m_element_type;
+                Shape m_shape;
             };
         }
     }

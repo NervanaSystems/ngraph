@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include "ngraph/descriptor/tensor_view.hpp"
+#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/type/type.hpp"
 
 using namespace ngraph;
@@ -23,4 +24,24 @@ using namespace std;
 shared_ptr<const ngraph::TensorViewType> descriptor::TensorView::get_value_type() const
 {
     return m_tensor_view_type;
+}
+
+const element::Type& descriptor::TensorView::get_element_type() const
+{
+    return m_tensor_view_type->get_element_type();
+}
+
+const Shape& descriptor::TensorView::get_shape() const
+{
+    return m_tensor_view_type->get_shape();
+}
+
+void descriptor::TensorView::set_tensor_view_type(const element::Type& element_type,
+                                                  const Shape& shape)
+{
+    m_tensor_view_type = make_shared<ngraph::TensorViewType>(element_type, shape);
+    if (nullptr != m_tensor_view_layout)
+    {
+        m_tensor_view_layout->set_tensor_view_type(element_type, shape);
+    }
 }

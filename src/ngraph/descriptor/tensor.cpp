@@ -60,9 +60,14 @@ size_t descriptor::Tensor::size() const
     }
     else
     {
-        auto tvt = primary_tensor_view->get_tensor_view_type();
+        auto tvt = m_primary_tensor_view->get_tensor_view_type();
         return shape_size(tvt->get_shape()) * m_element_type.size();
     }
+}
+
+void descriptor::Tensor::set_element_type(const element::Type& element_type)
+{
+    m_element_type = element_type;
 }
 
 ostream& operator<<(ostream& out, const descriptor::Tensor& tensor)
