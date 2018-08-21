@@ -26,21 +26,27 @@
 
 using namespace ngraph;
 
+using Inputs = std::vector<std::vector<float>>;
+using Outputs = std::vector<std::vector<float>>;
+using Model = std::vector<std::shared_ptr<Function>>;
+using Backend = std::shared_ptr<runtime::Backend>;
+using TensorView = std::shared_ptr<runtime::TensorView>;
+
 TEST(onnx, model_add_abc)
 {
-    auto model{ngraph::onnx_import::load_onnx_model(
-        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc.onnx"))};
-    auto backend{ngraph::runtime::Backend::create("INTERPRETER")};
+    Model model{onnx_import::load_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc.onnx"))};
+    Backend backend{runtime::Backend::create("INTERPRETER")};
 
-    ngraph::Shape shape{1};
-    auto a{backend->create_tensor(ngraph::element::f32, shape)};
+    Shape shape{1};
+    TensorView a{backend->create_tensor(element::f32, shape)};
     copy_data(a, std::vector<float>{1});
-    auto b{backend->create_tensor(ngraph::element::f32, shape)};
+    TensorView b{backend->create_tensor(element::f32, shape)};
     copy_data(b, std::vector<float>{2});
-    auto c{backend->create_tensor(ngraph::element::f32, shape)};
+    TensorView c{backend->create_tensor(element::f32, shape)};
     copy_data(c, std::vector<float>{3});
 
-    auto r{backend->create_tensor(ngraph::element::f32, shape)};
+    TensorView r{backend->create_tensor(element::f32, shape)};
 
     backend->call(model.front(), {r}, {a, b, c});
     EXPECT_TRUE(test::all_close_f((std::vector<float>{6}), read_vector<float>(r)));
@@ -48,16 +54,16 @@ TEST(onnx, model_add_abc)
 
 TEST(onnx, model_add_abc_initializers)
 {
-    auto model{ngraph::onnx_import::load_onnx_model(
-        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc_initializers.onnx"))};
-    auto backend{ngraph::runtime::Backend::create("INTERPRETER")};
+    Model model{onnx_import::load_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc_initializers.onnx"))};
+    Backend backend{runtime::Backend::create("INTERPRETER")};
 
-    ngraph::Shape shape{2, 2};
+    Shape shape{2, 2};
 
-    auto c{backend->create_tensor(ngraph::element::f32, shape)};
+    TensorView c{backend->create_tensor(element::f32, shape)};
     copy_data(c, std::vector<float>{1, 2, 3, 4});
 
-    auto r{backend->create_tensor(ngraph::element::f32, shape)};
+    TensorView r{backend->create_tensor(element::f32, shape)};
 
     backend->call(model.front(), {r}, {c});
     EXPECT_TRUE(test::all_close_f((std::vector<float>{3, 6, 9, 12}), read_vector<float>(r)));
@@ -65,84 +71,81 @@ TEST(onnx, model_add_abc_initializers)
 
 TEST(onnx, model_split_equal_parts_default)
 {
-    auto model{ngraph::onnx_import::load_onnx_model(
-        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/split_equal_parts_default.onnx"))};
+    Model model{onnx_import::load_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/split_equal_parts_default.onnx"))};
 
-    auto args = std::vector<std::vector<float>>{{1, 2, 3, 4, 5, 6}};
-    auto expected_output = std::vector<std::vector<float>>{{1, 2}, {3, 4}, {5, 6}};
+    Inputs inputs{{1, 2, 3, 4, 5, 6}};
+    Outputs expected_outputs{{1, 2}, {3, 4}, {5, 6}};
 
-    for (std::size_t i = 0; i < expected_output.size(); ++i)
+    for (std::size_t i = 0; i < expected_outputs.size(); ++i)
     {
-        auto result_vectors = execute(model[i], args, "INTERPRETER");
-        EXPECT_EQ(result_vectors.size(), 1);
-        EXPECT_TRUE(test::all_close_f(expected_output[i], result_vectors.front()));
+        Outputs outputs{execute(model[i], inputs, "INTERPRETER")};
+        EXPECT_EQ(outputs.size(), 1);
+        EXPECT_TRUE(test::all_close_f(expected_outputs[i], outputs.front()));
     }
 }
 
 TEST(onnx, model_split_equal_parts_2d)
 {
     // Split into 2 equal parts along axis=1
-    auto model{ngraph::onnx_import::load_onnx_model(
-        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/split_equal_parts_2d.onnx"))};
+    Model model{onnx_import::load_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/split_equal_parts_2d.onnx"))};
 
-    auto args = std::vector<std::vector<float>>{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}};
-    // each output we get as a flattened vector
-    auto expected_output =
-        std::vector<std::vector<float>>{{0, 1, 2, 6, 7, 8}, {3, 4, 5, 9, 10, 11}};
+    Inputs inputs{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}};
+    Outputs expected_outputs{{0, 1, 2, 6, 7, 8}, {3, 4, 5, 9, 10, 11}};
 
-    for (std::size_t i = 0; i < expected_output.size(); ++i)
+    for (std::size_t i = 0; i < expected_outputs.size(); ++i)
     {
-        auto result_vectors = execute(model[i], args, "INTERPRETER");
-        EXPECT_EQ(result_vectors.size(), 1);
-        EXPECT_TRUE(test::all_close_f(expected_output[i], result_vectors[0]));
+        Outputs outputs{execute(model[i], inputs, "INTERPRETER")};
+        EXPECT_EQ(outputs.size(), 1);
+        EXPECT_TRUE(test::all_close_f(expected_outputs[i], outputs.front()));
     }
 }
 
 TEST(onnx, model_split_variable_parts_2d)
 {
     // Split into variable parts {2, 4} along axis=1
-    auto model{ngraph::onnx_import::load_onnx_model(
-        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/split_variable_parts_2d.onnx"))};
+    Model model{onnx_import::load_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/split_variable_parts_2d.onnx"))};
 
-    auto args = std::vector<std::vector<float>>{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}};
-    // each output we get as a flattened vector
-    auto expected_output =
-        std::vector<std::vector<float>>{{0, 1, 6, 7}, {2, 3, 4, 5, 8, 9, 10, 11}};
+    Inputs inputs{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}};
+    Outputs expected_outputs{{0, 1, 6, 7}, {2, 3, 4, 5, 8, 9, 10, 11}};
 
-    for (std::size_t i = 0; i < expected_output.size(); ++i)
+    for (std::size_t i = 0; i < expected_outputs.size(); ++i)
     {
-        auto result_vectors = execute(model[i], args, "INTERPRETER");
-        EXPECT_EQ(result_vectors.size(), 1);
-        EXPECT_TRUE(test::all_close_f(expected_output[i], result_vectors[0]));
+        Outputs outputs{execute(model[i], inputs, "INTERPRETER")};
+        EXPECT_EQ(outputs.size(), 1);
+        EXPECT_TRUE(test::all_close_f(expected_outputs[i], outputs.front()));
     }
 }
 
 TEST(onnx, model_batchnorm_default)
 {
     // Batch Normalization with default parameters
-    auto function{ngraph::onnx_import::import_onnx_function(
-        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/batchnorm_default.onnx"))};
+    Model model{onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/batchnorm_default.onnx"))};
 
-    std::vector<std::vector<float>> inputs;
+    Inputs inputs;
 
     // input data shape (1, 2, 1, 3)
     inputs.emplace_back(
-        ngraph::test::NDArray<float, 4>({{{{-1., 0., 1.}}, {{2., 3., 4.}}}}).get_vector());
+        test::NDArray<float, 4>({{{{-1.f, 0.f, 1.f}}, {{2.f, 3.f, 4.f}}}}).get_vector());
 
     // scale (3)
-    inputs.emplace_back(std::vector<float>{1., 1.5});
+    inputs.emplace_back(std::vector<float>{1.f, 1.5f});
     // bias (3)
-    inputs.emplace_back(std::vector<float>{0., 1.});
+    inputs.emplace_back(std::vector<float>{0.f, 1.f});
     // mean (3)
-    inputs.emplace_back(std::vector<float>{0., 3});
+    inputs.emplace_back(std::vector<float>{0.f, 3.f});
     // var (3)
-    inputs.emplace_back(std::vector<float>{1., 1.5});
+    inputs.emplace_back(std::vector<float>{1.f, 1.5f});
 
     // shape (1, 2, 1, 3)
-    auto expected_output = ngraph::test::NDArray<float, 4>({{{{-0.999995f, 0.f, 0.999995f}},
-                                                             {{-0.22474074f, 1.f, 2.2247407f}}}})
-                               .get_vector();
+    Outputs expected_outputs{test::NDArray<float, 4>{
+	{{{{-0.999995f, 0.f, 0.999995f}},
+	  {{-0.22474074f, 1.f, 2.2247407f}}}}
+      }.get_vector()};
 
-    auto result_vectors = execute(function, inputs, "INTERPRETER");
-    EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
+    Outputs outputs{execute(model.front(), inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
