@@ -45,8 +45,8 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
-#include "ngraph/runtime/gpu/op/rnn.hpp"
 #include "ngraph/runtime/gpu/op/lstm.hpp"
+#include "ngraph/runtime/gpu/op/rnn.hpp"
 
 using namespace ngraph;
 void ngraph::runtime::gpu::pass::LSTMFusion::construct_sigmoid()
@@ -436,7 +436,8 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         auto weights_layer_rank = weights_layer->get_shape().size();
         auto weights_iter_rank = weights_iter->get_shape().size();
         auto bias_rank = bias_layer->get_shape().size();
-        if (src_layer_rank != 2 || src_iter_rank != 2 || weights_layer_rank != 2 || weights_iter_rank != 2)
+        if (src_layer_rank != 2 || src_iter_rank != 2 || weights_layer_rank != 2 ||
+            weights_iter_rank != 2)
         {
             throw ngraph_error(
                 "Pattern matcher error src_layer, weights_layer, src_iter, weights_iter should "
@@ -457,19 +458,19 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         }
 
         auto rnn = std::make_shared<op::gpu::Rnn>(src_layer,
-                                             src_iter,
-                                             weights_layer,
-                                             weights_iter,
-                                             bias_layer,
-                                             bias_iter,
-                                             state_iter,
-                                             num_of_lstm_matched,
-                                             num_gates_in_lstm,
-                                             sequence_len,
-                                             src_layer_feature_size,
-                                             feature_size,
-                                             direction,
-                                             num_fused_rnn_layers);
+                                                  src_iter,
+                                                  weights_layer,
+                                                  weights_iter,
+                                                  bias_layer,
+                                                  bias_iter,
+                                                  state_iter,
+                                                  num_of_lstm_matched,
+                                                  num_gates_in_lstm,
+                                                  sequence_len,
+                                                  src_layer_feature_size,
+                                                  feature_size,
+                                                  direction,
+                                                  num_fused_rnn_layers);
 
         std::vector<std::shared_ptr<op::Slice>> ht_slice_per_timestep(num_of_lstm_matched, nullptr);
         auto rnn_ht_out = std::make_shared<op::GetOutputElement>(rnn, 0);
@@ -587,7 +588,9 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 //     return std::make_shared<op::Concat>(node_labels, 0);
 // }
 
-void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_fusion_fprop() {}
+void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_fusion_fprop()
+{
+}
 // {
 //     auto src_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{30, 100});
 
