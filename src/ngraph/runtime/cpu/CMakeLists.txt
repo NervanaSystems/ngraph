@@ -25,6 +25,7 @@ set(SRC
     cpu_tensor_view.cpp
     cpu_tracing.cpp
     builder/add.cpp
+    builder/allreduce.cpp
     builder/avg_pool.cpp
     builder/argmin.cpp
     builder/argmax.cpp
