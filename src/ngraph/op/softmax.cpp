@@ -24,6 +24,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -78,8 +79,7 @@ void op::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
             shape.push_back(1);
         }
     }
-    AxisVector order(zsum->get_shape().size());
-    iota(order.begin(), order.end(), 0);
+    auto order = ngraph::get_default_order(zsum->get_shape());
     auto zreshape = make_shared<op::Reshape>(zsum, order, shape);
 
     auto adjoint =
