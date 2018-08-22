@@ -181,6 +181,7 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
     return;
 }
 
+//each thread calculate the whole reduction of one output
 void runtime::gpu::CudaKernelBuilder::get_reduce_op(codegen::CodeWriter& writer,
                                                     const std::string& name,
                                                     runtime::gpu::GPUKernelArgs& args,
@@ -203,6 +204,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_op(codegen::CodeWriter& writer,
             writer << "uint32_t in_idx = 0;\n";
             writer << data_types[1] << " r = 0;\n";
 
+            //loop through all reduction axis
             int64_t i = 0;
             for (; i < static_cast<int64_t>(out_rank); i++)
             {
@@ -225,6 +227,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_op(codegen::CodeWriter& writer,
                 }
                 writer << "int idx" << rr - 1 << " = 0;\n";
                 writer << "uint32_t step = reduce_strides" << rr - 1 << ";\n";
+                //unroll last reduction axis
                 writer << "for(; idx" << rr - 1 << "< (reduce_shape" << rr - 1 << " >> 3); idx"
                        << rr - 1 << "++)\n";
                 writer.block_begin();
@@ -258,6 +261,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_op(codegen::CodeWriter& writer,
     return;
 }
 
+//using one 32 thread block to calculate 1D reduction
 void runtime::gpu::CudaKernelBuilder::get_reduce_1d_op(codegen::CodeWriter& writer,
                                                        const std::string& name,
                                                        runtime::gpu::GPUKernelArgs& args,
@@ -277,6 +281,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_1d_op(codegen::CodeWriter& writ
         writer.block_end();
         writer << "r = in[in_idx];\n";
         writer << "in_idx += step;\n";
+        //accumulate reduction to 32 threads
         writer << "while((in_idx << 3) < nthreads)\n";
         writer.block_begin();
         {
@@ -294,6 +299,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_1d_op(codegen::CodeWriter& writ
             writer << "in_idx += step;\n";
         }
         writer.block_end();
+        //accumulate 32 threads
         writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 16, 32));\n";
         writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 8, 32));\n";
         writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 4, 32));\n";
