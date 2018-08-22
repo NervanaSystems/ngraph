@@ -137,7 +137,7 @@ Contents
 .. toctree::
    :maxdepth: 1
    :name: tocmaster
-   :caption: Documentation
+   :caption: Browse the Library 
 
    install.rst
    graph-basics.rst

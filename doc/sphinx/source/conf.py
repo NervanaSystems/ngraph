@@ -90,7 +90,8 @@ exclude_patterns = []
 
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+#pygments_style = 'sphinx'
+# this is defined in the theme.conf
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
@@ -101,39 +102,55 @@ todo_include_todos = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'ngraph_theme'
+
+# html_theme = 'ngt'
+
+html_theme_path = ["../ngth"]
+
+#html_theme = "classic"
+#html_theme_options = {
+#    "rightsidebar": "true",
+#    "sidebarwidth": '41.3%',
+#    "sidebarbgcolor": "#EFEEED",
+#    "sidebartextcolor": "#2D2324",
+#    "sidebarlinkcolor": "#20435C",
+#    "relbarbgcolor": "#84AEAD",
+#    "codebgcolor": "#edf0f2",
+#    "codetextcolor": "#959595",
+#    "headfont": "NeoSansIntel",
+#}
+
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 # html_theme_options = {}
-html_logo = '../ngraph_theme/static/favicon.ico'
+html_logo = '../ngth/assets/favicon.ico'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = '../ngraph_theme/static/favicon.ico'
+html_favicon = '../ngth/assets/favicon.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['../ngraph_theme/static']
+html_static_path = ['../ngth/assets']
 
-# Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = ["../"]
+
+html_css_files = ['../ngth/assets/custom.css',
+                  ('print.css', {'media': 'print'})]
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
 #
-# This is required for the alabaster theme
-# refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
 html_sidebars = {
     '**': [
         'relations.html',  # needs 'show_related': True theme option to display
         'searchbox.html',
+        'globaltoc.html',
     ]
 }
-
 
 # -- Options for HTMLHelp output ------------------------------------------
 

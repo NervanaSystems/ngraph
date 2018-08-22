@@ -1,0 +1,178 @@
+/**
+Intel nGraph Library Custom theme for Sphinx documentation build
+**/
+
+
+
+@import url(http://fonts.googleapis.com/css?family=Open+Sans)
+
+@import font-family {
+  font-family: 'NeoSansIntel';
+  src: local("NeoSansIntel"),
+       url("../../static/fonts/NeoSansIntel") format("ttf");
+}
+
+
+@font-face {
+  font-family: "NeoSansIntel-Regular";
+  font-style: normal;
+  font-weight: 400;
+  src: local("NeoSansIntel Regular"), local("NeoSansIntel-Regular"), url(../../static/fonts/NeoSansIntel-Regular.ttf) format("truetype");
+}
+
+html {
+   font-size: 97%;
+   -webkit-text-size-adjust: 100%;
+   -ms-text-size-adjust: 100%;
+}
+
+
+body, table, th, tr { font: normal 1.011em/1 NeoSansIntel; }
+
+
+p {
+	   font-family: "Open Sans", sans; }
+ 
+
+a {
+  color: #5c8583;
+  text-decoration: none;
+  cursor: pointer;
+}
+a:hover {
+  color: #5c8583;
+  background-color: #dce7e6;
+
+}
+a:visited {
+  color: #5c8583;
+}
+
+.copyright {
+    font-family: monospace;
+    font-size: 95%;
+    color: #959595;
+    margin-top: 7px;
+    margin-right: 20%;
+    margin-left: 33%;
+}
+
+.admonition {
+  border-top: 2px #e1d097 solid;
+  border-bottom: 2px #e1d097 solid;
+}
+
+.admonition-title {
+  font-family: 'Open Sans', sans;
+  font-weight: bold;
+  padding-top: 0.15em;
+}
+
+
+h1 {
+  font-family: "NeoSansIntel", sans;
+  font-weight: bold;
+  font-size: 163%;
+  letter-spacing: -1px;
+  color: #333c3a;
+  margin: 3px;
+  padding-left: 5px;
+  padding-top: 1px;
+}
+
+h2 {
+  font-family: "NeoSansIntel", sans;
+  font-weight: 600;
+  font-size: 141%;
+  color: #333c3a;
+  margin: 2px;
+  padding-left: 5px;
+}
+
+h3 {
+  font-family: "NeoSansIntel-Regular", sans;
+  font-size: 123%;
+  letter-spacing: -1px;
+  color: #333c3a;
+  margin: 3px;
+  margin-top: -5px;
+  padding-left: 5px;
+}
+
+h4 {
+  font-family: "NeoSansIntel-Regular", sans;
+  font-size: 19px;
+  letter-spacing: -1px;
+  margin-left: 3px;
+  padding-left: 5px;
+  color: #333c3a;
+}
+
+h5 {
+  font-family: "NeoSansIntel-Regular", sans;
+  font-size: 17px;
+  letter-spacing: -1px;
+  margin-left: 3px;
+  padding-left: 5px;
+  color: #333c3a;
+}
+
+div.body h1, div.body h2, div.body h3, div.body  h4, div.body h5 {
+  font-family: "NeoSansIntel", sans;
+  color: #333c3a;
+  margin: 3px;
+  padding-top: 1px;
+}
+
+pre, .codeblock, pre.literal-block, .rst .literal-block, .rst pre.literal-block, div[class^='highlight'] {
+  border: 0.05em solid #dfeef1;
+  padding: 0.01em;
+  caption-side: bottom; 
+  overflow-x: auto;
+  font-size: 0.97em;
+  line-height: 1.013em;
+  background: #efeeed;
+  margin: 0.12em;
+}
+
+
+dt {font-family:  monospace;}
+
+
+  .code-block-caption { 
+    color: #5f6161;
+    background-color: #c8d5d4;
+    padding-right: 0.43em;
+    padding-top: 0.29em;
+    padding-left: 0.11em;
+    padding-bottom: 0.23em;
+    text-align: right; 
+}
+
+.caption-text {
+	font-family:  monospace;
+	line-height: 1.79em;
+	color: #999;
+
+}
+
+.function {
+    border-right: dashed 0.19em #a3bfbd;
+    border-bottom: solid 0.23em #a3bfbd;
+    border-top: solid 0.31em #a3bfbd;
+    background: #f4f2f0;
+    margin-top: 0.22em;
+}
+
+dt {
+	  background-color: #f1f9f7;
+    padding: 0.33em;
+}
+
+
+.code {
+	font-family: monospace;
+}
+
+
+
