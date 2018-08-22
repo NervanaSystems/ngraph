@@ -41,6 +41,7 @@ set (SRC
     op/allreduce.cpp
     op/and.cpp
     op/argmin.cpp
+    op/argmax.cpp
     op/asin.cpp
     op/atan.cpp
     op/avg_pool.cpp
@@ -185,28 +186,27 @@ endif()
 
 include_directories("${NGRAPH_INCLUDE_PATH}")
 
-add_subdirectory(codegen)
+add_subdirectory(codegen EXCLUDE_FROM_ALL)
 add_subdirectory(runtime)
 
-add_library(ngraph_core STATIC ${SRC})
-target_compile_definitions(ngraph_core PRIVATE SHARED_LIB_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}")
-set_target_properties(ngraph_core PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
-target_link_libraries(ngraph_core PUBLIC libjson)
-target_compile_definitions(ngraph_core PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
-target_compile_options(ngraph_core PRIVATE -fPIC)
+add_library(ngraph SHARED ${SRC})
+target_compile_definitions(ngraph PRIVATE SHARED_LIB_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}")
+set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
+target_link_libraries(ngraph PUBLIC libjson)
+target_compile_definitions(ngraph PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
-    add_dependencies(ngraph_core onnx_import)
+    add_dependencies(ngraph onnx_import)
 endif()
 
 if (NOT APPLE)
-    set_property(TARGET ngraph_core APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,$ORIGIN")
+    set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,$ORIGIN")
 
     # nGraph links against one or more libraries (ex. LLVM) but we don't want to
     # export these symbols as part of the DSO. This is a GNU ld (and derivatives) specific
     # option so making this portable is still an open issue. As a note for the future,
     # this is not an issue on Windows and LLVM's lld does support --exclude-libs.
-    set_property(TARGET ngraph_core APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--exclude-libs,ALL")
+    set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--exclude-libs,ALL")
 
     # GCC invokes the linker with --as-needed by default which doesn't work for us
     # because generated code needs to find symbols in these DSOs at runtime.
@@ -215,35 +215,19 @@ if (NOT APPLE)
     # _do_ need to be linked with --as-needed with a higher priority for the
     # Intel OpenMP runtime so we don't mix libgomp and libiomp5
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        set_property(TARGET ngraph_core APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--no-as-needed")
+        set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--no-as-needed")
     endif()
 endif()
 
 # Defines macro in C++ to load backend plugin
-target_include_directories(ngraph_core PUBLIC "${NGRAPH_INCLUDE_PATH}")
+target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 if (NOT WIN32)
-    target_link_libraries(ngraph_core PUBLIC dl pthread)
+    target_link_libraries(ngraph PUBLIC dl pthread)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
-    target_sources(ngraph_core PRIVATE $<TARGET_OBJECTS:onnx_import_interface>)
-    target_link_libraries(ngraph_core PRIVATE onnx_import)
-endif()
-
-add_library(ngraph SHARED)
-set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
-if (APPLE)
-    target_link_libraries(ngraph PUBLIC -Wl,-force_load  ngraph_core)
-else()
-    target_link_libraries(ngraph PUBLIC -Wl,--whole-archive ngraph_core -Wl,--no-whole-archive)
-endif()
-
-if (NGRAPH_CPU_ENABLE)
-    if (APPLE)
-        target_link_libraries(ngraph PUBLIC -Wl,-force_load cpu_backend)
-    else()
-        target_link_libraries(ngraph PUBLIC -Wl,--whole-archive cpu_backend -Wl,--no-whole-archive)
-    endif()
+    target_sources(ngraph PRIVATE $<TARGET_OBJECTS:onnx_import_interface>)
+    target_link_libraries(ngraph PRIVATE onnx_import)
 endif()
 
 #-----------------------------------------------------------------------------------------------
