@@ -25,6 +25,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -83,6 +84,7 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
@@ -385,6 +387,12 @@ static shared_ptr<ngraph::Function>
             else if (node_op == "And")
             {
                 node = make_shared<op::And>(args[0], args[1]);
+            }
+            else if (node_op == "ArgMin")
+            {
+                auto axis = node_js.at("axis").get<size_t>();
+                auto target_type = read_element_type(node_js.at("index_element_type"));
+                node = make_shared<op::ArgMin>(args[0], axis, target_type);
             }
             else if (node_op == "Asin")
             {
@@ -900,6 +908,10 @@ static shared_ptr<ngraph::Function>
             {
                 node = make_shared<op::Tanh>(args[0]);
             }
+            else if (node_op == "StopGradient")
+            {
+                node = make_shared<op::StopGradient>(args[0]);
+            }
             else
             {
                 stringstream ss;
@@ -1005,6 +1017,12 @@ static json write(const Node& n, bool binary_constant_data)
     }
     else if (node_op == "Add")
     {
+    }
+    else if (node_op == "ArgMin")
+    {
+        auto tmp = dynamic_cast<const op::ArgMin*>(&n);
+        node["axis"] = tmp->get_reduction_axis();
+        node["index_element_type"] = write_element_type(tmp->get_element_type());
     }
     else if (node_op == "AllReduce")
     {

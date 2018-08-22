@@ -103,7 +103,6 @@ shared_ptr<Node> runtime::cpu::pass::CPULayout::insert_input_conversions(
         {
             auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
             layout->set_mkldnn_md(required_mds[index]);
-
             auto new_node = std::shared_ptr<Node>(
                 new runtime::cpu::op::ConvertLayout(output.get_node(), output.get_index(), layout));
             new_args.push_back(new_node);
@@ -186,9 +185,7 @@ void runtime::cpu::pass::CPULayout::set_native_layouts(
             if (!mkldnn_utils::compare_mkldnn_mds(cpu_tvl->get_mkldnn_md(), native_md))
             {
                 auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
-
                 layout->set_mkldnn_md(native_md);
-
                 auto new_node = std::shared_ptr<Node>(new runtime::cpu::op::ConvertLayout(
                     output.get_node(), output.get_index(), layout));
                 new_args.push_back(new_node);

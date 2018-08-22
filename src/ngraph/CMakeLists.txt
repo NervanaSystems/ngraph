@@ -40,6 +40,7 @@ set (SRC
     op/add.cpp
     op/allreduce.cpp
     op/and.cpp
+    op/argmin.cpp
     op/asin.cpp
     op/atan.cpp
     op/avg_pool.cpp
@@ -109,6 +110,7 @@ set (SRC
     op/util/binary_elementwise_comparison.cpp
     op/util/binary_elementwise_logical.cpp
     op/util/binary_elementwise.cpp
+    op/util/index_reduction.cpp
     op/util/requires_tensor_view_args.cpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise.cpp
@@ -139,6 +141,7 @@ set (SRC
     pattern/matcher.cpp
     runtime/aligned_buffer.cpp
     runtime/backend.cpp
+    runtime/backend_manager.cpp
     runtime/host_tensor_view.cpp
     runtime/tensor_view.cpp
     serializer.cpp
@@ -182,7 +185,7 @@ endif()
 
 include_directories("${NGRAPH_INCLUDE_PATH}")
 
-add_subdirectory(codegen)
+add_subdirectory(codegen EXCLUDE_FROM_ALL)
 add_subdirectory(runtime)
 
 add_library(ngraph SHARED ${SRC})

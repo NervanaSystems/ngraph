@@ -34,7 +34,8 @@ namespace ngraph
             {
                 Logistic,
                 Tanh,
-                Identity
+                Identity,
+                NumTypes
             };
             /// Input nodes are expected to be actual inputs where the corresponding input
             /// FunctionType will be applied to those inputs in the fused operation.

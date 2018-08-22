@@ -22,7 +22,7 @@
 
 #include "ngraph/node_vector.hpp"
 
-#include "onnx.pb.h"
+#include <onnx.pb.h>
 
 #include "attribute.hpp"
 #include "tensor.hpp"
@@ -58,6 +58,7 @@ namespace ngraph
                 : m_node_proto{node_proto}
                 , m_graph{graph}
                 , m_attributes{std::begin(node_proto.attribute()), std::end(node_proto.attribute())}
+                , m_output_names{std::begin(node_proto.output()), std::end(node_proto.output())}
             {
             }
 
@@ -73,6 +74,10 @@ namespace ngraph
 
             const std::string& op_type() const { return m_node_proto.op_type(); }
             const std::string& get_name() const { return m_node_proto.name(); }
+            const std::vector<std::reference_wrapper<const std::string>>& get_output_names() const
+            {
+                return m_output_names;
+            }
             const std::string& output(int index) const { return m_node_proto.output(index); }
             template <typename T>
             T get_attribute_value(const std::string& name, T default_value) const
@@ -106,6 +111,7 @@ namespace ngraph
             const onnx::NodeProto& m_node_proto;
             const Graph* m_graph;
             std::vector<Attribute> m_attributes;
+            std::vector<std::reference_wrapper<const std::string>> m_output_names;
         };
 
         inline std::ostream& operator<<(std::ostream& outs, const Node& node)

@@ -71,14 +71,28 @@ vector<string>
     }
 
     vector<string> index_vars;
+    bool omp_outer = true;
     for (size_t i = 0; i < top.size(); i++)
     {
-        string index_var = writer.generate_temporary_name("_i");
+        // Skip loop for size 1 dimensions
+        if (top[i] == (new_bottom[i] + 1))
+        {
+            string index_var = writer.generate_temporary_name("_i");
+            writer << "{\n";
+            writer.indent++;
+            writer << "size_t " << index_var << " = " << new_bottom[i] << ";\n";
+            index_vars.push_back(index_var);
+        }
+        else
+        {
+            string index_var = writer.generate_temporary_name("_i");
 
-        writer << runtime::cpu::kernel::start_index_loop(index_var, new_bottom[i], top[i], i == 0);
-        writer.indent++;
-
-        index_vars.push_back(index_var);
+            writer << runtime::cpu::kernel::start_index_loop(
+                index_var, new_bottom[i], top[i], omp_outer);
+            writer.indent++;
+            index_vars.push_back(index_var);
+            omp_outer = false;
+        }
     }
 
     return index_vars;

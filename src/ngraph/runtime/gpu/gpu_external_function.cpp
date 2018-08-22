@@ -106,6 +106,7 @@
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
+#include "ngraph/runtime/gpu/pass/gpu_layout.hpp"
 #include "ngraph/runtime/gpu/op/lstm.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_concat_inputs.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_rnn_fusion.hpp"
@@ -658,6 +659,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     m_pass_manager
         .register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
 
+    m_pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
     m_pass_manager.register_pass<ngraph::pass::Liveness>();
 
     m_pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);

@@ -23,7 +23,7 @@
 
 #include "ngraph/op/parameter_vector.hpp"
 
-#include "onnx.pb.h"
+#include <onnx.pb.h>
 #include "value_info.hpp"
 
 namespace ngraph
