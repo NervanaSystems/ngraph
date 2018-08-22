@@ -82,10 +82,10 @@ namespace ngraph
             template <typename T>
             T get_attribute_value(const std::string& name, T default_value) const
             {
-                auto it{std::find_if(
+                auto it = std::find_if(
                     std::begin(m_attributes),
                     std::end(m_attributes),
-                    [&](const Attribute& attribute) { return attribute.get_name() == name; })};
+                    [&](const Attribute& attribute) { return attribute.get_name() == name; });
                 if (it == std::end(m_attributes))
                 {
                     return default_value;
@@ -96,10 +96,10 @@ namespace ngraph
             template <typename T>
             T get_attribute_value(const std::string& name) const
             {
-                auto it{std::find_if(
+                auto it = std::find_if(
                     std::begin(m_attributes),
                     std::end(m_attributes),
-                    [&](const Attribute& attribute) { return attribute.get_name() == name; })};
+                    [&](const Attribute& attribute) { return attribute.get_name() == name; });
                 if (it == std::end(m_attributes))
                 {
                     throw error::node::UnknownAttribute{get_name(), name};

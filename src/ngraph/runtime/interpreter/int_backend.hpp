@@ -25,6 +25,7 @@
 #include "ngraph/runtime/host_tensor_view.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
+#include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
@@ -57,6 +58,7 @@
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
 #include "ngraph/runtime/reference/and.hpp"
+#include "ngraph/runtime/reference/argmax.hpp"
 #include "ngraph/runtime/reference/argmin.hpp"
 #include "ngraph/runtime/reference/asin.hpp"
 #include "ngraph/runtime/reference/atan.hpp"
@@ -229,6 +231,30 @@ private:
                                               args[0]->get_shape(),
                                               out[0]->get_shape(),
                                               argmin->get_reduction_axis());
+            }
+            else
+            {
+                throw ngraph_error("Unexpected type");
+            }
+        }
+        else if (node_op == "ArgMax")
+        {
+            const op::ArgMax* argmax = static_cast<const op::ArgMax*>(&node);
+            if (out[0]->get_element_type() == element::i64)
+            {
+                reference::argmax<T, int64_t>(args[0]->get_data_ptr<T>(),
+                                              out[0]->get_data_ptr<int64_t>(),
+                                              args[0]->get_shape(),
+                                              out[0]->get_shape(),
+                                              argmax->get_reduction_axis());
+            }
+            else if (out[0]->get_element_type() == element::i32)
+            {
+                reference::argmax<T, int32_t>(args[0]->get_data_ptr<T>(),
+                                              out[0]->get_data_ptr<int32_t>(),
+                                              args[0]->get_shape(),
+                                              out[0]->get_shape(),
+                                              argmax->get_reduction_axis());
             }
             else
             {

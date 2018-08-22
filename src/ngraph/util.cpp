@@ -14,11 +14,13 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <algorithm>
 #include <cassert>
 #include <deque>
 #include <forward_list>
 #include <iomanip>
 #include <map>
+#include <numeric>
 #include <unordered_set>
 
 #include "ngraph/function.hpp"
@@ -448,4 +450,15 @@ void ngraph::check_fp_values_isnan(const char* name, const double* array, size_t
             throw std::runtime_error("Discovered NaN in '" + string(name) + "'");
         }
     }
+}
+AxisVector ngraph::get_default_order(const Shape& shape)
+{
+    return get_default_order(shape.size());
+}
+
+AxisVector ngraph::get_default_order(size_t rank)
+{
+    AxisVector default_order(rank);
+    std::iota(begin(default_order), end(default_order), 0);
+    return default_order;
 }
