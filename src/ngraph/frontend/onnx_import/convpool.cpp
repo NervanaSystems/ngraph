@@ -68,8 +68,7 @@ namespace ngraph
                 CoordinateDiff pads;
                 try
                 {
-                    auto pads_int64 = node.get_attribute_value<std::vector<int64_t>>("pads");
-                    pads = CoordinateDiff{std::begin(pads_int64), std::end(pads_int64)};
+                    pads = CoordinateDiff{node.get_attribute_value<std::vector<int64_t>>("pads")};
                 }
                 catch (const error::node::UnknownAttribute&)
                 {
