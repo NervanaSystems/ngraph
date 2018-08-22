@@ -525,16 +525,6 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             {
                 do_equal_propagation(topology, get_input_name(op), get_output_name(op));
             }
-            else if (get_input_shape(op).empty())
-            {
-                do_bcast_sum_operation_scalar(topology,
-                                              get_input_name(op),
-                                              get_input_shape(op),
-                                              get_output_name(op),
-                                              get_output_shape(op),
-                                              get_output_type(op),
-                                              true);
-            }
             else
             {
                 do_bcast_sum_operation(topology,
@@ -557,16 +547,6 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             if (axis.empty())
             {
                 do_equal_propagation(topology, get_input_name(op), get_output_name(op));
-            }
-            else if (get_output_shape(op).empty())
-            {
-                do_bcast_sum_operation_scalar(topology,
-                                              get_input_name(op),
-                                              get_input_shape(op),
-                                              get_output_name(op),
-                                              get_output_shape(op),
-                                              get_output_type(op),
-                                              false);
             }
             else
             {
