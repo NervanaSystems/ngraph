@@ -34,7 +34,7 @@ TEST(onnx, model_add_abc)
 {
     auto function = onnx_import::import_onnx_function(
         file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc.onnx"));
-    
+
     Inputs inputs{{1}, {2}, {3}};
     Outputs expected_outputs{{6}};
 
