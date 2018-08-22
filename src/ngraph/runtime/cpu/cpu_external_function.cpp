@@ -1543,7 +1543,82 @@ shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
 
     if (!m_is_built && m_direct_execution)
     {
-        build();
+        if (std::getenv("NGRAPH_DEX_FALLBACK") == nullptr)
+        {
+            build();
+        }
+        else
+        {
+            auto m_function_clone = clone_function(*m_function);
+
+            std::unordered_set<shared_ptr<Function>> instances_seen;
+            deque<shared_ptr<Function>> stack;
+
+            stack.push_front(m_function_clone);
+            auto count = 0;
+            while (stack.size() > 0 && count <= 1)
+            {
+                shared_ptr<Function> func = stack.front();
+                if (instances_seen.find(func) == instances_seen.end())
+                {
+                    instances_seen.insert(func);
+                    count++;
+                }
+                stack.pop_front();
+                for (shared_ptr<Node> op : func->get_ops())
+                {
+                    for (shared_ptr<Function> fp : op->get_functions())
+                    {
+                        stack.push_front(fp);
+                    }
+                }
+            }
+
+            if (count > 1)
+            {
+                m_direct_execution = false;
+            }
+            else
+            {
+                ngraph::pass::Manager pass_manager;
+
+                pass_manager.register_pass<ngraph::pass::NopElimination>();
+                pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+                pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+                pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
+                pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+                pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+                pass_manager.register_pass<ngraph::pass::CoreFusion>();
+                pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+                pass_manager.run_passes(m_function_clone, false);
+
+                for (shared_ptr<Node> node : m_function_clone->get_ordered_ops())
+                {
+                    if (node->is_parameter() || node->is_constant())
+                    {
+                        continue;
+                    }
+                    auto& n =
+                        *node; // Work around a compiler warning (*node inside typeid may have effects
+                    // with shared pointers, which is fine here but clang doesn't like it.)
+                    auto handler = build_dispatcher.find(type_index(typeid(n)));
+                    if (handler == build_dispatcher.end())
+                    {
+                        m_direct_execution = false;
+                        break;
+                    }
+                }
+            }
+
+            if (m_direct_execution)
+            {
+                build();
+            }
+            else
+            {
+                compile();
+            }
+        }
     }
 
     return make_shared<ngraph::runtime::cpu::CPU_CallFrame>(shared_from_this(),
