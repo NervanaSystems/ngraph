@@ -99,17 +99,17 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
-#include "ngraph/runtime/gpu/op/lstm.hpp"
-#include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/pass/common_function_collection.hpp"
+#include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
-#include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
-#include "ngraph/runtime/gpu/pass/gpu_rnn_fusion.hpp"
+#include "ngraph/runtime/gpu/op/lstm.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_concat_inputs.hpp"
+#include "ngraph/runtime/gpu/pass/gpu_rnn_fusion.hpp"
+#include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -247,8 +247,7 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::And), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::And>},
     {TI(ngraph::op::Or), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Or>},
     {TI(ngraph::op::gpu::Lstm), &runtime::gpu::GPU_Emitter::emit<ngraph::op::gpu::Lstm>},
-    {TI(ngraph::op::Rnn), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Rnn>}
-};
+    {TI(ngraph::op::Rnn), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Rnn>}};
 
 const size_t runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction::s_memory_pool_alignment = 64;
 

@@ -23,7 +23,8 @@ namespace ngraph
 {
     namespace op
     {
-        namespace gpu {
+        namespace gpu
+        {
             class Lstm : public util::RequiresTensorViewArgs
             {
             public:
@@ -81,7 +82,7 @@ namespace ngraph
                 int get_num_fused_layers() const { return m_num_fused_layers; }
                 int get_fused_inputs() const { return m_fused_inputs; }
                 virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
             private:
                 Shape m_output_tensor_shape;

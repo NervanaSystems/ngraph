@@ -91,12 +91,12 @@ cudnnTensorDescriptor_t& runtime::gpu::CUDNNEmitter::get_nd_tensor_descriptor(
     {
         dimensions[i] = static_cast<int>(shape[i]);
     }
-    CUDNN_SAFE_CALL(cudnnSetTensorNdDescriptor(
-                        desc,
-                        data_type,
-                        static_cast<int>(dimensions.size()),
-                        dimensions.data(),
-                        runtime::gpu::cudnn_util::compute_strides(dimensions).data()));
+    CUDNN_SAFE_CALL(
+        cudnnSetTensorNdDescriptor(desc,
+                                   data_type,
+                                   static_cast<int>(dimensions.size()),
+                                   dimensions.data(),
+                                   runtime::gpu::cudnn_util::compute_strides(dimensions).data()));
     return desc;
 }
 
@@ -973,11 +973,11 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Lstm* node)
     int direction = node->get_direction();
     if (direction == 1)
     {
-        cell_dir= CUDNN_UNIDIRECTIONAL;
+        cell_dir = CUDNN_UNIDIRECTIONAL;
     }
     else if (direction == 2)
     {
-        cell_dir= CUDNN_BIDIRECTIONAL;
+        cell_dir = CUDNN_BIDIRECTIONAL;
     }
     else
     {
@@ -990,14 +990,15 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Lstm* node)
     auto& y_desc = m_descriptors.build<cudnnRNNDataDescriptor_t>();
 
     uint32_t input_size = node->get_src_layer_feature_size() * direction;
-    CUDNN_SAFE_CALL(cudnnSetRNNDataDescriptor(x_desc,
-                                              data_type,
-                                              CUDNN_RNN_DATA_LAYOUT_SEQ_MAJOR_UNPACKED, // TO DO: only unpacked
-                                              seq_length,
-                                              batch_size,
-                                              input_size,
-                                              sequence_lengths.data(),
-                                              pad_value));
+    CUDNN_SAFE_CALL(
+        cudnnSetRNNDataDescriptor(x_desc,
+                                  data_type,
+                                  CUDNN_RNN_DATA_LAYOUT_SEQ_MAJOR_UNPACKED, // TO DO: only unpacked
+                                  seq_length,
+                                  batch_size,
+                                  input_size,
+                                  sequence_lengths.data(),
+                                  pad_value));
 
     uint32_t hidden_size = node->get_src_iter_feature_size() * direction;
     CUDNN_SAFE_CALL(cudnnSetRNNDataDescriptor(y_desc,
@@ -1009,7 +1010,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Lstm* node)
                                               sequence_lengths.data(),
                                               pad_value));
 
-    std::cout << "Input vector size: " << input_size << " Hidden/recurrent vector size: " << hidden_size << std::endl;
+    std::cout << "Input vector size: " << input_size
+              << " Hidden/recurrent vector size: " << hidden_size << std::endl;
     // TO DO: with rnn projection layers the third dimension of the hidden_shape should be recProjSize
     cudnnTensorFormat_t format = CUDNN_TENSOR_NCHW;
     uint32_t num_layers = node->get_num_fused_layers() * direction;
@@ -1021,7 +1023,6 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Lstm* node)
     Shape cell_state_shape{num_layers, batch_size, hidden_size};
     auto& cx_desc = get_nd_tensor_descriptor(cell_state_shape, data_type, format);
     auto& cy_desc = get_nd_tensor_descriptor(cell_state_shape, data_type, format);
-
 
     GPUAllocator allocator = m_primitive_emitter->get_memory_allocator();
 
@@ -1073,15 +1074,17 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Lstm* node)
     }
 
     // construct descriptor for RNN  parameters
-    auto& temp_input_desc = get_nd_tensor_descriptor(Shape{batch_size, input_size, 1}, data_type, format);
+    auto& temp_input_desc =
+        get_nd_tensor_descriptor(Shape{batch_size, input_size, 1}, data_type, format);
 
     size_t params_size = 0;
-    CUDNN_SAFE_CALL(cudnnGetRNNParamsSize(*m_ctx->cudnn_handle, rnn_desc, temp_input_desc, &params_size, data_type));
+    CUDNN_SAFE_CALL(cudnnGetRNNParamsSize(
+        *m_ctx->cudnn_handle, rnn_desc, temp_input_desc, &params_size, data_type));
     auto& w_desc = get_nd_filter_descriptor(Shape{params_size, 1, 1}, data_type, format);
     size_t w_idx = allocator.reserve_workspace(params_size);
 
     int num_tensors_per_layer = [&mode] {
-        switch(mode)
+        switch (mode)
         {
         case CUDNN_RNN_RELU:
         case CUDNN_RNN_TANH:
@@ -1090,13 +1093,12 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Lstm* node)
             return 6; // 3 input + 3 recurrent input
         case CUDNN_LSTM:
             return 8; // 4 input + 4 recurrent input
-        default:
-            throw std::runtime_error("Encountered unsupported CUDNN RNN mode");
+        default: throw std::runtime_error("Encountered unsupported CUDNN RNN mode");
         }
     }();
 
-    std::vector<std::pair<int64_t,int64_t>> bias_offsets;
-    std::vector<std::pair<int64_t,int64_t>> weight_offsets;
+    std::vector<std::pair<int64_t, int64_t>> bias_offsets;
+    std::vector<std::pair<int64_t, int64_t>> weight_offsets;
     auto& ifilter_desc = m_descriptors.build<cudnnFilterDescriptor_t>();
     for (int ilayer = 0; ilayer < num_layers; ilayer++)
     {
@@ -1105,17 +1107,16 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Lstm* node)
             for (int kind = 0; kind < 2; kind++)
             {
                 void* offset = nullptr;
-                CUDNN_SAFE_CALL(((kind == 0) ?
-                                 cudnnGetRNNLinLayerMatrixParams :
-                                 cudnnGetRNNLinLayerBiasParams)(*m_ctx->cudnn_handle,
-                                                                rnn_desc,
-                                                                ilayer,
-                                                                temp_input_desc,
-                                                                w_desc,
-                                                                nullptr,
-                                                                itensor,
-                                                                ifilter_desc,
-                                                                &offset));
+                CUDNN_SAFE_CALL(((kind == 0) ? cudnnGetRNNLinLayerMatrixParams
+                                             : cudnnGetRNNLinLayerBiasParams)(*m_ctx->cudnn_handle,
+                                                                              rnn_desc,
+                                                                              ilayer,
+                                                                              temp_input_desc,
+                                                                              w_desc,
+                                                                              nullptr,
+                                                                              itensor,
+                                                                              ifilter_desc,
+                                                                              &offset));
                 cudnnDataType_t return_data_type;
                 cudnnTensorFormat_t return_format;
                 std::vector<int> dimensions = {1, 1, 1};
@@ -1126,27 +1127,27 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Lstm* node)
                                                            &return_format,
                                                            &return_rank,
                                                            dimensions.data()));
-                std::cout << "Layer: " << ilayer << " Tensor: " << itensor << " Kind: " << kind << " Dimensions: " << join(dimensions) << std::endl;
-                (kind == 0 ? weight_offsets : bias_offsets).emplace_back(
-                    reinterpret_cast<int64_t>(offset), shape_size(dimensions) * args[0].get_element_type().size());
+                std::cout << "Layer: " << ilayer << " Tensor: " << itensor << " Kind: " << kind
+                          << " Dimensions: " << join(dimensions) << std::endl;
+                (kind == 0 ? weight_offsets : bias_offsets)
+                    .emplace_back(reinterpret_cast<int64_t>(offset),
+                                  shape_size(dimensions) * args[0].get_element_type().size());
             }
         }
     }
 
     size_t workspace_size = 0;
     std::vector<cudnnTensorDescriptor_t> seq_descriptors(seq_length, temp_input_desc);
-    CUDNN_SAFE_CALL(cudnnGetRNNWorkspaceSize(*m_ctx->cudnn_handle,
-                                             rnn_desc,
-                                             seq_length,
-                                             seq_descriptors.data(),
-                                             &workspace_size));
+    CUDNN_SAFE_CALL(cudnnGetRNNWorkspaceSize(
+        *m_ctx->cudnn_handle, rnn_desc, seq_length, seq_descriptors.data(), &workspace_size));
     size_t workspace_idx = allocator.reserve_workspace(workspace_size);
     std::cout << "Workspace size: " << workspace_size << std::endl;
 
     std::cout << "Parameter space size: " << params_size << std::endl;
     for (int i = 0; i < weight_offsets.size(); i++)
     {
-        std::cout << "(" << weight_offsets.at(i).first << ", " << weight_offsets.at(i).second << ") ";
+        std::cout << "(" << weight_offsets.at(i).first << ", " << weight_offsets.at(i).second
+                  << ") ";
     }
     std::cout << std::endl;
 
@@ -1156,7 +1157,6 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Lstm* node)
     }
     std::cout << std::endl;
 
-
     auto wx_size = args[1].get_element_type().size() * shape_size(args[1].get_shape());
     auto wh_size = args[3].get_element_type().size() * shape_size(args[3].get_shape());
     auto bx_size = args[4].get_element_type().size() * shape_size(args[4].get_shape());
@@ -1164,43 +1164,48 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Lstm* node)
 
     std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](void** inputs,
                                                                          void** outputs) {
-                void* w_ptr =runtime::gpu::invoke_memory_primitive(m_ctx, w_idx);
-                void* workspace_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
+        void* w_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, w_idx);
+        void* workspace_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
 
-                // pack the weight and bias parameter data
-                cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + weight_offsets[0].first, inputs[1], wx_size);
-                cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + weight_offsets[num_tensors_per_layer/2].first, inputs[3], wh_size);
-                cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + bias_offsets[0].first, inputs[4], bx_size);
-                cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + bias_offsets[num_tensors_per_layer/2].first, inputs[4], bh_size);
+        // pack the weight and bias parameter data
+        cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + weight_offsets[0].first, inputs[1], wx_size);
+        cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) +
+                           weight_offsets[num_tensors_per_layer / 2].first,
+                       inputs[3],
+                       wh_size);
+        cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + bias_offsets[0].first, inputs[4], bx_size);
+        cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + bias_offsets[num_tensors_per_layer / 2].first,
+                       inputs[4],
+                       bh_size);
 
-                CUDNN_SAFE_CALL(cudnnRNNForwardInferenceEx(*m_ctx->cudnn_handle,
-                                                           rnn_desc,
-                                                           x_desc,
-                                                           inputs[0],
-                                                           hx_desc,
-                                                           inputs[2],
-                                                           cx_desc,
-                                                           inputs[6],
-                                                           w_desc,
-                                                           w_ptr,
-                                                           y_desc,
-                                                           outputs[2],
-                                                           hy_desc,
-                                                           outputs[0],
-                                                           cy_desc,
-                                                           outputs[1],
-                                                           NULL,
-                                                           NULL,
-                                                           NULL,
-                                                           NULL,
-                                                           NULL,
-                                                           NULL,
-                                                           NULL,
-                                                           NULL,
-                                                           workspace_ptr,
-                                                           workspace_size));
-                debug_sync();
-            }});
+        CUDNN_SAFE_CALL(cudnnRNNForwardInferenceEx(*m_ctx->cudnn_handle,
+                                                   rnn_desc,
+                                                   x_desc,
+                                                   inputs[0],
+                                                   hx_desc,
+                                                   inputs[2],
+                                                   cx_desc,
+                                                   inputs[6],
+                                                   w_desc,
+                                                   w_ptr,
+                                                   y_desc,
+                                                   outputs[2],
+                                                   hy_desc,
+                                                   outputs[0],
+                                                   cy_desc,
+                                                   outputs[1],
+                                                   NULL,
+                                                   NULL,
+                                                   NULL,
+                                                   NULL,
+                                                   NULL,
+                                                   NULL,
+                                                   NULL,
+                                                   NULL,
+                                                   workspace_ptr,
+                                                   workspace_size));
+        debug_sync();
+    }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
     m_primitive_emitter->cache(hash, primitive_index);

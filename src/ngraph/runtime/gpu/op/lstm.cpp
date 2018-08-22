@@ -49,12 +49,12 @@ shared_ptr<Node> op::gpu::Lstm::copy_with_new_args(const NodeVector& new_args) c
 }
 
 op::gpu::Lstm::Lstm(std::shared_ptr<Node> input_xt_1,
-               std::shared_ptr<Node> i2h_weights,
-               std::shared_ptr<Node> hidden_state_ht_1,
-               std::shared_ptr<Node> h2h_weights,
-               std::shared_ptr<Node> i2h_bias,
-               std::shared_ptr<Node> h2h_bias,
-               std::shared_ptr<Node> cell_state_ct_1)
+                    std::shared_ptr<Node> i2h_weights,
+                    std::shared_ptr<Node> hidden_state_ht_1,
+                    std::shared_ptr<Node> h2h_weights,
+                    std::shared_ptr<Node> i2h_bias,
+                    std::shared_ptr<Node> h2h_bias,
+                    std::shared_ptr<Node> cell_state_ct_1)
     : RequiresTensorViewArgs("Lstm",
                              {input_xt_1,
                               i2h_weights,
@@ -120,10 +120,10 @@ op::gpu::Lstm::Lstm(std::shared_ptr<Node> input_xt_1,
 }
 
 op::gpu::Lstm::Lstm(std::shared_ptr<Node> src_layer,
-               std::shared_ptr<Node> src_iter,
-               std::shared_ptr<Node> weights_layer,
-               std::shared_ptr<Node> weights_iter,
-               std::shared_ptr<Node> bias)
+                    std::shared_ptr<Node> src_iter,
+                    std::shared_ptr<Node> weights_layer,
+                    std::shared_ptr<Node> weights_iter,
+                    std::shared_ptr<Node> bias)
     : RequiresTensorViewArgs("Lstm", {src_layer, src_iter, weights_layer, weights_iter, bias})
     , m_output_tensor_shape(src_layer->get_shape())
     , m_output_cell_shape(src_iter->get_shape())

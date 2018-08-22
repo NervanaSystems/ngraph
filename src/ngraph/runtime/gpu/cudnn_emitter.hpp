@@ -153,13 +153,13 @@ namespace ngraph
                                              const cudnnDataType_t data_type,
                                              const cudnnTensorFormat_t tensor_format);
                 cudnnFilterDescriptor_t&
-                get_cudnn_filter_descriptor(const Shape& shape,
-                                            const cudnnDataType_t data_type,
-                                            const cudnnTensorFormat_t tensor_format);
+                    get_cudnn_filter_descriptor(const Shape& shape,
+                                                const cudnnDataType_t data_type,
+                                                const cudnnTensorFormat_t tensor_format);
                 cudnnFilterDescriptor_t&
-                get_nd_filter_descriptor(const Shape& shape,
-                                            const cudnnDataType_t data_type,
-                                            const cudnnTensorFormat_t tensor_format);
+                    get_nd_filter_descriptor(const Shape& shape,
+                                             const cudnnDataType_t data_type,
+                                             const cudnnTensorFormat_t tensor_format);
                 cudnnConvolutionDescriptor_t&
                     get_cudnn_convolution_descriptor(const Shape& padding,
                                                      const Strides& window_movement_strides,
