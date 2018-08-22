@@ -175,5 +175,6 @@ else()
 endif()
 
 add_library(libllvm INTERFACE)
+add_dependencies(libllvm ext_llvm)
 target_include_directories(libllvm SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/llvm/include)
 target_link_libraries(libllvm INTERFACE ${LLVM_LINK_LIBS})
