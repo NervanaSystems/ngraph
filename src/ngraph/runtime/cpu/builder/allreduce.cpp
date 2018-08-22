@@ -35,7 +35,7 @@ namespace ngraph
 
                 auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
                 auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
-                auto count = out[0].get_size();
+                int count = out[0].get_size();
                 auto data_type = MPI_FLOAT;
 
                 if (args[0].get_element_type() == element::f32)
