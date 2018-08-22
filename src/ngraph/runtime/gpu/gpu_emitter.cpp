@@ -93,6 +93,8 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/runtime/gpu/op/lstm.hpp"
+#include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
@@ -1553,6 +1555,58 @@ namespace ngraph
                     writer << ");\n";
                 }
                 writer.block_end();
+            }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::gpu::Lstm)
+            {
+                auto lstm = static_cast<const ngraph::op::gpu::Lstm*>(node);
+
+                auto& cudnn_emitter =
+                    external_function->get_primitive_emitter()->get_cudnn_emitter();
+                size_t lstm_index = cudnn_emitter->build_primitive(lstm);
+
+                writer << "gpu::invoke_primitive(ctx, " << lstm_index << ", ";
+                writer << "std::vector<void*>{" << args.front().get_name();
+                for (size_t i = 1; i < args.size(); i++)
+                {
+                    writer << ", " << args[i].get_name();
+                }
+                writer << "}.data(), ";
+                writer << "std::vector<void*>{" << out.front().get_name();
+                for (size_t i = 1; i < out.size(); i++)
+                {
+                    writer << ", " << out[i].get_name();
+                }
+                writer << "}.data()";
+                writer << ");\n";
+            }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::Rnn)
+            {
+                // auto rnn = static_cast<const ngraph::op::Rnn*>(node);
+
+                // auto& cudnn_emitter =
+                //     external_function->get_primitive_emitter()->get_cudnn_emitter();
+                // size_t rnn_index = cudnn_emitter->build_primitive(rnn);
+
+                // writer << "gpu::invoke_primitive(ctx, " << rnn_index << ", ";
+                // writer << "std::vector<void*>{" << args.front().get_name();
+                // for (size_t i = 1; i < args.size(); i++)
+                // {
+                //     writer << ", " << args[i].get_name();
+                // }
+                // writer << "}.data(), ";
+                // writer << "std::vector<void*>{" << out.front().get_name();
+                // for (size_t i = 1; i < out.size(); i++)
+                // {
+                //     writer << ", " << out[i].get_name();
+                // }
+                // writer << "}.data()";
+                // writer << ");\n";
+
+                exit(0);
             }
         }
     }

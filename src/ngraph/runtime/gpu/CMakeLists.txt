@@ -42,7 +42,7 @@ set(SRC
     gpu_kernel_args.cpp
     pass/gpu_rnn_fusion.cpp
     pass/gpu_concat_inputs.cpp
-    ../cpu/op/lstm.cpp
+    ../gpu/op/lstm.cpp
     ../cpu/op/rnn.cpp
     )
 
