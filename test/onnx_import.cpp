@@ -143,7 +143,7 @@ namespace
     }
 } // namespace
 
-TEST(onnx, conv2d_strides_padding)
+TEST(onnx, mode_conv2d_strides_padding)
 {
     // Convolution with strides=2 and padding=1
     auto function{ngraph::onnx_import::import_onnx_function(
@@ -160,7 +160,7 @@ TEST(onnx, conv2d_strides_padding)
     EXPECT_EQ(expected_output, result.front());
 }
 
-TEST(onnx, conv2d_strides_no_padding)
+TEST(onnx, model_conv2d_strides_no_padding)
 {
     // Convolution with strides=2 and padding=1
     auto function{ngraph::onnx_import::import_onnx_function(
@@ -175,7 +175,7 @@ TEST(onnx, conv2d_strides_no_padding)
     EXPECT_EQ(expected_output, result.front());
 }
 
-TEST(onnx, conv2d_strides_assymetric_padding)
+TEST(onnx, model_conv2d_strides_assymetric_padding)
 {
     // Convolution with strides=2 and padding=1
     auto function{ngraph::onnx_import::import_onnx_function(ngraph::file_util::path_join(
@@ -190,7 +190,7 @@ TEST(onnx, conv2d_strides_assymetric_padding)
     EXPECT_EQ(expected_output, result.front());
 }
 
-TEST(onnx, conv2d_strides_padding_bias)
+TEST(onnx, model_conv2d_strides_padding_bias)
 {
     // Convolution with strides=2 and padding=1 and bias=2
     // auto function{ngraph::onnx_import::import_onnx_function(
