@@ -131,7 +131,7 @@ endif()
 
 if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for graph_partition, convolution, and backwards unit tests
-    target_link_libraries(unit-test interpreter_backend)
+    target_link_libraries(unit-test cpu_backend interpreter_backend)
     target_link_libraries(unit-test libmkldnn)
 endif()
 
@@ -150,7 +150,7 @@ endif()
 
 add_custom_target(unit-test-check
     COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
-    DEPENDS unit-test nbench
+    DEPENDS unit-test
 )
 
 add_custom_target(check
