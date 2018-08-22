@@ -44,7 +44,7 @@ set(SRC
     pass/gpu_rnn_fusion.cpp
     pass/gpu_concat_inputs.cpp
     ../gpu/op/lstm.cpp
-    ../cpu/op/rnn.cpp
+    ../gpu/op/rnn.cpp
     )
 
 if (NGRAPH_GPU_ENABLE)

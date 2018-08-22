@@ -1531,38 +1531,13 @@ namespace ngraph
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::gpu::Lstm)
             {
-                auto lstm = static_cast<const ngraph::op::gpu::Lstm*>(node);
-
-                auto& cudnn_emitter =
-                    external_function->get_primitive_emitter()->get_cudnn_emitter();
-                size_t lstm_index = cudnn_emitter->build_primitive(lstm);
-
-                writer << "gpu::invoke_primitive(ctx, " << lstm_index << ", ";
-                writer << "std::vector<void*>{" << args.front().get_name();
-                for (size_t i = 1; i < args.size(); i++)
-                {
-                    writer << ", " << args[i].get_name();
-                }
-                writer << "}.data(), ";
-                writer << "std::vector<void*>{" << out.front().get_name();
-                for (size_t i = 1; i < out.size(); i++)
-                {
-                    writer << ", " << out[i].get_name();
-                }
-                writer << "}.data()";
-                writer << ");\n";
-            }
-
-            template <>
-            void GPU_Emitter::EMITTER_DECL(ngraph::op::Rnn)
-            {
-                // auto rnn = static_cast<const ngraph::op::Rnn*>(node);
+                // auto lstm = static_cast<const ngraph::op::gpu::Lstm*>(node);
 
                 // auto& cudnn_emitter =
                 //     external_function->get_primitive_emitter()->get_cudnn_emitter();
-                // size_t rnn_index = cudnn_emitter->build_primitive(rnn);
+                // size_t lstm_index = cudnn_emitter->build_primitive(lstm);
 
-                // writer << "gpu::invoke_primitive(ctx, " << rnn_index << ", ";
+                // writer << "gpu::invoke_primitive(ctx, " << lstm_index << ", ";
                 // writer << "std::vector<void*>{" << args.front().get_name();
                 // for (size_t i = 1; i < args.size(); i++)
                 // {
@@ -1576,8 +1551,31 @@ namespace ngraph
                 // }
                 // writer << "}.data()";
                 // writer << ");\n";
+            }
 
-                exit(0);
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::gpu::Rnn)
+            {
+                auto rnn = static_cast<const ngraph::op::gpu::Rnn*>(node);
+
+                auto& cudnn_emitter =
+                    external_function->get_primitive_emitter()->get_cudnn_emitter();
+                size_t rnn_index = cudnn_emitter->build_primitive(rnn);
+
+                writer << "gpu::invoke_primitive(ctx, " << rnn_index << ", ";
+                writer << "std::vector<void*>{" << args.front().get_name();
+                for (size_t i = 1; i < args.size(); i++)
+                {
+                    writer << ", " << args[i].get_name();
+                }
+                writer << "}.data(), ";
+                writer << "std::vector<void*>{" << out.front().get_name();
+                for (size_t i = 1; i < out.size(); i++)
+                {
+                    writer << ", " << out[i].get_name();
+                }
+                writer << "}.data()";
+                writer << ");\n";
             }
         }
     }

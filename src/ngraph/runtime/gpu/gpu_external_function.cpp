@@ -248,7 +248,7 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::And), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::And>},
     {TI(ngraph::op::Or), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Or>},
     {TI(ngraph::op::gpu::Lstm), &runtime::gpu::GPU_Emitter::emit<ngraph::op::gpu::Lstm>},
-    {TI(ngraph::op::Rnn), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Rnn>}};
+    {TI(ngraph::op::gpu::Rnn), &runtime::gpu::GPU_Emitter::emit<ngraph::op::gpu::Rnn>}};
 
 const size_t runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction::s_memory_pool_alignment = 64;
 
@@ -652,7 +652,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     // recurrent network fusion
     m_pass_manager.register_pass<runtime::gpu::pass::LSTMFusion>();
 
-    // m_pass_manager.register_pass<runtime::gpu::pass::RNNFusion>();
+    m_pass_manager.register_pass<runtime::gpu::pass::RNNFusion>();
 
     m_pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
 

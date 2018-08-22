@@ -35,7 +35,7 @@
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
-#include "ngraph/runtime/cpu/op/rnn.hpp"
+#include "ngraph/runtime/gpu/op/rnn.hpp"
 #include "ngraph/runtime/gpu/op/lstm.hpp"
 
 namespace ngraph
@@ -63,7 +63,7 @@ namespace ngraph
                 size_t build_primitive(const op::MaxPool* node);
                 size_t build_primitive(const op::Max* node);
                 size_t build_primitive(const op::Min* node);
-                size_t build_primitive(const op::gpu::Lstm* node);
+                size_t build_primitive(const op::gpu::Rnn* node);
 
             public:
                 enum class Prop

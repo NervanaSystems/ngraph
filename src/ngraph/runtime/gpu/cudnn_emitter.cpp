@@ -945,7 +945,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Min* node)
     return primitive_index;
 }
 
-size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Lstm* node)
+size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
 {
     auto& args = node->get_inputs();
     auto& out = node->get_outputs();
@@ -1188,11 +1188,11 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Lstm* node)
                                                    w_desc,
                                                    w_ptr,
                                                    y_desc,
-                                                   (seq_length > 1 ? outputs[2] : outputs[0]),
-                                                   hy_desc,
                                                    outputs[0],
-                                                   cy_desc,
+                                                   hy_desc,
                                                    outputs[1],
+                                                   cy_desc,
+                                                   outputs[2],
                                                    NULL,
                                                    NULL,
                                                    NULL,
