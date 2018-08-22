@@ -138,8 +138,8 @@ namespace ngraph
                                                   const std::string& name,
                                                   const Shape& kernel_shape)
                 {
-                    return node.get_attribute_value<std::vector<std::size_t>>(name,
-                        std::vector<std::size_t>(kernel_shape.size(), 1UL));
+                    return node.get_attribute_value<std::vector<std::size_t>>(
+                        name, std::vector<std::size_t>(kernel_shape.size(), 1UL));
                 }
             } // namespace detail
 

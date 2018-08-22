@@ -82,12 +82,9 @@ namespace ngraph
                 {
                     switch (attribute.type())
                     {
-                    case onnx::AttributeProto_AttributeType_INT:
-                        return attribute.i();
-                    case onnx::AttributeProto_AttributeType_FLOAT:
-                        return attribute.f();
-                    default:
-                        throw error::attribute::InvalidData{attribute.type()};
+                    case onnx::AttributeProto_AttributeType_INT: return attribute.i();
+                    case onnx::AttributeProto_AttributeType_FLOAT: return attribute.f();
+                    default: throw error::attribute::InvalidData{attribute.type()};
                     }
                 }
 
@@ -114,10 +111,8 @@ namespace ngraph
                     {
                     case onnx::AttributeProto_AttributeType_FLOAT:
                         return static_cast<double>(attribute.f());
-                    case onnx::AttributeProto_AttributeType_INT:
-                        return attribute.i();
-                    default:
-                        throw error::attribute::InvalidData{attribute.type()};
+                    case onnx::AttributeProto_AttributeType_INT: return attribute.i();
+                    default: throw error::attribute::InvalidData{attribute.type()};
                     }
                 }
 
