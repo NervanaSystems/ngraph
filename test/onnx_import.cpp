@@ -34,39 +34,27 @@ using TensorView = std::shared_ptr<runtime::TensorView>;
 
 TEST(onnx, model_add_abc)
 {
-    auto function{onnx_import::import_onnx_function(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc.onnx"))};
-    Backend backend{runtime::Backend::create("INTERPRETER")};
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc.onnx"));
+    
+    Inputs inputs{{1}, {2}, {3}};
+    Outputs expected_outputs{{6}};
 
-    Shape shape{1};
-    TensorView a{backend->create_tensor(element::f32, shape)};
-    copy_data(a, std::vector<float>{1});
-    TensorView b{backend->create_tensor(element::f32, shape)};
-    copy_data(b, std::vector<float>{2});
-    TensorView c{backend->create_tensor(element::f32, shape)};
-    copy_data(c, std::vector<float>{3});
-
-    TensorView r{backend->create_tensor(element::f32, shape)};
-
-    backend->call(function, {r}, {a, b, c});
-    EXPECT_TRUE(test::all_close_f({6}, read_vector<float>(r)));
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
 TEST(onnx, model_add_abc_initializers)
 {
-    auto function{onnx_import::import_onnx_function(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc_initializers.onnx"))};
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc_initializers.onnx"));
     Backend backend{runtime::Backend::create("INTERPRETER")};
 
-    Shape shape{2, 2};
+    Inputs inputs{{1, 2}, {3, 4}};
+    Outputs expected_outputs{{3, 6}, {9, 12}};
 
-    TensorView c{backend->create_tensor(element::f32, shape)};
-    copy_data(c, std::vector<float>{1, 2, 3, 4});
-
-    TensorView r{backend->create_tensor(element::f32, shape)};
-
-    backend->call(function, {r}, {c});
-    EXPECT_TRUE(test::all_close_f({3, 6, 9, 12}, read_vector<float>(r)));
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
 TEST(onnx, model_split_equal_parts_default)
@@ -152,8 +140,8 @@ TEST(onnx, model_batchnorm_default)
 TEST(onnx, model_relu)
 {
     // Simple ReLU test
-    auto function{ngraph::onnx_import::import_onnx_function(
-        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/relu.onnx"))};
+    auto function = ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/relu.onnx"));
 
     Inputs inputs{{-1, -2, 0, 1, 2, 3}};
     Outputs expected_outputs{{0, 0, 0, 1, 2, 3}};
