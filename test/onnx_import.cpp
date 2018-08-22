@@ -34,7 +34,7 @@ using TensorView = std::shared_ptr<runtime::TensorView>;
 
 TEST(onnx, model_add_abc)
 {
-    Model model{onnx_import::load_onnx_model(
+    auto function{onnx_import::import_onnx_function(
         file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc.onnx"))};
     Backend backend{runtime::Backend::create("INTERPRETER")};
 
@@ -48,13 +48,13 @@ TEST(onnx, model_add_abc)
 
     TensorView r{backend->create_tensor(element::f32, shape)};
 
-    backend->call(model.front(), {r}, {a, b, c});
-    EXPECT_TRUE(test::all_close_f((std::vector<float>{6}), read_vector<float>(r)));
+    backend->call(function, {r}, {a, b, c});
+    EXPECT_TRUE(test::all_close_f({6}, read_vector<float>(r)));
 }
 
 TEST(onnx, model_add_abc_initializers)
 {
-    Model model{onnx_import::load_onnx_model(
+    auto function{onnx_import::import_onnx_function(
         file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc_initializers.onnx"))};
     Backend backend{runtime::Backend::create("INTERPRETER")};
 
@@ -65,8 +65,8 @@ TEST(onnx, model_add_abc_initializers)
 
     TensorView r{backend->create_tensor(element::f32, shape)};
 
-    backend->call(model.front(), {r}, {c});
-    EXPECT_TRUE(test::all_close_f((std::vector<float>{3, 6, 9, 12}), read_vector<float>(r)));
+    backend->call(function, {r}, {c});
+    EXPECT_TRUE(test::all_close_f({3, 6, 9, 12}, read_vector<float>(r)));
 }
 
 TEST(onnx, model_split_equal_parts_default)
@@ -128,7 +128,7 @@ TEST(onnx, model_batchnorm_default)
     Inputs inputs;
 
     // input data shape (1, 2, 1, 3)
-    inputs.emplace_back(
+    inputs.push_back(
         test::NDArray<float, 4>({{{{-1.f, 0.f, 1.f}}, {{2.f, 3.f, 4.f}}}}).get_vector());
 
     // scale (3)
@@ -142,9 +142,8 @@ TEST(onnx, model_batchnorm_default)
 
     // shape (1, 2, 1, 3)
     Outputs expected_outputs{test::NDArray<float, 4>{
-	{{{{-0.999995f, 0.f, 0.999995f}},
-	  {{-0.22474074f, 1.f, 2.2247407f}}}}
-      }.get_vector()};
+        {{{{-0.999995f, 0.f, 0.999995f}}, {{-0.22474074f, 1.f, 2.2247407f}}}}}
+                                 .get_vector()};
 
     Outputs outputs{execute(model.front(), inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
@@ -156,9 +155,9 @@ TEST(onnx, model_relu)
     auto function{ngraph::onnx_import::import_onnx_function(
         ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/relu.onnx"))};
 
-    auto inputs = std::vector<std::vector<float>>{{-1, -2, 0, 1, 2, 3}};
-    auto expected_output = std::vector<std::vector<float>>{{0, 0, 0, 1, 2, 3}};
+    Inputs inputs{{-1, -2, 0, 1, 2, 3}};
+    Outputs expected_outputs{{0, 0, 0, 1, 2, 3}};
 
-    auto result_vectors = execute(function, inputs, "INTERPRETER");
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), result_vectors.front()));
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }

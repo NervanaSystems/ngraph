@@ -108,7 +108,7 @@ namespace ngraph
                 get_ng_node(op::ParameterVector& parameters,
                             const std::map<std::string, Tensor>& initializers) const
             {
-	        const std::map<std::string,Tensor>::const_iterator it{initializers.find(get_name())};
+                const auto it{initializers.find(get_name())};
                 if (it != std::end(initializers))
                 {
                     return get_ng_constant(it->second);
