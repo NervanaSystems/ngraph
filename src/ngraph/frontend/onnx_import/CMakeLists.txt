@@ -59,7 +59,7 @@ add_library(onnx_import STATIC
 add_dependencies(onnx_import onnx_import_interface)
 
 if (NOT NGRAPH_USE_SYSTEM_PROTOBUF)
-    add_dependencies(onnx_import_interface protobuf::libprotobuf)    
+    add_dependencies(onnx_import_interface protobuf::libprotobuf)
     add_dependencies(onnx_import protobuf::libprotobuf)
 endif()
 
@@ -73,9 +73,9 @@ target_include_directories(onnx_import_interface PRIVATE ${CMAKE_CURRENT_BINARY_
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(onnx_import PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
-            -Wno-extended-offsetof -Wno-zero-as-null-pointer-constant -Wno-shorten-64-to-32 -Wno-unused-macros
-            -Wno-missing-variable-declarations -Wno-unused-private-field)
+            -Wno-extended-offsetof -Wno-shorten-64-to-32 -Wno-unused-macros -Wno-missing-variable-declarations
+            -Wno-unused-private-field -Wno-shadow -Wno-deprecated)
     target_compile_options(onnx_import_interface PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
-            -Wno-extended-offsetof -Wno-zero-as-null-pointer-constant -Wno-shorten-64-to-32 -Wno-unused-macros
-            -Wno-missing-variable-declarations -Wno-unused-private-field)
+            -Wno-extended-offsetof -Wno-shorten-64-to-32 -Wno-unused-macros -Wno-missing-variable-declarations
+            -Wno-unused-private-field -Wno-shadow -Wno-deprecated)
 endif()
