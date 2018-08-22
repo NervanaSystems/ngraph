@@ -116,7 +116,6 @@ op::gpu::Lstm::Lstm(std::shared_ptr<Node> input_xt_1,
     }
     add_output(hidden_state_ht_1->get_element_type(), hidden_state_ht_1->get_shape());
     add_output(cell_state_ct_1->get_element_type(), cell_state_ct_1->get_shape());
-    add_output(hidden_state_ht_1->get_element_type(), hidden_state_ht_1->get_shape());
 }
 
 op::gpu::Lstm::Lstm(std::shared_ptr<Node> src_layer,

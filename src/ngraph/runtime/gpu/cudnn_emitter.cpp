@@ -1161,6 +1161,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Lstm* node)
     auto wh_size = args[3].get_element_type().size() * shape_size(args[3].get_shape());
     auto bx_size = args[4].get_element_type().size() * shape_size(args[4].get_shape());
     auto bh_size = args[5].get_element_type().size() * shape_size(args[5].get_shape());
+    auto recurrent_index = num_tensors_per_layer / 2;
 
     std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](void** inputs,
                                                                          void** outputs) {
@@ -1169,14 +1170,12 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Lstm* node)
 
         // pack the weight and bias parameter data
         cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + weight_offsets[0].first, inputs[1], wx_size);
-        cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) +
-                           weight_offsets[num_tensors_per_layer / 2].first,
+        cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + weight_offsets[recurrent_index].first,
                        inputs[3],
                        wh_size);
         cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + bias_offsets[0].first, inputs[4], bx_size);
-        cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + bias_offsets[num_tensors_per_layer / 2].first,
-                       inputs[4],
-                       bh_size);
+        cuda_memcpyDtD(
+            static_cast<uint8_t*>(w_ptr) + bias_offsets[recurrent_index].first, inputs[4], bh_size);
 
         CUDNN_SAFE_CALL(cudnnRNNForwardInferenceEx(*m_ctx->cudnn_handle,
                                                    rnn_desc,
@@ -1189,7 +1188,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Lstm* node)
                                                    w_desc,
                                                    w_ptr,
                                                    y_desc,
-                                                   outputs[2],
+                                                   (seq_length > 1 ? outputs[2] : outputs[0]),
                                                    hy_desc,
                                                    outputs[0],
                                                    cy_desc,
