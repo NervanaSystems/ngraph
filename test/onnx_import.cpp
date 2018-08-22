@@ -29,8 +29,6 @@ using namespace ngraph;
 using Inputs = std::vector<std::vector<float>>;
 using Outputs = std::vector<std::vector<float>>;
 using Model = std::vector<std::shared_ptr<Function>>;
-using Backend = std::shared_ptr<runtime::Backend>;
-using TensorView = std::shared_ptr<runtime::TensorView>;
 
 TEST(onnx, model_add_abc)
 {
@@ -48,10 +46,9 @@ TEST(onnx, model_add_abc_initializers)
 {
     auto function = onnx_import::import_onnx_function(
         file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc_initializers.onnx"));
-    Backend backend{runtime::Backend::create("INTERPRETER")};
 
-    Inputs inputs{{1, 2}, {3, 4}};
-    Outputs expected_outputs{{3, 6}, {9, 12}};
+    Inputs inputs{{1, 2, 3, 4}};
+    Outputs expected_outputs{{3, 6, 9, 12}};
 
     Outputs outputs{execute(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
