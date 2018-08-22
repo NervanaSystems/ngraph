@@ -246,6 +246,11 @@ if (NGRAPH_CPU_ENABLE)
     endif()
 endif()
 
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    find_package(ZLIB REQUIRED)
+    target_link_libraries(ngraph PUBLIC ZLIB::ZLIB)
+endif()
+
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
 #-----------------------------------------------------------------------------------------------
