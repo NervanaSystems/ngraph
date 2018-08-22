@@ -54,6 +54,26 @@ TEST(onnx, model_add_abc_initializers)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
+TEST(onnx, model_addmul_abc)
+{
+    auto function{ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/addmul_abc.onnx"))};
+
+    std::vector<std::vector<float>> inputs;
+
+    ngraph::Shape shape{1, 2, 2};
+    inputs.emplace_back(ngraph::test::NDArray<float, 3>({{{9, 10}}, {{11, 12}}}).get_vector());
+    inputs.emplace_back(ngraph::test::NDArray<float, 3>({{{5, 6}}, {{7, 8}}}).get_vector());
+    inputs.emplace_back(ngraph::test::NDArray<float, 3>({{{1, 2}}, {{3, 4}}}).get_vector());
+
+
+    auto expected_output = ngraph::test::NDArray<float, 3>({{{46, 62}},
+                                                            {{80, 100}}}).get_vector();
+
+    auto result_vectors = execute(function, inputs, "INTERPRETER");
+    EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
+}
+
 TEST(onnx, model_split_equal_parts_default)
 {
     Model model{onnx_import::load_onnx_model(

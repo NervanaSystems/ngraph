@@ -22,6 +22,7 @@
 #include "op/batch_norm.hpp"
 #include "op/constant.hpp"
 #include "op/conv.hpp"
+#include "op/mul.hpp"
 #include "op/relu.hpp"
 #include "op/split.hpp"
 #include "ops_bridge.hpp"
@@ -73,6 +74,7 @@ namespace ngraph
                                   std::bind(op::batch_norm, std::placeholders::_1));
                     m_map.emplace("Constant", std::bind(op::constant, std::placeholders::_1));
                     m_map.emplace("Conv", std::bind(op::conv, std::placeholders::_1));
+                    m_map.emplace("Mul", std::bind(op::mul, std::placeholders::_1));
                     m_map.emplace("Relu", std::bind(op::relu, std::placeholders::_1));
                     m_map.emplace("Split", std::bind(op::split, std::placeholders::_1));
                 }
