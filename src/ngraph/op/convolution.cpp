@@ -525,8 +525,7 @@ void op::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints
     }
 
     auto swap_NC = [](const shared_ptr<Node> n) {
-        AxisVector ax_order(n->get_shape().size());
-        iota(ax_order.begin(), ax_order.end(), 0);
+        AxisVector ax_order = ngraph::get_default_order(n->get_shape());
         ax_order[0] = 1;
         ax_order[1] = 0;
 
