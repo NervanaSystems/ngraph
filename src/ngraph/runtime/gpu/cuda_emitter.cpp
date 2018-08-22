@@ -1373,8 +1373,6 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
     }
     NVShape output_strides = row_major_strides(output_shape);
 
-    if (shape_size(input_shape) < 32 || out_rank != 0)
-    {
         uint32_t nthreads = static_cast<uint32_t>(shape_size(output_shape));
         //TODO: currently we set it to 64, will add tuning method later
         uint32_t block_size_x = 64;
@@ -1426,47 +1424,6 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
             }});
 
         primitive_index = this->m_primitive_emitter->insert(std::move(replace_slice));
-    }
-    else
-    {
-        uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
-        //TODO: currently we set it to 64, will add tuning method later
-        uint32_t block_size_x = 32;
-        auto args = m_primitive_emitter->add_kernel_args();
-        args.add_placeholder(dtypes[0], "in")
-            .add_placeholder(dtypes[1], "out")
-            .add("nthreads", nthreads);
-
-        // if the kernel has not been compiled, build it
-        auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name);
-        if (compiled_kernel == nullptr)
-        {
-            codegen::CodeWriter writer;
-            CudaKernelBuilder::add_pod_typedefs(writer);
-            writer << include_helpers();
-            if (kernel)
-            {
-                CudaKernelBuilder::get_device_helper(
-                    writer, op, kernel, {{dtypes[0], dtypes[0], dtypes[1]}});
-            }
-            runtime::gpu::CudaKernelBuilder::get_reduce_1d_op(
-                writer, kernel_name, args, dtypes, op);
-            compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
-        }
-
-        std::unique_ptr<gpu::primitive> replace_slice(
-            new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-                void** args_list = args.resolve_placeholder(0, &inputs[0])
-                                       .resolve_placeholder(1, &outputs[0])
-                                       .get_argument_list();
-
-                CUDA_SAFE_CALL(cuLaunchKernel(
-                    *compiled_kernel.get(), 1, 1, 1, block_size_x, 1, 1, 0, NULL, args_list, 0));
-                debug_sync();
-            }});
-
-        primitive_index = this->m_primitive_emitter->insert(std::move(replace_slice));
-    }
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }
