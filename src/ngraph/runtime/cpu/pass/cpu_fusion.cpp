@@ -54,6 +54,9 @@
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 
+extern template ngraph::Shape ngraph::apply_permutation<ngraph::Shape>(ngraph::Shape input,
+                                                                       ngraph::AxisVector order);
+
 static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
                            std::shared_ptr<ngraph::Node> arg,
                            bool& transpose_w,
@@ -106,24 +109,6 @@ static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
     }
 
     return true;
-}
-
-template <typename T>
-static std::vector<T> apply_permutation(std::vector<T> input, ngraph::AxisVector order)
-{
-    if (input.size() != order.size())
-    {
-        throw "input and order sizes don't match!";
-    }
-
-    std::vector<T> output(input.size());
-
-    for (size_t i = 0; i < order.size(); i++)
-    {
-        output[i] = input.at(order.at(i));
-    }
-
-    return output;
 }
 
 void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias()
@@ -427,8 +412,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_reshaped_conv(
                 std::dynamic_pointer_cast<op::Reshape>(pattern_map[reshape_label]);
 
             const auto& input_order = matched_reshape->get_input_order();
-            auto hoisted_reshape_output_shape = apply_permutation<Shape::value_type>(
-                pattern_map[pad_input]->get_shape(), input_order);
+            auto hoisted_reshape_output_shape =
+                ngraph::apply_permutation<Shape>(pattern_map[pad_input]->get_shape(), input_order);
 
             auto hoisted_reshape = std::make_shared<op::Reshape>(
                 pattern_map[pad_input],
