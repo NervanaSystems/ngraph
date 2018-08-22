@@ -851,11 +851,25 @@ namespace ngraph
                         {
                             kernel::emit_memcpyDtD(writer, out[0], args[0]);
                         }
-                        // descriptors for tensors  with <= 4 dimensions
+                        else if (out[0].get_shape().size() == 0)
+                        {
+                            auto& cudnn_emitter =
+                                external_function->get_primitive_emitter()->get_cudnn_emitter();
+                            auto sum_index =
+                                cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_ADD,
+                                                                    out[0].get_type(),
+                                                                    args[0].get_shape(),
+                                                                    sum->get_reduction_axes());
+
+                            writer << "gpu::invoke_primitive(ctx, " << sum_index << ", ";
+                            writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                            writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                            writer << ");\n";
+                        }
                         else
                         {
-                            ngraph::AxisVector axes_vec;
                             auto axes_set = sum->get_reduction_axes();
+                            ngraph::AxisVector axes_vec;
                             for (auto a : axes_set)
                             {
                                 axes_vec.push_back(a);
