@@ -50,7 +50,7 @@ namespace ngraph
                 ///
                 /// When we support non-linear buffers, this will need to be something other than size_t.
                 virtual size_t get_size() = 0;
-
+                virtual size_t get_allocated_size();
                 /// Offset of an index; useful for slice implementation.
                 ///
                 /// With non-linear buffers, this will need to be something other than size_t.
