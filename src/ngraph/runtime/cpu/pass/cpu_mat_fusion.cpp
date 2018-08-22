@@ -33,6 +33,7 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/runtime/cpu/op/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
+#include "ngraph/util.hpp"
 
 using namespace ngraph;
 
@@ -166,8 +167,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
         const auto& data_shape = data_node->get_shape();
         // construct new op nodes
-        AxisVector data_order(data_node->get_shape().size());
-        std::iota(begin(data_order), end(data_order), 0);
+        auto data_order = ngraph::get_default_order(data_node->get_shape());
         auto data_reshape_node = std::make_shared<op::Reshape>(
             data_node, data_order, Shape{data_shape[0] * data_shape[1], data_shape[2]});
 

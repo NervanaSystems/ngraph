@@ -118,3 +118,4 @@ zero_sized_subtract
 zero_sized_tan
 zero_sized_tanh
 argmin_trivial
+argmax_trivial

@@ -26,6 +26,7 @@
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
