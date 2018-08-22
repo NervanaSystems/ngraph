@@ -196,7 +196,10 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_op(codegen::CodeWriter& writer,
         writer << "if (tid < nthreads)\n";
         writer.block_begin();
         {
-            writer << "uint32_t out_idx = tid;\n";
+            if (out_rank > 0)
+            {
+                writer << "uint32_t out_idx = tid;\n";
+            }
             writer << "uint32_t in_idx = 0;\n";
             writer << data_types[1] << " r = 0;\n";
 
@@ -264,7 +267,8 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_1d_op(codegen::CodeWriter& writ
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
-        writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x; \n";
+        writer << "uint32_t tid = threadIdx.x; \n";
+        writer << "uint32_t step = blockDim.x; \n";
         writer << "uint32_t in_idx = tid;\n";
         writer << data_types[1] << " r = 0;\n";
         writer << "if(in_idx >= nthreads)\n";
@@ -272,11 +276,22 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_1d_op(codegen::CodeWriter& writ
         writer << "return;\n";
         writer.block_end();
         writer << "r = in[in_idx];\n";
-        writer << "in_idx += 32;\n";
-        writer << "for(; in_idx < nthreads; in_idx += 32)\n";
+        writer << "in_idx += step;\n";
+        writer << "while((in_idx << 3) < nthreads)\n";
+        writer.block_begin();
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                writer << "r = " << reduce_op << "(r , in[in_idx]);\n";
+                writer << "in_idx += step;\n";
+            }
+        }
+        writer.block_end();
+        writer << "while(in_idx < nthreads)\n";
         writer.block_begin();
         {
             writer << "r = " << reduce_op << "(r , in[in_idx]);\n";
+            writer << "in_idx += step;\n";
         }
         writer.block_end();
         writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 16, 32));\n";
