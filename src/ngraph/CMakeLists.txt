@@ -41,6 +41,7 @@ set (SRC
     op/allreduce.cpp
     op/and.cpp
     op/argmin.cpp
+    op/argmax.cpp
     op/asin.cpp
     op/atan.cpp
     op/avg_pool.cpp
