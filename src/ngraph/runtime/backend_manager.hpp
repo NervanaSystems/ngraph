@@ -50,8 +50,12 @@ public:
     ///    This function is not used if the backend is build as a shared library.
     /// @param name The name of the registering backend in UPPER CASE.
     /// @param backend_constructor A function of type new_backend_t which will be called to
-    ////     construct an instance of the registered backend.
+    ///    construct an instance of the registered backend.
     static void register_backend(const std::string& name, new_backend_t backend_constructor);
+
+    /// @brief Sets the search directory for backend shared libraries.
+    /// @param path The path to backend shared libraries.
+    static void set_search_directory(const std::string& path);
 
     /// @brief Query the list of registered devices
     /// @returns A vector of all registered devices.
@@ -66,4 +70,5 @@ private:
     static DL_HANDLE open_shared_library(std::string type);
     static std::map<std::string, std::string> get_registered_device_map();
     static bool is_backend_name(const std::string& file, std::string& backend_name);
+    static std::string m_backend_search_directory;
 };

@@ -17,6 +17,7 @@
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -33,4 +34,20 @@ TEST(backend_api, registered_devices)
 TEST(backend_api, invalid_name)
 {
     ASSERT_ANY_THROW(ngraph::runtime::Backend::create("COMPLETELY-BOGUS-NAME"));
+}
+
+TEST(backend_api, search_path)
+{
+    const string path = "/this/path/is/bogus";
+    runtime::BackendManager::set_search_directory(path);
+    try
+    {
+        runtime::Backend::create("BOGUS");
+        FAIL();
+    }
+    catch (std::exception& err)
+    {
+        string message = err.what();
+        EXPECT_NE(message.find(path), string::npos);
+    }
 }

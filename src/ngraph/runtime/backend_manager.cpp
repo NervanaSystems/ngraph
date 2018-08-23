@@ -38,6 +38,8 @@ using namespace ngraph;
 #define DLSYM(a, b) dlsym(a, b)
 #endif
 
+string runtime::BackendManager::m_backend_search_directory;
+
 unordered_map<string, runtime::new_backend_t>& runtime::BackendManager::get_registry()
 {
     static unordered_map<string, new_backend_t> s_registered_backend;
@@ -88,12 +90,6 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
     else
     {
         DL_HANDLE handle = open_shared_library(type);
-        if (!handle)
-        {
-            stringstream ss;
-            ss << "Backend '" << type << "' not registered";
-            throw runtime_error(ss.str());
-        }
         function<const char*()> get_ngraph_version_string =
             reinterpret_cast<const char* (*)()>(DLSYM(handle, "get_ngraph_version_string"));
         if (!get_ngraph_version_string)
@@ -154,13 +150,27 @@ DL_HANDLE runtime::BackendManager::open_shared_library(string type)
     }
 
     string library_name = "lib" + to_lower(type) + "_backend" + string(SHARED_LIB_EXT);
-    string my_directory = file_util::get_directory(find_my_file());
+    string my_directory;
+    if (!m_backend_search_directory.empty())
+    {
+        my_directory = m_backend_search_directory;
+    }
+    else
+    {
+        string my_directory = file_util::get_directory(find_my_file());
+    }
     string library_path = file_util::path_join(my_directory, library_name);
 #ifdef WIN32
     handle = LoadLibrary(library_path.c_str());
 #else
     handle = dlopen(library_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
 #endif
+    if (!handle)
+    {
+        stringstream ss;
+        ss << "Backend '" << type << "' not registered and not found at '" << library_path << "'";
+        throw runtime_error(ss.str());
+    }
     return handle;
 }
 
@@ -221,4 +231,9 @@ bool runtime::BackendManager::is_backend_name(const string& file, string& backen
         }
     }
     return rc;
+}
+
+void runtime::BackendManager::set_search_directory(const std::string& path)
+{
+    m_backend_search_directory = path;
 }
