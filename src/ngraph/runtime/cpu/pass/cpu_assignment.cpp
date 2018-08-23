@@ -33,7 +33,6 @@
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/relu.hpp"
-#include "ngraph/op/reshape.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -547,53 +546,6 @@ namespace ngraph
                 }
 
                 template <>
-                void CPUAssignment::ASSIGN_DECL(ngraph::op::Reshape)
-                {
-                    auto reshape = static_cast<op::Reshape*>(node);
-                    auto arg0_shape = node->get_input_shape(0);
-                    auto result_shape = node->get_output_shape(0);
-                    auto axis_order = reshape->get_input_order();
-                    bool flag = true;
-
-                    auto op_annotations =
-                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-
-                    auto users = reshape->get_users();
-                    auto arg = reshape->get_argument(0);
-                    // we need to copy input data if reshape modifies the data or inputs are
-                    // not in the memory pool, or has output users.
-                    bool need_copy = reshape->get_is_transpose() || arg->is_constant();
-
-                    if (!need_copy)
-                    {
-                        // map output to the input memory
-                        op_annotations->add_in_place_oi_pair({0, 0, false});
-                        reshape->set_op_annotations(op_annotations);
-                    }
-
-                    // Use Eigen for 3D
-                    if (node->get_input_element_type(0) == element::f32 &&
-                        arg0_shape.size() < TENSOR_MAX_DIMS && arg0_shape.size() > 3 &&
-                        arg0_shape.size() == result_shape.size())
-                    {
-                        for (size_t i = 0; i < axis_order.size(); i++)
-                        {
-                            if (arg0_shape[axis_order[i]] != result_shape[i])
-                            {
-                                flag = false;
-                                break;
-                            }
-                        }
-
-                        if (flag)
-                        {
-                            op_annotations->set_mkldnn_op(true);
-                            reshape->set_op_annotations(op_annotations);
-                        }
-                    }
-                }
-
-                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNorm)
                 {
                     auto input_shape = node->get_input_shape(2);
@@ -759,7 +711,6 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::SigmoidBackprop>},
     {TI(ngraph::op::Lstm), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Lstm>},
     {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Rnn>},
-    {TI(ngraph::op::Reshape), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Reshape>},
     {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Softmax>},
 };
 

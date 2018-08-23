@@ -32,8 +32,6 @@ using namespace std;
 // TODO(jmenon): Refactor all the alignment specifications into
 // a single place and allow lower or no alignment when possible
 
-const size_t runtime::cpu::CPUTensorView::BufferAlignment = 64;
-
 runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
                                            const Shape& shape,
                                            void* memory_pointer,
@@ -46,8 +44,8 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
     // TODO(jmenon): A fallback layout should not be needed but is required
     // because of how some unit test functionality is written (ex. 'backprop_derivative')
     // This needs to be removed
-    m_descriptor->set_tensor_view_layout(std::make_shared<runtime::cpu::LayoutDescriptor>(
-        *m_descriptor, runtime::cpu::LayoutDescriptor::create_native_axis_order(shape.size())));
+    m_descriptor->set_tensor_view_layout(
+        std::make_shared<runtime::cpu::LayoutDescriptor>(*m_descriptor));
 
     buffer_size = shape_size(shape) * element_type.size();
 
@@ -119,23 +117,42 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
 
     auto tvl = this->get_tensor_view_layout();
     auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
-    if (cpu_tvl && cpu_tvl->get_mkldnn_format() != memory::format::format_undef &&
-        !runtime::cpu::mkldnn_utils::compare_mkldnn_formats(
-            cpu_tvl->get_mkldnn_format(),
-            runtime::cpu::mkldnn_utils::CreateNativeDataFormat(*cpu_tvl)))
+
+    auto needs_conversion = [&]() {
+        if (!cpu_tvl)
+        {
+            return false;
+        }
+        if (!cpu_tvl->is_mkldnn_layout())
+        {
+            return false;
+        }
+        if (cpu_tvl->get_size() <= 1)
+        {
+            return false;
+        }
+        auto native_md = mkldnn_utils::create_blocked_mkldnn_md(
+            this->get_shape(),
+            cpu_tvl->get_strides(),
+            this->get_descriptor()->get_tensor_view_type()->get_element_type());
+        if (mkldnn_utils::compare_mkldnn_mds(cpu_tvl->get_mkldnn_md(), native_md))
+        {
+            return false;
+        }
+        return true;
+    };
+
+    if (needs_conversion())
     {
         auto tensor_shape = this->get_shape();
-        auto input_format = cpu_tvl->get_mkldnn_format();
-        auto output_format = runtime::cpu::mkldnn_utils::CreateNativeDataFormat(*cpu_tvl);
-        memory::data_type et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
+        auto input_desc = cpu_tvl->get_mkldnn_md();
+        auto output_desc = mkldnn_utils::create_blocked_mkldnn_md(
+            this->get_shape(),
+            cpu_tvl->get_strides(),
             this->get_descriptor()->get_tensor_view_type()->get_element_type());
 
-        engine cpu_engine{engine::cpu, 0};
-        memory::dims mkldnn_shape{tensor_shape.begin(), tensor_shape.end()};
-        memory::desc input_desc{mkldnn_shape, et, input_format};
-        memory::desc output_desc{mkldnn_shape, et, output_format};
-        memory input{{input_desc, cpu_engine}, aligned_buffer};
-        memory output{{output_desc, cpu_engine}, target};
+        memory input{{input_desc, mkldnn_utils::global_cpu_engine}, aligned_buffer};
+        memory output{{output_desc, mkldnn_utils::global_cpu_engine}, target};
         reorder prim{input, output};
         mkldnn::stream s(mkldnn::stream::kind::eager);
         s.submit({prim}).wait();

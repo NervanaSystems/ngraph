@@ -46,17 +46,33 @@ void ngraph::traverse_nodes(const std::shared_ptr<const Function> p,
 
 void ngraph::traverse_nodes(const Function* p, std::function<void(std::shared_ptr<Node>)> f)
 {
-    std::unordered_set<std::shared_ptr<Node>> instances_seen;
-    std::deque<std::shared_ptr<Node>> stack;
+    NodeVector nodes;
 
     for (auto r : p->get_results())
     {
-        stack.push_front(r);
+        nodes.push_back(r);
     }
 
     for (auto param : p->get_parameters())
     {
-        stack.push_front(param);
+        nodes.push_back(param);
+    }
+
+    traverse_nodes(nodes, f);
+}
+
+// This version of traverses directly from input/output nodes to perform functions on
+// graphs that are not wrapped by functions. Most useful for finding parameters of a graph
+// directly from the result nodes, not from function parameters.
+void ngraph::traverse_nodes(const NodeVector& io_nodes,
+                            std::function<void(std::shared_ptr<Node>)> f)
+{
+    std::unordered_set<std::shared_ptr<Node>> instances_seen;
+    std::deque<std::shared_ptr<Node>> stack;
+
+    for (auto r : io_nodes)
+    {
+        stack.push_front(r);
     }
 
     while (stack.size() > 0)
@@ -543,7 +559,7 @@ bool ngraph::possibly_overwritten(Node* node)
                 {
                     for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                     {
-                        if (input->get_index() == oi_pair.input)
+                        if (input->get_index() == oi_pair.input && oi_pair.destructive)
                         {
                             return true;
                         }

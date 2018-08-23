@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2018 Intel Corporation
+* Copyright 2017-2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,24 +14,16 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
+#include "ngraph/op/argmin.hpp"
 
-#include "ngraph/pass/pass.hpp"
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+shared_ptr<Node> op::ArgMin::copy_with_new_args(const NodeVector& new_args) const
 {
-    namespace runtime
+    if (new_args.size() != 1)
     {
-        namespace cpu
-        {
-            namespace pass
-            {
-                class CPUShuffleFolding : public ngraph::pass::FunctionPass
-                {
-                public:
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-                };
-            }
-        }
+        throw ngraph_error("Incorrect number of new arguments");
     }
+    return make_shared<ArgMin>(new_args.at(0), m_axis, this->get_element_type());
 }

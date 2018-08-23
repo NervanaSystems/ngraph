@@ -19,7 +19,10 @@
 
 #include "attribute.hpp"
 #include "ngraph/frontend/onnx_import/op/add.hpp"
+#include "ngraph/frontend/onnx_import/op/batch_norm.hpp"
 #include "ngraph/frontend/onnx_import/op/constant.hpp"
+#include "ngraph/frontend/onnx_import/op/relu.hpp"
+#include "ngraph/frontend/onnx_import/op/split.hpp"
 #include "ops_bridge.hpp"
 
 namespace ngraph
@@ -39,12 +42,6 @@ namespace ngraph
                 };
 
             } // namespace error
-
-            NodeVector add(const Node& node) { return op::add(node); }
-            NodeVector constant(const Node& node)
-            {
-                return {op::constant(node.get_attribute_value<Tensor>("value"))};
-            }
 
             class ops_bridge
             {
@@ -70,8 +67,12 @@ namespace ngraph
 
                 ops_bridge()
                 {
-                    m_map.emplace("Add", std::bind(add, std::placeholders::_1));
-                    m_map.emplace("Constant", std::bind(constant, std::placeholders::_1));
+                    m_map.emplace("Add", std::bind(op::add, std::placeholders::_1));
+                    m_map.emplace("BatchNormalization",
+                                  std::bind(op::batch_norm, std::placeholders::_1));
+                    m_map.emplace("Constant", std::bind(op::constant, std::placeholders::_1));
+                    m_map.emplace("Relu", std::bind(op::relu, std::placeholders::_1));
+                    m_map.emplace("Split", std::bind(op::split, std::placeholders::_1));
                 }
 
                 NodeVector operator()(const Node& node) const
@@ -80,7 +81,7 @@ namespace ngraph
                     {
                         return m_map.at(node.op_type())(node);
                     }
-                    catch (const std::exception&)
+                    catch (const std::out_of_range&)
                     {
                         throw detail::error::unknown_operation{node.op_type()};
                     }

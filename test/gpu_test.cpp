@@ -20,15 +20,15 @@
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_shape.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/runtime/gpu/nvshape.hpp"
 
 using namespace ngraph;
 
 TEST(gpu_test, gpu_shape_from_64bit_shape)
 {
     Shape shape{1UL << 33};
-    ASSERT_ANY_THROW([](GPUShape s) {}(shape););
+    ASSERT_ANY_THROW([](NVShape s) {}(shape););
 }
 
 TEST(gpu_test, memory_manager_unallocated)

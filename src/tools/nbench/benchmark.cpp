@@ -83,7 +83,8 @@ multimap<size_t, string> aggregate_timing(const vector<runtime::PerformanceCount
 void run_benchmark(const string& json_path,
                    const string& backend_name,
                    size_t iterations,
-                   bool timing_detail)
+                   bool timing_detail,
+                   int warmup_iterations)
 {
     stopwatch timer;
     timer.start();
@@ -92,7 +93,7 @@ void run_benchmark(const string& json_path,
     shared_ptr<Function> f = deserialize(ss);
     timer.stop();
     cout << "deserialize time: " << timer.get_milliseconds() << "ms" << endl;
-    run_benchmark(f, backend_name, iterations, timing_detail);
+    run_benchmark(f, backend_name, iterations, timing_detail, warmup_iterations);
 }
 
 void print_times(const multimap<size_t, string>& timing)
@@ -238,7 +239,8 @@ static void random_init(shared_ptr<runtime::TensorView> tv)
 void run_benchmark(shared_ptr<Function> f,
                    const string& backend_name,
                    size_t iterations,
-                   bool timing_detail)
+                   bool timing_detail,
+                   int warmup_iterations)
 {
     stopwatch timer;
     timer.start();
@@ -272,6 +274,15 @@ void run_benchmark(shared_ptr<Function> f,
             args[i]->set_stale(false);
         }
     }
+
+    if (warmup_iterations)
+    {
+        for (int i = 0; i < warmup_iterations; i++)
+        {
+            backend->call(f, results, args);
+        }
+    }
+
     stopwatch t1;
     t1.start();
     for (size_t i = 0; i < static_cast<size_t>(iterations); i++)

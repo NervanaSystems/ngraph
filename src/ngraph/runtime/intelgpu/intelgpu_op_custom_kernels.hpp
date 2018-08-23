@@ -18,6 +18,8 @@
 
 #include <CPP/topology.hpp>
 
+#include "ngraph/runtime/intelgpu/code_writer.hpp"
+
 #include "ngraph/axis_set.hpp"
 #include "ngraph/coordinate.hpp"
 #include "ngraph/shape.hpp"
@@ -39,6 +41,18 @@ namespace ngraph
                                   const element::Type& output_type,
                                   const Shape& pad_below,
                                   const Shape& pad_interior);
+
+            void do_max_pool_backprop_operation(cldnn::topology& topology,
+                                                const std::string& input_name,
+                                                const Shape& input_shape,
+                                                const std::string& delta_name,
+                                                const Shape& delta_shape,
+                                                const std::string& output_name,
+                                                const Shape& output_shape,
+                                                const element::Type& output_type,
+                                                const Shape& win_shape,
+                                                const Shape& win_stride,
+                                                const Shape& pad_below);
 
             void do_dot_operation(cldnn::topology& topology,
                                   const std::string& inputA_name,
@@ -73,17 +87,61 @@ namespace ngraph
             void do_logic_kernel(cldnn::topology& topology,
                                  const std::string& inputA_name,
                                  const Shape& inputA_shape,
+                                 const std::string& inputA_type,
                                  const std::string& inputB_name,
                                  const Shape& inputB_shape,
+                                 const std::string& inputB_type,
                                  const std::string& output_name,
                                  const Shape& output_shape,
                                  const element::Type& output_type,
                                  const std::string& operation);
 
+            void do_reverse_operation(cldnn::topology& topology,
+                                      const std::string& input_name,
+                                      const Shape& input_shape,
+                                      const std::string& output_name,
+                                      const Shape& output_shape,
+                                      const element::Type& output_type,
+                                      const AxisSet& reversed_axes);
+
+            void do_not_operation(cldnn::topology& topology,
+                                  const std::string& input_name,
+                                  const Shape& input_shape,
+                                  const std::string& output_name,
+                                  const Shape& output_shape,
+                                  const element::Type& output_type);
+
+            void do_one_hot_operation(cldnn::topology& topology,
+                                      const std::string& input_name,
+                                      const Shape& input_shape,
+                                      const element::Type& input_type,
+                                      const std::string& output_name,
+                                      const Shape& output_shape,
+                                      const element::Type& output_type,
+                                      const size_t one_hot_axis);
+
+            void do_convert_operation(cldnn::topology& topology,
+                                      const std::string& input_name,
+                                      const Shape& input_shape,
+                                      const element::Type& input_type,
+                                      const std::string& output_name,
+                                      const Shape& output_shape,
+                                      const element::Type& output_type);
+
             // Helper functions used in cldnn::custom_gpu_primitive kernels
             std::vector<cldnn_arg> get_kernel_args(size_t input, size_t output);
-            std::string array_dims(const Shape& dimentions);
-            std::string access_dims(const Shape& dimentions, const AxisSet& axis = {});
+            std::string array_dims(const Shape& dimentions, const AxisSet& axis = {});
+            std::string access_dims(const Shape& dimentions,
+                                    const AxisSet& axis = {},
+                                    bool is_reversed = false);
+            std::vector<size_t>
+                generate_loops(codegen::CodeWriter& writer, const Shape& shape, bool is_begin);
+            void gen_func_def(codegen::CodeWriter& writer,
+                              const std::string& entry_point_name,
+                              const std::vector<std::string>& input_types,
+                              const std::vector<Shape>& input_shapes,
+                              const std::string& output_type,
+                              const Shape& output_shape);
         }
     }
 }
