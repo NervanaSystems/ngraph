@@ -17,7 +17,8 @@
 #pragma once
 
 #include "ngraph/node_vector.hpp"
-#include "node.hpp"
+
+#include "ngraph/frontend/onnx_import/wrappers/node.hpp"
 
 namespace ngraph
 {

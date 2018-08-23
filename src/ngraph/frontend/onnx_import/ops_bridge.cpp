@@ -17,13 +17,13 @@
 #include <algorithm>
 #include <functional>
 
-#include "attribute.hpp"
 #include "ngraph/frontend/onnx_import/op/add.hpp"
 #include "ngraph/frontend/onnx_import/op/batch_norm.hpp"
 #include "ngraph/frontend/onnx_import/op/constant.hpp"
 #include "ngraph/frontend/onnx_import/op/conv.hpp"
 #include "ngraph/frontend/onnx_import/op/relu.hpp"
 #include "ngraph/frontend/onnx_import/op/split.hpp"
+#include "ngraph/frontend/onnx_import/wrappers/attribute.hpp"
 #include "ops_bridge.hpp"
 
 namespace ngraph

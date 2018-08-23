@@ -34,14 +34,7 @@ add_library(onnx_import_interface OBJECT
 
 add_library(onnx_import STATIC
         onnx.pb.cc
-        attribute.cpp
-        attribute.hpp
         exceptions.hpp
-        graph.cpp
-        graph.hpp
-        model.hpp
-        node.cpp
-        node.hpp
         op/add.hpp
         op/batch_norm.hpp
         op/constant.cpp
@@ -50,12 +43,19 @@ add_library(onnx_import STATIC
         op/relu.hpp
         op/split.hpp
         ops_bridge.cpp
-        tensor.hpp
         utils/broadcasting.cpp
         utils/broadcasting.hpp
         utils/convpool.cpp
         utils/convpool.hpp
-        value_info.hpp)
+        wrappers/attribute.cpp
+        wrappers/attribute.hpp
+        wrappers/graph.cpp
+        wrappers/graph.hpp
+        wrappers/model.hpp
+        wrappers/node.cpp
+        wrappers/node.hpp
+        wrappers/tensor.hpp
+        wrappers/value_info.hpp)
 
 add_dependencies(onnx_import onnx_import_interface)
 

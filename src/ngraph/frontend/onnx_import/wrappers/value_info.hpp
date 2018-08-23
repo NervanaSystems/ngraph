@@ -16,8 +16,6 @@
 
 #pragma once
 
-#include <ostream>
-
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/parameter_vector.hpp"
 #include "ngraph/shape.hpp"

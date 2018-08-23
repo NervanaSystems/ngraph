@@ -16,11 +16,6 @@
 
 #pragma once
 
-#include "frontend/onnx_import/utils/broadcasting.hpp"
-#include "frontend/onnx_import/utils/convpool.hpp"
-#include "ngraph/frontend/onnx_import/exceptions.hpp"
-#include "ngraph/frontend/onnx_import/node.hpp"
-
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
@@ -28,6 +23,11 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/strides.hpp"
+
+#include "ngraph/frontend/onnx_import/exceptions.hpp"
+#include "ngraph/frontend/onnx_import/utils/broadcasting.hpp"
+#include "ngraph/frontend/onnx_import/utils/convpool.hpp"
+#include "ngraph/frontend/onnx_import/wrappers/node.hpp"
 
 namespace ngraph
 {
