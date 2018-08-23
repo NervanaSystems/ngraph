@@ -1187,11 +1187,11 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
                                                    inputs[6],
                                                    w_desc,
                                                    w_ptr,
-                                                   y_desc,
+                                                   y_desc, // h_i
                                                    outputs[0],
-                                                   hy_desc,
+                                                   hy_desc, // h_t
                                                    outputs[1],
-                                                   cy_desc,
+                                                   cy_desc, // c_t
                                                    outputs[2],
                                                    NULL,
                                                    NULL,

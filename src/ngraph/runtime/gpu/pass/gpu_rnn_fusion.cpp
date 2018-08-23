@@ -625,11 +625,9 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                                                        ref_rnn_direction,
                                                        ref_num_of_rnn_fused_layer);
 
-    NodeVector ht_slice_per_timestep;
     auto rnn_ht_out = std::make_shared<op::GetOutputElement>(ref_rnn_node, 0);
     auto rnn_ht_label =
         std::make_shared<pattern::op::Label>(rnn_ht_out, nullptr, NodeVector{rnn_ht_out});
-    // auto rnn_ct_out = std::make_shared<op::GetOutputElement>(ref_rnn_node, 2);
 
     pattern::recurrent_graph_rewrite_callback callback = [src_layer_label,
                                                           src_iter_label,

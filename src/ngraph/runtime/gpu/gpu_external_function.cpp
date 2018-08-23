@@ -99,6 +99,7 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/common_function_collection.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
@@ -653,6 +654,8 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     m_pass_manager.register_pass<runtime::gpu::pass::LSTMFusion>();
 
     m_pass_manager.register_pass<runtime::gpu::pass::RNNFusion>();
+
+    m_pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
 
     m_pass_manager.register_pass<runtime::gpu::pass::MultiLayerRNNFusion>();
 
