@@ -48,15 +48,15 @@ namespace ngraph
 
                 if (!is_test)
                 {
-                    throw error::not_supported_error("BatchNormalization",
-                                                     node.get_name(),
-                                                     "only 'is_test' mode is currently supported.");
+                    throw error::NotSupported("BatchNormalization",
+                                              node.get_name(),
+                                              "only 'is_test' mode is currently supported.");
                 }
                 if (!spatial)
                 {
-                    throw error::not_supported_error("BatchNormalization",
-                                                     node.get_name(),
-                                                     "only 'spatial' mode is currently supported.");
+                    throw error::NotSupported("BatchNormalization",
+                                              node.get_name(),
+                                              "only 'spatial' mode is currently supported.");
                 }
 
                 if (inputs.size() >= 5)
