@@ -14,11 +14,12 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "cpu_fusion.hpp"
 #include <algorithm>
 #include <iostream>
 #include <numeric>
 #include <unordered_set>
+
+#include "cpu_fusion.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
@@ -53,6 +54,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
+#include "ngraph/util.hpp"
 
 extern template ngraph::Shape ngraph::apply_permutation<ngraph::Shape>(ngraph::Shape input,
                                                                        ngraph::AxisVector order);
@@ -85,9 +87,7 @@ static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
     auto io = r_w->get_input_order();
     if (r_w->get_shape().size() != arg->get_shape().size()) //reshape
     {
-        ngraph::AxisVector dio(io.size());
-        std::iota(begin(dio), end(dio), 0);
-
+        auto dio = ngraph::get_default_order(io);
         if (io != dio) //we can't reshape and transpose at the same time
         {
             NGRAPH_DEBUG << "Reshape for " << reshape->get_name() << " is not in default order "
@@ -621,8 +621,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
                 NGRAPH_DEBUG
                     << "mpattern = " << m.get_match_root()->get_name()
                     << "conv_bias bias shape != 1, requires reshape to match filter count.";
-                ngraph::AxisVector order(bias_shape.size());
-                std::iota(begin(order), end(order), 0);
+                auto order = ngraph::get_default_order(bias_shape);
                 auto bias_reshape =
                     std::make_shared<op::Reshape>(bias, order, Shape{conv->get_input_shape(1)[0]});
                 auto conv_bias = std::shared_ptr<Node>(new op::ConvolutionBias(conv, bias_reshape));
@@ -683,8 +682,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
                         NGRAPH_DEBUG
                             << "mpattern = " << m.get_match_root()->get_name()
                             << "conv_bias bias shape != 1, requires reshape to match filter count.";
-                        ngraph::AxisVector order(bias_shape.size());
-                        std::iota(begin(order), end(order), 0);
+                        auto order = ngraph::get_default_order(bias_shape);
                         auto bias_reshape = std::make_shared<op::Reshape>(
                             bias, order, Shape{conv_bprop->get_filters_shape()[0]});
                         bias_shape = bias_reshape->get_shape();

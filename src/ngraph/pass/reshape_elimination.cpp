@@ -33,6 +33,10 @@
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/util.hpp"
 
+extern template ngraph::AxisVector
+    ngraph::apply_permutation<ngraph::AxisVector>(ngraph::AxisVector input,
+                                                  ngraph::AxisVector order);
+
 void ngraph::pass::ReshapeElimination::construct_identity_reshape_pattern()
 {
     Shape shape_op{3};
@@ -55,8 +59,7 @@ void ngraph::pass::ReshapeElimination::construct_identity_reshape_pattern()
             return false;
         }
 
-        Shape do_r1(r1->get_shape().size());
-        std::iota(begin(do_r1), end(do_r1), 0);
+        auto do_r1 = ngraph::get_default_order(r1->get_shape());
 
         if (do_r1 != r1->get_input_order())
         {
@@ -101,10 +104,8 @@ void ngraph::pass::ReshapeElimination::construct_reshapex2_pattern()
         auto r2 = std::dynamic_pointer_cast<op::Reshape>(m.get_match_root());
         auto r1 = std::dynamic_pointer_cast<op::Reshape>(r2->get_argument(0));
 
-        Shape do_r2(r1->get_shape().size());
-        std::iota(begin(do_r2), end(do_r2), 0);
-        Shape do_r1(gop->get_shape().size());
-        std::iota(begin(do_r1), end(do_r1), 0);
+        auto do_r2 = ngraph::get_default_order(r1->get_shape());
+        auto do_r1 = ngraph::get_default_order(gop->get_shape());
 
         NGRAPH_DEBUG << "r1's i/o = " << vector_to_string(r1->get_input_order())
                      << "do_r1 = " << vector_to_string(do_r1);

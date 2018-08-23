@@ -14,25 +14,12 @@
 # limitations under the License.
 # ******************************************************************************
 
-set (SRC
-    nbench.cpp
-    benchmark.cpp
-)
+add_library(onnxifi-ngraph SHARED onnxifi.cpp)
+target_link_libraries(onnxifi-ngraph PRIVATE ngraph)
 
-add_executable(nbench ${SRC})
+set(ONNXIFI_VERSION ${NGRAPH_VERSION})
+set(ONNXIFI_ABI_VERSION 1)
 
-target_link_libraries(nbench ngraph)
-if (NGRAPH_CPU_ENABLE)
-    target_link_libraries(nbench cpu_backend)
-endif()
-if (NGRAPH_INTELGPU_ENABLE)
-    target_link_libraries(nbench intelgpu_backend)
-endif()
-if (NGRAPH_GPU_ENABLE)
-    target_link_libraries(nbench gpu_backend)
-endif()
-if (NGRAPH_INTERPRETER_ENABLE)
-    target_link_libraries(nbench interpreter_backend)
-endif()
+set_target_properties(onnxifi-ngraph PROPERTIES VERSION ${ONNXIFI_VERSION} SOVERSION ${ONNXIFI_ABI_VERSION})
 
-install(TARGETS nbench RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN})
+install(TARGETS onnxifi-ngraph DESTINATION ${NGRAPH_INSTALL_LIB})

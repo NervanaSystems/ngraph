@@ -14,11 +14,13 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <algorithm>
 #include <cassert>
 #include <deque>
 #include <forward_list>
 #include <iomanip>
 #include <map>
+#include <numeric>
 #include <unordered_set>
 
 #include "ngraph/function.hpp"
@@ -471,3 +473,15 @@ T ngraph::apply_permutation(T input, AxisVector order)
 
 template AxisVector ngraph::apply_permutation<AxisVector>(AxisVector input, AxisVector order);
 template Shape ngraph::apply_permutation<Shape>(Shape input, AxisVector order);
+
+AxisVector ngraph::get_default_order(const Shape& shape)
+{
+    return get_default_order(shape.size());
+}
+
+AxisVector ngraph::get_default_order(size_t rank)
+{
+    AxisVector default_order(rank);
+    std::iota(begin(default_order), end(default_order), 0);
+    return default_order;
+}
