@@ -1375,7 +1375,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
     NGRAPH_INFO << hash;
     NGRAPH_INFO << shape_size(input_shape);
     NGRAPH_INFO << out_rank;
-    if (shape_size(input_shape) < 1024 || out_rank != 0)
+    if (out_rank != 0)
     {
         uint32_t nthreads = static_cast<uint32_t>(shape_size(output_shape));
         //TODO: currently we set it to 64, will add tuning method later
@@ -1431,9 +1431,16 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
     }
     else
     {
-        kernel_name += "_1D_";
         uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
-        uint32_t block_size_x = 512;
+        uint32_t n = nthreads; 
+        uint32_t block_size_x = 1;
+        while(n > 1)
+        {
+            block_size_x <<= 1;
+            n >>= 1;    
+        }
+        block_size_x = fmin(512, block_size_x);
+        kernel_name += "_b_" + std::to_string(block_size_x);
         auto args = m_primitive_emitter->add_kernel_args();
         args.add_placeholder(dtypes[0], "in")
             .add_placeholder(dtypes[1], "out")
@@ -1452,7 +1459,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
                     writer, op, kernel, {{dtypes[0], dtypes[0], dtypes[1]}});
             }
             runtime::gpu::CudaKernelBuilder::get_reduce_1d_op(
-                writer, kernel_name, args, dtypes, op);
+                writer, kernel_name, args, dtypes, op, block_size_x);
             compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
         }
 

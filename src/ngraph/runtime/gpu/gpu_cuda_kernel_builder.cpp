@@ -266,7 +266,8 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_1d_op(codegen::CodeWriter& writ
                                                        const std::string& name,
                                                        runtime::gpu::GPUKernelArgs& args,
                                                        const std::vector<std::string>& data_types,
-                                                       const std::string& reduce_op)
+                                                       const std::string& reduce_op,
+                                                       uint32_t block_size_x)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -302,18 +303,19 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_1d_op(codegen::CodeWriter& writ
         writer.block_end();
         writer << "sdata[tid] = r;\n";
         writer << "__syncthreads();\n";
-        writer << " if (tid < 512) { sdata[tid] += sdata[tid + 512]; } __syncthreads();\n";
-        writer << " if (tid < 256) { sdata[tid] += sdata[tid + 256]; } __syncthreads();\n";
-        writer << " if (tid < 128) { sdata[tid] += sdata[tid + 128]; } __syncthreads();\n";
-        writer << " if (tid < 64) { sdata[tid] += sdata[tid + 64]; } __syncthreads();\n";
-        writer << " if (tid < 32) { r = sdata[tid] + sdata[tid + 32]; }\n";
+       
+        if(block_size_x > 512) writer << " if (tid < 512) { sdata[tid] =" << reduce_op << "(sdata[tid], sdata[tid + 512]); } __syncthreads();\n";
+        if(block_size_x > 256) writer << " if (tid < 256) { sdata[tid] = " << reduce_op << "(sdata[tid], sdata[tid + 256]); } __syncthreads();\n";
+        if(block_size_x > 128) writer << " if (tid < 128) { sdata[tid] =" << reduce_op << "(sdata[tid],  sdata[tid + 128]); } __syncthreads();\n";
+        if(block_size_x > 64) writer << " if (tid < 64) { sdata[tid] = " << reduce_op << "(sdata[tid], sdata[tid + 64]); } __syncthreads();\n";
+        if(block_size_x > 32) writer << " if (tid < 32) { r =" << reduce_op << "(sdata[tid], sdata[tid + 32]); }\n";
         
         //accumulate 32 threads
-        writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 16, 32));\n";
-        writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 8, 32));\n";
-        writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 4, 32));\n";
-        writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 2, 32));\n";
-        writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 1, 32));\n";
+        if(block_size_x > 16) writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 16, 32));\n";
+        if(block_size_x > 8) writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 8, 32));\n";
+        if(block_size_x > 4) writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 4, 32));\n";
+        if(block_size_x > 2) writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 2, 32));\n";
+        if(block_size_x > 1) writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 1, 32));\n";
         writer << "if(tid == 0)\n";
         writer.block_begin();
         {
