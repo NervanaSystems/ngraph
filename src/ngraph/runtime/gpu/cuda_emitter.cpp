@@ -1403,7 +1403,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
 
-    std::unique_ptr<gpu::primitive> replace_slice(
+    std::unique_ptr<gpu::primitive> reduce(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
             void** args_list = args.resolve_placeholder(0, &inputs[0])
                                    .resolve_placeholder(1, &outputs[0])
@@ -1423,7 +1423,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
             debug_sync();
         }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(replace_slice));
+    primitive_index = this->m_primitive_emitter->insert(std::move(reduce));
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }
