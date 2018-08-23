@@ -14,11 +14,12 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NGRAPH_ONNX_IMPORT_ENABLE)
-    add_subdirectory(onnx_import)
-    if (NGRAPH_ONNXIFI_ENABLE)
-        add_subdirectory(onnxifi)
-    endif()
-endif()
+add_library(onnxifi-ngraph SHARED onnxifi.cpp)
+target_link_libraries(onnxifi-ngraph PRIVATE ngraph)
 
+set(ONNXIFI_VERSION ${NGRAPH_VERSION})
+set(ONNXIFI_ABI_VERSION 1)
 
+set_target_properties(onnxifi-ngraph PROPERTIES VERSION ${ONNXIFI_VERSION} SOVERSION ${ONNXIFI_ABI_VERSION})
+
+install(TARGETS onnxifi-ngraph DESTINATION ${NGRAPH_INSTALL_LIB})
