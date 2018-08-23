@@ -261,6 +261,86 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_op(codegen::CodeWriter& writer,
     return;
 }
 
+//using one 32 thread block to calculate 1D reduction
+void runtime::gpu::CudaKernelBuilder::get_reduce_1d_op(codegen::CodeWriter& writer,
+                                                       const std::string& name,
+                                                       runtime::gpu::GPUKernelArgs& args,
+                                                       const std::vector<std::string>& data_types,
+                                                       const std::string& reduce_op,
+                                                       uint32_t block_size_x)
+{
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
+    writer.block_begin();
+    {
+        writer << "extern __shared__ " << data_types[1] << " sdata[1024];\n";
+        writer << "uint32_t tid = threadIdx.x; \n";
+        writer << "uint32_t step = blockDim.x; \n";
+        writer << "sdata[tid] = 0;\n";
+        writer << "uint32_t in_idx = tid;\n";
+        writer << data_types[1] << " r = 0;\n";
+        writer << "if(in_idx < nthreads)\n";
+        writer.block_begin();
+        writer << "r = in[in_idx];\n";
+        writer << "in_idx += step;\n";
+        writer.block_end();
+        //accumulate reduction to 32 threads
+        writer << "while(in_idx + (step * 7) < nthreads)\n";
+        writer.block_begin();
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                writer << "r = " << reduce_op << "(r , in[in_idx]);\n";
+                writer << "in_idx += step;\n";
+            }
+        }
+        writer.block_end();
+        writer << "while(in_idx < nthreads)\n";
+        writer.block_begin();
+        {
+            writer << "r = " << reduce_op << "(r , in[in_idx]);\n";
+            writer << "in_idx += step;\n";
+        }
+        writer.block_end();
+        writer << "sdata[tid] = r;\n";
+        writer << "__syncthreads();\n";
+
+        if (block_size_x > 512)
+            writer << " if (tid < 512) { sdata[tid] =" << reduce_op
+                   << "(sdata[tid], sdata[tid + 512]); } __syncthreads();\n";
+        if (block_size_x > 256)
+            writer << " if (tid < 256) { sdata[tid] = " << reduce_op
+                   << "(sdata[tid], sdata[tid + 256]); } __syncthreads();\n";
+        if (block_size_x > 128)
+            writer << " if (tid < 128) { sdata[tid] =" << reduce_op
+                   << "(sdata[tid],  sdata[tid + 128]); } __syncthreads();\n";
+        if (block_size_x > 64)
+            writer << " if (tid < 64) { sdata[tid] = " << reduce_op
+                   << "(sdata[tid], sdata[tid + 64]); } __syncthreads();\n";
+        if (block_size_x > 32)
+            writer << " if (tid < 32) { r =" << reduce_op << "(sdata[tid], sdata[tid + 32]); }\n";
+
+        //accumulate 32 threads
+        if (block_size_x > 16)
+            writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 16, 32));\n";
+        if (block_size_x > 8)
+            writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 8, 32));\n";
+        if (block_size_x > 4)
+            writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 4, 32));\n";
+        if (block_size_x > 2)
+            writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 2, 32));\n";
+        if (block_size_x > 1)
+            writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 1, 32));\n";
+        writer << "if(tid == 0)\n";
+        writer.block_begin();
+        {
+            writer << "out[0] = r;\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+    return;
+}
+
 void runtime::gpu::CudaKernelBuilder::get_broadcast_op(codegen::CodeWriter& writer,
                                                        const std::string& name,
                                                        runtime::gpu::GPUKernelArgs& args,

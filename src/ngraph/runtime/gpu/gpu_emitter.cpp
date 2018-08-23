@@ -851,7 +851,7 @@ namespace ngraph
                         {
                             kernel::emit_memcpyDtD(writer, out[0], args[0]);
                         }
-                        else if (out[0].get_shape().size() == 0)
+                        else if (out[0].get_shape().size() == 0 && shape_size(args[0].get_shape()) > 65536)
                         {
                             auto& cudnn_emitter =
                                 external_function->get_primitive_emitter()->get_cudnn_emitter();
