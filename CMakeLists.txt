@@ -101,6 +101,10 @@ endif()
 # Installation logic...
 #-----------------------------------------------------------------------------------------------
 
+if (NOT APPLE AND NOT WIN32)
+    include(cmake/platform.cmake)
+endif()
+
 if (DEFINED NGRAPH_INSTALL_PREFIX)
     set(CMAKE_INSTALL_PREFIX ${NGRAPH_INSTALL_PREFIX})
 endif()
