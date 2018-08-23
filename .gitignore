@@ -111,3 +111,7 @@ python/share/*
 
 python/pybind11/
 
+# Clion project files and directories
+\.idea
+build\.*
+cmake-*
