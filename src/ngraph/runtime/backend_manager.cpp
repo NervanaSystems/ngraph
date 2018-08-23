@@ -157,7 +157,7 @@ DL_HANDLE runtime::BackendManager::open_shared_library(string type)
     }
     else
     {
-        string my_directory = file_util::get_directory(find_my_file());
+        my_directory = file_util::get_directory(find_my_file());
     }
     string library_path = file_util::path_join(my_directory, library_name);
 #ifdef WIN32
