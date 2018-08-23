@@ -251,6 +251,10 @@ bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const Shape& dims,
                                                       const ngraph::element::Type type)
 {
     auto it = s_mkldnn_data_type_map.find(type);
+    if (dims.size() == 0)
+    {
+        return false;
+    }
     if (it == s_mkldnn_data_type_map.end() || it->second == mkldnn::memory::data_type::data_undef)
     {
         return false;

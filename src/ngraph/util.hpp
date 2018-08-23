@@ -26,7 +26,9 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/node_vector.hpp"
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
@@ -220,6 +222,9 @@ namespace ngraph
     void* aligned_alloc(size_t alignment, size_t size);
     void aligned_free(void*);
     size_t round_up(size_t size, size_t alignment);
+
+    AxisVector get_default_order(size_t rank);
+    AxisVector get_default_order(const Shape& shape);
 
     /*
     * Return type struct for cache_fprop, with the modified fprop and bprop
