@@ -21,6 +21,7 @@
 #include "ngraph/frontend/onnx_import/op/add.hpp"
 #include "ngraph/frontend/onnx_import/op/batch_norm.hpp"
 #include "ngraph/frontend/onnx_import/op/constant.hpp"
+#include "ngraph/frontend/onnx_import/op/conv.hpp"
 #include "ngraph/frontend/onnx_import/op/relu.hpp"
 #include "ngraph/frontend/onnx_import/op/split.hpp"
 #include "ops_bridge.hpp"
@@ -71,6 +72,7 @@ namespace ngraph
                     m_map.emplace("BatchNormalization",
                                   std::bind(op::batch_norm, std::placeholders::_1));
                     m_map.emplace("Constant", std::bind(op::constant, std::placeholders::_1));
+                    m_map.emplace("Conv", std::bind(op::conv, std::placeholders::_1));
                     m_map.emplace("Relu", std::bind(op::relu, std::placeholders::_1));
                     m_map.emplace("Split", std::bind(op::split, std::placeholders::_1));
                 }
