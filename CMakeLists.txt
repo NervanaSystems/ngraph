@@ -101,16 +101,25 @@ endif()
 # Installation logic...
 #-----------------------------------------------------------------------------------------------
 
+if (NOT APPLE AND NOT WIN32)
+    include(GNUInstallDirs)
+else()
+    set(CMAKE_INSTALL_BINDIR "bin")
+    set(CMAKE_INSTALL_INCLUDEDIR "include")
+    set(CMAKE_INSTALL_DOCDIR "doc")
+    set(CMAKE_INSTALL_LIBDIR "lib")
+endif()
+
 if (DEFINED NGRAPH_INSTALL_PREFIX)
     set(CMAKE_INSTALL_PREFIX ${NGRAPH_INSTALL_PREFIX})
 endif()
 message(STATUS "Installation directory: ${CMAKE_INSTALL_PREFIX}")
 
 # Destinations
-set(NGRAPH_INSTALL_LIB "${CMAKE_INSTALL_PREFIX}/lib")
-set(NGRAPH_INSTALL_INCLUDE "${CMAKE_INSTALL_PREFIX}/include")
-set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/doc")
-set(NGRAPH_INSTALL_BIN "${CMAKE_INSTALL_PREFIX}/bin")
+set(NGRAPH_INSTALL_LIB "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+set(NGRAPH_INSTALL_INCLUDE "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
+set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DOCDIR}")
+set(NGRAPH_INSTALL_BIN "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}")
 set(CMAKE_INSTALL_RPATH "$ORIGIN")
 
 #-----------------------------------------------------------------------------------------------
