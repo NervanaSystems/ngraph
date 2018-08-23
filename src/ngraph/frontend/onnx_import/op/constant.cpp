@@ -14,8 +14,6 @@
 * limitations under the License.
 *******************************************************************************/
 
-#pragma once
-
 #include "ngraph/op/constant.hpp"
 #include "ngraph/frontend/onnx_import/node.hpp"
 #include "ngraph/frontend/onnx_import/tensor.hpp"
