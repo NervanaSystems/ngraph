@@ -43,19 +43,19 @@ endif()
 
 # This section sets up MKL as an external project to be used later by MKLDNN
 
-set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/v0.16/")
-set(MKLVERSION "2019.0.20180710")
+set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/v0.14/")
+set(MKLVERSION "2018.0.3.20180406")
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     set(MKLPACKAGE "mklml_lnx_${MKLVERSION}.tgz")
-    set(MKL_SHA1_HASH e7c34105d486908b87b4b8c667c3a089f079ca51)
+    set(MKL_SHA1_HASH aea0d9ce65773cfcf5d8292b8db553bde965fc8f)
     set(MKL_LIBS libiomp5.so libmklml_intel.so)
 elseif (APPLE)
     set(MKLPACKAGE "mklml_mac_${MKLVERSION}.tgz")
-    set(MKL_SHA1_HASH c873d2bd36a0100344d1aac1b1e56c8c3a43a845)
+    set(MKL_SHA1_HASH d76083fd5a79767a96572ad0e23e7f4c892818f2)
     set(MKL_LIBS libmklml.dylib libiomp5.dylib)
 elseif (WIN32)
     set(MKLPACKAGE "mklml_win_${MKLVERSION}.zip")
-    set(MKL_SHA1_HASH 3767d9a1ad679d647b8c6edf1f97c767881d0c5c)
+    set(MKL_SHA1_HASH d607ca92d7bfc101f0828c0b005098b75531669b)
     set(MKL_LIBS mklml.dll libiomp5md.dll)
 endif()
 set(MKLURL ${MKLURLROOT}${MKLPACKAGE})
@@ -82,7 +82,7 @@ foreach(LIB ${MKL_LIBS})
 endforeach()
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
-set(MKLDNN_GIT_TAG "4e33378")
+set(MKLDNN_GIT_TAG "0e7ca73")
 
 # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
 if(${CMAKE_VERSION} VERSION_LESS 3.2)
@@ -135,7 +135,6 @@ else()
         CMAKE_ARGS
             -DWITH_TEST=FALSE
             -DWITH_EXAMPLE=FALSE
-            -DMKLDNN_ENABLE_CONCURRENT_EXEC=TRUE
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
             -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
@@ -166,7 +165,6 @@ add_custom_command(TARGET ext_mkldnn POST_BUILD
 )
 
 add_library(libmkldnn INTERFACE)
-add_dependencies(libmkldnn ext_mkldnn)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
 target_link_libraries(libmkldnn INTERFACE
     ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn${CMAKE_SHARED_LIBRARY_SUFFIX}
