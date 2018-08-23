@@ -1372,9 +1372,6 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
         }
     }
     NVShape output_strides = row_major_strides(output_shape);
-    NGRAPH_INFO << hash;
-    NGRAPH_INFO << shape_size(input_shape);
-    NGRAPH_INFO << out_rank;
     if (out_rank != 0)
     {
         uint32_t nthreads = static_cast<uint32_t>(shape_size(output_shape));
