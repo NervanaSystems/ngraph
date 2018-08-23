@@ -1372,8 +1372,10 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
         }
     }
     NVShape output_strides = row_major_strides(output_shape);
-
-    if (shape_size(input_shape) < 32 || out_rank != 0)
+    NGRAPH_INFO << hash;
+    NGRAPH_INFO << shape_size(input_shape);
+    NGRAPH_INFO << out_rank;
+    if (shape_size(input_shape) < 1024 || out_rank != 0)
     {
         uint32_t nthreads = static_cast<uint32_t>(shape_size(output_shape));
         //TODO: currently we set it to 64, will add tuning method later
@@ -1429,9 +1431,9 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
     }
     else
     {
+        kernel_name += "_1D_";
         uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
-        //TODO: currently we set it to 64, will add tuning method later
-        uint32_t block_size_x = 32;
+        uint32_t block_size_x = 512;
         auto args = m_primitive_emitter->add_kernel_args();
         args.add_placeholder(dtypes[0], "in")
             .add_placeholder(dtypes[1], "out")

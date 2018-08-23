@@ -50,7 +50,7 @@ multimap<size_t, string>
     {
         shared_ptr<Node> node = node_map.at(p.name());
         string op = p.name().substr(0, p.name().find('_'));
-        string shape_name = " {" + join(node->get_outputs()[0].get_shape()) + "} ";
+        string shape_name = " {" + join(node->get_inputs()[0].get_shape()) + "},{" + join(node->get_outputs()[0].get_shape()) + "} ";
         timing[op + shape_name] += p.microseconds();
         count[op + shape_name] += 1;
     }

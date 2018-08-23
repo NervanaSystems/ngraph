@@ -271,18 +271,19 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_1d_op(codegen::CodeWriter& writ
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
+        writer << "extern __shared__ " << data_types[1] << " sdata[1024];\n";
         writer << "uint32_t tid = threadIdx.x; \n";
         writer << "uint32_t step = blockDim.x; \n";
+        writer << "sdata[tid] = 0;\n";
         writer << "uint32_t in_idx = tid;\n";
         writer << data_types[1] << " r = 0;\n";
-        writer << "if(in_idx >= nthreads)\n";
+        writer << "if(in_idx < nthreads)\n";
         writer.block_begin();
-        writer << "return;\n";
-        writer.block_end();
         writer << "r = in[in_idx];\n";
         writer << "in_idx += step;\n";
+        writer.block_end();
         //accumulate reduction to 32 threads
-        writer << "while((in_idx << 3) < nthreads)\n";
+        writer << "while(in_idx + (step * 7) < nthreads)\n";
         writer.block_begin();
         {
             for (int i = 0; i < 8; i++)
@@ -299,6 +300,14 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_1d_op(codegen::CodeWriter& writ
             writer << "in_idx += step;\n";
         }
         writer.block_end();
+        writer << "sdata[tid] = r;\n";
+        writer << "__syncthreads();\n";
+        writer << " if (tid < 512) { sdata[tid] += sdata[tid + 512]; } __syncthreads();\n";
+        writer << " if (tid < 256) { sdata[tid] += sdata[tid + 256]; } __syncthreads();\n";
+        writer << " if (tid < 128) { sdata[tid] += sdata[tid + 128]; } __syncthreads();\n";
+        writer << " if (tid < 64) { sdata[tid] += sdata[tid + 64]; } __syncthreads();\n";
+        writer << " if (tid < 32) { r = sdata[tid] + sdata[tid + 32]; }\n";
+        
         //accumulate 32 threads
         writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 16, 32));\n";
         writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, 8, 32));\n";
@@ -308,7 +317,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_1d_op(codegen::CodeWriter& writ
         writer << "if(tid == 0)\n";
         writer.block_begin();
         {
-            writer << "out[0] = r;";
+            writer << "out[0] = r;\n";
         }
         writer.block_end();
     }
