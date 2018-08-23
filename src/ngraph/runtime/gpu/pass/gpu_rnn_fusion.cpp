@@ -611,19 +611,19 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
     size_t ref_num_of_rnn_fused_layer = 1;
 
     auto ref_rnn_node = std::make_shared<op::gpu::Rnn>(src_slice,
-                                                  src_iter_label,
-                                                  weights_layer_label,
-                                                  weights_iter_label,
-                                                  bias_layer_label,
-                                                  bias_iter_label,
-                                                  state_iter_label,
-                                                  ref_number_of_timesteps,
-                                                  ref_number_of_gates_per_cell,
-                                                  ref_src_seq_length,
-                                                  ref_src_layer_feature_size,
-                                                  ref_feature_size,
-                                                  ref_rnn_direction,
-                                                  ref_num_of_rnn_fused_layer);
+                                                       src_iter_label,
+                                                       weights_layer_label,
+                                                       weights_iter_label,
+                                                       bias_layer_label,
+                                                       bias_iter_label,
+                                                       state_iter_label,
+                                                       ref_number_of_timesteps,
+                                                       ref_number_of_gates_per_cell,
+                                                       ref_src_seq_length,
+                                                       ref_src_layer_feature_size,
+                                                       ref_feature_size,
+                                                       ref_rnn_direction,
+                                                       ref_num_of_rnn_fused_layer);
 
     NodeVector ht_slice_per_timestep;
     auto rnn_ht_out = std::make_shared<op::GetOutputElement>(ref_rnn_node, 0);
@@ -680,7 +680,8 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         std::vector<std::shared_ptr<op::gpu::Rnn>> rnn_nodes;
         for (auto& rnn_goe_input : m.get_bound_nodes_for_pattern(rnn_ht_label))
         {
-            auto rnn_op = std::dynamic_pointer_cast<op::gpu::Rnn>(rnn_goe_input->get_arguments()[0]);
+            auto rnn_op =
+                std::dynamic_pointer_cast<op::gpu::Rnn>(rnn_goe_input->get_arguments()[0]);
             if (rnn_op)
             {
                 rnn_nodes.push_back(rnn_op);
@@ -764,23 +765,24 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         if ((bias_iter->get_arguments().size()) != num_fused_rnn_layers)
         {
             throw ngraph_error(
-                "recurrent bias of RNN op in the layer fusion is not equal to num of fused_rnn_layers");
+                "recurrent bias of RNN op in the layer fusion is not equal to num of "
+                "fused_rnn_layers");
         }
 
         auto rnn = std::make_shared<op::gpu::Rnn>(src_layer,
-                                             src_iter,
-                                             weights_layer,
-                                             weights_iter,
-                                             bias_layer,
-                                             bias_iter,
-                                             state_iter,
-                                             num_time_steps,
-                                             num_gates_in_lstm,
-                                             sequence_len,
-                                             src_layer_feature_size,
-                                             feature_size,
-                                             rnn_direction,
-                                             num_fused_rnn_layers);
+                                                  src_iter,
+                                                  weights_layer,
+                                                  weights_iter,
+                                                  bias_layer,
+                                                  bias_iter,
+                                                  state_iter,
+                                                  num_time_steps,
+                                                  num_gates_in_lstm,
+                                                  sequence_len,
+                                                  src_layer_feature_size,
+                                                  feature_size,
+                                                  rnn_direction,
+                                                  num_fused_rnn_layers);
 
         auto layer_rnn_ht = std::make_shared<op::GetOutputElement>(rnn, 0);
         // auto layer_rnn_ht = std::make_shared<op::GetOutputElement>(rnn, 1);
