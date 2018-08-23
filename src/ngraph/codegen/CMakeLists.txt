@@ -69,9 +69,11 @@ add_custom_target(header_resource
     BYPRODUCTS
 )
 
-add_library(codegen SHARED ${SRC})
-set_target_properties(codegen PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
-add_dependencies(codegen header_resource libmkldnn libeigen)
-target_include_directories(codegen SYSTEM PUBLIC ${CMAKE_BINARY_DIR})
-target_link_libraries(codegen PRIVATE libllvm ngraph)
-install(TARGETS codegen DESTINATION ${NGRAPH_INSTALL_LIB})
+if (NGRAPH_GPU_ENABLE OR (NGRAPH_CPU_ENABLE AND NOT NGRAPH_DEX_ONLY))
+    add_library(codegen SHARED ${SRC})
+    set_target_properties(codegen PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
+    add_dependencies(codegen header_resource libmkldnn libeigen)
+    target_include_directories(codegen SYSTEM PUBLIC ${CMAKE_BINARY_DIR})
+    target_link_libraries(codegen PRIVATE libllvm ngraph)
+    install(TARGETS codegen DESTINATION ${NGRAPH_INSTALL_LIB})
+endif()
