@@ -43,16 +43,19 @@ namespace ngraph
                 //code from python not implemented in c++ yet.
                 //reshape_for_matmul(node, input_a, input_b);
 
-                std::shared_ptr<ngraph::Node> a_dot_b = std::make_shared<ngraph::op::Dot>(input_a, input_b);
+                std::shared_ptr<ngraph::Node> a_dot_b =
+                    std::make_shared<ngraph::op::Dot>(input_a, input_b);
 
-                std::shared_ptr<ngraph::Node> alpha_node = std::make_shared<ngraph::op::Constant>(a_dot_b->get_element_type(), ngraph::Shape{}, std::vector<double>{alpha});
+                std::shared_ptr<ngraph::Node> alpha_node = std::make_shared<ngraph::op::Constant>(
+                    a_dot_b->get_element_type(), ngraph::Shape{}, std::vector<double>{alpha});
                 alpha_node = std::make_shared<ngraph::op::Broadcast>(
                     alpha_node,
                     a_dot_b->get_shape(),
                     calculate_broadcast_axes(a_dot_b->get_shape(), alpha_node->get_shape()));
                 a_dot_b = std::make_shared<ngraph::op::Multiply>(alpha_node, a_dot_b);
 
-                std::shared_ptr<ngraph::Node> beta_node = std::make_shared<ngraph::op::Constant>(input_c->get_element_type(), ngraph::Shape{}, std::vector<double>{beta});
+                std::shared_ptr<ngraph::Node> beta_node = std::make_shared<ngraph::op::Constant>(
+                    input_c->get_element_type(), ngraph::Shape{}, std::vector<double>{beta});
                 beta_node = std::make_shared<ngraph::op::Broadcast>(
                     beta_node,
                     input_c->get_shape(),

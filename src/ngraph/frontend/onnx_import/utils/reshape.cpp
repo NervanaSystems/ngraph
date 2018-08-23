@@ -25,7 +25,9 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        std::shared_ptr<ngraph::Node> reorder_axes(std::shared_ptr<ngraph::Node>& node, std::vector<size_t> axes_order = std::vector<size_t>())
+        std::shared_ptr<ngraph::Node>
+            reorder_axes(std::shared_ptr<ngraph::Node>& node,
+                         std::vector<size_t> axes_order = std::vector<size_t>())
         {
             ngraph::Shape out_shape = node->get_shape();
             if (axes_order.size() == 0)

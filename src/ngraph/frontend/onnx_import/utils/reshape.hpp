@@ -23,9 +23,9 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        std::shared_ptr<ngraph::Node> reorder_axes(std::shared_ptr<ngraph::Node>& node, std::vector<int> axes_order);
+        std::shared_ptr<ngraph::Node> reorder_axes(std::shared_ptr<ngraph::Node>& node,
+                                                   std::vector<int> axes_order);
         std::shared_ptr<ngraph::Node> transpose(std::shared_ptr<ngraph::Node>& node);
     } // namespace onnx_import
 
 } // namespace ngraph
-
