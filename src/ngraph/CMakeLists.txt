@@ -186,7 +186,7 @@ endif()
 
 include_directories("${NGRAPH_INCLUDE_PATH}")
 
-add_subdirectory(codegen EXCLUDE_FROM_ALL)
+add_subdirectory(codegen)
 add_subdirectory(runtime)
 
 add_library(ngraph SHARED ${SRC})
