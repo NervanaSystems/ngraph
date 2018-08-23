@@ -109,7 +109,7 @@ bool runtime::cpu::pass::CPUCollapseDims::run_on_function(std::shared_ptr<ngraph
                 // Null broadcast operation, replace with reshape
                 AxisVector axis_order = ngraph::get_default_order(input_shape);
                 auto reshape = std::make_shared<op::Reshape>(
-                    node->get_argument(0), axis_order, Shape(cdims.output_shape));
+                    node->get_argument(0), axis_order, n->get_shape());
                 ngraph::replace_node(n, reshape);
                 replaced = true;
             }
