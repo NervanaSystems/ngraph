@@ -41,6 +41,8 @@ add_library(onnx_import STATIC
         op/constant.cpp
         op/constant.hpp
         op/conv.cpp
+        op/gemm.cpp
+        op/gemm.hpp
         op/mul.hpp
         op/relu.hpp
         op/split.cpp
@@ -50,6 +52,8 @@ add_library(onnx_import STATIC
         utils/broadcasting.hpp
         utils/convpool.cpp
         utils/convpool.hpp
+        utils/reshape.cpp
+        utils/reshape.hpp
         core/attribute.cpp
         core/attribute.hpp
         core/graph.cpp
