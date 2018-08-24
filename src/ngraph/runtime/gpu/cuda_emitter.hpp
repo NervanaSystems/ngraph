@@ -117,11 +117,11 @@ namespace ngraph
 
                 template <typename T>
                 size_t build_reduce(const std::vector<std::string>& dtypes,
-                                    NVShape tensor_shape,
+                                    NVShape input_shape,
                                     NVShape reduce_axis)
                 {
                     return build_reduce(dtypes,
-                                        tensor_shape,
+                                        input_shape,
                                         reduce_axis,
                                         CudaOpMap<T>::op,
                                         CudaOpMap<T>::math_kernel);
@@ -194,8 +194,23 @@ namespace ngraph
                                                     const char* reduce_op,
                                                     bool save_elementwise);
                 size_t build_reduce(const std::vector<std::string>& dtypes,
-                                    NVShape tensor_shape,
+                                    NVShape input_shape,
                                     NVShape reduce_axis,
+                                    const char* op,
+                                    const char* kernel);
+                size_t build_reduce_to_nd(const std::vector<std::string>& dtypes,
+                                    NVShape input_shape,
+                                    NVShape reduce_axis,
+                                    const char* op,
+                                    const char* kernel);
+                size_t build_reduce_to_scalar(const std::vector<std::string>& dtypes,
+                                    NVShape input_shape,
+                                    const char* op,
+                                    const char* kernel);
+                size_t build_reduce_to_scalar_acc(const std::vector<std::string>& dtypes,
+                                    NVShape input_shape,
+                                    NVShape output_shape,
+                                    uint32_t block_size_x,
                                     const char* op,
                                     const char* kernel);
                 GPUPrimitiveEmitter* m_primitive_emitter;

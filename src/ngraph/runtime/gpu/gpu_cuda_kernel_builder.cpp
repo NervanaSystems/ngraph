@@ -182,13 +182,14 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
 }
 
 //each thread calculate the whole reduction of one output
-void runtime::gpu::CudaKernelBuilder::get_reduce_op(codegen::CodeWriter& writer,
-                                                    const std::string& name,
-                                                    runtime::gpu::GPUKernelArgs& args,
-                                                    const std::vector<std::string>& data_types,
-                                                    const std::string& reduce_op,
-                                                    size_t out_rank,
-                                                    size_t reduce_rank)
+void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
+    codegen::CodeWriter& writer,
+    const std::string& name,
+    runtime::gpu::GPUKernelArgs& args,
+    const std::vector<std::string>& data_types,
+    const std::string& reduce_op,
+    size_t out_rank,
+    size_t reduce_rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -262,12 +263,13 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_op(codegen::CodeWriter& writer,
 }
 
 //using one 32 thread block to calculate 1D reduction
-void runtime::gpu::CudaKernelBuilder::get_reduce_1d_op(codegen::CodeWriter& writer,
-                                                       const std::string& name,
-                                                       runtime::gpu::GPUKernelArgs& args,
-                                                       const std::vector<std::string>& data_types,
-                                                       const std::string& reduce_op,
-                                                       uint32_t block_size_x)
+void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
+    codegen::CodeWriter& writer,
+    const std::string& name,
+    runtime::gpu::GPUKernelArgs& args,
+    const std::vector<std::string>& data_types,
+    const std::string& reduce_op,
+    uint32_t block_size_x)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -341,11 +343,12 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_1d_op(codegen::CodeWriter& writ
     return;
 }
 
-void runtime::gpu::CudaKernelBuilder::get_reduce_acc_op(codegen::CodeWriter& writer,
-                                                        const std::string& name,
-                                                        runtime::gpu::GPUKernelArgs& args,
-                                                        const std::vector<std::string>& data_types,
-                                                        const std::string& reduce_op)
+void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
+    codegen::CodeWriter& writer,
+    const std::string& name,
+    runtime::gpu::GPUKernelArgs& args,
+    const std::vector<std::string>& data_types,
+    const std::string& reduce_op)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
