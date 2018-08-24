@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "ngraph/node_vector.hpp"
 
 #include "core/node.hpp"
@@ -26,18 +28,9 @@ namespace ngraph
     {
         namespace op
         {
-            /**
-             * @brief Performs ONNX Conv operation.
-             *
-             * @param node   The ONNX node object representing this operation.
-             *
-             * @return The vector containing Ngraph nodes producing output of ONNX convolution
-             *         operation.
-             */
-            NodeVector conv(const Node& node);
+            NodeVector gemm(const Node& node);
+        } // namespace  op
 
-        } // namespace op
+    } // namespace  onnx_import
 
-    } // namespace onnx_import
-
-} // namespace ngraph
+} // namespace  ngraph
