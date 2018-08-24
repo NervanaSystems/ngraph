@@ -1,6 +1,6 @@
 # ******************************************************************************
 # Copyright (c) 2017-2018 Intel Copyright
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -34,21 +34,6 @@ add_library(onnx_import_interface OBJECT
 
 add_library(onnx_import STATIC
         onnx.pb.cc
-        exceptions.hpp
-        op/add.hpp
-        op/batch_norm.cpp
-        op/batch_norm.hpp
-        op/constant.cpp
-        op/constant.hpp
-        op/conv.cpp
-        op/relu.hpp
-        op/split.cpp
-        op/split.hpp
-        ops_bridge.cpp
-        utils/broadcasting.cpp
-        utils/broadcasting.hpp
-        utils/convpool.cpp
-        utils/convpool.hpp
         core/attribute.cpp
         core/attribute.hpp
         core/graph.cpp
@@ -57,7 +42,27 @@ add_library(onnx_import STATIC
         core/node.cpp
         core/node.hpp
         core/tensor.hpp
-        core/value_info.hpp)
+        core/value_info.hpp
+        exceptions.hpp
+        op/add.hpp
+        op/batch_norm.cpp
+        op/batch_norm.hpp
+        op/constant.cpp
+        op/constant.hpp
+        op/conv.cpp
+        op/gemm.cpp
+        op/gemm.hpp
+        op/mul.hpp
+        op/relu.hpp
+        op/split.cpp
+        op/split.hpp
+        ops_bridge.cpp
+        utils/broadcasting.cpp
+        utils/broadcasting.hpp
+        utils/convpool.cpp
+        utils/convpool.hpp
+        utils/reshape.cpp
+        utils/reshape.hpp)
 
 add_dependencies(onnx_import onnx_import_interface)
 
