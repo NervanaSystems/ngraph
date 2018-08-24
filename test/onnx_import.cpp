@@ -166,7 +166,7 @@ TEST(onnx, model_conv2d_strides_assymetric_padding)
 {
     // Convolution with strides=2 and padding=1
     auto function{ngraph::onnx_import::import_onnx_function(ngraph::file_util::path_join(
-        SERIALIZED_ZOO, "onnx/conv_with_strides_and_assymmetric_padding.onnx"))};
+        SERIALIZED_ZOO, "onnx/conv_with_strides_and_asymmetric_padding.onnx"))};
 
     // (1, 1, 4, 2)
     auto expected_output = ngraph::test::NDArray<float, 4>(
