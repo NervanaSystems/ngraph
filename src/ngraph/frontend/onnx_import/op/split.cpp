@@ -16,7 +16,7 @@
 
 #include "ngraph/op/slice.hpp"
 
-#include "ngraph/frontend/onnx_import/op/split.hpp"
+#include "op/split.hpp"
 
 namespace ngraph
 {

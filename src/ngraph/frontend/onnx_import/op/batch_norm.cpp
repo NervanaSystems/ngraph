@@ -20,7 +20,6 @@
 #include "ngraph/op/batch_norm.hpp"
 
 #include "ngraph/frontend/onnx_import/exceptions.hpp"
-#include "ngraph/frontend/onnx_import/node.hpp"
 #include "ngraph/frontend/onnx_import/op/batch_norm.hpp"
 
 namespace ngraph
