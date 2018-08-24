@@ -208,7 +208,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_op(codegen::CodeWriter& writer,
             for (int64_t i = 0; i < static_cast<int64_t>(out_rank); i++)
             {
                 writer << "in_idx += (dim_idx_generator / out_strides" << i
-                       << ") * non_reduce_in_strides" << i << ";\n";
+                       << ") * non_reduce_strides" << i << ";\n";
                 writer << "dim_idx_generator %= out_strides" << i << ";\n";
             }
             int64_t last_r_idx = static_cast<int64_t>(reduce_rank) - 1;
