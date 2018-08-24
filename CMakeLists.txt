@@ -95,6 +95,7 @@ option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     option(NGRAPH_USE_SYSTEM_PROTOBUF "Use system provided Protobuf shared object" FALSE)
+    option(NGRAPH_ONNXIFI_ENABLE "Enable ONNX Interface for Framework Integration" TRUE)
 endif()
 
 #-----------------------------------------------------------------------------------------------
@@ -233,7 +234,7 @@ endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     if (NOT NGRAPH_USE_SYSTEM_PROTOBUF)
-        include (cmake/external_protobuf.cmake)
+        include(cmake/external_protobuf.cmake)
     else()
         find_package(Protobuf 2.6.1 REQUIRED)
     endif()
