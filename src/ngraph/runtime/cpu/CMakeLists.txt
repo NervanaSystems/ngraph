@@ -62,6 +62,7 @@ set(SRC
     builder/softmax.cpp
     builder/sum.cpp
     builder/quantize.cpp
+    builder/dequantize.cpp
     kernel/eigen_thread_pool.cpp
     kernel/pad.cpp
     kernel/reduce_max.cpp
@@ -84,6 +85,7 @@ set(SRC
     op/rnn.cpp
     op/sigmoid_mul.cpp
     op/quantize.cpp
+    op/dequantize.cpp
     pass/cpu_assignment.cpp
     pass/cpu_collapse_dims.cpp
     pass/cpu_concat_inputs.cpp
