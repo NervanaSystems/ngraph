@@ -147,6 +147,7 @@
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
@@ -290,6 +291,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Floor), &runtime::cpu::CPU_Emitter::emit<op::Floor>},
     {TI(ngraph::op::Ceiling), &runtime::cpu::CPU_Emitter::emit<op::Ceiling>},
     {TI(ngraph::op::Sqrt), &runtime::cpu::CPU_Emitter::emit<op::Sqrt>},
+    {TI(ngraph::op::Quantize), &runtime::cpu::CPU_Emitter::emit<op::Quantize>},
     {TI(ngraph::op::Convolution), &runtime::cpu::CPU_Emitter::emit<op::Convolution>},
     {TI(ngraph::op::ConvolutionBackpropFilters),
      &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropFilters>},
