@@ -49,6 +49,9 @@ Node::Node(const std::string& node_type, const NodeVector& arguments, size_t out
     set_output_size(output_size);
 }
 
+// While we are still doing validation and type inference in the constructor, this is true
+// It can be set to false to debug doing validation/inference after construction. When that
+// is working, these two functions will be removed.
 static bool in_transition = true;
 
 void Node::constructor_validate_and_infer_types()
