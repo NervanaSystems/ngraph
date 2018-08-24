@@ -16,9 +16,10 @@
 
 #pragma once
 
-#include "core/node.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/relu.hpp"
+
+#include "core/node.hpp"
 
 namespace ngraph
 {
