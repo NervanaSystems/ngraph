@@ -1329,10 +1329,16 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
                                                const char* op,
                                                const char* kernel)
 {
+    size_t rank = input_shape.size();
+    size_t reduce_rank = reduce_axis.size();
+    size_t out_rank = rank - reduce_rank;
     // assumes NC{d1,...,dn} format
-    std::string kernel_name = "reduce_" + join(dtypes, "_") + "_ri_" +
-                              std::to_string(input_shape.size()) + "_rr_" +
-                              std::to_string(reduce_axis.size());
+    std::string kernel_name = "reduce_" + join(dtypes, "_");
+    if (out_rank != 0)
+    {
+        kernel_name += "_ri_" + std::to_string(input_shape.size()) + "_rr_" +
+                       std::to_string(reduce_axis.size());
+    }
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
 
     std::stringstream ss;
@@ -1345,9 +1351,6 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
         return primitive_index;
     }
 
-    size_t rank = input_shape.size();
-    size_t reduce_rank = reduce_axis.size();
-    size_t out_rank = rank - reduce_rank;
     NVShape reduce_flag(rank, 0);
     for (auto a : reduce_axis)
     {
@@ -1465,17 +1468,8 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
                                        .resolve_placeholder(1, &outputs[0])
                                        .get_argument_list();
 
-                CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                              1,
-                                              1,
-                                              1,
-                                              block_size_x,
-                                              1,
-                                              1,
-                                              0,
-                                              NULL,
-                                              args_list,
-                                              0));
+                CUDA_SAFE_CALL(cuLaunchKernel(
+                    *compiled_kernel.get(), 1, 1, 1, block_size_x, 1, 1, 0, NULL, args_list, 0));
                 debug_sync();
             }});
         primitive_index = this->m_primitive_emitter->insert(std::move(reduce));
