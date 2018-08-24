@@ -24,8 +24,8 @@ ngraph::op::Quantize::Quantize(std::shared_ptr<Node> input,
     , m_element_type(type)
 {
     add_output(type, input->get_shape());
-    add_output(input->get_element_type(), Shape{1});
-    add_output(input->get_element_type(), Shape{1});
+    add_output(input->get_element_type(), Shape{});
+    add_output(input->get_element_type(), Shape{});
 }
 
 std::shared_ptr<ngraph::Node>

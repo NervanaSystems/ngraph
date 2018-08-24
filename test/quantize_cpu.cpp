@@ -39,8 +39,8 @@ TEST(quantize_cpu, quantize_to_uint8_small)
     vector<float> a_data = {-85.0, 0.0, 2.0, 10.0, 15.0};
     Shape shape_a{5};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto B = op::Constant::create(element::f32, Shape{1}, {-85.0f});
-    auto C = op::Constant::create(element::f32, Shape{1}, {15.0f});
+    auto B = op::Constant::create(element::f32, Shape{}, {-85.0f});
+    auto C = op::Constant::create(element::f32, Shape{}, {15.0f});
     auto QT = make_shared<op::Quantize>(A, B, C, element::u8);
     auto output_data = std::make_shared<op::GetOutputElement>(QT, 0);
     auto output_min = std::make_shared<op::GetOutputElement>(QT, 1);
@@ -52,8 +52,8 @@ TEST(quantize_cpu, quantize_to_uint8_small)
     auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, a_data);
     auto result = backend->create_tensor(element::u8, shape_a);
-    auto result_min = backend->create_tensor(element::f32, Shape{1});
-    auto result_max = backend->create_tensor(element::f32, Shape{1});
+    auto result_min = backend->create_tensor(element::f32, Shape{});
+    auto result_max = backend->create_tensor(element::f32, Shape{});
     backend->call(f, {result, result_min, result_max}, {a});
     EXPECT_EQ((vector<uint8_t>{0, 0, 6, 30, 45}), read_vector<uint8_t>(result));
     EXPECT_EQ((vector<float>{0.0}), read_vector<float>(result_min));
@@ -65,8 +65,8 @@ TEST(quantize_cpu, quantize_to_uint8)
     vector<float> a_data = {-255.0, 0.0, 1.0, 1.25, 1.75, 64.0, 127.0, 500.0};
     Shape shape_a{8};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto B = op::Constant::create(element::f32, Shape{1}, {-255.0f});
-    auto C = op::Constant::create(element::f32, Shape{1}, {127.0f});
+    auto B = op::Constant::create(element::f32, Shape{}, {-255.0f});
+    auto C = op::Constant::create(element::f32, Shape{}, {127.0f});
     auto QT = make_shared<op::Quantize>(A, B, C, element::u8);
     auto output_data = std::make_shared<op::GetOutputElement>(QT, 0);
     auto output_min = std::make_shared<op::GetOutputElement>(QT, 1);
@@ -78,8 +78,8 @@ TEST(quantize_cpu, quantize_to_uint8)
     auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, a_data);
     auto result = backend->create_tensor(element::u8, shape_a);
-    auto result_min = backend->create_tensor(element::f32, Shape{1});
-    auto result_max = backend->create_tensor(element::f32, Shape{1});
+    auto result_min = backend->create_tensor(element::f32, Shape{});
+    auto result_max = backend->create_tensor(element::f32, Shape{});
     backend->call(f, {result, result_min, result_max}, {a});
     EXPECT_EQ((vector<uint8_t>{0, 0, 1, 1, 2, 64, 127, 255}), read_vector<uint8_t>(result));
     EXPECT_EQ((vector<float>{0.0}), read_vector<float>(result_min));
@@ -91,8 +91,8 @@ TEST(quantize_cpu, quantize_to_int8)
     vector<float> a_data = {-127.0, 0.0, 1.0, 3.0, 5.0, 64.0, 127.0, 500.0};
     Shape shape_a{8};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto B = op::Constant::create(element::f32, Shape{1}, {-127.0f});
-    auto C = op::Constant::create(element::f32, Shape{1}, {127.0f});
+    auto B = op::Constant::create(element::f32, Shape{}, {-127.0f});
+    auto C = op::Constant::create(element::f32, Shape{}, {127.0f});
     auto QT = make_shared<op::Quantize>(A, B, C, element::i8);
     auto output_data = std::make_shared<op::GetOutputElement>(QT, 0);
     auto output_min = std::make_shared<op::GetOutputElement>(QT, 1);
@@ -104,8 +104,8 @@ TEST(quantize_cpu, quantize_to_int8)
     auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, a_data);
     auto result = backend->create_tensor(element::i8, shape_a);
-    auto result_min = backend->create_tensor(element::f32, Shape{1});
-    auto result_max = backend->create_tensor(element::f32, Shape{1});
+    auto result_min = backend->create_tensor(element::f32, Shape{});
+    auto result_max = backend->create_tensor(element::f32, Shape{});
     backend->call(f, {result, result_min, result_max}, {a});
     EXPECT_EQ((vector<int8_t>{-127, 0, 1, 3, 5, 64, 127, 127}), read_vector<int8_t>(result));
     EXPECT_EQ((vector<float>{-127}), read_vector<float>(result_min));
