@@ -47,7 +47,15 @@ set(SRC
 )
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
-    list(APPEND SRC onnx_import.cpp)
+    if (APPLE OR WIN32)
+        list(APPEND SRC onnx_import.cpp)
+    else()
+        # ONNX unit tests temporarly disabled if CentOS detected
+        # (Protobuf issue with interpreting messages)
+        if (NOT ${DISTRIB_ID} STREQUAL "CentOS Linux")
+            list(APPEND SRC onnx_import.cpp)
+        endif()
+    endif()
 endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)

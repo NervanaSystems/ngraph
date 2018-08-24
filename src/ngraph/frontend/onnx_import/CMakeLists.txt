@@ -1,6 +1,6 @@
 # ******************************************************************************
 # Copyright (c) 2017-2018 Intel Copyright
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -34,30 +34,45 @@ add_library(onnx_import_interface OBJECT
 
 add_library(onnx_import STATIC
         onnx.pb.cc
-        attribute.cpp
+        core/attribute.cpp
+        core/attribute.hpp
+        core/graph.cpp
+        core/graph.hpp
+        core/model.hpp
+        core/node.cpp
+        core/node.hpp
+        core/tensor.hpp
+        core/value_info.hpp
         exceptions.hpp
-        graph.cpp
-        model.hpp
-        node.cpp
         op/add.hpp
+        op/batch_norm.cpp
         op/batch_norm.hpp
         op/constant.cpp
         op/constant.hpp
+        op/conv.cpp
+        op/gemm.cpp
+        op/gemm.hpp
+        op/mul.hpp
         op/relu.hpp
+        op/split.cpp
         op/split.hpp
         ops_bridge.cpp
-        tensor.hpp
-        value_info.hpp)
+        utils/broadcasting.cpp
+        utils/broadcasting.hpp
+        utils/convpool.cpp
+        utils/convpool.hpp
+        utils/reshape.cpp
+        utils/reshape.hpp)
 
 add_dependencies(onnx_import onnx_import_interface)
 
 if (NOT NGRAPH_USE_SYSTEM_PROTOBUF)
-    add_dependencies(onnx_import_interface protobuf::libprotobuf)    
+    add_dependencies(onnx_import_interface protobuf::libprotobuf)
     add_dependencies(onnx_import protobuf::libprotobuf)
 endif()
 
 set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_include_directories(onnx_import PUBLIC ${CMAKE_CURRENT_BINARY_DIR} PRIVATE ${NGRAPH_INCLUDE_PATH} ${Protobuf_INCLUDE_DIR})
+target_include_directories(onnx_import PUBLIC ${CMAKE_CURRENT_BINARY_DIR} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${NGRAPH_INCLUDE_PATH} ${Protobuf_INCLUDE_DIR})
 target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES})
 
 set_property(TARGET onnx_import_interface PROPERTY POSITION_INDEPENDENT_CODE ON)
@@ -66,9 +81,9 @@ target_include_directories(onnx_import_interface PRIVATE ${CMAKE_CURRENT_BINARY_
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(onnx_import PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
-            -Wno-extended-offsetof -Wno-zero-as-null-pointer-constant -Wno-shorten-64-to-32 -Wno-unused-macros
-            -Wno-missing-variable-declarations -Wno-unused-private-field)
+            -Wno-extended-offsetof -Wno-shorten-64-to-32 -Wno-unused-macros -Wno-missing-variable-declarations
+            -Wno-unused-private-field -Wno-shadow -Wno-deprecated)
     target_compile_options(onnx_import_interface PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
-            -Wno-extended-offsetof -Wno-zero-as-null-pointer-constant -Wno-shorten-64-to-32 -Wno-unused-macros
-            -Wno-missing-variable-declarations -Wno-unused-private-field)
+            -Wno-extended-offsetof -Wno-shorten-64-to-32 -Wno-unused-macros -Wno-missing-variable-declarations
+            -Wno-unused-private-field -Wno-shadow -Wno-deprecated)
 endif()
