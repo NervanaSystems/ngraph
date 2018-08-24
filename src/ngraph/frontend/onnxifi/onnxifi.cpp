@@ -19,7 +19,7 @@
 
 extern "C" {
 
-onnxStatus onnxGetBackentIDs(onnxBackendID* backendIDs, std::size_t* numBackends)
+onnxStatus onnxGetBackendIDs(onnxBackendID* backendIDs, std::size_t* numBackends)
 {
     return ONNXIFI_STATUS_INTERNAL_ERROR;
 }
