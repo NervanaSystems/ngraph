@@ -78,12 +78,14 @@ namespace ngraph
             const AxisVector& get_input_order() const { return m_input_order; }
             /// \return The shape of the output tensor.
             const Shape& get_output_shape() const { return m_output_shape; }
+            bool get_is_transpose() const { return m_is_transpose; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
 
             const AxisVector m_input_order;
             const Shape m_output_shape;
+            bool m_is_transpose{false};
         };
     }
 }

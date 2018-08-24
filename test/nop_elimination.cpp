@@ -100,3 +100,16 @@ TEST(nop_elimination, eliminate_broadcast)
 
     ASSERT_EQ(count_ops_of_type<op::Broadcast>(f), 0);
 }
+
+TEST(nop_elimination, eliminate_stop_gradient)
+{
+    Shape shape{};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::StopGradient>(A), op::ParameterVector{A});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::NopElimination>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::StopGradient>(f), 0);
+}

@@ -27,6 +27,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "ngraph/assertion.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
@@ -57,6 +58,8 @@ namespace ngraph
     void insert_new_node_between(const std::shared_ptr<Node>& src_node,
                                  const std::shared_ptr<Node>& dst_node,
                                  const std::shared_ptr<Node>& new_node);
+
+    std::string type_check_assert_string(const Node* node);
 
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
@@ -161,13 +164,12 @@ namespace ngraph
         /// Returns the shape of input i
         const Shape& get_input_shape(size_t i) const;
 
-        std::unordered_set<descriptor::Tensor*> liveness_live_list;
         std::unordered_set<descriptor::Tensor*> liveness_new_list;
         std::unordered_set<descriptor::Tensor*> liveness_free_list;
 
-        virtual NodeVector get_arguments(); //const;
+        virtual NodeVector get_arguments() const;
 
-        std::shared_ptr<Node> get_argument(size_t index);
+        std::shared_ptr<Node> get_argument(size_t index) const;
 
         virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const = 0;
 
@@ -205,4 +207,23 @@ namespace ngraph
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
     };
+
+    class TypeCheckError : public AssertionFailure
+    {
+    public:
+        TypeCheckError(std::string what)
+            : AssertionFailure(what)
+        {
+        }
+        TypeCheckError(const char* what)
+            : AssertionFailure(what)
+        {
+        }
+    };
 }
+
+#define TYPE_CHECK_ASSERT(node, cond)                                                              \
+    NGRAPH_ASSERT_STREAM_WITH_LOC(                                                                 \
+        ::ngraph::TypeCheckError, cond, ::ngraph::type_check_assert_string(node))
+#define TYPE_CHECK_FAIL(node)                                                                      \
+    NGRAPH_FAIL_STREAM_WITH_LOC(::ngraph::TypeCheckError, ::ngraph::type_check_assert_string(node))

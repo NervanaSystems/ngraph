@@ -14,9 +14,9 @@
 # limitations under the License.
 # ******************************************************************************
 
-#----------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Fetch and configure TBB
-#----------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 if(NGRAPH_TBB_ENABLE)
     set(TBB_GIT_REPO_URL https://github.com/01org/tbb)
@@ -28,5 +28,5 @@ if(NGRAPH_TBB_ENABLE)
     execute_process(COMMAND "${CMAKE_COMMAND}" --build .
       WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/tbb")
 
-    set(TBB_ROOT ${CMAKE_CURRENT_BINARY_DIR}/tbb/tbb-src PARENT_SCOPE)
+    set(TBB_ROOT ${CMAKE_CURRENT_BINARY_DIR}/tbb/tbb-src)
 endif()

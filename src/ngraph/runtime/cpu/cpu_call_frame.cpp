@@ -45,7 +45,6 @@ void runtime::cpu::CPU_CallFrame::call(
     vector<void*> inputs;
     vector<void*> outputs;
 
-    propagate_layouts(input_tvs, m_external_function->get_parameter_layout_descriptors());
     propagate_layouts(output_tvs, m_external_function->get_result_layout_descriptors());
 
     for (size_t i = 0; i < input_tvs.size(); i++)
@@ -63,7 +62,14 @@ void runtime::cpu::CPU_CallFrame::call(
     }
 
     // Invoke compiled computation
-    m_compiled_function(inputs.data(), outputs.data(), ctx);
+    if (!m_external_function->is_direct_execution())
+    {
+        m_compiled_function(inputs.data(), outputs.data(), ctx);
+    }
+    else
+    {
+        m_external_function->get_executor()(ctx, inputs, outputs);
+    }
 
     if (runtime::cpu::IsTracingEnabled())
     {
@@ -103,6 +109,9 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
         ctx->op_durations = new int64_t[m_external_function->get_op_attrs().size()];
     }
     ctx->p_en = new bool[m_external_function->get_parameter_layout_descriptors().size()];
+
+    ctx->first_iteration = true;
+
     // Create temporary buffer pools
     size_t alignment = runtime::cpu::CPU_ExternalFunction::s_memory_pool_alignment;
     for (auto buffer_size : m_external_function->get_memory_buffer_sizes())
@@ -113,6 +122,15 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
     const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
     ctx->mkldnn_primitives = mkldnn_emitter->get_mkldnn_primitives().data();
     ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces().data();
+
+    if (std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+    {
+        ctx->G = new tbb::flow::graph;
+        const auto envParallelism = std::getenv("NGRAPH_INTER_OP_PARALLELISM");
+        const auto parallelism = envParallelism == nullptr ? 1 : std::atoi(envParallelism);
+        ctx->c = new tbb::global_control(tbb::global_control::max_allowed_parallelism, parallelism);
+        ctx->init = new tbb::task_scheduler_init(parallelism);
+    }
 }
 
 void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
@@ -122,6 +140,23 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
     for (auto buffer : ctx->memory_buffers)
     {
         delete buffer;
+    }
+    if (std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+    {
+        // delete graph G and nodes in G
+        ctx->G->wait_for_all();
+        std::vector<tbb::flow::graph_node*> to_be_deleted;
+        for (auto it = ctx->G->begin(); it != ctx->G->end(); it++)
+        {
+            to_be_deleted.push_back(&(*it));
+        }
+        delete ctx->G;
+        for (auto node : to_be_deleted)
+        {
+            delete node;
+        }
+        delete ctx->c;
+        delete ctx->init;
     }
     delete ctx;
 }

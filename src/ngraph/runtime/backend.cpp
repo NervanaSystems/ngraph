@@ -14,80 +14,29 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <dlfcn.h>
 #include <sstream>
 
+#include "ngraph/file_util.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-bool runtime::Backend::register_backend(const string& name, shared_ptr<Backend> backend)
-{
-    get_backend_map().insert({name, backend});
-    return true;
-}
-
-unordered_map<string, shared_ptr<runtime::Backend>>& runtime::Backend::get_backend_map()
-{
-    static unordered_map<string, shared_ptr<Backend>> backend_map;
-    return backend_map;
-}
-
 runtime::Backend::~Backend()
 {
 }
 
-void* runtime::Backend::open_shared_library(const string& type)
-{
-    void* handle = nullptr;
-    string name = "lib" + to_lower(type) + "_backend.so";
-    handle = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
-    if (handle)
-    {
-        function<void()> create = reinterpret_cast<void (*)()>(dlsym(handle, "create_backend"));
-        if (create)
-        {
-            create();
-        }
-        else
-        {
-            throw runtime_error("Failed to find create_backend function in library '" + name + "'");
-        }
-    }
-    else
-    {
-        string err = dlerror();
-        throw runtime_error("Failed to find Backend library '" + name + "'\n" + err);
-    }
-    return handle;
-}
-
 shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
 {
-    auto it = get_backend_map().find(type);
-    if (it == get_backend_map().end())
-    {
-        open_shared_library(type);
-        it = get_backend_map().find(type);
-        if (it == get_backend_map().end())
-        {
-            throw runtime_error("Backend '" + type + "' not found in registered backends.");
-        }
-    }
-    return it->second;
+    return BackendManager::create_backend(type);
 }
 
 vector<string> runtime::Backend::get_registered_devices()
 {
-    vector<string> rc;
-    for (const auto& p : get_backend_map())
-    {
-        rc.push_back(p.first);
-    }
-    return rc;
+    return BackendManager::get_registered_backends();
 }
 
 void runtime::Backend::remove_compiled_function(shared_ptr<Function> func)

@@ -25,6 +25,8 @@
 #include "ngraph/runtime/host_tensor_view.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
+#include "ngraph/op/argmax.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
@@ -33,6 +35,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
@@ -55,6 +58,8 @@
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
 #include "ngraph/runtime/reference/and.hpp"
+#include "ngraph/runtime/reference/argmax.hpp"
+#include "ngraph/runtime/reference/argmin.hpp"
 #include "ngraph/runtime/reference/asin.hpp"
 #include "ngraph/runtime/reference/atan.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
@@ -78,6 +83,7 @@
 #include "ngraph/runtime/reference/less.hpp"
 #include "ngraph/runtime/reference/less_eq.hpp"
 #include "ngraph/runtime/reference/log.hpp"
+#include "ngraph/runtime/reference/lrn.hpp"
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/max_pool.hpp"
 #include "ngraph/runtime/reference/maximum.hpp"
@@ -102,6 +108,7 @@
 #include "ngraph/runtime/reference/reverse_sequence.hpp"
 #include "ngraph/runtime/reference/select.hpp"
 #include "ngraph/runtime/reference/select_and_scatter.hpp"
+#include "ngraph/runtime/reference/sigmoid.hpp"
 #include "ngraph/runtime/reference/sign.hpp"
 #include "ngraph/runtime/reference/sin.hpp"
 #include "ngraph/runtime/reference/sinh.hpp"
@@ -158,7 +165,6 @@ private:
         std::unordered_map<const Node*, stopwatch> m_timer_map;
     };
     std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
-    static bool init;
 
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensorView>>&,
                                   const Node* op = nullptr);
@@ -202,10 +208,58 @@ private:
 #endif
         else if (node_op == "And")
         {
-            reference::logical_and(args[0]->get_data_ptr<char>(),
-                                   args[1]->get_data_ptr<char>(),
-                                   out[0]->get_data_ptr<char>(),
+            reference::logical_and(args[0]->get_data_ptr<T>(),
+                                   args[1]->get_data_ptr<T>(),
+                                   out[0]->get_data_ptr<T>(),
                                    out[0]->get_element_count());
+        }
+        else if (node_op == "ArgMin")
+        {
+            const op::ArgMin* argmin = static_cast<const op::ArgMin*>(&node);
+            if (out[0]->get_element_type() == element::i64)
+            {
+                reference::argmin<T, int64_t>(args[0]->get_data_ptr<T>(),
+                                              out[0]->get_data_ptr<int64_t>(),
+                                              args[0]->get_shape(),
+                                              out[0]->get_shape(),
+                                              argmin->get_reduction_axis());
+            }
+            else if (out[0]->get_element_type() == element::i32)
+            {
+                reference::argmin<T, int32_t>(args[0]->get_data_ptr<T>(),
+                                              out[0]->get_data_ptr<int32_t>(),
+                                              args[0]->get_shape(),
+                                              out[0]->get_shape(),
+                                              argmin->get_reduction_axis());
+            }
+            else
+            {
+                throw ngraph_error("Unexpected type");
+            }
+        }
+        else if (node_op == "ArgMax")
+        {
+            const op::ArgMax* argmax = static_cast<const op::ArgMax*>(&node);
+            if (out[0]->get_element_type() == element::i64)
+            {
+                reference::argmax<T, int64_t>(args[0]->get_data_ptr<T>(),
+                                              out[0]->get_data_ptr<int64_t>(),
+                                              args[0]->get_shape(),
+                                              out[0]->get_shape(),
+                                              argmax->get_reduction_axis());
+            }
+            else if (out[0]->get_element_type() == element::i32)
+            {
+                reference::argmax<T, int32_t>(args[0]->get_data_ptr<T>(),
+                                              out[0]->get_data_ptr<int32_t>(),
+                                              args[0]->get_shape(),
+                                              out[0]->get_shape(),
+                                              argmax->get_reduction_axis());
+            }
+            else
+            {
+                throw ngraph_error("Unexpected type");
+            }
         }
         else if (node_op == "Asin")
         {
@@ -265,6 +319,22 @@ private:
                                                     reinterpret_cast<T*>(out[0]->get_data_ptr()),
                                                     args[2]->get_shape());
             }
+        }
+        else if (node_op == "BatchNormBackprop")
+        {
+            ngraph::op::BatchNormBackprop* bn_bprop =
+                dynamic_cast<ngraph::op::BatchNormBackprop*>(&node);
+            reference::batch_norm_backprop(bn_bprop->get_eps_value(),
+                                           reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                           reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                           reinterpret_cast<T*>(args[2]->get_data_ptr()),
+                                           reinterpret_cast<T*>(args[3]->get_data_ptr()),
+                                           reinterpret_cast<T*>(args[4]->get_data_ptr()),
+                                           reinterpret_cast<T*>(args[5]->get_data_ptr()),
+                                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                           reinterpret_cast<T*>(out[1]->get_data_ptr()),
+                                           reinterpret_cast<T*>(out[2]->get_data_ptr()),
+                                           args[2]->get_shape());
         }
         else if (node_op == "AvgPoolBackprop")
         {
@@ -560,6 +630,17 @@ private:
             reference::log<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
         }
+        else if (node_op == "LRN")
+        {
+            const op::LRN* lrn = static_cast<const op::LRN*>(&node);
+            reference::lrn<T>(args[0]->get_data_ptr<T>(),
+                              out[0]->get_data_ptr<T>(),
+                              args[0]->get_shape(),
+                              lrn->get_alpha(),
+                              lrn->get_beta(),
+                              lrn->get_bias(),
+                              lrn->get_nsize());
+        }
         else if (node_op == "Max")
         {
             const op::Max* max = static_cast<const op::Max*>(&node);
@@ -633,9 +714,8 @@ private:
         }
         else if (node_op == "Not")
         {
-            reference::logical_not(args[0]->get_data_ptr<char>(),
-                                   out[0]->get_data_ptr<char>(),
-                                   out[0]->get_element_count());
+            reference::logical_not(
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
         }
         else if (node_op == "NotEqual")
         {
@@ -655,9 +735,9 @@ private:
         }
         else if (node_op == "Or")
         {
-            reference::logical_or(args[0]->get_data_ptr<char>(),
-                                  args[1]->get_data_ptr<char>(),
-                                  out[0]->get_data_ptr<char>(),
+            reference::logical_or(args[0]->get_data_ptr<T>(),
+                                  args[1]->get_data_ptr<T>(),
+                                  out[0]->get_data_ptr<T>(),
                                   out[0]->get_element_count());
         }
         else if (node_op == "Parameter")
@@ -867,6 +947,18 @@ private:
                                              f_scatter,
                                              select_and_scatter->get_window_shape(),
                                              select_and_scatter->get_window_movement_strides());
+        }
+        else if (node_op == "Sigmoid")
+        {
+            reference::sigmoid<T>(
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+        }
+        else if (node_op == "SigmoidBackprop")
+        {
+            reference::sigmoid_backprop<T>(args[0]->get_data_ptr<T>(),
+                                           args[1]->get_data_ptr<T>(),
+                                           out[0]->get_data_ptr<T>(),
+                                           out[0]->get_element_count());
         }
         else if (node_op == "Sign")
         {

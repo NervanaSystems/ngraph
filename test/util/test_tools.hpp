@@ -23,6 +23,7 @@
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/serializer.hpp"
 
@@ -55,6 +56,8 @@ std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::TensorView> tv)
     tv->read(rc.data(), 0, size);
     return rc;
 }
+
+std::vector<float> read_float_vector(std::shared_ptr<ngraph::runtime::TensorView> tv);
 
 template <typename T>
 void write_vector(std::shared_ptr<ngraph::runtime::TensorView> tv, const std::vector<T>& values)
@@ -90,4 +93,45 @@ size_t count_ops_of_type(std::shared_ptr<ngraph::Function> f)
     }
 
     return count;
+}
+
+template <typename T>
+std::vector<std::vector<T>> execute(const std::shared_ptr<ngraph::Function>& function,
+                                    std::vector<std::vector<T>> args,
+                                    const std::string& backend_id)
+{
+    auto backend = ngraph::runtime::Backend::create(backend_id);
+
+    auto parms = function->get_parameters();
+
+    if (parms.size() != args.size())
+    {
+        throw ngraph::ngraph_error("number of parameters and arguments don't match");
+    }
+
+    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> arg_tensors(args.size());
+    for (size_t i = 0; i < args.size(); i++)
+    {
+        auto t = backend->create_tensor(parms.at(i)->get_element_type(), parms.at(i)->get_shape());
+        copy_data(t, args.at(i));
+        arg_tensors.at(i) = t;
+    }
+
+    auto results = function->get_results();
+    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> result_tensors(results.size());
+
+    for (size_t i = 0; i < results.size(); i++)
+    {
+        result_tensors.at(i) =
+            backend->create_tensor(results.at(i)->get_element_type(), results.at(i)->get_shape());
+    }
+
+    backend->call_with_validate(function, result_tensors, arg_tensors);
+
+    std::vector<std::vector<T>> result_vectors;
+    for (auto rt : result_tensors)
+    {
+        result_vectors.push_back(read_vector<T>(rt));
+    }
+    return result_vectors;
 }

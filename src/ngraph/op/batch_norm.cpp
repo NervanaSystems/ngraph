@@ -14,6 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <set>
+
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -265,17 +267,19 @@ void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
     //and get_n() is used to sort the inputs in the same order as Batchnorm's outputs
     //Next, Mean and Variance (`at(1)` and `at(2)`) are extracted
     //Please see `add_output` in `BatchNorm::BatchNorm` for more details
-
-    std::vector<std::shared_ptr<Node>> goes(get_outputs().size());
     if (this->get_training_flag() && get_input_size() == 3)
     {
-        for (auto goe_input : get_output_inputs(0))
-        {
-            auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(goe_input->get_node());
-            goes.at(goe->get_n()) = goe_input->get_node();
-        }
+        auto goes = op::get_output_elements(shared_from_this());
         mean = goes.at(1);
         var = goes.at(2);
+        if (!mean)
+        {
+            throw ngraph_error("GetOutputElement for mean is missing");
+        };
+        if (!var)
+        {
+            throw ngraph_error("GetOutputElement for variance is missing");
+        }
     }
     else // BatchNorm Training with global stats
     {

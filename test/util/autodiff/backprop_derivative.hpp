@@ -17,6 +17,7 @@
 #pragma once
 
 #include <memory>
+#include <unordered_map>
 
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/graph_util.hpp"
@@ -30,6 +31,10 @@ namespace ngraph
 {
     class Node;
     class Function;
+
+    static std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Function>> s_df_map;
+    static std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Function>> s_clone_fwd_map;
+    static std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Function>> s_clone_bwd_map;
 
     namespace runtime
     {
@@ -95,7 +100,7 @@ namespace ngraph
                 write_vector(c_arg, c_vec);
 
                 // call modified df/dX* = f'(c, cached)
-                backend->call(df, df_output_args, df_input_args);
+                backend->call_with_validate(df, df_output_args, df_input_args);
 
                 // reset the adjoint element
                 c_vec[i] = 0;
@@ -145,7 +150,6 @@ namespace ngraph
             for (auto x : indep_params)
             {
                 // add df/dx to df/dX*
-                auto x_shape = x->get_shape();
                 df_output_params.push_back(adjoints.backprop_node(x));
             }
 
@@ -154,7 +158,11 @@ namespace ngraph
             df_input_params.insert(df_input_params.begin(), c_param);
 
             // df/dX* = f'(c, X)
-            auto df = std::make_shared<Function>(df_output_params, df_input_params);
+            if (!s_df_map[f])
+            {
+                s_df_map[f] = std::make_shared<Function>(df_output_params, df_input_params);
+            }
+            auto df = s_df_map[f];
 
             // (c, X) arguments
             std::vector<std::shared_ptr<runtime::TensorView>> df_input_args = f_input_args;
@@ -166,15 +174,14 @@ namespace ngraph
             // create fprop cache
             // creates modified forward function -> (y, cached) = f(x)
             // creates modified backward function -> df/dX* = f'(c, cached)
-            auto fprop_cache = cache_fprop(f, df, {c_param});
+            auto fprop_cache = cache_fprop(f, df);
 
             // (y, cached) arguments
             std::vector<std::shared_ptr<runtime::TensorView>> mod_f_output_args;
             mod_f_output_args.push_back(backend->create_tensor<T>(y_shape));
 
             // (c, cached) arguments
-            std::vector<std::shared_ptr<runtime::TensorView>> mod_df_input_args;
-            mod_df_input_args.push_back(c_arg);
+            std::vector<std::shared_ptr<runtime::TensorView>> mod_df_input_args = df_input_args;
 
             // add cached nodes to both modified f output and modified f' input arguments
             for (auto node : fprop_cache.fprop_output_nodes)
@@ -185,15 +192,24 @@ namespace ngraph
             }
 
             // compile and run modified (y, cached) = f(x)
-            auto clone_fwd = clone_function(*fprop_cache.fprop);
-            backend->call(clone_fwd, mod_f_output_args, f_input_args);
+            if (!s_clone_fwd_map[f])
+            {
+                s_clone_fwd_map[f] = clone_function(*fprop_cache.fprop);
+            }
+            auto clone_fwd = s_clone_fwd_map[f];
+
+            backend->call_with_validate(clone_fwd, mod_f_output_args, f_input_args);
 
             // call modfied f'(c, cached) to get df/dX*
-            auto clone_bwd = clone_function(*fprop_cache.bprop);
+            if (!s_clone_bwd_map[f])
+            {
+                s_clone_bwd_map[f] = clone_function(*fprop_cache.bprop);
+            }
+            auto clone_bwd = s_clone_bwd_map[f];
             auto cache_dfdx = get_autodiff<T>(backend, clone_bwd, mod_df_input_args, indep_params);
 
-            const auto numpy_atol = 1e-5f;
-            const auto numpy_rtol = 1e-8f;
+            const T numpy_atol = static_cast<const T>(1e-5f);
+            const T numpy_rtol = static_cast<const T>(1e-8f);
             auto close = ngraph::test::all_close<T>(dfdx, cache_dfdx, numpy_atol, numpy_rtol);
             if (!close)
             {

@@ -26,71 +26,13 @@
 #include "ngraph/log.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-#include "util/benchmark.hpp"
 #include "util/random.hpp"
 #include "util/test_tools.hpp"
 
 using namespace std;
 using namespace ngraph;
-
-TEST(benchmark, mxnet_mnist_mlp_forward)
-{
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/mnist_mlp_forward.json");
-    run_benchmark(json_path, "CPU", 1000);
-}
-
-TEST(benchmark, gpu_mxnet_mnist_mlp_forward)
-{
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/mnist_mlp_forward.json");
-    run_benchmark(json_path, "GPU", 1000);
-}
-
-TEST(benchmark, mxnet_10_bucket_lstm)
-{
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/10_bucket_LSTM.json");
-    run_benchmark(json_path, "CPU", 10);
-}
-
-TEST(benchmark, mxnet_lstm_backward)
-{
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/LSTM_backward.json");
-    run_benchmark(json_path, "CPU", 10);
-}
-
-TEST(benchmark, mxnet_lstm_forward)
-{
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/LSTM_forward.json");
-    run_benchmark(json_path, "CPU", 10);
-}
-
-TEST(benchmark, mxnet_seq2seq_forward)
-{
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Seq2Seq_forward.json");
-    run_benchmark(json_path, "CPU", 10);
-}
-
-TEST(benchmark, mxnet_seq2seq_backward)
-{
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Seq2Seq_backward.json");
-    run_benchmark(json_path, "CPU", 10);
-}
-
-TEST(benchmark, mxnet_sockeye_seq2seq_forward)
-{
-    const string json_path =
-        file_util::path_join(SERIALIZED_ZOO, "mxnet/Sockeye_Seq2Seq_forward.json");
-    run_benchmark(json_path, "CPU", 10);
-}
-
-TEST(benchmark, mxnet_sockeye_seq2seq_backward)
-{
-    const string json_path =
-        file_util::path_join(SERIALIZED_ZOO, "mxnet/Sockeye_Seq2Seq_backward.json");
-    run_benchmark(json_path, "CPU", 10);
-}
 
 //
 // Benchmarks a graph that concatenates six 32x1x200 arrays along the middle axis.
@@ -156,7 +98,9 @@ TEST(benchmark, concat_32x1x200_axis1_6)
         auto result_tv = backend->create_tensor(element::f32, result_shape);
         result_tvs.push_back(result_tv);
 
-        std::function<void()> cb = [&]() { backend->call(f, {result_tv}, input_vals); };
+        std::function<void()> cb = [&]() {
+            backend->call_with_validate(f, {result_tv}, input_vals);
+        };
 
         test_callbacks.push_back(cb);
     }

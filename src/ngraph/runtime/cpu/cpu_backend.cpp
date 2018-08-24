@@ -14,8 +14,10 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/runtime/cpu/cpu_backend.hpp"
+#include <tbb/tbb_stddef.h>
+
 #include "ngraph/graph_util.hpp"
+#include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
@@ -24,13 +26,22 @@
 using namespace ngraph;
 using namespace std;
 
-static bool static_init()
+extern "C" const char* get_ngraph_version_string()
 {
-    runtime::Backend::register_backend("CPU", make_shared<runtime::cpu::CPU_Backend>());
-    return true;
-};
+    return NGRAPH_VERSION;
+}
 
-bool runtime::cpu::CPU_Backend::init = static_init();
+extern "C" runtime::Backend* new_backend(const char* configuration_string)
+{
+    // Force TBB to link to the backend
+    tbb::TBB_runtime_interface_version();
+    return new runtime::cpu::CPU_Backend();
+}
+
+extern "C" void delete_backend(runtime::Backend* backend)
+{
+    delete backend;
+}
 
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
     const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function)
@@ -56,7 +67,9 @@ bool runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func)
     if (instance.m_external_function == nullptr)
     {
         instance.m_external_function = make_shared<CPU_ExternalFunction>(func);
+#if !defined(NGRAPH_DEX_ONLY)
         instance.m_external_function->m_emit_timing = instance.m_performance_counters_enabled;
+#endif
         auto cf = instance.m_external_function->make_call_frame();
         instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
     }
@@ -68,8 +81,6 @@ bool runtime::cpu::CPU_Backend::call(shared_ptr<Function> func,
                                      const vector<shared_ptr<runtime::TensorView>>& inputs)
 {
     bool rc = true;
-
-    validate_call(func, outputs, inputs);
 
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_external_function == nullptr)
@@ -86,6 +97,8 @@ void runtime::cpu::CPU_Backend::remove_compiled_function(shared_ptr<Function> fu
 {
     m_function_map.erase(func);
 }
+
+#if !defined(NGRAPH_DEX_ONLY)
 
 void runtime::cpu::CPU_Backend::enable_performance_data(shared_ptr<Function> func, bool enable)
 {
@@ -130,3 +143,5 @@ vector<runtime::PerformanceCounter>
     }
     return rc;
 }
+
+#endif

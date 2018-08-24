@@ -90,8 +90,8 @@ TEST(file_util, path_join)
     }
 }
 
-TEST(file_util, get_temp_directory)
+TEST(file_util, get_temp_directory_path)
 {
-    string tmp = file_util::get_temp_directory();
+    string tmp = file_util::get_temp_directory_path();
     EXPECT_NE(0, tmp.size());
 }

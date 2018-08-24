@@ -26,7 +26,7 @@ from ngraph.impl.op import Parameter
 from ngraph.utils.types import get_dtype, NumericData
 from ngraph.exceptions import UserInputError
 
-log = logging.getLogger(__file__)
+log = logging.getLogger(__name__)
 
 
 def runtime(backend_name='CPU'):  # type: (str) -> 'Runtime'
@@ -120,7 +120,9 @@ class Computation:
 
         buffer_size = Computation._get_buffer_size(
             tensor_view.element_type, tensor_view.element_count)
-        tensor_view.write(util.numpy_to_c(np.ascontiguousarray(value)), 0, buffer_size)
+
+        nparray = np.ascontiguousarray(value)
+        tensor_view.write(util.numpy_to_c(nparray), 0, buffer_size)
 
     @staticmethod
     def _read_tensor_view_to_ndarray(tensor_view, output):

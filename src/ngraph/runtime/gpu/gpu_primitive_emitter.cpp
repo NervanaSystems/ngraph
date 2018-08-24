@@ -23,8 +23,19 @@ using namespace ngraph;
 using namespace ngraph::runtime::gpu;
 
 GPUPrimitiveEmitter::GPUPrimitiveEmitter()
-    : m_cuda_emitter(new CUDAEmitter(this))
-    , m_cudnn_emitter(new CUDNNEmitter(this))
+    : m_memory_manager(this)
+    , m_host_parameters(new GPUHostParameters)
+    , m_cuda_emitter(new CUDAEmitter(this, nullptr))
+    , m_cudnn_emitter(new CUDNNEmitter(this, nullptr, nullptr))
+{
+}
+
+GPUPrimitiveEmitter::GPUPrimitiveEmitter(const std::unique_ptr<GPURuntimeContext>& ctx)
+    : m_memory_manager(this)
+    , m_host_parameters(new GPUHostParameters)
+    , m_cuda_emitter(new CUDAEmitter(this, ctx.get()))
+    , m_cudnn_emitter(new CUDNNEmitter(this, ctx.get(), this->m_host_parameters))
+
 {
 }
 
@@ -41,6 +52,11 @@ size_t GPUPrimitiveEmitter::insert(std::unique_ptr<gpu::primitive>&& f)
     m_managed_primitives.emplace_back(std::move(f));
     m_gpu_primitives.push_back(m_managed_primitives.back().get());
     return m_gpu_primitives.size() - 1;
+}
+size_t GPUPrimitiveEmitter::insert(gpu::memory_primitive& f)
+{
+    m_gpu_mem_primitives.push_back(f);
+    return m_gpu_mem_primitives.size() - 1;
 }
 size_t GPUPrimitiveEmitter::lookup(std::string hash)
 {

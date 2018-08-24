@@ -101,11 +101,13 @@ void test_read_write(const vector<T>& x)
     ASSERT_EQ(result1, result2);
 }
 
+#if defined(NGRAPH_INTERPRETER_ENABLE)
 TEST(tensor, read_write)
 {
     test_read_write<float>({1.0, 3.0, 5.0});
     test_read_write<int64_t>({-1, 2, 4});
 }
+#endif
 
 TEST(tensor, output_flag)
 {

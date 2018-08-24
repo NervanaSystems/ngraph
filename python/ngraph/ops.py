@@ -20,12 +20,12 @@ import numpy as np
 from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Function, Node, \
     NodeVector, Shape, Strides
 
-from ngraph.impl.op import Abs, Acos, Add, Asin, Atan, AvgPool, BatchNorm, Broadcast, Ceiling, \
-    Concat, Constant, Convert, Convolution, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, \
-    FunctionCall, GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, Max, Maximum, MaxPool, \
-    Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Pad, Parameter, Product, Power, \
-    Reduce, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, Sqrt, \
-    Subtract, Sum, Tan, Tanh
+from ngraph.impl.op import Abs, Acos, Add, And, Asin, Atan, AvgPool, BatchNorm, Broadcast, \
+    Ceiling, Concat, Constant, Convert, Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, \
+    Dot, Equal, Exp, Floor, FunctionCall, GetOutputElement, Greater, GreaterEq, Less, LessEq, \
+    Log, LRN, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, \
+    Pad, Parameter, Product, Power, Reduce, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, \
+    Sin, Sinh, Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh
 
 from typing import Callable, Iterable, List, Union
 
@@ -393,6 +393,30 @@ def less_eq(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, s
     return LessEq(left_node, right_node)
 
 
+@binary_op
+def logical_and(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+    """Return node which perform logical and operation on input nodes element-wise.
+
+    :param left_node: The first input node providing data.
+    :param right_node: The second input node providing data.
+    :param name: The optional new name for output node.
+    :return: The node performing logical and operation on input nodes corresponding elements.
+    """
+    return And(left_node, right_node)
+
+
+@binary_op
+def logical_or(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+    """Return node which performs logical or operation on input nodes element-wise.
+
+    :param left_node: The first input node providing data.
+    :param right_node: The second input node providing data.
+    :param name: The optional new name for output node.
+    :return: The node performing logical or operation on input nodes corresponding elements.
+    """
+    return Or(left_node, right_node)
+
+
 @unary_op
 def logical_not(node, name=None):  # type: (Node, str) -> Node
     """Return node which applies logical negation to the input node elementwise."""
@@ -420,14 +444,59 @@ Node.__ge__ = greater_eq
 
 # Custom ops
 @nameable_op
-def broadcast(node, new_shape, axis=None, name=None):  # type: (Node, TensorShape, int, str) -> Node
-    """Return node which broadcasts input node values to specified shape.
+def broadcast(node, new_shape, broadcast_axes, name=None):
+    # type: (Node, TensorShape, Iterable[int], str) -> Node
+    """Create a node which broadcasts the input node's values along specified axes to a desired shape.
+
+    :param node: The node with input tensor data.
+    :param new_shape: The new shape we want to broadcast tensor to.
+    :param broadcast_axes: The axis positions (0-based) in the result that are being broadcast.
+    :param name: Optional new name for output node.
+    :return: New node with broadcast shape.
+    """
+    return Broadcast(node, Shape(new_shape), AxisSet(broadcast_axes))
+
+
+@nameable_op
+def broadcast_to(node, new_shape, axis=None, name=None):
+    # type: (Node, TensorShape, int, str) -> Node
+    """Create a node which broadcasts the input node's values to a desired shape.
+
+    `broadcast_to` will attempt to automatically determine which axes need broadcasting.
+
+    The optional `axis` parameter specifies the starting axis position (0-based) in the output
+    shape from which the current shape of the tensor matches the desired new shape.
+
+    e.g. current_shape: [4, 5], new_shape: [2, 3, 4, 5, 6], axis: 2
+
+    By using the `axis` parameter you can control which output axis to broadcast along.
+
+    Example:
+
+    >>> input_node = ng.constant([1, 2, 3])
+    >>> current_shape = [3]
+    >>> new_shape = [3, 3]
+    >>> ng.broadcast_to(input_node, new_shape, axis=1)
+    array([[1, 2, 3],
+           [1, 2, 3],
+           [1, 2, 3]])
+
+    >>> ng.broadcast_to(input_node, new_shape, axis=0)
+    array([[1, 1, 1],
+           [2, 2, 2],
+           [3, 3, 3]])
+
+    If the `axis` parameter is not specified, `broadcast_to` will attempt to match shapes,
+    assuming the current shape matches the rightmost positions of the desired new shape.
+    This behaviour is similar to NumPy's broadcasting.
+
+    i.e. default `axis = len(new_shape) - len(current_shape)`
 
     :param node: The node with input tensor data.
     :param new_shape: The new shape we want to broadcast tensor to.
     :param axis: The axis along which we perform broadcasting.
     :param name: Optional new name for output node.
-    :return: New node with broadcasted shape.
+    :return: New node with broadcast shape.
     """
     return Broadcast(node, Shape(new_shape), get_broadcast_axes(new_shape, node.shape, axis))
 
@@ -529,6 +598,49 @@ def convolution(data_batch,                     # type: Node
     return Convolution(data_batch, filter_weights, Strides(filter_strides),
                        Strides(filter_dilation_strides), CoordinateDiff(padding_below),
                        CoordinateDiff(padding_above), Strides(data_dilation_strides))
+
+
+@nameable_op
+def convolution_backprop_data(data_batch_shape,                      # type: TensorShape
+                              filters,                               # type: Node
+                              output_delta,                          # type: Node
+                              window_movement_strides_forward=None,  # type: List[int]
+                              window_dilation_strides_forward=None,  # type: List[int]
+                              padding_below_forward=None,            # type: List[int]
+                              padding_above_forward=None,            # type: List[int]
+                              data_dilation_strides_forward=None,    # type: List[int]
+                              name=None,                             # type: str
+                              ):
+    # type: (...) -> Node
+    """Return node performing a batched-convolution data batch-backprop operation.
+
+    :param data_batch_shape: The shape of the data batch from forward-prop.
+    :param filters: The node producing the filters from forward-prop.
+    :param output_delta: The node producing output delta.
+    :param window_movement_strides_forward: The window movement strides from forward-prop.
+    :param window_dilation_strides_forward: The window dilation strides from forward-prop.
+    :param padding_below_forward: The padding-below sizes from forward-prop.
+    :param padding_above_forward: The padding-above sizes from forward-prop.
+    :param data_dilation_strides_forward: The data dilation strides from forward-prop.
+    """
+    spatial_dim_count = len(data_batch_shape) - 2
+    if window_movement_strides_forward is None:
+        window_movement_strides_forward = [1] * spatial_dim_count
+    if window_dilation_strides_forward is None:
+        window_dilation_strides_forward = [1] * spatial_dim_count
+    if padding_below_forward is None:
+        padding_below_forward = [0] * spatial_dim_count
+    if padding_above_forward is None:
+        padding_above_forward = [0] * spatial_dim_count
+    if data_dilation_strides_forward is None:
+        data_dilation_strides_forward = [1] * spatial_dim_count
+
+    return ConvolutionBackpropData(Shape(data_batch_shape), filters, output_delta,
+                                   Strides(window_movement_strides_forward),
+                                   Strides(window_dilation_strides_forward),
+                                   CoordinateDiff(padding_below_forward),
+                                   CoordinateDiff(padding_above_forward),
+                                   Strides(data_dilation_strides_forward))
 
 
 @nameable_op
@@ -815,6 +927,28 @@ def batch_norm(eps,             # type: float
         return BatchNorm(eps, gamma, beta, data)
     else:
         return BatchNorm(eps, gamma, beta, data, mean, variance, training)
+
+
+@nameable_op
+def lrn(data,       # type: Node
+        alpha=1,    # type: float
+        beta=0.5,   # type: float
+        bias=1,     # type: float
+        size=5,     # type: int
+        name=None,  # type: str
+        ):
+    # type: (...) -> Node
+    """Return a node which performs element-wise Local Response Normalization (LRN) operation.
+
+    :param data: Input data.
+    :param alpha: A scale factor (usually positive).
+    :param beta: An exponent.
+    :param bias: An offset (usually positive) to avoid dividing by 0.
+    :param size: Width of the 1-D normalization window.
+    :param name: An optional name of the output node.
+    :return: The new node which performs LRN.
+    """
+    return LRN(data, alpha, beta, bias, size)
 
 
 @nameable_op

@@ -47,6 +47,8 @@
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/remainder.hpp"
+#include "ngraph/op/reshape.hpp"
+#include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
 #include "ngraph/op/sinh.hpp"
@@ -62,6 +64,45 @@ using namespace ngraph;
 
 #define TI(x) std::type_index(typeid(x))
 
+static bool cse_constant(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
+{
+    NGRAPH_DEBUG << "In cse_constant for " << a->get_name() << " and " << b->get_name();
+
+    if (a->get_shape() != b->get_shape() || a->get_element_type() != b->get_element_type())
+    {
+        return false;
+    }
+
+    auto ca = std::dynamic_pointer_cast<op::Constant>(a);
+    auto cb = std::dynamic_pointer_cast<op::Constant>(b);
+
+    size_t size = shape_size(a->get_shape()) * a->get_element_type().size();
+
+    return !memcmp(ca->get_data_ptr(), cb->get_data_ptr(), size);
+}
+
+static bool cse_reshape(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
+{
+    NGRAPH_DEBUG << "In cse_reshape for " << a->get_name() << " and " << b->get_name();
+
+    auto reshape_a = std::dynamic_pointer_cast<ngraph::op::Reshape>(a);
+    auto reshape_b = std::dynamic_pointer_cast<ngraph::op::Reshape>(b);
+
+    return (a->get_argument(0) == b->get_argument(0)) &&
+           (reshape_a->get_input_order() == reshape_b->get_input_order()) &&
+           (reshape_a->get_output_shape() == reshape_b->get_output_shape());
+}
+static bool cse_broadcast(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
+{
+    NGRAPH_DEBUG << "In cse_broadcast for " << a->get_name() << " and " << b->get_name();
+
+    auto broadcast_a = std::dynamic_pointer_cast<ngraph::op::Broadcast>(a);
+    auto broadcast_b = std::dynamic_pointer_cast<ngraph::op::Broadcast>(b);
+
+    return (a->get_argument(0) == b->get_argument(0)) &&
+           (broadcast_a->get_broadcast_axes() == broadcast_b->get_broadcast_axes()) &&
+           (broadcast_a->get_broadcast_shape() == broadcast_b->get_broadcast_shape());
+}
 static bool cse_unarywise(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_unarywise for " << a->get_name() << " and " << b->get_name();
@@ -77,40 +118,56 @@ static bool cse_binarywise(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
            (a->get_argument(1) == b->get_argument(0) && a->get_argument(0) == b->get_argument(1));
 }
 
+static bool cse_reduction(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
+{
+    NGRAPH_DEBUG << "In cse_reduction for " << a->get_name() << " and " << b->get_name();
+
+    auto ar_a = std::dynamic_pointer_cast<op::util::ArithmeticReduction>(a);
+    auto ar_b = std::dynamic_pointer_cast<op::util::ArithmeticReduction>(b);
+
+    return ar_a->get_argument(0) == ar_b->get_argument(0) &&
+           ar_a->get_reduction_axes() == ar_b->get_reduction_axes();
+}
+
 static std::unordered_map<std::type_index,
                           std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>
     initialize_ops_to_cse_handlers()
 {
     return std::unordered_map<std::type_index,
-                              std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>({
-        {TI(op::Abs), cse_unarywise},
-        {TI(op::Acos), cse_unarywise},
-        {TI(op::Asin), cse_unarywise},
-        {TI(op::Atan), cse_unarywise},
-        {TI(op::Ceiling), cse_unarywise},
-        {TI(op::Cos), cse_unarywise},
-        {TI(op::Cosh), cse_unarywise},
-        {TI(op::Exp), cse_unarywise},
-        {TI(op::Floor), cse_unarywise},
-        {TI(op::Log), cse_unarywise},
-        {TI(op::Negative), cse_unarywise},
-        {TI(op::Relu), cse_unarywise},
-        {TI(op::Sign), cse_unarywise},
-        {TI(op::Sin), cse_unarywise},
-        {TI(op::Sinh), cse_unarywise},
-        //{TI(op::Softmax), cse_unarywise},
-        {TI(op::Sqrt), cse_unarywise},
-        {TI(op::Tan), cse_unarywise},
-        {TI(op::Tanh), cse_unarywise},
-        {TI(op::Add), cse_binarywise},
-        {TI(op::Divide), cse_binarywise},
-        {TI(op::Maximum), cse_binarywise},
-        {TI(op::Minimum), cse_binarywise},
-        {TI(op::Multiply), cse_binarywise},
-        {TI(op::Power), cse_binarywise},
-        //{TI(op::Remainder), cse_binarywise},
-        {TI(op::Subtract), cse_binarywise},
-    });
+                              std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>(
+        {{TI(op::Abs), cse_unarywise},
+         {TI(op::Acos), cse_unarywise},
+         {TI(op::Asin), cse_unarywise},
+         {TI(op::Atan), cse_unarywise},
+         {TI(op::Ceiling), cse_unarywise},
+         {TI(op::Constant), cse_constant},
+         {TI(op::Cos), cse_unarywise},
+         {TI(op::Cosh), cse_unarywise},
+         {TI(op::Exp), cse_unarywise},
+         {TI(op::Floor), cse_unarywise},
+         {TI(op::Log), cse_unarywise},
+         {TI(op::Negative), cse_unarywise},
+         {TI(op::Relu), cse_unarywise},
+         {TI(op::Sigmoid), cse_unarywise},
+         {TI(op::Sign), cse_unarywise},
+         {TI(op::Sin), cse_unarywise},
+         {TI(op::Sinh), cse_unarywise},
+         //{TI(op::Softmax), cse_unarywise},
+         {TI(op::Sqrt), cse_unarywise},
+         {TI(op::Tan), cse_unarywise},
+         {TI(op::Tanh), cse_unarywise},
+         {TI(op::Add), cse_binarywise},
+         {TI(op::Divide), cse_binarywise},
+         {TI(op::Maximum), cse_binarywise},
+         {TI(op::Minimum), cse_binarywise},
+         {TI(op::Multiply), cse_binarywise},
+         {TI(op::Power), cse_binarywise},
+         //{TI(op::Remainder), cse_binarywise},
+         {TI(op::Subtract), cse_binarywise},
+         {TI(op::Sum), cse_reduction},
+         {TI(op::Product), cse_reduction},
+         {TI(op::Reshape), cse_reshape},
+         {TI(op::Broadcast), cse_broadcast}});
 }
 
 static std::unordered_map<std::type_index,
@@ -194,8 +251,7 @@ bool ngraph::pass::CommonSubexpressionElimination::run_on_function(
 
     for (auto n : f->get_ordered_ops())
     {
-        if (n->is_output() || n->is_parameter() ||
-            n->is_constant() /*we could CSE constants as well*/)
+        if (n->is_output() || n->is_parameter())
         {
             continue;
         }

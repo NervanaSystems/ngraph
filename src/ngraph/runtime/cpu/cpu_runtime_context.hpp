@@ -19,6 +19,11 @@
 #include <chrono>
 #include <cstdint>
 
+#define TBB_PREVIEW_GLOBAL_CONTROL 1
+#include <tbb/flow_graph.h>
+#include <tbb/global_control.h>
+#include <tbb/task_scheduler_init.h>
+
 namespace mkldnn
 {
     class primitive;
@@ -47,9 +52,13 @@ namespace ngraph
             {
                 int64_t* op_durations;
                 bool* p_en;
+                bool first_iteration;
                 mkldnn::primitive* const* mkldnn_primitives;
                 std::vector<AlignedBuffer*> memory_buffers;
                 char* const* mkldnn_workspaces;
+                tbb::flow::graph* G;
+                tbb::global_control* c;
+                tbb::task_scheduler_init* init;
             };
             }
         }

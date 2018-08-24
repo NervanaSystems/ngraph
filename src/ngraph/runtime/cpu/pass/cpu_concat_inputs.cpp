@@ -111,12 +111,15 @@ void ngraph::runtime::cpu::pass::ConcatInputs::concat_lstm_inputs()
             {
                 auto goe_node = std::dynamic_pointer_cast<op::GetOutputElement>(goes->get_node());
                 lstm_outputs.insert(goes->get_node());
-                // first output node of lstm
+                //first output node of lstm
                 if (goe_node->get_n() == 0)
                 {
                     NGRAPH_DEBUG << "Replacing 1st output Lstm node " << goe_node->get_name()
                                  << " with " << lstm_ht_out->get_name();
-                    ngraph::replace_node(goe_node, lstm_ht_out);
+                    if (!goe_node->get_users().empty())
+                    {
+                        ngraph::replace_node(goe_node, lstm_ht_out);
+                    }
                 }
                 else if (goe_node->get_n() == 1)
                 {

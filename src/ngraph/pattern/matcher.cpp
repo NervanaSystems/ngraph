@@ -19,6 +19,7 @@
 #include <typeindex>
 #include <typeinfo>
 
+#include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/parameter.hpp"
 
@@ -69,6 +70,27 @@ namespace ngraph
                 }
             }
             return is_match;
+        }
+
+        bool Matcher::is_contained_match(const NodeVector& exclusions, bool ignore_unused)
+        {
+            if (exclusions.empty())
+            {
+                NodeVector label_exclusions;
+                for (auto entry : m_pattern_map)
+                {
+                    //leaf label
+                    if (entry.first->get_inputs().empty())
+                    {
+                        label_exclusions.push_back(entry.second);
+                    }
+                }
+                return ngraph::get_subgraph_outputs(
+                           get_matched_nodes(), label_exclusions, ignore_unused)
+                           .size() < 2;
+            }
+
+            return ngraph::get_subgraph_outputs(get_matched_nodes(), exclusions).size() < 2;
         }
 
         bool Matcher::match_skip(const std::shared_ptr<op::Skip>& skip,
@@ -122,24 +144,27 @@ namespace ngraph
                 throw ngraph_error("pattern_node or graph_node shouldn't be nullptrs!");
             }
 
+            add_node(graph_node);
+            size_t watermark = m_matched_list.size() - 1;
+
             NGRAPH_DEBUG << pad(2 * m_depth) << "[MATCHER] in match_node : "
                          << "pattern = " << pattern_node->get_name() << " matched "
                          << graph_node->get_name();
 
             if (auto label_node = std::dynamic_pointer_cast<op::Label>(pattern_node))
             {
-                return match_pattern(label_node, graph_node, pattern_map);
+                return abort_match(watermark, match_pattern(label_node, graph_node, pattern_map));
             }
 
             if (auto skip_node = std::dynamic_pointer_cast<op::Skip>(
                     pattern_node)) //matches PatternSkipOp semantics
             {
-                return match_skip(skip_node, graph_node, pattern_map);
+                return abort_match(watermark, match_skip(skip_node, graph_node, pattern_map));
             }
 
             if (auto any_node = std::dynamic_pointer_cast<op::Any>(pattern_node))
             {
-                return match_any(any_node, graph_node, pattern_map);
+                return abort_match(watermark, match_any(any_node, graph_node, pattern_map));
             }
 
             auto p_pattern_node = pattern_node.get();
@@ -147,10 +172,11 @@ namespace ngraph
 
             if (std::type_index(typeid(*p_pattern_node)) == std::type_index(typeid(*p_graph_node)))
             {
-                return match_arguments(pattern_node, graph_node, pattern_map);
+                return abort_match(watermark,
+                                   match_arguments(pattern_node, graph_node, pattern_map));
             }
 
-            return false;
+            return abort_match(watermark, false);
         }
 
         bool Matcher::match_permutation(const NodeVector& pattern_args,
@@ -240,6 +266,7 @@ namespace ngraph
             //clear our state
             m_match_root.reset();
             m_pattern_map.clear();
+            m_matched_list.clear();
 
             if (!m_pattern_node || !graph_node)
             {

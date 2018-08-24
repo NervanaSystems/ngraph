@@ -87,7 +87,6 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
     if (shape_size(src_layer->get_shape()) !=
         m_src_sequence_length * m_batch_size * m_src_layer_feature_size)
     {
-        std::cout << "shape_size: " << shape_size(src_layer->get_shape()) << std::endl;
         throw ngraph_error("src_layer size is not equal t*n*c");
     }
 
@@ -107,9 +106,10 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
     }
 
     add_output(src_layer->get_element_type(),
-               Shape{static_cast<unsigned long>(m_num_timesteps * m_batch_size),
+               Shape{static_cast<unsigned long>(m_direction * m_num_timesteps * m_batch_size),
                      static_cast<unsigned long>(m_src_iter_feature_size)});
     add_output(src_layer->get_element_type(),
-               Shape{static_cast<unsigned long>(m_num_cell_states * m_batch_size),
+               Shape{static_cast<unsigned long>(m_num_cell_states * m_direction *
+                                                m_num_fused_layers * m_batch_size),
                      static_cast<unsigned long>(m_src_iter_feature_size)});
 }

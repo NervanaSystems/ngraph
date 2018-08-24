@@ -22,35 +22,79 @@
 
 namespace ngraph
 {
-    class file_util;
+    namespace file_util
+    {
+        // @brief Returns the name with extension for a given path
+        // @param path The path to the output file
+        std::string get_file_name(const std::string& path);
+
+        // @brief Returns the file extension
+        // @param path The path to the output file
+        std::string get_file_ext(const std::string& path);
+
+        // @brief Returns the directory portion of the given path
+        // @param path The path to the output file
+        std::string get_directory(const std::string& path);
+
+        // @brief Serialize a Function to as a json file
+        // @param s1 Left side of path
+        // @param s2 Right side of path
+        std::string path_join(const std::string& s1, const std::string& s2);
+        std::string path_join(const std::string& s1, const std::string& s2, const std::string& s3);
+        std::string path_join(const std::string& s1,
+                              const std::string& s2,
+                              const std::string& s3,
+                              const std::string& s4);
+
+        // @brief Returns the size in bytes of filename
+        // @param filename The name of the file
+        size_t get_file_size(const std::string& filename);
+
+        // @brief Removes all files and directories starting at dir
+        // @param dir The path of the directory to remove
+        void remove_directory(const std::string& dir);
+
+        // @brief Create a directory
+        // @param dir Path of the directory to create
+        // @param func The Function to serialize
+        // @return true if the directory was created, false otherwise
+        bool make_directory(const std::string& dir);
+
+        // @brief Gets the path of the system temporary directory
+        // @return the path to the system temporary directory
+        std::string get_temp_directory_path();
+
+        // @brief Removes a file from the filesystem
+        // @param file The path to the file to be removed
+        void remove_file(const std::string& file);
+
+        // @brief Reads the contents of a file
+        // @param path The path of the file to read
+        // @return vector<char> of the file's contents
+        std::vector<char> read_file_contents(const std::string& path);
+
+        // @brief Reads the contents of a file
+        // @param path The path of the file to read
+        // @return string of the file's contents
+        std::string read_file_to_string(const std::string& path);
+
+        // @brief Iterate through files and optionally directories. Symbolic links are skipped.
+        // @param path The path to iterate over
+        // @param func A callback function called with each file or directory encountered
+        // @param recurse Optional parameter to enable recursing through path
+        void iterate_files(const std::string& path,
+                           std::function<void(const std::string& file, bool is_dir)> func,
+                           bool recurse = false,
+                           bool include_links = false);
+
+        // @brief Create a temporary file
+        // @param extension Optional extension for the temporary file
+        // @return Name of the temporary file
+        std::string tmp_filename(const std::string& extension = "");
+
+        // @brief Test for the existence of a path or file
+        // @param path The path to test
+        // @param true if the path exists, false otherwise
+        bool exists(const std::string& path);
+    }
 }
-
-class ngraph::file_util
-{
-public:
-    static std::string get_file_name(const std::string&);
-    static std::string get_file_ext(const std::string&);
-    static std::string path_join(const std::string& s1, const std::string& s2);
-    static size_t get_file_size(const std::string& filename);
-    static void remove_directory(const std::string& dir);
-    static bool make_directory(const std::string& dir);
-    static std::string make_temp_directory(const std::string& path = "");
-    static std::string get_temp_directory();
-    static void remove_file(const std::string& file);
-    static std::vector<char> read_file_contents(const std::string& path);
-    static std::string read_file_to_string(const std::string& path);
-    static void iterate_files(const std::string& path,
-                              std::function<void(const std::string& file, bool is_dir)> func,
-                              bool recurse = false);
-    static std::string tmp_filename(const std::string& extension = "");
-    static void touch(const std::string& filename);
-    static bool exists(const std::string& filename);
-    static int try_get_lock(const std::string& filename);
-    static void release_lock(int fd, const std::string& filename);
-    static time_t get_timestamp(const std::string& filename);
-
-private:
-    static void iterate_files_worker(const std::string& path,
-                                     std::function<void(const std::string& file, bool is_dir)> func,
-                                     bool recurse = false);
-};

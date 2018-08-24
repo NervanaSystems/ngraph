@@ -32,11 +32,11 @@ bool ngraph::pass::GraphRewrite::run_matchers_on_nodes_list(
     {
         for (auto matcher : matchers)
         {
-            NGRAPH_DEBUG << "Running matcher " << matcher << " on " << node << " , "
-                         << node->get_name() << " , is_output = " << node->is_output();
+            NGRAPH_DEBUG << "Running matcher " << matcher->get_name() << "("
+                         << matcher->get_pattern()->get_name() << ") on " << node->get_name();
             if (matcher->match(node))
             {
-                NGRAPH_DEBUG << "Matcher " << matcher << " matched " << node << " , "
+                NGRAPH_DEBUG << "Matcher " << matcher << matcher->get_name() << " matched "
                              << node->get_name();
                 rewritten = true;
                 if (matcher->process_match())
@@ -64,12 +64,10 @@ bool ngraph::pass::RecurrentGraphRewrite::run_on_function(std::shared_ptr<ngraph
         {
             for (auto matcher : m_matchers)
             {
-                NGRAPH_DEBUG << "Running matcher " << matcher << " on " << node << " , "
-                             << node->get_name() << " , is_output = " << node->is_output();
+                NGRAPH_DEBUG << "Running matcher " << matcher << " on " << node->get_name();
                 if (matcher->match(node))
                 {
-                    NGRAPH_DEBUG << "Matcher " << matcher << " matched " << node << " , "
-                                 << node->get_name();
+                    NGRAPH_DEBUG << "Matcher " << matcher << " matched " << node->get_name();
                     if (matcher->process_match())
                     {
                         changed = true;

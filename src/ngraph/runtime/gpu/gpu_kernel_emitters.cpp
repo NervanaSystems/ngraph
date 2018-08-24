@@ -232,3 +232,19 @@ void runtime::gpu::kernel::emit_cudnnReduceTensor(codegen::CodeWriter& writer,
     writer << "                  " << out.get_name() << "));\n";
     writer << "ngraph::runtime::gpu::free_gpu_buffer(workspace_ptr);\n";
 }
+
+std::string runtime::gpu::kernel::emit_type_string(const Node* node)
+{
+    std::stringstream ss;
+    for (auto const& input : node->get_inputs())
+    {
+        ss << input.get_element_type().c_type_string() << "_";
+    }
+    for (auto const& output : node->get_outputs())
+    {
+        ss << output.get_element_type().c_type_string() << "_";
+    }
+    std::string types = ss.str();
+    std::replace(types.begin(), types.end(), ' ', '_');
+    return types;
+}

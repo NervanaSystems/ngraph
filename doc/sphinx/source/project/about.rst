@@ -1,11 +1,43 @@
 .. about: 
 
-About
-=====
+Overview
+========
 
-Welcome to nGraph™, an open-source C++ compiler library for running and 
-training :abbr:`Deep Neural Network (DNN)` models. This project is 
-framework-neutral and can target a variety of modern devices or platforms. 
+
+Welcome to the documentation site for nGraph™, an open-source C++ Compiler, 
+Library, and runtime suite for running training and inference on 
+:abbr:`Deep Neural Network (DNN)` models. nGraph is framework-neutral and can be 
+targeted for programming and deploying :abbr:`Deep Learning (DL)` applications 
+on the most modern compute and edge devices.   
+
+Features
+--------
+
+:ref:`no-lockin`
+:ref:`framework-flexibility`
+
+
+.. _no-lockin:
+
+Develop without lock-in
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: ../graphics/develop-without-lockin.png
+   :width: 650px
+  
+
+Indeed, capabilities to increase training performance or to reduce inference 
+latency by simply adding another device of *any* specialized form factor -- 
+whether it be more compute (CPU), GPU or VPU processing power, custom ASIC or 
+FPGA, or a yet-to-be invented generation of NNP or accelerator -- are the key 
+benefits for frameworks developers working with nGraph. Our commitment to bake 
+flexibility into our ecosystem ensures developers' freedom to design user-facing 
+APIs for various hardware deployments directly into the framework. 
+Developers working on things like edge-devices augmented by machine learning, or 
+large distributed training clusters, or those who simply want a framework 
+without restrictive lock-in to let users switch or upgrade backends quickly and 
+easily.  
+
 
 .. figure:: ../graphics/ngraph-ecosystem.png
    :width: 585px   
@@ -14,11 +46,11 @@ nGraph currently supports :doc:`three popular <../framework-integration-guides>`
 frameworks for :abbr:`Deep Learning (DL)` models through what we call 
 a :term:`bridge` that can be integrated during the framework's build time. 
 For developers working with other frameworks (even those not listed above), 
-we've created a :doc:`How to Guide <../howto/index>` so you can learn how to create 
-custom bridge code that can be used to :doc:`compile and run <../howto/execute>` 
-a training model.
+we've created a :doc:`How to Guide <../howto/index>` so you can learn how to 
+create custom bridge code that can be used to 
+:doc:`compile and run <../howto/execute>` a training model.  
 
-We've recently added initial support for the `ONNX`_ format. Developers who 
+Additionally We've recently added initial support for the `ONNX`_ format. Developers who 
 already have a "trained" model can use nGraph to bypass a lot of the 
 framework-based complexity and :doc:`../howto/import` to test or run it 
 on targeted and efficient backends with our user-friendly ``ngraph_api``. 
@@ -29,17 +61,14 @@ about how to adapt models to train and run efficiently on different devices.
 Supported platforms
 --------------------
 
-Initially-supported backends include:
 
 * Intel® Architecture Processors (CPUs), 
 * Intel® Nervana™ Neural Network Processor™ (NNPs), and 
 * NVIDIA\* CUDA (GPUs). 
 
-Tentatively in the pipeline, we plan to add support for more backends,
-including:
 
-* :abbr:`Field Programmable Gate Arrays (FPGA)` (FPGAs)
-* `Movidius`_ compute stick 
+
+
 
 .. note:: The library code is under active development as we're continually 
    adding support for more kinds of DL models and ops, framework compiler 
@@ -81,6 +110,8 @@ to one :term:`step` in a computation, where each step produces zero or more
 tensor outputs from zero or more tensor inputs. For a more detailed dive into 
 how this works, read our documentation on how to :doc:`../howto/execute`.
 
+
+.. _framework-flexibility:
 
 How do I connect it to a framework? 
 ------------------------------------

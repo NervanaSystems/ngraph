@@ -10,13 +10,13 @@ building of graphs.
 Several C++ operators are overloaded to simplify graph construction.
 For example, the following:
 
-.. literalinclude:: ../../../examples/abc.cpp
+.. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 32-32
 
 can be simplified to:	   
 
-.. literalinclude:: ../../../examples/abc_operator.cpp
+.. literalinclude:: ../../../examples/abc_operator/abc_operator.cpp
    :language: cpp
    :lines: 31
 

@@ -4,13 +4,9 @@
 Derive a trainable model 
 #########################
 
-Documentation in this section describes one of the ways to derive and run a
-trainable model from an inference model.
-
-We can derive a trainable model from any graph that has been constructed with 
-weight-based updates. For this example named ``mnist_mlp.cpp``, we start with 
-a hand-designed inference model and convert it to a model that can be trained 
-with nGraph. 
+Documentation in this section describes one of the possible ways to turn a 
+:abbr:`DL (Deep Learning)` model for inference into one that can be used  
+for training.
 
 Additionally, and to provide a more complete walk-through that *also* trains the 
 model, our example includes the use of a simple data loader for uncompressed
@@ -25,19 +21,26 @@ MNIST data.
   - :ref:`update`
 
 
-.. _understanding_ml_ecosystem:
+.. _automating_graph_construction:
 
-Understanding the ML ecosystem
-===============================
+Automating graph construction
+==============================
 
-In a :abbr:`Machine Learning (ML)` ecosystem, it makes sense to take advantage 
-of automation and abstraction as much as possible. As such, nGraph was designed 
-to integrate wtih graph construction endpoints (AKA *ops*) handed down to it 
-from a framework. Our graph-construction API, therefore, needs to operate at a 
-fundamentally lower level than a typical framework's API. For this reason, 
-writing a model directly in nGraph would be somewhat akin to programming in 
-assembly language: not impossible, but not exactly the easiest thing for humans 
-to do. 
+In a :abbr:`Machine Learning (ML)` ecosystem, it makes sense to use automation 
+and abstraction whereever possible. nGraph was designed to automatically use 
+the "ops" of tensors provided by a framework when constructing graphs. However, 
+nGraph's graph-construction API operates at a fundamentally lower level than a 
+typical framework's API, and writing a model directly in nGraph would be somewhat 
+akin to programming in assembly language: not impossible, but not the easiest 
+thing for humans to do. 
+
+To make the task easier for developers who need to customize the "automatic", 
+construction of graphs, we've provided some demonstration code for how this 
+could be done. We know, for example, that a trainable model can be derived from 
+any graph that has been constructed with weight-based updates. 
+
+The following example named ``mnist_mlp.cpp`` represents a hand-designed 
+inference model being converted to a model that can be trained with nGraph. 
 
 
 .. _model_overview:
@@ -74,20 +77,25 @@ Inference
 ---------
 
 We begin by building the graph, starting with the input parameter 
-``X``. We define a fully-connected layer, including a parameter for
-weights and bias.
+``X``. We also define a fully-connected layer, including parameters for
+weights and bias:
 
-.. literalinclude:: ../../../examples/mnist_mlp.cpp
+.. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
-   :lines: 124-136
+   :lines: 127-139
 
 
-We repeat the process for the next layer, which we
-normalize with a ``softmax``.
+Repeat the process for the next layer,
 
-.. literalinclude:: ../../../examples/mnist_mlp.cpp
+.. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
-   :lines: 138-149
+   :lines: 141-149
+
+and normalize everything with a ``softmax``.
+
+.. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
+   :language: cpp
+   :lines: 151-153
 
 
 .. _loss:
@@ -95,13 +103,13 @@ normalize with a ``softmax``.
 Loss
 ----
 
-We use cross-entropy to compute the loss. nGraph does not currenty
-have a cross-entropy op, so we implement it directly, adding clipping
-to prevent underflow.
+We use cross-entropy to compute the loss. nGraph does not currenty have a core
+op for cross-entropy, so we implement it directly, adding clipping to prevent 
+underflow.
 
-.. literalinclude:: ../../../examples/mnist_mlp.cpp
+.. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
-   :lines: 151-166
+   :lines: 154-169
 
 
 .. _backprop:
@@ -109,16 +117,15 @@ to prevent underflow.
 Backprop
 --------
 
-We want to reduce the loss by adjusting the weights. We compute the
-adjustments using the reverse mode autodiff algorithm, commonly
-referred to as "backprop" because of the way it is implemented in
-interpreted frameworks. In nGraph, we augment the loss computation
-with computations for the weight adjustments. This allows the
-calculations for the adjustments to be further optimized.
+We want to reduce the loss by adjusting the weights. We compute the adjustments 
+using the reverse-mode autodiff algorithm, commonly referred to as "backprop" 
+because of the way it is implemented in interpreted frameworks. In nGraph, we 
+augment the loss computation with computations for the weight adjustments. This 
+allows the calculations for the adjustments to be further optimized.
 
-.. literalinclude:: ../../../examples/mnist_mlp.cpp
+.. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
-   :lines: 172-175
+   :lines: 171-175
 
 
 For any node ``N``, if the update for ``loss`` is ``delta``, the
@@ -129,9 +136,10 @@ update computation for ``N`` will be given by the node
    auto update = loss->backprop_node(N, delta);
 
 The different update nodes will share intermediate computations. So to
-get the updated values for the weights we just say:
+get the updated values for the weights as computed with the specified 
+:doc:`backend <../programmable/index>`, 
 
-.. literalinclude:: ../../../examples/mnist_mlp.cpp
+.. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
    :lines: 177-217
 
@@ -151,7 +159,7 @@ use the same nodes in different functions, nGraph currently does not
 allow the same nodes to be compiled in different functions, so we
 compile clones of the nodes.
 
-.. literalinclude:: ../../../examples/mnist_mlp.cpp
+.. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
-   :lines: 220-226
+   :lines: 221-226
 

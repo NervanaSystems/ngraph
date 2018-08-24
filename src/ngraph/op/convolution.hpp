@@ -180,6 +180,7 @@ namespace ngraph
                                     const CoordinateDiff& padding_above_forward,
                                     const Strides& data_dilation_strides_forward);
 
+            void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 

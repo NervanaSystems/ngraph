@@ -31,7 +31,4 @@ class ngraph::pass::Liveness : public FunctionPass
 {
 public:
     bool run_on_function(std::shared_ptr<ngraph::Function>) override;
-
-private:
-    void validate_liveness(const std::list<Node*>& ops);
 };

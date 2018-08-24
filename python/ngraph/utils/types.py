@@ -27,7 +27,7 @@ from ngraph.impl.op import Constant
 from ngraph.exceptions import NgraphTypeError
 
 
-log = logging.getLogger(__file__)
+log = logging.getLogger(__name__)
 
 TensorShape = List[int]
 NumericData = Union[int, float, np.ndarray]

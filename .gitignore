@@ -14,6 +14,8 @@
 *.dylib
 *.dll
 
+*.db
+
 # Fortran module files
 *.mod
 
@@ -76,6 +78,7 @@ config_args.txt
 .nfs*
 venv/
 .vscode/
+.vs/
 
 # VisualGDB files
 VisualGDB/

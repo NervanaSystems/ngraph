@@ -55,7 +55,8 @@ public:
     enum class allocation_scheme
     {
         FIRST_FIT,
-        BEST_FIT
+        BEST_FIT,
+        NO_REUSE
     };
 
     class node
@@ -68,7 +69,7 @@ public:
         block_state m_state;
     };
 
-    MemoryManager(size_t alignment = 1);
+    MemoryManager(size_t alignment = 1, bool disable_reuse = false);
     // memory_manager& alignment(size_t a);
 
     size_t allocate(size_t size);
@@ -87,6 +88,7 @@ public:
 private:
     size_t first_fit(size_t size);
     size_t best_fit(size_t size);
+    size_t no_reuse_allocator(size_t size);
 
     std::list<node> m_node_list;
     size_t m_alignment;

@@ -87,6 +87,23 @@ namespace cblas
                      const float beta,
                      float* C,
                      const int64_t ldc);
+
+    void cblas_sgemm_batch(const Layout Layout,
+                           const Transpose* transa_array,
+                           const Transpose* transb_array,
+                           const int64_t* m_array,
+                           const int64_t* n_array,
+                           const int64_t* k_array,
+                           const float* alpha_array,
+                           const float** a_array,
+                           const int64_t* lda_array,
+                           const float** b_array,
+                           const int64_t* ldb_array,
+                           const float* beta_array,
+                           float** c_array,
+                           const int64_t* ldc_array,
+                           const int64_t group_count,
+                           const int64_t* group_size);
     }
 }
 
@@ -119,7 +136,7 @@ namespace ngraph
             {
                 void pad_4d_float32(float* input,
                                     float* output,
-                                    float pad_value,
+                                    float* pad_value,
                                     const Shape& input_shape,
                                     const Shape& output_shape,
                                     const Shape& padding_below,
@@ -136,6 +153,12 @@ namespace ngraph
                                                const Shape& output_shape);
 
                 void reduce_sum_2d_1rd_float32(float* input,
+                                               float* output,
+                                               const Shape& input_shape,
+                                               const Shape& output_shape,
+                                               const AxisSet& reduction_axes);
+
+                void reduce_sum_4d_2rd_float32(float* input,
                                                float* output,
                                                const Shape& input_shape,
                                                const Shape& output_shape,

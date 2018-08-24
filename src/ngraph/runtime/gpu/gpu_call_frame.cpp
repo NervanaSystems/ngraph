@@ -32,19 +32,16 @@ runtime::gpu::GPU_CallFrame::GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction>
     : m_external_function(external_function)
     , m_compiled_function(compiled_function)
 {
-    setup_runtime_context();
 }
 
 runtime::gpu::GPU_CallFrame::~GPU_CallFrame()
 {
-    cublasDestroy(m_cublas_handle);
-    cudnnDestroy(m_cudnn_handle);
-    cleanup_runtime_context();
 }
 
 void runtime::gpu::GPU_CallFrame::call(
     const std::vector<std::shared_ptr<runtime::TensorView>>& output_tvs,
-    const std::vector<std::shared_ptr<runtime::TensorView>>& input_tvs)
+    const std::vector<std::shared_ptr<runtime::TensorView>>& input_tvs,
+    GPURuntimeContext* ctx)
 {
     //Device tensors
     vector<void*> inputs;
@@ -63,33 +60,5 @@ void runtime::gpu::GPU_CallFrame::call(
         outputs.push_back(tv->m_allocated_buffer_pool);
     }
 
-    m_compiled_function(inputs.data(), outputs.data(), m_external_function->m_ctx.get());
-}
-
-void runtime::gpu::GPU_CallFrame::setup_runtime_context()
-{
-    cublasStatus_t cublasStatus = cublasCreate(&m_cublas_handle);
-    if (cublasStatus != CUBLAS_STATUS_SUCCESS)
-    {
-        throw runtime_error("cuBLAS create handle failed");
-    }
-    cudnnStatus_t cudnnStatus = cudnnCreate(&m_cudnn_handle);
-    if (cudnnStatus != CUDNN_STATUS_SUCCESS)
-    {
-        throw runtime_error("cuDnn create handle failed");
-    }
-
-    // Pass scalars as reference on the Device
-    cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_DEVICE);
-
-    const auto& primitive_emitter = m_external_function->get_primitive_emitter();
-    m_external_function->m_ctx->gpu_primitives = primitive_emitter->get_primitives().data();
-
-    // register with c-api runtime context
-    m_external_function->m_ctx->cublas_handle = &m_cublas_handle;
-    m_external_function->m_ctx->cudnn_handle = &m_cudnn_handle;
-}
-
-void runtime::gpu::GPU_CallFrame::cleanup_runtime_context()
-{
+    m_compiled_function(inputs.data(), outputs.data(), ctx);
 }

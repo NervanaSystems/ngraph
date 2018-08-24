@@ -71,7 +71,7 @@ They receive their values from outside of the graph, so they have no inputs.
 They have attributes for the element type and the shape of the tensor that will 
 be passed to them.
 
-.. literalinclude:: ../../../examples/abc.cpp
+.. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 25-29
 
@@ -81,7 +81,7 @@ shape ``(2, 3)`` and a row-major element layout.
 To create a graph for ``(a + b) * c``, first make an ``op::Add`` node with inputs 
 from ``a`` and ``b``, and an ``op::Multiply`` node from the add node and ``c``:
 
-.. literalinclude:: ../../../examples/abc.cpp
+.. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 31-32
 
@@ -94,7 +94,7 @@ type and shape of its unique output.
 
 Once the graph is built, we need to package it in a ``Function``:
 
-.. literalinclude:: ../../../examples/abc.cpp
+.. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 35-36
 
@@ -131,7 +131,7 @@ for additional details.
 
 To continue with our original example and select the ``"CPU"`` backend: 
 
-.. literalinclude:: ../../../examples/abc.cpp
+.. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 38-39
 
@@ -166,17 +166,16 @@ you switch between odd/even generations of variables on each update.
 
 Backends are responsible for managing storage. If the storage is off-CPU, caches 
 are used to minimize copying between device and CPU. We can allocate storage for 
-the three parameters and the return value as follows:
+the three parameters and the return value.
 
-.. literalinclude:: ../../../examples/abc.cpp
+.. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 41-46
 
-
-Each tensor is a shared pointer to a :doc:`../programmable/index/tensorview`, 
-the interface backends implement for tensor use. When there are no more references to the 
+Each tensor is a shared pointer to a :term:`Tensorview`, which is the interface 
+backends implement for tensor use. When there are no more references to the 
 tensor view, it will be freed when convenient for the backend. See the 
-:doc:`../programmable/index` documentation for details on ``TensorView ``.
+:doc:`../programmable/index` documentation for details on ``TensorView``.
 
 
 .. _initialize_inputs:
@@ -186,7 +185,7 @@ Initialize the inputs
 
 Next we need to copy some data into the tensors.
 
-.. literalinclude:: ../../../examples/abc.cpp
+.. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 48-55
 
@@ -201,7 +200,7 @@ Invoke the computation
 To invoke the function, we simply pass argument and resultant tensors to the 
 call frame:
 
-.. literalinclude:: ../../../examples/abc.cpp
+.. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 57-58
 
@@ -213,7 +212,7 @@ Access the outputs
 
 We can use the ``read`` method to access the result:
 
-.. literalinclude:: ../../../examples/abc.cpp
+.. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 60-77
 
@@ -222,7 +221,7 @@ We can use the ``read`` method to access the result:
 Put it all together
 ===================
 
-.. literalinclude:: ../../../examples/abc.cpp
+.. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp
    :linenos:
    :caption: "The (a + b) * c example for executing a computation on nGraph"

@@ -19,10 +19,16 @@
 #include "ngraph/runtime/gpu/gpu_invoke.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 
-extern "C" void ngraph::runtime::gpu::invoke_primitive(GPURuntimeContext* ctx,
+extern "C" void ngraph::runtime::gpu::invoke_primitive(const GPURuntimeContext* ctx,
                                                        size_t primitive_index,
                                                        void** args,
                                                        void** result)
 {
     (*ctx->gpu_primitives[primitive_index])(args, result);
+}
+
+extern "C" void* ngraph::runtime::gpu::invoke_memory_primitive(const GPURuntimeContext* ctx,
+                                                               size_t primitive_index)
+{
+    return ctx->gpu_memory_primitives[primitive_index]();
 }

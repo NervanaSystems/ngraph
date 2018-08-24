@@ -20,6 +20,7 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 
 #include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
+#include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -31,8 +32,8 @@ namespace ngraph
             namespace kernel
             {
                 template <typename ElementType, unsigned int Rank>
-                void reduce_max_all(ElementType* input,
-                                    ElementType* output,
+                void reduce_max_all(void* input,
+                                    void* output,
                                     const Shape& input_shape,
                                     const Shape& output_shape)
                 {
@@ -44,16 +45,43 @@ namespace ngraph
                         in_dims[i] = input_shape[i];
                     }
 
-                    Eigen::TensorMap<Eigen::Tensor<ElementType, 0, Eigen::RowMajor>> out(output,
-                                                                                         out_dims);
-                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(input,
-                                                                                           in_dims);
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, 0, Eigen::RowMajor>> out(
+                        static_cast<ElementType*>(output), out_dims);
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(
+                        static_cast<ElementType*>(input), in_dims);
                     out.device(eigen::global_thread_pool_device) = in.maximum();
                 }
 
+                template <typename ElementType, unsigned int Rank>
+                void reduce_max_innermost_1rd(void* input,
+                                              void* output,
+                                              const Shape& input_shape,
+                                              const Shape& output_shape)
+                {
+                    Eigen::array<Eigen::Index, Rank> in_dims;
+                    Eigen::array<Eigen::Index, Rank - 1> out_dims;
+                    Eigen::IndexList<Eigen::type2index<Rank - 1>> reduction_dim;
+
+                    for (int i = 0; i < Rank; i++)
+                    {
+                        in_dims[i] = input_shape[i];
+                    }
+
+                    for (int i = 0; i < Rank - 1; i++)
+                    {
+                        out_dims[i] = output_shape[i];
+                    }
+
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank - 1, Eigen::RowMajor>> out(
+                        static_cast<ElementType*>(output), out_dims);
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(
+                        static_cast<ElementType*>(input), in_dims);
+                    out.device(eigen::global_thread_pool_device) = in.maximum(reduction_dim);
+                }
+
                 template <typename ElementType, unsigned int Rank, unsigned int ReductionDims>
-                void reduce_max(ElementType* input,
-                                ElementType* output,
+                void reduce_max(void* input,
+                                void* output,
                                 const Shape& input_shape,
                                 const Shape& output_shape,
                                 const AxisSet& reduction_axes)
@@ -80,10 +108,68 @@ namespace ngraph
 
                     Eigen::TensorMap<
                         Eigen::Tensor<ElementType, Rank - ReductionDims, Eigen::RowMajor>>
-                        out(output, out_dims);
-                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(input,
-                                                                                           in_dims);
+                        out(static_cast<ElementType*>(output), out_dims);
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(
+                        static_cast<ElementType*>(input), in_dims);
                     out.device(eigen::global_thread_pool_device) = in.maximum(reduction_dims);
+                }
+
+                template <typename ElementType, unsigned int Rank>
+                void reduce_max_1rd(void* input,
+                                    void* output,
+                                    const Shape& input_shape,
+                                    const Shape& output_shape,
+                                    const AxisSet& reduction_axes)
+                {
+                    reduce_max<ElementType, Rank, 1>(
+                        input, output, input_shape, output_shape, reduction_axes);
+                }
+
+                template <typename ElementType>
+                void reduce_max_3d_2rd(void* input,
+                                       void* output,
+                                       const Shape& input_shape,
+                                       const Shape& output_shape,
+                                       const AxisSet& reduction_axes)
+                {
+                    reduce_max<ElementType, 3, 2>(
+                        input, output, input_shape, output_shape, reduction_axes);
+                }
+
+                template <typename ElementType>
+                void reduce_max_4d_2rd(void* input,
+                                       void* output,
+                                       const Shape& input_shape,
+                                       const Shape& output_shape,
+                                       const AxisSet& reduction_axes)
+                {
+                    reduce_max<ElementType, 4, 2>(
+                        input, output, input_shape, output_shape, reduction_axes);
+                }
+
+                template <typename ElementType>
+                void reduce_max_5d_2rd(void* input,
+                                       void* output,
+                                       const Shape& input_shape,
+                                       const Shape& output_shape,
+                                       const AxisSet& reduction_axes)
+                {
+                    reduce_max<ElementType, 5, 2>(
+                        input, output, input_shape, output_shape, reduction_axes);
+                }
+
+                template <typename ElementType>
+                void max(void* arg,
+                         void* out,
+                         const Shape& in_shape,
+                         const Shape& out_shape,
+                         const AxisSet& reduction_axes)
+                {
+                    reference::max(static_cast<ElementType*>(arg),
+                                   static_cast<ElementType*>(out),
+                                   in_shape,
+                                   out_shape,
+                                   reduction_axes);
                 }
             }
         }

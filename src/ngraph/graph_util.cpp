@@ -46,17 +46,33 @@ void ngraph::traverse_nodes(const std::shared_ptr<const Function> p,
 
 void ngraph::traverse_nodes(const Function* p, std::function<void(std::shared_ptr<Node>)> f)
 {
-    std::unordered_set<std::shared_ptr<Node>> instances_seen;
-    std::deque<std::shared_ptr<Node>> stack;
+    NodeVector nodes;
 
     for (auto r : p->get_results())
     {
-        stack.push_front(r);
+        nodes.push_back(r);
     }
 
     for (auto param : p->get_parameters())
     {
-        stack.push_front(param);
+        nodes.push_back(param);
+    }
+
+    traverse_nodes(nodes, f);
+}
+
+// This version of traverses directly from input/output nodes to perform functions on
+// graphs that are not wrapped by functions. Most useful for finding parameters of a graph
+// directly from the result nodes, not from function parameters.
+void ngraph::traverse_nodes(const NodeVector& io_nodes,
+                            std::function<void(std::shared_ptr<Node>)> f)
+{
+    std::unordered_set<std::shared_ptr<Node>> instances_seen;
+    std::deque<std::shared_ptr<Node>> stack;
+
+    for (auto r : io_nodes)
+    {
+        stack.push_front(r);
     }
 
     while (stack.size() > 0)
@@ -110,6 +126,11 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     if (target->is_output())
     {
         throw ngraph_error("Result nodes cannot be replaced.");
+    }
+
+    if (target->get_users().empty())
+    {
+        throw ngraph_error("replacing an unreachable node");
     }
 
     // Fix input/output descriptors
@@ -167,6 +188,36 @@ std::list<std::shared_ptr<ngraph::Node>>
     }
 
     return result_list;
+}
+
+// Check if all paths from X to a result go through Y
+bool ngraph::is_post_dominated(Node* X, Node* Y)
+{
+    std::unordered_set<Node*> visited;
+    std::deque<Node*> stack;
+    stack.push_front(X);
+
+    while (stack.size() > 0)
+    {
+        ngraph::Node* curr = stack.front();
+        visited.insert(curr);
+        if (curr->is_output())
+        {
+            return false;
+        }
+        stack.pop_front();
+        if (curr != Y)
+        {
+            for (auto next : curr->get_users())
+            {
+                if (visited.count(next.get()) == 0)
+                {
+                    stack.push_front(next.get());
+                }
+            }
+        }
+    }
+    return true;
 }
 
 void ngraph::NodeMap::update(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> val)
@@ -428,4 +479,94 @@ bool ngraph::is_one(std::shared_ptr<Node> reduce_constant)
 {
     auto result_bool = is_equal_to_const_value("1", reduce_constant);
     return result_bool;
+}
+
+NodeVector ngraph::get_subgraph_outputs(const NodeVector& nodes,
+                                        const NodeVector& exclusions,
+                                        bool ignore_unused)
+{
+    std::set<shared_ptr<Node>> exclusions_set(exclusions.begin(), exclusions.end());
+    std::set<shared_ptr<Node>> nodes_set(nodes.begin(), nodes.end());
+
+    NodeVector outputs;
+
+    for (auto n : nodes)
+    {
+        if (exclusions_set.count(n) != 0)
+        {
+            continue;
+        }
+
+        for (auto u : n->get_users())
+        {
+            if (nodes_set.count(u) == 0 && (!ignore_unused || is_used(u.get())))
+            {
+                outputs.push_back(n);
+            }
+        }
+    }
+    return outputs;
+}
+
+bool ngraph::is_used(Node* node)
+{
+    std::unordered_set<Node*> instances_seen;
+    std::deque<Node*> stack;
+    stack.push_front(node);
+
+    while (stack.size() > 0)
+    {
+        ngraph::Node* n = stack.front();
+        if (instances_seen.count(n) == 0)
+        {
+            if (n->is_output())
+            {
+                return true;
+            }
+            instances_seen.insert(n);
+        }
+        stack.pop_front();
+        for (auto arg : n->get_users())
+        {
+            if (instances_seen.count(arg.get()) == 0)
+            {
+                stack.push_front(arg.get());
+            }
+        }
+    }
+    return false;
+}
+
+size_t ngraph::get_user_count(Node* node)
+{
+    size_t count = 0;
+    for (auto node_user : node->get_users())
+    {
+        count += is_used(node_user.get());
+    }
+    return count;
+}
+
+bool ngraph::possibly_overwritten(Node* node)
+{
+    for (const descriptor::Output& output : node->get_outputs())
+    {
+        for (const descriptor::Input* input : output.get_inputs())
+        {
+            if (auto op = std::dynamic_pointer_cast<ngraph::op::Op>(input->get_node()))
+            {
+                if (auto op_annotations = op->get_op_annotations())
+                {
+                    for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
+                    {
+                        if (input->get_index() == oi_pair.input && oi_pair.destructive)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return false;
 }

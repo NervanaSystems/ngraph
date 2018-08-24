@@ -14,33 +14,13 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <algorithm>
-#include <vector>
-
 #include "ngraph/shape.hpp"
+#include "ngraph/util.hpp"
 
-using namespace std;
-using namespace ngraph;
-
-size_t ngraph::shape_size(const Shape& shape)
+std::ostream& ngraph::operator<<(std::ostream& s, const Shape& shape)
 {
-    size_t size = 1;
-    for (auto d : shape)
-    {
-        size *= d;
-    }
-    return size;
-}
-
-Strides ngraph::row_major_strides(const Shape& shape)
-{
-    Strides strides;
-    size_t s = 1;
-    for (auto d = shape.rbegin(); d != shape.rend(); d++)
-    {
-        strides.push_back(s);
-        s *= *d;
-    }
-    reverse(strides.begin(), strides.end());
-    return strides;
+    s << "Shape{";
+    s << ngraph::join(shape);
+    s << "}";
+    return s;
 }

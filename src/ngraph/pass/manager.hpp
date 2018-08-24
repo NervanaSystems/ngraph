@@ -42,25 +42,27 @@ public:
     void initialize_default_passes();
 
     template <typename T, class... Args>
-    void register_pass(Args... args)
+    void register_pass(Args&&... args)
     {
         static_assert(std::is_base_of<pass::PassBase, T>::value, "pass not derived from pass base");
-        auto pass = std::make_shared<T>(args...);
+        auto pass = std::make_shared<T>(std::forward<Args>(args)...);
         auto pass_base = std::static_pointer_cast<PassBase>(pass);
         m_pass_list.push_back(pass_base);
-        if (m_visualize)
+        if (m_visualize || m_serialize)
         {
             m_pass_names.push_back(typeid(T).name());
         }
     }
 
-    void run_passes(std::shared_ptr<Function>);
+    void run_passes(std::shared_ptr<Function>, bool transitive = true);
 
     ManagerState& get_state();
     void set_pass_visualization(bool new_state) { m_visualize = new_state; }
+    void set_pass_serialization(bool new_state) { m_serialize = new_state; }
 private:
     std::vector<std::string> m_pass_names;
     std::vector<std::shared_ptr<PassBase>> m_pass_list;
     ManagerState m_state;
     bool m_visualize = false;
+    bool m_serialize = false;
 };
