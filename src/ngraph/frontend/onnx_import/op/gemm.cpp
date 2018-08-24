@@ -16,6 +16,16 @@
 
 #include "op/gemm.hpp"
 
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/dot.hpp"
+#include "ngraph/op/multiply.hpp"
+
+#include "ngraph/frontend/onnx_import/exceptions.hpp"
+#include "ngraph/frontend/onnx_import/utils/broadcasting.hpp"
+#include "ngraph/frontend/onnx_import/utils/reshape.hpp"
+
 namespace ngraph
 {
     namespace onnx_import
@@ -36,9 +46,13 @@ namespace ngraph
                 auto trans_b{node.get_attribute_value<int64_t>("transB", 0)};
 
                 if (trans_a)
+                {
                     input_a = transpose(input_a);
+                }
                 if (trans_b)
+                {
                     input_b = transpose(input_b);
+                }
 
                 //code from python not implemented in c++ yet.
                 //reshape_for_matmul(node, input_a, input_b);

@@ -19,16 +19,8 @@
 #include <memory>
 
 #include "ngraph/node_vector.hpp"
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/broadcast.hpp"
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/dot.hpp"
-#include "ngraph/op/multiply.hpp"
 
 #include "core/node.hpp"
-#include "exceptions.hpp"
-#include "utils/broadcasting.hpp"
-#include "utils/reshape.hpp"
 
 namespace ngraph
 {
