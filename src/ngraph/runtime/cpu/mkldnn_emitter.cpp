@@ -114,13 +114,8 @@ mkldnn::memory::desc
 
 size_t MKLDNNEmitter::build_memory_primitive(const mkldnn::memory::desc& desc)
 {
-    // MKLDNN unconditionally writes into data handles at primitive creation for padded layouts
-    // Provide a dummy location to keep MKLDNN happy
-    auto pd = mkldnn::memory::primitive_desc(desc, mkldnn_utils::global_cpu_engine);
-    void* tmp_buf = malloc(pd.get_size());
     size_t index =
-        insert_primitive(new mkldnn::memory({desc, mkldnn_utils::global_cpu_engine}, tmp_buf));
-    free(tmp_buf);
+        insert_primitive(new mkldnn::memory({desc, mkldnn_utils::global_cpu_engine}, nullptr));
     return index;
 }
 
