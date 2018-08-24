@@ -18,9 +18,9 @@
 
 #include "ngraph/except.hpp"
 
-#include "graph.hpp"
-#include "model.hpp"
-#include "node.hpp"
+#include "core/graph.hpp"
+#include "core/model.hpp"
+#include "core/node.hpp"
 #include "onnx.hpp"
 
 namespace ngraph

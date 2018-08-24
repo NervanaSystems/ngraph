@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2018 Intel Corporation
+ * Copyright 2017-2018 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/node_vector.hpp"
+#include "ngraph/op/multiply.hpp"
 
 #include "core/node.hpp"
 
@@ -26,15 +27,11 @@ namespace ngraph
     {
         namespace op
         {
-            /**
-             * @brief Performs ONNX Conv operation.
-             *
-             * @param node   The ONNX node object representing this operation.
-             *
-             * @return The vector containing Ngraph nodes producing output of ONNX convolution
-             *         operation.
-             */
-            NodeVector conv(const Node& node);
+            inline NodeVector mul(const Node& node)
+            {
+                NodeVector ng_inputs{node.get_ng_inputs()};
+                return {std::make_shared<ngraph::op::Multiply>(ng_inputs.at(0), ng_inputs.at(1))};
+            }
 
         } // namespace op
 

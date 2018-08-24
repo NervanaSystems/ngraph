@@ -17,8 +17,10 @@
 #pragma once
 
 #include "ngraph/coordinate_diff.hpp"
-#include "ngraph/frontend/onnx_import/attribute.hpp"
-#include "ngraph/frontend/onnx_import/node.hpp"
+#include "ngraph/shape.hpp"
+
+#include "core/attribute.hpp"
+#include "core/node.hpp"
 
 namespace ngraph
 {
@@ -26,6 +28,40 @@ namespace ngraph
     {
         namespace attribute
         {
+            /**
+             * @brief Get shape of kernel (filter) in pixels.
+             *
+             * @param node The Node ptr representing Conv or Pool operation.
+             * @return The kernel Shape object representing its dimensions (height, width, depth).
+             */
+            Shape get_kernel_shape(const Node& node);
+
+            /**
+             * @brief  Get number of pixels to stride operation by in each direction.
+             *
+             * @param node The Node ptr representing Conv or Pool operation.
+             * @param kernel_shape The shape of the kernel which we retrieve strides for.
+             * @return The kernel Shape object representing its dimensions (height, width, depth).
+             */
+            Strides get_strides(const Node& node, const Shape& kernel_shape);
+
+            /**
+             * @brief  Get number of pixels to stride operation by in each direction.
+             *
+             * @param node The Node ptr representing Conv or Pool operation.
+             * @return The kernel Shape object representing its dimensions (height, width, depth).
+             */
+            Strides get_strides(const Node& node);
+
+            /**
+             * @brief Get number of pixels for filter dilation in each direction.
+             *
+             * @param node The Node ptr representing ONNX operation.
+             * @return The Strides object containing number of pixels for filter dilation
+             *         (height, width, depth).
+             */
+            Strides get_dilations(const Node& node);
+
             /**
              * @brief Get padding values for the operation described by an ONNX node.
              * @details If `auto_pad` attribute is specified as SAME_UPPER or SAME_LOWER, or VALID
