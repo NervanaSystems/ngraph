@@ -64,6 +64,8 @@ public:
             construct_conv_bias_relu();
             construct_conv_bias_add();
             construct_conv_bias_add_relu();
+            construct_conv_add();
+            construct_conv_add_relu();
             construct_bounded_relu();
         }
 
@@ -90,5 +92,7 @@ private:
     void construct_conv_bias_relu();
     void construct_conv_bias_add();
     void construct_conv_bias_add_relu();
+    void construct_conv_add();
+    void construct_conv_add_relu();
     void construct_bounded_relu();
 };
