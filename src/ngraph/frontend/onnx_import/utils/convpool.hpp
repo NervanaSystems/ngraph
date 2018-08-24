@@ -17,8 +17,10 @@
 #pragma once
 
 #include "ngraph/coordinate_diff.hpp"
-#include "ngraph/frontend/onnx_import/attribute.hpp"
-#include "ngraph/frontend/onnx_import/node.hpp"
+#include "ngraph/shape.hpp"
+
+#include "core/attribute.hpp"
+#include "core/node.hpp"
 
 namespace ngraph
 {

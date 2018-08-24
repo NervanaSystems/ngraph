@@ -14,6 +14,12 @@
  * limitations under the License.
  *******************************************************************************/
 
+#include <cstddef>
+#include <memory>
+#include <vector>
+
+#include "op/conv.hpp"
+
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"

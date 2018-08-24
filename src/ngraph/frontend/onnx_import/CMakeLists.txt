@@ -34,14 +34,7 @@ add_library(onnx_import_interface OBJECT
 
 add_library(onnx_import STATIC
         onnx.pb.cc
-        attribute.cpp
-        attribute.hpp
         exceptions.hpp
-        graph.cpp
-        graph.hpp
-        model.hpp
-        node.cpp
-        node.hpp
         op/add.hpp
         op/batch_norm.cpp
         op/batch_norm.hpp
@@ -52,12 +45,19 @@ add_library(onnx_import STATIC
         op/split.cpp
         op/split.hpp
         ops_bridge.cpp
-        tensor.hpp
         utils/broadcasting.cpp
         utils/broadcasting.hpp
         utils/convpool.cpp
         utils/convpool.hpp
-        value_info.hpp)
+        core/attribute.cpp
+        core/attribute.hpp
+        core/graph.cpp
+        core/graph.hpp
+        core/model.hpp
+        core/node.cpp
+        core/node.hpp
+        core/tensor.hpp
+        core/value_info.hpp)
 
 add_dependencies(onnx_import onnx_import_interface)
 
@@ -67,7 +67,7 @@ if (NOT NGRAPH_USE_SYSTEM_PROTOBUF)
 endif()
 
 set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_include_directories(onnx_import PUBLIC ${CMAKE_CURRENT_BINARY_DIR} PRIVATE ${NGRAPH_INCLUDE_PATH} ${Protobuf_INCLUDE_DIR})
+target_include_directories(onnx_import PUBLIC ${CMAKE_CURRENT_BINARY_DIR} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${NGRAPH_INCLUDE_PATH} ${Protobuf_INCLUDE_DIR})
 target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES})
 
 set_property(TARGET onnx_import_interface PROPERTY POSITION_INDEPENDENT_CODE ON)
