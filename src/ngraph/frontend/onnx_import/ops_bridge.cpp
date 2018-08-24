@@ -79,14 +79,14 @@ namespace ngraph
 
                 NodeVector operator()(const Node& node) const
                 {
-                    try
-                    {
-                        return m_map.at(node.op_type())(node);
-                    }
-                    catch (const std::out_of_range&)
+                    auto it = m_map.find(node.op_type());
+                    if (it == m_map.end())
                     {
                         throw detail::error::unknown_operation{node.op_type()};
                     }
+
+                    std::function<NodeVector(const Node&)> factory{it->second};
+                    return factory(node);
                 }
             };
 
