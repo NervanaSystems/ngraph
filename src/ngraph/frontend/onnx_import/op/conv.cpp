@@ -118,14 +118,14 @@ namespace ngraph
                                                       std::to_string(groups)};
                 }
 
-                auto strides{attribute::get_strides(node)};
-                auto dilations{attribute::get_dilations(node)};
-                auto paddings{attribute::get_pads(node)};
-                const auto& padding_below{paddings.first};
-                const auto& padding_above{paddings.second};
+                auto strides = attribute::get_strides(node);
+                auto dilations = attribute::get_dilations(node);
+                auto paddings = attribute::get_pads(node);
+                const auto& padding_below = paddings.first;
+                const auto& padding_above = paddings.second;
 
-                auto conv_node{make_ng_convolution(
-                    data, filters, strides, dilations, padding_below, padding_above, groups)};
+                auto conv_node = make_ng_convolution(
+                    data, filters, strides, dilations, padding_below, padding_above, groups);
 
                 // no bias param
                 if (inputs.size() < 3)
@@ -133,11 +133,11 @@ namespace ngraph
                     return {conv_node};
                 }
 
-                auto bias{inputs.at(2)};
+                auto bias = inputs.at(2);
                 const Shape& new_shape = conv_node->get_shape();
 
-                auto broadcasted_bias{std::make_shared<ngraph::op::Broadcast>(
-                    bias, new_shape, calculate_broadcast_axes(new_shape, bias->get_shape(), 1))};
+                auto broadcasted_bias = std::make_shared<ngraph::op::Broadcast>(
+                    bias, new_shape, calculate_broadcast_axes(new_shape, bias->get_shape(), 1));
                 return {std::make_shared<ngraph::op::Add>(conv_node, broadcasted_bias)};
             }
 
