@@ -15,10 +15,7 @@
  *******************************************************************************/
 
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/node_vector.hpp"
 
-#include "core/node.hpp"
-#include "core/tensor.hpp"
 #include "utils/reshape.hpp"
 
 namespace ngraph

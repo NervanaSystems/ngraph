@@ -16,15 +16,30 @@
 
 #pragma once
 
-#include "ngraph/node_vector.hpp"
-#include "ngraph/op/constant.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
+        /**
+         * @brief Change order of axes in node output data.
+         *
+         * @param node Node that output will have changed axes order.
+         * @param axes_order Desired order of axes.
+         *
+         * @return reshape op to reorder axes of input node output.
+         */
         std::shared_ptr<ngraph::Node> reorder_axes(const std::shared_ptr<ngraph::Node>& node,
                                                    std::vector<int> axes_order);
+
+        /**
+         * @brief Transpose node output data.
+         *
+         * @param node Node that output will be transposed.
+         *
+         * @return reshape op to transpose input node output.
+         */
         std::shared_ptr<ngraph::Node> transpose(const std::shared_ptr<ngraph::Node>& node);
     } // namespace onnx_import
 

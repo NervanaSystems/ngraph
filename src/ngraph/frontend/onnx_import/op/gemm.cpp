@@ -62,18 +62,12 @@ namespace ngraph
 
                 std::shared_ptr<ngraph::Node> alpha_node = std::make_shared<ngraph::op::Constant>(
                     a_dot_b->get_element_type(), ngraph::Shape{}, std::vector<double>{alpha});
-                alpha_node = std::make_shared<ngraph::op::Broadcast>(
-                    alpha_node,
-                    a_dot_b->get_shape(),
-                    calculate_broadcast_axes(a_dot_b->get_shape(), alpha_node->get_shape()));
+                alpha_node = make_broadcast_node(alpha_node, a_dot_b->get_shape());
                 a_dot_b = std::make_shared<ngraph::op::Multiply>(alpha_node, a_dot_b);
 
                 std::shared_ptr<ngraph::Node> beta_node = std::make_shared<ngraph::op::Constant>(
                     input_c->get_element_type(), ngraph::Shape{}, std::vector<double>{beta});
-                beta_node = std::make_shared<ngraph::op::Broadcast>(
-                    beta_node,
-                    input_c->get_shape(),
-                    calculate_broadcast_axes(input_c->get_shape(), beta_node->get_shape()));
+                beta_node = make_broadcast_node(beta_node, input_c->get_shape());
                 input_c = std::make_shared<ngraph::op::Multiply>(beta_node, input_c);
 
                 return {std::make_shared<ngraph::op::Add>(a_dot_b, input_c)};
