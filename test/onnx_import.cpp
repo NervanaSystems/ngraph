@@ -151,8 +151,8 @@ namespace
 TEST(onnx, mode_conv2d_strides_padding)
 {
     // Convolution with strides=2 and padding=1
-    auto function{ngraph::onnx_import::import_onnx_function(
-        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/conv_with_strides_padding.onnx"))};
+    auto function = ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/conv_with_strides_padding.onnx"));
 
     // (1, 1, 4, 3)
     auto expected_output = ngraph::test::NDArray<float, 4>({{{{12.f, 27.f, 24.f},
@@ -161,37 +161,37 @@ TEST(onnx, mode_conv2d_strides_padding)
                                                               {112.f, 177.f, 124.f}}}})
                                .get_vector();
 
-    auto result{conv2d_execute(function)};
+    auto result = conv2d_execute(function);
     EXPECT_EQ(expected_output, result.front());
 }
 
 TEST(onnx, model_conv2d_strides_no_padding)
 {
     // Convolution with strides=2 and padding=1
-    auto function{ngraph::onnx_import::import_onnx_function(
-        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/conv_with_strides_no_padding.onnx"))};
+    auto function = ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/conv_with_strides_no_padding.onnx"));
 
     // (1, 1, 3, 2)
     auto expected_output =
         ngraph::test::NDArray<float, 4>({{{{54.f, 72.f}, {144.f, 162.f}, {234.f, 252.f}}}})
             .get_vector();
 
-    auto result{conv2d_execute(function)};
+    auto result = conv2d_execute(function);
     EXPECT_EQ(expected_output, result.front());
 }
 
 TEST(onnx, model_conv2d_strides_assymetric_padding)
 {
     // Convolution with strides=2 and padding=1
-    auto function{ngraph::onnx_import::import_onnx_function(ngraph::file_util::path_join(
-        SERIALIZED_ZOO, "onnx/conv_with_strides_and_asymmetric_padding.onnx"))};
+    auto function = ngraph::onnx_import::import_onnx_function(ngraph::file_util::path_join(
+        SERIALIZED_ZOO, "onnx/conv_with_strides_and_asymmetric_padding.onnx"));
 
     // (1, 1, 4, 2)
     auto expected_output = ngraph::test::NDArray<float, 4>(
                                {{{{21.f, 33.f}, {99.f, 117.f}, {189.f, 207.f}, {171.f, 183.f}}}})
                                .get_vector();
 
-    auto result{conv2d_execute(function)};
+    auto result = conv2d_execute(function);
     EXPECT_EQ(expected_output, result.front());
 }
 
