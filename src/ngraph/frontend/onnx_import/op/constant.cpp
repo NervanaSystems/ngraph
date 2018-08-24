@@ -15,9 +15,9 @@
 *******************************************************************************/
 
 #include "ngraph/op/constant.hpp"
+#include "core/node.hpp"
+#include "core/tensor.hpp"
 #include "ngraph/node_vector.hpp"
-#include "wrappers/node.hpp"
-#include "wrappers/tensor.hpp"
 
 namespace ngraph
 {

@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <functional>
 
+#include "core/attribute.hpp"
 #include "op/add.hpp"
 #include "op/batch_norm.hpp"
 #include "op/constant.hpp"
@@ -24,7 +25,6 @@
 #include "op/relu.hpp"
 #include "op/split.hpp"
 #include "ops_bridge.hpp"
-#include "wrappers/attribute.hpp"
 
 namespace ngraph
 {

@@ -24,10 +24,10 @@
 #include "ngraph/op/op.hpp"
 #include "ngraph/strides.hpp"
 
+#include "core/node.hpp"
 #include "exceptions.hpp"
-#include "frontend/onnx_import/utils/convpool.hpp"
 #include "utils/broadcasting.hpp"
-#include "wrappers/node.hpp"
+#include "utils/convpool.hpp"
 
 namespace ngraph
 {

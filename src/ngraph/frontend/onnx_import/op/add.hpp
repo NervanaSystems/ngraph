@@ -19,7 +19,7 @@
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/add.hpp"
 
-#include "wrappers/node.hpp"
+#include "core/node.hpp"
 
 namespace ngraph
 {

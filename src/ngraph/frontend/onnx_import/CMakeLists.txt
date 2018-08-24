@@ -47,15 +47,15 @@ add_library(onnx_import STATIC
         utils/broadcasting.hpp
         utils/convpool.cpp
         utils/convpool.hpp
-        wrappers/attribute.cpp
-        wrappers/attribute.hpp
-        wrappers/graph.cpp
-        wrappers/graph.hpp
-        wrappers/model.hpp
-        wrappers/node.cpp
-        wrappers/node.hpp
-        wrappers/tensor.hpp
-        wrappers/value_info.hpp)
+        core/attribute.cpp
+        core/attribute.hpp
+        core/graph.cpp
+        core/graph.hpp
+        core/model.hpp
+        core/node.cpp
+        core/node.hpp
+        core/tensor.hpp
+        core/value_info.hpp)
 
 add_dependencies(onnx_import onnx_import_interface)
 

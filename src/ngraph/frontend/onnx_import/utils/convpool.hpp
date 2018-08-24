@@ -17,8 +17,9 @@
 #pragma once
 
 #include "ngraph/coordinate_diff.hpp"
-#include "wrappers/attribute.hpp"
-#include "wrappers/node.hpp"
+#include "ngraph/shape.hpp"
+#include "core/attribute.hpp"
+#include "core/node.hpp"
 
 namespace ngraph
 {
