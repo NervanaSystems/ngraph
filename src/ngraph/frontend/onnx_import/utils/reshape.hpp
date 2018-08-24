@@ -23,22 +23,22 @@ namespace ngraph
     namespace onnx_import
     {
         /**
-         * @brief Change order of axes in node output data.
+         * @brief Permute axes according to specified axes_order parameter.
          *
-         * @param node Node that output will have changed axes order.
-         * @param axes_order Desired order of axes.
+         * @param node: The node which axes we want to permute.
+         * @param axes_order: The permutation of node tensor axes.
          *
-         * @return reshape op to reorder axes of input node output.
+         * @retur: New node with permuted axes.
          */
         std::shared_ptr<ngraph::Node> reorder_axes(const std::shared_ptr<ngraph::Node>& node,
                                                    std::vector<int> axes_order);
 
         /**
-         * @brief Transpose node output data.
+         * @brief Return transposed tensor (with axes in reversed order).
          *
-         * @param node Node that output will be transposed.
+         * @param node: Input tensor we want to transpose
          *
-         * @return reshape op to transpose input node output.
+         * @return: New node with reversed dimensions.
          */
         std::shared_ptr<ngraph::Node> transpose(const std::shared_ptr<ngraph::Node>& node);
     } // namespace onnx_import
