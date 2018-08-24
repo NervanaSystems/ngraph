@@ -82,10 +82,10 @@ namespace ngraph
             template <typename T>
             T get_attribute_value(const std::string& name, T default_value) const
             {
-                auto it{std::find_if(
+                auto it = std::find_if(
                     std::begin(m_attributes),
                     std::end(m_attributes),
-                    [&](const Attribute& attribute) { return attribute.get_name() == name; })};
+                    [&](const Attribute& attribute) { return attribute.get_name() == name; });
                 if (it == std::end(m_attributes))
                 {
                     return default_value;
@@ -96,10 +96,10 @@ namespace ngraph
             template <typename T>
             T get_attribute_value(const std::string& name) const
             {
-                auto it{std::find_if(
+                auto it = std::find_if(
                     std::begin(m_attributes),
                     std::end(m_attributes),
-                    [&](const Attribute& attribute) { return attribute.get_name() == name; })};
+                    [&](const Attribute& attribute) { return attribute.get_name() == name; });
                 if (it == std::end(m_attributes))
                 {
                     throw error::node::UnknownAttribute{get_name(), name};
@@ -118,6 +118,65 @@ namespace ngraph
         {
             return (outs << "<Node(" << node.op_type() << "): " << node.get_name() << ">");
         }
+
+        namespace attribute
+        {
+            /**
+             * @brief Get shape of kernel (filter) in pixels.
+             *
+             * @param node The Node ptr representing Conv or Pool operation.
+             * @return The kernel Shape object representing its dimensions (height, width, depth).
+             */
+            inline Shape get_kernel_shape(const Node& node)
+            {
+                return node.get_attribute_value<std::vector<std::size_t>>("kernel_shape", {1, 1});
+            }
+
+            namespace detail
+            {
+                inline Strides get_strides_helper(const Node& node,
+                                                  const std::string& name,
+                                                  const Shape& kernel_shape)
+                {
+                    return node.get_attribute_value<std::vector<std::size_t>>(
+                        name, std::vector<std::size_t>(kernel_shape.size(), 1UL));
+                }
+            } // namespace detail
+
+            /**
+             * @brief  Get number of pixels to stride operation by in each direction.
+             *
+             * @param node The Node ptr representing Conv or Pool operation.
+             * @param kernel_shape The shape of the kernel which we retrieve strides for.
+             * @return The kernel Shape object representing its dimensions (height, width, depth).
+             */
+            inline Strides get_strides(const Node& node, const Shape& kernel_shape)
+            {
+                return detail::get_strides_helper(node, "strides", kernel_shape);
+            }
+            /**
+             * @brief  Get number of pixels to stride operation by in each direction.
+             *
+             * @param node The Node ptr representing Conv or Pool operation.
+             * @return The kernel Shape object representing its dimensions (height, width, depth).
+             */
+            inline Strides get_strides(const Node& node)
+            {
+                return get_strides(node, get_kernel_shape(node));
+            }
+
+            /**
+             * @brief Get number of pixels for filter dilation in each direction.
+             *
+             * @param node The Node ptr representing ONNX operation.
+             * @return The Strides object containing number of pixels for filter dilation
+             *         (height, width, depth).
+             */
+            inline Strides get_dilations(const Node& node)
+            {
+                return detail::get_strides_helper(node, "dilations", get_kernel_shape(node));
+            }
+        } // namespace attribute
 
     } // namespace onnx_import
 

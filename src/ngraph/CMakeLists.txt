@@ -41,6 +41,7 @@ set (SRC
     op/allreduce.cpp
     op/and.cpp
     op/argmin.cpp
+    op/argmax.cpp
     op/asin.cpp
     op/atan.cpp
     op/avg_pool.cpp
@@ -185,7 +186,7 @@ endif()
 
 include_directories("${NGRAPH_INCLUDE_PATH}")
 
-add_subdirectory(codegen EXCLUDE_FROM_ALL)
+add_subdirectory(codegen)
 add_subdirectory(runtime)
 
 add_library(ngraph SHARED ${SRC})

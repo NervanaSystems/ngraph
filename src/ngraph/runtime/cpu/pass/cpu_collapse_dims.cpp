@@ -23,16 +23,9 @@
 #include "ngraph/log.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/util.hpp"
 
 using namespace ngraph;
-
-static void get_default_order(std::vector<size_t>& order, size_t rank)
-{
-    for (size_t i = 0; i < rank; i++)
-    {
-        order.push_back(i);
-    }
-}
 
 struct CollapsedDims
 {
@@ -114,18 +107,16 @@ bool runtime::cpu::pass::CPUCollapseDims::run_on_function(std::shared_ptr<ngraph
             if (cdims.axis_set.size() == 0)
             {
                 // Null broadcast operation, replace with reshape
-                AxisVector axis_order;
-                get_default_order(axis_order, input_shape.size());
+                AxisVector axis_order = ngraph::get_default_order(input_shape);
                 auto reshape = std::make_shared<op::Reshape>(
-                    node->get_argument(0), axis_order, Shape(cdims.output_shape));
+                    node->get_argument(0), axis_order, n->get_shape());
                 ngraph::replace_node(n, reshape);
                 replaced = true;
             }
             else if (output_shape.size() != cdims.output_shape.size())
             {
                 // Reshape arg to collapsed input_shape
-                AxisVector input_axis_order;
-                get_default_order(input_axis_order, input_shape.size());
+                AxisVector input_axis_order = ngraph::get_default_order(input_shape);
                 auto reshape_input = std::make_shared<op::Reshape>(
                     node->get_argument(0), input_axis_order, Shape(cdims.input_shape));
 
@@ -133,8 +124,7 @@ bool runtime::cpu::pass::CPUCollapseDims::run_on_function(std::shared_ptr<ngraph
                     reshape_input, Shape(cdims.output_shape), AxisSet(cdims.axis_set));
 
                 // Reshape collapsed output to original output_shape
-                AxisVector output_axis_order;
-                get_default_order(output_axis_order, cdims.output_shape.size());
+                AxisVector output_axis_order = ngraph::get_default_order(cdims.output_shape);
                 auto reshape_output =
                     std::make_shared<op::Reshape>(broadcast, output_axis_order, output_shape);
                 ngraph::replace_node(n, reshape_output);
