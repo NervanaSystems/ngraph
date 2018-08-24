@@ -15,9 +15,9 @@
 *******************************************************************************/
 
 #include "ngraph/op/constant.hpp"
-#include "ngraph/frontend/onnx_import/wrappers/node.hpp"
-#include "ngraph/frontend/onnx_import/wrappers/tensor.hpp"
 #include "ngraph/node_vector.hpp"
+#include "wrappers/node.hpp"
+#include "wrappers/tensor.hpp"
 
 namespace ngraph
 {

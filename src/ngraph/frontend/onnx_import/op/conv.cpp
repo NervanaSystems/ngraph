@@ -18,7 +18,7 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/frontend/onnx_import/op/conv.hpp"
+#include "op/conv.hpp"
 
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"

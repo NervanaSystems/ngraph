@@ -18,8 +18,8 @@
 
 #include <memory>
 
-#include "ngraph/frontend/onnx_import/exceptions.hpp"
-#include "ngraph/frontend/onnx_import/wrappers/node.hpp"
+#include "exceptions.hpp"
+#include "wrappers/node.hpp"
 
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/batch_norm.hpp"

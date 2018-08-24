@@ -15,8 +15,8 @@
 *******************************************************************************/
 
 #include "node.hpp"
-#include "ngraph/frontend/onnx_import/ops_bridge.hpp"
-#include "ngraph/frontend/onnx_import/wrappers/graph.hpp"
+#include "graph.hpp"
+#include "ops_bridge.hpp"
 
 namespace ngraph
 {

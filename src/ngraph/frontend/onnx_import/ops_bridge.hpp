@@ -18,7 +18,7 @@
 
 #include "ngraph/node_vector.hpp"
 
-#include "ngraph/frontend/onnx_import/wrappers/node.hpp"
+#include "wrappers/node.hpp"
 
 namespace ngraph
 {

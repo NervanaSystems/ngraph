@@ -18,10 +18,10 @@
 
 #include "ngraph/except.hpp"
 
-#include "ngraph/frontend/onnx_import/wrappers/graph.hpp"
-#include "ngraph/frontend/onnx_import/wrappers/model.hpp"
-#include "ngraph/frontend/onnx_import/wrappers/node.hpp"
 #include "onnx.hpp"
+#include "wrappers/graph.hpp"
+#include "wrappers/model.hpp"
+#include "wrappers/node.hpp"
 
 namespace ngraph
 {
