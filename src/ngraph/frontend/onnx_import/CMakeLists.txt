@@ -45,6 +45,8 @@ add_library(onnx_import STATIC
         core/value_info.hpp
         exceptions.hpp
         op/add.hpp
+        op/average_pool.cpp
+        op/average_pool.hpp
         op/batch_norm.cpp
         op/batch_norm.hpp
         op/constant.cpp

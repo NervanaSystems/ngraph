@@ -19,6 +19,7 @@
 
 #include "core/attribute.hpp"
 #include "op/add.hpp"
+#include "op/average_pool.hpp"
 #include "op/batch_norm.hpp"
 #include "op/constant.hpp"
 #include "op/conv.hpp"
@@ -69,6 +70,8 @@ namespace ngraph
                 ops_bridge()
                 {
                     m_map.emplace("Add", std::bind(op::add, std::placeholders::_1));
+                    m_map.emplace("AveragePool",
+                                  std::bind(op::average_pool, std::placeholders::_1));
                     m_map.emplace("BatchNormalization",
                                   std::bind(op::batch_norm, std::placeholders::_1));
                     m_map.emplace("Constant", std::bind(op::constant, std::placeholders::_1));

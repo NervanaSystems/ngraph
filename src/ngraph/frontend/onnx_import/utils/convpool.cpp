@@ -17,7 +17,6 @@
 #include "convpool.hpp"
 #include <cmath>
 
-
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/shape.hpp"
 
@@ -38,11 +37,11 @@ namespace ngraph
             namespace detail
             {
                 Strides get_strides_helper(const Node& node,
-                                                  const std::string& name,
-                                                  const Shape& kernel_shape)
+                                           const std::string& name,
+                                           const Shape& kernel_shape)
                 {
                     return node.get_attribute_value<std::vector<std::size_t>>(
-                            name, std::vector<std::size_t>(kernel_shape.size(), 1UL));
+                        name, std::vector<std::size_t>(kernel_shape.size(), 1UL));
                 }
             } // namespace detail
 
@@ -60,7 +59,6 @@ namespace ngraph
             {
                 return detail::get_strides_helper(node, "dilations", get_kernel_shape(node));
             }
-
 
             namespace
             {
@@ -120,7 +118,7 @@ namespace ngraph
                 }
                 if (pads.empty())
                 {
-                    pads = {static_cast<std::ptrdiff_t>(kernel_shape.size()), 0UL};
+                    pads = CoordinateDiff(static_cast<std::ptrdiff_t>(kernel_shape.size()), 0UL);
                 }
 
                 if (pads.size() <= 3)
@@ -135,11 +133,7 @@ namespace ngraph
                 }
             }
 
-
-
-
-
-
         } // namespace attribute
-    }     // namespace onnx_import
+
+    } // namespace onnx_import
 } // namespace ngraph
