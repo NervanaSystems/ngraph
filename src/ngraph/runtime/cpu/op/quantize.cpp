@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ ngraph::op::Quantize::Quantize(std::shared_ptr<Node> input,
     , m_element_type(type)
 {
     add_output(type, input->get_shape());
-    add_output(element::f32, Shape{1});
-    add_output(element::f32, Shape{1});
+    add_output(input->get_element_type(), Shape{1});
+    add_output(input->get_element_type(), Shape{1});
 }
 
 std::shared_ptr<ngraph::Node>
