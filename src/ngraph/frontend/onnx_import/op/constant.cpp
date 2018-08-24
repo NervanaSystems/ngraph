@@ -15,8 +15,8 @@
 *******************************************************************************/
 
 #include "ngraph/op/constant.hpp"
-#include "ngraph/frontend/onnx_import/node.hpp"
-#include "ngraph/frontend/onnx_import/tensor.hpp"
+#include "core/node.hpp"
+#include "core/tensor.hpp"
 #include "ngraph/node_vector.hpp"
 
 namespace ngraph
