@@ -14,6 +14,8 @@
  * limitations under the License.
  *******************************************************************************/
 
+#include <numeric>
+
 #include "ngraph/op/reshape.hpp"
 
 #include "utils/reshape.hpp"
