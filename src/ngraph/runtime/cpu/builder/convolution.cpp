@@ -543,6 +543,7 @@ namespace ngraph
             REGISTER_OP_BUILDER(Convolution);
             REGISTER_OP_BUILDER(ConvolutionRelu);
             REGISTER_OP_BUILDER(ConvolutionBias);
+            REGISTER_OP_BUILDER(ConvolutionAdd);
             REGISTER_OP_BUILDER(ConvolutionBiasAdd);
             REGISTER_OP_BUILDER(ConvolutionBackpropData);
             REGISTER_OP_BUILDER(ConvolutionBackpropFilters);
