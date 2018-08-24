@@ -54,6 +54,24 @@ TEST(onnx, model_add_abc_initializers)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
+TEST(onnx, model_addmul_abc)
+{
+    auto function{ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/addmul_abc.onnx"))};
+
+    std::vector<std::vector<float>> inputs;
+
+    ngraph::Shape shape{1, 2, 2};
+    inputs.emplace_back(ngraph::test::NDArray<float, 3>({{{9, 10}}, {{11, 12}}}).get_vector());
+    inputs.emplace_back(ngraph::test::NDArray<float, 3>({{{5, 6}}, {{7, 8}}}).get_vector());
+    inputs.emplace_back(ngraph::test::NDArray<float, 3>({{{1, 2}}, {{3, 4}}}).get_vector());
+
+    auto expected_output = ngraph::test::NDArray<float, 3>({{{46, 62}}, {{80, 100}}}).get_vector();
+
+    auto result_vectors = execute(function, inputs, "INTERPRETER");
+    EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
+}
+
 TEST(onnx, model_split_equal_parts_default)
 {
     Model model{onnx_import::load_onnx_model(
@@ -218,4 +236,35 @@ TEST(onnx, model_relu)
 
     Outputs outputs{execute(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_gemm_abc)
+{
+    auto function{ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/gemm_abc.onnx"))};
+
+    std::vector<std::vector<float>> inputs;
+
+    inputs.emplace_back(ngraph::test::NDArray<float, 2>(
+                            {{1, 2, 3, 4, 5, 6}, {7, 8, 9, 10, 11, 12}, {13, 14, 15, 16, 17, 18}})
+                            .get_vector());
+
+    inputs.emplace_back(ngraph::test::NDArray<float, 2>({{19, 20, 21, 22},
+                                                         {23, 24, 25, 26},
+                                                         {27, 28, 29, 30},
+                                                         {31, 32, 33, 34},
+                                                         {35, 36, 37, 38},
+                                                         {39, 40, 41, 42}})
+                            .get_vector());
+
+    inputs.emplace_back(
+        ngraph::test::NDArray<float, 2>({{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}}).get_vector());
+
+    auto expected_output =
+        ngraph::test::NDArray<float, 2>(
+            {{340, 350.5, 361, 371.5}, {862, 890.5, 919, 947.5}, {1384, 1430.5, 1477, 1523.5}})
+            .get_vector();
+
+    auto result_vectors = execute(function, inputs, "INTERPRETER");
+    EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
 }
