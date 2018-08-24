@@ -341,6 +341,48 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_1d_op(codegen::CodeWriter& writ
     return;
 }
 
+void runtime::gpu::CudaKernelBuilder::get_reduce_acc_op(codegen::CodeWriter& writer,
+                                                        const std::string& name,
+                                                        runtime::gpu::GPUKernelArgs& args,
+                                                        const std::vector<std::string>& data_types,
+                                                        const std::string& reduce_op)
+{
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
+    writer.block_begin();
+    {
+        writer << "uint32_t tid = blockDim.x*blockIdx.x + threadIdx.x;\n";
+        writer << "uint32_t step = gridDim.x * blockDim.x; \n";
+        writer << "uint32_t in_idx = tid;\n";
+        writer << data_types[1] << " r = 0;\n";
+        writer << "if(in_idx < nthreads)\n";
+        writer.block_begin();
+        writer << "r = in[in_idx];\n";
+        writer << "in_idx += step;\n";
+        writer.block_end();
+        //accumulate reduction to step threads
+        writer << "while(in_idx + (step * 7) < nthreads)\n";
+        writer.block_begin();
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                writer << "r = " << reduce_op << "(r , in[in_idx]);\n";
+                writer << "in_idx += step;\n";
+            }
+        }
+        writer.block_end();
+        writer << "while(in_idx < nthreads)\n";
+        writer.block_begin();
+        {
+            writer << "r = " << reduce_op << "(r , in[in_idx]);\n";
+            writer << "in_idx += step;\n";
+        }
+        writer.block_end();
+        writer << "out[tid] = r;\n";
+    }
+    writer.block_end();
+    return;
+}
+
 void runtime::gpu::CudaKernelBuilder::get_broadcast_op(codegen::CodeWriter& writer,
                                                        const std::string& name,
                                                        runtime::gpu::GPUKernelArgs& args,

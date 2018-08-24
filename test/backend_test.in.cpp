@@ -18,8 +18,8 @@
 #include <cinttypes>
 #include <cmath>
 #include <cstdlib>
+#include <random>
 #include <string>
-
 #include "gtest/gtest.h"
 
 #include "ngraph/autodiff/adjoints.hpp"
@@ -36,6 +36,8 @@
 #include "util/random.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
+
+static std::mt19937_64 random_generator;
 
 using namespace std;
 using namespace ngraph;
@@ -3483,6 +3485,30 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_to_scalar)
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(a));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, sum_large_1d_to_scalar)
+{
+    Shape shape{100000};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    vector<float> v_a(100000, 0);
+    float r = 0;
+    for (int i = 0; i < 100000; i++)
+    {
+        v_a[i] = static_cast<float>(random_generator() % 255);
+        r += v_a[i];
+    }
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, v_a);
+    auto result = backend->create_tensor(element::f32, Shape{});
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((vector<float>{r}), read_vector<float>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, sum_matrix_columns)

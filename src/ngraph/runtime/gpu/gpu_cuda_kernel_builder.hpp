@@ -74,6 +74,12 @@ namespace ngraph
                                              const std::string& reduce_op,
                                              uint32_t block_size_x);
 
+                static void get_reduce_acc_op(codegen::CodeWriter& writer,
+                                              const std::string& name,
+                                              runtime::gpu::GPUKernelArgs& args,
+                                              const std::vector<std::string>& data_types,
+                                              const std::string& reduce_op);
+
                 static void get_slice_op(codegen::CodeWriter& writer,
                                          const std::string& name,
                                          const std::array<std::string, 2>& data_types,
