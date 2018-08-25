@@ -1354,7 +1354,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::stri
         reduce_flag[a] = 1;
     }
     NVShape output_shape;
-    NVShape non_reduce_in_strides;
+    NVShape non_reduce_strides;
     NVShape reduce_shape;
     NVShape reduce_strides;
     NVShape input_strides = row_major_strides(input_shape);
@@ -1367,7 +1367,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::stri
         }
         else
         {
-            non_reduce_in_strides.push_back(input_strides[i]);
+            non_reduce_strides.push_back(input_strides[i]);
             output_shape.push_back(input_shape[i]);
         }
     }
@@ -1380,7 +1380,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::stri
     args.add_placeholder(dtypes[0], "in")
         .add_placeholder(dtypes[1], "out")
         .add("out_strides", output_strides)
-        .add("non_reduce_in_strides", non_reduce_in_strides)
+        .add("non_reduce_strides", non_reduce_strides)
         .add("reduce_shape", reduce_shape)
         .add("reduce_strides", reduce_strides)
         .add("nthreads", nthreads);
