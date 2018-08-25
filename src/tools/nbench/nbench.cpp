@@ -35,9 +35,48 @@
 using namespace std;
 using namespace ngraph;
 
-multimap<size_t, string>
-    aggregate_timing_details(const vector<runtime::PerformanceCounter>& perf_data,
-                             shared_ptr<Function> func)
+class PerfShape : public ngraph::runtime::PerformanceCounter
+{
+public:
+    PerfShape(const runtime::PerformanceCounter& p, Shape s)
+        : PerformanceCounter(p)
+        , shape(s)
+    {
+    }
+    Shape shape;
+};
+
+unordered_map<string, shared_ptr<Node>> get_node_map(shared_ptr<Function> func)
+{
+    unordered_map<string, shared_ptr<Node>> node_map;
+    vector<shared_ptr<Function>> fs;
+    traverse_functions(func, [&](shared_ptr<Function> f) { fs.push_back(f); });
+    for (shared_ptr<Function> f : fs)
+    {
+        for (shared_ptr<Node> node : f->get_ops())
+        {
+            node_map.insert({node->get_name(), node});
+        }
+    }
+    return node_map;
+}
+
+vector<PerfShape> to_perf_shape(shared_ptr<Function> f,
+                                const vector<runtime::PerformanceCounter>& perf_data)
+{
+    vector<PerfShape> result;
+    auto node_map = get_node_map(f);
+    for (const runtime::PerformanceCounter& p : perf_data)
+    {
+        auto node = node_map[p.name()];
+        Shape shape = node->get_outputs()[0].get_shape();
+        result.push_back(PerfShape(p, shape));
+    }
+    return result;
+}
+
+multimap<size_t, string> aggregate_timing_details(const vector<PerfShape>& perf_data,
+                                                  shared_ptr<Function> func)
 {
     unordered_map<string, shared_ptr<Node>> node_map;
     vector<shared_ptr<Function>> fs;
@@ -52,9 +91,10 @@ multimap<size_t, string>
 
     unordered_map<string, size_t> timing;
     unordered_map<string, size_t> count;
-    for (const runtime::PerformanceCounter& p : perf_data)
+    for (const PerfShape& p : perf_data)
     {
         shared_ptr<Node> node = node_map.at(p.name());
+        NGRAPH_INFO << p.name();
         string op = p.name().substr(0, p.name().find('_'));
         string shape_name = " {" + join(node->get_outputs()[0].get_shape()) + "} ";
         timing[op + shape_name] += p.microseconds();
@@ -69,10 +109,10 @@ multimap<size_t, string>
     return rc;
 }
 
-multimap<size_t, string> aggregate_timing(const vector<runtime::PerformanceCounter>& perf_data)
+multimap<size_t, string> aggregate_timing(const vector<PerfShape>& perf_data)
 {
     unordered_map<string, size_t> timing;
-    for (const runtime::PerformanceCounter& p : perf_data)
+    for (const PerfShape& p : perf_data)
     {
         string op = p.name().substr(0, p.name().find('_'));
         timing[op] += p.microseconds();
@@ -106,15 +146,11 @@ void print_times(const multimap<size_t, string>& timing)
     }
 }
 
-void print_results(shared_ptr<Function> f,
-                   vector<runtime::PerformanceCounter> perf_data,
-                   bool timing_detail)
+void print_results(shared_ptr<Function> f, vector<PerfShape> perf_data, bool timing_detail)
 {
-    sort(perf_data.begin(),
-         perf_data.end(),
-         [](const runtime::PerformanceCounter& p1, const runtime::PerformanceCounter& p2) {
-             return p1.total_microseconds() > p2.total_microseconds();
-         });
+    sort(perf_data.begin(), perf_data.end(), [](const PerfShape& p1, const PerfShape& p2) {
+        return p1.total_microseconds() > p2.total_microseconds();
+    });
     multimap<size_t, string> timing = aggregate_timing(perf_data);
     multimap<size_t, string> timing_details = aggregate_timing_details(perf_data, f);
 
@@ -285,7 +321,7 @@ OPTIONS
     else if (!directory.empty())
     {
         vector<string> models;
-        vector<runtime::PerformanceCounter> aggregate_perf_data;
+        vector<PerfShape> aggregate_perf_data;
         file_util::iterate_files(directory,
                                  [&](const string& file, bool is_dir) {
                                      if (!is_dir)
@@ -294,6 +330,7 @@ OPTIONS
                                      }
                                  },
                                  true);
+        unordered_map<string, Shape> shape_info;
         for (const string& m : models)
         {
             try
@@ -303,8 +340,9 @@ OPTIONS
                      << " iterations.\n";
                 auto perf_data =
                     run_benchmark(f, backend, iterations, timing_detail, warmup_iterations);
+                auto perf_shape = to_perf_shape(f, perf_data);
                 aggregate_perf_data.insert(
-                    aggregate_perf_data.end(), perf_data.begin(), perf_data.end());
+                    aggregate_perf_data.end(), perf_shape.begin(), perf_shape.end());
             }
             catch (exception e)
             {
@@ -318,7 +356,8 @@ OPTIONS
         cout << "Benchmarking " << model << ", " << backend << " backend, " << iterations
              << " iterations.\n";
         auto perf_data = run_benchmark(f, backend, iterations, timing_detail, warmup_iterations);
-        print_results(f, perf_data, timing_detail);
+        auto perf_shape = to_perf_shape(f, perf_data);
+        print_results(f, perf_shape, timing_detail);
     }
 
     return 0;
