@@ -32,9 +32,11 @@ namespace ngraph
         class PrimaryTensorView : public TensorView
         {
         public:
-            /// @param tensor_view_type The type for this view.
+            /// @param element_type The element type for this view.
+            /// @param shape The shape for this view
             /// @param name Description of the tensor, for debugging.
-            PrimaryTensorView(const std::shared_ptr<const TensorViewType>& tensor_view_type,
+            PrimaryTensorView(const element::Type& element_type,
+                              const Shape& shape,
                               const std::string& name);
 
             virtual const Tensor& get_tensor() const override;

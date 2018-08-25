@@ -149,7 +149,6 @@ set (SRC
     shape.cpp
     strides.cpp
     type/element_type.cpp
-    type/type.cpp
     util.cpp
     graph_util.cpp
     placement.cpp

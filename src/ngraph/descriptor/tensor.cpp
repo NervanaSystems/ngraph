@@ -60,8 +60,7 @@ size_t descriptor::Tensor::size() const
     }
     else
     {
-        auto tvt = m_primary_tensor_view->get_tensor_view_type();
-        return shape_size(tvt->get_shape()) * m_element_type.size();
+        return shape_size(m_primary_tensor_view->get_shape()) * m_element_type.size();
     }
 }
 

@@ -173,8 +173,8 @@ void runtime::cpu::pass::CPULayout::set_native_layouts(
     {
         const auto& output = input.get_output();
         auto tv = output.get_tensor_view();
-        auto et = tv->get_tensor_view_type()->get_element_type();
-        auto shape = tv->get_tensor_view_type()->get_shape();
+        auto et = tv->get_element_type();
+        auto shape = tv->get_shape();
         auto tvl = tv->get_tensor_view_layout();
         auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
 
@@ -242,8 +242,8 @@ void runtime::cpu::pass::CPULayout::set_native_layouts(
             continue;
         }
 
-        auto shape = tv->get_tensor_view_type()->get_shape();
-        auto et = tv->get_tensor_view_type()->get_element_type();
+        auto shape = tv->get_shape();
+        auto et = tv->get_element_type();
         auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
         if (mkldnn_utils::can_create_mkldnn_md(shape, layout->get_strides(), et))
         {

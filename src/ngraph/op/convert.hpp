@@ -17,7 +17,6 @@
 #pragma once
 
 #include "ngraph/op/util/unary_elementwise.hpp"
-#include "ngraph/type/type.hpp"
 
 namespace ngraph
 {

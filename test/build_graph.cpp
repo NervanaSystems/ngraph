@@ -72,7 +72,6 @@ TEST(build_graph, literal)
 
     vector<int32_t> int32{3};
     auto int32_0 = make_shared<op::Constant>(element::i32, Shape{}, int32);
-    auto int32_scalar_type = make_shared<TensorViewType>(element::i32, Shape{});
     ASSERT_EQ(int32_0->get_vector<int32_t>(), std::vector<int>{3});
     ASSERT_EQ(int32_0->get_element_type(), element::i32);
     ASSERT_EQ(int32_0->get_shape(), Shape{});

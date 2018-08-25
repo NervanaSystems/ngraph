@@ -670,7 +670,7 @@ using namespace ngraph::runtime;
             for (size_t i = 0; i < param->get_output_size(); ++i)
             {
                 shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_view(i);
-                const element::Type& et = tv->get_tensor_view_type()->get_element_type();
+                const element::Type& et = tv->get_element_type();
                 string type = et.c_type_string();
                 stringstream ss;
                 ss << "((" << type << "*)(inputs[" << arg_index << "]))";
@@ -687,7 +687,7 @@ using namespace ngraph::runtime;
         {
             shared_ptr<Node> op = current_function->get_output_op(i);
             shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
-            string type = tv->get_tensor_view_type()->get_element_type().c_type_string();
+            string type = tv->get_element_type().c_type_string();
             stringstream ss;
             ss << "((" << type << "*)(outputs[" << i << "]))";
             m_variable_name_map[tv->get_tensor().get_name()] = ss.str();

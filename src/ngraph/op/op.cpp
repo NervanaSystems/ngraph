@@ -20,7 +20,7 @@
 
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/type/type.hpp"
+#include "ngraph/type/element_type.hpp"
 
 using namespace ngraph;
 using namespace std;

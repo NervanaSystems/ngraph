@@ -20,7 +20,6 @@
 
 #include "ngraph/except.hpp"
 #include "ngraph/op/util/requires_tensor_view_args.hpp"
-#include "ngraph/type/type.hpp"
 
 using namespace ngraph;
 using namespace std;

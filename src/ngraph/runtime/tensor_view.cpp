@@ -17,7 +17,6 @@
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/type/element_type.hpp"
-#include "ngraph/type/type.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -34,7 +33,7 @@ shared_ptr<descriptor::TensorView> runtime::TensorView::get_descriptor() const
 
 const Shape& runtime::TensorView::get_shape() const
 {
-    return m_descriptor->get_tensor_view_type()->get_shape();
+    return m_descriptor->get_shape();
 }
 
 const Strides& runtime::TensorView::get_strides() const

@@ -34,7 +34,6 @@
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/placement.hpp"
-#include "ngraph/type/type.hpp"
 
 namespace ngraph
 {

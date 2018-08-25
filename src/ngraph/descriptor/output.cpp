@@ -49,17 +49,12 @@ descriptor::Tensor& descriptor::Output::get_tensor() const
     return m_tensor_view->get_tensor();
 }
 
-shared_ptr<const TensorViewType> descriptor::Output::get_tensor_view_type() const
-{
-    return get_tensor_view()->get_tensor_view_type();
-}
-
 const Shape& descriptor::Output::get_shape() const
 {
-    return get_tensor_view_type()->get_shape();
+    return m_tensor_view->get_shape();
 }
 
 const element::Type& descriptor::Output::get_element_type() const
 {
-    return get_tensor_view_type()->get_element_type();
+    return m_tensor_view->get_element_type();
 }

@@ -19,10 +19,11 @@
 using namespace ngraph;
 using namespace descriptor;
 
-PrimaryTensorView::PrimaryTensorView(const std::shared_ptr<const TensorViewType>& tensor_view_type,
+PrimaryTensorView::PrimaryTensorView(const element::Type& element_type,
+                                     const Shape& shape,
                                      const std::string& name)
-    : TensorView(tensor_view_type)
-    , m_tensor(tensor_view_type->get_element_type(), this, name)
+    : TensorView(element_type, shape)
+    , m_tensor(m_element_type, this, name)
 {
     // Set the name in the parent TensorView.
     // This can't be done until after the m_tensor is constructed.

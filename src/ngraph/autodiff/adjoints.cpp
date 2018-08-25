@@ -32,7 +32,6 @@
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/strides.hpp"
-#include "ngraph/type/type.hpp"
 
 using namespace ngraph;
 

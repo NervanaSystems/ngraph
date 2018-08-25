@@ -19,7 +19,9 @@
 #include <iostream>
 #include <memory>
 #include <vector>
-#include "ngraph/type/type.hpp"
+
+#include "ngraph/shape.hpp"
+#include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {

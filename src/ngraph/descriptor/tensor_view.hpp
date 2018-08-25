@@ -25,7 +25,6 @@
 namespace ngraph
 {
     class Node;
-    class TensorViewType;
 
     namespace descriptor
     {
@@ -45,8 +44,9 @@ namespace ngraph
             TensorView& operator=(const TensorView&) = delete;
 
         protected:
-            TensorView(const std::shared_ptr<const TensorViewType>& tensor_view_type)
-                : m_tensor_view_type(tensor_view_type)
+            TensorView(const element::Type& element_type, const Shape& shape)
+                : m_element_type(element_type)
+                , m_shape(shape)
             {
             }
 
@@ -55,13 +55,7 @@ namespace ngraph
             virtual const Tensor& get_tensor() const = 0;
             virtual Tensor& get_tensor() = 0;
 
-            virtual std::shared_ptr<const TensorViewType> get_value_type() const;
             const std::string& get_name() const { return m_name; }
-            std::shared_ptr<const TensorViewType> get_tensor_view_type() const
-            {
-                return m_tensor_view_type;
-            }
-
             virtual void set_tensor_view_type(const element::Type& element_type,
                                               const Shape& shape);
 
@@ -80,7 +74,8 @@ namespace ngraph
             }
 
         protected:
-            std::shared_ptr<const TensorViewType> m_tensor_view_type;
+            element::Type m_element_type;
+            Shape m_shape;
             std::shared_ptr<layout::TensorViewLayout> m_tensor_view_layout;
             std::string m_name;
         };

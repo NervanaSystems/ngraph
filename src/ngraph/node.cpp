@@ -75,10 +75,8 @@ void Node::set_output_size(size_t n)
     m_outputs.clear();
     for (size_t i = m_outputs.size(); i < n; ++i)
     {
-        shared_ptr<TensorViewType> tensor_view_type =
-            make_shared<TensorViewType>(element::unspecified, Shape());
         auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(
-            tensor_view_type, ngraph::descriptor::Tensor::make_tensor_name(this, i));
+            element::unspecified, Shape(), ngraph::descriptor::Tensor::make_tensor_name(this, i));
         m_outputs.emplace_back(this, i, tensor_view_descriptor);
     }
 }
