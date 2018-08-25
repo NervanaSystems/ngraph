@@ -20,6 +20,18 @@
 using namespace ngraph;
 using namespace std;
 
+descriptor::TensorView::TensorView(const element::Type& element_type,
+                                   const Shape& shape,
+                                   const std::string& name)
+    : m_element_type(element_type)
+    , m_shape(shape)
+    , m_tensor(m_element_type, this, name)
+{
+    // Set the name in the parent TensorView.
+    // This can't be done until after the m_tensor is constructed.
+    m_name = m_tensor.get_next_view_name();
+}
+
 const element::Type& descriptor::TensorView::get_element_type() const
 {
     return m_element_type;
@@ -30,11 +42,22 @@ const Shape& descriptor::TensorView::get_shape() const
     return m_shape;
 }
 
+const descriptor::Tensor& descriptor::TensorView::get_tensor() const
+{
+    return m_tensor;
+}
+
+descriptor::Tensor& descriptor::TensorView::get_tensor()
+{
+    return m_tensor;
+}
+
 void descriptor::TensorView::set_tensor_view_type(const element::Type& element_type,
                                                   const Shape& shape)
 {
     m_shape = shape;
     m_element_type = element_type;
+    m_tensor.set_element_type(element_type);
     if (nullptr != m_tensor_view_layout)
     {
         m_tensor_view_layout->set_tensor_view_type(element_type, shape);

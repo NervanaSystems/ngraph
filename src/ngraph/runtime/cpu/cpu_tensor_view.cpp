@@ -19,7 +19,6 @@
 
 #include "cpu_tensor_view.hpp"
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
-#include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -37,7 +36,7 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
                                            void* memory_pointer,
                                            const string& name)
     : runtime::TensorView(
-          std::make_shared<ngraph::descriptor::PrimaryTensorView>(element_type, shape, name))
+          std::make_shared<ngraph::descriptor::TensorView>(element_type, shape, name))
     , buffer(nullptr)
     , aligned_buffer(nullptr)
 {

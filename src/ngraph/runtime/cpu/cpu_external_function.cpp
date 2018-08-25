@@ -42,7 +42,6 @@
 
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
-#include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"

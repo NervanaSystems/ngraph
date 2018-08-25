@@ -28,7 +28,6 @@ set (SRC
     descriptor/layout/dense_tensor_view_layout.cpp
     descriptor/layout/tensor_view_layout.cpp
     descriptor/output.cpp
-    descriptor/primary_tensor_view.cpp
     descriptor/tensor.cpp
     descriptor/tensor_view.cpp
     file_util.cpp
