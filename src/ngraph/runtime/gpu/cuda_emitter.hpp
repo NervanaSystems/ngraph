@@ -199,20 +199,20 @@ namespace ngraph
                                     const char* op,
                                     const char* kernel);
                 size_t build_reduce_to_nd(const std::vector<std::string>& dtypes,
-                                    NVShape input_shape,
-                                    NVShape reduce_axis,
-                                    const char* op,
-                                    const char* kernel);
+                                          NVShape input_shape,
+                                          NVShape reduce_axis,
+                                          const char* op,
+                                          const char* kernel);
                 size_t build_reduce_to_scalar(const std::vector<std::string>& dtypes,
-                                    NVShape input_shape,
-                                    const char* op,
-                                    const char* kernel);
+                                              NVShape input_shape,
+                                              const char* op,
+                                              const char* kernel);
                 size_t build_reduce_to_scalar_acc(const std::vector<std::string>& dtypes,
-                                    NVShape input_shape,
-                                    NVShape output_shape,
-                                    uint32_t block_size_x,
-                                    const char* op,
-                                    const char* kernel);
+                                                  NVShape input_shape,
+                                                  NVShape output_shape,
+                                                  uint32_t block_size_x,
+                                                  const char* op,
+                                                  const char* kernel);
                 GPUPrimitiveEmitter* m_primitive_emitter;
                 GPURuntimeContext* m_ctx;
             };

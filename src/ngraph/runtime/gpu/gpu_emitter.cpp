@@ -850,7 +850,7 @@ namespace ngraph
                         else if (args[0].get_size() == out[0].get_size())
                         {
                             kernel::emit_memcpyDtD(writer, out[0], args[0]);
-                        } 
+                        }
                         else
                         {
                             auto axes_set = sum->get_reduction_axes();

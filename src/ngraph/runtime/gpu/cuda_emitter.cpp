@@ -1519,7 +1519,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_scalar_acc(const std::vector<s
         .add_placeholder(dtypes[1], "out")
         .add("nthreads", nthreads);
 
-    uint32_t aligned_grid_size_x = static_cast<uint32_t>(shape_size(output_shape))/block_size_x;
+    uint32_t aligned_grid_size_x = static_cast<uint32_t>(shape_size(output_shape)) / block_size_x;
 
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name);
     // if the kernel has not been compiled, build it
@@ -1589,10 +1589,10 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
         return primitive_index;
     }
 
-            int num_SMs;
-            CUDA_RT_SAFE_CALL(cudaDeviceGetAttribute(&num_SMs, cudaDevAttrMultiProcessorCount, 0));
-            uint32_t block_size_x_acc = 256;
-            uint32_t nthreads_acc = num_SMs * block_size_x_acc;
+    int num_SMs;
+    CUDA_RT_SAFE_CALL(cudaDeviceGetAttribute(&num_SMs, cudaDevAttrMultiProcessorCount, 0));
+    uint32_t block_size_x_acc = 256;
+    uint32_t nthreads_acc = num_SMs * block_size_x_acc;
     if (out_rank != 0)
     {
         size_t reduce_idx = build_reduce_to_nd(dtypes, input_shape, reduce_axis, op, kernel);
@@ -1612,8 +1612,8 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
         if (nthreads > nthreads_acc * 9)
         {
             NVShape acc_output_shape{nthreads_acc};
-            size_t reduce_scalar_acc_idx =
-                build_reduce_to_scalar_acc(dtypes, input_shape, acc_output_shape, block_size_x_acc, op, kernel);
+            size_t reduce_scalar_acc_idx = build_reduce_to_scalar_acc(
+                dtypes, input_shape, acc_output_shape, block_size_x_acc, op, kernel);
             size_t reduce_scalar_idx = build_reduce_to_scalar(dtypes, acc_output_shape, op, kernel);
             // get an allocator for transient per kernel gpu memory
             GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
