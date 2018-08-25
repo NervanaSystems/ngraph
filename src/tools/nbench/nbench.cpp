@@ -75,8 +75,7 @@ vector<PerfShape> to_perf_shape(shared_ptr<Function> f,
     return result;
 }
 
-multimap<size_t, string> aggregate_timing_details(const vector<PerfShape>& perf_data,
-                                                  shared_ptr<Function> func)
+multimap<size_t, string> aggregate_timing_details(const vector<PerfShape>& perf_data)
 {
     unordered_map<string, size_t> timing;
     unordered_map<string, size_t> count;
@@ -133,13 +132,13 @@ void print_times(const multimap<size_t, string>& timing)
     }
 }
 
-void print_results(shared_ptr<Function> f, vector<PerfShape> perf_data, bool timing_detail)
+void print_results(vector<PerfShape> perf_data, bool timing_detail)
 {
     sort(perf_data.begin(), perf_data.end(), [](const PerfShape& p1, const PerfShape& p2) {
         return p1.total_microseconds() > p2.total_microseconds();
     });
     multimap<size_t, string> timing = aggregate_timing(perf_data);
-    multimap<size_t, string> timing_details = aggregate_timing_details(perf_data, f);
+    multimap<size_t, string> timing_details = aggregate_timing_details(perf_data);
 
     if (timing_detail)
     {
@@ -323,8 +322,8 @@ OPTIONS
             try
             {
                 shared_ptr<Function> f = deserialize(m);
-                cout << "Benchmarking " << m << ", " << backend << " backend, " << iterations
-                     << " iterations.\n";
+                // cout << "Benchmarking " << m << ", " << backend << " backend, " << iterations
+                //      << " iterations.\n";
                 auto perf_data =
                     run_benchmark(f, backend, iterations, timing_detail, warmup_iterations);
                 auto perf_shape = to_perf_shape(f, perf_data);
@@ -336,6 +335,7 @@ OPTIONS
                 cout << "Exception caught on '" << m << "'\n" << e.what() << endl;
             }
         }
+        print_results(aggregate_perf_data, timing_detail);
     }
     else if (iterations > 0)
     {
@@ -344,7 +344,7 @@ OPTIONS
              << " iterations.\n";
         auto perf_data = run_benchmark(f, backend, iterations, timing_detail, warmup_iterations);
         auto perf_shape = to_perf_shape(f, perf_data);
-        print_results(f, perf_shape, timing_detail);
+        print_results(perf_shape, timing_detail);
     }
 
     return 0;
