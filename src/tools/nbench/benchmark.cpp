@@ -80,22 +80,6 @@ multimap<size_t, string> aggregate_timing(const vector<runtime::PerformanceCount
     return rc;
 }
 
-void run_benchmark(const string& json_path,
-                   const string& backend_name,
-                   size_t iterations,
-                   bool timing_detail,
-                   int warmup_iterations)
-{
-    stopwatch timer;
-    timer.start();
-    const string json_string = file_util::read_file_to_string(json_path);
-    stringstream ss(json_string);
-    shared_ptr<Function> f = deserialize(ss);
-    timer.stop();
-    cout << "deserialize time: " << timer.get_milliseconds() << "ms" << endl;
-    run_benchmark(f, backend_name, iterations, timing_detail, warmup_iterations);
-}
-
 void print_times(const multimap<size_t, string>& timing)
 {
     // set the column widths

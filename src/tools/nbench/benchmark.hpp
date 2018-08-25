@@ -33,9 +33,3 @@ void run_benchmark(std::shared_ptr<ngraph::Function> f,
                    size_t iterations,
                    bool timing_detail,
                    int warmup_iterations);
-
-void run_benchmark(const std::string& json_path,
-                   const std::string& backend_name,
-                   size_t iterations,
-                   bool timing_detail = false,
-                   int warmup_iterations = 1);
