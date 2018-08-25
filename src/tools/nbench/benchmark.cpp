@@ -302,9 +302,12 @@ void run_benchmark(shared_ptr<Function> f,
     multimap<size_t, string> timing = aggregate_timing(perf_data);
     multimap<size_t, string> timing_details = aggregate_timing_details(perf_data, f);
 
-    cout << "\n---- Aggregate times per op type ----\n";
-    print_times(timing);
+    if (timing_detail)
+    {
+        cout << "\n---- Aggregate times per op type ----\n";
+        print_times(timing);
 
-    cout << "\n---- Aggregate times per op type/shape/count ----\n";
-    print_times(timing_details);
+        cout << "\n---- Aggregate times per op type/shape/count ----\n";
+        print_times(timing_details);
+    }
 }
