@@ -78,25 +78,12 @@ vector<PerfShape> to_perf_shape(shared_ptr<Function> f,
 multimap<size_t, string> aggregate_timing_details(const vector<PerfShape>& perf_data,
                                                   shared_ptr<Function> func)
 {
-    unordered_map<string, shared_ptr<Node>> node_map;
-    vector<shared_ptr<Function>> fs;
-    traverse_functions(func, [&](shared_ptr<Function> f) { fs.push_back(f); });
-    for (shared_ptr<Function> f : fs)
-    {
-        for (shared_ptr<Node> node : f->get_ops())
-        {
-            node_map.insert({node->get_name(), node});
-        }
-    }
-
     unordered_map<string, size_t> timing;
     unordered_map<string, size_t> count;
     for (const PerfShape& p : perf_data)
     {
-        shared_ptr<Node> node = node_map.at(p.name());
-        NGRAPH_INFO << p.name();
         string op = p.name().substr(0, p.name().find('_'));
-        string shape_name = " {" + join(node->get_outputs()[0].get_shape()) + "} ";
+        string shape_name = " {" + join(p.shape) + "} ";
         timing[op + shape_name] += p.microseconds();
         count[op + shape_name] += 1;
     }
