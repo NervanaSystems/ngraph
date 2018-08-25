@@ -106,6 +106,28 @@ void print_times(const multimap<size_t, string>& timing)
     }
 }
 
+void print_results(shared_ptr<Function> f,
+                   vector<runtime::PerformanceCounter> perf_data,
+                   bool timing_detail)
+{
+    sort(perf_data.begin(),
+         perf_data.end(),
+         [](const runtime::PerformanceCounter& p1, const runtime::PerformanceCounter& p2) {
+             return p1.total_microseconds() > p2.total_microseconds();
+         });
+    multimap<size_t, string> timing = aggregate_timing(perf_data);
+    multimap<size_t, string> timing_details = aggregate_timing_details(perf_data, f);
+
+    if (timing_detail)
+    {
+        cout << "\n---- Aggregate times per op type ----\n";
+        print_times(timing);
+
+        cout << "\n---- Aggregate times per op type/shape/count ----\n";
+        print_times(timing_details);
+    }
+}
+
 int main(int argc, char** argv)
 {
     string model;
@@ -263,6 +285,7 @@ OPTIONS
     else if (!directory.empty())
     {
         vector<string> models;
+        vector<runtime::PerformanceCounter> aggregate_perf_data;
         file_util::iterate_files(directory,
                                  [&](const string& file, bool is_dir) {
                                      if (!is_dir)
@@ -278,7 +301,10 @@ OPTIONS
                 shared_ptr<Function> f = deserialize(m);
                 cout << "Benchmarking " << m << ", " << backend << " backend, " << iterations
                      << " iterations.\n";
-                run_benchmark(f, backend, iterations, timing_detail, warmup_iterations);
+                auto perf_data =
+                    run_benchmark(f, backend, iterations, timing_detail, warmup_iterations);
+                aggregate_perf_data.insert(
+                    aggregate_perf_data.end(), perf_data.begin(), perf_data.end());
             }
             catch (exception e)
             {
@@ -292,23 +318,7 @@ OPTIONS
         cout << "Benchmarking " << model << ", " << backend << " backend, " << iterations
              << " iterations.\n";
         auto perf_data = run_benchmark(f, backend, iterations, timing_detail, warmup_iterations);
-
-        sort(perf_data.begin(),
-             perf_data.end(),
-             [](const runtime::PerformanceCounter& p1, const runtime::PerformanceCounter& p2) {
-                 return p1.total_microseconds() > p2.total_microseconds();
-             });
-        multimap<size_t, string> timing = aggregate_timing(perf_data);
-        multimap<size_t, string> timing_details = aggregate_timing_details(perf_data, f);
-
-        if (timing_detail)
-        {
-            cout << "\n---- Aggregate times per op type ----\n";
-            print_times(timing);
-
-            cout << "\n---- Aggregate times per op type/shape/count ----\n";
-            print_times(timing_details);
-        }
+        print_results(f, perf_data, timing_detail);
     }
 
     return 0;
