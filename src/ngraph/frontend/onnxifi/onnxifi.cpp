@@ -20,7 +20,7 @@
 extern "C" {
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
-onnxGetBackendIDs(onnxBackendID* backendIDs, std::size_t* numBackends)
+    onnxGetBackendIDs(onnxBackendID* backendIDs, std::size_t* numBackends)
 {
     if ((backendIDs == nullptr) || (numBackends == nullptr))
     {
@@ -30,95 +30,83 @@ onnxGetBackendIDs(onnxBackendID* backendIDs, std::size_t* numBackends)
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
-onnxReleaseBackendID(onnxBackendID backendID)
+    onnxReleaseBackendID(onnxBackendID backendID)
+{
+    return ONNXIFI_STATUS_INTERNAL_ERROR;
+}
+
+ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxGetBackendInfo(
+    onnxBackendID backendID, onnxBackendInfo infoType, void* infoValue, std::size_t* infoValueSize)
+{
+    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
+}
+
+ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxGetBackendCompatibility(
+    onnxBackendID backendID, std::size_t onnxModelSize, const void* onnxModel)
+{
+    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
+}
+
+ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxInitBackend(
+    onnxBackendID backendID, const uint64_t* auxPropertiesList, onnxBackend* backend)
+{
+    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
+}
+
+ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxReleaseBackend(onnxBackend backend)
+{
+    return ONNXIFI_STATUS_INTERNAL_ERROR;
+}
+
+ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxInitEvent(onnxBackend backend,
+                                                                         onnxEvent* event)
+{
+    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
+}
+
+ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxSignalEvent(onnxEvent event)
+{
+    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
+}
+
+ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxWaitEvent(onnxEvent event)
+{
+    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
+}
+
+ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxReleaseEvent(onnxEvent event)
 {
     return ONNXIFI_STATUS_INTERNAL_ERROR;
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
-onnxGetBackendInfo(onnxBackendID backendID,
-                   onnxBackendInfo infoType,
-                   void* infoValue,
-                   std::size_t* infoValueSize)
+    onnxInitGraph(onnxBackend backend,
+                  std::size_t onnxModelSize,
+                  const void* onnxModel,
+                  std::uint32_t weightsCount,
+                  const onnxTensorDescriptor* weightDescriptors,
+                  onnxGraph* graph)
 {
     return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
-onnxGetBackendCompatibility(onnxBackendID backendID,
-                                       std::size_t onnxModelSize,
-                                       const void* onnxModel)
+    onnxSetGraphIO(onnxGraph graph,
+                   std::uint32_t inputsCount,
+                   const onnxTensorDescriptor* inputDescriptors,
+                   std::uint32_t outputsCount,
+                   const onnxTensorDescriptor* outputDescriptors)
 {
     return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
-onnxInitBackend(onnxBackendID backendID,
-                           const uint64_t* auxPropertiesList,
-                           onnxBackend* backend)
+    onnxRunGraph(onnxGraph graph, const onnxMemoryFence* inputFence, onnxMemoryFence* outputFence)
 {
     return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
 }
 
-ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
-onnxReleaseBackend(onnxBackend backend)
-{
-    return ONNXIFI_STATUS_INTERNAL_ERROR;
-}
-
-ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
-onnxInitEvent(onnxBackend backend, onnxEvent* event)
-{
-    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
-}
-
-ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
-onnxSignalEvent(onnxEvent event)
-{
-    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
-}
-
-ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
-onnxWaitEvent(onnxEvent event)
-{
-    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
-}
-
-ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
-onnxReleaseEvent(onnxEvent event)
-{
-    return ONNXIFI_STATUS_INTERNAL_ERROR;
-}
-
-ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
-onnxInitGraph(onnxBackend backend,
-                         std::size_t onnxModelSize,
-                         const void* onnxModel,
-                         std::uint32_t weightsCount,
-                         const onnxTensorDescriptor* weightDescriptors,
-                         onnxGraph* graph)
-{
-    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
-}
-
-ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
-onnxSetGraphIO(onnxGraph graph,
-                          std::uint32_t inputsCount,
-                          const onnxTensorDescriptor* inputDescriptors,
-                          std::uint32_t outputsCount,
-                          const onnxTensorDescriptor* outputDescriptors)
-{
-    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
-}
-
-ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
-onnxRunGraph(onnxGraph graph, const onnxMemoryFence* inputFence, onnxMemoryFence* outputFence)
-{
-    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
-}
-
-ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
-onnxReleaseGraph(onnxGraph graph)
+ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxReleaseGraph(onnxGraph graph)
 {
     return ONNXIFI_STATUS_INTERNAL_ERROR;
 }
