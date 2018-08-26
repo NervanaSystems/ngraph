@@ -114,12 +114,9 @@ mkldnn::memory::desc
 
 size_t MKLDNNEmitter::build_memory_primitive(const mkldnn::memory::desc& desc)
 {
-    // The MKL-DNN C++ API forces proper initialization of a memory primitive
-    // with a non-null pointer (unlike the C API)
-    // Primitives are initialized at runtime so we use a known-invalid address here
-    // to bypass this check
-    return insert_primitive(
-        new mkldnn::memory({desc, mkldnn_utils::global_cpu_engine}, reinterpret_cast<void*>(0x42)));
+    size_t index =
+        insert_primitive(new mkldnn::memory({desc, mkldnn_utils::global_cpu_engine}, nullptr));
+    return index;
 }
 
 mkldnn::memory::format MKLDNNEmitter::query_convolution_forward_weight_format(

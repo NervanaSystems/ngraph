@@ -17,6 +17,8 @@
 #pragma once
 
 #include "ngraph/axis_set.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -65,6 +67,12 @@ namespace ngraph
                 output_shape, input_shape, output_shape.size() - input_shape.size());
         }
 
+        inline std::shared_ptr<ngraph::Node>
+            make_broadcast_node(const std::shared_ptr<ngraph::Node>& node, ngraph::Shape new_shape)
+        {
+            return std::make_shared<ngraph::op::Broadcast>(
+                node, new_shape, calculate_broadcast_axes(new_shape, node->get_shape()));
+        }
     } // namespace  onnx_import
 
 } // namespace  ngraph
