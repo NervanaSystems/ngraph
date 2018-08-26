@@ -43,6 +43,10 @@ endif()
 
 project (ngraph)
 
+if (UNIX AND NOT APPLE)
+    set(LINUX TRUE)
+endif()
+
 SET(GCC_MIN_VERSION 4.8)
 SET(CLANG_MIN_VERSION 3.8)
 SET(APPLE_CLANG_MIN_VERSION 8.1)
@@ -102,7 +106,7 @@ endif()
 # Installation logic...
 #-----------------------------------------------------------------------------------------------
 
-if (NOT APPLE AND NOT WIN32)
+if (LINUX)
     include(GNUInstallDirs)
     include(cmake/platform.cmake)
 else()
