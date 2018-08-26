@@ -104,6 +104,7 @@ endif()
 
 if (NOT APPLE AND NOT WIN32)
     include(GNUInstallDirs)
+    include(cmake/platform.cmake)
 else()
     set(CMAKE_INSTALL_BINDIR "bin")
     set(CMAKE_INSTALL_INCLUDEDIR "include")
