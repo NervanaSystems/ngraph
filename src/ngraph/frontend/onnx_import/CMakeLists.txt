@@ -1,6 +1,6 @@
 # ******************************************************************************
 # Copyright (c) 2017-2018 Intel Copyright
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -52,6 +52,9 @@ add_library(onnx_import STATIC
         op/constant.cpp
         op/constant.hpp
         op/conv.cpp
+        op/gemm.cpp
+        op/gemm.hpp
+        op/mul.hpp
         op/relu.hpp
         op/split.cpp
         op/split.hpp
@@ -59,7 +62,9 @@ add_library(onnx_import STATIC
         utils/broadcasting.cpp
         utils/broadcasting.hpp
         utils/convpool.cpp
-        utils/convpool.hpp)
+        utils/convpool.hpp
+        utils/reshape.cpp
+        utils/reshape.hpp)
 
 add_dependencies(onnx_import onnx_import_interface)
 
