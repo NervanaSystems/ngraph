@@ -65,7 +65,7 @@ else()
                            -DProtobuf_PROTOC_EXECUTABLE=${Protobuf_PROTOC_EXECUTABLE}
                            -DProtobuf_INCLUDE_DIR=${Protobuf_INCLUDE_DIR}
                            -DPROTOBUF_LIBRARY=${Protobuf_LIBRARY}
-                           -DPROTOBUF_SRC_ROOT_FOLDER=${Protobuf_SRC_ROOT_FOLDER}                            
+                           -DPROTOBUF_SRC_ROOT_FOLDER=${Protobuf_SRC_ROOT_FOLDER}
                 TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/tmp"
                 STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/stamp"
                 DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/download"
@@ -89,8 +89,6 @@ else()
                 CMAKE_ARGS -DONNX_GEN_PB_TYPE_STUBS=OFF
                            -DProtobuf_PROTOC_EXECUTABLE=${Protobuf_PROTOC_EXECUTABLE}
                            -DProtobuf_INCLUDE_DIR=${Protobuf_INCLUDE_DIR}
-                           -PROTOBUF_LIBRARY=${Protobuf_LIBRARY}
-                           -DPROTOBUF_SRC_ROOT_FOLDER=${Protobuf_SRC_ROOT_FOLDER}
                 TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/tmp"
                 STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/stamp"
                 DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/download"
