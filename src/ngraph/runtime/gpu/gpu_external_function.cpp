@@ -514,7 +514,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 for (size_t i = 0; i < param->get_output_size(); ++i)
                 {
                     shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_view(i);
-                    const element::Type& et = tv->get_tensor_view_type()->get_element_type();
+                    const element::Type& et = tv->get_element_type();
                     string type = et.c_type_string();
                     stringstream ss;
                     ss << "((" << type << "*)(inputs[" << arg_index << "]))";
@@ -528,7 +528,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
             {
                 shared_ptr<Node> op = current_function->get_output_op(i);
                 shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
-                string type = tv->get_tensor_view_type()->get_element_type().c_type_string();
+                string type = tv->get_element_type().c_type_string();
                 stringstream ss;
                 ss << "((" << type << "*)(outputs[" << i << "]))";
                 m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
@@ -643,7 +643,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     auto allocator = std::make_shared<runtime::gpu::GPUAllocator>(
         m_shared_context->m_primitive_emitter->get_memory_allocator());
 
-    m_pass_manager.register_pass<ngraph::pass : LikeReplacement>();
+    m_pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     m_pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
 
     m_pass_manager
