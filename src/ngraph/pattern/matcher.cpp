@@ -49,7 +49,7 @@ namespace ngraph
                 is_match = !predicate || predicate(graph_node);
             }
 
-            if (is_match) //in case label was already bound this rebinds it to the same node (harmless; and the logic seems cleaner)
+            if (is_match) // in case label was already bound this rebinds it to the same node (harmless; and the logic seems cleaner)
             {
                 auto args = label->get_arguments();
                 if (args.size() > 0)
@@ -79,7 +79,7 @@ namespace ngraph
                 NodeVector label_exclusions;
                 for (auto entry : m_pattern_map)
                 {
-                    //leaf label
+                    // leaf label
                     if (entry.first->get_inputs().empty())
                     {
                         label_exclusions.push_back(entry.second);
@@ -157,7 +157,7 @@ namespace ngraph
             }
 
             if (auto skip_node = std::dynamic_pointer_cast<op::Skip>(
-                    pattern_node)) //matches PatternSkipOp semantics
+                    pattern_node)) // matches PatternSkipOp semantics
             {
                 return abort_match(watermark, match_skip(skip_node, graph_node, pattern_map));
             }
@@ -216,7 +216,7 @@ namespace ngraph
             {
                 std::sort(
                     begin(pattern_args),
-                    end(pattern_args)); //TODO: [nikolayk] we don't really have to use lexicographically-based perms, heap's algo should be faster
+                    end(pattern_args)); // TODO: [nikolayk] we don't really have to use lexicographically-based perms, heap's algo should be faster
                 do
                 {
                     NGRAPH_DEBUG << pad(2 * m_depth) << "Running a permutation for graph_node "
@@ -263,7 +263,7 @@ namespace ngraph
 
         bool Matcher::match(const std::shared_ptr<Node>& graph_node)
         {
-            //clear our state
+            // clear our state
             m_match_root.reset();
             m_pattern_map.clear();
             m_matched_list.clear();
@@ -287,11 +287,11 @@ namespace ngraph
         bool Matcher::match(const std::shared_ptr<Node>& graph_node,
                             const PatternMap& previous_matches)
         {
-            //clear our state
+            // clear our state
             m_match_root.reset();
             m_pattern_map.clear();
 
-            //insert previous matches
+            // insert previous matches
             m_pattern_map.insert(previous_matches.cbegin(), previous_matches.cend());
 
             if (!m_pattern_node || !graph_node)
@@ -319,29 +319,29 @@ namespace ngraph
             m_match_root = graph;
 
             NGRAPH_DEBUG << "matching graph to " << graph->get_name() << std::endl;
-            //try to match one cell (i.e. pattern)
+            // try to match one cell (i.e. pattern)
             while (m.match(graph, previous_matches))
             {
                 matched = true;
-                //move to the next cell
+                // move to the next cell
                 graph = m.get_pattern_map()[m_recurrent_pattern];
                 NGRAPH_DEBUG << "setting graph to " << graph->get_name() << std::endl;
 
-                //copy bound nodes for the current pattern graph into a global matches map
+                // copy bound nodes for the current pattern graph into a global matches map
                 for (auto cur_match : m.get_pattern_map())
                 {
                     m_matches[cur_match.first].push_back(cur_match.second);
                 }
 
-                //pre-populate the pattern map for the next cell with the bound nodes
-                //from the current match. Only bound nodes whose labels are in
-                //correlated_patterns are pre-populated. Skip other labels are
-                //unbounded by default
+                // pre-populate the pattern map for the next cell with the bound nodes
+                // from the current match. Only bound nodes whose labels are in
+                // correlated_patterns are pre-populated. Skip other labels are
+                // unbounded by default
                 for (auto cor_pat : m_correlated_patterns)
                 {
                     if (m.get_pattern_map().count(cor_pat) != 0)
                     {
-                        //assert that bound nodes from the previous and current matches are the same
+                        // assert that bound nodes from the previous and current matches are the same
                         if (previous_matches.count(cor_pat) != 0)
                         {
                             if (previous_matches[cor_pat] != m.get_pattern_map()[cor_pat])

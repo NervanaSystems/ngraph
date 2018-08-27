@@ -23,11 +23,11 @@ namespace ngraph
 {
     namespace op
     {
-        //MaxPoolWithIndices produces two outputs.
-        //The first output is equivalent to what MaxPool produces
-        //The second one contains the indices of the maximum numbers
-        //for each window in input (arg)
-        //These indices are used by MKLDNN for a back propagation pass
+        // MaxPoolWithIndices produces two outputs.
+        // The first output is equivalent to what MaxPool produces
+        // The second one contains the indices of the maximum numbers
+        // for each window in input (arg)
+        // These indices are used by MKLDNN for a back propagation pass
         class MaxPoolWithIndices : public util::RequiresTensorViewArgs
         {
         public:
@@ -59,8 +59,8 @@ namespace ngraph
             Shape m_padding_above;
         };
 
-        //MaxPoolWithIndicesBackprop takes MaxPoolWithIndices' outputs and
-        //pass the indices directly to MKLDNN to avoid max indices recomputation
+        // MaxPoolWithIndicesBackprop takes MaxPoolWithIndices' outputs and
+        // pass the indices directly to MKLDNN to avoid max indices recomputation
         class MaxPoolWithIndicesBackprop : public util::RequiresTensorViewArgs
         {
         public:

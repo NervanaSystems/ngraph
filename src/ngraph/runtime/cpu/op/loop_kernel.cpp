@@ -31,7 +31,7 @@ shared_ptr<Node>
         throw ngraph_error("number of arguments don't match");
     }
 
-    //map inputs
+    // map inputs
     NodeMap nm;
     for (size_t i = 0; i < args.size(); i++)
     {
