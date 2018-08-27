@@ -14,12 +14,12 @@
  * limitations under the License.
  *******************************************************************************/
 
-#include "convpool.hpp"
 #include <cmath>
 
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/shape.hpp"
 
+#include "convpool.hpp"
 #include "core/attribute.hpp"
 #include "core/node.hpp"
 
@@ -27,7 +27,7 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        namespace attribute
+        namespace convpool
         {
             Shape get_kernel_shape(const Node& node)
             {
@@ -133,7 +133,6 @@ namespace ngraph
                 }
             }
 
-        } // namespace attribute
-
-    } // namespace onnx_import
+        } // namespace convpool
+    }     // namespace onnx_import
 } // namespace ngraph

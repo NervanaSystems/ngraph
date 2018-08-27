@@ -26,7 +26,7 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        namespace attribute
+        namespace convpool
         {
             /**
              * @brief Get shape of kernel (filter) in pixels.
@@ -94,7 +94,35 @@ namespace ngraph
             {
                 return get_pads(node, get_kernel_shape(node));
             }
-        } // namespace attribute
+
+            template <class T>
+            inline NodeVector make_ng_pool(const Node& node)
+            {
+                NodeVector ng_inputs{node.get_ng_inputs()};
+                std::shared_ptr<ngraph::Node>& data{ng_inputs.at(0)};
+
+                Shape kernel_shape = convpool::get_kernel_shape(node);
+
+                auto strides{convpool::get_strides(node)};
+                auto dilations{convpool::get_dilations(node)};
+
+                auto paddings{convpool::get_pads(node)};
+                const auto& padding_below{paddings.first};
+                const auto& padding_above{paddings.second};
+
+                Shape padding_below_shape{std::begin(padding_below), std::end(padding_below)};
+                Shape padding_above_shape{std::begin(padding_above), std::end(padding_above)};
+                bool include_padding_in_avg_computation = false;
+
+                return {std::make_shared<T>(data,
+                                            kernel_shape,
+                                            strides,
+                                            padding_below_shape,
+                                            padding_above_shape,
+                                            include_padding_in_avg_computation)};
+            }
+
+        } // namespace convpool
 
     } // namespace  onnx_import
 
