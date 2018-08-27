@@ -283,7 +283,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
         writer << "r = in[in_idx];\n";
         writer << "in_idx += step;\n";
         writer.block_end();
-        //accumulate reduction to 32 threads
+        //accumulate reduction to blockDim.x threads
         writer << "while(in_idx + (step * 7) < nthreads)\n";
         writer.block_begin();
         {
