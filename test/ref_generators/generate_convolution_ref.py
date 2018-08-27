@@ -249,9 +249,7 @@ NGRAPH_TEST (${BACKEND_NAME}, %s)
     backend->call_with_validate(function, {result}, {a, b});
     EXPECT_TRUE(test::all_close<float>(vector<float>{expected_result}, read_vector<float>(result), 1.0e-4f, 1.0e-6f));
     // only test backprop for certain cases as it takes significant compute resources
-    if(%s) {
-        EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {a, b}, .01f, .01f));
-    }
+    %s
 }
 '''
     f.write (template % (test_name,
@@ -268,50 +266,52 @@ NGRAPH_TEST (${BACKEND_NAME}, %s)
                          data_str(output_batch_data),
                          bprop));
 
+bprop_check_result = "    EXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {a, b}, .01f, .01f));"
+
 #                                                                              filter                                      data
 #         test name                                skip list   i             batch shape   filts shape   stride    dilation  below-pads  above-pads  dilation   bprop?
 tests = [
-         ("convolution_2d_1item",                  (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (1,1),     "true"),
-         ("convolution_2d_1item_padded_1_1x1_1",   (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (1,1),      (1,1),      (1,1),     "true"),
-         ("convolution_2d_1item_padded_2_3x4_5",   (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (2,3),      (4,5),      (1,1),     "true"),
-         ("convolution_2d_2items",                    (2,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (1,1),     "true"),
-         ("convolution_2d_2items_strided",            (2,1,3,5),    (2,1,2,2),    (2,2),    (1,1),    (0,0),      (0,0),      (1,1),     "true"),
-         ("convolution_2d_2items_strided_padded",  (2,1,3,5),    (2,1,2,2),    (2,2),    (1,1),    (4,2),      (5,7),      (1,1),     "true"),
-         ("convolution_2d_2items_strided_padded_same",(2,1,3,5),    (2,1,2,2),    (2,2),    (1,1),    (2,2),      (2,2),      (1,1),     "true"),
-         ("convolution_2d_2items_dilated",            (2,1,3,5),    (2,1,2,2),    (1,1),    (2,2),    (0,0),      (0,0),      (1,1),     "true"),
-         ("convolution_2d_2items_dilated_padded",  (2,1,3,5),    (2,1,2,2),    (1,1),    (2,2),    (4,2),      (5,7),      (1,1),     "true"),
-         ("convolution_3d_2items",                    (2,1,3,5,8),  (2,1,2,2,3),  (1,1,1),  (1,1,1),  (0,0,0),    (0,0,0),    (1,1,1),   "true"),
-         ("convolution_4d_2items",                 (2,1,3,5,8,7),(2,1,2,2,3,1),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
-         ("convolution_4d_4items",                 (4,3,3,5,8,7),(4,3,2,2,3,1),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
-         ("convolution_4d_4items_padded_neg",      (4,3,3,5,8,7),(4,3,2,2,3,1),(1,1,1,1),(1,1,1,1),(-1,2,-3,2),(1,0,0,-3), (1,1,1,1), "false"),
-         ("convolution_4d_4items_strided",         (4,3,3,5,8,7),(4,3,2,2,3,1),(2,1,3,2),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
-         ("convolution_4d_4items_dilated",         (4,3,3,5,8,7),(4,3,2,2,3,1),(1,1,1,1),(2,1,3,2),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
-         ("convolution_4d_4items_strided_dilated", (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "false"),
+         ("convolution_2d_1item",                  (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (1,1),     bprop_check_result),
+         ("convolution_2d_1item_padded_1_1x1_1",   (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (1,1),      (1,1),      (1,1),     bprop_check_result),
+         ("convolution_2d_1item_padded_2_3x4_5",   (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (2,3),      (4,5),      (1,1),     bprop_check_result),
+         ("convolution_2d_2items",                 (2,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (1,1),     bprop_check_result),
+         ("convolution_2d_2items_strided",         (2,1,3,5),    (2,1,2,2),    (2,2),    (1,1),    (0,0),      (0,0),      (1,1),     bprop_check_result),
+         ("convolution_2d_2items_strided_padded",  (2,1,3,5),    (2,1,2,2),    (2,2),    (1,1),    (4,2),      (5,7),      (1,1),     bprop_check_result),
+         ("convolution_2d_2items_strided_padded_same",(2,1,3,5), (2,1,2,2),    (2,2),    (1,1),    (2,2),      (2,2),      (1,1),     bprop_check_result),
+         ("convolution_2d_2items_dilated",         (2,1,3,5),    (2,1,2,2),    (1,1),    (2,2),    (0,0),      (0,0),      (1,1),     bprop_check_result),
+         ("convolution_2d_2items_dilated_padded",  (2,1,3,5),    (2,1,2,2),    (1,1),    (2,2),    (4,2),      (5,7),      (1,1),     bprop_check_result),
+         ("convolution_3d_2items",                 (2,1,3,5,8),  (2,1,2,2,3),  (1,1,1),  (1,1,1),  (0,0,0),    (0,0,0),    (1,1,1),   bprop_check_result),
+         ("convolution_4d_2items",                 (2,1,3,5,8,7),(2,1,2,2,3,1),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), ""),
+         ("convolution_4d_4items",                 (4,3,3,5,8,7),(4,3,2,2,3,1),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), ""),
+         ("convolution_4d_4items_padded_neg",      (4,3,3,5,8,7),(4,3,2,2,3,1),(1,1,1,1),(1,1,1,1),(-1,2,-3,2),(1,0,0,-3), (1,1,1,1), ""),
+         ("convolution_4d_4items_strided",         (4,3,3,5,8,7),(4,3,2,2,3,1),(2,1,3,2),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), ""),
+         ("convolution_4d_4items_dilated",         (4,3,3,5,8,7),(4,3,2,2,3,1),(1,1,1,1),(2,1,3,2),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), ""),
+         ("convolution_4d_4items_strided_dilated", (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), ""),
          ("convolution_4d_4items_strided_dilated_padded",
-                                                   (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(2,4,6,8),  (1,3,5,7),  (1,1,1,1), "false"),
+                                                   (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(2,4,6,8),  (1,3,5,7),  (1,1,1,1), ""),
          ("convolution_4d_4items_strided_dilated_padded_neg",
-                                                   (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(-2,4,0,5), (1,3,-1,-4),(1,1,1,1), "false"),
+                                                   (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(-2,4,0,5), (1,3,-1,-4),(1,1,1,1), ""),
          ("convolution_4d_4items_strided_dilated_padded_same",
-                                                   (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(3,3,3,3),  (3,3,3,3),  (1,1,1,1), "false"),
-         ("convolution_2d_1item_1o1i_data_dilated",(1,1,3,5),    (1,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
-         ("convolution_2d_1item_2o1i_data_dilated",(1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
-         ("convolution_2d_1item_2o2i_data_dilated",(1,2,3,5),    (2,2,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
-         ("convolution_2d_1item_5o3i_data_dilated",(1,3,3,5),    (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
-         ("convolution_2d_2item_5o3i_data_dilated",(2,3,3,5),    (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
+                                                   (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(3,3,3,3),  (3,3,3,3),  (1,1,1,1), ""),
+         ("convolution_2d_1item_1o1i_data_dilated",(1,1,3,5),    (1,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     bprop_check_result),
+         ("convolution_2d_1item_2o1i_data_dilated",(1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     bprop_check_result),
+         ("convolution_2d_1item_2o2i_data_dilated",(1,2,3,5),    (2,2,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     bprop_check_result),
+         ("convolution_2d_1item_5o3i_data_dilated",(1,3,3,5),    (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     bprop_check_result),
+         ("convolution_2d_2item_5o3i_data_dilated",(2,3,3,5),    (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     bprop_check_result),
          ("convolution_2d_8item_large_5o3i_data_dilated",
-                                                   (8,3,16,16),  (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "false"),
+                                                   (8,3,16,16),  (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     ""),
          ("convolution_2d_8item_large_5o3i_uneven_filter_data_dilated",
-                                                   (8,3,16,16),  (5,3,2,3),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "false"),
+                                                   (8,3,16,16),  (5,3,2,3),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     ""),
          ("convolution_2d_8item_large_5o3i_uneven_filter_uneven_data_dilation_data_dilated",
-                                                   (8,3,16,16),  (5,3,2,3),    (1,1),    (1,1),    (0,0),      (0,0),      (2,3),     "false"),
+                                                   (8,3,16,16),  (5,3,2,3),    (1,1),    (1,1),    (0,0),      (0,0),      (2,3),     ""),
          ("convolution_3d_2item_large_5o3i_uneven_filter_uneven_data_dilation_data_dilated",
-                                                   (2,3,8,8,8),  (5,3,2,3,4),  (1,1,1),  (1,1,1),  (0,0,0),    (0,0,0),    (2,3,2),   "false"),
+                                                   (2,3,8,8,8),  (5,3,2,3,4),  (1,1,1),  (1,1,1),  (0,0,0),    (0,0,0),    (2,3,2),   ""),
          ("convolution_3d_1item_large_5o3i_padded_uneven_filter_uneven_data_dilation_data_dilated",
-                                                   (1,3,8,8,8),  (5,3,2,3,4),  (1,1,1),  (1,1,1),  (2,1,2),    (1,2,3),    (2,3,2),   "false"),
+                                                   (1,3,8,8,8),  (5,3,2,3,4),  (1,1,1),  (1,1,1),  (2,1,2),    (1,2,3),    (2,3,2),   ""),
          ("convolution_3d_2item_large_5o3i_padded_strided_uneven_filter_uneven_data_dilation_data_dilated",
-                                                   (2,3,8,8,8),  (5,3,2,3,4),  (2,3,2),  (1,1,1),  (2,1,2),    (1,2,3),    (2,3,2),   "false"),
+                                                   (2,3,8,8,8),  (5,3,2,3,4),  (2,3,2),  (1,1,1),  (2,1,2),    (1,2,3),    (2,3,2),   ""),
          ("convolution_3d_2item_large_5o3i_padded_strided_uneven_filter_uneven_data_dilation_filter_dilated_data_dilated",
-                                                   (2,3,8,8,8),  (5,3,2,3,4),  (2,3,2),  (3,2,2),  (2,1,2),    (1,2,3),    (2,3,2),   "false"),
+                                                   (2,3,8,8,8),  (5,3,2,3,4),  (2,3,2),  (3,2,2),  (2,1,2),    (1,2,3),    (2,3,2),   ""),
         ]
 
 def main():
