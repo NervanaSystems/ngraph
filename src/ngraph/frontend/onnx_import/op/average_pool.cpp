@@ -18,7 +18,7 @@
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/avg_pool.hpp"
 
-#include "ngraph/frontend/onnx_import/utils/convpool.hpp"
+#include "utils/convpool.hpp"
 
 namespace ngraph
 {

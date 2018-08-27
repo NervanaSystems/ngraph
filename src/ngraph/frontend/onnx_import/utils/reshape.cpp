@@ -35,7 +35,7 @@ namespace ngraph
             }
             else
             {
-                for (unsigned int i = 0; i < axes_order.size(); ++i)
+                for (std::size_t i = 0; i < axes_order.size(); ++i)
                 {
                     out_shape[i] = node->get_shape().at(axes_order.at(i));
                 }

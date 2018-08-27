@@ -106,13 +106,13 @@ namespace ngraph
             inline NodeVector make_ng_pool(const Node& node)
             {
                 // Fetch input node for the pooling operation
-                auto data{node.get_ng_inputs().at(0)};
+                auto data = node.get_ng_inputs().at(0);
 
                 // Parse ONNX op attributes
                 Shape kernel_shape = convpool::get_kernel_shape(node);
-                auto strides{convpool::get_strides(node)};
-                auto dilations{convpool::get_dilations(node)};
-                auto paddings{convpool::get_pads(node)};
+                auto strides = convpool::get_strides(node);
+                auto dilations = convpool::get_dilations(node);
+                auto paddings = convpool::get_pads(node);
 
                 // Convert padding from CoordinateDiff to Shape objects
                 const CoordinateDiff& padding_below{paddings.first};

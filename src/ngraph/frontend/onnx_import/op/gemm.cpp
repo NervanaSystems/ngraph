@@ -39,11 +39,11 @@ namespace ngraph
                 auto input_b = inputs.at(1);
                 auto input_c = inputs.at(2);
 
-                double alpha{node.get_attribute_value<double>("alpha", 1)};
-                double beta{node.get_attribute_value<double>("beta", 1)};
+                double alpha = node.get_attribute_value<double>("alpha", 1);
+                double beta = node.get_attribute_value<double>("beta", 1);
 
-                auto trans_a{node.get_attribute_value<int64_t>("transA", 0)};
-                auto trans_b{node.get_attribute_value<int64_t>("transB", 0)};
+                auto trans_a = node.get_attribute_value<int64_t>("transA", 0);
+                auto trans_b = node.get_attribute_value<int64_t>("transB", 0);
 
                 if (trans_a)
                 {
