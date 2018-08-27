@@ -41,6 +41,12 @@ void regclass_pyngraph_Function(py::module m)
     function.def("get_parameters", &ngraph::Function::get_parameters);
     function.def("get_results", &ngraph::Function::get_results);
     function.def("get_result", &ngraph::Function::get_result);
-    function.def("get_name", &ngraph::Function::get_name);
+    function.def("get_unique_name", &ngraph::Function::get_name);
+    function.def("get_name", &ngraph::Function::get_friendly_name);
     function.def("set_name", &ngraph::Function::set_name);
+    function.def("__repr__", [](const ngraph::Function& self) {
+        std::string class_name = py::cast(self).get_type().attr("__name__").cast<std::string>();
+        std::string shape = py::cast(self.get_output_shape(0)).attr("__str__")().cast<std::string>();
+        return "<" + class_name + ": '" + self.get_friendly_name() + "' (" + shape + ")>";
+    });
 }
