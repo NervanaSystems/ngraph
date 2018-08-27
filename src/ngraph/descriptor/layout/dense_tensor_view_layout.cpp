@@ -24,7 +24,7 @@ using namespace ngraph;
 descriptor::layout::DenseTensorViewLayout::DenseTensorViewLayout(const TensorView& tensor_view)
     : TensorViewLayout(tensor_view)
 {
-    Shape shape = tensor_view.get_shape();
+    const Shape& shape = tensor_view.get_shape();
     m_size = ngraph::shape_size(shape);
     m_strides = ngraph::row_major_strides(shape);
 }

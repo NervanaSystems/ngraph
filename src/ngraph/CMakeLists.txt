@@ -123,6 +123,7 @@ set (SRC
     pass/get_output_element_elimination.cpp
     pass/graph_rewrite.cpp
     pass/inliner.cpp
+    pass/like_replacement.cpp
     pass/liveness.cpp
     pass/manager.cpp
     pass/manager_state.cpp

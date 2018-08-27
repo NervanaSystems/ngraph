@@ -70,6 +70,9 @@ Function::Function(const std::shared_ptr<Node>& result,
                    const std::string& name)
     : Function(NodeVector{result}, parameters, name)
 {
+    // TODO this does not do anything while infer happens in the constructors
+    // and it will go away after we add shape during a clone; it is here now
+    // to assist development between those two stages.
     validate_nodes_and_infer_types();
 }
 

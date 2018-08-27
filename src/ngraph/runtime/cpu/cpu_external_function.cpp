@@ -121,6 +121,7 @@
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
+#include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
@@ -370,6 +371,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     //nv_cwi is required only by some frontends
     //in which case they should run this pass(CPUWorkspaceInsertion) explicitly
     NodeVector nv_cwi;
+    pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
     // failing mxnet unit tests.

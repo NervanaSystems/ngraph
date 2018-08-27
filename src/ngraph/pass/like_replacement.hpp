@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
+* Copyright 2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,18 +14,18 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <algorithm>
-#include <memory>
-#include <sstream>
+#pragma once
 
-#include "ngraph/node_vector.hpp"
-#include "ngraph/op/op.hpp"
-#include "ngraph/type/element_type.hpp"
+#include "ngraph/pass/pass.hpp"
 
-using namespace ngraph;
-using namespace std;
-
-op::Op::Op(const std::string& node_type, const NodeVector& args)
-    : Node(node_type, args)
+namespace ngraph
 {
+    namespace pass
+    {
+        class LikeReplacement : public FunctionPass
+        {
+        public:
+            bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+        };
+    }
 }
