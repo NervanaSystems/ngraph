@@ -112,14 +112,9 @@ namespace ngraph
 
                 Shape padding_below_shape{std::begin(padding_below), std::end(padding_below)};
                 Shape padding_above_shape{std::begin(padding_above), std::end(padding_above)};
-                bool include_padding_in_avg_computation = false;
 
-                return {std::make_shared<T>(data,
-                                            kernel_shape,
-                                            strides,
-                                            padding_below_shape,
-                                            padding_above_shape,
-                                            include_padding_in_avg_computation)};
+                return {std::make_shared<T>(
+                    data, kernel_shape, strides, padding_below_shape, padding_above_shape)};
             }
 
         } // namespace convpool
