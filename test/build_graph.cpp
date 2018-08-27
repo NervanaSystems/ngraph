@@ -60,7 +60,7 @@ TEST(build_graph, node_comparison)
 TEST(build_graph, literal)
 {
     // float scalar from a float
-    //auto float0 = FloatConstant::make(3.0);
+    // auto float0 = FloatConstant::make(3.0);
     vector<float> float_t{3.0};
     auto float0 = make_shared<op::Constant>(element::f32, Shape{}, float_t);
     ASSERT_EQ(float0->get_vector<float>(), std::vector<float>{3.0});
@@ -81,7 +81,7 @@ TEST(build_graph, literal)
 TEST(build_graph, tensor)
 {
     // float scalar from a float
-    //auto float0 = FloatConstant::make(3.0);
+    // auto float0 = FloatConstant::make(3.0);
     Shape shape{2, 3};
     vector<float> float_t(shape_size(shape), 0);
     auto float0 = make_shared<op::Constant>(element::f32, shape, float_t);

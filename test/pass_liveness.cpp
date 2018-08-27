@@ -51,13 +51,13 @@ TEST(liveness, constant)
     EXPECT_EQ(0, sorted[0]->liveness_new_list.size());
     EXPECT_EQ(0, sorted[0]->liveness_free_list.size());
 
-    //op::Negative is live on output to op::Result
-    //op::Negative is new
+    // op::Negative is live on output to op::Result
+    // op::Negative is new
     EXPECT_EQ(1, sorted[1]->liveness_new_list.size());
     EXPECT_EQ(0, sorted[1]->liveness_free_list.size());
 
-    //op::Negative is live on input to op::Result
+    // op::Negative is live on input to op::Result
     EXPECT_EQ(0, sorted[2]->liveness_new_list.size());
-    //op::Negative is freed
+    // op::Negative is freed
     EXPECT_EQ(1, sorted[2]->liveness_free_list.size());
 }

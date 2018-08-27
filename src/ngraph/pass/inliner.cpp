@@ -55,12 +55,12 @@ bool ngraph::pass::Inliner::inline_function_call(std::shared_ptr<ngraph::Node> i
         return false;
     }
 
-    //map args to parms
+    // map args to parms
     auto callee = callsite->get_functions().at(0);
 
     if (callee->get_results().size() > 1)
     {
-        return false; //relax in the next iteration (can't just use replace_node)
+        return false; // relax in the next iteration (can't just use replace_node)
     }
     ngraph::NodeMap nm;
     for (size_t i = 0; i < callee->get_parameters().size(); i++)
@@ -88,7 +88,7 @@ bool ngraph::pass::Inliner::run_on_function_call(std::shared_ptr<ngraph::op::Fun
         return false;
     }
 
-    //we could clone_function f if we need to preserve it
+    // we could clone_function f if we need to preserve it
     run_on_functions(callees, f);
     return true;
 }
@@ -100,7 +100,7 @@ void ngraph::pass::Inliner::run_on_functions(
     for (auto callee : callees)
     {
         m_depth++;
-        //recursive inlining
+        // recursive inlining
         run_on_function_call(callee);
         m_depth--;
         inline_function_call(callee, caller);

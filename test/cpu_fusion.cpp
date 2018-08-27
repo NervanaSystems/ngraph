@@ -1717,16 +1717,16 @@ TEST(cpu_fusion, group_convolution)
 
     auto av = read_vector<float>(a_);
     auto bv = read_vector<float>(b_);
-    auto c_ = backend->create_tensor(element::f32, shape_c, av.data()); //lower data
-    auto d_ = backend->create_tensor(element::f32, shape_d, bv.data()); //upper data
+    auto c_ = backend->create_tensor(element::f32, shape_c, av.data()); // lower data
+    auto d_ = backend->create_tensor(element::f32, shape_d, bv.data()); // upper data
 
     auto e_ =
-        backend->create_tensor(element::f32, shape_c, av.data() + av.size() / 2); //lower weights
+        backend->create_tensor(element::f32, shape_c, av.data() + av.size() / 2); // lower weights
     auto f_ =
-        backend->create_tensor(element::f32, shape_d, bv.data() + bv.size() / 2); //upper weights
+        backend->create_tensor(element::f32, shape_d, bv.data() + bv.size() / 2); // upper weights
 
     Shape shape_ur{1, 1, 2, 2};
-    //allocate a contigious storage for both lower and upper halves.
+    // allocate a contigious storage for both lower and upper halves.
     vector<float> erv(shape_size(shape_r), 0);
     auto lower_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(
         backend->create_tensor(element::f32, shape_ur, erv.data()));

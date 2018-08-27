@@ -54,8 +54,8 @@ namespace ngraph
                     input_b = transpose(input_b);
                 }
 
-                //code from python not implemented in c++ yet.
-                //reshape_for_matmul(node, input_a, input_b);
+                // code from python not implemented in c++ yet.
+                // reshape_for_matmul(node, input_a, input_b);
 
                 std::shared_ptr<ngraph::Node> a_dot_b =
                     std::make_shared<ngraph::op::Dot>(input_a, input_b);

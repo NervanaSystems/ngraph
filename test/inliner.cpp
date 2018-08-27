@@ -47,8 +47,8 @@ TEST(inline, basic)
     auto bc = g->get_ops().size();
     pass_manager.run_passes(g);
     auto ac = g->get_ops().size();
-    ASSERT_EQ(count_ops_of_type<op::FunctionCall>(g), 0); //check that FunctionCalls disappear
-    ASSERT_LT(bc, ac);                                    //we should get more ops after inlining
+    ASSERT_EQ(count_ops_of_type<op::FunctionCall>(g), 0); // check that FunctionCalls disappear
+    ASSERT_LT(bc, ac);                                    // we should get more ops after inlining
 }
 
 TEST(inline, recursive)
@@ -76,8 +76,8 @@ TEST(inline, recursive)
     auto bce = e->get_ops().size();
     pass_manager.run_passes(e);
     auto ace = e->get_ops().size();
-    ASSERT_EQ(count_ops_of_type<op::FunctionCall>(g), 0); //check that FunctionCalls disappear
-    ASSERT_EQ(count_ops_of_type<op::Add>(g), 1);          //FunctionCall is replaced w/ Add
+    ASSERT_EQ(count_ops_of_type<op::FunctionCall>(g), 0); // check that FunctionCalls disappear
+    ASSERT_EQ(count_ops_of_type<op::Add>(g), 1);          // FunctionCall is replaced w/ Add
     ASSERT_EQ(count_ops_of_type<op::FunctionCall>(e), 0);
-    ASSERT_LT(bce, ace); //we should get more ops after inlining
+    ASSERT_LT(bce, ace); // we should get more ops after inlining
 }
