@@ -139,5 +139,6 @@ set(LLVM_LINK_LIBS
 )
 
 add_library(libllvm INTERFACE)
+add_dependencies(libllvm ext_llvm)
 target_include_directories(libllvm SYSTEM INTERFACE ${SOURCE_DIR}/include)
 target_link_libraries(libllvm INTERFACE ${LLVM_LINK_LIBS})

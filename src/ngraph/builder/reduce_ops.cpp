@@ -26,6 +26,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -93,8 +94,7 @@ namespace ngraph
                 reshape[i] = 1;
             }
 
-            ngraph::AxisVector order(mu->get_shape().size());
-            std::iota(order.begin(), order.end(), 0);
+            ngraph::AxisVector order = ngraph::get_default_order(mu->get_shape());
 
             mu = std::make_shared<op::Reshape>(mu, order, reshape);
 

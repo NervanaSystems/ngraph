@@ -32,3 +32,5 @@ backwards_avgpool_n1_c1_hw4x4
 backwards_avgpool_n2_c2_hw4x4
 max_pool_3d
 avg_pool_3d
+argmin_trivial
+argmax_trivial

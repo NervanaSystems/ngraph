@@ -851,8 +851,7 @@ namespace ngraph
                         {
                             kernel::emit_memcpyDtD(writer, out[0], args[0]);
                         }
-                        // descriptors for tensors  with <= 4 dimensions
-                        else
+                        else if (out[0].get_shape().size() == 0)
                         {
                             auto& cudnn_emitter =
                                 external_function->get_primitive_emitter()->get_cudnn_emitter();
@@ -861,6 +860,27 @@ namespace ngraph
                                                                     out[0].get_type(),
                                                                     args[0].get_shape(),
                                                                     sum->get_reduction_axes());
+
+                            writer << "gpu::invoke_primitive(ctx, " << sum_index << ", ";
+                            writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                            writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                            writer << ");\n";
+                        }
+                        else
+                        {
+                            auto axes_set = sum->get_reduction_axes();
+                            ngraph::AxisVector axes_vec;
+                            for (auto a : axes_set)
+                            {
+                                axes_vec.push_back(a);
+                            }
+                            std::vector<std::string> dtypes;
+                            dtypes.push_back(args[0].get_type());
+                            dtypes.push_back(out[0].get_type());
+                            auto& cuda_emitter =
+                                external_function->get_primitive_emitter()->get_cuda_emitter();
+                            auto sum_index = cuda_emitter->build_reduce<ngraph::op::Add>(
+                                dtypes, args[0].get_shape(), axes_vec);
 
                             writer << "gpu::invoke_primitive(ctx, " << sum_index << ", ";
                             writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
@@ -1475,48 +1495,19 @@ namespace ngraph
             {
                 // assumes NC{d1,d2,...} format
                 auto rep_slice = static_cast<const ngraph::op::ReplaceSlice*>(node);
+                bool in_place_op = (args[0].get_name() == out[0].get_name());
                 writer.block_begin();
                 {
-                    auto& input_shape = args[0].get_shape();
-                    auto& source_shape = args[1].get_shape();
-                    auto& lower_bounds = rep_slice->get_lower_bounds();
-                    auto& upper_bounds = rep_slice->get_upper_bounds();
-                    auto& strides = rep_slice->get_strides();
-                    Shape slice_shape(upper_bounds.size(), 0);
-                    std::transform(upper_bounds.begin(),
-                                   upper_bounds.end(),
-                                   lower_bounds.begin(),
-                                   slice_shape.begin(),
-                                   std::minus<size_t>());
-                    std::transform(slice_shape.begin(),
-                                   slice_shape.end(),
-                                   strides.begin(),
-                                   slice_shape.begin(),
-                                   std::divides<size_t>());
-                    // replace the input with the source if the slice shape and input shape are equal
-                    if (input_shape == slice_shape)
-                    {
-                        kernel::emit_memcpyDtD(writer, out[0], args[1]);
-                    }
-                    else
-                    {
-                        auto& cuda_emitter =
-                            external_function->get_primitive_emitter()->get_cuda_emitter();
+                    auto& cuda_emitter =
+                        external_function->get_primitive_emitter()->get_cuda_emitter();
 
-                        auto replace_slice_index = cuda_emitter->build_replace_slice(
-                            {{args[0].get_type(), args[1].get_type(), out[0].get_type()}},
-                            input_shape,
-                            source_shape,
-                            lower_bounds,
-                            upper_bounds,
-                            rep_slice->get_strides());
+                    auto index = cuda_emitter->build_primitive(rep_slice, in_place_op);
 
-                        writer << "gpu::invoke_primitive(ctx, " << replace_slice_index << ", ";
-                        writer << "std::vector<void*>{" << args[0].get_name() << ", "
-                               << args[1].get_name() << "}.data(), ";
-                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                        writer << ");\n";
-                    }
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
+                    writer << "std::vector<void*>{" << args[0].get_name() << ", "
+                           << args[1].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                    writer << ");\n";
                 }
                 writer.block_end();
             }

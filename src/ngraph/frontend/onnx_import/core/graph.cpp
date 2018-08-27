@@ -50,7 +50,7 @@ namespace ngraph
             {
                 m_nodes.emplace_back(node_proto, this);
                 const Node& node{m_nodes.back()};
-                const auto& ng_nodes{node.get_ng_nodes()};
+                NodeVector ng_nodes{node.get_ng_nodes()};
                 for (int i = 0; i < ng_nodes.size(); i++)
                 {
                     m_ng_node_cache[node.output(i)] = ng_nodes[i];

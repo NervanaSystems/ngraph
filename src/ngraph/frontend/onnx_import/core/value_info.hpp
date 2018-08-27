@@ -16,8 +16,6 @@
 
 #pragma once
 
-#include <ostream>
-
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/parameter_vector.hpp"
 #include "ngraph/shape.hpp"
@@ -39,7 +37,7 @@ namespace ngraph
                 struct unspecified_element_type : ngraph_error
                 {
                     unspecified_element_type()
-                        : ngraph_error{"value info has not element type specified"}
+                        : ngraph_error{"value info has no element type specified"}
                     {
                     }
                 };
@@ -108,7 +106,7 @@ namespace ngraph
                 get_ng_node(op::ParameterVector& parameters,
                             const std::map<std::string, Tensor>& initializers) const
             {
-                const auto it{initializers.find(get_name())};
+                const auto it = initializers.find(get_name());
                 if (it != std::end(initializers))
                 {
                     return get_ng_constant(it->second);

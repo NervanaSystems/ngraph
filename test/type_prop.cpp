@@ -17,6 +17,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
 
@@ -6451,6 +6452,63 @@ TEST(type_prop, sum_axis_oob)
     {
         EXPECT_EQ(error.what(),
                   std::string("Reduction axis for arithmetic reduction operator is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, index_reduction_scalar)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{});
+
+    try
+    {
+        auto argmin = make_shared<op::ArgMin>(a, 0, element::i32);
+        FAIL() << "ArgMin c-tor should throw for scalar shapes";
+    }
+    catch (const TypeCheckError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Tensor's rank must be at least 1");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, index_reduction_invalid_rank)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+
+    try
+    {
+        auto argmin = make_shared<op::ArgMin>(a, 2, element::i32);
+        FAIL() << "ArgMin c-tor should throw for scalar shapes";
+    }
+    catch (const TypeCheckError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "is greater than rank of");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, index_reduction_invalid_index_type)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+
+    try
+    {
+        auto argmin = make_shared<op::ArgMin>(a, 1, element::f32);
+        FAIL() << "ArgMin c-tor should throw for scalar shapes";
+    }
+    catch (const TypeCheckError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Index element type must be");
     }
     catch (...)
     {

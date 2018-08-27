@@ -52,6 +52,8 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/argmax.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -149,6 +151,7 @@
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_collapse_dims.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_concat_inputs.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
@@ -278,6 +281,8 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Tan), &runtime::cpu::CPU_Emitter::emit<op::Tan>},
     {TI(ngraph::op::Tanh), &runtime::cpu::CPU_Emitter::emit<op::Tanh>},
     {TI(ngraph::op::Asin), &runtime::cpu::CPU_Emitter::emit<op::Asin>},
+    {TI(ngraph::op::ArgMin), &runtime::cpu::CPU_Emitter::emit<op::ArgMin>},
+    {TI(ngraph::op::ArgMax), &runtime::cpu::CPU_Emitter::emit<op::ArgMax>},
     {TI(ngraph::op::Acos), &runtime::cpu::CPU_Emitter::emit<op::Acos>},
     {TI(ngraph::op::Atan), &runtime::cpu::CPU_Emitter::emit<op::Atan>},
     {TI(ngraph::op::ReplaceSlice), &runtime::cpu::CPU_Emitter::emit<op::ReplaceSlice>},
@@ -378,6 +383,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
     pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
@@ -422,6 +428,8 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/reference/and.hpp"
+#include "ngraph/runtime/reference/argmax.hpp"
+#include "ngraph/runtime/reference/argmin.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
 #include "ngraph/runtime/reference/batch_norm.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
@@ -1128,6 +1136,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
     pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
@@ -1372,10 +1381,17 @@ void runtime::cpu::CPU_ExternalFunction::build()
                 auto it = enable_nodename_list.begin();
                 for (const auto& p : enables)
                 {
+                    std::vector<std::function<void(CPURuntimeContext*)>> ftrs;
+                    for (size_t j = 0; j < p.second; j++)
+                    {
+                        ftrs.push_back(*functor);
+                        std::advance(functor, 1);
+                    }
+
                     tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>*
                         flowgraph_node = new tbb::flow::continue_node<tbb::flow::continue_msg,
                                                                       tbb::flow::lightweight>(
-                            *(ctx->G), [&](const tbb::flow::continue_msg& msg) {
+                            *(ctx->G), [&, ftrs](const tbb::flow::continue_msg& msg) {
                                 if (p.first(ctx) || ctx->first_iteration)
                                 {
                                     for (size_t j = 0; j < p.second; j++)
@@ -1384,7 +1400,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
                                         {
                                             start_ts = cpu::Clock::now();
                                         }
-                                        (*functor)(ctx);
+                                        ftrs[j](ctx);
                                         if (runtime::cpu::IsTracingEnabled())
                                         {
                                             ctx->op_durations[profiler_count++] =
@@ -1392,8 +1408,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
                                                      cpu::Clock::now() - start_ts))
                                                     .count();
                                         }
-
-                                        std::advance(functor, 1);
                                     }
                                 }
                                 else
@@ -1405,7 +1419,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
                                             ctx->op_durations[profiler_count++] = 0;
                                         }
                                     }
-                                    std::advance(functor, p.second);
                                 }
                             });
                     nodename_tbbnode_map.insert({it->second, flowgraph_node});
