@@ -14,6 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "pyngraph/onnx_import.hpp"
 #include <istream>
 #include <memory>
 #include <pybind11/pybind11.h>
@@ -22,51 +23,51 @@
 #include <vector>
 #include "ngraph/frontend/onnx_import/onnx.hpp"
 #include "ngraph/function.hpp"
-#include "pyngraph/onnx_import.hpp"
 
 namespace py = pybind11;
 
-static std::vector<std::shared_ptr<ngraph::Function>> load_onnx_model(const std::string& model_proto)
+static std::vector<std::shared_ptr<ngraph::Function>>
+    load_onnx_model(const std::string& model_proto)
 {
-	std::istringstream iss(model_proto, std::ios_base::binary | std::ios_base::in | 
-												 std::ios_base::ate);
-	return ngraph::onnx_import::load_onnx_model(iss);	
+    std::istringstream iss(model_proto,
+                           std::ios_base::binary | std::ios_base::in | std::ios_base::ate);
+    return ngraph::onnx_import::load_onnx_model(iss);
 }
 
 static std::shared_ptr<ngraph::Function> import_onnx_function(const std::string& model_proto)
 {
-	std::istringstream iss(model_proto, std::ios_base::binary | std::ios_base::in | 
-												 std::ios_base::ate);
-	return ngraph::onnx_import::import_onnx_function(iss);	
+    std::istringstream iss(model_proto,
+                           std::ios_base::binary | std::ios_base::in | std::ios_base::ate);
+    return ngraph::onnx_import::import_onnx_function(iss);
 }
 
 void regmodule_pyngraph_onnx_import(py::module mod)
 {
 #if __cplusplus >= 201402L
-		/*
+    /*
 		 * If we have c++14 enabled we can use PyBind11 py::overload_cast which makes function 
 		 * overloading easier.
 		 */
-		mod.def("load_onnx_model_file",
-						py::overload_cast<const std::string &>(& ngraph::onnx_import::load_onnx_model));
-	  
-	  // std::shared_ptr<ngraph::Function> import_onnx_function(const std::string&);
-		mod.def("import_onnx_function_file", 
-						py::overload_cast<const std::string &>(& ngraph::onnx_import::import_onnx_function));
+    mod.def("load_onnx_model_file",
+            py::overload_cast<const std::string&>(&ngraph::onnx_import::load_onnx_model));
+
+    // std::shared_ptr<ngraph::Function> import_onnx_function(const std::string&);
+    mod.def("import_onnx_function_file",
+            py::overload_cast<const std::string&>(&ngraph::onnx_import::import_onnx_function));
 #elif __cplusplus >= 201103L
-		// std::vector<std::shared_ptr<ngraph::Function>> load_onnx_model(const std::string&)
-		mod.def("load_onnx_model_file",
-						(std::vector<std::shared_ptr<ngraph::Function>>(*)(const std::string &)) 
-							& ngraph::onnx_import::load_onnx_model,
-						py::arg());
- 
-	  // std::shared_ptr<ngraph::Function> import_onnx_function(const std::string&);
-		mod.def("import_onnx_function_file", 
-						(std::shared_ptr<ngraph::Function>(*)(const std::string &)) 
-						 	& ngraph::onnx_import::import_onnx_function,
-					 	py::arg());
+    // std::vector<std::shared_ptr<ngraph::Function>> load_onnx_model(const std::string&)
+    mod.def("load_onnx_model_file",
+            (std::vector<std::shared_ptr<ngraph::Function>>(*)(const std::string&)) &
+                ngraph::onnx_import::load_onnx_model,
+            py::arg());
+
+    // std::shared_ptr<ngraph::Function> import_onnx_function(const std::string&);
+    mod.def("import_onnx_function_file",
+            (std::shared_ptr<ngraph::Function>(*)(const std::string&)) &
+                ngraph::onnx_import::import_onnx_function,
+            py::arg());
 #endif
 
-		mod.def("load_onnx_model", &load_onnx_model);
-		mod.def("import_onnx_function", &import_onnx_function);
+    mod.def("load_onnx_model", &load_onnx_model);
+    mod.def("import_onnx_function", &import_onnx_function);
 }

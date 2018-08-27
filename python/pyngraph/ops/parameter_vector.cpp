@@ -32,9 +32,10 @@ void regclass_pyngraph_op_ParameterVector(py::module m)
     parameter_vector.def(py::init<const std::vector<std::shared_ptr<ngraph::op::Parameter>>&>());
     parameter_vector.def(py::init<const ngraph::op::ParameterVector&>());
     parameter_vector.def("__len__", [](const ngraph::op::ParameterVector& v) { return v.size(); });
-    parameter_vector.def("__getitem__", [](const ngraph::op::ParameterVector& v, int key) {
-    										 return v[key]; });
-    parameter_vector.def("__iter__",
-              [](ngraph::op::ParameterVector& v) { return py::make_iterator(v.begin(), v.end()); },
-              py::keep_alive<0, 1>()); /* Keep vector alive while iterator is used */
+    parameter_vector.def("__getitem__",
+                         [](const ngraph::op::ParameterVector& v, int key) { return v[key]; });
+    parameter_vector.def(
+        "__iter__",
+        [](ngraph::op::ParameterVector& v) { return py::make_iterator(v.begin(), v.end()); },
+        py::keep_alive<0, 1>()); /* Keep vector alive while iterator is used */
 }

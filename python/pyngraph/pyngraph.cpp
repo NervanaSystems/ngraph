@@ -50,8 +50,9 @@ PYBIND11_MODULE(_pyngraph, m)
     regmodule_pyngraph_types(m);
     regclass_pyngraph_Function(m);
     regclass_pyngraph_Serializer(m);
-    py::module m_onnx_import = m.def_submodule("onnx_import", "Package ngraph.impl.onnx_import "
-        "that wraps ngraph::onnx_import");
+    py::module m_onnx_import = m.def_submodule("onnx_import",
+                                               "Package ngraph.impl.onnx_import "
+                                               "that wraps ngraph::onnx_import");
     regmodule_pyngraph_onnx_import(m_onnx_import);
     py::module m_op = m.def_submodule("op", "Package ngraph.impl.op that wraps ngraph::op");
     regclass_pyngraph_op_Op(m_op);
