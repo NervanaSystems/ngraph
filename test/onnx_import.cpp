@@ -271,22 +271,20 @@ TEST(onnx, model_gemm_abc)
 
 TEST(onnx, model_matmul)
 {
-    auto function{ngraph::onnx_import::import_onnx_function(
-        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/matmul.onnx"))};
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/matmul.onnx"));
 
     std::vector<std::vector<float>> inputs;
 
     inputs.emplace_back(
-        ngraph::test::NDArray<float, 2>({{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}})
-            .get_vector());
+        test::NDArray<float, 2>({{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}}).get_vector());
 
     inputs.emplace_back(
-        ngraph::test::NDArray<float, 2>({{13, 14, 15}, {16, 17, 18}, {19, 20, 21}, {22, 23, 24}})
+        test::NDArray<float, 2>({{13, 14, 15}, {16, 17, 18}, {19, 20, 21}, {22, 23, 24}})
             .get_vector());
 
     auto expected_output =
-        ngraph::test::NDArray<float, 2>({{190, 200, 210}, {470, 496, 522}, {750, 792, 834}})
-            .get_vector();
+        test::NDArray<float, 2>({{190, 200, 210}, {470, 496, 522}, {750, 792, 834}}).get_vector();
 
     auto result_vectors = execute(function, inputs, "INTERPRETER");
     EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
