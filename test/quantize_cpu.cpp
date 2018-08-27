@@ -114,19 +114,18 @@ TEST(quantize_cpu, quantize_to_int8)
 }
 
 template <typename T>
-void DequantizeTest(
-    int input, float min, float max, float expected_output, const element::Type& type)
+void DequantizeTest(int input, float min, float max, float expected_output)
 {
     vector<T> a_data = {static_cast<T>(input)};
     Shape shape_a{1};
-    auto A = make_shared<op::Parameter>(type, shape_a);
+    auto A = make_shared<op::Parameter>(element::from<T>(), shape_a);
     auto B = op::Constant::create(element::f32, Shape{}, {min});
     auto C = op::Constant::create(element::f32, Shape{}, {max});
-    auto r = make_shared<op::Dequantize>(A, B, C, type);
+    auto r = make_shared<op::Dequantize>(A, B, C, element::from<T>());
     auto f = make_shared<Function>(r, op::ParameterVector{A});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
-    auto a = backend->create_tensor(type, Shape{});
+    auto a = backend->create_tensor(element::from<T>(), Shape{});
     copy_data(a, a_data);
     auto result = backend->create_tensor(element::f32, Shape{});
     backend->call(f, {result}, {a});
@@ -135,20 +134,20 @@ void DequantizeTest(
 
 TEST(quantize_cpu, dequantize_from_uint8)
 {
-    DequantizeTest<uint8_t>(255, 100.0f, 300.0f, 300.0, element::u8);
+    DequantizeTest<uint8_t>(255, 100.0f, 300.0f, 300.0);
 }
 
 TEST(quantize_cpu, dequantize_from_uint8_smallrange)
 {
-    DequantizeTest<uint8_t>(255, -2.0f, 5.0f, 5.0, element::u8);
+    DequantizeTest<uint8_t>(255, -2.0f, 5.0f, 5.0);
 }
 
 TEST(quantize_cpu, dequantize_from_int8_smallrange)
 {
-    DequantizeTest<int8_t>(-127, -2.0f, 1.0f, -2.0, element::i8);
+    DequantizeTest<int8_t>(-127, -2.0f, 1.0f, -2.0);
 }
 
 TEST(quantize_cpu, dequantize_from_int8)
 {
-    DequantizeTest<int8_t>(42, -1.0f, 300.0f, 99.212601, element::i8);
+    DequantizeTest<int8_t>(42, -1.0f, 300.0f, 99.212601);
 }
