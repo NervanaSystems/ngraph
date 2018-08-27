@@ -139,7 +139,7 @@ void pass::CoreFusion::construct_sigmoid_bprop()
     auto broadcast_constant = std::make_shared<op::Broadcast>(constant, Shape{3, 4}, AxisSet{0, 1});
 
     auto add_exp = std::make_shared<op::Add>(exp_neg_input, broadcast_constant);
-    // // auto divide_1_over_exp = std::make_shared<op::Divide>(broadcast_constant, add_exp);
+    // auto divide_1_over_exp = std::make_shared<op::Divide>(broadcast_constant, add_exp);
     auto sigmoid_fwd = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
 
     auto delta = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
