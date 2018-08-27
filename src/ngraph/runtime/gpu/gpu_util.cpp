@@ -239,7 +239,7 @@ size_t runtime::gpu::StopWatch::get_total_microseconds()
 
 size_t runtime::gpu::StopWatch::get_total_nanoseconds()
 {
-    //only need to sync the last stop.
+    // only need to sync the last stop.
     cudaEventSynchronize(stops.back());
     float total_time = 0;
     for (int i = 0; i < stops.size(); i++)

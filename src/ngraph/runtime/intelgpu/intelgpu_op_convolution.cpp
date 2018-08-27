@@ -202,7 +202,7 @@ void runtime::intelgpu::do_convolution_operation(cldnn::topology& topology,
                         writer.block_begin();
                         {
                             // Generate other conditionals
-                            writer << "//Since we use unsigned indexes we don't need "
+                            writer << "// Since we use unsigned indexes we don't need "
                                    << "(input_idx_data_dilationX >= 0) extra check\n"
                                    << "if (";
                             var_idx = 0;
@@ -229,10 +229,10 @@ void runtime::intelgpu::do_convolution_operation(cldnn::topology& topology,
                                        << array_dim(filter_data, "f", reverse_filter) << ";\n";
                             }
                             writer.block_end();
-                            //End of other conditional generation
+                            // End of other conditional generation
                         }
                         writer.block_end();
-                        //End of dilation conditional generation
+                        // End of dilation conditional generation
 
                         // Closing brackets for filter loop
                         for (auto const& i : filter_data)

@@ -26,17 +26,17 @@ bool ngraph::pass::ResultCopyElimination::run_on_function(std::shared_ptr<ngraph
     for (auto res : f->get_results())
     {
         auto arg = res->get_argument(0);
-        //we need a copy
+        // we need a copy
         if (arg->is_parameter() || arg->is_constant())
         {
             continue;
         }
 
-        //TODO: check if broadcast replace op::Result w/ a copy of broadcast node
+        // TODO: check if broadcast replace op::Result w/ a copy of broadcast node
 
-        //TODO: consider other cases where it's easier to recompute than make a copy
+        // TODO: consider other cases where it's easier to recompute than make a copy
 
-        //we will compute the result directly into output[]
+        // we will compute the result directly into output[]
         if (seen.count(arg) == 0)
         {
             res->set_needs_copy(false);
