@@ -14,26 +14,13 @@
 # limitations under the License.
 # ******************************************************************************
 
-set(ONNX_SOURCE_URL "https://raw.githubusercontent.com/onnx/onnx/v1.1.2/onnx/onnx.proto")
-
-set_source_files_properties(onnx.pb.h onnx.pb.cc PROPERTIES GENERATED TRUE)
-
-if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/onnx.proto")
-    file(DOWNLOAD ${ONNX_SOURCE_URL} ${CMAKE_CURRENT_BINARY_DIR}/onnx.proto)
-endif()
-
-add_custom_command(OUTPUT onnx.pb.cc onnx.pb.h
-        COMMAND protobuf::protoc --cpp_out ${CMAKE_CURRENT_BINARY_DIR} --proto_path ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/onnx.proto
-        DEPENDS onnx.proto)
-
 add_library(onnx_import_interface OBJECT
         onnx.cpp
-        onnx.hpp
-        onnx.pb.h
-        onnx.proto)
+        onnx.hpp)
+
+target_include_directories(onnx_import_interface PRIVATE ${ONNX_PROTO_INCLUDE_DIR})
 
 add_library(onnx_import STATIC
-        onnx.pb.cc
         core/attribute.cpp
         core/attribute.hpp
         core/graph.cpp
@@ -68,12 +55,12 @@ add_dependencies(onnx_import onnx_import_interface)
 
 if (NOT NGRAPH_USE_SYSTEM_PROTOBUF)
     add_dependencies(onnx_import_interface protobuf::libprotobuf)
-    add_dependencies(onnx_import protobuf::libprotobuf)
+    add_dependencies(onnx_import_interface onnx::libonnx_proto)
 endif()
 
 set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_include_directories(onnx_import PUBLIC ${CMAKE_CURRENT_BINARY_DIR} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${NGRAPH_INCLUDE_PATH} ${Protobuf_INCLUDE_DIR})
-target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES})
+target_include_directories(onnx_import PUBLIC ${CMAKE_CURRENT_BINARY_DIR} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${NGRAPH_INCLUDE_PATH} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
+target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES} ${ONNX_PROTO_LIBRARY})
 
 set_property(TARGET onnx_import_interface PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_include_directories(onnx_import_interface PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
