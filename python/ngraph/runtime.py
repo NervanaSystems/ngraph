@@ -47,48 +47,43 @@ class Runtime:
     def __repr__(self):  # type: () -> str
         return '<Runtime: Backend=\'{}\'>'.format(self.backend_name)
 
-    def computation(self, node, *inputs):  # type: (Node, *Node) -> 'Computation'
+    def computation_node(self, node, *inputs):  # type: (Node, *Node) -> 'ComputationNode'
         """Return a callable Computation object."""
-        return Computation(self, node, *inputs)
+        return ComputationNode(self, node, *inputs)
+
+    def computation_function(self, function):
+        # type: (Function, *Node) -> 'ComputationFunction'
+        """Return a callable Computation object."""
+        return ComputationFunction(self, function)
 
 
-class Computation:
-    """ngraph callable computation object."""
+class ComputationBase:
+    """ngraph callable computation base object."""
 
-    def __init__(self, runtime, node, *parameters):  # type: (Runtime, Node, *Parameter) -> None
+    def __init__(self, runtime, function, *parameters):
+    # type: (Runtime, Function, *Parameter) -> None
         self.runtime = runtime
-        self.node = node
         self.parameters = parameters
         self.tensor_views = []  # type: List[TensorViewType]
         for parameter in parameters:
             shape = parameter.get_shape()
             element_type = parameter.get_element_type()
             self.tensor_views.append(runtime.backend.create_tensor(element_type, shape))
-        self.function = Function(self.node, self.parameters, 'ngraph_computation')
+        self.function = function
         self.backend = runtime.backend
 
-    def __repr__(self):  # type: () -> str
-        params_string = ', '.join([param.name for param in self.parameters])
-        return '<Computation: {}({})>'.format(self.node.name, params_string)
-
-    def __call__(self, *input_values):  # type: (*NumericData) -> NumericData
+    def __call__(self, result_view, result_shape, result_dtype, *input_values):
+        # type: (TensorViewType, Shape, *NumericData) -> NumericData
         """Run computation on input values and return result."""
         for tensor_view, value in zip(self.tensor_views, input_values):
             if not isinstance(value, np.ndarray):
                 value = np.array(value)
-            Computation._write_ndarray_to_tensor_view(value, tensor_view)
+            ComputationBase._write_ndarray_to_tensor_view(value, tensor_view)
 
-        result_element_type = self.node.get_element_type()
-        result_shape = self.node.get_shape()
-        result_dtype = get_dtype(result_element_type)
-
-        result_view = self.runtime.backend.create_tensor(
-            result_element_type, result_shape)
         result_arr = np.empty(result_shape, dtype=result_dtype)
-
         self.backend.call(self.function, [result_view], self.tensor_views)
 
-        Computation._read_tensor_view_to_ndarray(result_view, result_arr)
+        ComputationBase._read_tensor_view_to_ndarray(result_view, result_arr)
         result_arr = result_arr.reshape(result_shape)
         return result_arr
 
@@ -118,7 +113,7 @@ class Computation:
                 tensor_view.element_type)
             value = value.astype(tensor_view_dtype)
 
-        buffer_size = Computation._get_buffer_size(
+        buffer_size = ComputationBase._get_buffer_size(
             tensor_view.element_type, tensor_view.element_count)
 
         nparray = np.ascontiguousarray(value)
@@ -127,6 +122,49 @@ class Computation:
     @staticmethod
     def _read_tensor_view_to_ndarray(tensor_view, output):
         # type: (TensorViewType, np.ndarray) -> None
-        buffer_size = Computation._get_buffer_size(
+        buffer_size = ComputationBase._get_buffer_size(
             tensor_view.element_type, tensor_view.element_count)
         tensor_view.read(util.numpy_to_c(output), 0, buffer_size)
+
+
+class ComputationNode(ComputationBase):
+    """ngraph callable computation node object """
+
+    def __init__(self, runtime, node, *parameters):  # type: (Runtime, Node, *Parameter) -> None
+        super(ComputationNode, self).__init__(runtime, Function(node, self.parameters,
+              'ngraph_computation'), parameters)
+        self.node = node
+    
+    def __repr__(self):  # type: () -> str
+        params_string = ', '.join([param.name for param in self.parameters])
+        return '<ComputationNode: {}({})>'.format(self.node.name, params_string)
+
+    def __call__(self, *input_values):  # type: (*NumericData) -> NumericData
+        """Run computation on input values and return result."""
+        result_element_type = self.node.get_element_type()
+        result_shape = self.node.get_shape()
+        result_dtype = get_dtype(result_element_type)
+
+        result_view = self.runtime.backend.create_tensor(result_element_type, result_shape)
+        return super(ComputationNode, self).__call__(result_view, result_shape, result_dtype, *input_values)
+
+
+class ComputationFunction(ComputationBase):
+    """"""
+
+    def __init__(self, runtime, function):
+        # type: (Runtime, Function, *Parameter) -> None
+        super(ComputationFunction, self).__init__(runtime, function, *function.get_parameters())
+
+    def __repr__(self):  # type: () -> str
+        params_string = ', '.join([param.name for param in self.parameters])
+        return '<ComputationFunction: {}({})>'.format(self.function.get_name(), params_string)
+
+    def __call__(self, *input_values):  # type: (*NumericData) -> NumericData
+        """Run computation on input values and return result."""
+        result_element_type = self.function.get_output_element_type(0)
+        result_shape = self.function.get_output_shape(0)
+        result_dtype = get_dtype(result_element_type)
+
+        result_view = self.runtime.backend.create_tensor(result_element_type, result_shape)
+        return super(ComputationFunction, self).__call__(result_view, result_shape, result_dtype, *input_values)
