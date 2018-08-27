@@ -54,7 +54,7 @@ namespace ngraph
                         *(static_cast<float const*>(min_const_op->get_data_ptr()));
                     float input_max_range =
                         *(static_cast<float const*>(max_const_op->get_data_ptr()));
-                    // begin code copied and pasted (and modified) from
+                    // begin code copied and pasted from
                     // github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/quantize_op.cc
                     float min_range;
                     float max_range;
@@ -66,11 +66,12 @@ namespace ngraph
                         100.0f;
                     max_range = std::max(input_max_range, min_range + epsilon);
                     max_range = std::max(0.0f, max_range);
-                    // end code copied and pasted (and modified) from
+                    // end code copied and pasted from
                     // github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/quantize_op.cc
                     const float max_abs = std::max(std::abs(min_range), std::abs(max_range));
                     bool is_signed = (quantize->get_quantize_et()).is_signed();
-                    const float target_range = (is_signed ? std::pow(2, 7) : std::pow(2, 8)) - 1;
+                    const float target_range =
+                        static_cast<float>((is_signed ? std::pow(2, 7) : std::pow(2, 8)) - 1);
                     max_range = max_abs;
                     min_range = is_signed ? -max_abs : 0;
                     const float scale = target_range / max_abs;

@@ -2703,7 +2703,6 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Quantize)
             {
-                auto quantize = static_cast<const ngraph::op::Quantize*>(node);
                 auto arg0_shape = args[0].get_shape();
                 auto result_shape = out[0].get_shape();
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
@@ -2736,7 +2735,7 @@ namespace ngraph
                 }
                 else
                 {
-                    throw ngraph_error("unsupported parameters for QuantizeOp");
+                    throw ngraph_error("Unsupported parameters for QuantizeOp");
                 }
             }
 
