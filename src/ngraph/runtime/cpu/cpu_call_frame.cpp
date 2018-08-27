@@ -15,12 +15,15 @@
 *******************************************************************************/
 
 #include <algorithm>
+#include <fstream>
 
+#include "ngraph/file_util.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -69,6 +72,46 @@ void runtime::cpu::CPU_CallFrame::call(
     else
     {
         m_external_function->get_executor()(ctx, inputs, outputs);
+    }
+
+    for (shared_ptr<Node> node : m_external_function->get_function()->get_ordered_ops())
+    {
+        codegen::CodeWriter writer;
+        std::stringstream strm;
+        string filename =
+            file_util::path_join("debug", m_external_function->get_function_name() + "_debug.txt");
+        std::ofstream out(filename, std::ofstream::app);
+        std::vector<string> inputs;
+        std::vector<string> outputs;
+        if (node->is_parameter() || node->is_constant())
+        {
+            continue;
+        }
+        for (const descriptor::Input& input : node->get_inputs())
+        {
+            const descriptor::Output& output = input.get_output();
+            shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+            auto name = tv->get_tensor().get_name();
+            strm << m_external_function->get_tensor_data(name);
+            inputs.push_back(name + "(" + strm.str() + ")");
+        }
+
+        for (const descriptor::Output& output : node->get_outputs())
+        {
+            shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+            auto name = tv->get_tensor().get_name();
+            strm << m_external_function->get_tensor_data(name);
+            outputs.push_back(name + "(" + strm.str() + ")");
+        }
+        writer << "\n" << node->get_name() << "(";
+        vector<string> parameter_nodes = inputs;
+        parameter_nodes.insert(parameter_nodes.end(), outputs.begin(), outputs.end());
+        writer << join(parameter_nodes);
+        writer << ")\n";
+
+        string code = writer.get_code();
+        out << code;
+        out.close();
     }
 
     if (runtime::cpu::IsTracingEnabled())

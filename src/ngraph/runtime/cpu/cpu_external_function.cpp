@@ -1110,7 +1110,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         return;
     }
     // stream writer to dump the debug manifest for the DEX
-    static const string s_debug_dir = "/dataset/ngraph/build_master/debug";
+    static const string s_debug_dir = "debug";
     codegen::CodeWriter writer;
 
     file_util::make_directory(s_debug_dir);
@@ -1228,9 +1228,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
                                               arg_index,
                                               tensor_stale[tv->get_tensor().get_name()]);
             m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::INPUT;
-            writer << tv->get_tensor().get_name() << ", "
-                   << "tensor_stale " << tensor_stale[tv->get_tensor().get_name()] << ", "
-                   << "tensor_role: CPUTensorRole::INPUT\n";
+
             propagate_in_place_input(
                 &param->get_outputs().at(i), tv->get_tensor().get_name(), true);
             arg_index++;
@@ -1292,11 +1290,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
             out.push_back(TensorViewWrapper(tv, tv->get_tensor().get_name()));
             out_names.push_back(tv->get_tensor().get_name());
         }
-        writer << "\n" << node->get_name() << "(";
-        vector<string> parameter_nodes = in_names;
-        parameter_nodes.insert(parameter_nodes.end(), out_names.begin(), out_names.end());
-        writer << join(parameter_nodes);
-        writer << ")";
 
         m_op_attrs.emplace_back(node->description(), out_names, in_names);
 
@@ -1357,11 +1350,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
         enable_nodename_list.emplace_back(make_pair(enable, node->get_name()));
     }
 
-    ofstream out(filename);
-    string code = writer.get_code();
-    out << code;
-    out.close();
-
     executor = [&](CPURuntimeContext* ctx, vector<void*>& inputs, vector<void*>& outputs) {
         cpu::Timestamp start_ts;
         int profiler_count = 0;
@@ -1378,6 +1366,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         {
             get<0>(p).get() = inputs[get<1>(p)];
             get<2>(p).get() = ctx->p_en[get<1>(p)];
+            writer << "\n" << get<0>(p).get() << " " << get<2>(p).get() << "\n";
         }
 
         for (const auto& p : function_output_index)
@@ -1534,6 +1523,10 @@ void runtime::cpu::CPU_ExternalFunction::build()
     {
         release_function();
     }
+    ofstream out(filename);
+    string code = writer.get_code();
+    out << code;
+    out.close();
 }
 
 void*& runtime::cpu::CPU_ExternalFunction::get_tensor_data(const std::string& name)
