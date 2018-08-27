@@ -45,11 +45,11 @@ namespace ngraph
                 auto trans_a = node.get_attribute_value<int64_t>("transA", 0);
                 auto trans_b = node.get_attribute_value<int64_t>("transB", 0);
 
-                if (trans_a)
+                if (trans_a != 0)
                 {
                     input_a = transpose(input_a);
                 }
-                if (trans_b)
+                if (trans_b != 0)
                 {
                     input_b = transpose(input_b);
                 }
