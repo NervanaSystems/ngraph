@@ -90,6 +90,7 @@ else()
                 UPDATE_COMMAND ""
                 CMAKE_ARGS -DONNX_GEN_PB_TYPE_STUBS=OFF
                            -DProtobuf_PROTOC_EXECUTABLE=${Protobuf_PROTOC_EXECUTABLE}
+                           -DProtobuf_LIBRARY=${Protobuf_LIBRARY}
                            -DProtobuf_INCLUDE_DIR=${Protobuf_INCLUDE_DIR}
                 TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/tmp"
                 STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/stamp"
