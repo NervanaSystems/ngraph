@@ -31,6 +31,7 @@ namespace ngraph
     {
         namespace gpu
         {
+            class GPUKernelArgs;
             class CudaKernelBuilder
             {
             public:
@@ -41,7 +42,7 @@ namespace ngraph
 
                 static void get_broadcast_op(codegen::CodeWriter& writer,
                                              const std::string& name,
-                                             const std::array<std::string, 2>& data_types,
+                                             GPUKernelArgs& args,
                                              const size_t rank);
 
                 static void get_concat_op(codegen::CodeWriter& writer,
@@ -58,6 +59,14 @@ namespace ngraph
                                            const std::array<std::string, 2>& data_types,
                                            size_t rank);
 
+                static void get_reduce_op(codegen::CodeWriter& writer,
+                                          const std::string& name,
+                                          runtime::gpu::GPUKernelArgs& args,
+                                          const std::vector<std::string>& data_types,
+                                          const std::string& reduce_op,
+                                          size_t out_rank,
+                                          size_t reduce_rank);
+
                 static void get_slice_op(codegen::CodeWriter& writer,
                                          const std::string& name,
                                          const std::array<std::string, 2>& data_types,
@@ -69,8 +78,8 @@ namespace ngraph
 
                 static void get_replace_slice_op(codegen::CodeWriter& writer,
                                                  const std::string& name,
-                                                 const std::array<std::string, 3>& data_types,
-                                                 int nthreads_per_block);
+                                                 GPUKernelArgs& args,
+                                                 const size_t rank);
 
                 static void get_reduce_window_op(codegen::CodeWriter& writer,
                                                  const std::string& name,
@@ -92,10 +101,13 @@ namespace ngraph
 
                 static void get_pad_dynamic_op(codegen::CodeWriter& writer,
                                                const std::string& name,
-                                               const std::array<std::string, 2>& data_types);
+                                               GPUKernelArgs& args,
+                                               const std::array<std::string, 2>& data_types,
+                                               size_t rank);
 
                 static void get_ew_collective_op(codegen::CodeWriter& writer,
                                                  const std::string& name,
+                                                 GPUKernelArgs& args,
                                                  const std::string& op,
                                                  const std::string& reduce_op,
                                                  const std::vector<std::string>& data_types,
@@ -119,12 +131,19 @@ namespace ngraph
                 static void get_convolution_forward(codegen::CodeWriter& writer,
                                                     const std::string& name,
                                                     const std::array<std::string, 3>& data_types,
+                                                    GPUKernelArgs& args,
                                                     int N,
                                                     int K,
-                                                    int filter_size,
                                                     int rank,
+                                                    int filter_size,
                                                     int sm_tile_size = 8,
                                                     int reg_tile_size = 1);
+
+                static void get_softmax_divide_op(codegen::CodeWriter& writer,
+                                                  const std::string& name,
+                                                  const std::vector<std::string>& data_types,
+                                                  std::vector<size_t> axes_flag,
+                                                  size_t rank);
 
                 static void add_pod_typedefs(codegen::CodeWriter& writer);
 
@@ -138,14 +157,16 @@ namespace ngraph
                                                            std::string i_stride_shift,
                                                            std::string i_reduced_strides,
                                                            std::string o_coordinates,
-                                                           size_t rank);
+                                                           size_t rank,
+                                                           bool register_arguments = false);
                 static void coordinate_transform_to_multi_d(codegen::CodeWriter& writer,
                                                             std::string i_strides,
                                                             std::string i_stride_magic,
                                                             std::string i_stride_shift,
                                                             std::string i_coord_product,
                                                             std::string o_coordinates,
-                                                            size_t rank);
+                                                            size_t rank,
+                                                            bool register_arguments = false);
             };
         }
     }

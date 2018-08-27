@@ -21,6 +21,10 @@
 
 #include "ngraph/coordinate_transform.hpp"
 
+#ifdef WIN32
+#undef min
+#endif
+
 namespace ngraph
 {
     namespace runtime

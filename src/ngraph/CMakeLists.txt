@@ -40,6 +40,8 @@ set (SRC
     op/add.cpp
     op/allreduce.cpp
     op/and.cpp
+    op/argmin.cpp
+    op/argmax.cpp
     op/asin.cpp
     op/atan.cpp
     op/avg_pool.cpp
@@ -64,6 +66,7 @@ set (SRC
     op/less.cpp
     op/less_eq.cpp
     op/log.cpp
+    op/lrn.cpp
     op/max.cpp
     op/maximum.cpp
     op/max_pool.cpp
@@ -108,6 +111,7 @@ set (SRC
     op/util/binary_elementwise_comparison.cpp
     op/util/binary_elementwise_logical.cpp
     op/util/binary_elementwise.cpp
+    op/util/index_reduction.cpp
     op/util/requires_tensor_view_args.cpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise.cpp
@@ -138,6 +142,7 @@ set (SRC
     pattern/matcher.cpp
     runtime/aligned_buffer.cpp
     runtime/backend.cpp
+    runtime/backend_manager.cpp
     runtime/host_tensor_view.cpp
     runtime/tensor_view.cpp
     serializer.cpp
@@ -216,7 +221,9 @@ endif()
 
 # Defines macro in C++ to load backend plugin
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
-target_link_libraries(ngraph PUBLIC dl pthread)
+if (NOT WIN32)
+    target_link_libraries(ngraph PUBLIC dl pthread)
+endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     target_sources(ngraph PRIVATE $<TARGET_OBJECTS:onnx_import_interface>)

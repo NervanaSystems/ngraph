@@ -96,6 +96,7 @@ private:
 
     bool is_version_number(const std::string& path);
     std::string find_header_version(const std::string& path);
+    std::string find_os_specific_path(const std::string& path);
     void configure_search_path();
     void load_headers_from_resource();
 };

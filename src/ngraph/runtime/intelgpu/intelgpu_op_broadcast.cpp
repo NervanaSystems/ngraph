@@ -15,170 +15,252 @@
 *******************************************************************************/
 
 #include <CPP/concatenation.hpp>
+#include <CPP/custom_gpu_primitive.hpp>
 #include <CPP/reshape.hpp>
 
+#include "ngraph/runtime/intelgpu/code_writer.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_broadcast.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
 
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-static const string reshape_suf("_reshape");
-
-static Shape propagate_backward(const Shape& input)
-{
-    Shape result({0, 0, 0, 0});
-    size_t idx = result.size() - 1;
-
-    for (auto i = input.crbegin(); i != input.crend(); ++i, --idx)
-    {
-        result.at(idx) = *i;
-    }
-
-    return result;
-}
-
-static Shape propagate_forward(const Shape& input)
-{
-    Shape result({0, 0, 0, 0});
-    size_t idx = 0;
-
-    for (auto i = input.cbegin(); i != input.cend(); ++i, ++idx)
-    {
-        result.at(idx) = *i;
-    }
-
-    return result;
-}
-
-static Shape apply_axis(const Shape& input, const AxisSet& axis)
-{
-    Shape result = input;
-
-    for (auto const& i : axis)
-    {
-        result.at(i) = 0;
-    }
-
-    return result;
-}
-
-// This function broadcast input data to all other dimensions of the output
-// it operates in two mode only (controlled by is_forward flag):
-// [forward]: propagate data from left to right in Shape array term
-//            in[2], out[2,3,4,5], axis[1,2,3]
-// [backward]: propagate data from right to left in Shape array term
-//            in[5], out[2,3,4,5], axis[0,1,2]
-// Input and output shapes can be up to 4 dimensions
-// Other variants, like: in[4] out[2,3,4,5] axis[0,1,3], unsupported yet
-static void do_propagation(cldnn::topology& topology,
-                           const string& input_name,
-                           const Shape& input_shape,
-                           const string& output_name,
-                           const Shape& output_shape,
-                           const AxisSet& axis,
-                           bool is_forward)
-{
-    //default value used in "forward" mode
-    cldnn::concatenation::concatenation_axis direction =
-        runtime::intelgpu::IntelGPULayout::get_cldnn_axis(3);
-
-    string input_name_it = input_name;
-    string output_name_it = output_name;
-    Shape input_shape_it = input_shape;
-    for (auto axis_id = axis.crbegin(); axis_id != axis.crend();)
-    {
-        const size_t input_count = output_shape.at(*axis_id);
-
-        if (is_forward)
-        {
-            input_shape_it.push_back(1);
-            const cldnn::tensor my_tensor =
-                runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(input_shape_it);
-
-            const cldnn::reshape op_reshape(input_name_it + reshape_suf, input_name_it, my_tensor);
-            topology.add(op_reshape);
-
-            input_shape_it.back() = input_count;
-            input_name_it += reshape_suf;
-        }
-        else
-        {
-            direction = runtime::intelgpu::IntelGPULayout::get_cldnn_axis(*axis_id);
-        }
-
-        const vector<cldnn::primitive_id> input_names(input_count, input_name_it);
-
-        ++axis_id;
-        if (axis_id == axis.crend())
-        {
-            output_name_it = output_name;
-        }
-        else
-        {
-            output_name_it += ":_";
-            input_name_it = output_name_it;
-        }
-
-        const cldnn::concatenation op_concat(output_name_it, input_names, direction);
-        topology.add(op_concat);
-    }
-}
-
-// Assume input is scalar. All output data will be populated by the scalar
-// The function extremely non optimal from performance perspective
-static void do_scalar_propagation(cldnn::topology& topology,
-                                  const string& input_name,
-                                  const string& output_name,
-                                  const Shape& output_shape)
-{
-    const size_t input_count = shape_size<const Shape>(output_shape);
-    const vector<cldnn::primitive_id> input_names(input_count, input_name);
-
-    const cldnn::concatenation op_concat(output_name, input_names, cldnn::concatenation::along_x);
-    topology.add(op_concat);
-}
-
-void runtime::intelgpu::do_broadcast_operation(cldnn::topology& topology,
+void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
                                                const string& input_name,
                                                const Shape& input_shape,
                                                const string& output_name,
                                                const Shape& output_shape,
-                                               const AxisSet& axis)
+                                               const element::Type& output_type,
+                                               const AxisSet& axis,
+                                               bool is_bcast)
 {
-    if (input_shape.size() > 4 || output_shape.size() > 4)
-    {
-        throw invalid_argument("IntelGPU::Broadcast supports 4D shapes maximum.");
-    }
+    string function_name = is_bcast ? "broadcast_" : "sum_";
+    function_name += output_name;
+    codegen::CodeWriter writer;
+    vector<size_t> gws;
 
-    if (input_shape.empty())
+    runtime::intelgpu::gen_func_def(
+        writer, function_name, {"float"}, {input_shape}, "float", output_shape);
+    writer.block_begin();
     {
-        do_scalar_propagation(topology, input_name, output_name, output_shape);
+        if (is_bcast)
+        {
+            // Broadcast loops
+            gws = runtime::intelgpu::generate_loops(writer, output_shape, true);
 
-        return;
-    }
+            writer << "output" << access_dims(output_shape) << " = input0"
+                   << access_dims(output_shape, axis) << ";\n";
 
-    const Shape output_shape_axis = apply_axis(output_shape, axis);
-    const Shape input_shape_forward = propagate_forward(input_shape);
-    const Shape output_shape_forward = propagate_forward(output_shape_axis);
-    const Shape input_shape_backward = propagate_backward(input_shape);
-    const Shape output_shape_backward = propagate_backward(output_shape_axis);
+            // Closing brackets for Broadcast loop
+            runtime::intelgpu::generate_loops(writer, output_shape, false);
+        }
+        else
+        {
+            gws = {1}; // non parallel version
+            // Initialize destination output by zeroes
+            size_t var_idx = 0;
+            for (auto const& i : output_shape)
+            {
+                writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
+                       << var_idx << ")\n";
+                writer.block_begin();
+                ++var_idx;
+            }
 
-    if (input_shape_forward == output_shape_forward)
+            writer << "output" << access_dims(output_shape) << " = 0.0f;\n";
+
+            // Closing brackets for Sum initialization loop
+            for (auto const& i : output_shape)
+            {
+                writer.block_end();
+            }
+
+            // Now do the Sum operation
+            var_idx = 0;
+            for (auto const& i : input_shape)
+            {
+                writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
+                       << var_idx << ")\n";
+                writer.block_begin();
+                ++var_idx;
+            }
+
+            writer << "output" << access_dims(input_shape, axis) << " += input0"
+                   << access_dims(input_shape) << ";\n";
+
+            // Closing brackets for Sum loop
+            for (auto const& i : input_shape)
+            {
+                writer.block_end();
+            }
+        }
+    } // End of function bracket
+    writer.block_end();
+
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const cldnn::custom_gpu_primitive op_bcast_sum(output_name,
+                                                   {input_name},
+                                                   {writer.get_code()},
+                                                   function_name,
+                                                   get_kernel_args(1, 1),
+                                                   "",
+                                                   layout,
+                                                   gws);
+    topology.add(op_bcast_sum);
+}
+
+void runtime::intelgpu::do_max_min_operation(cldnn::topology& topology,
+                                             const string& input_name,
+                                             const Shape& input_shape,
+                                             const string& output_name,
+                                             const Shape& output_shape,
+                                             const element::Type& output_type,
+                                             const AxisSet& axis,
+                                             bool is_min)
+{
+    const string function_name = "min_max_" + output_name;
+    const size_t input_size = shape_size<Shape>(input_shape);
+    const string& init_value = is_min ? "INFINITY" : "-INFINITY";
+    const string& operation = is_min ? " < " : " > ";
+    codegen::CodeWriter writer;
+
+    writer << "__kernel void " << function_name << "(const __global float input"
+           << array_dims(input_shape) << ", __global float output" << array_dims(output_shape)
+           << ")\n";
+
+    writer.block_begin();
     {
-        do_propagation(topology, input_name, input_shape, output_name, output_shape, axis, true);
-    }
-    else if (input_shape_backward == output_shape_backward)
+        // Initialization loop
+        size_t var_idx = 0;
+        for (auto const& i : output_shape)
+        {
+            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
+                   << var_idx << ")\n";
+            writer.block_begin();
+            ++var_idx;
+        }
+
+        writer << "output" << access_dims(output_shape) << " = " << init_value << ";\n";
+
+        // Closing brackets for initialization loop
+        for (auto const& i : output_shape)
+        {
+            writer.block_end();
+        }
+
+        if (input_size && !input_shape.empty())
+        {
+            // Main operation loop
+            var_idx = 0;
+            for (auto const& i : input_shape)
+            {
+                writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
+                       << var_idx << ")\n";
+                writer.block_begin();
+                ++var_idx;
+            }
+
+            writer << "if (input" << access_dims(input_shape) << operation << "output"
+                   << access_dims(input_shape, axis) << ")\n";
+            writer.block_begin();
+            {
+                writer << "output" << access_dims(input_shape, axis) << " = input"
+                       << access_dims(input_shape) << ";\n";
+            }
+            writer.block_end();
+
+            // Closing brackets for loop
+            for (auto const& i : input_shape)
+            {
+                writer.block_end();
+            }
+        }
+    } // End of function bracket
+    writer.block_end();
+
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const cldnn::custom_gpu_primitive op_min_max(output_name,
+                                                 {input_name},
+                                                 {writer.get_code()},
+                                                 function_name,
+                                                 get_kernel_args(1, 1),
+                                                 "",
+                                                 layout,
+                                                 {1});
+    topology.add(op_min_max);
+}
+
+void runtime::intelgpu::do_product_operation(cldnn::topology& topology,
+                                             const string& input_name,
+                                             const Shape& input_shape,
+                                             const string& output_name,
+                                             const Shape& output_shape,
+                                             const element::Type& output_type,
+                                             const AxisSet& axis)
+{
+    const string function_name = "product_" + output_name;
+    const size_t input_size = shape_size<Shape>(input_shape);
+    codegen::CodeWriter writer;
+
+    writer << "__kernel void " << function_name << "(const __global float input"
+           << array_dims(input_shape) << ", __global float output" << array_dims(output_shape)
+           << ")\n";
+
+    writer.block_begin();
     {
-        do_propagation(topology, input_name, input_shape, output_name, output_shape, axis, false);
-    }
-    else
-    {
-        ostringstream os;
-        os << "IntelGP::Broadcast unsupported mode. input" << vector_to_string(input_shape)
-           << " output" << vector_to_string(output_shape) << " axis" << vector_to_string(axis);
-        throw invalid_argument(os.str());
-    }
+        // Initialization loop
+        size_t var_idx = 0;
+        for (auto const& i : output_shape)
+        {
+            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
+                   << var_idx << ")\n";
+            writer.block_begin();
+            ++var_idx;
+        }
+
+        writer << "output" << access_dims(output_shape) << " = 1;\n";
+
+        // Closing brackets for initialization loop
+        for (auto const& i : output_shape)
+        {
+            writer.block_end();
+        }
+
+        if (input_size && !input_shape.empty())
+        {
+            // Main operation loop
+            var_idx = 0;
+            for (auto const& i : input_shape)
+            {
+                writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
+                       << var_idx << ")\n";
+                writer.block_begin();
+                ++var_idx;
+            }
+
+            writer << "output" << access_dims(input_shape, axis) << " *= input"
+                   << access_dims(input_shape) << ";\n";
+
+            // Closing brackets for loop
+            for (auto const& i : input_shape)
+            {
+                writer.block_end();
+            }
+        }
+    } // End of function bracket
+    writer.block_end();
+
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const cldnn::custom_gpu_primitive op_product(output_name,
+                                                 {input_name},
+                                                 {writer.get_code()},
+                                                 function_name,
+                                                 get_kernel_args(1, 1),
+                                                 "",
+                                                 layout,
+                                                 {1});
+    topology.add(op_product);
 }

@@ -46,6 +46,29 @@ namespace ngraph
                                                      padding_below,
                                                      padding_above);
                 }
+
+                template <typename ElementType>
+                void max_pool_backprop(void* arg_forward,
+                                       void* delta,
+                                       void* out,
+                                       const Shape& delta_shape,
+                                       const Shape& out_shape, // same as arg_forward_shape
+                                       const Shape& window_shape,
+                                       const Strides& window_movement_strides,
+                                       const Shape& padding_below,
+                                       const Shape& padding_above)
+                {
+                    reference::max_pool_backprop<ElementType>(
+                        static_cast<const ElementType*>(arg_forward),
+                        static_cast<const ElementType*>(delta),
+                        static_cast<ElementType*>(out),
+                        delta_shape,
+                        out_shape,
+                        window_shape,
+                        window_movement_strides,
+                        padding_below,
+                        padding_above);
+                }
             }
         }
     }

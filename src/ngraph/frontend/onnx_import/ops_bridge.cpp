@@ -17,9 +17,15 @@
 #include <algorithm>
 #include <functional>
 
-#include "attribute.hpp"
-#include "ngraph/frontend/onnx_import/op/add.hpp"
-#include "ngraph/frontend/onnx_import/op/constant.hpp"
+#include "core/attribute.hpp"
+#include "op/add.hpp"
+#include "op/batch_norm.hpp"
+#include "op/constant.hpp"
+#include "op/conv.hpp"
+#include "op/gemm.hpp"
+#include "op/mul.hpp"
+#include "op/relu.hpp"
+#include "op/split.hpp"
 #include "ops_bridge.hpp"
 
 namespace ngraph
@@ -39,12 +45,6 @@ namespace ngraph
                 };
 
             } // namespace error
-
-            NodeVector add(const Node& node) { return op::add(node); }
-            NodeVector constant(const Node& node)
-            {
-                return {op::constant(node.get_attribute_value<Tensor>("value"))};
-            }
 
             class ops_bridge
             {
@@ -70,20 +70,27 @@ namespace ngraph
 
                 ops_bridge()
                 {
-                    m_map.emplace("Add", std::bind(add, std::placeholders::_1));
-                    m_map.emplace("Constant", std::bind(constant, std::placeholders::_1));
+                    m_map.emplace("Add", std::bind(op::add, std::placeholders::_1));
+                    m_map.emplace("BatchNormalization",
+                                  std::bind(op::batch_norm, std::placeholders::_1));
+                    m_map.emplace("Constant", std::bind(op::constant, std::placeholders::_1));
+                    m_map.emplace("Conv", std::bind(op::conv, std::placeholders::_1));
+                    m_map.emplace("Gemm", std::bind(op::gemm, std::placeholders::_1));
+                    m_map.emplace("Mul", std::bind(op::mul, std::placeholders::_1));
+                    m_map.emplace("Relu", std::bind(op::relu, std::placeholders::_1));
+                    m_map.emplace("Split", std::bind(op::split, std::placeholders::_1));
                 }
 
                 NodeVector operator()(const Node& node) const
                 {
-                    try
-                    {
-                        return m_map.at(node.op_type())(node);
-                    }
-                    catch (const std::exception&)
+                    auto it = m_map.find(node.op_type());
+                    if (it == m_map.end())
                     {
                         throw detail::error::unknown_operation{node.op_type()};
                     }
+
+                    std::function<NodeVector(const Node&)> factory{it->second};
+                    return factory(node);
                 }
             };
 

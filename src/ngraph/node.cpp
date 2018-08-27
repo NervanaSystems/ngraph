@@ -27,10 +27,6 @@
 #include "ngraph/op/result.hpp"
 #include "ngraph/placement.hpp"
 
-#if not defined(EIGEN_MPL2_ONLY)
-#error("The flag `EIGEN_MPL2_ONLY` must be defined");
-#endif
-
 using namespace std;
 using namespace ngraph;
 

@@ -40,6 +40,11 @@ namespace ngraph
         // @param s1 Left side of path
         // @param s2 Right side of path
         std::string path_join(const std::string& s1, const std::string& s2);
+        std::string path_join(const std::string& s1, const std::string& s2, const std::string& s3);
+        std::string path_join(const std::string& s1,
+                              const std::string& s2,
+                              const std::string& s3,
+                              const std::string& s4);
 
         // @brief Returns the size in bytes of filename
         // @param filename The name of the file

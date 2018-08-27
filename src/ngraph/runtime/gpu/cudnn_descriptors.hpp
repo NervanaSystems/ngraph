@@ -79,7 +79,7 @@ namespace ngraph
                 }
                 static void destroy(cudnnLRNDescriptor_t& desc)
                 {
-                    CUDNN_SAFE_CALL(cudnnDestroyLRNDescriptor(desc));
+                    CUDNN_SAFE_CALL_NO_THROW(cudnnDestroyLRNDescriptor(desc));
                 }
             };
 
@@ -92,7 +92,7 @@ namespace ngraph
                 }
                 static void destroy(cudnnTensorDescriptor_t& desc)
                 {
-                    CUDNN_SAFE_CALL(cudnnDestroyTensorDescriptor(desc));
+                    CUDNN_SAFE_CALL_NO_THROW(cudnnDestroyTensorDescriptor(desc));
                 }
             };
 
@@ -105,7 +105,7 @@ namespace ngraph
                 }
                 static void destroy(cudnnSpatialTransformerDescriptor_t& desc)
                 {
-                    CUDNN_SAFE_CALL(cudnnDestroySpatialTransformerDescriptor(desc));
+                    CUDNN_SAFE_CALL_NO_THROW(cudnnDestroySpatialTransformerDescriptor(desc));
                 }
             };
 
@@ -118,7 +118,7 @@ namespace ngraph
                 }
                 static void destroy(cudnnReduceTensorDescriptor_t& desc)
                 {
-                    CUDNN_SAFE_CALL(cudnnDestroyReduceTensorDescriptor(desc));
+                    CUDNN_SAFE_CALL_NO_THROW(cudnnDestroyReduceTensorDescriptor(desc));
                 }
             };
 
@@ -131,7 +131,7 @@ namespace ngraph
                 }
                 static void destroy(cudnnRNNDescriptor_t& desc)
                 {
-                    CUDNN_SAFE_CALL(cudnnDestroyRNNDescriptor(desc));
+                    CUDNN_SAFE_CALL_NO_THROW(cudnnDestroyRNNDescriptor(desc));
                 }
             };
 
@@ -144,7 +144,7 @@ namespace ngraph
                 }
                 static void destroy(cudnnPoolingDescriptor_t& desc)
                 {
-                    CUDNN_SAFE_CALL(cudnnDestroyPoolingDescriptor(desc));
+                    CUDNN_SAFE_CALL_NO_THROW(cudnnDestroyPoolingDescriptor(desc));
                 }
             };
 
@@ -157,7 +157,7 @@ namespace ngraph
                 }
                 static void destroy(cudnnOpTensorDescriptor_t& desc)
                 {
-                    CUDNN_SAFE_CALL(cudnnDestroyOpTensorDescriptor(desc));
+                    CUDNN_SAFE_CALL_NO_THROW(cudnnDestroyOpTensorDescriptor(desc));
                 }
             };
 
@@ -170,7 +170,7 @@ namespace ngraph
                 }
                 static void destroy(cudnnFilterDescriptor_t& desc)
                 {
-                    CUDNN_SAFE_CALL(cudnnDestroyFilterDescriptor(desc));
+                    CUDNN_SAFE_CALL_NO_THROW(cudnnDestroyFilterDescriptor(desc));
                 }
             };
 
@@ -183,7 +183,7 @@ namespace ngraph
                 }
                 static void destroy(cudnnDropoutDescriptor_t& desc)
                 {
-                    CUDNN_SAFE_CALL(cudnnDestroyDropoutDescriptor(desc));
+                    CUDNN_SAFE_CALL_NO_THROW(cudnnDestroyDropoutDescriptor(desc));
                 }
             };
 
@@ -196,7 +196,7 @@ namespace ngraph
                 }
                 static void destroy(cudnnConvolutionDescriptor_t& desc)
                 {
-                    CUDNN_SAFE_CALL(cudnnDestroyConvolutionDescriptor(desc));
+                    CUDNN_SAFE_CALL_NO_THROW(cudnnDestroyConvolutionDescriptor(desc));
                 }
             };
 
@@ -209,7 +209,7 @@ namespace ngraph
                 }
                 static void destroy(cudnnCTCLossDescriptor_t& desc)
                 {
-                    CUDNN_SAFE_CALL(cudnnDestroyCTCLossDescriptor(desc));
+                    CUDNN_SAFE_CALL_NO_THROW(cudnnDestroyCTCLossDescriptor(desc));
                 }
             };
 
@@ -222,7 +222,7 @@ namespace ngraph
                 }
                 static void destroy(cudnnActivationDescriptor_t& desc)
                 {
-                    CUDNN_SAFE_CALL(cudnnDestroyActivationDescriptor(desc));
+                    CUDNN_SAFE_CALL_NO_THROW(cudnnDestroyActivationDescriptor(desc));
                 }
             };
         }

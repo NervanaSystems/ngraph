@@ -24,11 +24,17 @@
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
+#include <utility>
 #include <vector>
+
+#if !defined(NGRAPH_DEX_ONLY)
 
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
+
+#endif
+
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
@@ -45,6 +51,8 @@ namespace ngraph
             class CPU_Emitter;
             class CPU_CallFrame;
 
+#if !defined(NGRAPH_DEX_ONLY)
+
             using OpFunction = std::function<void(CPU_ExternalFunction* external_function,
                                                   codegen::CodeWriter&,
                                                   const ngraph::Node*,
@@ -52,6 +60,7 @@ namespace ngraph
                                                   const std::vector<TensorViewWrapper>& outputs)>;
 
             using OpMap = std::unordered_map<std::type_index, OpFunction>;
+#endif
 
             struct OpAttributes
             {
@@ -73,6 +82,14 @@ namespace ngraph
                 friend class CPU_Backend;
 
             public:
+                enum class CPUTensorRole
+                {
+                    INPUT,
+                    CONSTANT,
+                    OUTPUT,
+                    INTERMEDIATE
+                };
+
                 CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                      bool release_function = true);
                 ~CPU_ExternalFunction();
@@ -93,13 +110,14 @@ namespace ngraph
                 const std::string& get_function_name() const { return m_function_name; }
                 const std::shared_ptr<ngraph::Function> get_function() { return m_function; }
                 // Temporary Memory Pool alignment
-                static const size_t s_memory_pool_alignment;
+                static constexpr size_t s_memory_pool_alignment = 4096;
 
                 std::list<std::function<void(CPURuntimeContext*)>>& get_functors()
                 {
                     return functors;
                 }
                 std::unordered_map<std::string, void*>& get_tensor_data() { return tensor_data; }
+                void*& get_tensor_data(const std::string& name);
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>&
                     get_executor()
                 {
@@ -113,11 +131,27 @@ namespace ngraph
                 bool is_direct_execution() const { return m_direct_execution; }
             protected:
                 void build();
+
+#if !defined(NGRAPH_DEX_ONLY)
+
                 void compile();
 
+#endif
+
             private:
+                // For non-destructive passthrough kernels, propagate function
+                // input buffers to internal ops
+                void propagate_in_place_input(ngraph::descriptor::Output* output,
+                                              std::string input_name,
+                                              bool dex);
+                // For in-place kernels, propagate function output buffers to
+                // internal ops
                 void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
-                                               std::string output_name);
+                                               std::string output_name,
+                                               bool dex);
+                bool computes_result(Node* node);
+
+#if !defined(NGRAPH_DEX_ONLY)
                 void emit_debug_function_entry(codegen::CodeWriter& writer,
                                                Node* node,
                                                const std::vector<TensorViewWrapper>& in,
@@ -137,23 +171,33 @@ namespace ngraph
                     const std::unordered_map<const Node*, std::string>& node_cache);
                 std::string emit_op_as_function(const Node&, const std::string& function_name);
                 std::string strip_comments(const std::string&);
+
+#endif
                 void release_function() { m_function = nullptr; }
                 std::shared_ptr<ngraph::Function> m_function;
                 bool m_release_function;
-                bool m_is_compiled;
+
+                bool m_use_tbb;
+
                 EntryPoint m_compiled_function;
+                std::unordered_map<std::string, std::string> m_variable_name_map;
+
+#if !defined(NGRAPH_DEX_ONLY)
+
+                bool m_is_compiled;
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
                 bool m_emit_timing;
-                bool m_use_tbb;
 
-                std::unordered_map<std::string, std::string> m_variable_name_map;
                 std::map<std::string, size_t> m_name_index_map;
 
                 // Because we are directly accessing the constant data stored in the
                 // Constant ops we need to keep a list of shared_ptr to each Constant
                 // so they don't get freed before we are done with them
                 std::vector<std::shared_ptr<Node>> m_active_constants;
+
+#endif
+                std::unordered_map<std::string, CPUTensorRole> m_tensor_roles;
 
                 LayoutDescriptorPtrs parameter_layout_descriptors;
                 LayoutDescriptorPtrs result_layout_descriptors;
@@ -172,8 +216,12 @@ namespace ngraph
                     executor;
                 std::unordered_map<std::string, void*> tensor_data;
                 std::unordered_map<std::string, bool> tensor_stale;
-                std::unordered_map<std::string, size_t> intermediates_offsets;
-                std::unordered_map<std::string, size_t> function_input_index, function_output_index;
+                std::unordered_map<std::string, std::string> tensor_alias;
+                std::list<std::pair<std::reference_wrapper<void*>, size_t>> intermediates_offsets;
+                std::list<
+                    std::tuple<std::reference_wrapper<void*>, size_t, std::reference_wrapper<bool>>>
+                    function_input_index;
+                std::list<std::pair<std::reference_wrapper<void*>, size_t>> function_output_index;
                 std::unordered_map<std::string, std::shared_ptr<CPU_ExternalFunction>> callees;
                 bool m_is_built;
                 bool m_direct_execution;

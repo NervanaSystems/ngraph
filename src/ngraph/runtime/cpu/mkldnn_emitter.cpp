@@ -64,24 +64,24 @@ const std::vector<size_t>& MKLDNNEmitter::get_primitive_deps(size_t index) const
 mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor(const TensorViewWrapper& tvw,
                                                             mkldnn::memory::format fmt) const
 {
+    if (fmt == mkldnn::memory::format::blocked)
+    {
+        throw ngraph_error("Cannot created blocked descriptor.");
+    }
     return mkldnn::memory::desc(
         mkldnn::memory::dims(tvw.get_shape().begin(), tvw.get_shape().end()),
         mkldnn_utils::get_mkldnn_data_type(tvw.get_element_type()),
         fmt);
 }
 
-mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor(const TensorViewWrapper& tvw) const
-{
-    auto layout =
-        std::static_pointer_cast<LayoutDescriptor>(tvw.get_tensor_view()->get_tensor_view_layout());
-
-    return build_memory_descriptor(tvw, layout->get_mkldnn_format());
-}
-
 mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor(const Shape& shape,
                                                             const ngraph::element::Type& et,
                                                             mkldnn::memory::format fmt) const
 {
+    if (fmt == mkldnn::memory::format::blocked)
+    {
+        throw ngraph_error("Cannot created blocked descriptor");
+    }
     return mkldnn::memory::desc(mkldnn::memory::dims(shape.begin(), shape.end()),
                                 mkldnn_utils::get_mkldnn_data_type(et),
                                 fmt);
@@ -112,19 +112,11 @@ mkldnn::memory::desc
     return mkldnn::memory::desc(md);
 }
 
-mkldnn::memory MKLDNNEmitter::build_memory_primitive(const TensorViewWrapper& tvw) const
-{
-    return mkldnn::memory({build_memory_descriptor(tvw), mkldnn_utils::global_cpu_engine}, nullptr);
-}
-
 size_t MKLDNNEmitter::build_memory_primitive(const mkldnn::memory::desc& desc)
 {
-    // The MKL-DNN C++ API forces proper initialization of a memory primitive
-    // with a non-null pointer (unlike the C API)
-    // Primitives are initialized at runtime so we use a known-invalid address here
-    // to bypass this check
-    return insert_primitive(
-        new mkldnn::memory({desc, mkldnn_utils::global_cpu_engine}, reinterpret_cast<void*>(0x42)));
+    size_t index =
+        insert_primitive(new mkldnn::memory({desc, mkldnn_utils::global_cpu_engine}, nullptr));
+    return index;
 }
 
 mkldnn::memory::format MKLDNNEmitter::query_convolution_forward_weight_format(
@@ -200,24 +192,34 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
     mkldnn::primitive_attr conv_attr;
     conv_attr.set_post_ops(pops);
 
-    size_t conv_index = insert_primitive(new mkldnn::convolution_forward(
-        {{mkldnn::prop_kind::forward,
-          mkldnn::algorithm::convolution_direct,
-          input_data_desc,
-          weights_desc,
-          result_desc,
-          mkldnn::memory::dims(strides.begin(), strides.end()),
-          mkldnn::memory::dims(dilation_strides.begin(), dilation_strides.end()),
-          mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
-          mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
-          mkldnn::padding_kind::zero},
-         conv_attr,
-         mkldnn_utils::global_cpu_engine},
-        *m_mkldnn_primitives[input_data_index],
-        *m_mkldnn_primitives[weights_index],
-        *m_mkldnn_primitives[result_index]));
+    size_t conv_index = 0;
+    try
+    {
+        auto conv_prim = new mkldnn::convolution_forward(
+            {{mkldnn::prop_kind::forward,
+              mkldnn::algorithm::convolution_direct,
+              input_data_desc,
+              weights_desc,
+              result_desc,
+              mkldnn::memory::dims(strides.begin(), strides.end()),
+              mkldnn::memory::dims(dilation_strides.begin(), dilation_strides.end()),
+              mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+              mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
+              mkldnn::padding_kind::zero},
+             conv_attr,
+             mkldnn_utils::global_cpu_engine},
+            *m_mkldnn_primitives[input_data_index],
+            *m_mkldnn_primitives[weights_index],
+            *m_mkldnn_primitives[result_index]);
 
-    m_primitive_deps[conv_index] = {input_data_index, weights_index, result_index};
+        conv_index = insert_primitive(conv_prim);
+
+        m_primitive_deps[conv_index] = {input_data_index, weights_index, result_index};
+    }
+    catch (const mkldnn::error& e)
+    {
+        throw ngraph_error("Could not create mkldnn convolution " + e.message);
+    }
     return conv_index;
 }
 
@@ -239,26 +241,34 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
     mkldnn::primitive_attr conv_attr;
     conv_attr.set_post_ops(pops);
 
-    const size_t conv_index = insert_primitive(new mkldnn::convolution_forward(
-        {{mkldnn::prop_kind::forward,
-          mkldnn::algorithm::convolution_direct,
-          input_data_desc,
-          weights_desc,
-          bias_desc,
-          result_desc,
-          mkldnn::memory::dims(strides.begin(), strides.end()),
-          mkldnn::memory::dims(dilation_strides.begin(), dilation_strides.end()),
-          mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
-          mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
-          mkldnn::padding_kind::zero},
-         conv_attr,
-         mkldnn_utils::global_cpu_engine},
-        *m_mkldnn_primitives[input_data_index],
-        *m_mkldnn_primitives[weights_index],
-        *m_mkldnn_primitives[bias_index],
-        *m_mkldnn_primitives[result_index]));
+    size_t conv_index = -1;
+    try
+    {
+        conv_index = insert_primitive(new mkldnn::convolution_forward(
+            {{mkldnn::prop_kind::forward,
+              mkldnn::algorithm::convolution_direct,
+              input_data_desc,
+              weights_desc,
+              bias_desc,
+              result_desc,
+              mkldnn::memory::dims(strides.begin(), strides.end()),
+              mkldnn::memory::dims(dilation_strides.begin(), dilation_strides.end()),
+              mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+              mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
+              mkldnn::padding_kind::zero},
+             conv_attr,
+             mkldnn_utils::global_cpu_engine},
+            *m_mkldnn_primitives[input_data_index],
+            *m_mkldnn_primitives[weights_index],
+            *m_mkldnn_primitives[bias_index],
+            *m_mkldnn_primitives[result_index]));
 
-    m_primitive_deps[conv_index] = {input_data_index, weights_index, bias_index, result_index};
+        m_primitive_deps[conv_index] = {input_data_index, weights_index, bias_index, result_index};
+    }
+    catch (const mkldnn::error& e)
+    {
+        throw ngraph_error("Could not create convolution " + e.message);
+    }
     return conv_index;
 }
 
@@ -623,6 +633,33 @@ size_t MKLDNNEmitter::build_reorder(const mkldnn::memory::desc& input_desc,
 
     size_t primitive_index = insert_primitive(
         new mkldnn::reorder(*m_mkldnn_primitives[input_index], *m_mkldnn_primitives[result_index]));
+
+    m_primitive_deps[primitive_index] = {input_index, result_index};
+    return primitive_index;
+}
+
+size_t MKLDNNEmitter::build_lrn_forward(const mkldnn::memory::desc& input_desc,
+                                        const mkldnn::memory::desc& result_desc,
+                                        float alpha,
+                                        float beta,
+                                        float bias,
+                                        int nsize)
+{
+    size_t input_index = build_memory_primitive(input_desc);
+    size_t result_index = build_memory_primitive(result_desc);
+
+    auto lrn_desc = mkldnn::lrn_forward::desc(mkldnn::prop_kind::forward_scoring,
+                                              mkldnn::algorithm::lrn_across_channels,
+                                              input_desc,
+                                              nsize,
+                                              alpha,
+                                              beta,
+                                              bias);
+    auto lrn_prim_desc =
+        mkldnn::lrn_forward::primitive_desc(lrn_desc, mkldnn_utils::global_cpu_engine);
+
+    size_t primitive_index = insert_primitive(new mkldnn::lrn_forward(
+        lrn_prim_desc, *m_mkldnn_primitives[input_index], *m_mkldnn_primitives[result_index]));
 
     m_primitive_deps[primitive_index] = {input_index, result_index};
     return primitive_index;

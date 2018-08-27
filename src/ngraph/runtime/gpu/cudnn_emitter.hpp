@@ -17,6 +17,7 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 #include <vector>
 
 #include <cublas_v2.h>
@@ -29,6 +30,11 @@
 #include "ngraph/runtime/gpu/cudnn_host_parameters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/shape.hpp"
+
+#include "ngraph/op/convolution.hpp"
+#include "ngraph/op/max.hpp"
+#include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/min.hpp"
 
 namespace ngraph
 {
@@ -47,6 +53,14 @@ namespace ngraph
             class CUDNNEmitter
             {
                 friend class GPUPrimitiveEmitter;
+
+            public:
+                size_t build_primitive(const op::Convolution* node);
+                size_t build_primitive(const op::ConvolutionBackpropData* node);
+                size_t build_primitive(const op::ConvolutionBackpropFilters* node);
+                size_t build_primitive(const op::MaxPool* node);
+                size_t build_primitive(const op::Max* node);
+                size_t build_primitive(const op::Min* node);
 
             public:
                 enum class Prop
@@ -119,7 +133,9 @@ namespace ngraph
                 void sync();
 
             private:
-                CUDNNEmitter(GPUPrimitiveEmitter* emitter, GPURuntimeContext* ctx);
+                CUDNNEmitter(GPUPrimitiveEmitter* emitter,
+                             GPURuntimeContext* ctx,
+                             std::shared_ptr<GPUHostParameters> params);
 
                 void* get_data_by_type(cudnnDataType_t data_type, double value);
 

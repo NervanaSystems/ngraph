@@ -61,6 +61,8 @@ namespace ngraph
         class And;
         class Or;
         class Nop;
+        class Sigmoid;
+        class SigmoidBackprop;
     }
     namespace runtime
     {
@@ -362,6 +364,20 @@ namespace ngraph
                 static constexpr const char* op = "";
                 static constexpr const char* math_kernel = "";
                 static constexpr const char* atomic = "";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Sigmoid>
+            {
+                static constexpr const char* op = "sigmoid";
+                static constexpr const char* math_kernel = "1 / (1 + expf(-x0))";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::SigmoidBackprop>
+            {
+                static constexpr const char* op = "sigmoid_backprop";
+                static constexpr const char* math_kernel = "x1 / (2 + expf(-x0) + expf(x0))";
             };
         }
     }

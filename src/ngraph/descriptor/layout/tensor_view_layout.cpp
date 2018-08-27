@@ -22,16 +22,29 @@
 using namespace ngraph;
 
 descriptor::layout::TensorViewLayout::TensorViewLayout(const descriptor::TensorView& tensor_view)
-    : m_tensor_view_type(tensor_view.get_tensor_view_type())
+    : m_element_type(tensor_view.get_element_type())
+    , m_shape(tensor_view.get_shape())
 {
 }
 
 const element::Type& descriptor::layout::TensorViewLayout::get_element_type() const
 {
-    return m_tensor_view_type->get_element_type();
+    return m_element_type;
 }
 
 const Shape& descriptor::layout::TensorViewLayout::get_shape() const
 {
-    return m_tensor_view_type->get_shape();
+    return m_shape;
+}
+
+void descriptor::layout::TensorViewLayout::set_tensor_view_type(const element::Type& element_type,
+                                                                const Shape& shape)
+{
+    m_element_type = element_type;
+    m_shape = shape;
+}
+
+size_t descriptor::layout::TensorViewLayout::get_allocated_size()
+{
+    return get_size() * get_element_type().size();
 }

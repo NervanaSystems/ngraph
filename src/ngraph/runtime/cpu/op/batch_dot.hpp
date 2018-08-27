@@ -32,6 +32,8 @@ namespace ngraph
 
             bool get_is_a_transposed() const { return m_transpose_a; }
             bool get_is_b_transposed() const { return m_transpose_b; }
+            Shape get_a_shape() const { return get_argument(0)->get_shape(); }
+            Shape get_b_shape() const { return get_argument(1)->get_shape(); }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 

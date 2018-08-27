@@ -20,6 +20,7 @@
 #include <cuda_runtime.h>
 #include <cudnn.h>
 #include <fstream>
+#include <mutex>
 #include <string>
 #include <tuple>
 
@@ -87,6 +88,7 @@
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/select_and_scatter.hpp"
+#include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
 #include "ngraph/op/sinh.hpp"
@@ -99,21 +101,23 @@
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/pass/common_function_collection.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
-#include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
+#include "ngraph/runtime/gpu/pass/gpu_layout.hpp"
+#include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 static const string s_output_dir = "gpu_codegen";
+static std::mutex s_compilation;
 
-class StaticInitializers
+class GPUStaticInitializers
 {
 public:
-    StaticInitializers()
+    GPUStaticInitializers()
     {
         file_util::remove_directory(s_output_dir);
         file_util::make_directory(s_output_dir);
@@ -152,14 +156,14 @@ static string emit_string_array(const vector<string>& s, size_t max_line_length)
     return ss.str();
 }
 
-static StaticInitializers s_static_initializers;
+static GPUStaticInitializers s_static_initializers;
 
 #define TI(x) type_index(typeid(x))
 
 static const runtime::gpu::OpMap dispatcher{
-    {TI(ngraph::op::Add), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Add>},
+    {TI(ngraph::op::Add), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Add>},
     {TI(ngraph::op::Dot), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Dot>},
-    {TI(ngraph::op::Multiply), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Multiply>},
+    {TI(ngraph::op::Multiply), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Multiply>},
     {TI(ngraph::op::Parameter), &runtime::gpu::GPU_Emitter::nop},
     {TI(ngraph::op::Abs), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Abs>},
     {TI(ngraph::op::Concat), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Concat>},
@@ -173,8 +177,8 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::Less), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Less>},
     {TI(ngraph::op::LessEq), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::LessEq>},
     {TI(ngraph::op::Log), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Log>},
-    {TI(ngraph::op::Maximum), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Maximum>},
-    {TI(ngraph::op::Minimum), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Minimum>},
+    {TI(ngraph::op::Maximum), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Maximum>},
+    {TI(ngraph::op::Minimum), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Minimum>},
     {TI(ngraph::op::Negative), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Negative>},
     {TI(ngraph::op::NotEqual), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::NotEqual>},
     {TI(ngraph::op::Power), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Power>},
@@ -203,7 +207,7 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::OneHot), &runtime::gpu::GPU_Emitter::emit<ngraph::op::OneHot>},
     {TI(ngraph::op::Floor), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Floor>},
     {TI(ngraph::op::Ceiling), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Ceiling>},
-    {TI(ngraph::op::Sqrt), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Sqrt>},
+    {TI(ngraph::op::Sqrt), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sqrt>},
     {TI(ngraph::op::Convolution), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Convolution>},
     {TI(ngraph::op::ConvolutionBackpropFilters),
      &runtime::gpu::GPU_Emitter::emit<ngraph::op::ConvolutionBackpropFilters>},
@@ -234,8 +238,13 @@ static const runtime::gpu::OpMap dispatcher{
     {TI(ngraph::op::ReluBackprop),
      &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::ReluBackprop>},
     {TI(ngraph::op::Softmax), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Softmax>},
+    {TI(ngraph::op::Sigmoid), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sigmoid>},
+    {TI(ngraph::op::SigmoidBackprop),
+     &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::SigmoidBackprop>},
     {TI(ngraph::op::And), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::And>},
     {TI(ngraph::op::Or), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Or>}};
+
+const size_t runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction::s_memory_pool_alignment = 64;
 
 runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function,
@@ -247,6 +256,7 @@ runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     , m_is_compiled(false)
     , m_release_function(release_function)
     , m_temporaries_used(false)
+    , m_tensor_memory_buffers(new std::unordered_map<std::string, size_t>)
     , m_shared_context(shared_context)
 {
 }
@@ -279,7 +289,6 @@ void runtime::gpu::GPU_ExternalFunction::emit_header()
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/gpu/cudnn_descriptors.hpp"
-#include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
 #include "ngraph/runtime/gpu/gpu_invoke.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
@@ -374,7 +383,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_constant_declarations()
             {
                 shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
                 // get an allocator for transient per kernel gpu memory
-                GPUAllocator allocator =
+                runtime::gpu::GPUAllocator allocator =
                     m_shared_context->m_primitive_emitter->get_memory_allocator();
                 size_t idx = allocator.reserve_argspace(
                     c->get_data_ptr(),
@@ -447,11 +456,10 @@ void runtime::gpu::GPU_ExternalFunction::emit_temp_mem_pool_allocation(
     }
     if (m_temporaries_used)
     {
-        size_t temp_pool_size = current_function->get_temporary_pool_size();
         m_writer << "// Allocate the memory pool\n";
         // TODO memory pool malloc.
-        m_writer << "void* pool_base_ptr = ngraph::runtime::gpu::create_gpu_buffer("
-                 << temp_pool_size << ");\n";
+        m_writer << "void* pool_base_ptr = ngraph::runtime::gpu::invoke_memory_primitive(ctx, "
+                 << m_tensor_memory_buffers->at(current_function->get_name()) << ");\n";
 
         // Add temporaries to the variable name map
         for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
@@ -464,14 +472,6 @@ void runtime::gpu::GPU_ExternalFunction::emit_temp_mem_pool_allocation(
                 m_variable_name_map[tensor->get_name()] = ss.str();
             }
         }
-    }
-}
-
-void runtime::gpu::GPU_ExternalFunction::emit_temp_mem_pool_release()
-{
-    if (m_temporaries_used)
-    {
-        m_writer << "ngraph::runtime::gpu::free_gpu_buffer(pool_base_ptr);\n";
     }
 }
 
@@ -616,7 +616,6 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                     emit_debug_function_exit(node.get());
                 }
             }
-            emit_temp_mem_pool_release();
         }
         m_writer.block_end(); // End generated function
     }
@@ -637,28 +636,42 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     {
         return;
     }
+    std::unique_lock<std::mutex> lock(s_compilation);
 
     m_function_name = m_function->get_name();
-    string dump_filename = file_util::path_join(s_output_dir, m_function_name + "_ops.txt");
 
-    // For now, just make everyone row-major.
-    m_pass_manager.register_pass<pass::ResultCopyElimination>();
-    m_pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
-    string common_function_string;
+    auto allocator = std::make_shared<runtime::gpu::GPUAllocator>(
+        m_shared_context->m_primitive_emitter->get_memory_allocator());
+
+    m_pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
+
+    m_pass_manager
+        .register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
+
+    m_pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
+    m_pass_manager.register_pass<ngraph::pass::Liveness>();
+
+    m_pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
+
+    m_pass_manager.register_pass<runtime::gpu::pass::TensorMemoryReservation>(
+        allocator, m_tensor_memory_buffers);
+
+    std::string common_function_string;
     auto femitter = bind(&ngraph::runtime::gpu::GPU_ExternalFunction::emit_op_as_function,
                          this,
                          placeholders::_1,
                          placeholders::_2);
     m_pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
         femitter, m_node_function_map, common_function_string);
-    m_pass_manager.register_pass<pass::Liveness>();
-    m_pass_manager.register_pass<pass::MemoryLayout>(64);
-    m_pass_manager.register_pass<pass::DumpSorted>(dump_filename);
+
+    string dump_filename = file_util::path_join(s_output_dir, m_function_name + "_ops.txt");
+    m_pass_manager.register_pass<ngraph::pass::DumpSorted>(dump_filename);
+
     m_pass_manager.run_passes(m_function);
 
     for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
     {
-        m_function_ordered_ops.insert({current_function, current_function->get_ordered_ops()});
+        m_function_ordered_ops.emplace(current_function, current_function->get_ordered_ops());
     }
 
     emit_header();
@@ -669,6 +682,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     emit_functions();
 
     // allocate device buffers for primitive arguments and workspace
+    allocator->close();
     m_shared_context->m_primitive_emitter->allocate_primitive_memory();
 
     string code = m_writer.get_code();

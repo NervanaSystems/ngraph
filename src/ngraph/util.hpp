@@ -26,7 +26,9 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/node_vector.hpp"
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
@@ -212,33 +214,19 @@ namespace ngraph
         return y > x ? 0 : x - y;
     }
 
-    template <typename T, bool (*func)(T)>
-    void check_fp_values(const char* name, const T* array, size_t n)
-    {
-        bool (*fPtr)(T) = &std::isinf;
-        const char* cerr_type = fPtr == func ? "Inf" : "NaN";
-        for (size_t i = 0; i < n; i++)
-        {
-            if (func(array[i]))
-            {
-                throw std::runtime_error(std::string("Discovered ") + cerr_type + " in '" + name +
-                                         "'");
-            }
-        }
-    }
-
-    template void
-        check_fp_values<float, std::isinf>(const char* name, const float* array, size_t n);
-    template void
-        check_fp_values<float, std::isnan>(const char* name, const float* array, size_t n);
-    template void
-        check_fp_values<double, std::isinf>(const char* name, const double* array, size_t n);
-    template void
-        check_fp_values<double, std::isnan>(const char* name, const double* array, size_t n);
+    void check_fp_values_isinf(const char* name, const float* array, size_t n);
+    void check_fp_values_isinf(const char* name, const double* array, size_t n);
+    void check_fp_values_isnan(const char* name, const float* array, size_t n);
+    void check_fp_values_isnan(const char* name, const double* array, size_t n);
 
     void* aligned_alloc(size_t alignment, size_t size);
     void aligned_free(void*);
     size_t round_up(size_t size, size_t alignment);
+    template <typename T>
+    T apply_permutation(T input, ngraph::AxisVector order);
+
+    AxisVector get_default_order(size_t rank);
+    AxisVector get_default_order(const Shape& shape);
 
     /*
     * Return type struct for cache_fprop, with the modified fprop and bprop

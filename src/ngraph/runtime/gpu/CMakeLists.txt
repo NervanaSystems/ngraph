@@ -27,7 +27,6 @@ set(SRC
     gpu_cuda_function_builder.cpp
     gpu_cuda_function_pool.cpp
     gpu_cuda_kernel_builder.cpp
-    gpu_cuda_kernel_emitters.cpp
     gpu_emitter.cpp
     gpu_external_function.cpp
     gpu_invoke.cpp
@@ -39,6 +38,9 @@ set(SRC
     gpu_tensor_view.cpp
     gpu_util.cpp
     type_info.cpp
+    pass/gpu_layout.cpp
+    pass/tensor_memory_reservation.cpp
+    gpu_kernel_args.cpp
     )
 
 if (NGRAPH_GPU_ENABLE)

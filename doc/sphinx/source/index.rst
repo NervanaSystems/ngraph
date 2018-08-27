@@ -141,11 +141,11 @@ Contents
 
    install.rst
    graph-basics.rst
-   fusion/index.rst
    howto/index.rst
    ops/index.rst
    framework-integration-guides.rst
    frameworks/index.rst
+   fusion/index.rst
    programmable/index.rst
    distr/index.rst
    python_api/index.rst

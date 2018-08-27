@@ -27,13 +27,36 @@ namespace ngraph
     {
         namespace intelgpu
         {
-            // This implements Broadcast nGraph operation
-            void do_broadcast_operation(cldnn::topology& topology,
+            // This implements Broadcast and Sum nGraph operations.
+            // input_shape (bcast) or output_shape (sum) can be empty.
+            // If the shape is empty it means scalar
+            void do_bcast_sum_operation(cldnn::topology& topology,
                                         const std::string& input_name,
                                         const Shape& input_shape,
                                         const std::string& output_name,
                                         const Shape& output_shape,
-                                        const AxisSet& axis);
+                                        const element::Type& output_type,
+                                        const AxisSet& axis,
+                                        bool is_bcast);
+
+            // This implements Min and Max operations depends on is_min parameter
+            void do_max_min_operation(cldnn::topology& topology,
+                                      const std::string& input_name,
+                                      const Shape& input_shape,
+                                      const std::string& output_name,
+                                      const Shape& output_shape,
+                                      const element::Type& output_type,
+                                      const AxisSet& axis,
+                                      bool is_min);
+
+            // This implements Product operation
+            void do_product_operation(cldnn::topology& topology,
+                                      const std::string& input_name,
+                                      const Shape& input_shape,
+                                      const std::string& output_name,
+                                      const Shape& output_shape,
+                                      const element::Type& output_type,
+                                      const AxisSet& axis);
         }
     }
 }

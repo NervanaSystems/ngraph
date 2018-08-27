@@ -45,7 +45,6 @@ void runtime::cpu::CPU_CallFrame::call(
     vector<void*> inputs;
     vector<void*> outputs;
 
-    propagate_layouts(input_tvs, m_external_function->get_parameter_layout_descriptors());
     propagate_layouts(output_tvs, m_external_function->get_result_layout_descriptors());
 
     for (size_t i = 0; i < input_tvs.size(); i++)
@@ -110,6 +109,9 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
         ctx->op_durations = new int64_t[m_external_function->get_op_attrs().size()];
     }
     ctx->p_en = new bool[m_external_function->get_parameter_layout_descriptors().size()];
+
+    ctx->first_iteration = true;
+
     // Create temporary buffer pools
     size_t alignment = runtime::cpu::CPU_ExternalFunction::s_memory_pool_alignment;
     for (auto buffer_size : m_external_function->get_memory_buffer_sizes())

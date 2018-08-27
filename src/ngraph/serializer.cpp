@@ -25,6 +25,8 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/argmax.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -49,6 +51,7 @@
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
+#include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
@@ -82,6 +85,7 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
@@ -385,6 +389,18 @@ static shared_ptr<ngraph::Function>
             {
                 node = make_shared<op::And>(args[0], args[1]);
             }
+            else if (node_op == "ArgMin")
+            {
+                auto axis = node_js.at("axis").get<size_t>();
+                auto target_type = read_element_type(node_js.at("index_element_type"));
+                node = make_shared<op::ArgMin>(args[0], axis, target_type);
+            }
+            else if (node_op == "ArgMax")
+            {
+                auto axis = node_js.at("axis").get<size_t>();
+                auto target_type = read_element_type(node_js.at("index_element_type"));
+                node = make_shared<op::ArgMax>(args[0], axis, target_type);
+            }
             else if (node_op == "Asin")
             {
                 node = make_shared<op::Asin>(args[0]);
@@ -637,6 +653,14 @@ static shared_ptr<ngraph::Function>
             else if (node_op == "Log")
             {
                 node = make_shared<op::Log>(args[0]);
+            }
+            else if (node_op == "LRN")
+            {
+                auto alpha = node_js.at("alpha").get<double>();
+                auto beta = node_js.at("beta").get<double>();
+                auto bias = node_js.at("bias").get<double>();
+                auto nsize = node_js.at("nsize").get<size_t>();
+                node = make_shared<op::LRN>(args[0], alpha, beta, bias, nsize);
             }
             else if (node_op == "Max")
             {
@@ -891,6 +915,10 @@ static shared_ptr<ngraph::Function>
             {
                 node = make_shared<op::Tanh>(args[0]);
             }
+            else if (node_op == "StopGradient")
+            {
+                node = make_shared<op::StopGradient>(args[0]);
+            }
             else
             {
                 stringstream ss;
@@ -996,6 +1024,18 @@ static json write(const Node& n, bool binary_constant_data)
     }
     else if (node_op == "Add")
     {
+    }
+    else if (node_op == "ArgMin")
+    {
+        auto tmp = dynamic_cast<const op::ArgMin*>(&n);
+        node["axis"] = tmp->get_reduction_axis();
+        node["index_element_type"] = write_element_type(tmp->get_element_type());
+    }
+    else if (node_op == "ArgMax")
+    {
+        auto tmp = dynamic_cast<const op::ArgMax*>(&n);
+        node["axis"] = tmp->get_reduction_axis();
+        node["index_element_type"] = write_element_type(tmp->get_element_type());
     }
     else if (node_op == "AllReduce")
     {
@@ -1140,6 +1180,14 @@ static json write(const Node& n, bool binary_constant_data)
     }
     else if (node_op == "Log")
     {
+    }
+    else if (node_op == "LRN")
+    {
+        auto tmp = dynamic_cast<const op::LRN*>(&n);
+        node["alpha"] = tmp->get_alpha();
+        node["beta"] = tmp->get_beta();
+        node["bias"] = tmp->get_bias();
+        node["nsize"] = tmp->get_nsize();
     }
     else if (node_op == "Max")
     {

@@ -18,88 +18,12 @@
 
 #include <iostream>
 #include <memory>
-#include <sstream>
-#include <stdexcept>
-#include <stdint.h>
 #include <string>
 #include <tuple>
 #include <vector>
 
-#include <cublas_v2.h>
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <cudnn.h>
-#include <nvrtc.h>
+#include "ngraph/runtime/gpu/cuda_error_check.hpp"
 #include "ngraph/util.hpp"
-
-//why use "do...while.."
-//https://stackoverflow.com/questions/154136/why-use-apparently-meaningless-do-while-and-if-else-statements-in-macros
-#define NVRTC_SAFE_CALL(x)                                                                         \
-    do                                                                                             \
-    {                                                                                              \
-        nvrtcResult result = x;                                                                    \
-        if (result != NVRTC_SUCCESS)                                                               \
-        {                                                                                          \
-            throw std::runtime_error("\nerror: " #x " failed with error " +                        \
-                                     std::string(nvrtcGetErrorString(result)));                    \
-        }                                                                                          \
-    } while (0)
-
-#define CUDA_SAFE_CALL(x)                                                                          \
-    do                                                                                             \
-    {                                                                                              \
-        CUresult result = x;                                                                       \
-        if (result != CUDA_SUCCESS)                                                                \
-        {                                                                                          \
-            const char* msg;                                                                       \
-            cuGetErrorName(result, &msg);                                                          \
-            std::stringstream safe_call_ss;                                                        \
-            safe_call_ss << "\nerror: " #x " failed with error"                                    \
-                         << "\nfile: " << __FILE__ << "\nline: " << __LINE__ << "\nmsg: " << msg;  \
-            throw std::runtime_error(safe_call_ss.str());                                          \
-        }                                                                                          \
-    } while (0)
-
-#define CUDA_RT_SAFE_CALL(x)                                                                       \
-    do                                                                                             \
-    {                                                                                              \
-        cudaError_t err = x;                                                                       \
-        if (cudaSuccess != err)                                                                    \
-        {                                                                                          \
-            std::stringstream safe_call_ss;                                                        \
-            safe_call_ss << "\nerror: " #x " failed with error"                                    \
-                         << "\nfile: " << __FILE__ << "\nline: " << __LINE__                       \
-                         << "\nmsg: " << cudaGetErrorString(err);                                  \
-            throw std::runtime_error(safe_call_ss.str());                                          \
-        }                                                                                          \
-    } while (0)
-
-#define CUDNN_SAFE_CALL(func)                                                                      \
-    do                                                                                             \
-    {                                                                                              \
-        cudnnStatus_t e = (func);                                                                  \
-        if (e != CUDNN_STATUS_SUCCESS)                                                             \
-        {                                                                                          \
-            auto msg = cudnnGetErrorString(e);                                                     \
-            std::stringstream safe_call_ss;                                                        \
-            safe_call_ss << "\nerror: " #func " failed with error"                                 \
-                         << "\nfile: " << __FILE__ << "\nline: " << __LINE__ << "\nmsg: " << msg;  \
-            throw std::runtime_error(safe_call_ss.str());                                          \
-        }                                                                                          \
-    } while (0)
-
-#define CUBLAS_SAFE_CALL(func)                                                                     \
-    do                                                                                             \
-    {                                                                                              \
-        cublasStatus_t e = (func);                                                                 \
-        if (e != CUBLAS_STATUS_SUCCESS)                                                            \
-        {                                                                                          \
-            std::stringstream safe_call_ss;                                                        \
-            safe_call_ss << "\nerror: " #func " failed with error"                                 \
-                         << "\nfile: " << __FILE__ << "\nline: " << __LINE__ << "\nmsg: " << e;    \
-            throw std::runtime_error(safe_call_ss.str());                                          \
-        }                                                                                          \
-    } while (0)
 
 namespace ngraph
 {

@@ -18,34 +18,48 @@ set(SRC
     cpu_backend.cpp
     cpu_builder.cpp
     cpu_call_frame.cpp
-    cpu_emitter.cpp
     cpu_external_function.cpp
-    cpu_kernel_emitters.cpp
-    cpu_kernel_utils.cpp
     cpu_kernels.cpp
     cpu_layout_descriptor.cpp
     cpu_tensor_view_wrapper.cpp
     cpu_tensor_view.cpp
     cpu_tracing.cpp
+    builder/add.cpp
+    builder/allreduce.cpp
     builder/avg_pool.cpp
+    builder/argmin.cpp
+    builder/argmax.cpp
     builder/batch_norm.cpp
     builder/broadcast.cpp
+    builder/bounded_relu.cpp
     builder/concat.cpp
     builder/convert.cpp
     builder/convert_layout.cpp
     builder/convolution.cpp
     builder/dot.cpp
     builder/function_call.cpp
+    builder/lstm.cpp
+    builder/lrn.cpp
     builder/matmul_bias.cpp
     builder/max.cpp
     builder/max_pool.cpp
     builder/min.cpp
+    builder/one_hot.cpp
+    builder/relu.cpp
+    builder/pad.cpp
+    builder/product.cpp
+    builder/reduce_function.cpp
+    builder/reduce_function_window.cpp
+    builder/replace_slice.cpp
     builder/reshape.cpp
     builder/reverse.cpp
     builder/reverse_sequence.cpp
+    builder/rnn.cpp
     builder/select.cpp
     builder/select_and_scatter.cpp
     builder/sigmoid.cpp
+    builder/slice.cpp
+    builder/softmax.cpp
     builder/sum.cpp
     kernel/eigen_thread_pool.cpp
     kernel/pad.cpp
@@ -69,16 +83,25 @@ set(SRC
     op/rnn.cpp
     op/sigmoid_mul.cpp
     pass/cpu_assignment.cpp
+    pass/cpu_collapse_dims.cpp
     pass/cpu_concat_inputs.cpp
     pass/cpu_fusion.cpp
     pass/cpu_layout.cpp
+    pass/cpu_loop_kernel_fusion.cpp
+    pass/cpu_mat_fusion.cpp
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
-    pass/cpu_mat_fusion.cpp
-    pass/cpu_loop_kernel_fusion.cpp
-    pass/cpu_shuffle_folding.cpp
     pass/cpu_workspace_insertion.cpp
 )
+
+if (NOT NGRAPH_DEX_ONLY)
+    set(SRC
+        ${SRC}
+        cpu_emitter.cpp
+        cpu_kernel_emitters.cpp
+        cpu_kernel_utils.cpp
+        )
+endif()
 
 if (NGRAPH_TBB_ENABLE)
     include(${TBB_ROOT}/cmake/TBBBuild.cmake)
@@ -114,6 +137,9 @@ if (NGRAPH_CPU_ENABLE)
 
     add_library(cpu_backend SHARED ${SRC})
     set_target_properties(cpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
+    if (NGRAPH_DEX_ONLY)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
+    endif()
 
     if(NGRAPH_DISTRIBUTED_ENABLE)
         find_package(MPI REQUIRED)
@@ -123,7 +149,11 @@ if (NGRAPH_CPU_ENABLE)
         target_link_libraries(cpu_backend PRIVATE ${MPI_CXX_LIBRARIES})
     endif()
 
-    target_link_libraries(cpu_backend PUBLIC ngraph codegen libmkldnn libeigen libjson libtbb)
+    add_dependencies(cpu_backend ext_mkldnn ext_eigen)
+    target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libeigen libjson libtbb)
+    if (NOT NGRAPH_DEX_ONLY)
+        target_link_libraries(cpu_backend PUBLIC codegen)
+    endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
     set_target_properties(cpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 

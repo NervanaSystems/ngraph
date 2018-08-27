@@ -83,7 +83,8 @@ multimap<size_t, string> aggregate_timing(const vector<runtime::PerformanceCount
 void run_benchmark(const string& json_path,
                    const string& backend_name,
                    size_t iterations,
-                   bool timing_detail)
+                   bool timing_detail,
+                   int warmup_iterations)
 {
     stopwatch timer;
     timer.start();
@@ -92,7 +93,7 @@ void run_benchmark(const string& json_path,
     shared_ptr<Function> f = deserialize(ss);
     timer.stop();
     cout << "deserialize time: " << timer.get_milliseconds() << "ms" << endl;
-    run_benchmark(f, backend_name, iterations, timing_detail);
+    run_benchmark(f, backend_name, iterations, timing_detail, warmup_iterations);
 }
 
 void print_times(const multimap<size_t, string>& timing)
@@ -128,6 +129,45 @@ void init_int_tv(shared_ptr<runtime::TensorView> tv, T min, T max)
         element = dist(s_random_engine);
     }
     tv->write(vec.data(), 0, vec.size() * sizeof(T));
+}
+
+template <>
+void init_int_tv<char>(shared_ptr<runtime::TensorView> tv, char min, char max)
+{
+    size_t size = tv->get_element_count();
+    uniform_int_distribution<int16_t> dist(static_cast<short>(min), static_cast<short>(max));
+    vector<char> vec(size);
+    for (char& element : vec)
+    {
+        element = static_cast<char>(dist(s_random_engine));
+    }
+    tv->write(vec.data(), 0, vec.size() * sizeof(char));
+}
+
+template <>
+void init_int_tv<int8_t>(shared_ptr<runtime::TensorView> tv, int8_t min, int8_t max)
+{
+    size_t size = tv->get_element_count();
+    uniform_int_distribution<int16_t> dist(static_cast<short>(min), static_cast<short>(max));
+    vector<int8_t> vec(size);
+    for (int8_t& element : vec)
+    {
+        element = static_cast<int8_t>(dist(s_random_engine));
+    }
+    tv->write(vec.data(), 0, vec.size() * sizeof(int8_t));
+}
+
+template <>
+void init_int_tv<uint8_t>(shared_ptr<runtime::TensorView> tv, uint8_t min, uint8_t max)
+{
+    size_t size = tv->get_element_count();
+    uniform_int_distribution<int16_t> dist(static_cast<short>(min), static_cast<short>(max));
+    vector<uint8_t> vec(size);
+    for (uint8_t& element : vec)
+    {
+        element = static_cast<uint8_t>(dist(s_random_engine));
+    }
+    tv->write(vec.data(), 0, vec.size() * sizeof(uint8_t));
 }
 
 template <typename T>
@@ -199,7 +239,8 @@ static void random_init(shared_ptr<runtime::TensorView> tv)
 void run_benchmark(shared_ptr<Function> f,
                    const string& backend_name,
                    size_t iterations,
-                   bool timing_detail)
+                   bool timing_detail,
+                   int warmup_iterations)
 {
     stopwatch timer;
     timer.start();
@@ -233,6 +274,15 @@ void run_benchmark(shared_ptr<Function> f,
             args[i]->set_stale(false);
         }
     }
+
+    if (warmup_iterations)
+    {
+        for (int i = 0; i < warmup_iterations; i++)
+        {
+            backend->call(f, results, args);
+        }
+    }
+
     stopwatch t1;
     t1.start();
     for (size_t i = 0; i < static_cast<size_t>(iterations); i++)

@@ -82,6 +82,8 @@ namespace ngraph
                                             const std::string& output_desc,
                                             const float& alpha,
                                             const float& beta);
+
+                std::string emit_type_string(const Node* node);
             }
         }
     }
