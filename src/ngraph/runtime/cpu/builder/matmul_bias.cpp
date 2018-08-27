@@ -287,7 +287,7 @@ namespace ngraph
                 options.offset_b = offset_b;
                 options.offset_c = offset_c;
 
-                //if we were to support more groups
+                // if we were to support more groups
                 const size_t group_count = 1;
                 options.group_count = group_count;
 

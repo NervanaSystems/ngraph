@@ -365,7 +365,7 @@ namespace ngraph
 
                     if (default_weights_format)
                     {
-                        //note, we need the original shape (4D) while arg_shape1 is redefined
+                        // note, we need the original shape (4D) while arg_shape1 is redefined
                         i_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
                             node.get(), 1, false, memory::format::oihw));
                     }
@@ -1264,7 +1264,7 @@ namespace ngraph
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        //ensure delta and input have same layout
+                        // ensure delta and input have same layout
                         i_mds.push_back(input_md);
                         i_mds.push_back(input_md);
                         o_mds.push_back(input_md);
