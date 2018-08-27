@@ -207,6 +207,10 @@ namespace ngraph
                                               NVShape input_shape,
                                               const char* op,
                                               const char* kernel);
+
+//This is the preprocess for reduce to scalar if the data size is large than a number.
+//The number can be tuned based on hardware.
+//This cuda kernel will accumulate reduction to a certain number of bins depends on hardware.
                 size_t build_reduce_to_scalar_acc(const std::vector<std::string>& dtypes,
                                                   NVShape input_shape,
                                                   NVShape output_shape,
