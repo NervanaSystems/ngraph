@@ -16,8 +16,8 @@
 
 #include "ngraph/op/softmax.hpp"
 
-#include "ngraph/frontend/onnx_import/exceptions.hpp"
-#include "ngraph/frontend/onnx_import/op/softmax.hpp"
+#include "exceptions.hpp"
+#include "softmax.hpp"
 
 namespace ngraph
 {
@@ -44,6 +44,7 @@ namespace ngraph
                         node.get_name(),
                         "): provided axis attribute is out of input tensor dimensions range.");
                 }
+                // create vector of capacity data_dimensions - axis_divider position
                 std::vector<size_t> axes(data_shape.size() - axis);
                 std::iota(std::begin(axes), std::end(axes), axis);
                 return {std::make_shared<ngraph::op::Softmax>(data, axes)};
