@@ -14,6 +14,8 @@
 # limitations under the License.
 # ******************************************************************************
 
+include(FindOpenMP)
+
 set(SRC
     cpu_backend.cpp
     cpu_builder.cpp
@@ -142,7 +144,12 @@ if (NGRAPH_CPU_ENABLE)
     endif()
 
     target_compile_definitions(cpu_backend PRIVATE EIGEN_OPENMP)
-    target_compile_options(cpu_backend PRIVATE "-fopenmp")
+
+    if(OPENMP_FOUND)
+        target_compile_options(cpu_backend PRIVATE "${OpenMP_CXX_FLAGS}")
+    else()
+         message(FATAL_ERROR "The build toolset doesn't support OpenMP which is required by the CPU backend")
+    endif()
 
     if(NGRAPH_DISTRIBUTED_ENABLE)
         find_package(MPI REQUIRED)
