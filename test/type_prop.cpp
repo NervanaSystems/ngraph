@@ -1949,7 +1949,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce)
 TEST(type_prop, conv_1d_back_filters_deduce)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 100};
+    // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 91}); // output delta
@@ -2026,7 +2026,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_padded)
 TEST(type_prop, conv_1d_back_filters_deduce_padded)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 100};
+    // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 96}); // output delta
@@ -2100,7 +2100,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_strided)
 TEST(type_prop, conv_1d_back_filters_deduce_strided)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 100};
+    // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 46}); // output delta
@@ -2178,7 +2178,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_strided_padded)
 TEST(type_prop, conv_1d_back_filters_deduce_strided_padded)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 100};
+    // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 48}); // output delta
@@ -2252,7 +2252,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_strided_small_uneven)
 TEST(type_prop, conv_1d_back_filters_deduce_strided_small_uneven)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 5};
+    // Shape data_batch_shape{64, 3, 5};
     Shape filters_shape{128, 3, 2};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 5});   // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 2}); // output delta
@@ -2323,7 +2323,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_strided_small_even)
 TEST(type_prop, conv_1d_back_filters_deduce_strided_small_even)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 6};
+    // Shape data_batch_shape{64, 3, 6};
     Shape filters_shape{128, 3, 2};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 6});   // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 3}); // output delta
@@ -2396,7 +2396,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_window_dilated)
 TEST(type_prop, conv_1d_back_filters_deduce_window_dilated)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 100};
+    // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 82}); // output delta
@@ -2475,7 +2475,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_window_dilated_padded)
 TEST(type_prop, conv_1d_back_filters_deduce_window_dilated_padded)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 100};
+    // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 87}); // output delta
@@ -2563,7 +2563,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_window_dilated_data_dilated_padde
 TEST(type_prop, conv_1d_back_filters_deduce_window_dilated_data_dilated_padded)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 100};
+    // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});   // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 285}); // output delta

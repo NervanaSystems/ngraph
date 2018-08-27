@@ -158,12 +158,12 @@ op::MaxPoolWithIndices::MaxPoolWithIndices(const shared_ptr<Node>& arg,
 
     set_output_size(2);
     set_output_type(0, get_input_element_type(0), result_shape);
-    //MKLDNN can pick one of the two following datatypes
-    //to store maximum indices: s32 and u8.
-    //For smaller kernels, where 255 positions is enough
-    //to span the entire kernel, u8 is picked.
-    //We conservatively always use s32
-    //to simplify MaxPoolWithIndices c-tor.
+    // MKLDNN can pick one of the two following datatypes
+    // to store maximum indices: s32 and u8.
+    // For smaller kernels, where 255 positions is enough
+    // to span the entire kernel, u8 is picked.
+    // We conservatively always use s32
+    // to simplify MaxPoolWithIndices c-tor.
     set_output_type(1, element::i32, result_shape);
 }
 

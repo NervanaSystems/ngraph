@@ -501,10 +501,10 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
         m_writer.block_begin();
         {
             m_writer << "m_runtime_context = ctx;\n";
-            //set constant pointers during the first run
+            // set constant pointers during the first run
             m_writer << "invoke_constant_mem_ptr();\n";
 
-            //alocate temp memory pool
+            // alocate temp memory pool
             emit_temp_mem_pool_allocation(current_function);
 
             // Add inputs to the variable name map
@@ -533,8 +533,8 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 ss << "((" << type << "*)(outputs[" << i << "]))";
                 m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
 
-                //it should be safe to assign both descriptors to one output*
-                //since needs_copy == false makes `op::Result` an nop
+                // it should be safe to assign both descriptors to one output*
+                // since needs_copy == false makes `op::Result` an nop
                 auto res = dynamic_pointer_cast<ngraph::op::Result>(op);
                 if (!res->needs_copy())
                 {

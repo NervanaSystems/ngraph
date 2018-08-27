@@ -42,9 +42,9 @@ void Input::replace_output(Output& new_output)
 
     if (nerc)
     {
-        //the result of copy_with_new_args will be thrown away or
-        //an exception will be thrown by `m_node`'s class c-tor
-        //if a new input violates one of the type checks in the c-tor.
+        // the result of copy_with_new_args will be thrown away or
+        // an exception will be thrown by `m_node`'s class c-tor
+        // if a new input violates one of the type checks in the c-tor.
         (this->m_node->copy_with_new_args(this->m_node->get_arguments()));
     }
 }

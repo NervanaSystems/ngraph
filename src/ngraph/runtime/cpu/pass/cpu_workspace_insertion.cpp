@@ -110,7 +110,7 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
         return false;
     }
 
-    //find the original MaxPool now
+    // find the original MaxPool now
     std::shared_ptr<op::MaxPool> m_max_pool;
     for (auto u : pattern_map[data]->get_users())
     {
@@ -147,7 +147,7 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
     auto max_pool_with_indices_indices =
         std::make_shared<op::GetOutputElement>(max_pool_with_indices, 1);
 
-    //rewire users to use a new MaxPoolWithIndices (maxpool's output)
+    // rewire users to use a new MaxPoolWithIndices (maxpool's output)
     for (auto& o : m_max_pool->get_outputs())
     {
         std::set<ngraph::descriptor::Input*> copy{begin(o.get_inputs()), end(o.get_inputs())};
@@ -157,7 +157,7 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
         }
     }
 
-    //create a new max_pool_with_indices_bprop
+    // create a new max_pool_with_indices_bprop
     auto max_pool_with_indices_bprop =
         std::make_shared<op::MaxPoolWithIndicesBackprop>(pattern_map[data],
                                                          pattern_map[delta],
