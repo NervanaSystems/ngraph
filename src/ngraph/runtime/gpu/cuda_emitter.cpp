@@ -1593,6 +1593,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
     CUDA_RT_SAFE_CALL(cudaDeviceGetAttribute(&num_SMs, cudaDevAttrMultiProcessorCount, 0));
     uint32_t block_size_x_acc = 256;
     uint32_t nthreads_acc = num_SMs * block_size_x_acc;
+    //call reduce_to_nd
     if (out_rank != 0)
     {
         size_t reduce_idx = build_reduce_to_nd(dtypes, input_shape, reduce_axis, op, kernel);
@@ -1609,6 +1610,8 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
     else
     {
         uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
+        //if the data size is large, call reduce_to_scalar_acc first and then reduce_to_scalar.
+        //other wise, call reduce to scalar directly.
         if (nthreads > nthreads_acc * 9)
         {
             NVShape acc_output_shape{nthreads_acc};
