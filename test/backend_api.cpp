@@ -50,4 +50,7 @@ TEST(backend_api, search_path)
         string message = err.what();
         EXPECT_NE(message.find(path), string::npos);
     }
+
+    // Need to reset to empty string so other tests pass
+    runtime::BackendManager::set_search_directory("");
 }
