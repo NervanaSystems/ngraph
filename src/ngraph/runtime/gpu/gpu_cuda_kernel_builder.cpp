@@ -341,8 +341,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
     return;
 }
 
-call reduce_to_scalar_acc first 
-void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
+call reduce_to_scalar_acc first void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
     codegen::CodeWriter& writer,
     const std::string& name,
     runtime::gpu::GPUKernelArgs& args,

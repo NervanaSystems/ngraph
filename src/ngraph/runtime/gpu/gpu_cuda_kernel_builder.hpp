@@ -67,7 +67,7 @@ namespace ngraph
                                                 size_t out_rank,
                                                 size_t reduce_rank);
 
-//using one block with at most 512 threads to reduce to scalar.
+                //using one block with at most 512 threads to reduce to scalar.
                 static void get_reduce_to_scalar_op(codegen::CodeWriter& writer,
                                                     const std::string& name,
                                                     runtime::gpu::GPUKernelArgs& args,
@@ -75,9 +75,9 @@ namespace ngraph
                                                     const std::string& reduce_op,
                                                     uint32_t block_size_x);
 
-//This is the preprocess to reduce to scalar if the data size is large than a number.
-//The number can be tuned based on hardware.
-//This cuda kernel will accumulate reduction to a certain number of bins depends on hardware.
+                //This is the preprocess to reduce to scalar if the data size is large than a number.
+                //The number can be tuned based on hardware.
+                //This cuda kernel will accumulate reduction to a certain number of bins depends on hardware.
                 static void get_reduce_to_scalar_acc_op(codegen::CodeWriter& writer,
                                                         const std::string& name,
                                                         runtime::gpu::GPUKernelArgs& args,
