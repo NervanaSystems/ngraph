@@ -43,6 +43,7 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
                        -DProtobuf_PROTOC_EXECUTABLE=${Protobuf_PROTOC_EXECUTABLE}
                        -DProtobuf_INCLUDE_DIR=${Protobuf_INCLUDE_DIR}
                        -DPROTOBUF_LIBRARY=${Protobuf_LIBRARY}
+                       -DPROTOBUF_INCLUDE_DIR=${Protobuf_INCLUDE_DIR}
                        -DPROTOBUF_SRC_ROOT_FOLDER=${Protobuf_SRC_ROOT_FOLDER}
             TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/tmp"
             STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/stamp"
@@ -65,6 +66,7 @@ else()
                            -DProtobuf_PROTOC_EXECUTABLE=${Protobuf_PROTOC_EXECUTABLE}
                            -DProtobuf_INCLUDE_DIR=${Protobuf_INCLUDE_DIR}
                            -DPROTOBUF_LIBRARY=${Protobuf_LIBRARY}
+                           -DPROTOBUF_INCLUDE_DIR=${Protobuf_INCLUDE_DIR}
                            -DPROTOBUF_SRC_ROOT_FOLDER=${Protobuf_SRC_ROOT_FOLDER}
                 TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/tmp"
                 STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/stamp"
