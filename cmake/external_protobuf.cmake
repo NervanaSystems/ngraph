@@ -119,3 +119,6 @@ if (NOT TARGET protobuf::protoc)
         IMPORTED_LOCATION "${Protobuf_PROTOC_EXECUTABLE}")
     add_dependencies(protobuf::protoc ext_protobuf)
 endif()
+
+set(Protobuf_FOUND)
+set(PROTOBUF_FOUND)
