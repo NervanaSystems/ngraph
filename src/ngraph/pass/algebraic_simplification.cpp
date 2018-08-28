@@ -143,7 +143,9 @@ static bool simplify_concat(std::shared_ptr<Node> n)
     auto replacement = goe;
     if (goe->get_shape().size() != n->get_shape().size())
     {
-        return false;
+        auto default_shape = ngraph::get_default_order(goe->get_shape());
+        auto reshape = std::make_shared<op::Reshape>(goe, default_shape, n->get_shape());
+        replacement = reshape;
     }
 
     ngraph::replace_node(n, replacement);
