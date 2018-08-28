@@ -409,33 +409,11 @@ TEST(onnx, model_sub)
         ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/sub.onnx"));
 
     Inputs inputs;
-    inputs.emplace_back(
-        ngraph::test::NDArray<float, 3>(
-            {{{1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}, {16, 17, 18, 19, 20}},
+    inputs.emplace_back(ngraph::test::NDArray<float, 3>({{{1, 2, 3}}}).get_vector());
 
-             {{21, 22, 23, 24, 25},
-              {26, 27, 28, 29, 30},
-              {31, 32, 33, 34, 35},
-              {36, 37, 38, 39, 40}},
+    inputs.emplace_back(ngraph::test::NDArray<float, 3>({{{4, 5, 7}}}).get_vector());
 
-             {{41, 42, 43, 44, 45},
-              {46, 47, 48, 49, 50},
-              {51, 52, 53, 54, 55},
-              {56, 57, 58, 59, 60}}})
-            .get_vector());
-    inputs.emplace_back(
-        ngraph::test::NDArray<float, 3>(
-            {{{1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}, {16, 17, 18, 19, 20}},
-             {{1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}, {16, 17, 18, 19, 20}},
-             {{1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}, {16, 17, 18, 19, 20}}})
-            .get_vector());
-
-    auto expected_output = ngraph::test::NDArray<float, 3>(
-        {{{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}},
-         {{20, 20, 20, 20, 20}, {20, 20, 20, 20, 20}, {20, 20, 20, 20, 20}, {20, 20, 20, 20, 20}},
-
-         {{40, 40, 40, 40, 40}, {40, 40, 40, 40, 40}, {40, 40, 40, 40, 40}, {40, 40, 40, 40, 40}}})
-            .get_vector();
+    auto expected_output = ngraph::test::NDArray<float, 3>({{{-3, -3, -4}}}).get_vector();
 
     auto result_vectors = execute(function, inputs, "INTERPRETER");
     EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
@@ -448,41 +426,13 @@ TEST(onnx, model_div)
 
     Inputs inputs;
     inputs.emplace_back(
-        ngraph::test::NDArray<float, 3>(
-            {{{1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}, {16, 17, 18, 19, 20}},
-
-             {{21, 22, 23, 24, 25},
-              {26, 27, 28, 29, 30},
-              {31, 32, 33, 34, 35},
-              {36, 37, 38, 39, 40}},
-
-             {{41, 42, 43, 44, 45},
-              {46, 47, 48, 49, 50},
-              {51, 52, 53, 54, 55},
-              {56, 57, 58, 59, 60}}})
-            .get_vector());
+        ngraph::test::NDArray<float, 3>({{{1, 2, 3}}}).get_vector());
 
     inputs.emplace_back(
-        ngraph::test::NDArray<float, 3>(
-            {{{1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}, {16, 17, 18, 19, 20}},
-             {{1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}, {16, 17, 18, 19, 20}},
-             {{1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}, {16, 17, 18, 19, 20}}})
-            .get_vector());
+        ngraph::test::NDArray<float, 3>({{{1, 4, 12}}}).get_vector());
 
     auto expected_output =
-        ngraph::test::NDArray<float, 3>(
-            {{{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
-
-             {{21, 11, 23 / 3.0, 6, 5},
-              {26 / 6.0, 27 / 7.0, 3.5, 29 / 9.0, 3},
-              {31 / 11.0, 32 / 12.0, 33 / 13.0, 34 / 14.0, 35 / 15.0},
-              {2.25, 37 / 17.0, 38 / 18.0, 39 / 19.0, 2}},
-
-             {{41, 21, 43 / 3.0, 11, 9},
-              {46 / 6.0, 47 / 7.0, 6, 49 / 9.0, 5},
-              {51 / 11.0, 52 / 12.0, 53 / 13.0, 54 / 14.0, 55 / 15.0},
-              {3.5, 57 / 17.0, 58 / 18.0, 59 / 19.0, 3}}})
-            .get_vector();
+        ngraph::test::NDArray<float, 3>({{{1, 0.5, 0.25}}}).get_vector();
 
     auto result_vectors = execute(function, inputs, "INTERPRETER");
     EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
