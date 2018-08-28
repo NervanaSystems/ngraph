@@ -402,7 +402,6 @@ TEST(onnx, model_softmax)
     EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
 }
 
-
 TEST(onnx, model_sub)
 {
     auto function = ngraph::onnx_import::import_onnx_function(
@@ -425,14 +424,11 @@ TEST(onnx, model_div)
         ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/div.onnx"));
 
     Inputs inputs;
-    inputs.emplace_back(
-        ngraph::test::NDArray<float, 3>({{{1, 2, 3}}}).get_vector());
+    inputs.emplace_back(ngraph::test::NDArray<float, 3>({{{1, 2, 3}}}).get_vector());
 
-    inputs.emplace_back(
-        ngraph::test::NDArray<float, 3>({{{1, 4, 12}}}).get_vector());
+    inputs.emplace_back(ngraph::test::NDArray<float, 3>({{{1, 4, 12}}}).get_vector());
 
-    auto expected_output =
-        ngraph::test::NDArray<float, 3>({{{1, 0.5, 0.25}}}).get_vector();
+    auto expected_output = ngraph::test::NDArray<float, 3>({{{1, 0.5, 0.25}}}).get_vector();
 
     auto result_vectors = execute(function, inputs, "INTERPRETER");
     EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
