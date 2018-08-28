@@ -1035,3 +1035,44 @@ void runtime::intelgpu::do_convert_operation(cldnn::topology& topology,
                                                  gws);
     topology.add(op_convert);
 }
+
+void runtime::intelgpu::do_sigmoid_backprop_operation(cldnn::topology& topology,
+                                                      const string& input_name,
+                                                      const Shape& input_shape,
+                                                      const string& delta_name,
+                                                      const Shape& delta_shape,
+                                                      const string& output_name,
+                                                      const Shape& output_shape,
+                                                      const element::Type& output_type)
+{
+    const string entry_point_name = "op_sigmoid_backprop_" + output_name;
+    codegen::CodeWriter writer;
+    vector<size_t> gws;
+
+    runtime::intelgpu::gen_func_def(
+        writer, entry_point_name, {2, "float"}, {input_shape, delta_shape}, "float", output_shape);
+
+    writer.block_begin();
+    {
+        writer << "float func_x = 0.0f;\n";
+        gws = runtime::intelgpu::generate_loops(writer, output_shape, true);
+
+        writer << "func_x = 1/(1+ exp(-input0" << access_dims(input_shape) << "));\n";
+        writer << "output" << access_dims(output_shape) << " = input1" << access_dims(delta_shape)
+               << " * func_x * (1 - func_x);\n";
+
+        runtime::intelgpu::generate_loops(writer, output_shape, false);
+    }
+    writer.block_end();
+
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const cldnn::custom_gpu_primitive op_sigmoid_backprop(output_name,
+                                                          {input_name, delta_name},
+                                                          {writer.get_code()},
+                                                          entry_point_name,
+                                                          get_kernel_args(2, 1),
+                                                          "",
+                                                          layout,
+                                                          gws);
+    topology.add(op_sigmoid_backprop);
+}
