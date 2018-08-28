@@ -103,6 +103,8 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
     auto bias_i2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
     auto broadcast_bias_i2h = std::make_shared<op::Broadcast>(bias_i2h, Shape{10, 400}, AxisSet{0});
     auto add_1 = std::make_shared<op::Add>(dot_1, broadcast_bias_i2h);
+    //auto add_1 = std::make_shared<pattern::op::Any>(dot_1, pattern::has_class<op::Add>(), NodeVector{dot_1, broadcast_bias_i2h});
+
 
     auto hidden_ht = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 50});
     auto weights_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 50});
@@ -112,8 +114,10 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
 
     auto bias_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
     auto broadcast_bias_h2h = std::make_shared<op::Broadcast>(bias_h2h, Shape{10, 400}, AxisSet{0});
+    //auto add_2 = std::make_shared<pattern::op::Any>(dot_2, pattern::has_class<op::Add>(), NodeVector{dot_2, broadcast_bias_h2h});
     auto add_2 = std::make_shared<op::Add>(dot_2, broadcast_bias_h2h);
 
+    //auto X = std::make_shared<pattern::op::Any>(add_1, pattern::has_class<op::Add>(), NodeVector{add_1, add_2});
     auto X = std::make_shared<op::Add>(add_2, add_1);
     // construct forget gate
     auto input_slice_0 = std::make_shared<op::Slice>(X, Coordinate{0, 0}, Coordinate{10, 100});
@@ -132,6 +136,9 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
 
     auto add_ct_1_input_gate_tanh_1 =
         std::make_shared<op::Add>(multiply_forget_gate_ct_1, multiply_input_gate_tanh_1);
+    //auto add_ct_1_input_gate_tanh_1 = std::make_shared<pattern::op::Any>(multiply_forget_gate_ct_1,
+    //pattern::has_class<op::Add>(),
+    //NodeVector{multiply_forget_gate_ct_1, multiply_input_gate_tanh_1});
     auto ct_label = std::make_shared<pattern::op::Label>(
         add_ct_1_input_gate_tanh_1, nullptr, NodeVector{add_ct_1_input_gate_tanh_1});
 
@@ -194,18 +201,20 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
 
         // if the matched LSTM is the first cell we need to check if symbol input_xt corresponds
         // to the input data tensor, or the hidden (recurrent) data tensor
+
+
         if (!intermediate_lstm &&
             (std::dynamic_pointer_cast<op::Broadcast>(pattern_map[hidden_ht]) &&
              std::dynamic_pointer_cast<op::Constant>(pattern_map[hidden_ht]->get_argument(0))))
         // in this case input_xt is the input data to the first LSTM
         {
-            lstm = std::make_shared<op::gpu::Lstm>(pattern_map[input_xt],    // x  -  args[0]
-                                                   pattern_map[weights_i2h], // w  -  args[1]
-                                                   pattern_map[hidden_ht],   // hx -  args[2]
-                                                   pattern_map[weights_h2h], // w  -  args[3]
-                                                   pattern_map[bias_i2h],    // b  -  args[4]
-                                                   pattern_map[bias_h2h],    // b  -  args[5]
-                                                   pattern_map[ct_1]);       // cx -  args[6]
+            lstm = std::make_shared<op::gpu::Lstm>(pattern_map[input_xt],
+                                                   pattern_map[weights_i2h],
+                                                   pattern_map[hidden_ht],
+                                                   pattern_map[weights_h2h],
+                                                   pattern_map[bias_i2h],
+                                                   pattern_map[bias_h2h],
+                                                   pattern_map[ct_1]);
         }
         else if (!intermediate_lstm &&
                  (std::dynamic_pointer_cast<op::Broadcast>(pattern_map[input_xt]) &&
@@ -220,8 +229,13 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                                    pattern_map[bias_i2h],
                                                    pattern_map[ct_1]);
         }
-        else if (pattern_map[ct_1]->get_shape() == pattern_map[hidden_ht]->get_shape())
+        else if (pattern_map[hidden_ht]->get_arguments().size()
+                 && pattern_map[ct_1]->get_arguments().at(0)->get_instance_id()
+                 == pattern_map[hidden_ht]->get_arguments().at(0)->get_instance_id())
+            // this still has a bug vector: if the hidden input ht is a non-broadcasted constant
+            // it will be misclassified as input data xt
         {
+            std::cout << "input_xt is output data from previous LSTM" << std::endl;
             // in this case input_xt is the output data from the previous LSTM cell
             NGRAPH_DEBUG << "ct_shape : " << join(pattern_map[ct_1]->get_shape())
                          << " hidden state shape: " << join(pattern_map[hidden_ht]->get_shape());
@@ -235,6 +249,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
         }
         else
         {
+            std::cout << "hiddent_ht is output data from previous LSTM" << std::endl;
             // in this case hidden_ht is the output data from the previous LSTM cell
             NGRAPH_DEBUG << "ct_shape: " << join(pattern_map[ct_1]->get_shape())
                          << " hidden state shape: " << join(pattern_map[input_xt]->get_shape());
@@ -283,7 +298,6 @@ static std::shared_ptr<ngraph::Node>
                      bool concat_all = false)
 {
     NGRAPH_DEBUG << "Inside compute arg " << rnn_labels.size();
-    NodeVector concat_args;
 
     // src_layer -> concatenate input symbols from different LSTM cells belonging to same RNN layer
     // in the order 0, 1, 2... t time slice
