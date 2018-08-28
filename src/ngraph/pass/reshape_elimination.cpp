@@ -136,7 +136,7 @@ void ngraph::pass::ReshapeElimination::construct_reshapex2_pattern()
 
 void ngraph::pass::ReshapeElimination::construct_dot_transpose_pattern()
 {
-    //dot(A,B).T = dot (B.T, A.T)
+    // dot(A,B).T = dot (B.T, A.T)
     auto dot_pred = [](std::shared_ptr<Node> n) {
         return static_cast<bool>(std::dynamic_pointer_cast<op::Dot>(n));
     };
@@ -149,7 +149,7 @@ void ngraph::pass::ReshapeElimination::construct_dot_transpose_pattern()
                      << m.get_match_root()->get_name();
 
         auto mtranspose = std::dynamic_pointer_cast<op::Reshape>(m.get_match_root());
-        //this also checks the rank
+        // this also checks the rank
         if (mtranspose->get_input_order() != AxisVector{1, 0})
         {
             NGRAPH_DEBUG << "Reshape isn't transpose. "
