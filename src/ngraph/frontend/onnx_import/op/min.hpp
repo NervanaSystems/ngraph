@@ -17,7 +17,7 @@
 #pragma once
 
 #include "ngraph/node_vector.hpp"
-#include "ngraph/op/add.hpp"
+#include "ngraph/op/minimum.hpp"
 
 #include "utils/variadic.hpp"
 #include "core/node.hpp"
@@ -28,9 +28,9 @@ namespace ngraph
     {
         namespace op
         {
-            inline NodeVector sum(const Node& node)
+            inline NodeVector min(const Node& node)
             {
-                return variadic::make_ng_variadic_op<ngraph::op::Add>(node);
+                return variadic::make_ng_variadic_op<ngraph::op::Minimum>(node);
             }
 
         } // namespace op
