@@ -50,6 +50,7 @@ add_library(onnx_import STATIC
         op/softmax.hpp
         op/split.cpp
         op/split.hpp
+        op/sum.hpp
         ops_bridge.cpp
         utils/broadcasting.cpp
         utils/broadcasting.hpp
