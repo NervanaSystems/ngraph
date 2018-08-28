@@ -108,7 +108,6 @@
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/op/lstm.hpp"
-#include "ngraph/runtime/gpu/pass/gpu_concat_inputs.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_layout.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_rnn_fusion.hpp"
 #include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"

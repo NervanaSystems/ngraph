@@ -176,7 +176,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
 
         if (bias_i2h->get_shape().size() != 1 || bias_h2h->get_shape().size() != 1)
         {
-            throw ngraph_error("Bias should have rank of 1 for MKLDNN Rnn op");
+            throw ngraph_error("Bias should have rank of 1 for Rnn op");
         }
 
         // Determine which is ht_1 and xt. but if both xt and ht_1 have the same shape we need to capture this
@@ -441,19 +441,19 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         {
             throw ngraph_error(
                 "Pattern matcher error src_layer, weights_layer, src_iter, weights_iter should "
-                "have rank 2 for MKLDNN RNN op");
+                "have rank 2 for RNN op");
         }
 
         if (bias_rank != 1)
         {
-            throw ngraph_error("Bias should have rank of 1 for MKLDNN Rnn op");
+            throw ngraph_error("Bias should have rank of 1 for Rnn op");
         }
 
         if (src_layer->get_element_type() != element::f32 ||
             src_iter->get_element_type() != element::f32)
         {
             throw ngraph_error(
-                "input tensor type and input recurrent state tensor type for MKLDNN RNN op should "
+                "input tensor type and input recurrent state tensor type for RNN op should "
                 "be float32");
         }
 
@@ -663,7 +663,7 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         }
 
         // we just need to capture the input symbols {x0 | x1.....| xt} of the first lstm layer
-        // the intermediate inputs for the next layer will be computed by the MKLDNN
+        // the intermediate inputs for the next layer will be computed by the kernel
         auto src_layer_nodes = m.get_bound_nodes_for_pattern(src_layer_label);
         auto src_layer = src_layer_nodes[src_layer_nodes.size() - 1];
 
@@ -822,7 +822,7 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                 {
                     // we need to only replace the {ht} consumers of the last RNN layer,
                     // since for other layers the intermediate outputs {ht} will be computed
-                    // within MKLDNN
+                    // within the kernel
                     if (index == 0)
                     {
                         if (rnn_goe_node->get_n() == 0)

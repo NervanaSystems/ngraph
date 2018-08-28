@@ -42,7 +42,7 @@ namespace ngraph
                 //   [1] - ct, output recurrent state tensor with the same shape as cell state
 
                 // This version of the LSTM op is only used to simplify recurrent RNN cell(LSTM) fusion across
-                // horizontal time steps. This doesnt have mkldnn emitter code.
+                // horizontal time steps.
                 Lstm(std::shared_ptr<Node> input_xt_1,
                      std::shared_ptr<Node> i2h_weights,
                      std::shared_ptr<Node> hidden_state_ht_1,
@@ -62,7 +62,7 @@ namespace ngraph
                 //   [0] - ht, output tensor with shape (sequence_length*batch_size, num_hidden) .
                 //   [1] - {ht | ct} output recurrent state tensor with the same shape as states
 
-                // This version of the LSTM op supports MKLDNN emitter code, this can be used standalone for computing RNN
+                // This version of the LSTM op supports emitter code, this can be used standalone for computing RNN
                 // without fusing RNN cell (LSTM)'s across time steps.
                 Lstm(std::shared_ptr<Node> src_layer,
                      std::shared_ptr<Node> src_iter,

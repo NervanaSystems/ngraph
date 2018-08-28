@@ -42,7 +42,6 @@ set(SRC
     pass/tensor_memory_reservation.cpp
     gpu_kernel_args.cpp
     pass/gpu_rnn_fusion.cpp
-    pass/gpu_concat_inputs.cpp
     ../gpu/op/lstm.cpp
     ../gpu/op/rnn.cpp
     )
