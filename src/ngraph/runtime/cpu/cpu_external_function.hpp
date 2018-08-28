@@ -62,6 +62,11 @@ namespace ngraph
             using OpMap = std::unordered_map<std::type_index, OpFunction>;
 #endif
 
+#define EMIT_DEBUG_MANIFEST(writer, tensor_name)                                                   \
+    {                                                                                              \
+        if (std::getenv("NGRAPH_DEX_DEBUG") != nullptr)                                            \
+            writer << tensor_name << "\n";                                                         \
+    }
             struct OpAttributes
             {
                 std::string Description;
@@ -91,7 +96,7 @@ namespace ngraph
                 };
 
                 CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                     bool release_function = false);
+                                     bool release_function = true);
                 ~CPU_ExternalFunction();
                 std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame> make_call_frame();
 
@@ -129,6 +134,8 @@ namespace ngraph
                     return callees;
                 }
                 bool is_direct_execution() const { return m_direct_execution; }
+                bool is_release_function() const { return m_release_function; }
+                void release_function() { m_function = nullptr; }
             protected:
                 void build();
 
@@ -173,7 +180,6 @@ namespace ngraph
                 std::string strip_comments(const std::string&);
 
 #endif
-                void release_function() { m_function = nullptr; }
                 std::shared_ptr<ngraph::Function> m_function;
                 bool m_release_function;
 

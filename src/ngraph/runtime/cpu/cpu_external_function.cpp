@@ -1194,7 +1194,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
                 intermediates_offsets.emplace_back(tensor_data[tensor->get_name()],
                                                    tensor->get_pool_offset());
                 m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
-                writer << tensor->get_name() << "\n";
+                EMIT_DEBUG_MANIFEST(writer, tensor->get_name());
             }
         }
     }
@@ -1209,7 +1209,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
             tensor_data[tv->get_tensor().get_name()] =
                 const_cast<void*>(static_pointer_cast<ngraph::op::Constant>(node)->get_data_ptr());
             m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::CONSTANT;
-            writer << tv->get_tensor().get_name() << "\n";
+            EMIT_DEBUG_MANIFEST(writer, tv->get_tensor().get_name());
         }
     }
 
@@ -1225,7 +1225,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
                                               arg_index,
                                               tensor_stale[tv->get_tensor().get_name()]);
             m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::INPUT;
-
+            EMIT_DEBUG_MANIFEST(writer, tv->get_tensor().get_name());
             propagate_in_place_input(
                 &param->get_outputs().at(i), tv->get_tensor().get_name(), true);
             arg_index++;
@@ -1240,8 +1240,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
         function_output_index.emplace_back(tensor_data[tv->get_tensor().get_name()], i);
         m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::OUTPUT;
-
-        writer << tv->get_tensor().get_name() << "\n";
+        EMIT_DEBUG_MANIFEST(writer, tv->get_tensor().get_name());
         auto res = std::dynamic_pointer_cast<ngraph::op::Result>(op);
         if (!res->needs_copy())
         {
@@ -1448,7 +1447,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
                         }
                     });
 
-                if (m_release_function)
+                if (m_release_function && !(std::getenv("NGRAPH_DEX_DEBUG") != nullptr))
                 {
                     release_function();
                 }
@@ -1514,10 +1513,11 @@ void runtime::cpu::CPU_ExternalFunction::build()
 
     m_is_built = true;
 
-    if (m_release_function && !m_use_tbb)
+    if (m_release_function && !m_use_tbb && !(std::getenv("NGRAPH_DEX_DEBUG") != nullptr))
     {
         release_function();
     }
+
     ofstream out(filename);
     string code = writer.get_code();
     out << code;
