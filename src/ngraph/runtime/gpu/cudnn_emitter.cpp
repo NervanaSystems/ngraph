@@ -963,7 +963,6 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
 
     uint32_t seq_length = node->get_src_sequence_length();
     uint32_t batch_size = node->get_batch_size();
-    std::cout << "Sequence length: " << seq_length << " Batch size: " << batch_size << std::endl;
     std::vector<int32_t> sequence_lengths(batch_size, seq_length);
     cudnnDataType_t data_type = get_cudnn_datatype(dtype);
     void* pad_value = m_host_parameters.allocate_by_datatype(data_type, 0);
@@ -1010,12 +1009,9 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
                                               sequence_lengths.data(),
                                               pad_value));
 
-    std::cout << "Input vector size: " << input_size
-              << " Hidden/recurrent vector size: " << hidden_size << std::endl;
     // TO DO: with rnn projection layers the third dimension of the hidden_shape should be recProjSize
     cudnnTensorFormat_t format = CUDNN_TENSOR_NCHW;
     uint32_t num_layers = node->get_num_fused_layers() * direction;
-    std::cout << "Num layers: " << num_layers << std::endl;
     Shape hidden_shape{num_layers, batch_size, hidden_size};
     auto& hx_desc = get_nd_tensor_descriptor(hidden_shape, data_type, format);
     auto& hy_desc = get_nd_tensor_descriptor(hidden_shape, data_type, format);
@@ -1127,8 +1123,6 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
                                                            &return_format,
                                                            &return_rank,
                                                            dimensions.data()));
-                std::cout << "Layer: " << ilayer << " Tensor: " << itensor << " Kind: " << kind
-                          << " Dimensions: " << join(dimensions) << std::endl;
                 (kind == 0 ? weight_offsets : bias_offsets)
                     .emplace_back(reinterpret_cast<int64_t>(offset),
                                   shape_size(dimensions) * args[0].get_element_type().size());
@@ -1141,21 +1135,6 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
     CUDNN_SAFE_CALL(cudnnGetRNNWorkspaceSize(
         *m_ctx->cudnn_handle, rnn_desc, seq_length, seq_descriptors.data(), &workspace_size));
     size_t workspace_idx = allocator.reserve_workspace(workspace_size);
-    std::cout << "Workspace size: " << workspace_size << std::endl;
-
-    std::cout << "Parameter space size: " << params_size << std::endl;
-    for (int i = 0; i < weight_offsets.size(); i++)
-    {
-        std::cout << "(" << weight_offsets.at(i).first << ", " << weight_offsets.at(i).second
-                  << ") ";
-    }
-    std::cout << std::endl;
-
-    for (int i = 0; i < bias_offsets.size(); i++)
-    {
-        std::cout << "(" << bias_offsets.at(i).first << ", " << bias_offsets.at(i).second << ") ";
-    }
-    std::cout << std::endl;
 
     auto wx_size = args[1].get_element_type().size() * shape_size(args[1].get_shape());
     auto wh_size = args[3].get_element_type().size() * shape_size(args[3].get_shape());
