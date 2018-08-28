@@ -45,14 +45,14 @@ namespace ngraph
 
             /// \return the position within all supplied tensors of this input
             size_t get_index() const { return m_index; }
-            // \return the connected output
+            /// \return the connected output
             const Output& get_output() const { return *m_output; }
-            // \return the connected output
+            /// \return the connected output
             Output& get_output() { return *m_output; }
-            // \return the tensor of the connected output
+            /// \return the tensor of the connected output
             const Tensor& get_tensor() const;
 
-            // \return the tensor of the connected output
+            /// \return the tensor of the connected output
             Tensor& get_tensor();
 
             void replace_output(std::shared_ptr<Node> node, size_t i);
