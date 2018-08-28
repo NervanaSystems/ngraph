@@ -361,7 +361,6 @@ TEST(onnx, model_matmul)
 
 TEST(onnx, model_softmax)
 {
-    // Simple ReLU test
     auto function = ngraph::onnx_import::import_onnx_function(
         ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/softmax.onnx"));
 
