@@ -20,7 +20,7 @@
 extern "C" {
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
-    onnxGetBackendIDs(onnxBackendID* backendIDs, std::size_t* numBackends)
+    onnxGetBackendIDs(onnxBackendID* backendIDs, size_t* numBackends)
 {
     if ((backendIDs == nullptr) || (numBackends == nullptr))
     {
@@ -36,13 +36,13 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxGetBackendInfo(
-    onnxBackendID backendID, onnxBackendInfo infoType, void* infoValue, std::size_t* infoValueSize)
+    onnxBackendID backendID, onnxBackendInfo infoType, void* infoValue, size_t* infoValueSize)
 {
     return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxGetBackendCompatibility(
-    onnxBackendID backendID, std::size_t onnxModelSize, const void* onnxModel)
+    onnxBackendID backendID, size_t onnxModelSize, const void* onnxModel)
 {
     return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
 }
@@ -81,7 +81,7 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxReleaseEvent(onnx
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
     onnxInitGraph(onnxBackend backend,
-                  std::size_t onnxModelSize,
+                  size_t onnxModelSize,
                   const void* onnxModel,
                   std::uint32_t weightsCount,
                   const onnxTensorDescriptor* weightDescriptors,
