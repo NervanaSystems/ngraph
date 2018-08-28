@@ -105,7 +105,6 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
     auto add_1 = std::make_shared<op::Add>(dot_1, broadcast_bias_i2h);
     //auto add_1 = std::make_shared<pattern::op::Any>(dot_1, pattern::has_class<op::Add>(), NodeVector{dot_1, broadcast_bias_i2h});
 
-
     auto hidden_ht = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 50});
     auto weights_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 50});
     auto param2_2_reshape =
@@ -202,7 +201,6 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
         // if the matched LSTM is the first cell we need to check if symbol input_xt corresponds
         // to the input data tensor, or the hidden (recurrent) data tensor
 
-
         if (!intermediate_lstm &&
             (std::dynamic_pointer_cast<op::Broadcast>(pattern_map[hidden_ht]) &&
              std::dynamic_pointer_cast<op::Constant>(pattern_map[hidden_ht]->get_argument(0))))
@@ -229,11 +227,11 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                                    pattern_map[bias_i2h],
                                                    pattern_map[ct_1]);
         }
-        else if (pattern_map[hidden_ht]->get_arguments().size()
-                 && pattern_map[ct_1]->get_arguments().at(0)->get_instance_id()
-                 == pattern_map[hidden_ht]->get_arguments().at(0)->get_instance_id())
-            // this still has a bug vector: if the hidden input ht is a non-broadcasted constant
-            // it will be misclassified as input data xt
+        else if (pattern_map[hidden_ht]->get_arguments().size() &&
+                 pattern_map[ct_1]->get_arguments().at(0)->get_instance_id() ==
+                     pattern_map[hidden_ht]->get_arguments().at(0)->get_instance_id())
+        // this still has a bug vector: if the hidden input ht is a non-broadcasted constant
+        // it will be misclassified as input data xt
         {
             std::cout << "input_xt is output data from previous LSTM" << std::endl;
             // in this case input_xt is the output data from the previous LSTM cell

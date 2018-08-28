@@ -80,25 +80,26 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
     const int rnn_direction = 1;
     const int num_of_rnn_fused_layer = 1;
     auto rnn_node = make_shared<op::gpu::Rnn>(src_layer,
-                                         src_iter,
-                                         weights_layer,
-                                         weights_iter,
-                                         bias_layer,
-                                         bias_iter,
-                                         state_iter,
-                                         number_of_timesteps,
-                                         number_of_gates_per_cell,
-                                         src_seq_length,
-                                         src_layer_feature_size,
-                                         feature_size,
-                                         rnn_direction,
-                                         num_of_rnn_fused_layer);
+                                              src_iter,
+                                              weights_layer,
+                                              weights_iter,
+                                              bias_layer,
+                                              bias_iter,
+                                              state_iter,
+                                              number_of_timesteps,
+                                              number_of_gates_per_cell,
+                                              src_seq_length,
+                                              src_layer_feature_size,
+                                              feature_size,
+                                              rnn_direction,
+                                              num_of_rnn_fused_layer);
     auto rnn_ht_output = make_shared<op::GetOutputElement>(rnn_node, 0);
     auto rnn_ct_output = make_shared<op::GetOutputElement>(rnn_node, 1);
 
     auto func = make_shared<Function>(
         NodeVector{rnn_ht_output, rnn_ct_output},
-        op::ParameterVector{src_layer, src_iter, weights_layer, weights_iter, bias_layer, bias_iter, state_iter});
+        op::ParameterVector{
+            src_layer, src_iter, weights_layer, weights_iter, bias_layer, bias_iter, state_iter});
     auto backend = runtime::Backend::create("GPU");
 
     shared_ptr<runtime::TensorView> src_layer_t =
@@ -127,10 +128,15 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
     copy_data(bias_layer_t, vector<float>(400, 1));
     copy_data(bias_iter_t, vector<float>(400, 1));
 
-    backend->call_with_validate(
-        func,
-        {result_ht, result_ct},
-        {src_layer_t, src_iter_t, weights_layer_t, weights_iter_t, bias_layer_t, bias_iter_t, state_iter_t});
+    backend->call_with_validate(func,
+                                {result_ht, result_ct},
+                                {src_layer_t,
+                                 src_iter_t,
+                                 weights_layer_t,
+                                 weights_iter_t,
+                                 bias_layer_t,
+                                 bias_iter_t,
+                                 state_iter_t});
     vector<float> expected_ht(10 * 100, 0.964028f);
     vector<float> expected_ct;
     for (size_t i = 0; i < 10 * 100; i++)
