@@ -25,14 +25,12 @@ using namespace ngraph;
 op::util::BinaryElementwise::BinaryElementwise(const std::string& node_type,
                                                const std::shared_ptr<Node>& arg0,
                                                const std::shared_ptr<Node>& arg1)
-    : RequiresTensorViewArgs(node_type, NodeVector{arg0, arg1})
+    : Op(node_type, check_single_output_args(NodeVector{arg0, arg1}))
 {
 }
 
 void op::util::BinaryElementwise::validate_and_infer_types()
 {
-    RequiresTensorViewArgs::validate_and_infer_types();
-
     if (get_input_shape(0) != get_input_shape(1))
     {
         throw ngraph_error("Arguments must have the same tensor view shape");

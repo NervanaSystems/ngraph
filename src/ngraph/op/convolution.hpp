@@ -18,7 +18,7 @@
 
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief Batched convolution operation, with optional window dilation and stride.
         ///
-        class Convolution : public util::RequiresTensorViewArgs
+        class Convolution : public Op
         {
         public:
             /// \brief Constructs a batched convolution operation.
@@ -160,7 +160,7 @@ namespace ngraph
         };
 
         /// \brief Data batch backprop for batched convolution operation.
-        class ConvolutionBackpropData : public util::RequiresTensorViewArgs
+        class ConvolutionBackpropData : public Op
         {
         public:
             /// \brief Constructs a batched-convolution data batch-backprop operation.
@@ -258,7 +258,7 @@ namespace ngraph
         };
 
         /// \brief Filters backprop for batched convolution operation.
-        class ConvolutionBackpropFilters : public util::RequiresTensorViewArgs
+        class ConvolutionBackpropFilters : public Op
         {
         public:
             /// \brief Constructs a batched-convolution filter-backprop operation.

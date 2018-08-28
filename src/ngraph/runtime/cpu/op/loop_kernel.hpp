@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 #include "ngraph/util.hpp"
 
 namespace ngraph
@@ -29,7 +29,7 @@ namespace ngraph
             {
                 /// \brief LoopKernel represents graphs consisting
                 /// of arithmetic operations that can be executed in the same loop
-                class LoopKernel : public ngraph::op::util::RequiresTensorViewArgs
+                class LoopKernel : public ngraph::op::Op
                 {
                 public:
                     LoopKernel(const NodeVector& node_list,

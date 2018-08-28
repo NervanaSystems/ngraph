@@ -25,7 +25,7 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
                                  std::shared_ptr<ngraph::Node> gamma,
                                  std::shared_ptr<ngraph::Node> beta,
                                  std::shared_ptr<ngraph::Node> input)
-    : RequiresTensorViewArgs("BatchNorm", {gamma, beta, input})
+    : Op("BatchNorm", check_single_output_args({gamma, beta, input}))
     , m_bn_input_shape(input->get_shape())
     , m_epsilon(eps)
     , m_training(true)
@@ -35,8 +35,6 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
 
 void ngraph::op::BatchNorm::validate_and_infer_types()
 {
-    util::RequiresTensorViewArgs::validate_and_infer_types();
-
     m_bn_input_shape = get_input_shape(INPUT);
     if (m_bn_input_shape.size() < 2)
     {
@@ -119,7 +117,7 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
                                  std::shared_ptr<ngraph::Node> mean,
                                  std::shared_ptr<ngraph::Node> variance,
                                  bool training)
-    : RequiresTensorViewArgs("BatchNorm", {gamma, beta, input, mean, variance})
+    : Op("BatchNorm", check_single_output_args({gamma, beta, input, mean, variance}))
     , m_epsilon(eps)
     , m_training(training)
 {
@@ -174,7 +172,7 @@ ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
                                                  std::shared_ptr<ngraph::Node> mean,
                                                  std::shared_ptr<ngraph::Node> variance,
                                                  std::shared_ptr<ngraph::Node> delta)
-    : RequiresTensorViewArgs("BatchNormBackprop", {gamma, beta, input, mean, variance, delta})
+    : Op("BatchNormBackprop", check_single_output_args({gamma, beta, input, mean, variance, delta}))
     , epsilon(eps)
 
 {
@@ -184,7 +182,6 @@ ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
 void ngraph::op::BatchNormBackprop::validate_and_infer_types()
 {
     set_output_size(3);
-    util::RequiresTensorViewArgs::validate_and_infer_types();
 
     if (get_input_shape(INPUT).size() != 4)
     {

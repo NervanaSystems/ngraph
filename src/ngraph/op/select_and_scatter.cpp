@@ -30,7 +30,7 @@ op::SelectAndScatter::SelectAndScatter(const shared_ptr<Node>& arg_selectee,
                                        const shared_ptr<Function>& scatter_function,
                                        const Shape& window_shape,
                                        const Strides& window_movement_strides)
-    : RequiresTensorViewArgs("SelectAndScatter", {arg_selectee, arg_source, arg_init})
+    : Op("SelectAndScatter", check_single_output_args({arg_selectee, arg_source, arg_init}))
     , m_selection_function(selection_function)
     , m_scatter_function(scatter_function)
     , m_window_shape(window_shape)

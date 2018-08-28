@@ -29,7 +29,7 @@ op::ReverseSequence::ReverseSequence(const std::shared_ptr<Node> arg,
                                      const std::shared_ptr<Node> seq_indices,
                                      size_t batch_axis,
                                      size_t seq_axis)
-    : RequiresTensorViewArgs("ReverseSequence", {arg, seq_indices})
+    : Op("ReverseSequence", check_single_output_args({arg, seq_indices}))
     , m_batch_axis(batch_axis)
     , m_seq_axis(seq_axis)
 {
@@ -38,8 +38,6 @@ op::ReverseSequence::ReverseSequence(const std::shared_ptr<Node> arg,
 
 void op::ReverseSequence::validate_and_infer_types()
 {
-    util::RequiresTensorViewArgs::validate_and_infer_types();
-
     if (get_input_shape(1).size() != 1)
     {
         throw ngraph_error("indices should be a 1-dimensional array");

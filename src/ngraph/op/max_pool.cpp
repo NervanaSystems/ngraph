@@ -30,7 +30,7 @@ op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
                      const Strides& window_movement_strides,
                      const Shape& padding_below,
                      const Shape& padding_above)
-    : RequiresTensorViewArgs("MaxPool", {arg})
+    : Op("MaxPool", check_single_output_args({arg}))
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
@@ -41,8 +41,6 @@ op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
 
 void op::MaxPool::validate_and_infer_types()
 {
-    util::RequiresTensorViewArgs::validate_and_infer_types();
-
     if (m_inputs.size() != 1)
     {
         throw ngraph_error("Max-pool data batch argument must have exactly one output");
@@ -221,7 +219,7 @@ op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
                                      const Shape& padding_below,
                                      const Shape& padding_above,
                                      const shared_ptr<op::MaxPool>& forward_op)
-    : RequiresTensorViewArgs("MaxPoolBackprop", {arg_forward, delta})
+    : Op("MaxPoolBackprop", check_single_output_args({arg_forward, delta}))
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
@@ -233,8 +231,6 @@ op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
 
 void op::MaxPoolBackprop::validate_and_infer_types()
 {
-    util::RequiresTensorViewArgs::validate_and_infer_types();
-
     // --
     // TODO: de-duplicate this code from MaxPool::MaxPool.
     // --

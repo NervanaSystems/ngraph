@@ -18,14 +18,14 @@
 
 #include <utility>
 
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Generalized dot product operation, including scalar-tensor product, matrix-vector product, and matrix multiplication.
-        class Dot : public util::RequiresTensorViewArgs
+        class Dot : public Op
         {
         public:
             /// \brief Constructs a dot product operation.

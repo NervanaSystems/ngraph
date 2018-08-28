@@ -18,8 +18,8 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/op/op.hpp"
 #include "ngraph/op/util/arithmetic_reduction.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {

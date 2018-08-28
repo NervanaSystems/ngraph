@@ -20,14 +20,14 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 #include "ngraph/util.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class BatchNorm : public util::RequiresTensorViewArgs
+        class BatchNorm : public Op
         {
         public:
             // In this version of BatchNorm:
@@ -112,7 +112,7 @@ namespace ngraph
             bool m_training;
         };
 
-        class BatchNormBackprop : public util::RequiresTensorViewArgs
+        class BatchNormBackprop : public Op
         {
         public:
             BatchNormBackprop(double eps,

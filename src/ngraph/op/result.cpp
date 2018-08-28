@@ -25,15 +25,13 @@ using namespace std;
 using namespace ngraph;
 
 op::Result::Result(const shared_ptr<Node>& arg)
-    : RequiresTensorViewArgs("Result", {arg})
+    : Op("Result", check_single_output_args({arg}))
 {
     constructor_validate_and_infer_types();
 }
 
 void op::Result::validate_and_infer_types()
 {
-    util::RequiresTensorViewArgs::validate_and_infer_types();
-
     if (get_input_size() != 1)
     {
         throw ngraph_error("Result expected a single-output argument");

@@ -23,7 +23,7 @@ op::Slice::Slice(const shared_ptr<Node>& arg,
                  const Coordinate& lower_bounds,
                  const Coordinate& upper_bounds,
                  const Strides& strides)
-    : RequiresTensorViewArgs("Slice", {arg})
+    : Op("Slice", check_single_output_args({arg}))
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
     , m_strides(strides)
@@ -34,7 +34,7 @@ op::Slice::Slice(const shared_ptr<Node>& arg,
 op::Slice::Slice(const shared_ptr<Node>& arg,
                  const Coordinate& lower_bounds,
                  const Coordinate& upper_bounds)
-    : RequiresTensorViewArgs("Slice", {arg})
+    : Op("Slice", check_single_output_args({arg}))
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
     , m_strides(Strides())
@@ -44,8 +44,6 @@ op::Slice::Slice(const shared_ptr<Node>& arg,
 
 void op::Slice::validate_and_infer_types()
 {
-    util::RequiresTensorViewArgs::validate_and_infer_types();
-
     if (0 == m_strides.size())
     {
         m_strides = Strides(m_lower_bounds.size(), 1);

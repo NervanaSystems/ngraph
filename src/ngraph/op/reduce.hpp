@@ -17,7 +17,7 @@
 #pragma once
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
@@ -77,7 +77,7 @@ namespace ngraph
         /// | Type                                      | Description                                                                                                      |
         /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by reduction. |
-        class Reduce : public util::RequiresTensorViewArgs
+        class Reduce : public Op
         {
         public:
             /// \brief Constructs a reduction operation.

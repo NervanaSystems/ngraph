@@ -20,14 +20,14 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 #include "ngraph/util.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class BatchNormRelu : public util::RequiresTensorViewArgs
+        class BatchNormRelu : public Op
         {
         public:
             BatchNormRelu(double eps,

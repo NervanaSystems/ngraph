@@ -27,7 +27,7 @@ op::ReduceWindow::ReduceWindow(const shared_ptr<Node>& arg_reductee,
                                const shared_ptr<Function>& reduction_function,
                                const Shape& window_shape,
                                const Strides& window_movement_strides)
-    : RequiresTensorViewArgs("ReduceWindow", {arg_reductee, arg_init})
+    : Op("ReduceWindow", check_single_output_args({arg_reductee, arg_init}))
     , m_reduction_function(reduction_function)
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)

@@ -16,13 +16,13 @@
 
 #pragma once
 
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class BatchDot : public util::RequiresTensorViewArgs
+        class BatchDot : public Op
         {
         public:
             BatchDot(std::shared_ptr<Node> a,

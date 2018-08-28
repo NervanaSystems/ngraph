@@ -24,7 +24,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Reverse::Reverse(const shared_ptr<Node>& arg, const AxisSet& reversed_axes)
-    : RequiresTensorViewArgs("Reverse", {arg})
+    : Op("Reverse", check_single_output_args({arg}))
     , m_reversed_axes(reversed_axes)
 {
     constructor_validate_and_infer_types();
@@ -32,8 +32,6 @@ op::Reverse::Reverse(const shared_ptr<Node>& arg, const AxisSet& reversed_axes)
 
 void op::Reverse::validate_and_infer_types()
 {
-    util::RequiresTensorViewArgs::validate_and_infer_types();
-
     auto input_shape = get_input_shape(0);
     auto input_rank = input_shape.size();
 

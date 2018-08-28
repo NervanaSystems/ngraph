@@ -17,13 +17,13 @@
 #pragma once
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class MatmulBias : public util::RequiresTensorViewArgs
+        class MatmulBias : public Op
         {
         public:
             MatmulBias(std::shared_ptr<Node> W,

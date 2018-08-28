@@ -241,7 +241,7 @@ op::Convolution::Convolution(const shared_ptr<Node>& data_batch,
                              const CoordinateDiff& padding_below,
                              const CoordinateDiff& padding_above,
                              const Strides& data_dilation_strides)
-    : RequiresTensorViewArgs("Convolution", {data_batch, filters})
+    : Op("Convolution", check_single_output_args({data_batch, filters}))
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -253,8 +253,6 @@ op::Convolution::Convolution(const shared_ptr<Node>& data_batch,
 
 void op::Convolution::validate_and_infer_types()
 {
-    util::RequiresTensorViewArgs::validate_and_infer_types();
-
     auto& data_batch_shape = get_input_shape(0);
     auto& data_batch_et = get_input_element_type(0);
     auto& filters_shape = get_input_shape(1);
@@ -433,7 +431,7 @@ op::ConvolutionBackpropData::ConvolutionBackpropData(const Shape& data_batch_sha
                                                      const CoordinateDiff& padding_below_forward,
                                                      const CoordinateDiff& padding_above_forward,
                                                      const Strides& data_dilation_strides_forward)
-    : RequiresTensorViewArgs("ConvolutionBackpropData", {filters, output_delta})
+    : Op("ConvolutionBackpropData", check_single_output_args({filters, output_delta}))
     , m_data_batch_shape(data_batch_shape)
     , m_window_movement_strides_forward(window_movement_strides_forward)
     , m_window_dilation_strides_forward(window_dilation_strides_forward)
@@ -446,8 +444,6 @@ op::ConvolutionBackpropData::ConvolutionBackpropData(const Shape& data_batch_sha
 
 void op::ConvolutionBackpropData::validate_and_infer_types()
 {
-    util::RequiresTensorViewArgs::validate_and_infer_types();
-
     auto& filters_shape = get_input_shape(0);
     auto& filters_et = get_input_element_type(0);
     auto& output_delta_shape = get_input_shape(1);
@@ -611,7 +607,7 @@ op::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
     const CoordinateDiff& padding_below_forward,
     const CoordinateDiff& padding_above_forward,
     const Strides& data_dilation_strides_forward)
-    : RequiresTensorViewArgs("ConvolutionBackpropFilters", {data_batch, output_delta})
+    : Op("ConvolutionBackpropFilters", check_single_output_args({data_batch, output_delta}))
     , m_filters_shape(filters_shape)
     , m_window_movement_strides_forward(window_movement_strides_forward)
     , m_window_dilation_strides_forward(window_dilation_strides_forward)
@@ -624,8 +620,6 @@ op::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
 
 void op::ConvolutionBackpropFilters::validate_and_infer_types()
 {
-    util::RequiresTensorViewArgs::validate_and_infer_types();
-
     auto& data_batch_shape = get_input_shape(0);
     auto& data_batch_et = get_input_element_type(0);
     auto& output_delta_shape = get_input_shape(1);

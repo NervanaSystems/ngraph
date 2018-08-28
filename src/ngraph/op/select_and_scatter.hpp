@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
@@ -68,7 +68,7 @@ namespace ngraph
         /// | Type                   | Description          |
         /// | ---------------------- | -------------------- |
         /// | \f$E[d_1,\dots,d_n]\f$ | See above algorithm. |
-        class SelectAndScatter : public util::RequiresTensorViewArgs
+        class SelectAndScatter : public Op
         {
         public:
             /// \brief Constructs a select-and-scatter operation.

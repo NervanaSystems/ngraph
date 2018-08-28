@@ -18,13 +18,13 @@
 
 #include <memory>
 
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class Result : public util::RequiresTensorViewArgs
+        class Result : public Op
         {
         public:
             /// \brief Constructs an arcsin operation.

@@ -23,12 +23,6 @@ using namespace ngraph;
 
 op::util::UnaryElementwise::UnaryElementwise(const std::string& node_type,
                                              const std::shared_ptr<Node>& arg)
-    : RequiresTensorViewArgs(node_type, NodeVector{arg})
+    : Op(node_type, check_single_output_args(NodeVector{arg}))
 {
-}
-
-void op::util::UnaryElementwise::validate_and_infer_types()
-{
-    RequiresTensorViewArgs::validate_and_infer_types();
-    set_output_type(0, get_input_element_type(0), get_input_shape(0));
 }

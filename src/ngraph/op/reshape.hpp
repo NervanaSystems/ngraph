@@ -18,7 +18,7 @@
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node_vector.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
@@ -57,7 +57,7 @@ namespace ngraph
         /// | Type                     | Description                                                                                            |
         /// | ------------------------ | ------------------------------------------------------------------------------------------------------ |
         /// | \f$E[d'_1,\dots,d'_m]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with its elements rearranged as described above. |
-        class Reshape : public util::RequiresTensorViewArgs
+        class Reshape : public Op
         {
         public:
             /// \brief Constructs a reshape operation.

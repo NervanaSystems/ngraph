@@ -22,15 +22,13 @@ using namespace ngraph;
 op::util::ArithmeticReduction::ArithmeticReduction(const std::string& node_type,
                                                    const std::shared_ptr<Node>& arg,
                                                    const AxisSet& reduction_axes)
-    : RequiresTensorViewArgs(node_type, {arg})
+    : Op(node_type, check_single_output_args({arg}))
     , m_reduction_axes(reduction_axes)
 {
 }
 
 void op::util::ArithmeticReduction::validate_and_infer_types()
 {
-    RequiresTensorViewArgs::validate_and_infer_types();
-
     auto input_shape = get_input_shape(0);
 
     for (auto axis : m_reduction_axes)

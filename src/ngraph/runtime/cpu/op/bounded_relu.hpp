@@ -18,7 +18,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief Elementwise Minimum(Relu(arg, 0), alpha) operation.
         ///
-        class BoundedRelu : public util::RequiresTensorViewArgs
+        class BoundedRelu : public Op
         {
         public:
             /// \brief Constructs a BoundedRelu operation.

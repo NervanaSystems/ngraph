@@ -24,7 +24,7 @@ op::Broadcast::Broadcast(const std::string& name,
                          const NodeVector& args,
                          const Shape& shape,
                          const AxisSet& broadcast_axes)
-    : RequiresTensorViewArgs(name, args)
+    : Op(name, check_single_output_args(args))
     , m_shape(shape)
     , m_broadcast_axes(broadcast_axes)
 {
@@ -40,8 +40,6 @@ op::Broadcast::Broadcast(const shared_ptr<Node>& arg,
 
 void op::Broadcast::validate_and_infer_types()
 {
-    util::RequiresTensorViewArgs::validate_and_infer_types();
-
     infer_shape();
     Shape target_shape = m_shape;
     for (auto i = m_broadcast_axes.rbegin(); i != m_broadcast_axes.rend(); ++i)

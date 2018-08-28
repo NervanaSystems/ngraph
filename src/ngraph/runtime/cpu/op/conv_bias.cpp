@@ -52,8 +52,8 @@ void op::util::validate_convbias_shapes(const Shape& data_shape,
 op::ConvolutionBias::ConvolutionBias(const shared_ptr<op::Convolution>& conv,
                                      const shared_ptr<Node>& bias,
                                      const bool with_relu)
-    : RequiresTensorViewArgs("ConvolutionBias",
-                             {conv->get_argument(0), conv->get_argument(1), bias})
+    : Op("ConvolutionBias",
+         check_single_output_args({conv->get_argument(0), conv->get_argument(1), bias}))
     , m_window_movement_strides(conv->get_window_movement_strides())
     , m_window_dilation_strides(conv->get_window_dilation_strides())
     , m_padding_below(conv->get_padding_below())
@@ -83,7 +83,7 @@ op::ConvolutionBias::ConvolutionBias(const shared_ptr<Node>& data_batch,
                                      const CoordinateDiff& padding_above,
                                      const Strides& data_dilation_strides,
                                      const bool with_relu)
-    : RequiresTensorViewArgs("ConvolutionBias", {data_batch, filters, bias})
+    : Op("ConvolutionBias", check_single_output_args({data_batch, filters, bias}))
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -194,7 +194,7 @@ op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
     const CoordinateDiff& padding_below_forward,
     const CoordinateDiff& padding_above_forward,
     const Strides& data_dilation_strides_forward)
-    : RequiresTensorViewArgs("ConvolutionBiasBackpropFiltersBias", {data_batch, output_delta})
+    : Op("ConvolutionBiasBackpropFiltersBias", check_single_output_arg({data_batch, output_delta}))
     , m_filters_shape(filters_shape)
     , m_bias_shape(bias_shape)
     , m_window_movement_strides_forward(window_movement_strides_forward)
@@ -268,9 +268,9 @@ shared_ptr<Node>
 op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<op::ConvolutionBias>& conv,
                                            const std::shared_ptr<Node>& sum_input,
                                            bool with_relu)
-    : RequiresTensorViewArgs(
-          "ConvolutionBiasAdd",
-          {conv->get_argument(0), conv->get_argument(1), conv->get_argument(2), sum_input})
+    : Op("ConvolutionBiasAdd",
+         check_single_output_args(
+             {conv->get_argument(0), conv->get_argument(1), conv->get_argument(2), sum_input}))
     , m_window_movement_strides(conv->get_window_movement_strides())
     , m_window_dilation_strides(conv->get_window_dilation_strides())
     , m_padding_below(conv->get_padding_below())
@@ -296,7 +296,7 @@ op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<Node>& data_bat
                                            const CoordinateDiff& padding_above,
                                            const Strides& data_dilation_strides,
                                            bool with_relu)
-    : RequiresTensorViewArgs("ConvolutionBiasAdd", {data_batch, filters, bias, sum_input})
+    : Op("ConvolutionBiasAdd", check_single_output_args({data_batch, filters, bias, sum_input}))
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)

@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
@@ -26,7 +26,7 @@ namespace ngraph
         {
             /// \brief Abstract base class for arithmetic reduction operations, i.e., operations where chosen axes of the input tensors
             ///        are eliminated (reduced out) by repeated application of a particular binary arithmetic operation.
-            class ArithmeticReduction : public RequiresTensorViewArgs
+            class ArithmeticReduction : public Op
             {
             public:
                 /// \brief Constructs an arithmetic reduction operation.

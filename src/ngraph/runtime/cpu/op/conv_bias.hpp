@@ -17,14 +17,14 @@
 #pragma once
 
 #include "ngraph/op/convolution.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Convolution + bias forward prop for batched convolution operation.
-        class ConvolutionBias : public util::RequiresTensorViewArgs
+        class ConvolutionBias : public Op
         {
         public:
             ConvolutionBias(const std::shared_ptr<op::Convolution>& conv,
@@ -66,7 +66,7 @@ namespace ngraph
 
         /// \brief Filters and bias backprop for batched convolution operation. Data backprop is
         /// the same as regular convolution backprop for data.
-        class ConvolutionBiasBackpropFiltersBias : public util::RequiresTensorViewArgs
+        class ConvolutionBiasBackpropFiltersBias : public Op
         {
         public:
             ConvolutionBiasBackpropFiltersBias(const std::shared_ptr<Node>& data_batch,
@@ -154,7 +154,7 @@ namespace ngraph
             Strides m_data_dilation_strides_backward;
         };
 
-        class ConvolutionBiasAdd : public util::RequiresTensorViewArgs
+        class ConvolutionBiasAdd : public Op
         {
         public:
             ConvolutionBiasAdd(const std::shared_ptr<op::ConvolutionBias>& conv,

@@ -17,14 +17,14 @@
 #pragma once
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Operation which "adds" axes to an input tensor, replicating elements from the input as needed along the new axes.
-        class Broadcast : public util::RequiresTensorViewArgs
+        class Broadcast : public Op
         {
         public:
             /// \brief Constructs a conversion operation.

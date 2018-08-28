@@ -38,7 +38,7 @@ op::Dot::Dot(const shared_ptr<Node>& arg0,
              const shared_ptr<Node>& arg1,
              size_t reduction_axes_count,
              bool has_reduction_axes_count)
-    : RequiresTensorViewArgs("Dot", {arg0, arg1})
+    : Op("Dot", check_single_output_args({arg0, arg1}))
     , m_reduction_axes_count(reduction_axes_count)
     , m_has_reduction_axes_count(has_reduction_axes_count)
 {
@@ -47,8 +47,6 @@ op::Dot::Dot(const shared_ptr<Node>& arg0,
 
 void op::Dot::validate_and_infer_types()
 {
-    util::RequiresTensorViewArgs::validate_and_infer_types();
-
     auto& input_0 = get_inputs().at(0);
     auto& input_1 = get_inputs().at(1);
 

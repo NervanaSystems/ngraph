@@ -25,7 +25,7 @@ op::Reduce::Reduce(const shared_ptr<Node>& arg_reductee,
                    const shared_ptr<Node>& arg_init,
                    const shared_ptr<Function>& reduction_function,
                    const AxisSet& reduction_axes)
-    : RequiresTensorViewArgs("Reduce", {arg_reductee, arg_init})
+    : Op("Reduce", check_single_output_args({arg_reductee, arg_init}))
     , m_reduction_function(reduction_function)
     , m_reduction_axes(reduction_axes)
 {

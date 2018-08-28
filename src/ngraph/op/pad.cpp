@@ -26,7 +26,7 @@ op::Pad::Pad(const shared_ptr<Node>& arg,
              const Shape& padding_below,
              const Shape& padding_above,
              const Shape& padding_interior)
-    : RequiresTensorViewArgs("Pad", {arg, arg_pad_value})
+    : Op("Pad", check_single_output_args({arg, arg_pad_value}))
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
     , m_padding_interior(padding_interior)

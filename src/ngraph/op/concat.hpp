@@ -18,14 +18,14 @@
 
 #include <memory>
 
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Concatenation operation.
-        class Concat : public util::RequiresTensorViewArgs
+        class Concat : public Op
         {
         public:
             /// \brief Constructs a concatenation operation.

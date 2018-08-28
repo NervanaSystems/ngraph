@@ -17,14 +17,14 @@
 #pragma once
 
 #include "ngraph/graph_util.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Batched max pooling operation, with optional padding and window stride.
-        class MaxPool : public util::RequiresTensorViewArgs
+        class MaxPool : public Op
         {
         public:
             /// \brief Constructs a batched max pooling operation.
@@ -84,7 +84,7 @@ namespace ngraph
             Shape m_padding_above;
         };
 
-        class MaxPoolBackprop : public util::RequiresTensorViewArgs
+        class MaxPoolBackprop : public Op
         {
         public:
             MaxPoolBackprop(const std::shared_ptr<Node>& arg_forward,

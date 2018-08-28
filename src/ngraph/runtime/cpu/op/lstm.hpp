@@ -16,14 +16,14 @@
 
 #pragma once
 
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 #include "ngraph/util.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class Lstm : public util::RequiresTensorViewArgs
+        class Lstm : public Op
         {
         public:
             // INPUTS:

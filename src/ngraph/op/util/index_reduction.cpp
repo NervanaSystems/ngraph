@@ -25,7 +25,7 @@ op::util::IndexReduction::IndexReduction(const std::string& node_type,
                                          const std::shared_ptr<Node>& arg,
                                          size_t axis,
                                          const element::Type& index_element_type)
-    : RequiresTensorViewArgs(node_type, {arg})
+    : Op(node_type, check_single_output_args({arg}))
     , m_axis(axis)
 {
     constructor_validate_and_infer_types();

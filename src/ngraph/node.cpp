@@ -345,6 +345,23 @@ NodeVector Node::get_users() const
     return result;
 }
 
+const std::shared_ptr<Node>& ngraph::check_single_output_arg(const std::shared_ptr<Node>& node,
+                                                             size_t i)
+{
+    NGRAPH_ASSERT(node->get_output_size() == 1) << "Argument " << i << node
+                                                << " must produce exactly one value.";
+    return node;
+}
+
+const NodeVector& ngraph::check_single_output_args(const NodeVector& args)
+{
+    for (size_t i = 0; i < args.size(); ++i)
+    {
+        ngraph::check_single_output_arg(args.at(i), i);
+    }
+    return args;
+}
+
 std::string ngraph::type_check_assert_string(const Node* node)
 {
     std::stringstream ss;

@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
 #include "ngraph/util.hpp"
 
@@ -36,7 +36,7 @@ namespace ngraph
 
         /// \brief Elementwise SigmoidBackprop operation.
         ///
-        class SigmoidBackprop : public util::RequiresTensorViewArgs
+        class SigmoidBackprop : public Op
         {
         public:
             /// \brief Constructs a SigmoidBackprop operation.

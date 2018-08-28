@@ -27,7 +27,7 @@ op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
                      const Shape& padding_below,
                      const Shape& padding_above,
                      bool include_padding_in_avg_computation)
-    : RequiresTensorViewArgs("AvgPool", {arg})
+    : Op("AvgPool", check_single_output_args({arg}))
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
@@ -39,8 +39,6 @@ op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
 
 void op::AvgPool::validate_and_infer_types()
 {
-    util::RequiresTensorViewArgs::validate_and_infer_types();
-
     auto& arg_shape = get_input_shape(0);
 
     if (0 == m_window_movement_strides.size() && arg_shape.size() > 2)
@@ -233,7 +231,7 @@ op::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
                                      const Shape& padding_below,
                                      const Shape& padding_above,
                                      bool include_padding_in_avg_computation)
-    : RequiresTensorViewArgs("AvgPoolBackprop", {delta})
+    : Op("AvgPoolBackprop", check_single_output_args({delta}))
     , m_forward_arg_shape(forward_arg_shape)
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)

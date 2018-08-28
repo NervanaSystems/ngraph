@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
@@ -31,7 +31,7 @@ namespace ngraph
                 /// \brief Layout Conversion
                 ///
                 /// Converts an input tensor to a tensor with the given layout descriptor
-                class ConvertLayout : public ngraph::op::util::RequiresTensorViewArgs
+                class ConvertLayout : public ngraph::op::Op
                 {
                 public:
                     ConvertLayout(

@@ -39,7 +39,7 @@ op::Sigmoid::Sigmoid(shared_ptr<Node> arg)
 }
 
 op::SigmoidBackprop::SigmoidBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
-    : RequiresTensorViewArgs("SigmoidBackprop", {arg, delta})
+    : Op("SigmoidBackprop", check_single_output_args({arg, delta}))
 {
     if (arg->get_element_type() != delta->get_element_type())
     {
