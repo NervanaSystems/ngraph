@@ -21,9 +21,6 @@ RUN make --version
 RUN gcc --version
 RUN c++ --version
 
-RUN easy_install pip
-RUN pip install virtualenv
-
 # Install nGraph in /root/ngraph
 COPY . /root/ngraph
 RUN mkdir /root/ngraph/build
