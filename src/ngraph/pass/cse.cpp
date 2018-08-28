@@ -225,8 +225,8 @@ namespace std
 
             auto cargs = k.get_node()->get_arguments();
 
-            //TODO: Do we need another map, so we could
-            //specify how to compute hash for each op?
+            // TODO: Do we need another map, so we could
+            // specify how to compute hash for each op?
             if (p_this.is_commutative())
             {
                 std::sort(begin(cargs), end(cargs));

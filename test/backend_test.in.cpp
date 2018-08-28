@@ -6881,7 +6881,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_0x0)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
-    //copy_data(a, test::NDArray<float, 2>({{}}).get_vector());
+    // copy_data(a, test::NDArray<float, 2>({{}}).get_vector());
     auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{2112});
     auto result = backend->create_tensor(element::f32, shape_r);
@@ -6914,7 +6914,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_0x3)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
-    //copy_data(a, test::NDArray<float, 2>({}).get_vector());
+    // copy_data(a, test::NDArray<float, 2>({}).get_vector());
     auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{2112});
     auto result = backend->create_tensor(element::f32, shape_r);
@@ -6947,7 +6947,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_3x0)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
-    //copy_data(a, test::NDArray<float, 2>({}).get_vector());
+    // copy_data(a, test::NDArray<float, 2>({}).get_vector());
     auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{2112});
     auto result = backend->create_tensor(element::f32, shape_r);
@@ -7047,7 +7047,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
-    //copy_data(a, test::NDArray<float, 2>({}).get_vector());
+    // copy_data(a, test::NDArray<float, 2>({}).get_vector());
     auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{2112});
     auto result = backend->create_tensor(element::f32, shape_r);
@@ -8701,7 +8701,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_bprop_n4c3h2w2)
     auto df = make_shared<Function>(NodeVector{dinput, dgamma, dbeta},
                                     op::ParameterVector{mean, var, input, gamma, beta, C});
 
-    //roundtrip serialization
+    // roundtrip serialization
     string js = serialize(df, 4);
     istringstream in(js);
     df = deserialize(in);
