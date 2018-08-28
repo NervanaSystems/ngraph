@@ -30,7 +30,7 @@ namespace ngraph
             void argmax(
                 const T* arg, U* out, const Shape& in_shape, const Shape& out_shape, size_t axis)
             {
-                //take the first elements (i.e. 0 indices) in out_shape - axis as maximums
+                // take the first elements (i.e. 0 indices) in out_shape - axis as maximums
                 memset(out, 0, shape_size(out_shape) * sizeof(U));
 
                 AxisVector av{axis};

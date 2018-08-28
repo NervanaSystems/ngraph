@@ -14,26 +14,30 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <fstream>
+#pragma once
 
-#include "ngraph/file_util.hpp"
-#include "ngraph/pass/serialize.hpp"
-#include "ngraph/serializer.hpp"
-#include "ngraph/util.hpp"
-#include "nlohmann/json.hpp"
+#include "ngraph/node_vector.hpp"
 
-using namespace std;
-using namespace ngraph;
+#include "core/node.hpp"
 
-pass::Serialization::Serialization(const string& name)
-    : m_name{name}
+namespace ngraph
 {
-}
+    namespace onnx_import
+    {
+        namespace op
+        {
+            /**
+             * @brief Convert ONNX MaxPool operation to an nGraph node.
+             *
+             * @param node   The ONNX node object representing this operation.
+             *
+             * @return The vector containing Ngraph nodes producing output of ONNX MaxPool
+             *         operation.
+             */
+            NodeVector max_pool(const Node& node);
 
-bool pass::Serialization::run_on_module(vector<shared_ptr<Function>>& functions)
-{
-    // serializing the outermost functions
-    // also implicitly serializes any inner functions
-    serialize(m_name, functions.at(0), 4);
-    return false;
-}
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

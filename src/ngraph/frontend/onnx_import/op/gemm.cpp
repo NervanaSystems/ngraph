@@ -39,23 +39,23 @@ namespace ngraph
                 auto input_b = inputs.at(1);
                 auto input_c = inputs.at(2);
 
-                double alpha{node.get_attribute_value<double>("alpha", 1)};
-                double beta{node.get_attribute_value<double>("beta", 1)};
+                double alpha = node.get_attribute_value<double>("alpha", 1);
+                double beta = node.get_attribute_value<double>("beta", 1);
 
-                auto trans_a{node.get_attribute_value<int64_t>("transA", 0)};
-                auto trans_b{node.get_attribute_value<int64_t>("transB", 0)};
+                auto trans_a = node.get_attribute_value<int64_t>("transA", 0);
+                auto trans_b = node.get_attribute_value<int64_t>("transB", 0);
 
-                if (trans_a)
+                if (trans_a != 0)
                 {
                     input_a = transpose(input_a);
                 }
-                if (trans_b)
+                if (trans_b != 0)
                 {
                     input_b = transpose(input_b);
                 }
 
-                //code from python not implemented in c++ yet.
-                //reshape_for_matmul(node, input_a, input_b);
+                // code from python not implemented in c++ yet.
+                // reshape_for_matmul(node, input_a, input_b);
 
                 std::shared_ptr<ngraph::Node> a_dot_b =
                     std::make_shared<ngraph::op::Dot>(input_a, input_b);

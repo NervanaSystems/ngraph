@@ -14,7 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/axis_vector.hpp" //ngraph::AxisVector
+#include "ngraph/axis_vector.hpp" // ngraph::AxisVector
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include "pyngraph/axis_vector.hpp"

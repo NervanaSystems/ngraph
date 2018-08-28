@@ -14,26 +14,25 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <fstream>
+#include "ngraph/node.hpp"
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/avg_pool.hpp"
 
-#include "ngraph/file_util.hpp"
-#include "ngraph/pass/serialize.hpp"
-#include "ngraph/serializer.hpp"
-#include "ngraph/util.hpp"
-#include "nlohmann/json.hpp"
+#include "utils/convpool.hpp"
 
-using namespace std;
-using namespace ngraph;
-
-pass::Serialization::Serialization(const string& name)
-    : m_name{name}
+namespace ngraph
 {
-}
+    namespace onnx_import
+    {
+        namespace op
+        {
+            NodeVector average_pool(const Node& node)
+            {
+                return convpool::make_ng_pool<ngraph::op::AvgPool>(node);
+            }
 
-bool pass::Serialization::run_on_module(vector<shared_ptr<Function>>& functions)
-{
-    // serializing the outermost functions
-    // also implicitly serializes any inner functions
-    serialize(m_name, functions.at(0), 4);
-    return false;
-}
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph
