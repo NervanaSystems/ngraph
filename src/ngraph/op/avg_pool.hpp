@@ -48,7 +48,7 @@ namespace ngraph
                     const Strides& window_movement_strides,
                     const Shape& padding_below,
                     const Shape& padding_above,
-                    bool include_padding_in_avg_computation);
+                    bool include_padding_in_avg_computation = false);
 
             /// \brief Constructs a batched, unpadded average pooling operation (i.e., all padding shapes are set to 0).
             ///
