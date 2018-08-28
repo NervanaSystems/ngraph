@@ -63,6 +63,8 @@ set(SRC
     builder/sum.cpp
     builder/quantize.cpp
     builder/dequantize.cpp
+    builder/quantized_max_pool.cpp
+    builder/quantized_avg_pool.cpp
     kernel/eigen_thread_pool.cpp
     kernel/pad.cpp
     kernel/reduce_max.cpp
@@ -86,6 +88,8 @@ set(SRC
     op/sigmoid_mul.cpp
     op/quantize.cpp
     op/dequantize.cpp
+    op/quantized_max_pool.cpp
+    op/quantized_avg_pool.cpp
     pass/cpu_assignment.cpp
     pass/cpu_collapse_dims.cpp
     pass/cpu_concat_inputs.cpp
