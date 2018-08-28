@@ -14,12 +14,12 @@
  * limitations under the License.
  *******************************************************************************/
 
-#include "convpool.hpp"
 #include <cmath>
 
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/shape.hpp"
 
+#include "convpool.hpp"
 #include "core/attribute.hpp"
 #include "core/node.hpp"
 
@@ -27,7 +27,7 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        namespace attribute
+        namespace convpool
         {
             Shape get_kernel_shape(const Node& node)
             {
@@ -118,7 +118,7 @@ namespace ngraph
                 }
                 if (pads.empty())
                 {
-                    pads = {static_cast<std::ptrdiff_t>(kernel_shape.size()), 0UL};
+                    pads = CoordinateDiff(static_cast<std::ptrdiff_t>(kernel_shape.size()), 0UL);
                 }
 
                 if (pads.size() <= 3)
@@ -133,6 +133,6 @@ namespace ngraph
                 }
             }
 
-        } // namespace attribute
+        } // namespace convpool
     }     // namespace onnx_import
 } // namespace ngraph
