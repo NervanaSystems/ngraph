@@ -19,8 +19,8 @@
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/minimum.hpp"
 
-#include "utils/variadic.hpp"
 #include "core/node.hpp"
+#include "utils/variadic.hpp"
 
 namespace ngraph
 {

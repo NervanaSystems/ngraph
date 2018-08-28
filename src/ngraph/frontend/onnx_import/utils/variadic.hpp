@@ -18,8 +18,8 @@
 
 #include <numeric>
 
-#include "ngraph/node_vector.hpp"
 #include "ngraph/coordinate_diff.hpp"
+#include "ngraph/node_vector.hpp"
 #include "ngraph/shape.hpp"
 
 #include "ngraph/node_vector.hpp"
@@ -38,14 +38,13 @@ namespace ngraph
             {
                 NodeVector ng_inputs{node.get_ng_inputs()};
 
-                auto result =
-                        std::accumulate(std::next(std::begin(ng_inputs)),
-                                        std::end(ng_inputs),
-                                        ng_inputs.front(),
-                                        [](const std::shared_ptr<ngraph::Node>& arg0,
-                                           const std::shared_ptr<ngraph::Node>& arg1) {
-                                            return std::make_shared<T>(arg0, arg1);
-                                        });
+                auto result = std::accumulate(std::next(std::begin(ng_inputs)),
+                                              std::end(ng_inputs),
+                                              ng_inputs.front(),
+                                              [](const std::shared_ptr<ngraph::Node>& arg0,
+                                                 const std::shared_ptr<ngraph::Node>& arg1) {
+                                                  return std::make_shared<T>(arg0, arg1);
+                                              });
 
                 return {result};
             }

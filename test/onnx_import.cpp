@@ -341,7 +341,7 @@ TEST(onnx, model_min_two_inputs)
 {
     // Simple Sum test
     auto function = ngraph::onnx_import::import_onnx_function(
-            ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/min_two_inputs.onnx"));
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/min_two_inputs.onnx"));
 
     // input data shape (3, )
     Inputs inputs;
@@ -352,7 +352,6 @@ TEST(onnx, model_min_two_inputs)
     Outputs outputs{execute(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
-
 
 TEST(onnx, model_gemm_abc)
 {
