@@ -77,12 +77,12 @@ static bool simplify_concat(std::shared_ptr<Node> n)
 {
     NGRAPH_DEBUG << "In simplify_concat for " << n->get_name();
 
-    std::shared_ptr<Node> goe;
+    std::shared_ptr<Node> branch_tip;
 
-    auto lgoe = std::make_shared<pattern::op::Label>(element::i32, Shape{2, 1});
+    auto ltip = std::make_shared<pattern::op::Label>(element::i32, Shape{2, 1});
 
     auto slice =
-        std::make_shared<op::Slice>(lgoe, Coordinate{0, 0}, Coordinate{2, 1}, Strides{1, 1});
+        std::make_shared<op::Slice>(ltip, Coordinate{0, 0}, Coordinate{2, 1}, Strides{1, 1});
 
     auto skip_reshape =
         std::make_shared<pattern::op::Skip>(slice, pattern::has_class<op::Reshape>());
@@ -97,23 +97,23 @@ static bool simplify_concat(std::shared_ptr<Node> n)
             return false;
         }
 
-        if (goe)
+        if (branch_tip)
         {
-            if (goe != matcher->get_pattern_map()[lgoe])
+            if (branch_tip != matcher->get_pattern_map()[ltip])
             {
-                NGRAPH_DEBUG << goe->get_name() << " doesn't match "
-                             << matcher->get_pattern_map()[lgoe]->get_name();
+                NGRAPH_DEBUG << branch_tip->get_name() << " doesn't match "
+                             << matcher->get_pattern_map()[ltip]->get_name();
                 return false;
             }
         }
         else
         {
-            goe = matcher->get_pattern_map()[lgoe];
-            NGRAPH_DEBUG << "setting goe to " << goe->get_name();
+            branch_tip = matcher->get_pattern_map()[ltip];
+            NGRAPH_DEBUG << "setting branch_tip to " << branch_tip->get_name();
         }
 
         auto it = carg;
-        while (it != goe)
+        while (it != branch_tip)
         {
             if (auto rcarg = std::dynamic_pointer_cast<op::Reshape>(carg))
             {
@@ -134,17 +134,11 @@ static bool simplify_concat(std::shared_ptr<Node> n)
         }
     }
 
-    if (!std::dynamic_pointer_cast<op::GetOutputElement>(goe))
+    auto replacement = branch_tip;
+    if (branch_tip->get_shape().size() != n->get_shape().size())
     {
-        NGRAPH_DEBUG << goe->get_name() << " isn't GOE ";
-        return false;
-    }
-
-    auto replacement = goe;
-    if (goe->get_shape().size() != n->get_shape().size())
-    {
-        auto default_shape = ngraph::get_default_order(goe->get_shape());
-        auto reshape = std::make_shared<op::Reshape>(goe, default_shape, n->get_shape());
+        auto default_shape = ngraph::get_default_order(branch_tip->get_shape());
+        auto reshape = std::make_shared<op::Reshape>(branch_tip, default_shape, n->get_shape());
         replacement = reshape;
     }
 
