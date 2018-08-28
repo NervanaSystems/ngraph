@@ -19,7 +19,7 @@ from typing import List
 
 import numpy as np
 
-from ngraph.impl import Function, Node, serialize, TensorViewType, util
+from ngraph.impl import Function, Node, Shape, serialize, TensorViewType, util
 from ngraph.impl.runtime import Backend
 from ngraph.impl.op import Parameter
 
@@ -51,17 +51,16 @@ class Runtime:
         """Return a callable Computation object."""
         return ComputationNode(self, node, *inputs)
 
-    def computation_function(self, function):
-        # type: (Function, *Node) -> 'ComputationFunction'
+    def computation_function(self, function):  # type: (Function) -> 'ComputationFunction'
         """Return a callable Computation object."""
         return ComputationFunction(self, function)
 
 
-class ComputationBase:
+class ComputationBase(object):
     """ngraph callable computation base object."""
 
     def __init__(self, runtime, function, *parameters):
-    # type: (Runtime, Function, *Parameter) -> None
+        # type: (Runtime, Function, *Parameter) -> None
         self.runtime = runtime
         self.parameters = parameters
         self.tensor_views = []  # type: List[TensorViewType]
@@ -73,7 +72,7 @@ class ComputationBase:
         self.backend = runtime.backend
 
     def __call__(self, result_view, result_shape, result_dtype, *input_values):
-        # type: (TensorViewType, Shape, *NumericData) -> NumericData
+        # type: (TensorViewType, Shape, np.dtype, *NumericData) -> NumericData
         """Run computation on input values and return result."""
         for tensor_view, value in zip(self.tensor_views, input_values):
             if not isinstance(value, np.ndarray):
@@ -128,13 +127,13 @@ class ComputationBase:
 
 
 class ComputationNode(ComputationBase):
-    """ngraph callable computation node object """
+    """ngraph callable computation node object."""
 
     def __init__(self, runtime, node, *parameters):  # type: (Runtime, Node, *Parameter) -> None
-        super(ComputationNode, self).__init__(runtime, Function(node, self.parameters,
-              'ngraph_computation'), parameters)
+        super(ComputationNode, self).__init__(runtime, Function(node, parameters,
+                                                                'ngraph_computation'), *parameters)
         self.node = node
-    
+
     def __repr__(self):  # type: () -> str
         params_string = ', '.join([param.name for param in self.parameters])
         return '<ComputationNode: {}({})>'.format(self.node.name, params_string)
@@ -146,14 +145,15 @@ class ComputationNode(ComputationBase):
         result_dtype = get_dtype(result_element_type)
 
         result_view = self.runtime.backend.create_tensor(result_element_type, result_shape)
-        return super(ComputationNode, self).__call__(result_view, result_shape, result_dtype, *input_values)
+        return super(ComputationNode, self).__call__(result_view, result_shape, result_dtype,
+                                                     *input_values)
 
 
 class ComputationFunction(ComputationBase):
-    """"""
+    """ngraph callable computation function object."""
 
     def __init__(self, runtime, function):
-        # type: (Runtime, Function, *Parameter) -> None
+        # type: (Runtime, Function) -> None
         super(ComputationFunction, self).__init__(runtime, function, *function.get_parameters())
 
     def __repr__(self):  # type: () -> str
@@ -167,4 +167,5 @@ class ComputationFunction(ComputationBase):
         result_dtype = get_dtype(result_element_type)
 
         result_view = self.runtime.backend.create_tensor(result_element_type, result_shape)
-        return super(ComputationFunction, self).__call__(result_view, result_shape, result_dtype, *input_values)
+        return super(ComputationFunction, self).__call__(result_view, result_shape, result_dtype,
+                                                         *input_values)
