@@ -28,6 +28,7 @@
 #include "op/max_pool.hpp"
 #include "op/mul.hpp"
 #include "op/relu.hpp"
+#include "op/softmax.hpp"
 #include "op/split.hpp"
 #include "ops_bridge.hpp"
 
@@ -85,6 +86,7 @@ namespace ngraph
                     m_map.emplace("MaxPool", std::bind(op::max_pool, std::placeholders::_1));
                     m_map.emplace("Mul", std::bind(op::mul, std::placeholders::_1));
                     m_map.emplace("Relu", std::bind(op::relu, std::placeholders::_1));
+                    m_map.emplace("Softmax", std::bind(op::softmax, std::placeholders::_1));
                     m_map.emplace("Split", std::bind(op::split, std::placeholders::_1));
                 }
 
