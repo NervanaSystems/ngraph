@@ -28,7 +28,7 @@ def test_lrn():
 
     runtime = get_runtime()
     model = ng.lrn(ng.constant(input_image), alpha=1.0, beta=2.0, bias=1.0, size=3)
-    computation = runtime.computation(model)
+    computation = runtime.computation_node(model)
     result = computation()
     assert np.allclose(result,
                        np.array([[[[0.0],
@@ -46,7 +46,7 @@ def test_lrn():
 
     # Test LRN default parameter values
     model = ng.lrn(ng.constant(input_image))
-    computation = runtime.computation(model)
+    computation = runtime.computation_node(model)
     result = computation()
     assert np.allclose(result,
                        np.array([[[[0.0],

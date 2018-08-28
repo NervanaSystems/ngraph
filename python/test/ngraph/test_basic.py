@@ -35,7 +35,7 @@ def test_simple_computation_on_ndarrays(dtype):
     parameter_b = ng.parameter(shape, dtype=dtype, name='B')
     parameter_c = ng.parameter(shape, dtype=dtype, name='C')
     model = (parameter_a + parameter_b) * parameter_c
-    computation = runtime.computation(model, parameter_a, parameter_b, parameter_c)
+    computation = runtime.computation_node(model, parameter_a, parameter_b, parameter_c)
 
     value_a = np.array([[1, 2], [3, 4]], dtype=dtype)
     value_b = np.array([[5, 6], [7, 8]], dtype=dtype)
@@ -61,7 +61,7 @@ def test_function_call():
     ops = ((parameter_a + parameter_b) * parameter_c)
     func = Function(NodeVector([ops]), parameter_list, 'addmul')
     fc = ng.function_call(func, NodeVector(parameter_list))
-    computation = runtime.computation(fc, parameter_a, parameter_b, parameter_c)
+    computation = runtime.computation_node(fc, parameter_a, parameter_b, parameter_c)
 
     value_a = np.array([[1, 2], [3, 4]], dtype=dtype)
     value_b = np.array([[5, 6], [7, 8]], dtype=dtype)
@@ -80,7 +80,7 @@ def test_serialization():
     parameter_c = ng.parameter(shape, dtype=dtype, name='C')
     model = (parameter_a + parameter_b) * parameter_c
     runtime = ng.runtime(backend_name=backend_name)
-    computation = runtime.computation(model, parameter_a, parameter_b, parameter_c)
+    computation = runtime.computation_node(model, parameter_a, parameter_b, parameter_c)
     serialized = computation.serialize(2)
     serial_json = json.loads(serialized)
 
@@ -165,7 +165,7 @@ def test_bad_data_shape():
     B = ng.parameter(shape=[2, 2], name='B')
     model = (A + B)
     runtime = ng.runtime(backend_name='INTERPRETER')
-    computation = runtime.computation(model, A, B)
+    computation = runtime.computation_node(model, A, B)
 
     value_a = np.array([[1, 2]], dtype=np.float32)
     value_b = np.array([[5, 6], [7, 8]], dtype=np.float32)

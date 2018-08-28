@@ -37,7 +37,7 @@ def test_avg_pool_2d(_ndarray_1x1x4x4):
                   [21.5, 23.5]]]]
 
     avg_pool_node = ng.avg_pool(param, window_shape, strides)
-    computation = runtime.computation(avg_pool_node, param)
+    computation = runtime.computation_node(avg_pool_node, param)
     result = computation(input_data)
     assert np.allclose(result, expected)
 
@@ -45,7 +45,7 @@ def test_avg_pool_2d(_ndarray_1x1x4x4):
                   [17.5, 18.5, 19.5],
                   [21.5, 22.5, 23.5]]]]
     avg_pool_node = ng.avg_pool(param, window_shape)
-    computation = runtime.computation(avg_pool_node, param)
+    computation = runtime.computation_node(avg_pool_node, param)
     result = computation(input_data)
     assert np.allclose(result, expected)
 
@@ -59,7 +59,7 @@ def test_avg_pool_2d(_ndarray_1x1x4x4):
                   [23.0, 24.5, 26.0]]]]
     avg_pool_node = ng.avg_pool(param, window_shape, strides, padding_below, padding_above,
                                 include_pad)
-    computation = runtime.computation(avg_pool_node, param)
+    computation = runtime.computation_node(avg_pool_node, param)
     result = computation(input_data)
     assert np.allclose(result, expected)
 
@@ -69,7 +69,7 @@ def test_avg_pool_2d(_ndarray_1x1x4x4):
                   [5.75, 12.25, 6.5]]]]
     avg_pool_node = ng.avg_pool(param, window_shape, strides, padding_below, padding_above,
                                 include_pad)
-    computation = runtime.computation(avg_pool_node, param)
+    computation = runtime.computation_node(avg_pool_node, param)
     result = computation(input_data)
     assert np.allclose(result, expected)
 
@@ -84,7 +84,7 @@ def test_avg_pooling_3d(_ndarray_1x1x4x4):
     strides = [2, 2, 2]
 
     avgpool = ng.avg_pool(param, window_shape, strides)
-    comp = rt.computation(avgpool, param)
+    comp = rt.computation_node(avgpool, param)
     result = comp(data)
     result_ref = [[[[[13.5, 15.5],
                      [21.5, 23.5]],

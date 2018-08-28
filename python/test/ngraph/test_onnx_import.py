@@ -17,15 +17,16 @@
 import os
 import numpy as np
 
-from ngraph.impl.onnx_import import onnx_import
+from ngraph.impl.onnx_import import load_onnx_model_file
 from test.ngraph.util import get_runtime
+
 
 def test_import_onnx_function():
     runtime = get_runtime()
     dtype = np.float32
     cur_dir = os.path.dirname(__file__)
     model_path = os.path.join(cur_dir, '../../../test/models/onnx/add_abc.onnx')
-    ng_function = onnx_import.load_onnx_model_file(model_path)[0]
+    ng_function = load_onnx_model_file(model_path)[0]
     computation = runtime.computation_function(ng_function)
 
     value_a = np.array([1.0], dtype=dtype)

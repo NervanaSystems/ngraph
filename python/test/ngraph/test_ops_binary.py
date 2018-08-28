@@ -44,7 +44,7 @@ def test_binary_op(ng_api_helper, numpy_function):
     parameter_b = ng.parameter(shape, name='B', dtype=np.float32)
 
     model = ng_api_helper(parameter_a, parameter_b)
-    computation = runtime.computation(model, parameter_a, parameter_b)
+    computation = runtime.computation_node(model, parameter_a, parameter_b)
 
     value_a = np.array([[1, 2], [3, 4]], dtype=np.float32)
     value_b = np.array([[5, 6], [7, 8]], dtype=np.float32)
@@ -78,7 +78,7 @@ def test_binary_op_with_scalar(ng_api_helper, numpy_function):
     parameter_a = ng.parameter(shape, name='A', dtype=np.float32)
 
     model = ng_api_helper(parameter_a, value_b)
-    computation = runtime.computation(model, parameter_a)
+    computation = runtime.computation_node(model, parameter_a)
 
     result = computation(value_a)
     expected = numpy_function(value_a, value_b)
@@ -97,7 +97,7 @@ def test_binary_logical_op(ng_api_helper, numpy_function):
     parameter_b = ng.parameter(shape, name='B', dtype=np.bool)
 
     model = ng_api_helper(parameter_a, parameter_b)
-    computation = runtime.computation(model, parameter_a, parameter_b)
+    computation = runtime.computation_node(model, parameter_a, parameter_b)
 
     value_a = np.array([[True, False], [False, False]], dtype=np.bool)
     value_b = np.array([[False, True], [False, True]], dtype=np.bool)
@@ -121,7 +121,7 @@ def test_binary_logical_op_with_scalar(ng_api_helper, numpy_function):
     parameter_a = ng.parameter(shape, name='A', dtype=np.bool)
 
     model = ng_api_helper(parameter_a, value_b)
-    computation = runtime.computation(model, parameter_a)
+    computation = runtime.computation_node(model, parameter_a)
 
     result = computation(value_a)
     expected = numpy_function(value_a, value_b)
@@ -150,7 +150,7 @@ def test_binary_operators(operator, numpy_function):
     parameter_a = ng.parameter(shape, name='A', dtype=np.float32)
 
     model = operator(parameter_a, value_b)
-    computation = runtime.computation(model, parameter_a)
+    computation = runtime.computation_node(model, parameter_a)
 
     result = computation(value_a)
     expected = numpy_function(value_a, value_b)
@@ -179,7 +179,7 @@ def test_binary_operators_with_scalar(operator, numpy_function):
     parameter_a = ng.parameter(shape, name='A', dtype=np.float32)
 
     model = operator(parameter_a, value_b)
-    computation = runtime.computation(model, parameter_a)
+    computation = runtime.computation_node(model, parameter_a)
 
     result = computation(value_a)
     expected = numpy_function(value_a, value_b)

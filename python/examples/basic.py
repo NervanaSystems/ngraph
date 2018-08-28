@@ -32,7 +32,7 @@ runtime = ng.runtime(backend_name='CPU')
 # >>> print(runtime)
 # <Runtime: Backend='CPU'>
 
-computation = runtime.computation(model, A, B, C)
+computation = runtime.computation_node(model, A, B, C)
 # >>> print(computation)
 # <Computation: Multiply_14(A, B, C)>
 

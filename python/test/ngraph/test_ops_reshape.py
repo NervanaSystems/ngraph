@@ -31,7 +31,7 @@ def test_concat():
     parameter_a = ng.parameter(list(a.shape), name='A', dtype=np.float32)
     parameter_b = ng.parameter(list(b.shape), name='B', dtype=np.float32)
     node = ng.concat([parameter_a, parameter_b], axis)
-    computation = runtime.computation(node, parameter_a, parameter_b)
+    computation = runtime.computation_node(node, parameter_a, parameter_b)
     result = computation(a, b)
     assert np.allclose(result, expected)
 

@@ -55,7 +55,7 @@ def run_op_node(input_data, op_fun, *args):
             comp_inputs.append(data)
     op_fun_args.extend(args)
     node = op_fun(*op_fun_args)
-    computation = runtime.computation(node, *comp_args)
+    computation = runtime.computation_node(node, *comp_args)
     return computation(*comp_inputs)
 
 
@@ -71,5 +71,5 @@ def run_op_numeric_data(input_data, op_fun, *args):
     """
     runtime = get_runtime()
     node = op_fun(input_data, *args)
-    computation = runtime.computation(node)
+    computation = runtime.computation_node(node)
     return computation()
