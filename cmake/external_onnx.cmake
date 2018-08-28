@@ -21,14 +21,14 @@ include(ExternalProject)
 # ONNX.proto definition version
 #------------------------------------------------------------------------------
 
-set(ONNX_VERSION 1.2.2)
+set(ONNX_VERSION pre-1.3)
 
 #------------------------------------------------------------------------------
 # Download and install libonnx ...
 #------------------------------------------------------------------------------
 
 set(ONNX_GIT_REPO_URL https://github.com/onnx/onnx.git)
-set(ONNX_GIT_BRANCH rel-${ONNX_VERSION})
+set(ONNX_GIT_BRANCH master)
 
 # The 'BUILD_BYPRODUCTS' arguments was introduced in CMake 3.2.
 if (${CMAKE_VERSION} VERSION_LESS 3.2)
