@@ -30,6 +30,7 @@
 #include "op/relu.hpp"
 #include "op/softmax.hpp"
 #include "op/split.hpp"
+#include "op/sub.hpp"
 #include "ops_bridge.hpp"
 
 namespace ngraph
@@ -88,6 +89,7 @@ namespace ngraph
                     m_map.emplace("Relu", std::bind(op::relu, std::placeholders::_1));
                     m_map.emplace("Softmax", std::bind(op::softmax, std::placeholders::_1));
                     m_map.emplace("Split", std::bind(op::split, std::placeholders::_1));
+                    m_map.emplace("Sub", std::bind(op::sub, std::placeholders::_1));
                 }
 
                 NodeVector operator()(const Node& node) const
