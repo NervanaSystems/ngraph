@@ -26,14 +26,12 @@ namespace ngraph
     {
         namespace op
         {
-            /**
-             * \brief Performs ONNX Conv operation.
-             *
-             * \param node   The ONNX node object representing this operation.
-             *
-             * \return The vector containing Ngraph nodes producing output of ONNX convolution
-             *         operation.
-             */
+            /// \brief Performs ONNX Conv operation.
+            ///
+            /// \param node   The ONNX node object representing this operation.
+            ///
+            /// \return The vector containing Ngraph nodes producing output of ONNX convolution
+            ///         operation.
             NodeVector conv(const Node& node);
 
         } // namespace op
