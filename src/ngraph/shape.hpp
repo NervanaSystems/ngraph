@@ -84,9 +84,8 @@ namespace ngraph
         {
             return m_data.insert(pos, value);
         }
-        void insert(std::vector<size_t>::iterator pos,
-                    std::vector<size_t>::iterator first,
-                    std::vector<size_t>::iterator last)
+        template <class InputIterator>
+        void insert(std::vector<size_t>::iterator pos, InputIterator first, InputIterator last)
         {
             m_data.insert(pos, first, last);
         }
