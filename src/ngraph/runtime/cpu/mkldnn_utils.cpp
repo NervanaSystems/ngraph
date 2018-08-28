@@ -235,12 +235,12 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_default_mkldnn_md(
     if (output)
     {
         shape = node->get_output_shape(index);
-        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_output_element_type(0));
+        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_output_element_type(index));
     }
     else
     {
         shape = node->get_input_shape(index);
-        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0));
+        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(index));
     }
 
     return memory::desc(memory::dims(shape.begin(), shape.end()), et, format);
