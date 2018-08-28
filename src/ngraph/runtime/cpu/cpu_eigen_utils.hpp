@@ -54,7 +54,7 @@ namespace ngraph
 
                 namespace fmt
                 {
-                    /// @brief vector format for Eigen wrappers.
+                    /// \brief vector format for Eigen wrappers.
                     class V
                     {
                     public:

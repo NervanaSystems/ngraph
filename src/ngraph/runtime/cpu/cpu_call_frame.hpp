@@ -46,7 +46,7 @@ namespace ngraph
                               EntryPoint compiled_function);
                 ~CPU_CallFrame();
 
-                /// @brief Invoke the function with values matching the signature of the function.
+                /// \brief Invoke the function with values matching the signature of the function.
                 ///
                 /// Tuples will be expanded into their tensor views to build the call frame.
                 void call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,

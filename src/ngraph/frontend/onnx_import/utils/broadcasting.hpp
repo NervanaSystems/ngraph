@@ -26,29 +26,29 @@ namespace ngraph
     namespace onnx_import
     {
         /**
-         * @brief Generate a list of broadcast axes.
+         * \brief Generate a list of broadcast axes.
          *
-         * @details Informally, a broadcast "adds" axes to the input tensor, replicating
+         * \details Informally, a broadcast "adds" axes to the input tensor, replicating
          *          elements from the input tensor as needed to fill the new dimensions.
          *          Function calculate which of the output axes are added in this way.
          *
-         * @param output_shape      The new shape for the output tensor.
-         * @param input_shape       The shape of input tensor.
-         * @param start_match_axis  The axis along which we want to replicate elements.
+         * \param output_shape      The new shape for the output tensor.
+         * \param input_shape       The shape of input tensor.
+         * \param start_match_axis  The axis along which we want to replicate elements.
          *                          The starting axis position (0-based) int the output
          *                          shape from which the current shape of the tensor
          *                          matches the desired new shape.
          *
-         * @return The indices of added axes.
+         * \return The indices of added axes.
          */
         AxisSet calculate_broadcast_axes(const Shape& output_shape,
                                          const Shape& input_shape,
                                          std::size_t start_match_axis);
 
         /**
-         * @brief Generate a list of broadcast along axes.
+         * \brief Generate a list of broadcast along axes.
          *
-         * @details Broadcast "adds" elements along axes to the input tensor, replicating
+         * \details Broadcast "adds" elements along axes to the input tensor, replicating
          *          elements from the input tensor as needed to fill the new dimensions.
          *          Function calculate which of the output axes are added in this way.
          *
@@ -56,10 +56,10 @@ namespace ngraph
          *          matches the rightmost positions of the desired new shape. This behaviour
          *          is similar to NumPy's broadcasting.
          *
-         * @param output_shape The new shape for the output tensor.
-         * @param input_shape  The shape of input tensor.
+         * \param output_shape The new shape for the output tensor.
+         * \param input_shape  The shape of input tensor.
          *
-         * @return             The indices of added axes.
+         * \return             The indices of added axes.
          */
         inline AxisSet calculate_broadcast_axes(const Shape& output_shape, const Shape& input_shape)
         {

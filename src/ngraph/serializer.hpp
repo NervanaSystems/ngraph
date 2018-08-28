@@ -23,36 +23,36 @@
 
 namespace ngraph
 {
-    // @brief Serialize a Function to a json string
-    // @param func The Function to serialize
-    // @param indent If 0 then there is no formatting applied and the resulting string is the
+    // \brief Serialize a Function to a json string
+    // \param func The Function to serialize
+    // \param indent If 0 then there is no formatting applied and the resulting string is the
     //    most compact representation. If non-zero then the json string is formatted with the
     //    indent level specified.
     std::string serialize(std::shared_ptr<ngraph::Function> func, size_t indent = 0);
 
-    // @brief Serialize a Function to as a json file
-    // @param path The path to the output file
-    // @param func The Function to serialize
-    // @param indent If 0 then there is no formatting applied and the resulting string is the
+    // \brief Serialize a Function to as a json file
+    // \param path The path to the output file
+    // \param func The Function to serialize
+    // \param indent If 0 then there is no formatting applied and the resulting string is the
     //    most compact representation. If non-zero then the json string is formatted with the
     //    indent level specified.
     void serialize(const std::string& path,
                    std::shared_ptr<ngraph::Function> func,
                    size_t indent = 0);
 
-    // @brief Serialize a Function to a CPIO file with all constant data stored as binary
-    // @param out The output stream to which the data is serialized.
-    // @param func The Function to serialize
-    // @param indent If 0 then there is no formatting applied and the json is the
+    // \brief Serialize a Function to a CPIO file with all constant data stored as binary
+    // \param out The output stream to which the data is serialized.
+    // \param func The Function to serialize
+    // \param indent If 0 then there is no formatting applied and the json is the
     //    most compact representation. If non-zero then the json is formatted with the
     //    indent level specified.
     void serialize(std::ostream& out, std::shared_ptr<ngraph::Function> func, size_t indent = 0);
 
-    // @brief Deserialize a Function
-    // @param in An isteam to the input data
+    // \brief Deserialize a Function
+    // \param in An isteam to the input data
     std::shared_ptr<ngraph::Function> deserialize(std::istream& in);
 
-    // @brief Deserialize a Function
-    // @param str The json formatted string to deseriailze.
+    // \brief Deserialize a Function
+    // \param str The json formatted string to deseriailze.
     std::shared_ptr<ngraph::Function> deserialize(const std::string& str);
 }
