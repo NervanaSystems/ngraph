@@ -5,6 +5,9 @@ language: cpp
 services:
   - docker
 
+git:
+  depth: false
+
 env:
   - TASK=cpp_test OS=ubuntu
   - TASK=cpp_test OS=centos
@@ -12,7 +15,12 @@ env:
   - TASK=python3_test OS=ubuntu
 
 before_install:
-  - docker build -t test_ngraph -f .ci/travis/$OS/Dockerfile .
+  - |
+    if [ "TASK" == "cpp_test" ]; then
+      docker build -t test_ngraph -f .ci/travis/ubuntu/Dockerfile .
+    else
+      docker build -t test_ngraph -f .ci/travis/ubuntu/Dockerfile --build-arg buildtype=interpreter .
+    fi
 
 install: true
 

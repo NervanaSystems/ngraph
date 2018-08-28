@@ -22,25 +22,9 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Operation to get an element from a tuple.
-        ///
-        /// ## Parameters
-        ///
-        /// |     | Description                                                        |
-        /// | --- | ------------------------------------------------------------------ |
-        /// | `n` | The position of the element (0-based) to get from the input tuple. |
-        ///
-        /// ## Inputs
-        ///
-        /// |        | Type                                                        | Description                                |
-        /// | ------ | ----------------------------------------------------------- | ------------------------------------------ |
-        /// | `arg`  | \f$(T_1,\dots,T_{n-1},T_n,T_{n+1},\dots,T_m)~(m \geq 1)\f$ | An input tuple with at least `n` elements. |
-        ///
-        /// ## Output
-        ///
-        /// | Type      | Description                           |
-        /// | --------- | ------------------------------------- |
-        /// | \f$T_n\f$ | The `n`th element of the input tuple. |
+        NodeVector get_output_elements(const std::shared_ptr<Node>& mon);
+
+        /// \brief Operation to get an output from a node.
         class GetOutputElement : public Node
         {
         public:
@@ -55,7 +39,7 @@ namespace ngraph
 
             /// \return The index of the tuple element to get.
             size_t get_n() const { return m_n; }
-            virtual NodeVector get_arguments() override;
+            virtual NodeVector get_arguments() const override;
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,

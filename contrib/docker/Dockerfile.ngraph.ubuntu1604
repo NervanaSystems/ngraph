@@ -23,7 +23,8 @@ RUN apt-get update && apt-get install -y \
         clang-3.9 clang-format-3.9 \
         git \
         wget patch diffutils zlib1g-dev libtinfo-dev \
-        doxygen python-pip
+        doxygen graphviz \
+        python-pip
 
 RUN apt-get clean autoclean && \
     apt-get autoremove -y
@@ -36,5 +37,8 @@ RUN pip install --upgrade pip
 # allows for make html build under the doc/source directory as an interim build process
 RUN pip install sphinx
 RUN pip install breathe
+
+# need numpy to successfully build docs for python_api
+RUN pip install numpy
 
 WORKDIR /home

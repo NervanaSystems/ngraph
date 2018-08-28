@@ -43,7 +43,7 @@ Mathematical Definition
 
 .. math::
 
-   \texttt{output}_{i_0, \ldots, i_{n-1}} = \texttt{arg0}_{i_0, \ldots, i_{n-1}} \neq \texttt{arg1}_{i_0, \ldots, i_{n-1}}
+   \mathtt{output}_{i_0, \ldots, i_{n-1}} = \mathtt{arg0}_{i_0, \ldots, i_{n-1}} \neq \mathtt{arg1}_{i_0, \ldots, i_{n-1}}
 
 
 C++ Interface

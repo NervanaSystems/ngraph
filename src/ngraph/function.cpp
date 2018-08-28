@@ -74,14 +74,6 @@ Function::Function(const std::shared_ptr<Node>& result,
 
 void Function::init()
 {
-    for (auto r : m_results)
-    {
-        for (descriptor::Output& output : r->get_outputs())
-        {
-            output.get_tensor().set_is_output();
-        }
-    }
-
     traverse_nodes(this, [&](shared_ptr<Node> node) {
         std::shared_ptr<op::Parameter> p = std::dynamic_pointer_cast<op::Parameter>(node);
         if (nullptr != p)
@@ -138,7 +130,7 @@ void Function::set_temporary_pool_size(size_t size)
     m_temporary_pool_size = size;
 }
 
-std::ostream& ngraph::operator<<(std::ostream& out, const Function& f)
+std::ostream& operator<<(std::ostream& out, const Function& f)
 {
     out << "Function(" << f.get_name() << ")";
     return out;

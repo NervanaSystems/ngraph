@@ -21,6 +21,7 @@
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
+#include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -60,6 +61,90 @@ namespace ngraph
 
                     out.device(eigen::global_thread_pool_device) =
                         in.shuffle(axis_order).reshape(out_dims);
+                }
+
+                template <typename ElementType, unsigned int InRank, unsigned int OutRank>
+                void reshape(void* input,
+                             void* output,
+                             const Shape& input_shape,
+                             const AxisVector& input_axis_order,
+                             const Shape& output_shape)
+                {
+                    reshape<ElementType, InRank, OutRank>(static_cast<ElementType*>(input),
+                                                          static_cast<ElementType*>(output),
+                                                          input_shape,
+                                                          input_axis_order,
+                                                          output_shape);
+                }
+
+                template <typename ElementType, unsigned int OutRank>
+                void reshape_1d(void* input,
+                                void* output,
+                                const Shape& input_shape,
+                                const AxisVector& input_axis_order,
+                                const Shape& output_shape)
+                {
+                    reshape<ElementType, 1, OutRank>(static_cast<ElementType*>(input),
+                                                     static_cast<ElementType*>(output),
+                                                     input_shape,
+                                                     input_axis_order,
+                                                     output_shape);
+                }
+
+                template <typename ElementType, unsigned int OutRank>
+                void reshape_2d(void* input,
+                                void* output,
+                                const Shape& input_shape,
+                                const AxisVector& input_axis_order,
+                                const Shape& output_shape)
+                {
+                    reshape<ElementType, 2, OutRank>(static_cast<ElementType*>(input),
+                                                     static_cast<ElementType*>(output),
+                                                     input_shape,
+                                                     input_axis_order,
+                                                     output_shape);
+                }
+
+                template <typename ElementType, unsigned int OutRank>
+                void reshape_3d(void* input,
+                                void* output,
+                                const Shape& input_shape,
+                                const AxisVector& input_axis_order,
+                                const Shape& output_shape)
+                {
+                    reshape<ElementType, 3, OutRank>(static_cast<ElementType*>(input),
+                                                     static_cast<ElementType*>(output),
+                                                     input_shape,
+                                                     input_axis_order,
+                                                     output_shape);
+                }
+
+                template <typename ElementType, unsigned int OutRank>
+                void reshape_4d(void* input,
+                                void* output,
+                                const Shape& input_shape,
+                                const AxisVector& input_axis_order,
+                                const Shape& output_shape)
+                {
+                    reshape<ElementType, 4, OutRank>(static_cast<ElementType*>(input),
+                                                     static_cast<ElementType*>(output),
+                                                     input_shape,
+                                                     input_axis_order,
+                                                     output_shape);
+                }
+
+                template <typename ElementType>
+                void reshape(const void* arg,
+                             void* out,
+                             const Shape& in_shape,
+                             const AxisVector& in_axis_order,
+                             const Shape& out_shape)
+                {
+                    reference::reshape(static_cast<const ElementType*>(arg),
+                                       static_cast<ElementType*>(out),
+                                       in_shape,
+                                       in_axis_order,
+                                       out_shape);
                 }
             }
         }

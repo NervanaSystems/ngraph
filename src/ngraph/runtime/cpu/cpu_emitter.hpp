@@ -58,6 +58,13 @@ namespace ngraph
                 {
                 }
 
+                static void emitBatchNorm(CPU_ExternalFunction* external_function,
+                                          codegen::CodeWriter& writer,
+                                          const ngraph::Node* node,
+                                          const std::vector<TensorViewWrapper>& args,
+                                          const std::vector<TensorViewWrapper>& out,
+                                          bool append_relu = false);
+
             private:
                 static std::string emit_vector(const TensorViewWrapper&,
                                                const std::string& name = "");
@@ -65,6 +72,9 @@ namespace ngraph
                                                 const std::string& name = "");
                 static std::string emit_matrix(const TensorViewWrapper&,
                                                const std::string& name = "");
+
+                static std::string emit_for_lt(const std::string& prefix, size_t index, size_t to);
+                static std::string emit_indices(const std::vector<std::string> indices);
             };
         }
     }

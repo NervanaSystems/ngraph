@@ -41,7 +41,7 @@ Mathematical Definition
 
 .. math::
 
-   \texttt{output}_{i_0, \ldots, i_{n-1}} = \log(\texttt{arg}_{i_0, \ldots, i_{n-1}})
+   \mathtt{output}_{i_0, \ldots, i_{n-1}} = \log(\mathtt{arg}_{i_0, \ldots, i_{n-1}})
 
 
 Backprop
@@ -49,7 +49,7 @@ Backprop
 
 .. math::
 
-   \overline{\texttt{arg}} \leftarrow \frac{\Delta}{\texttt{input}}
+   \overline{\mathtt{arg}} \leftarrow \frac{\Delta}{\mathtt{input}}
 
 
 C++ Interface

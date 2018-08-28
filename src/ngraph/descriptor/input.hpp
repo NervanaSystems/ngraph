@@ -41,7 +41,7 @@ namespace ngraph
             Input(Node* node, size_t index, Output& output);
 
             /// @return the node that this is an input of
-            std::shared_ptr<Node> get_node();
+            std::shared_ptr<Node> get_node() const;
 
             /// @return the position within all supplied tensors of this input
             size_t get_index() const { return m_index; }
@@ -76,7 +76,7 @@ namespace ngraph
             const element::Type& get_element_type() const;
 
         protected:
-            //owner of an argument node (in lieu of m_arguments)
+            // owner of an argument node (in lieu of m_arguments)
             std::shared_ptr<Node> m_src_node;
             Node* m_node;   // The node we are an input for
             size_t m_index; // Index into all input tensors

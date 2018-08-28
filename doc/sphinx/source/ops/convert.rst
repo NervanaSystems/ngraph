@@ -49,7 +49,7 @@ Backprop
 
 .. math::
 
-   \overline{\texttt{arg}} \leftarrow \texttt{Convert}(\Delta,\texttt{arg->get_element_type()})
+   \overline{\mathtt{arg}} \leftarrow \mathtt{Convert}(\Delta,\mathtt{arg->get_element_type()})
 
 
 C++ Interface

@@ -15,27 +15,40 @@
 *******************************************************************************/
 
 #include <cassert>
+#ifdef WIN32
+#include <windows.h>
+#else
 #include <dirent.h>
+#include <ftw.h>
+#include <sys/file.h>
+#include <sys/time.h>
+#include <unistd.h>
+#endif
 #include <fcntl.h>
 #include <fstream>
-#include <ftw.h>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <string.h>
-#include <sys/file.h>
 #include <sys/stat.h>
-#include <sys/time.h>
 #include <sys/types.h>
-#include <unistd.h>
 #include <vector>
 
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
 
-using namespace std;
+#ifdef WIN32
+#define RMDIR(a) RemoveDirectoryA(a)
+#define RMFILE(a) DeleteFileA(a)
+#else
+#define RMDIR(a) rmdir(a)
+#define RMFILE(a) remove(a)
+#endif
 
-std::string ngraph::file_util::get_file_name(const std::string& s)
+using namespace std;
+using namespace ngraph;
+
+string file_util::get_file_name(const string& s)
 {
     string rc = s;
     auto pos = s.find_last_of('/');
@@ -46,7 +59,7 @@ std::string ngraph::file_util::get_file_name(const std::string& s)
     return rc;
 }
 
-std::string ngraph::file_util::get_file_ext(const std::string& s)
+string file_util::get_file_ext(const string& s)
 {
     string rc = get_file_name(s);
     auto pos = rc.find_last_of('.');
@@ -61,7 +74,28 @@ std::string ngraph::file_util::get_file_ext(const std::string& s)
     return rc;
 }
 
-string ngraph::file_util::path_join(const string& s1, const string& s2)
+string file_util::get_directory(const string& s)
+{
+    string rc = s;
+    auto pos = s.find_last_of('/');
+    if (pos != string::npos)
+    {
+        rc = s.substr(0, pos);
+    }
+    return rc;
+}
+
+string file_util::path_join(const string& s1, const string& s2, const string& s3)
+{
+    return path_join(path_join(s1, s2), s3);
+}
+
+string file_util::path_join(const string& s1, const string& s2, const string& s3, const string& s4)
+{
+    return path_join(path_join(path_join(s1, s2), s3), s4);
+}
+
+string file_util::path_join(const string& s1, const string& s2)
 {
     string rc;
     if (s2.size() > 0)
@@ -91,20 +125,20 @@ string ngraph::file_util::path_join(const string& s1, const string& s2)
     return rc;
 }
 
-size_t ngraph::file_util::get_file_size(const string& filename)
+size_t file_util::get_file_size(const string& filename)
 {
     // ensure that filename exists and get its size
 
     struct stat stats;
     if (stat(filename.c_str(), &stats) == -1)
     {
-        throw std::runtime_error("Could not find file: \"" + filename + "\"");
+        throw runtime_error("Could not find file: \"" + filename + "\"");
     }
 
     return stats.st_size;
 }
 
-void ngraph::file_util::remove_directory(const string& dir)
+void file_util::remove_directory(const string& dir)
 {
     struct stat status;
     if (stat(dir.c_str(), &status) != -1)
@@ -113,25 +147,28 @@ void ngraph::file_util::remove_directory(const string& dir)
                       [](const string& file, bool is_dir) {
                           if (is_dir)
                           {
-                              rmdir(file.c_str());
+                              RMDIR(file.c_str());
                           }
                           else
                           {
-                              remove(file.c_str());
+                              RMFILE(file.c_str());
                           }
                       },
                       true);
-        rmdir(dir.c_str());
+        RMDIR(dir.c_str());
     }
 }
 
-void ngraph::file_util::remove_file(const string& file)
+void file_util::remove_file(const string& file)
 {
     remove(file.c_str());
 }
 
-bool ngraph::file_util::make_directory(const string& dir)
+bool file_util::make_directory(const string& dir)
 {
+#ifdef WIN32
+    CreateDirectoryA(dir.c_str(), nullptr);
+#else
     if (mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH))
     {
         if (errno == EEXIST)
@@ -139,28 +176,13 @@ bool ngraph::file_util::make_directory(const string& dir)
             // not really an error, the directory already exists
             return false;
         }
-        throw std::runtime_error("error making directory " + dir + " " + strerror(errno));
+        throw runtime_error("error making directory " + dir + " " + strerror(errno));
     }
+#endif
     return true;
 }
 
-string ngraph::file_util::make_temp_directory(const string& path)
-{
-    string fname = path.empty() ? file_util::get_temp_directory() : path;
-    string tmp_template = file_util::path_join(fname, "ngraph_XXXXXX");
-    char* tmpname = strdup(tmp_template.c_str());
-
-    string rc;
-    if (mkdtemp(tmpname))
-    {
-        rc = tmpname;
-    }
-
-    free(tmpname);
-    return rc;
-}
-
-std::string ngraph::file_util::get_temp_directory()
+string file_util::get_temp_directory_path()
 {
     const vector<string> potential_tmps = {"NGRAPH_TMP", "TMPDIR", "TMP", "TEMP", "TEMPDIR"};
 
@@ -181,12 +203,10 @@ std::string ngraph::file_util::get_temp_directory()
     return path;
 }
 
-vector<char> ngraph::file_util::read_file_contents(const string& path)
+vector<char> file_util::read_file_contents(const string& path)
 {
     size_t file_size = get_file_size(path);
-    vector<char> data;
-    data.reserve(file_size);
-    data.resize(file_size);
+    vector<char> data(file_size);
 
     FILE* f = fopen(path.c_str(), "rb");
     if (f)
@@ -204,33 +224,107 @@ vector<char> ngraph::file_util::read_file_contents(const string& path)
     }
     else
     {
-        throw std::runtime_error("error opening file '" + path + "'");
+        throw runtime_error("error opening file '" + path + "'");
     }
     return data;
 }
 
-std::string ngraph::file_util::read_file_to_string(const std::string& path)
+string file_util::read_file_to_string(const string& path)
 {
-    std::ifstream f(path);
-    std::stringstream ss;
+    ifstream f(path);
+    stringstream ss;
     ss << f.rdbuf();
     return ss.str();
 }
 
-void ngraph::file_util::iterate_files(const string& path,
-                                      std::function<void(const string& file, bool is_dir)> func,
-                                      bool recurse)
+#ifndef WIN32
+static void iterate_files_worker(const string& path,
+                                 function<void(const string& file, bool is_dir)> func,
+                                 bool recurse,
+                                 bool include_links)
+{
+    DIR* dir;
+    struct dirent* ent;
+    if ((dir = opendir(path.c_str())) != nullptr)
+    {
+        try
+        {
+            while ((ent = readdir(dir)) != nullptr)
+            {
+                string name = ent->d_name;
+                string path_name = file_util::path_join(path, name);
+                switch (ent->d_type)
+                {
+                case DT_DIR:
+                    if (name != "." && name != "..")
+                    {
+                        if (recurse)
+                        {
+                            file_util::iterate_files(path_name, func, recurse);
+                        }
+                        func(path_name, true);
+                    }
+                    break;
+                case DT_LNK:
+                    if (include_links)
+                    {
+                        func(path_name, false);
+                    }
+                    break;
+                case DT_REG: func(path_name, false); break;
+                default: break;
+                }
+            }
+        }
+        catch (...)
+        {
+            exception_ptr p = current_exception();
+            closedir(dir);
+            rethrow_exception(p);
+        }
+        closedir(dir);
+    }
+    else
+    {
+        throw runtime_error("error enumerating file " + path);
+    }
+}
+#endif
+
+void file_util::iterate_files(const string& path,
+                              function<void(const string& file, bool is_dir)> func,
+                              bool recurse,
+                              bool include_links)
 {
     vector<string> files;
     vector<string> dirs;
-    file_util::iterate_files_worker(path,
-                                    [&files, &dirs](const string& file, bool is_dir) {
-                                        if (is_dir)
-                                            dirs.push_back(file);
-                                        else
-                                            files.push_back(file);
-                                    },
-                                    recurse);
+#ifdef WIN32
+    string file_match = path_join(path, "*");
+    WIN32_FIND_DATA data;
+    HANDLE hFind = FindFirstFile(file_match.c_str(), &data);
+    if (hFind != INVALID_HANDLE_VALUE)
+    {
+        do
+        {
+            std::cout << data.cFileName << std::endl;
+        } while (FindNextFile(hFind, &data));
+        FindClose(hFind);
+    }
+#else
+    iterate_files_worker(path,
+                         [&files, &dirs](const string& file, bool is_dir) {
+                             if (is_dir)
+                             {
+                                 dirs.push_back(file);
+                             }
+                             else
+                             {
+                                 files.push_back(file);
+                             }
+                         },
+                         recurse,
+                         include_links);
+#endif
 
     for (auto f : files)
     {
@@ -242,108 +336,27 @@ void ngraph::file_util::iterate_files(const string& path,
     }
 }
 
-void ngraph::file_util::iterate_files_worker(
-    const string& path, std::function<void(const string& file, bool is_dir)> func, bool recurse)
+string file_util::tmp_filename(const string& extension)
 {
-    DIR* dir;
-    struct dirent* ent;
-    if ((dir = opendir(path.c_str())) != nullptr)
-    {
-        while ((ent = readdir(dir)) != nullptr)
-        {
-            string name = ent->d_name;
-            switch (ent->d_type)
-            {
-            case DT_DIR:
-                if (name != "." && name != "..")
-                {
-                    string dir_path = file_util::path_join(path, name);
-                    if (recurse)
-                    {
-                        iterate_files(dir_path, func, recurse);
-                    }
-                    func(dir_path, true);
-                }
-                break;
-            case DT_LNK: break;
-            case DT_REG:
-            {
-                string file_name = file_util::path_join(path, name);
-                func(file_name, false);
-                break;
-            }
-            default: break;
-            }
-        }
-        closedir(dir);
-    }
-    else
-    {
-        throw std::runtime_error("error enumerating file " + path);
-    }
-}
-
-string ngraph::file_util::tmp_filename(const string& extension)
-{
+    string rc;
+#ifdef WIN32
+    rc = _tempnam(file_util::get_temp_directory_path().c_str(), "ngraph_");
+#else
     string tmp_template =
-        file_util::path_join(file_util::get_temp_directory(), "ngraph_XXXXXX" + extension);
+        file_util::path_join(file_util::get_temp_directory_path(), "ngraph_XXXXXX" + extension);
     char* tmpname = strdup(tmp_template.c_str());
 
     // mkstemp opens the file with open() so we need to close it
     close(mkstemps(tmpname, static_cast<int>(extension.size())));
 
-    string rc = tmpname;
+    rc = tmpname;
     free(tmpname);
+#endif
     return rc;
 }
 
-void ngraph::file_util::touch(const std::string& filename)
-{
-    // inspired by http://chris-sharpe.blogspot.com/2013/05/better-than-systemtouch.html
-    int fd = open(filename.c_str(), O_WRONLY | O_CREAT | O_NOCTTY | O_NONBLOCK, 0666);
-    assert(fd >= 0);
-    close(fd);
-
-    // update timestamp for filename
-    int rc = utimes(filename.c_str(), nullptr);
-    assert(!rc);
-}
-
-bool ngraph::file_util::exists(const std::string& filename)
+bool file_util::exists(const string& filename)
 {
     struct stat buffer;
     return (stat(filename.c_str(), &buffer) == 0);
-}
-
-int ngraph::file_util::try_get_lock(const std::string& filename)
-{
-    mode_t m = umask(0);
-    int fd = open(filename.c_str(), O_RDWR | O_CREAT, 0666);
-    umask(m);
-    if (fd >= 0 && flock(fd, LOCK_EX | LOCK_NB) < 0)
-    {
-        close(fd);
-        fd = -1;
-    }
-    return fd;
-}
-
-void ngraph::file_util::release_lock(int fd, const std::string& filename)
-{
-    if (fd >= 0)
-    {
-        remove_file(filename);
-        close(fd);
-    }
-}
-
-time_t ngraph::file_util::get_timestamp(const std::string& filename)
-{
-    time_t rc = 0;
-    struct stat st;
-    if (stat(filename.c_str(), &st) == 0)
-    {
-        rc = st.st_mtime;
-    }
-    return rc;
 }

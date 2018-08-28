@@ -115,14 +115,14 @@ vector<string> op::Constant::get_value_strings() const
     }
     else if (m_element_type == element::u8)
     {
-        for (uint value : get_vector<uint8_t>())
+        for (uint32_t value : get_vector<uint8_t>())
         {
             rc.push_back(to_string(value));
         }
     }
     else if (m_element_type == element::u16)
     {
-        for (uint value : get_vector<uint16_t>())
+        for (uint32_t value : get_vector<uint16_t>())
         {
             rc.push_back(to_string(value));
         }

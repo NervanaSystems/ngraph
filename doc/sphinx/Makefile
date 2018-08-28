@@ -29,7 +29,7 @@ clean:
 	@rm -rf ../doxygen/latex
 	@rm -rf ../doxygen/*.tmp
 
-doxy-code:
+doxy-code: gen_python_api_doc
 	$(Q)(cat ngraph.doxyfile ; echo "STRIP_FROM_PATH=${NGRAPH_BASE}" ) | doxygen -  2>&1 | tee doc.log
 
 html: doxy-code
@@ -124,4 +124,5 @@ coverage:
 	@echo "Testing of coverage in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/coverage/python.txt."
 
-
+gen_python_api_doc:
+	@./generate_python_api_doc.sh

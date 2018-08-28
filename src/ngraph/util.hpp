@@ -26,6 +26,10 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/axis_vector.hpp"
+#include "ngraph/node_vector.hpp"
+#include "ngraph/shape.hpp"
+
 namespace ngraph
 {
     class Node;
@@ -108,6 +112,7 @@ namespace ngraph
     void dump(std::ostream& out, const void*, size_t);
 
     std::string to_lower(const std::string& s);
+    std::string to_upper(const std::string& s);
     std::string trim(const std::string& s);
     std::vector<std::string> split(const std::string& s, char delimiter, bool trim = false);
 
@@ -209,33 +214,19 @@ namespace ngraph
         return y > x ? 0 : x - y;
     }
 
-    template <typename T, bool (*func)(T)>
-    void check_fp_values(const char* name, const T* array, size_t n)
-    {
-        bool (*fPtr)(T) = &std::isinf;
-        const char* cerr_type = fPtr == func ? "Inf" : "NaN";
-        for (size_t i = 0; i < n; i++)
-        {
-            if (func(array[i]))
-            {
-                throw std::runtime_error(std::string("Discovered ") + cerr_type + " in '" + name +
-                                         "'");
-            }
-        }
-    }
-
-    template void
-        check_fp_values<float, std::isinf>(const char* name, const float* array, size_t n);
-    template void
-        check_fp_values<float, std::isnan>(const char* name, const float* array, size_t n);
-    template void
-        check_fp_values<double, std::isinf>(const char* name, const double* array, size_t n);
-    template void
-        check_fp_values<double, std::isnan>(const char* name, const double* array, size_t n);
+    void check_fp_values_isinf(const char* name, const float* array, size_t n);
+    void check_fp_values_isinf(const char* name, const double* array, size_t n);
+    void check_fp_values_isnan(const char* name, const float* array, size_t n);
+    void check_fp_values_isnan(const char* name, const double* array, size_t n);
 
     void* aligned_alloc(size_t alignment, size_t size);
     void aligned_free(void*);
     size_t round_up(size_t size, size_t alignment);
+    template <typename T>
+    T apply_permutation(T input, ngraph::AxisVector order);
+
+    AxisVector get_default_order(size_t rank);
+    AxisVector get_default_order(const Shape& shape);
 
     /*
     * Return type struct for cache_fprop, with the modified fprop and bprop
@@ -259,7 +250,7 @@ namespace ngraph
     * The last argument is the adjoints coming into the bprop function, the output
     * bprop function will have these nodes as the first N input parameters
     **/
-    FpropCache cache_fprop(std::shared_ptr<Function> fprop,
-                           std::shared_ptr<Function> bprop,
-                           std::vector<std::shared_ptr<Node>> adjoints);
+    FpropCache cache_fprop(std::shared_ptr<Function> fprop, std::shared_ptr<Function> bprop);
 } // end namespace ngraph
+
+std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);

@@ -21,7 +21,7 @@ import ngraph as ng
 from ngraph.impl import Node, AxisSet
 from ngraph.utils.types import TensorShape, get_dtype, make_constant_node, NodeInput
 
-log = logging.getLogger(__file__)
+log = logging.getLogger(__name__)
 
 
 def get_broadcast_axes(output_shape, input_shape, axis=None):
@@ -63,8 +63,9 @@ def as_elementwise_compatible_nodes(*input_values):  # type: (*NodeInput) -> Lis
     if len(shapes) > 1:
         log.warning('More than one different shape in input nodes %s.', input_nodes)
 
-    types = {node.get_element_type() for node in input_nodes}
-    if len(types) > 1:
+    types = [node.get_element_type() for node in input_nodes]
+    unique_types = {repr(type) for type in types}
+    if len(unique_types) > 1:
         log.warning('More than one different data type in input nodes %s.', input_nodes)
 
     sorted_shapes = sorted(shapes, key=len)
@@ -74,10 +75,10 @@ def as_elementwise_compatible_nodes(*input_values):  # type: (*NodeInput) -> Lis
     output_nodes = []
     for input_value in input_values:
         if issubclass(type(input_value), Node):
-            input_value = ng.broadcast(input_value, broadcast_shape)
+            input_value = ng.broadcast_to(input_value, broadcast_shape)
             output_nodes.append(input_value)
         else:
             input_value = make_constant_node(input_value, dtype=broadcast_dtype)
-            output_nodes.append(ng.broadcast(input_value, broadcast_shape))
+            output_nodes.append(ng.broadcast_to(input_value, broadcast_shape))
 
     return output_nodes

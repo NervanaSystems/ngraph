@@ -16,6 +16,7 @@
 
 #include "ngraph/node.hpp"
 #include <memory>
+#include <sstream>
 #include <typeindex>
 #include <typeinfo>
 
@@ -25,10 +26,6 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/placement.hpp"
-
-#if not defined(EIGEN_MPL2_ONLY)
-#error("The flag `EIGEN_MPL2_ONLY` must be defined");
-#endif
 
 using namespace std;
 using namespace ngraph;
@@ -68,11 +65,7 @@ void Node::add_output(const element::Type& element_type, const Shape& shape)
     shared_ptr<TensorViewType> tensor_view_type = make_shared<TensorViewType>(element_type, shape);
     size_t i = m_outputs.size();
     auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(
-        tensor_view_type,
-        ngraph::descriptor::Tensor::make_tensor_name(this, i),
-        false,
-        is_parameter(),
-        is_constant());
+        tensor_view_type, ngraph::descriptor::Tensor::make_tensor_name(this, i));
     m_outputs.emplace_back(this, i, tensor_view_descriptor);
 }
 
@@ -142,7 +135,7 @@ void Node::set_placement(Placement placement)
     m_placement = placement;
 }
 
-std::shared_ptr<Node> Node::get_argument(size_t index)
+std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
     for (auto& i : get_inputs())
     {
@@ -162,7 +155,7 @@ Node::~Node()
     }
 }
 
-NodeVector Node::get_arguments()
+NodeVector Node::get_arguments() const
 {
     NodeVector result;
     for (auto& i : get_inputs())
@@ -332,4 +325,12 @@ NodeVector Node::get_users() const
     }
 
     return result;
+}
+
+std::string ngraph::type_check_assert_string(const Node* node)
+{
+    std::stringstream ss;
+    ss << "While type-checking node '" << node->get_name() << "' of type '" << node->description()
+       << "'";
+    return ss.str();
 }

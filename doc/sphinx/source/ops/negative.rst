@@ -48,7 +48,7 @@ Backprop
 
 .. math::
 
-   \overline{\texttt{arg}} \leftarrow -\Delta
+   \overline{\mathtt{arg}} \leftarrow -\Delta
 
 
 C++ Interface

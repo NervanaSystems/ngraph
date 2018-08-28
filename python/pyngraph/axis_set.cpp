@@ -14,9 +14,13 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/axis_set.hpp" //ngraph::AxisSet
+#include <iterator>
+#include <sstream>
+#include <string>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include "ngraph/axis_set.hpp" // ngraph::AxisSet
 #include "pyngraph/axis_set.hpp"
 
 namespace py = pybind11;
@@ -27,5 +31,19 @@ void regclass_pyngraph_AxisSet(py::module m)
     axis_set.doc() = "ngraph.impl.AxisSet wraps ngraph::AxisSet";
     axis_set.def(py::init<const std::initializer_list<size_t>&>());
     axis_set.def(py::init<const std::set<size_t>&>());
+    axis_set.def(py::init<const std::vector<size_t>&>());
     axis_set.def(py::init<const ngraph::AxisSet&>());
+
+    axis_set.def("__len__", [](const ngraph::AxisSet& v) { return v.size(); });
+
+    axis_set.def("__iter__",
+                 [](ngraph::AxisSet& v) { return py::make_iterator(v.begin(), v.end()); },
+                 py::keep_alive<0, 1>()); /* Keep set alive while iterator is used */
+
+    axis_set.def("__repr__", [](const ngraph::AxisSet& self) -> std::string {
+        std::stringstream data_ss;
+        std::copy(self.begin(), self.end(), std::ostream_iterator<int>(data_ss, ", "));
+        std::string data_str = data_ss.str();
+        return "<AxisSet {" + data_str.substr(0, data_str.size() - 2) + "}>";
+    });
 }

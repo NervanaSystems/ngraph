@@ -154,6 +154,12 @@ namespace ngraph
             }
 
             const void* get_data_ptr() const { return m_data; }
+            template <typename T>
+            const T* get_data_ptr() const
+            {
+                return reinterpret_cast<T*>(m_data);
+            }
+
             bool is_constant() const override { return true; }
         protected:
             template <typename T>

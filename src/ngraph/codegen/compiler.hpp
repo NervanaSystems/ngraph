@@ -26,14 +26,12 @@ namespace ngraph
     {
         class Module;
         class Compiler;
-        class StaticCompiler;
-        class HeaderCache;
+        class CompilerCore;
     }
 }
 
 namespace clang
 {
-    class HeaderSearchOptions;
     class CompilerInstance;
     class CodeGenAction;
 }
@@ -65,36 +63,40 @@ public:
     std::unique_ptr<clang::CodeGenAction>& get_compiler_action() { return m_compiler_action; }
 private:
     std::unique_ptr<clang::CodeGenAction> m_compiler_action;
+    std::shared_ptr<CompilerCore> m_compiler_core;
+    std::string m_precompiled_header_source;
+    std::vector<std::string> m_header_search_paths;
 };
 
-class ngraph::codegen::StaticCompiler
+class ngraph::codegen::CompilerCore
 {
 public:
-    StaticCompiler();
-    ~StaticCompiler();
+    CompilerCore();
+    ~CompilerCore();
 
     void set_debuginfo_enabled(bool state) { m_debuginfo_enabled = state; }
     bool is_debuginfo_enabled() { return m_debuginfo_enabled; }
     void set_precompiled_header_source(const std::string& source);
+    const std::string& get_precompiled_header_source() const;
     void add_header_search_path(const std::string& path);
 
     std::unique_ptr<ngraph::codegen::Module>
         compile(std::unique_ptr<clang::CodeGenAction>& compiler_action, const std::string& source);
-    void generate_pch(const std::string& source);
+    std::string generate_pch(const std::string& source);
     void initialize();
 
 private:
     std::unique_ptr<clang::CompilerInstance> m_compiler;
-    bool m_precompiled_header_valid;
     bool m_debuginfo_enabled;
     bool m_enable_diag_output;
     bool m_enable_pass_report;
     std::string m_source_name;
     std::vector<std::string> m_extra_search_path_list;
-    std::string m_pch_path;
-    std::string m_precomiled_header_source;
+    std::string m_precompiled_header_source;
 
     bool is_version_number(const std::string& path);
+    std::string find_header_version(const std::string& path);
+    std::string find_os_specific_path(const std::string& path);
     void configure_search_path();
     void load_headers_from_resource();
 };

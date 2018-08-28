@@ -38,6 +38,7 @@ namespace ngraph
         protected:
             TensorView(const std::shared_ptr<ngraph::descriptor::TensorView>& descriptor)
                 : m_descriptor(descriptor)
+                , m_stale(true)
             {
             }
 
@@ -58,6 +59,8 @@ namespace ngraph
             std::shared_ptr<ngraph::descriptor::layout::TensorViewLayout>
                 get_tensor_view_layout() const;
 
+            bool get_stale() { return m_stale; }
+            void set_stale(bool val) { m_stale = val; }
             /// @brief Write bytes directly into the tensor
             /// @param p Pointer to source of data
             /// @param tensor_offset Offset into tensor storage to begin writing. Must be element-aligned.
@@ -72,6 +75,7 @@ namespace ngraph
 
         protected:
             std::shared_ptr<ngraph::descriptor::TensorView> m_descriptor;
+            bool m_stale;
         };
 
         using TensorViewPtrs = std::vector<std::shared_ptr<TensorView>>;

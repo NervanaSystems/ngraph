@@ -27,12 +27,8 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::Liveness : public CallGraphPass
+class ngraph::pass::Liveness : public FunctionPass
 {
 public:
-    virtual bool run_on_call_graph(const std::list<std::shared_ptr<Node>>&) override;
-
-private:
-    bool is_temporary(const descriptor::Tensor&);
-    void validate_liveness(const std::list<Node*>& ops);
+    bool run_on_function(std::shared_ptr<ngraph::Function>) override;
 };

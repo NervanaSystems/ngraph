@@ -40,7 +40,7 @@ Mathematical Definition
 
 .. math::
 
-   \texttt{output}_{i_0, \ldots, i_{n-1}} = \exp(\texttt{arg}_{i_0, \ldots, i_{n-1}})
+   \mathtt{output}_{i_0, \ldots, i_{n-1}} = \exp(\mathtt{arg}_{i_0, \ldots, i_{n-1}})
 
 
 Backprop
@@ -48,7 +48,7 @@ Backprop
 
 .. math::
 
-   \overline{\texttt{arg}} \leftarrow \Delta\ \texttt{output}
+   \overline{\mathtt{arg}} \leftarrow \Delta\ \mathtt{output}
 
 
 C++ Interface

@@ -27,24 +27,62 @@
 using namespace std;
 using namespace ngraph;
 
-pass::MemoryLayout::MemoryLayout(size_t alignment)
+pass::MemoryLayout::MemoryLayout(size_t alignment, bool disable_memory_sharing)
     : m_alignment(alignment)
+    , m_disable_memory_sharing(disable_memory_sharing)
 {
 }
 
 bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
 {
-    MemoryManager mm(m_alignment);
+    MemoryManager mm(m_alignment, m_disable_memory_sharing);
     for (shared_ptr<Node> node : function->get_ordered_ops())
     {
+        std::map<descriptor::Tensor*, descriptor::Tensor*> in_place_outputs;
+        std::set<const descriptor::Tensor*> reused_inputs;
+
+        if (auto op = std::dynamic_pointer_cast<op::Op>(node))
+        {
+            if (auto op_annotations = op->get_op_annotations())
+            {
+                for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
+                {
+                    auto output = &node->get_outputs().at(oi_pair.output).get_tensor();
+                    auto input = &node->get_inputs().at(oi_pair.input).get_tensor();
+                    auto input_node = node->get_inputs().at(oi_pair.input).get_output().get_node();
+
+                    // an input tensor can be reused if this is the last use or
+                    // an op isn't destructive (i.e. Reshape(DimShuffle))
+                    if ((node->liveness_free_list.count(input) != 0 &&
+                         node->liveness_new_list.count(output) != 0) ||
+                        (!oi_pair.destructive && !input_node->is_parameter() &&
+                         !input_node->is_constant()))
+                    {
+                        in_place_outputs.insert({output, input});
+                        reused_inputs.insert(input);
+                    }
+                }
+            }
+        }
+
         for (descriptor::Tensor* tensor : node->liveness_new_list)
         {
-            size_t offset = mm.allocate(tensor->size());
+            size_t offset = in_place_outputs.count(tensor)
+                                ? in_place_outputs.at(tensor)->get_pool_offset()
+                                : mm.allocate(tensor->size());
+
             tensor->set_pool_offset(offset);
         }
-        for (const descriptor::Tensor* tensor : node->liveness_free_list)
+
+        if (!m_disable_memory_sharing)
         {
-            mm.free(tensor->get_pool_offset());
+            for (const descriptor::Tensor* tensor : node->liveness_free_list)
+            {
+                if (reused_inputs.count(tensor) == 0)
+                {
+                    mm.free(tensor->get_pool_offset());
+                }
+            }
         }
     }
     function->set_temporary_pool_size(mm.max_allocated());
@@ -58,9 +96,9 @@ pass::MemoryManager::node::node(size_t size, block_state state)
 {
 }
 
-pass::MemoryManager::MemoryManager(size_t alignment)
+pass::MemoryManager::MemoryManager(size_t alignment, bool disable_memory_reuse)
     : m_alignment{alignment}
-    , m_scheme{allocation_scheme::BEST_FIT}
+    , m_scheme{disable_memory_reuse ? allocation_scheme::NO_REUSE : allocation_scheme::FIRST_FIT}
     , m_max_allocated{0}
 {
     // assert(m_base_offset % m_alignment == 0);
@@ -74,8 +112,16 @@ size_t pass::MemoryManager::allocate(size_t size)
     {
     case allocation_scheme::FIRST_FIT: rc = first_fit(size); break;
     case allocation_scheme::BEST_FIT: rc = best_fit(size); break;
+    case allocation_scheme::NO_REUSE: rc = no_reuse_allocator(size); break;
     }
     return rc;
+}
+
+size_t pass::MemoryManager::no_reuse_allocator(size_t size)
+{
+    size_t offset = m_max_allocated;
+    m_max_allocated += align(size, m_alignment);
+    return offset;
 }
 
 size_t pass::MemoryManager::best_fit(size_t size)

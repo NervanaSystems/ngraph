@@ -35,6 +35,8 @@ repeated use of the trademark / branding symbols.
 
 * Intel® Xeon® (CPU processor)
   
+* Intel® Architecture
+
 * Intel® nGraph™
 
 * Intel® nGraph™ library 

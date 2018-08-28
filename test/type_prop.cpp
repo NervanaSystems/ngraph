@@ -17,11 +17,16 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/reverse_sequence.hpp"
 
 #include <memory>
 using namespace std;
 using namespace ngraph;
+
+#define EXPECT_HAS_SUBSTRING(haystack, needle)                                                     \
+    EXPECT_PRED_FORMAT2(testing::IsSubstring, needle, haystack)
 
 //
 // Tests for broadcast.
@@ -2056,7 +2061,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce)
 TEST(type_prop, conv_1d_back_filters_deduce)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 100};
+    // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 91}); // output delta
@@ -2133,7 +2138,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_padded)
 TEST(type_prop, conv_1d_back_filters_deduce_padded)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 100};
+    // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 96}); // output delta
@@ -2207,7 +2212,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_strided)
 TEST(type_prop, conv_1d_back_filters_deduce_strided)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 100};
+    // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 46}); // output delta
@@ -2285,7 +2290,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_strided_padded)
 TEST(type_prop, conv_1d_back_filters_deduce_strided_padded)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 100};
+    // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 48}); // output delta
@@ -2359,7 +2364,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_strided_small_uneven)
 TEST(type_prop, conv_1d_back_filters_deduce_strided_small_uneven)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 5};
+    // Shape data_batch_shape{64, 3, 5};
     Shape filters_shape{128, 3, 2};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 5});   // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 2}); // output delta
@@ -2430,7 +2435,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_strided_small_even)
 TEST(type_prop, conv_1d_back_filters_deduce_strided_small_even)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 6};
+    // Shape data_batch_shape{64, 3, 6};
     Shape filters_shape{128, 3, 2};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 6});   // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 3}); // output delta
@@ -2503,7 +2508,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_window_dilated)
 TEST(type_prop, conv_1d_back_filters_deduce_window_dilated)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 100};
+    // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 82}); // output delta
@@ -2582,7 +2587,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_window_dilated_padded)
 TEST(type_prop, conv_1d_back_filters_deduce_window_dilated_padded)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 100};
+    // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 87}); // output delta
@@ -2670,7 +2675,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_window_dilated_data_dilated_padde
 TEST(type_prop, conv_1d_back_filters_deduce_window_dilated_data_dilated_padded)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 100};
+    // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});   // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 285}); // output delta
@@ -4017,6 +4022,92 @@ TEST(type_prop, reverse_3d_deduce_oob)
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(error.what(), std::string("Reverse axis 3 is out of bounds (input rank is 3)."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reverse_sequence_1_dim)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2});
+    auto seq_lenghts = make_shared<op::Parameter>(element::f32, Shape{4, 4});
+    try
+    {
+        size_t batch_axis = 0;
+        size_t seq_axis = 1;
+        auto bc = make_shared<op::ReverseSequence>(data, seq_lenghts, batch_axis, seq_axis);
+        FAIL() << "ReverseSequence c-tor should throw for seq_lenghts whose rank isn't equal to 1";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("indices should be a 1-dimensional array"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reverse_sequence_batch_index_oob)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2});
+    auto seq_lenghts = make_shared<op::Parameter>(element::f32, Shape{3});
+    try
+    {
+        size_t batch_axis = 3;
+        size_t seq_axis = 1;
+        auto bc = make_shared<op::ReverseSequence>(data, seq_lenghts, batch_axis, seq_axis);
+        FAIL() << "ReverseSequence c-tor should throw for out-of-bounds batch axis index";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("batch axis index is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reverse_sequence_sequence_index_oob)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2});
+    auto seq_lenghts = make_shared<op::Parameter>(element::f32, Shape{3});
+    try
+    {
+        size_t batch_axis = 1;
+        size_t seq_axis = 3;
+        auto bc = make_shared<op::ReverseSequence>(data, seq_lenghts, batch_axis, seq_axis);
+        FAIL() << "ReverseSequence c-tor should throw for out-of-bounds sequence axis index";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("sequence axis index is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reverse_sequence_seq_len_size_equal_to_batch_dim)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2});
+    auto seq_lenghts = make_shared<op::Parameter>(element::f32, Shape{3});
+    try
+    {
+        size_t batch_axis = 0;
+        size_t seq_axis = 1;
+        auto bc = make_shared<op::ReverseSequence>(data, seq_lenghts, batch_axis, seq_axis);
+        FAIL() << "ReverseSequence c-tor should throw when sequence length size isn't equal to "
+                  "batch dimension";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Sequence length size should be equal to batch axis dimension"));
     }
     catch (...)
     {
@@ -5792,12 +5883,9 @@ TEST(type_prop, avg_pool_invalid_0d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 0D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool data batch input must have rank of at "
-                              "least 3 (one batch axis, one channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(), "Data input shape does not have rank of at least 3");
     }
     catch (...)
     {
@@ -5817,12 +5905,9 @@ TEST(type_prop, avg_pool_invalid_1d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 1D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool data batch input must have rank of at "
-                              "least 3 (one batch axis, one channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(), "Data input shape does not have rank of at least 3");
     }
     catch (...)
     {
@@ -5842,12 +5927,9 @@ TEST(type_prop, avg_pool_invalid_2d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 2D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool data batch input must have rank of at "
-                              "least 3 (one batch axis, one channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(), "Data input shape does not have rank of at least 3");
     }
     catch (...)
     {
@@ -5867,9 +5949,9 @@ TEST(type_prop, avg_pool_invalid_0_batch_size)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 batch size not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Average-pool data batch size is zero."));
+        EXPECT_HAS_SUBSTRING(error.what(), "Data batch size is zero");
     }
     catch (...)
     {
@@ -5889,9 +5971,9 @@ TEST(type_prop, avg_pool_invalid_0_channels)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 channels not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Average-pool requires at least one feature channel."));
+        EXPECT_HAS_SUBSTRING(error.what(), "Channel count is zero");
     }
     catch (...)
     {
@@ -5911,12 +5993,10 @@ TEST(type_prop, avg_pool_invalid_wrong_number_of_window_dimensions_too_many)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too many window dimensions not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Average-pool window shape rank does not match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Window shape rank does not match number of spatial dimensions");
     }
     catch (...)
     {
@@ -5936,12 +6016,10 @@ TEST(type_prop, avg_pool_invalid_wrong_number_of_window_dimensions_too_few)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too few window dimensions not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Average-pool window shape rank does not match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Window shape rank does not match number of spatial dimensions");
     }
     catch (...)
     {
@@ -5962,11 +6040,11 @@ TEST(type_prop, avg_pool_invalid_movement_stride_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong movement stride rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool window movement stride rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Window movement stride rank does not match number of spatial dimensions");
     }
     catch (...)
     {
@@ -5990,11 +6068,10 @@ TEST(type_prop, avg_pool_invalid_padding_below_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong below-padding rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool below-padding rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Below-padding rank does not match number of spatial dimensions");
     }
     catch (...)
     {
@@ -6018,11 +6095,10 @@ TEST(type_prop, avg_pool_invalid_padding_above_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong above-padding rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool above-padding rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Above-padding rank does not match number of spatial dimensions");
     }
     catch (...)
     {
@@ -6042,10 +6118,10 @@ TEST(type_prop, avg_pool_invalid_input_item_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length spatial axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool input spatial dimension is zero even after padding."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Data input spatial dimension 0 has zero length even after padding");
     }
     catch (...)
     {
@@ -6065,9 +6141,9 @@ TEST(type_prop, avg_pool_invalid_window_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length window axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Average-pool window shape has a zero-length axis."));
+        EXPECT_HAS_SUBSTRING(error.what(), "Window shape dimension 1 has zero length");
     }
     catch (...)
     {
@@ -6087,11 +6163,10 @@ TEST(type_prop, avg_pool_invalid_dilated_too_large)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with oversized window not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool window shape is larger than the spatial "
-                              "dimensions even after padding."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Window shape after padding is larger than the spatial dimensions");
     }
     catch (...)
     {
@@ -6112,9 +6187,9 @@ TEST(type_prop, avg_pool_invalid_movement_stride_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0-length movement stride axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const TypeCheckError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Average-pool window axis movement stride is zero."));
+        EXPECT_HAS_SUBSTRING(error.what(), "Window movement strides dimension 0 has zero length");
     }
     catch (...)
     {
@@ -6377,6 +6452,63 @@ TEST(type_prop, sum_axis_oob)
     {
         EXPECT_EQ(error.what(),
                   std::string("Reduction axis for arithmetic reduction operator is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, index_reduction_scalar)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{});
+
+    try
+    {
+        auto argmin = make_shared<op::ArgMin>(a, 0, element::i32);
+        FAIL() << "ArgMin c-tor should throw for scalar shapes";
+    }
+    catch (const TypeCheckError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Tensor's rank must be at least 1");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, index_reduction_invalid_rank)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+
+    try
+    {
+        auto argmin = make_shared<op::ArgMin>(a, 2, element::i32);
+        FAIL() << "ArgMin c-tor should throw for scalar shapes";
+    }
+    catch (const TypeCheckError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "is greater than rank of");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, index_reduction_invalid_index_type)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+
+    try
+    {
+        auto argmin = make_shared<op::ArgMin>(a, 1, element::f32);
+        FAIL() << "ArgMin c-tor should throw for scalar shapes";
+    }
+    catch (const TypeCheckError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Index element type must be");
     }
     catch (...)
     {

@@ -29,7 +29,7 @@ runtime::HostTensorView::HostTensorView(const ngraph::element::Type& element_typ
                                         void* memory_pointer,
                                         const string& name)
     : runtime::TensorView(std::make_shared<ngraph::descriptor::PrimaryTensorView>(
-          std::make_shared<ngraph::TensorViewType>(element_type, shape), name, true, true, false))
+          std::make_shared<ngraph::TensorViewType>(element_type, shape), name))
     , m_allocated_buffer_pool(nullptr)
     , m_aligned_buffer_pool(nullptr)
 

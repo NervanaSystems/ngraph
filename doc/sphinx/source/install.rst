@@ -4,10 +4,14 @@
 Install 
 ########
 
+* :ref:`ubuntu`
+* :ref:`centos`
+
+
 Build Environments
 ==================
 
-The |release| version of |project| supports Linux\*-based systems  
+Release |release| of |project| supports Linux\*-based systems  
 with the following packages and prerequisites: 
 
 .. csv-table::
@@ -16,14 +20,14 @@ with the following packages and prerequisites:
    :escape: ~
 
    CentOS 7.4 64-bit, GCC 4.8, CMake 3.4.3, supported, ``wget zlib-devel ncurses-libs ncurses-devel patch diffutils gcc-c++ make git perl-Data-Dumper`` 
-   Ubuntu 16.04 (LTS) 64-bit, Clang 3.9, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-3.9 git curl zlib1g zlib1g-dev libtinfo-dev``
+   Ubuntu 16.04 or 18.04 (LTS) 64-bit, Clang 3.9, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-3.9 clang-format-3.9 git curl zlib1g zlib1g-dev libtinfo-dev unzip autoconf automake libtool``
    Clear Linux\* OS for Intel Architecture, Clang 5.0.1, CMake 3.10.2, experimental, bundles ``machine-learning-basic dev-utils python3-basic python-basic-dev``
 
 Other configurations may work, but should be considered experimental with
-limited support. On Ubuntu 16.04 with ``gcc-5.4.0`` or ``clang-3.9``, for 
-example, we recommend adding ``-DNGRAPH_USE_PREBUILT_LLVM=TRUE`` to the 
-:command:`cmake` command in step 4 below. This fetches a pre-built tarball 
-of LLVM+Clang from `llvm.org`_, and will substantially reduce build time.
+limited support. On Ubuntu 16.04 with gcc-5.4.0 or clang-3.9, for example, we 
+recommend adding ``-DNGRAPH_USE_PREBUILT_LLVM=TRUE`` to the cmake command in 
+step 4 below. This fetches a pre-built tarball of LLVM+Clang from llvm.org, 
+and it will substantially reduce build time.
 
 If using ``gcc`` version 4.8, it may be necessary to add symlinks from ``gcc`` 
 to ``gcc-4.8``, and from ``g++`` to ``g++-4.8``, in your :envvar:`PATH`, even 
@@ -36,19 +40,22 @@ compatible with a gcc 4.8-based build.)
 Installation Steps
 ==================
 
-The CMake procedure installs ``ngraph_dist`` to the installing user's ``$HOME`` 
-directory as the default location. See the :file:`CMakeLists.txt` file for 
-details about how to change or customize the install location.
+.. important:: The default :program:`cmake` procedure (no build flags) will  
+   install ``ngraph_dist`` to an OS-level location like ``/usr/bin/ngraph_dist``
+   or ``/usr/lib/ngraph_dist``. Here we specify how to build locally to the
+   location of ``~/ngraph_dist`` with the cmake target ``-DCMAKE_INSTALL_PREFIX=~/ngraph_dist``. 
+   All of the nGraph Library documentation presumes that ``ngraph_dist`` 
+   gets installed locally. The system location can be used just as easily by 
+   customizing paths on that system. See the :file:`ngraph/CMakeLists.txt` 
+   file to change or customize the default CMake procedure.
 
-The instructions below also presume cloning the nGraph source via an SSH-enabled 
-Github account. If you don't have SSH keys set up on your GitHub account, you can 
-still follow the instructions below and clone via HTTPS.
+.. _ubuntu:
 
+Ubuntu 16.04
+-------------
 
-Ubuntu
-------
-
-The process documented here will work on Ubuntu\* 16.04 (LTS)
+The process documented here will work on Ubuntu\* 16.04 (LTS) or on Ubuntu 
+18.04 (LTS).
 
 #. (Optional) Create something like ``/opt/libraries`` and (with sudo), 
    give ownership of that directory to your user. Creating such a placeholder 
@@ -77,20 +84,27 @@ The process documented here will work on Ubuntu\* 16.04 (LTS)
 
       $ mkdir build && cd build
 
-#. Generate the GNUMakefiles in the customary manner (from within the 
-   ``build`` directory). If running ``gcc-5.4.0`` or ``clang-3.9``, remember 
-   that you can also append ``cmake`` with the prebuilt LLVM option to 
-   speed-up the build. Another option if your deployment system has Intel®
-   Advanced Vector Extensions (Intel® AVX) is to target the accelerations 
-   available directly by compiling the build as follows during the cmake 
-   step: ``-DNGRAPH_TARGET_ARCH=skylake-avx512``.
+#. Generate the GNU Makefiles in the customary manner (from within the 
+   ``build`` directory). This command sets the target build location to
+   be ``~/ngraph_dist``, where it can be easily located.  
 
    .. code-block:: console
 
-      $ cmake ../ [-DNGRAPH_USE_PREBUILT_LLVM=TRUE]
+      $ cmake ../ -DCMAKE_INSTALL_PREFIX=~/ngraph_dist  
+
+   **Other optional build flags** -- If running ``gcc-5.4.0`` or ``clang-3.9``, 
+   remember that you can also append ``cmake`` with the prebuilt LLVM option 
+   to speed-up the build.  Another option if your deployment system has Intel® 
+   Advanced Vector Extensions (Intel® AVX) is to target the accelerations 
+   available directly by compiling the build as follows during the cmake 
+   step: ``-DNGRAPH_TARGET_ARCH=skylake-avx512``.  
+   
+   .. code-block:: console
+
+      $ cmake .. [-DNGRAPH_USE_PREBUILT_LLVM=TRUE] [-DNGRAPH_TARGET_ARCH=skylake-avx512]   
 
 #. Run ``$ make`` and ``make install`` to install ``libngraph.so`` and the 
-   header files to ``$HOME/ngraph_dist``:
+   header files to ``~/ngraph_dist``:
 
    .. code-block:: console
       
@@ -100,11 +114,15 @@ The process documented here will work on Ubuntu\* 16.04 (LTS)
 #. (Optional, requires `doxygen`_, `Sphinx`_, and `breathe`_). Run ``make html`` 
    inside the ``doc/sphinx`` directory of the cloned source to build a copy of 
    the `website docs`_ locally. The low-level API docs with inheritance and 
-   collaboration diagrams can be found inside the ``/docs/doxygen/`` directory.    
+   collaboration diagrams can be found inside the ``/docs/doxygen/`` directory. 
+   See the :doc:`project/doc-contributor-README` for more details about how to 
+   build documentation for nGraph. 
 
 
-CentOS
-------
+.. _centos: 
+
+CentOS 7.4
+-----------
 
 The process documented here will work on CentOS 7.4.
 
@@ -135,26 +153,26 @@ The process documented here will work on CentOS 7.4.
       $ wget https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz      
       $ tar -xzvf cmake-3.4.3.tar.gz
       $ cd cmake-3.4.3
-      $ ./bootstrap
-      $ make && sudo make install  
+      $ ./bootstrap --system-curl --prefix=~/cmake
+      $ make && make install     
 
-#. Clone the `NervanaSystems` ``ngraph`` repo and use Cmake 3.4.3 to 
-   install the nGraph libraries to ``$HOME/ngraph_dist``.
+#. Clone the `NervanaSystems` ``ngraph`` repo via HTTPS and use Cmake 3.4.3 to 
+   build nGraph Libraries to ``~/ngraph_dist``. 
 
    .. code-block:: console
 
       $ cd /opt/libraries 
       $ git clone https://github.com/NervanaSystems/ngraph.git
       $ cd ngraph && mkdir build && cd build
-      $ cmake ../
+      $ ~/cmake/bin/cmake .. -DCMAKE_INSTALL_PREFIX=~/ngraph_dist  
       $ make && sudo make install 
 
 
 macOS\* development
 --------------------
 
-.. note:: Although we do not offer support for the macOS platform; some 
-   configurations and features may work.
+.. note:: Although we do not currently offer full support for the macOS platform, 
+   some configurations and features may work.
 
 The repository includes two scripts (``maint/check-code-format.sh`` and 
 ``maint/apply-code-format.sh``) that are used respectively to check adherence 
@@ -165,7 +183,7 @@ according to those conventions. These scripts require the command
 
 .. code-block:: bash
 
-   $ brew install llvm@3.9
+   $ brew install llvm@3.9 automake
    $ mkdir -p $HOME/bin
    $ ln -s /usr/local/opt/llvm@3.9/bin/clang-format $HOME/bin/clang-format-3.9
    $ echo 'export PATH=$HOME/bin:$PATH' >> $HOME/.bash_profile
@@ -203,9 +221,10 @@ on an Intel nGraph-enabled backend.
 For the former case, this early |version|, :doc:`framework-integration-guides`, 
 can help you get started with a training a model on a supported framework. 
 
-* :doc:`neon<framework-integration-guides>` framework,  
 * :doc:`MXNet<framework-integration-guides>` framework,  
 * :doc:`TensorFlow<framework-integration-guides>` framework, and
+* :doc:`neon<framework-integration-guides>` framework,  
+
 
 For the latter case, if you've followed a tutorial from `ONNX`_, and you have an 
 exported, serialized model, you can skip the section on frameworks and go directly

@@ -28,6 +28,7 @@ void regmodule_pyngraph_op_util(py::module m)
     regclass_pyngraph_op_util_BinaryElementwise(m_util);
     regclass_pyngraph_op_util_BinaryElementwiseArithmetic(m_util);
     regclass_pyngraph_op_util_BinaryElementwiseComparison(m_util);
+    regclass_pyngraph_op_util_BinaryElementwiseLogical(m_util);
     regclass_pyngraph_op_util_UnaryElementwise(m_util);
     regclass_pyngraph_op_util_UnaryElementwiseArithmetic(m_util);
 }

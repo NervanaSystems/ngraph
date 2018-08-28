@@ -53,12 +53,12 @@ For example, if ``arg`` is :math:`[a, b, c]` then
 
 .. math::
 
-   \texttt{Broadcast(arg, Shape{2, 3}, AxisSet{0})} &=
+   \mathtt{Broadcast(arg, Shape{2, 3}, AxisSet{0})} &=
    \begin{bmatrix}
    a & b & c\\
    a & b & c
    \end{bmatrix}\\
-   \texttt{Broadcast(arg, Shape{3, 2}, AxisSet{1})} &=
+   \mathtt{Broadcast(arg, Shape{3, 2}, AxisSet{1})} &=
    \begin{bmatrix}
    a & a\\
    b & b\\
@@ -71,12 +71,12 @@ Mathematical Definition
 
 For a coordinate :math:`C`, let :math:`p(C)` be a coordinate with the
 axes in ``broadcast_axes`` removed.  For example, if
-:math:`\texttt{broadcast_axes}=\{1,3\}` then :math:`p([d_0, d_1,
+:math:`\mathtt{broadcast_axes}=\{1,3\}` then :math:`p([d_0, d_1,
 d_2, d_3, d_4]) = [d_0, d_2, d_4]`.  Then
 
 .. math::
 
-   \texttt{output}_C = \texttt{arg}_{p(C)}.
+   \mathtt{output}_C = \mathtt{arg}_{p(C)}.
    
 
 
@@ -85,7 +85,7 @@ Backprop
 
 .. math::
 
-   \overline{\texttt{arg}} \leftarrow \texttt{Sum}(\Delta, \texttt{broadcast_axes}).
+   \overline{\mathtt{arg}} \leftarrow \mathtt{Sum}(\Delta, \mathtt{broadcast_axes}).
    
 
 C++ Interface

@@ -39,15 +39,17 @@ namespace ngraph
                        T rtol = static_cast<T>(1e-5),
                        T atol = static_cast<T>(1e-8))
         {
+            bool rc = true;
             assert(a.size() == b.size());
             for (size_t i = 0; i < a.size(); ++i)
             {
                 if (std::abs(a[i] - b[i]) > atol + rtol * std::abs(b[i]))
                 {
-                    return false;
+                    NGRAPH_INFO << a[i] << " is not close to " << b[i] << " at index " << i;
+                    rc = false;
                 }
             }
-            return true;
+            return rc;
         }
 
         /// @brief Same as numpy.allclose

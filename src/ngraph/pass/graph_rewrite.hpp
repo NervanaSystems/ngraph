@@ -61,7 +61,7 @@ public:
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 
 private:
-    //enable cascading rewrites
+    // enable cascading rewrites
     std::vector<std::shared_ptr<pattern::Matcher>> m_matchers;
 };
 

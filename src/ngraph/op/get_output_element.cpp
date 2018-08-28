@@ -42,7 +42,7 @@ shared_ptr<Node> op::GetOutputElement::copy_with_new_args(const NodeVector& new_
     return make_shared<GetOutputElement>(new_args.at(0), m_n);
 }
 
-NodeVector op::GetOutputElement::get_arguments()
+NodeVector op::GetOutputElement::get_arguments() const
 {
     return NodeVector{get_inputs().at(0).get_output().get_node()};
 }
@@ -52,4 +52,16 @@ void op::GetOutputElement::generate_adjoints(autodiff::Adjoints& adjoints, const
     auto delta = deltas.at(0);
 
     adjoints.add_delta(get_inputs().at(0).get_output().get_node(), delta, get_n());
+}
+
+NodeVector op::get_output_elements(const shared_ptr<Node>& mon)
+{
+    NodeVector goes(mon->get_outputs().size());
+
+    for (auto goe_input : mon->get_output_inputs(0))
+    {
+        auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(goe_input->get_node());
+        goes.at(goe->get_n()) = goe_input->get_node();
+    }
+    return goes;
 }

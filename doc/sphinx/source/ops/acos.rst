@@ -40,14 +40,14 @@ Mathematical Definition
 
 .. math::
 
-   \texttt{output}_{i_0, \ldots, i_{n-1}} = \cos^{-1}(\texttt{arg}_{i_0, \ldots, i_{n-1}})
+   \mathtt{output}_{i_0, \ldots, i_{n-1}} = \cos^{-1}(\mathtt{arg}_{i_0, \ldots, i_{n-1}})
 
 Backprop
 ========
 
 .. math::
 
-   \overline{\texttt{arg}} \leftarrow -\frac{\Delta}{\sqrt{1-\texttt{arg}^2}}
+   \overline{\mathtt{arg}} \leftarrow -\frac{\Delta}{\sqrt{1-\mathtt{arg}^2}}
 
 
 C++ Interface

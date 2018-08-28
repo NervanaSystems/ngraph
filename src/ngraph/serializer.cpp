@@ -25,6 +25,8 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/argmax.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -49,6 +51,7 @@
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
+#include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
@@ -72,14 +75,17 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/select_and_scatter.hpp"
+#include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
 #include "ngraph/op/sinh.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
@@ -96,16 +102,7 @@ using const_data_callback_t = shared_ptr<Node>(const string&, const element::Typ
 template <typename T>
 T get_or_default(nlohmann::json& j, const std::string& key, const T& default_value)
 {
-    T rc;
-    try
-    {
-        rc = j.at(key).get<T>();
-    }
-    catch (...)
-    {
-        rc = default_value;
-    }
-    return rc;
+    return j.count(key) != 0 ? j.at(key).get<T>() : default_value;
 }
 
 static std::shared_ptr<ngraph::Function>
@@ -213,17 +210,10 @@ std::string ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t ind
 
 shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
 {
-    std::stringstream ss;
-    ss << in.rdbuf();
-    return deserialize(ss.str());
-}
-
-shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
-{
     shared_ptr<Function> rc;
-    if (file_util::exists(s))
+    if (cpio::is_cpio(in))
     {
-        cpio::Reader reader(s);
+        cpio::Reader reader(in);
         vector<cpio::FileInfo> file_info = reader.get_file_info();
         if (file_info.size() > 0)
         {
@@ -258,6 +248,25 @@ shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
                 rc = f;
             }
         }
+    }
+    else
+    {
+        // json file?
+        std::stringstream ss;
+        ss << in.rdbuf();
+        rc = deserialize(ss.str());
+    }
+    return rc;
+}
+
+shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
+{
+    shared_ptr<Function> rc;
+    if (file_util::exists(s))
+    {
+        // s is a file and not a json string
+        ifstream in(s, ios_base::binary | ios_base::in);
+        rc = deserialize(in);
     }
     else
     {
@@ -379,6 +388,18 @@ static shared_ptr<ngraph::Function>
             else if (node_op == "And")
             {
                 node = make_shared<op::And>(args[0], args[1]);
+            }
+            else if (node_op == "ArgMin")
+            {
+                auto axis = node_js.at("axis").get<size_t>();
+                auto target_type = read_element_type(node_js.at("index_element_type"));
+                node = make_shared<op::ArgMin>(args[0], axis, target_type);
+            }
+            else if (node_op == "ArgMax")
+            {
+                auto axis = node_js.at("axis").get<size_t>();
+                auto target_type = read_element_type(node_js.at("index_element_type"));
+                node = make_shared<op::ArgMax>(args[0], axis, target_type);
             }
             else if (node_op == "Asin")
             {
@@ -633,6 +654,14 @@ static shared_ptr<ngraph::Function>
             {
                 node = make_shared<op::Log>(args[0]);
             }
+            else if (node_op == "LRN")
+            {
+                auto alpha = node_js.at("alpha").get<double>();
+                auto beta = node_js.at("beta").get<double>();
+                auto bias = node_js.at("bias").get<double>();
+                auto nsize = node_js.at("nsize").get<size_t>();
+                node = make_shared<op::LRN>(args[0], alpha, beta, bias, nsize);
+            }
             else if (node_op == "Max")
             {
                 auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
@@ -739,7 +768,8 @@ static shared_ptr<ngraph::Function>
                     node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
                 auto element_type = read_element_type(type_node_js.at("element_type"));
                 auto shape = type_node_js.at("shape");
-                node = make_shared<op::Parameter>(element_type, shape);
+                auto cacheable = get_or_default<bool>(node_js, "cacheable", false);
+                node = make_shared<op::Parameter>(element_type, shape, cacheable);
             }
             else if (node_op == "Power")
             {
@@ -802,6 +832,13 @@ static shared_ptr<ngraph::Function>
                 auto reversed_axes = node_js.at("reversed_axes").get<set<size_t>>();
                 node = make_shared<op::Reverse>(args[0], reversed_axes);
             }
+            else if (node_op == "ReverseSequence")
+            {
+                auto batch_axis = node_js.at("batch_axis").get<size_t>();
+                auto sequence_axis = node_js.at("sequence_axis").get<size_t>();
+                node =
+                    make_shared<op::ReverseSequence>(args[0], args[1], batch_axis, sequence_axis);
+            }
             else if (node_op == "Select")
             {
                 node = make_shared<op::Select>(args[0], args[1], args[2]);
@@ -825,6 +862,14 @@ static shared_ptr<ngraph::Function>
                                                          window_shape,
                                                          window_movement_strides);
             }
+            else if (node_op == "Sigmoid")
+            {
+                node = make_shared<op::Sigmoid>(args[0]);
+            }
+            else if (node_op == "SigmoidBackprop")
+            {
+                node = make_shared<op::SigmoidBackprop>(args[0], args[1]);
+            }
             else if (node_op == "Sign")
             {
                 node = make_shared<op::Sign>(args[0]);
@@ -846,8 +891,8 @@ static shared_ptr<ngraph::Function>
             }
             else if (node_op == "Softmax")
             {
-                auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
-                node = make_shared<op::Softmax>(args[0], reduction_axes);
+                auto softmax_axes = node_js.at("softmax_axes").get<set<size_t>>();
+                node = make_shared<op::Softmax>(args[0], softmax_axes);
             }
             else if (node_op == "Sqrt")
             {
@@ -869,6 +914,10 @@ static shared_ptr<ngraph::Function>
             else if (node_op == "Tanh")
             {
                 node = make_shared<op::Tanh>(args[0]);
+            }
+            else if (node_op == "StopGradient")
+            {
+                node = make_shared<op::StopGradient>(args[0]);
             }
             else
             {
@@ -898,8 +947,8 @@ static shared_ptr<ngraph::Function>
         }
     }
 
-    //This handles both graphs w/ `op::Result` and legacy graphs w/o it
-    //If we are dealing w/ a legacy graph, add op::Result for each output node
+    // This handles both graphs w/ `op::Result` and legacy graphs w/o it
+    // If we are dealing w/ a legacy graph, add op::Result for each output node
     ResultVector result;
     size_t results = 0;
     for (auto result_name : func_result)
@@ -908,7 +957,7 @@ static shared_ptr<ngraph::Function>
         if (auto res = std::dynamic_pointer_cast<op::Result>(fr))
         {
             result.push_back(res);
-            //make sure we have `op::Result` on top of all outputs
+            // make sure we have `op::Result` on top of all outputs
             results++;
         }
         else
@@ -975,6 +1024,18 @@ static json write(const Node& n, bool binary_constant_data)
     }
     else if (node_op == "Add")
     {
+    }
+    else if (node_op == "ArgMin")
+    {
+        auto tmp = dynamic_cast<const op::ArgMin*>(&n);
+        node["axis"] = tmp->get_reduction_axis();
+        node["index_element_type"] = write_element_type(tmp->get_element_type());
+    }
+    else if (node_op == "ArgMax")
+    {
+        auto tmp = dynamic_cast<const op::ArgMax*>(&n);
+        node["axis"] = tmp->get_reduction_axis();
+        node["index_element_type"] = write_element_type(tmp->get_element_type());
     }
     else if (node_op == "AllReduce")
     {
@@ -1120,6 +1181,14 @@ static json write(const Node& n, bool binary_constant_data)
     else if (node_op == "Log")
     {
     }
+    else if (node_op == "LRN")
+    {
+        auto tmp = dynamic_cast<const op::LRN*>(&n);
+        node["alpha"] = tmp->get_alpha();
+        node["beta"] = tmp->get_beta();
+        node["bias"] = tmp->get_bias();
+        node["nsize"] = tmp->get_nsize();
+    }
     else if (node_op == "Max")
     {
         auto tmp = dynamic_cast<const op::Max*>(&n);
@@ -1181,6 +1250,7 @@ static json write(const Node& n, bool binary_constant_data)
     {
         auto tmp = dynamic_cast<const op::Parameter*>(&n);
         node["shape"] = tmp->get_shape();
+        node["cacheable"] = tmp->get_cacheable();
         node["element_type"] = write_element_type(tmp->get_element_type());
     }
     else if (node_op == "Product")
@@ -1234,6 +1304,12 @@ static json write(const Node& n, bool binary_constant_data)
         auto tmp = dynamic_cast<const op::Reverse*>(&n);
         node["reversed_axes"] = tmp->get_reversed_axes();
     }
+    else if (node_op == "ReverseSequence")
+    {
+        auto tmp = dynamic_cast<const op::ReverseSequence*>(&n);
+        node["batch_axis"] = tmp->get_batch_axis();
+        node["sequence_axis"] = tmp->get_sequence_axis();
+    }
     else if (node_op == "Select")
     {
     }
@@ -1244,6 +1320,12 @@ static json write(const Node& n, bool binary_constant_data)
         node["scatter_function"] = tmp->get_functions()[1]->get_name();
         node["window_shape"] = tmp->get_window_shape();
         node["window_movement_strides"] = tmp->get_window_movement_strides();
+    }
+    else if (node_op == "Sigmoid")
+    {
+    }
+    else if (node_op == "SigmoidBackprop")
+    {
     }
     else if (node_op == "Sign")
     {
@@ -1271,6 +1353,11 @@ static json write(const Node& n, bool binary_constant_data)
     {
         auto tmp = dynamic_cast<const op::Sum*>(&n);
         node["reduction_axes"] = tmp->get_reduction_axes();
+    }
+    else if (node_op == "Softmax")
+    {
+        auto tmp = dynamic_cast<const op::Softmax*>(&n);
+        node["softmax_axes"] = tmp->get_axes();
     }
     else if (node_op == "Tan")
     {

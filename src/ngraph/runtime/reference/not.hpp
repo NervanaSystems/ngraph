@@ -24,14 +24,12 @@ namespace ngraph
     {
         namespace reference
         {
-            static inline void
-                logical_not(const char* arg,
-                            char* out,
-                            size_t count) // TODO: using char for bool, is this right?
+            template <typename T>
+            void logical_not(const T* arg, T* out, size_t count)
             {
                 for (size_t i = 0; i < count; i++)
                 {
-                    out[i] = !(arg[i]);
+                    out[i] = static_cast<T>(!(arg[i]));
                 }
             }
         }

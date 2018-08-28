@@ -24,24 +24,6 @@ namespace ngraph
     namespace op
     {
         /// \brief Batched max pooling operation, with optional padding and window stride.
-        ///
-        /// (TODO: add an account of the optional padding to this comment.)
-        ///
-        /// Max pooling takes as its input a data batch tensor of shape \f$(N,C,d_1,\dots,d_n)\f$ where \f$n > 0\f$, every \f$d_i > 0\f$, and where \f$N\f$ is
-        /// the batch size, and \f$C > 0\f$ is the number of channels (sometimes called features). The dimensions \f$(d_1,\dots,d_n)\f$ correspond to the shape of
-        /// an \f$n\f$-dimensional data item in a batch. For example, where \f$n=2\f$, the data may represent a two-dimensional image. It also takes two parameters:
-        ///
-        /// 1. <i>(the window shape)</i> a size vector \f$(w_1,\dots,w_n)\f$ where every \f$w_i \le d_i\f$; and
-        /// 2. <i>(the window movement strides, optional)</i> a vector of positive integers \f$(s_1,\dots,s_n)\f$.
-        ///
-        /// The output has the shape \f$(N,C,d'_1,\dots,d'_n)\f$, where \f$d'_n = \lceil \frac{d_i - w_i + 1}{s_i} \rceil\f$.
-        ///
-        /// Given an input data batch tensor \f$T_\textit{in}\f$, the output tensor is defined by the equation
-        ///
-        /// \f[
-        ///      T_\textit{out}[a,c,i_1,\dots,i_n] = \max_{j_1 = s_1 i_1, \dots, j_n = s_n i_n}^{j_1 = s_1 i_1 + w_1 - 1, \dots, j_n = s_n i_n + w_n - 1} (T_\textit{in}[a,c,j_1,\dots,j_n])
-        /// \f]
-        ///
         class MaxPool : public util::RequiresTensorViewArgs
         {
         public:

@@ -17,7 +17,9 @@
 #pragma once
 
 #include <cstddef>
+#include <ostream>
 #include <set>
+#include <vector>
 
 namespace ngraph
 {
@@ -33,6 +35,11 @@ namespace ngraph
 
         AxisSet(const std::set<size_t>& axes)
             : std::set<size_t>(axes)
+        {
+        }
+
+        AxisSet(const std::vector<size_t>& axes)
+            : std::set<size_t>(axes.begin(), axes.end())
         {
         }
 
@@ -53,4 +60,6 @@ namespace ngraph
             return *this;
         }
     };
+
+    std::ostream& operator<<(std::ostream& s, const AxisSet& axis_set);
 }

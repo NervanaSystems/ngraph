@@ -14,33 +14,24 @@
 # limitations under the License.
 # ******************************************************************************
 
-include_directories(
-    SYSTEM
-    ${GTEST_INCLUDE_DIR}
-    ${EIGEN_INCLUDE_DIR}
-    )
-
-include_directories(
-    ${NGRAPH_INCLUDE_DIR}
-    )
-
-set (SRC
-    backend_api.cpp
+set(SRC
     algebraic_simplification.cpp
-    backend_debug_api.cpp
-    builder.cpp
+    assertion.cpp
     builder_autobroadcast.cpp
     build_graph.cpp
+    constant_folding.cpp
     copy.cpp
-    core_fusion.cpp
     cpio.cpp
+    cse.cpp
     element_type.cpp
     file_util.cpp
+    all_close_f.cpp
     inliner.cpp
     input_output_assign.cpp
     main.cpp
     op.cpp
     graph_partition.cpp
+    nop_elimination.cpp
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
@@ -50,76 +41,57 @@ set (SRC
     reshape_elimination.cpp
     tensor.cpp
     type_prop.cpp
-    util/autodiff/backprop_function.cpp
-    util/test_tools.cpp
-    util/benchmark.cpp
     util.cpp
     uuid.cpp
     zero_dim_tensor_elimination.cpp
 )
 
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    if (APPLE OR WIN32)
+        list(APPEND SRC onnx_import.cpp)
+    else()
+        # ONNX unit tests temporarly disabled if CentOS detected
+        # (Protobuf issue with interpreting messages)
+        if (NOT ${DISTRIB_ID} STREQUAL "CentOS Linux")
+            list(APPEND SRC onnx_import.cpp)
+        endif()
+    endif()
+endif()
+
+if (NGRAPH_INTERPRETER_ENABLE)
+    set(SRC ${SRC} backend_debug_api.cpp builder.cpp backend_api.cpp)
+endif()
+
+if (NGRAPH_CPU_ENABLE)
+    set(SRC ${SRC} core_fusion.cpp)
+endif()
+
 add_subdirectory(models)
 add_subdirectory(files)
+add_subdirectory(util)
 
-#================================================================================================
-# To auto generate a suite of unit tests for a backend add a line like this
-# set(BACKEND_NAMES ${BACKEND_NAMES} "BACKEND_NAME_GOES_HERE")
-# and replace BACKEND_NAME_GOES_HERE with your backend name.
-# The code for the unit test suite is in test/backend_test.in.cpp
-#================================================================================================
-# TODO add interpreter back to unit tests when it works
-set(BACKEND_NAMES ${BACKEND_NAMES} "INTERPRETER")
-set(BACKEND_NAMES ${BACKEND_NAMES} "IE")
-
-if(MKLDNN_INCLUDE_DIR)
-    include_directories(SYSTEM ${MKLDNN_INCLUDE_DIR})
-    link_directories(${MKLDNN_LIB_DIR})
-    set(SRC ${SRC} mkldnn.cpp)
+if(NGRAPH_CPU_ENABLE)
+    set(SRC ${SRC} backend_performance.cpp cpu_fusion.cpp cpu_test.cpp)
 endif()
 
-if(NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR)
-    include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
-    link_directories(${LLVM_LIB_DIR})
-    set(SRC ${SRC} backend_performance.cpp codegen.cpp cpu_fusion.cpp cpu_test.cpp)
-    set(BACKEND_NAMES ${BACKEND_NAMES} "CPU")
+if(NGRAPH_GPU_ENABLE)
+    set(SRC ${SRC} cudnn.cpp gpu_test.cpp)
 endif()
 
-if(NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
-    include_directories(SYSTEM ${LLVM_INCLUDE_DIR} ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
-    link_directories(${LLVM_LIB_DIR})
-    link_directories(${CUDA_LIBRARIES})
-    link_directories(${CUDA_CUBLAS_LIBRARIES})
-    link_directories(${CUDNN_LIBRARIES})
-    set(SRC
-        ${SRC}
-        cudnn.cpp)
-    # Disabled for testing
-    set(BACKEND_NAMES ${BACKEND_NAMES} "GPU")
-endif()
+foreach(TEST_CONFIG ${UNIT_TEST_CONFIG_LIST})
+    string(FIND ${TEST_CONFIG} "@" OFFSET)
+    string(SUBSTRING ${TEST_CONFIG} 0 ${OFFSET} BACKEND_NAME)
+    math(EXPR OFFSET ${OFFSET}+1)
+    string(SUBSTRING ${TEST_CONFIG} ${OFFSET} -1 MANIFEST)
 
-if(NGRAPH_NNP_ENABLE)
-    include_directories(SYSTEM ${NNP_TRANSFORMER_INCLUDE_DIR})
-    set(BACKEND_NAMES ${BACKEND_NAMES} "NNP_TESTER")
-    set(ADDITIONAL_NNP_TEST ${NNP_TRANSFORMER_SOURCE_DIR}/test/test_nnp_backend.cpp)
-    # Ensures ADDITIONAL_NNP_TEST are a dependency on nnp transformer
-    add_custom_command(OUTPUT ${ADDITIONAL_NNP_TEST} DEPENDS ext_nnp_transformer COMMAND "")
-    set(SRC ${SRC} ${ADDITIONAL_NNP_TEST})
-endif()
-
-if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_C_INCLUDE_PATH)
-    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-    foreach(BACKEND_NAME ${BACKEND_NAMES})
-        configure_file(distributed.cpp distributed_${BACKEND_NAME}.cpp)
-        set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/distributed_${BACKEND_NAME}.cpp)
-endforeach()
-endif()
-
-foreach(BACKEND_NAME ${BACKEND_NAMES})
     configure_file(backend_test.in.cpp backend_test_${BACKEND_NAME}.cpp)
     configure_file(convolution_test.in.cpp convolution_test_${BACKEND_NAME}.cpp)
-    set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/backend_test_${BACKEND_NAME}.cpp)
-    set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/convolution_test_${BACKEND_NAME}.cpp)
+    set(SRC ${CMAKE_CURRENT_BINARY_DIR}/backend_test_${BACKEND_NAME}.cpp ${SRC})
+    set(SRC ${CMAKE_CURRENT_BINARY_DIR}/convolution_test_${BACKEND_NAME}.cpp ${SRC})
+    if(NGRAPH_DISTRIBUTED_ENABLE)
+        configure_file(distributed.cpp distributed_${BACKEND_NAME}.cpp)
+        set(SRC ${CMAKE_CURRENT_BINARY_DIR}/distributed_${BACKEND_NAME}.cpp  ${SRC})
+    endif()
 
     # Some---but not all---autodiff tests go through multiple iterations with
     # different random seeds. On the CPU backend this is currently very slow
@@ -133,7 +105,7 @@ foreach(BACKEND_NAME ${BACKEND_NAMES})
     endif()
 
     configure_file(autodiff.in.cpp autodiff_${BACKEND_NAME}.cpp)
-    set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/autodiff_${BACKEND_NAME}.cpp)
+    set(SRC ${CMAKE_CURRENT_BINARY_DIR}/autodiff_${BACKEND_NAME}.cpp ${SRC})
 
     message(STATUS "Adding unit test for backend ${BACKEND_NAME}")
 endforeach()
@@ -148,46 +120,45 @@ if(NGRAPH_ADDRESS_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
 endif()
 
+if(NGRAPH_DISTRIBUTED_ENABLE)
+    find_package(MPI REQUIRED)
+    add_definitions(-DNGRAPH_DISTRIBUTED)
+    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    link_libraries(${MPI_CXX_LIBRARIES})
+endif()
+
 add_executable(unit-test ${SRC})
-
-if(MPI_C_INCLUDE_PATH)
-    target_link_libraries(unit-test ${MPI_CXX_LIBRARIES})
-endif()
-
-if(MKLDNN_INCLUDE_DIR)
-    target_link_libraries(unit-test mkldnn)
-    add_dependencies(unit-test ext_mkldnn)
-endif()
-
-if(LLVM_INCLUDE_DIR)
-    target_link_libraries(unit-test ${LLVM_LINK_LIBS})
-    add_dependencies(unit-test ext_llvm)
-endif()
-
-if(CUDA_INCLUDE_DIRS)
-    find_library(CUDA_NVRTC_LIBRARY nvrtc /usr/local/cuda/lib64)
-    target_link_libraries(unit-test ${CUDA_NVRTC_LIBRARY} ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
-endif()
-
-target_link_libraries(unit-test ngraph libgtest pthread)
+target_link_libraries(unit-test ngraph_test_util)
+target_link_libraries(unit-test ngraph libgtest libjson pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
-if(NGRAPH_NNP_ENABLE)
-    # A framework like TF shall not need to link `libnnp.so`, but shall call via libngraph.so.
-    # Since we're testing non-public APIs in libnnp.so, we link it directly here.
-    target_link_libraries(unit-test ${NNP_TRANSFORMER_LIB_DIR}/libnnp.so)
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
+    target_compile_options(unit-test PRIVATE -Wno-undef -Wno-reserved-id-macro)
 endif()
 
-add_dependencies(unit-test ngraph libgtest ext_json)
-include_directories(SYSTEM ${JSON_INCLUDE_DIR})
+if (NGRAPH_CPU_ENABLE)
+    # The INTERPRETER backend is required for graph_partition, convolution, and backwards unit tests
+    target_link_libraries(unit-test cpu_backend interpreter_backend)
+    target_link_libraries(unit-test libmkldnn)
+endif()
 
-add_custom_target(style-check
-    COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh
-)
+if (NGRAPH_TBB_ENABLE)
+    add_definitions(-DNGRAPH_TBB_ENABLE)
+endif()
+
+if (NGRAPH_INTERPRETER_ENABLE)
+    add_definitions(-DNGRAPH_INTERPRETER_ENABLE)
+    target_link_libraries(unit-test interpreter_backend)
+endif()
+
+if (NGRAPH_GPU_ENABLE)
+    target_link_libraries(unit-test gpu_backend)
+endif()
 
 add_custom_target(unit-test-check
-	COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
-	DEPENDS unit-test
+    COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
+    DEPENDS unit-test
 )
 
 add_custom_target(check

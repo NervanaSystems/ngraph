@@ -20,7 +20,6 @@
 #include <iostream>
 #include <string>
 #include <sys/stat.h>
-#include <sys/time.h>
 #include <vector>
 
 std::string trim(const std::string& s);

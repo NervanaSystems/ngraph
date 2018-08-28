@@ -28,7 +28,15 @@ using namespace std;
 class MpiEnvironment : public ::testing::Environment
 {
 protected:
-    virtual void SetUp() { MPI::Init(); }
+    virtual void SetUp()
+    {
+        int flag = 0;
+        MPI_Initialized(&flag);
+        if (!flag)
+        {
+            MPI::Init();
+        }
+    }
     virtual void TearDown() { MPI::Finalize(); }
     virtual ~MpiEnvironment() {}
 };
