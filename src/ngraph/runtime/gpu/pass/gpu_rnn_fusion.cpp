@@ -189,7 +189,6 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
             intermediate_lstm = true;
         }
 
-
         // if the matched LSTM is the first cell we need to check if symbol input_xt corresponds
         // to the input data tensor, or the hidden (recurrent) data tensor
         if (!intermediate_lstm &&
