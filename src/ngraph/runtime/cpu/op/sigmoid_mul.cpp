@@ -56,7 +56,7 @@ op::SigmoidMultiply::SigmoidMultiply(shared_ptr<Node> input_0,
                                      shared_ptr<Node> input_1,
                                      const FunctionType input_0_type,
                                      const FunctionType input_1_type)
-    : RequiresTensorViewArgs("SigmoidMultiply", {input_0, input_1})
+    : Op("SigmoidMultiply", check_single_output_args({input_0, input_1}))
 {
     constructor_validate_and_infer_types();
 

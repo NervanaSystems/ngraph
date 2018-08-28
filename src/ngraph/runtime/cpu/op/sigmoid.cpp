@@ -32,7 +32,7 @@ shared_ptr<Node> op::Sigmoid::copy_with_new_args(const NodeVector& new_args) con
 }
 
 op::Sigmoid::Sigmoid(shared_ptr<Node> input)
-    : RequiresTensorViewArgs("Sigmoid", {input})
+    : Op("Sigmoid", check_single_output_args({input}))
     , m_shape_input(input->get_shape())
 {
     constructor_validate_and_infer_types();

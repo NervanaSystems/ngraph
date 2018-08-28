@@ -55,14 +55,14 @@ op::Lstm::Lstm(std::shared_ptr<Node> input_xt_1,
                std::shared_ptr<Node> i2h_bias,
                std::shared_ptr<Node> h2h_bias,
                std::shared_ptr<Node> cell_state_ct_1)
-    : RequiresTensorViewArgs("Lstm",
-                             {input_xt_1,
-                              i2h_weights,
-                              hidden_state_ht_1,
-                              h2h_weights,
-                              i2h_bias,
-                              h2h_bias,
-                              cell_state_ct_1})
+    : Op("Lstm",
+         check_single_output_args({input_xt_1,
+                                   i2h_weights,
+                                   hidden_state_ht_1,
+                                   h2h_weights,
+                                   i2h_bias,
+                                   h2h_bias,
+                                   cell_state_ct_1}))
     , m_output_tensor_shape(hidden_state_ht_1->get_shape())
     , m_output_cell_shape(cell_state_ct_1->get_shape())
     , m_num_timesteps(1)

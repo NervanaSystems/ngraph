@@ -46,9 +46,9 @@ op::MatmulBias::MatmulBias(shared_ptr<Node> W,
                            bool transpose_w,
                            bool transpose_x,
                            AxisSet axes)
-    : RequiresTensorViewArgs("MatmulBias",
-                             b == nullptr ? vector<shared_ptr<Node>>{W, x}
-                                          : vector<shared_ptr<Node>>{W, x, b})
+    : Op("MatmulBias",
+         check_single_output_args(b == nullptr ? vector<shared_ptr<Node>>{W, x}
+                                               : vector<shared_ptr<Node>>{W, x, b}))
     , m_shape_w(shape_w)
     , m_shape_x(shape_x)
     , m_transpose_w(transpose_w)

@@ -30,7 +30,7 @@ op::MaxPoolWithIndices::MaxPoolWithIndices(const shared_ptr<Node>& arg,
                                            const Strides& window_movement_strides,
                                            const Shape& padding_below,
                                            const Shape& padding_above)
-    : RequiresTensorViewArgs("MaxPoolWithIndices", {arg})
+    : Op("MaxPoolWithIndices", check_single_output_args({arg}))
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)

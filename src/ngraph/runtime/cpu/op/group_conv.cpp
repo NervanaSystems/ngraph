@@ -34,7 +34,7 @@ op::GroupConvolution::GroupConvolution(const shared_ptr<Node>& data_batch,
                                        const Strides& data_dilation_strides,
                                        size_t groups,
                                        const Shape& output_shape)
-    : RequiresTensorViewArgs("GroupConvolution", {data_batch, filters})
+    : Op("GroupConvolution", check_single_output_args({data_batch, filters}))
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)

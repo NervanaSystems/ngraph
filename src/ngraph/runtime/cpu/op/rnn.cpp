@@ -55,7 +55,7 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
              const int num_cell_states,
              const int direction,
              const int num_fused_layers)
-    : RequiresTensorViewArgs("Rnn", {src_layer, src_iter, weights_layer, weights_iter, bias})
+    : Op("Rnn", check_single_output_args({src_layer, src_iter, weights_layer, weights_iter, bias}))
     , m_num_timesteps(num_timesteps)
     , m_num_gates_per_cell(num_gates_per_cell)
     , m_src_sequence_length(src_sequence_length)

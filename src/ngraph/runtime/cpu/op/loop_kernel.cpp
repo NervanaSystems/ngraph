@@ -63,7 +63,7 @@ shared_ptr<Node>
 ngraph::runtime::cpu::op::LoopKernel::LoopKernel(const NodeVector& node_list,
                                                  const NodeVector& outputs,
                                                  const NodeVector& args)
-    : RequiresTensorViewArgs("LoopKernel", {args})
+    : Op("LoopKernel", check_single_output_args({args}))
     , m_node_list(node_list)
     , m_output_nodes(outputs)
 {

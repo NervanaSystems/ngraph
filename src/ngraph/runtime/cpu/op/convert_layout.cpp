@@ -40,7 +40,7 @@ runtime::cpu::op::ConvertLayout::ConvertLayout(
     const shared_ptr<Node>& arg,
     size_t output_index,
     const shared_ptr<runtime::cpu::LayoutDescriptor>& layout)
-    : RequiresTensorViewArgs("ConvertLayout", {arg})
+    : Op("ConvertLayout", check_single_output_args({arg}))
     , arg_output_index(output_index)
     , output_layout(layout)
 {

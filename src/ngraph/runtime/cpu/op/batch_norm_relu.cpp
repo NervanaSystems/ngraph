@@ -22,7 +22,7 @@ ngraph::op::BatchNormRelu::BatchNormRelu(double eps,
                                          std::shared_ptr<ngraph::Node> gamma,
                                          std::shared_ptr<ngraph::Node> beta,
                                          std::shared_ptr<ngraph::Node> input)
-    : RequiresTensorViewArgs("BatchNormRelu", {gamma, beta, input})
+    : Op("BatchNormRelu", check_single_output_args({gamma, beta, input}))
     , m_bn_input_shape(input->get_shape())
     , m_epsilon(eps)
     , m_training(true)
