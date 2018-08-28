@@ -15,7 +15,6 @@
 *******************************************************************************/
 
 #include <cstddef>
-#include <cstdint>
 #include <onnxifi.h>
 
 extern "C" {
