@@ -17,9 +17,9 @@ env:
 before_install:
   - |
     if [ "TASK" == "cpp_test" ]; then
-      docker build -t test_ngraph -f .ci/travis/ubuntu/Dockerfile .
+      docker build -t test_ngraph -f .ci/travis/$OS/Dockerfile .
     else
-      docker build -t test_ngraph -f .ci/travis/ubuntu/Dockerfile --build-arg buildtype=interpreter .
+      docker build -t test_ngraph -f .ci/travis/$OS/Dockerfile --build-arg buildtype=interpreter .
     fi
 
 install: true
