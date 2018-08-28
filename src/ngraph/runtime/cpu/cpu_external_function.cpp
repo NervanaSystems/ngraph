@@ -1194,8 +1194,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
                 intermediates_offsets.emplace_back(tensor_data[tensor->get_name()],
                                                    tensor->get_pool_offset());
                 m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
-                writer << tensor->get_name() << ", " << tensor_data[tensor->get_name()] << ", "
-                       << "tensor_role: CPUTensorRole::INTERMEDIATE\n";
+                writer << tensor->get_name() << "\n";
             }
         }
     }
@@ -1210,9 +1209,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
             tensor_data[tv->get_tensor().get_name()] =
                 const_cast<void*>(static_pointer_cast<ngraph::op::Constant>(node)->get_data_ptr());
             m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::CONSTANT;
-            writer << tv->get_tensor().get_name() << ", "
-                   << tensor_data[tv->get_tensor().get_name()] << ", "
-                   << "tensor_role: CPUTensorRole::CONSTANT\n";
+            writer << tv->get_tensor().get_name() << "\n";
         }
     }
 
@@ -1236,16 +1233,15 @@ void runtime::cpu::CPU_ExternalFunction::build()
     }
 
     // Outputs
+    writer << "\n// Outputs \n";
     for (size_t i = 0; i < m_function->get_output_size(); ++i)
     {
-        writer << "\n// Outputs \n";
         shared_ptr<Node> op = m_function->get_output_op(i);
         shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
         function_output_index.emplace_back(tensor_data[tv->get_tensor().get_name()], i);
         m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::OUTPUT;
 
-        writer << tv->get_tensor().get_name() << " "
-               << "tensor_role: CPUTensorRole::OUTPUT\n";
+        writer << tv->get_tensor().get_name() << "\n";
         auto res = std::dynamic_pointer_cast<ngraph::op::Result>(op);
         if (!res->needs_copy())
         {
@@ -1366,7 +1362,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
         {
             get<0>(p).get() = inputs[get<1>(p)];
             get<2>(p).get() = ctx->p_en[get<1>(p)];
-            writer << "\n" << get<0>(p).get() << " " << get<2>(p).get() << "\n";
         }
 
         for (const auto& p : function_output_index)

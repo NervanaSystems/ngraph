@@ -78,11 +78,9 @@ void runtime::cpu::CPU_CallFrame::call(
     {
         codegen::CodeWriter writer;
         std::stringstream strm;
-        string filename =
-            file_util::path_join("debug", m_external_function->get_function_name() + "_debug.txt");
-        std::ofstream out(filename, std::ofstream::app);
-        std::vector<string> inputs;
-        std::vector<string> outputs;
+        std::vector<string> node_inputs;
+        std::vector<string> node_outputs;
+
         if (node->is_parameter() || node->is_constant())
         {
             continue;
@@ -93,7 +91,7 @@ void runtime::cpu::CPU_CallFrame::call(
             shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
             auto name = tv->get_tensor().get_name();
             strm << m_external_function->get_tensor_data(name);
-            inputs.push_back(name + "(" + strm.str() + ")");
+            node_inputs.push_back(name + "(" + strm.str() + ")");
         }
 
         for (const descriptor::Output& output : node->get_outputs())
@@ -101,14 +99,17 @@ void runtime::cpu::CPU_CallFrame::call(
             shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
             auto name = tv->get_tensor().get_name();
             strm << m_external_function->get_tensor_data(name);
-            outputs.push_back(name + "(" + strm.str() + ")");
+            node_outputs.push_back(name + "(" + strm.str() + ")");
         }
         writer << "\n" << node->get_name() << "(";
-        vector<string> parameter_nodes = inputs;
-        parameter_nodes.insert(parameter_nodes.end(), outputs.begin(), outputs.end());
+        vector<string> parameter_nodes = node_inputs;
+        parameter_nodes.insert(parameter_nodes.end(), node_outputs.begin(), node_outputs.end());
         writer << join(parameter_nodes);
         writer << ")\n";
 
+        string filename =
+            file_util::path_join("debug", m_external_function->get_function_name() + "_debug.txt");
+        std::ofstream out(filename, std::ofstream::app);
         string code = writer.get_code();
         out << code;
         out.close();
