@@ -482,7 +482,7 @@ namespace ngraph
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::ConvolutionAdd, true, false>(
+                        ConvolutionLayout<ngraph::op::ConvolutionAdd, false, false>(
                             node, i_mds, o_mds);
                         // Force second input to sum to use the same layout as convolution output
                         i_mds.push_back(o_mds[0]);
@@ -1584,8 +1584,6 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionRelu>},
     {TI(ngraph::op::ConvolutionBiasAdd),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBiasAdd>},
-    {TI(ngraph::op::ConvolutionAdd),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionAdd>},
     {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBiasBackpropFiltersBias>},
     {TI(ngraph::op::BatchNorm), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNorm>},
@@ -1608,6 +1606,9 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Rnn>},
     {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Softmax>},
     {TI(ngraph::op::BoundedRelu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BoundedRelu>},
+    {TI(ngraph::op::ConvolutionAdd),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionAdd>},
+
 };
 
 bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)

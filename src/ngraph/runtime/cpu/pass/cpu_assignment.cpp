@@ -240,7 +240,7 @@ namespace ngraph
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
-                        const int ADD_INPUT = 3; // CHECK: 3 or 2?
+                        const int ADD_INPUT = 2; // CHECK: 3 or 2?
                         // Accumulates conv into the second input of the unfused add
                         op_annotations->add_in_place_oi_pair({0, ADD_INPUT, true});
                         convolution->set_op_annotations(op_annotations);
@@ -713,8 +713,6 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionRelu>},
     {TI(ngraph::op::ConvolutionBiasAdd),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBiasAdd>},
-    {TI(ngraph::op::ConvolutionAdd),
-     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionAdd>},
     {TI(ngraph::op::BatchNormRelu),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::BatchNormRelu>},
     {TI(ngraph::op::ConvolutionBackpropData),
@@ -742,6 +740,9 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Lstm), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Lstm>},
     {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Rnn>},
     {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Softmax>},
+    {TI(ngraph::op::ConvolutionAdd),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionAdd>},
+    
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(

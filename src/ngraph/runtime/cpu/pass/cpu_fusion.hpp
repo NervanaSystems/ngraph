@@ -64,8 +64,6 @@ public:
             construct_conv_bias_relu();
             construct_conv_bias_add();
             construct_conv_bias_add_relu();
-            construct_conv_add();
-            construct_conv_add_relu();
             construct_bounded_relu();
         }
 
@@ -73,6 +71,11 @@ public:
         {
             construct_conv_bias();
             construct_sigmoid_multiply();
+        }
+        if (fusions & REGULAR_FUSIONS)
+        {
+            construct_conv_add();
+            construct_conv_add_relu();
         }
     }
 

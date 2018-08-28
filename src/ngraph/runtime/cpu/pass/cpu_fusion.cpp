@@ -1105,8 +1105,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add()
         return true;
     };
 
-    auto m = std::make_shared<pattern::Matcher>(padd, callback, "conv_add");
-    this->add_matcher(m);
+    //auto m = std::make_shared<pattern::Matcher>(padd, callback, "conv_add");
+    //this->add_matcher(m);
 }
 
 void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add_relu()
@@ -1155,8 +1155,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add_relu()
         return true;
     };
 
-    auto m = std::make_shared<pattern::Matcher>(prelu, callback, "conv_add_relu");
-    this->add_matcher(m);
+    //auto m = std::make_shared<pattern::Matcher>(prelu, callback, "conv_add_relu");
+    //this->add_matcher(m);
 }
 
 void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()

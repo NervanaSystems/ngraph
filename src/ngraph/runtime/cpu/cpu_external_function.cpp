@@ -300,7 +300,6 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::ConvolutionBias), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBias>},
     {TI(ngraph::op::ConvolutionRelu), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionRelu>},
     {TI(ngraph::op::ConvolutionBiasAdd), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBiasAdd>},
-    {TI(ngraph::op::ConvolutionAdd), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionAdd>},
     // conv+bias backprop for data share the same implementation as ConvolutionBackpropData
     {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
      &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBiasBackpropFiltersBias>},
@@ -342,6 +341,8 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::runtime::cpu::op::LoopKernel),
      &runtime::cpu::CPU_Emitter::emit<runtime::cpu::op::LoopKernel>},
     {TI(ngraph::op::LRN), &runtime::cpu::CPU_Emitter::emit<ngraph::op::LRN>},
+    {TI(ngraph::op::ConvolutionAdd), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionAdd>},
+
 };
 
 static void

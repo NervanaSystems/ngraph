@@ -129,8 +129,8 @@ namespace ngraph
 
                     mkldnn::post_ops ops;
 
-                    if (std::is_same<OP, ngraph::op::ConvolutionBiasAdd>() ||
-                        std::is_same<OP, ngraph::op::ConvolutionAdd>())
+                    if (std::is_same<OP, ngraph::op::ConvolutionBiasAdd>() /*||
+                        std::is_same<OP, ngraph::op::ConvolutionAdd>()*/)
                     {
                         ops.append_sum(1.f);
                     }

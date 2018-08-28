@@ -72,7 +72,6 @@ set(SRC
     op/batch_norm_relu.cpp
     op/bounded_relu.cpp
     op/group_conv.cpp
-    op/conv_add.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
     op/convert_layout.cpp
@@ -82,6 +81,7 @@ set(SRC
     op/max_pool_with_indices.cpp
     op/rnn.cpp
     op/sigmoid_mul.cpp
+    op/conv_add.cpp
     pass/cpu_assignment.cpp
     pass/cpu_collapse_dims.cpp
     pass/cpu_concat_inputs.cpp
