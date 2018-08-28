@@ -39,6 +39,8 @@ add_library(onnx_import STATIC
         op/constant.cpp
         op/constant.hpp
         op/conv.cpp
+        op/conv.hpp
+        op/div.hpp
         op/gemm.cpp
         op/gemm.hpp
         op/matmul.hpp
@@ -48,6 +50,7 @@ add_library(onnx_import STATIC
         op/relu.hpp
         op/split.cpp
         op/split.hpp
+        op/sub.hpp
         ops_bridge.cpp
         utils/broadcasting.cpp
         utils/broadcasting.hpp
