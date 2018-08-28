@@ -1592,8 +1592,6 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionRelu>},
     {TI(ngraph::op::ConvolutionBiasAdd),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBiasAdd>},
-    {TI(ngraph::op::ConvolutionAdd),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionAdd>},
     {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBiasBackpropFiltersBias>},
     {TI(ngraph::op::BatchNorm), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNorm>},
