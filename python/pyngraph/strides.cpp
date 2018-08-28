@@ -19,7 +19,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/strides.hpp" //ngraph::Strides
+#include "ngraph/strides.hpp" // ngraph::Strides
 #include "pyngraph/strides.hpp"
 
 namespace py = pybind11;
