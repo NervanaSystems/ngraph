@@ -326,7 +326,6 @@ TEST(onnx, model_sum)
 
 TEST(onnx, model_sum_one_input)
 {
-    // Simple Sum test
     auto function = ngraph::onnx_import::import_onnx_function(
         ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/sum_one_input.onnx"));
 
@@ -339,7 +338,6 @@ TEST(onnx, model_sum_one_input)
 
 TEST(onnx, model_min_two_inputs)
 {
-    // Simple Sum test
     auto function = ngraph::onnx_import::import_onnx_function(
         ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/min_two_inputs.onnx"));
 
@@ -349,6 +347,22 @@ TEST(onnx, model_min_two_inputs)
     inputs.emplace_back(std::vector<float>{1.f, 4.f, 4.f});
 
     Outputs expected_outputs{{1.f, 2.f, 1.f}};
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_max)
+{
+    auto function = ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/max.onnx"));
+
+    // input data shape (3, )
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{3.f, 2.f, 1.f});
+    inputs.emplace_back(std::vector<float>{1.f, 4.f, 4.f});
+    inputs.emplace_back(std::vector<float>{2.f, 5.f, 3.f});
+
+    Outputs expected_outputs{{3.f, 5.f, 4.f}};
     Outputs outputs{execute(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
