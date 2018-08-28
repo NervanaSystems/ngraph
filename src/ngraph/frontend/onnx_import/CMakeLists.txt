@@ -32,6 +32,8 @@ add_library(onnx_import STATIC
         core/value_info.hpp
         exceptions.hpp
         op/add.hpp
+        op/average_pool.cpp
+        op/average_pool.hpp
         op/batch_norm.cpp
         op/batch_norm.hpp
         op/constant.cpp
@@ -40,8 +42,12 @@ add_library(onnx_import STATIC
         op/gemm.cpp
         op/gemm.hpp
         op/matmul.hpp
+        op/max_pool.cpp
+        op/max_pool.hpp
         op/mul.hpp
         op/relu.hpp
+        op/softmax.cpp
+        op/softmax.hpp
         op/split.cpp
         op/split.hpp
         ops_bridge.cpp
