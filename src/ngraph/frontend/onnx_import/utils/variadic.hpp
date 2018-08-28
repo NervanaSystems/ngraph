@@ -19,24 +19,39 @@
 #include <numeric>
 
 #include "ngraph/node_vector.hpp"
+#include "ngraph/coordinate_diff.hpp"
+#include "ngraph/shape.hpp"
+
+#include "ngraph/node_vector.hpp"
 #include "ngraph/op/add.hpp"
 
-#include "utils/variadic.hpp"
 #include "core/node.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        namespace op
+        namespace variadic
         {
-            inline NodeVector sum(const Node& node)
+            template <class T>
+            inline NodeVector make_ng_variadic_op(const Node& node)
             {
-                return variadic::make_ng_variadic_op<ngraph::op::Add>(node);
+                NodeVector ng_inputs{node.get_ng_inputs()};
+
+                auto result =
+                        std::accumulate(std::next(std::begin(ng_inputs)),
+                                        std::end(ng_inputs),
+                                        ng_inputs.front(),
+                                        [](const std::shared_ptr<ngraph::Node>& arg0,
+                                           const std::shared_ptr<ngraph::Node>& arg1) {
+                                            return std::make_shared<T>(arg0, arg1);
+                                        });
+
+                return {result};
             }
 
-        } // namespace op
+        } // namespace variadic
 
-    } // namespace onnx_import
+    } // namespace  onnx_import
 
-} // namespace ngraph
+} // namespace  ngraph

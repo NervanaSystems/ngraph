@@ -57,7 +57,8 @@ add_library(onnx_import STATIC
         utils/convpool.cpp
         utils/convpool.hpp
         utils/reshape.cpp
-        utils/reshape.hpp)
+        utils/reshape.hpp
+        utils/variadic.hpp)
 
 add_dependencies(onnx_import onnx_import_interface)
 
