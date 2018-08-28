@@ -81,11 +81,10 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxReleaseEvent(onnx
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
     onnxInitGraph(onnxBackend backend,
-                  const uint64_t* auxPropertiesList,
                   std::size_t onnxModelSize,
                   const void* onnxModel,
-                  uint32_t weightsCount,
-                  const onnxTensorDescriptorV1* weightDescriptors,
+                  std::uint32_t weightsCount,
+                  const onnxTensorDescriptor* weightDescriptors,
                   onnxGraph* graph)
 {
     return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
@@ -94,15 +93,15 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
     onnxSetGraphIO(onnxGraph graph,
                    std::uint32_t inputsCount,
-                   const onnxTensorDescriptorV1* inputDescriptors,
+                   const onnxTensorDescriptor* inputDescriptors,
                    std::uint32_t outputsCount,
-                   const onnxTensorDescriptorV1* outputDescriptors)
+                   const onnxTensorDescriptor* outputDescriptors)
 {
     return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
 }
 
-ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxRunGraph(
-    onnxGraph graph, const onnxMemoryFenceV1* inputFence, onnxMemoryFenceV1* outputFence)
+ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
+    onnxRunGraph(onnxGraph graph, const onnxMemoryFence* inputFence, onnxMemoryFence* outputFence)
 {
     return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
 }
