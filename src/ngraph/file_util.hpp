@@ -56,7 +56,6 @@ namespace ngraph
 
         /// \brief Create a directory
         /// \param dir Path of the directory to create
-        /// \param func The Function to serialize
         /// \return true if the directory was created, false otherwise
         bool make_directory(const std::string& dir);
 
@@ -94,7 +93,7 @@ namespace ngraph
 
         /// \brief Test for the existence of a path or file
         /// \param path The path to test
-        /// \param true if the path exists, false otherwise
+        /// \return true if the path exists, false otherwise
         bool exists(const std::string& path);
     }
 }
