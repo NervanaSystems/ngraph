@@ -25,7 +25,7 @@ def test_import_onnx_function():
     runtime = get_runtime()
     dtype = np.float32
     cur_dir = os.path.dirname(__file__)
-    model_path = os.path.join(cur_dir, '../../../test/models/onnx/add_abc.onnx')
+    model_path = os.path.join(cur_dir, 'models/add_abc.onnx')
     ng_function = load_onnx_model_file(model_path)[0]
     computation = runtime.computation_function(ng_function)
 
