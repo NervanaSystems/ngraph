@@ -29,15 +29,13 @@ namespace py = pybind11;
 static std::vector<std::shared_ptr<ngraph::Function>>
     load_onnx_model(const std::string& model_proto)
 {
-    std::istringstream iss(model_proto,
-                           std::ios_base::binary | std::ios_base::in | std::ios_base::ate);
+    std::istringstream iss(model_proto, std::ios_base::binary | std::ios_base::in);
     return ngraph::onnx_import::load_onnx_model(iss);
 }
 
 static std::shared_ptr<ngraph::Function> import_onnx_function(const std::string& model_proto)
 {
-    std::istringstream iss(model_proto,
-                           std::ios_base::binary | std::ios_base::in | std::ios_base::ate);
+    std::istringstream iss(model_proto, std::ios_base::binary | std::ios_base::in);
     return ngraph::onnx_import::import_onnx_function(iss);
 }
 
@@ -45,7 +43,7 @@ void regmodule_pyngraph_onnx_import(py::module mod)
 {
 #if __cplusplus >= 201402L
     /*
-		 * If we have c++14 enabled we can use PyBind11 py::overload_cast which makes function 
+		 * If we have c++14 enabled we can use PyBind11 py::overload_cast which makes function
 		 * overloading easier.
 		 */
     mod.def("load_onnx_model_file",
