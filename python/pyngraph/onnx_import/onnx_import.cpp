@@ -14,7 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "pyngraph/onnx_import.hpp"
+#include "pyngraph/onnx_import/onnx_import.hpp"
 #include <istream>
 #include <memory>
 #include <pybind11/pybind11.h>

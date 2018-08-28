@@ -22,7 +22,7 @@
 #include "pyngraph/function.hpp"
 #include "pyngraph/node.hpp"
 #include "pyngraph/node_vector.hpp"
-#include "pyngraph/onnx_import.hpp"
+#include "pyngraph/onnx_import/onnx_import.hpp"
 #include "pyngraph/ops/op.hpp"
 #include "pyngraph/ops/regmodule_pyngraph_op.hpp"
 #include "pyngraph/ops/util/regmodule_pyngraph_op_util.hpp"
