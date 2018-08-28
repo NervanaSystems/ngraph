@@ -164,8 +164,8 @@ TEST(quantize_cpu, quantize_max_pool_2d_unsigned)
     Shape padding_above{0, 0};
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
     Shape shape_r{1, 1, 2, 3};
-    auto B = op::Constant::create(element::f32, Shape{1}, {0.0f});
-    auto C = op::Constant::create(element::f32, Shape{1}, {255.0f});
+    auto B = op::Constant::create(element::f32, Shape{}, {0.0f});
+    auto C = op::Constant::create(element::f32, Shape{}, {255.0f});
     auto QMP = make_shared<op::QuantizedMaxPool>(
         A, window_shape, window_movement_strides, padding_below, padding_above, B, C);
     auto output_data = std::make_shared<op::GetOutputElement>(QMP, 0);
@@ -178,8 +178,8 @@ TEST(quantize_cpu, quantize_max_pool_2d_unsigned)
     auto a = backend->create_tensor(element::u8, shape_a);
     copy_data(a, a_data);
     auto result = backend->create_tensor(element::u8, shape_r);
-    auto result_min = backend->create_tensor(element::f32, Shape{1});
-    auto result_max = backend->create_tensor(element::f32, Shape{1});
+    auto result_min = backend->create_tensor(element::f32, Shape{});
+    auto result_max = backend->create_tensor(element::f32, Shape{});
     backend->call(f, {result, result_min, result_max}, {a});
     EXPECT_EQ((vector<uint8_t>{3, 3, 2, 3, 3, 2}), read_vector<uint8_t>(result));
     EXPECT_EQ((vector<float>{0.0}), read_vector<float>(result_min));
@@ -196,8 +196,8 @@ TEST(quantize_cpu, quantize_max_pool_2d_signed)
     Shape padding_above{0, 0};
     auto A = make_shared<op::Parameter>(element::i8, shape_a);
     Shape shape_r{1, 1, 2, 3};
-    auto B = op::Constant::create(element::f32, Shape{1}, {0.0f});
-    auto C = op::Constant::create(element::f32, Shape{1}, {127.0f});
+    auto B = op::Constant::create(element::f32, Shape{}, {0.0f});
+    auto C = op::Constant::create(element::f32, Shape{}, {127.0f});
     auto QMP = make_shared<op::QuantizedMaxPool>(
         A, window_shape, window_movement_strides, padding_below, padding_above, B, C);
     auto output_data = std::make_shared<op::GetOutputElement>(QMP, 0);
@@ -210,8 +210,8 @@ TEST(quantize_cpu, quantize_max_pool_2d_signed)
     auto a = backend->create_tensor(element::i8, shape_a);
     copy_data(a, a_data);
     auto result = backend->create_tensor(element::i8, shape_r);
-    auto result_min = backend->create_tensor(element::f32, Shape{1});
-    auto result_max = backend->create_tensor(element::f32, Shape{1});
+    auto result_min = backend->create_tensor(element::f32, Shape{});
+    auto result_max = backend->create_tensor(element::f32, Shape{});
     backend->call(f, {result, result_min, result_max}, {a});
     EXPECT_EQ((vector<int8_t>{2, 2, 2, 2, 2, 2}), read_vector<int8_t>(result));
     EXPECT_EQ((vector<float>{0.0}), read_vector<float>(result_min));
@@ -228,8 +228,8 @@ TEST(quantize_cpu, quantize_avg_pool_2d_unsigned)
     Shape padding_above{0, 0};
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
     Shape shape_r{1, 1, 2, 3};
-    auto B = op::Constant::create(element::f32, Shape{1}, {0.0f});
-    auto C = op::Constant::create(element::f32, Shape{1}, {255.0f});
+    auto B = op::Constant::create(element::f32, Shape{}, {0.0f});
+    auto C = op::Constant::create(element::f32, Shape{}, {255.0f});
     auto QMP = make_shared<op::QuantizedAvgPool>(
         A, window_shape, window_movement_strides, padding_below, padding_above, false, B, C);
     auto output_data = std::make_shared<op::GetOutputElement>(QMP, 0);
@@ -242,8 +242,8 @@ TEST(quantize_cpu, quantize_avg_pool_2d_unsigned)
     auto a = backend->create_tensor(element::u8, shape_a);
     copy_data(a, a_data);
     auto result = backend->create_tensor(element::u8, shape_r);
-    auto result_min = backend->create_tensor(element::f32, Shape{1});
-    auto result_max = backend->create_tensor(element::f32, Shape{1});
+    auto result_min = backend->create_tensor(element::f32, Shape{});
+    auto result_max = backend->create_tensor(element::f32, Shape{});
     backend->call(f, {result, result_min, result_max}, {a});
     EXPECT_EQ((vector<uint8_t>{1, 1, 1, 1, 1, 0}), read_vector<uint8_t>(result));
     EXPECT_EQ((vector<float>{0.0}), read_vector<float>(result_min));
@@ -260,8 +260,8 @@ TEST(quantize_cpu, quantize_avg_pool_2d_signed)
     Shape padding_above{0, 0};
     auto A = make_shared<op::Parameter>(element::i8, shape_a);
     Shape shape_r{1, 1, 2, 3};
-    auto B = op::Constant::create(element::f32, Shape{1}, {0.0f});
-    auto C = op::Constant::create(element::f32, Shape{1}, {127.0f});
+    auto B = op::Constant::create(element::f32, Shape{}, {0.0f});
+    auto C = op::Constant::create(element::f32, Shape{}, {127.0f});
     auto QMP = make_shared<op::QuantizedAvgPool>(
         A, window_shape, window_movement_strides, padding_below, padding_above, false, B, C);
     auto output_data = std::make_shared<op::GetOutputElement>(QMP, 0);
@@ -274,8 +274,8 @@ TEST(quantize_cpu, quantize_avg_pool_2d_signed)
     auto a = backend->create_tensor(element::i8, shape_a);
     copy_data(a, a_data);
     auto result = backend->create_tensor(element::i8, shape_r);
-    auto result_min = backend->create_tensor(element::f32, Shape{1});
-    auto result_max = backend->create_tensor(element::f32, Shape{1});
+    auto result_min = backend->create_tensor(element::f32, Shape{});
+    auto result_max = backend->create_tensor(element::f32, Shape{});
     backend->call(f, {result, result_min, result_max}, {a});
     EXPECT_EQ((vector<int8_t>{2, 0, 0, 0, 0, 1}), read_vector<int8_t>(result));
     EXPECT_EQ((vector<float>{0.0}), read_vector<float>(result_min));

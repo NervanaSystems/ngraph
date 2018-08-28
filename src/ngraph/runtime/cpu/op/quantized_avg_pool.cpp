@@ -66,8 +66,8 @@ op::QuantizedAvgPool::QuantizedAvgPool(const shared_ptr<Node>& arg,
     result_shape[1] = channel_count;
     copy(output_item_shape.begin(), output_item_shape.end(), result_shape.begin() + 2);
     set_value_type_checked(get_input_element_type(0), result_shape);
-    add_output(element::f32, Shape{1});
-    add_output(element::f32, Shape{1});
+    add_output(element::f32, Shape{});
+    add_output(element::f32, Shape{});
 }
 
 shared_ptr<Node> op::QuantizedAvgPool::copy_with_new_args(const NodeVector& new_args) const
