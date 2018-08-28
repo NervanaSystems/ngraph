@@ -90,9 +90,9 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         std::make_shared<pattern::op::Label>(element::f32, Shape{4, 1}, weights_pred);
     auto weights_pattern = construct_weights_pattern(weights_reshape);
 
-    //we don't really need a broadcast node but
-    //labelling a Broadcast allows us to extract
-    //params from all 3 labels in the same fashion
+    // we don't really need a broadcast node but
+    // labelling a Broadcast allows us to extract
+    // params from all 3 labels in the same fashion
     //(i.e. via get_argument(0))
     auto broadcast_pred = [](std::shared_ptr<Node> n) {
         return std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr;
@@ -103,13 +103,13 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
     const size_t NUM_MMB_ARGS = 3;
     std::shared_ptr<pattern::op::Label> labels[] = {data_slice, weights_reshape, bias_broadcast};
-    //Matchers' ordering is important! Don't change!
+    // Matchers' ordering is important! Don't change!
     std::shared_ptr<pattern::Matcher> matchers[] = {
         std::make_shared<pattern::Matcher>(data_pattern),
         std::make_shared<pattern::Matcher>(weights_pattern),
         std::make_shared<pattern::Matcher>(bias_pattern)};
 
-    std::map<std::shared_ptr<Node>, NodeVector> op_seg_map; //add to list of params
+    std::map<std::shared_ptr<Node>, NodeVector> op_seg_map; // add to list of params
     std::map<NodeVector, NodeVector> param_list;
     for (auto n : function->get_ordered_ops())
     {
@@ -120,9 +120,9 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             auto matcher = matchers[i];
             if (matcher->match(n))
             {
-                //if we get all 3 matches they will all fall
-                //in the right spots (e.g. DATA, WEIGHTS, BIAS) since matchers are ordered
-                //if we have less than 3 matches we skip this node anyways
+                // if we get all 3 matches they will all fall
+                // in the right spots (e.g. DATA, WEIGHTS, BIAS) since matchers are ordered
+                // if we have less than 3 matches we skip this node anyways
                 auto matched = matcher->get_pattern_map()[labels[i]];
                 params.push_back(matched->get_argument(0));
                 matched_nodes.push_back(matched);
@@ -133,7 +133,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
                 continue;
             }
 
-            //we have a full set for the current Add (n) i.e. data, weights, bias
+            // we have a full set for the current Add (n) i.e. data, weights, bias
             op_seg_map.insert(std::make_pair(n, matched_nodes));
             param_list[params].push_back(n);
         }
@@ -302,13 +302,13 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
         }
     }
 
-    //TF-flavoured group convolution needs channels re-arranged
-    //MKLDNN requires group slicing to be done on OC
-    //MKLDNN [4,2,-]
-    //ordering w00 w01 w10 w11 w20 w21 w30 w31 produces g00 g01 g10 g11
-    //whereas
-    //TF    [2,4,-]
-    //ordering w00 w01 w02 w03 w10 w11 w12 w13 produces g00 g10 g01 g11
+    // TF-flavoured group convolution needs channels re-arranged
+    // MKLDNN requires group slicing to be done on OC
+    // MKLDNN [4,2,-]
+    // ordering w00 w01 w10 w11 w20 w21 w30 w31 produces g00 g01 g10 g11
+    // whereas
+    // TF    [2,4,-]
+    // ordering w00 w01 w02 w03 w10 w11 w12 w13 produces g00 g10 g01 g11
     const size_t CONCAT_AXIS_OC = 0;
     if (!slices.empty())
     {

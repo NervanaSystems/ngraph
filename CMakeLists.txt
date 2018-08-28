@@ -102,6 +102,10 @@ endif()
 # Installation logic...
 #-----------------------------------------------------------------------------------------------
 
+if (NOT APPLE AND NOT WIN32)
+    include(cmake/platform.cmake)
+endif()
+
 if (DEFINED NGRAPH_INSTALL_PREFIX)
     set(CMAKE_INSTALL_PREFIX ${NGRAPH_INSTALL_PREFIX})
 endif()
@@ -228,6 +232,12 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
         include(cmake/external_protobuf.cmake)
     else()
         find_package(Protobuf 2.6.1 REQUIRED)
+    endif()
+    if (NGRAPH_ONNXIFI_ENABLE)
+        include(cmake/external_onnx.cmake)
+        if (TARGET ext_protobuf)
+            add_dependencies(ext_onnx ext_protobuf)
+        endif()
     endif()
 endif()
 

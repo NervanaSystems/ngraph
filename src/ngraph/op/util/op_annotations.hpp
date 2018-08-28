@@ -53,7 +53,7 @@ namespace ngraph
                 }
 
             private:
-                //map of output-input pairs for which in-place computation is valid
+                // map of output-input pairs for which in-place computation is valid
                 std::vector<struct oi_pair> m_in_place_oi_pairs;
             };
         }

@@ -58,7 +58,7 @@ namespace ngraph
                                                 ? orig_seq_index - in_coord[sequence_axis] - 1
                                                 : in_coord[sequence_axis];
 
-                    //make a copy of in_coord and update sequence_index
+                    // make a copy of in_coord and update sequence_index
                     Coordinate out_coord = in_coord;
                     out_coord[sequence_axis] = sequence_index;
                     out[input_transform.index(out_coord)] = arg[input_transform.index(in_coord)];

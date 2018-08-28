@@ -16,18 +16,9 @@
 
 #pragma once
 
-#include "frontend/onnx_import/utils/broadcasting.hpp"
-#include "frontend/onnx_import/utils/convpool.hpp"
-#include "ngraph/frontend/onnx_import/exceptions.hpp"
-#include "ngraph/frontend/onnx_import/node.hpp"
-
-#include "ngraph/coordinate_diff.hpp"
-#include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/broadcast.hpp"
-#include "ngraph/op/op.hpp"
-#include "ngraph/strides.hpp"
+
+#include "core/node.hpp"
 
 namespace ngraph
 {
@@ -35,18 +26,6 @@ namespace ngraph
     {
         namespace op
         {
-            namespace detail
-            {
-                std::shared_ptr<ngraph::op::Op>
-                    make_ng_convolution(const std::shared_ptr<ngraph::Node>& data,
-                                        const std::shared_ptr<ngraph::Node>& filters,
-                                        const ngraph::Strides& strides,
-                                        const ngraph::Strides& dilations,
-                                        const ngraph::CoordinateDiff& padding_below,
-                                        const ngraph::CoordinateDiff& padding_above,
-                                        int groups);
-            }
-
             /**
              * @brief Performs ONNX Conv operation.
              *

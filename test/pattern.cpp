@@ -107,7 +107,7 @@ bool sum_predicate(std::shared_ptr<Node> gn)
     return false;
 }
 
-std::shared_ptr<pattern::op::Label> construct_sum_pattern() //for the sake of explicitness
+std::shared_ptr<pattern::op::Label> construct_sum_pattern() // for the sake of explicitness
 {
     return std::make_shared<pattern::op::Label>(element::i32, Shape{}, sum_predicate);
 }
@@ -132,7 +132,7 @@ static std::shared_ptr<pattern::op::Label> construct_variance_graph()
 
 static std::shared_ptr<pattern::op::Label> construct_mean_graph()
 {
-    //construct mean;
+    // construct mean;
     auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 3});
     auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
     auto sum_input1 = std::make_shared<op::Sum>(input, AxisSet{0});
@@ -146,7 +146,7 @@ class TestGraphRewrite : public ngraph::pass::GraphRewrite
 public:
     void construct_multiply_by_one()
     {
-        //pattern #1 : a * 1 = a
+        // pattern #1 : a * 1 = a
         auto iconst1 = construct_constant_node(1);
         auto pattern = std::make_shared<pattern::op::Label>(iconst1);
 
@@ -192,7 +192,7 @@ public:
 
     void construct_add_zero()
     {
-        //pattern #2 : a + 0 = a
+        // pattern #2 : a + 0 = a
         auto iconst0 = construct_constant_node(0);
         auto pattern = std::make_shared<pattern::op::Label>(iconst0);
 
@@ -308,11 +308,11 @@ TEST(pattern, graph_rewrite)
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
         ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
-                  &a->get_outputs().at(0)); //graph's input points to a's output
+                  &a->get_outputs().at(0)); // graph's input points to a's output
         ASSERT_TRUE(sum->get_output_inputs(0)
-                        .empty()); //graph's input is removed from sum's output.get_inputs()
+                        .empty()); // graph's input is removed from sum's output.get_inputs()
         ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
-            &graph->get_inputs().at(1))); //a's output feeds into graph's input
+            &graph->get_inputs().at(1))); // a's output feeds into graph's input
     }
 
     {
@@ -324,13 +324,13 @@ TEST(pattern, graph_rewrite)
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
         ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
-                  &a->get_outputs().at(0)); //graph's input points to a's output
+                  &a->get_outputs().at(0)); // graph's input points to a's output
         ASSERT_TRUE(mul->get_outputs()
                         .at(0)
                         .get_inputs()
-                        .empty()); //graph's input is removed from sum's output.get_inputs()
+                        .empty()); // graph's input is removed from sum's output.get_inputs()
         ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
-            &graph->get_inputs().at(1))); //a's output feeds into graph's input
+            &graph->get_inputs().at(1))); // a's output feeds into graph's input
     }
 
     {
@@ -341,9 +341,9 @@ TEST(pattern, graph_rewrite)
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(0), a);
         ASSERT_EQ(&graph->get_inputs().at(0).get_output(),
-                  &a->get_outputs().at(0)); //graph's input points to a's output
+                  &a->get_outputs().at(0)); // graph's input points to a's output
         ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
-            &graph->get_inputs().at(0))); //a's output feeds into graph's input
+            &graph->get_inputs().at(0))); // a's output feeds into graph's input
     }
 
     {
@@ -355,9 +355,9 @@ TEST(pattern, graph_rewrite)
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
         ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
-                  &a->get_outputs().at(0)); //graph's input points to a's output
+                  &a->get_outputs().at(0)); // graph's input points to a's output
         ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
-            &graph->get_inputs().at(1))); //a's output feeds into graph's input
+            &graph->get_inputs().at(1))); // a's output feeds into graph's input
     }
 
     {
@@ -368,12 +368,12 @@ TEST(pattern, graph_rewrite)
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
         ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
-                  &a->get_outputs().at(0)); //graph's input points to a's output
+                  &a->get_outputs().at(0)); // graph's input points to a's output
         ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
-            &graph->get_inputs().at(1))); //a's output feeds into graph's input
+            &graph->get_inputs().at(1))); // a's output feeds into graph's input
     }
 
-    //Sum rewrite
+    // Sum rewrite
     {
         auto parm = make_shared<op::Parameter>(element::i32, Shape{2, 2});
         auto axes = AxisSet{0, 1};
@@ -470,23 +470,23 @@ TEST(pattern, matcher)
     ASSERT_EQ(n.get_pattern_map()[pattern], abs);
     ASSERT_EQ(n.get_matched_nodes(), (NodeVector{mul_add_absb, c, add_absb, abs, b}));
 
-    ASSERT_TRUE(n.match(c * (any + b), mul_add_absb)); //nested any
+    ASSERT_TRUE(n.match(c * (any + b), mul_add_absb)); // nested any
     ASSERT_EQ(n.get_matched_nodes(), (NodeVector{mul_add_absb, c, add_absb, abs, a, b}));
-    ASSERT_TRUE(n.match(c * (any + b), (b + abs) * c)); //permutations w/ any
+    ASSERT_TRUE(n.match(c * (any + b), (b + abs) * c)); // permutations w/ any
     auto mul_c_add_ab = c * add_ab;
-    ASSERT_TRUE(n.match(c * (any_false + b), c * (a + b)));  //nested any
-    ASSERT_TRUE(n.match(c * (any_false + b), mul_c_add_ab)); //permutations w/ any_false
+    ASSERT_TRUE(n.match(c * (any_false + b), c * (a + b)));  // nested any
+    ASSERT_TRUE(n.match(c * (any_false + b), mul_c_add_ab)); // permutations w/ any_false
     ASSERT_EQ(n.get_matched_nodes(), (NodeVector{mul_c_add_ab, c, add_ab, a, a, b}));
 
     auto iconst1_0 = construct_constant_node(1);
     auto iconst1_1 = construct_constant_node(1);
-    ASSERT_TRUE(n.match(pattern * iconst1_0, a * iconst1_1)); //different iconst
+    ASSERT_TRUE(n.match(pattern * iconst1_0, a * iconst1_1)); // different iconst
     ASSERT_EQ(n.get_pattern_map()[pattern], a);
     auto fconst1_0 = op::Constant::create(element::f32, shape, {1});
     auto patternf = std::make_shared<pattern::op::Label>(fconst1_0);
-    ASSERT_TRUE(n.match(patternf * fconst1_0, a * iconst1_1)); //different iconst
+    ASSERT_TRUE(n.match(patternf * fconst1_0, a * iconst1_1)); // different iconst
 
-    //Subgraph labels
+    // Subgraph labels
     auto add = a + b;
     auto label = std::make_shared<pattern::op::Label>(add, nullptr, NodeVector{add});
     ASSERT_TRUE(n.match(label, add));
@@ -498,7 +498,7 @@ TEST(pattern, matcher)
     ASSERT_TRUE(n.match(make_shared<op::Abs>(label), make_shared<op::Abs>(add)));
     ASSERT_EQ(n.get_pattern_map()[label], add);
 
-    //Correct argument order
+    // Correct argument order
     ASSERT_FALSE(n.match(b - a, a - b));
     auto aab = a * (a - b);
     auto paab = pattern * (pattern - b);
@@ -508,7 +508,7 @@ TEST(pattern, matcher)
     auto paba = pattern * (b - pattern);
     ASSERT_FALSE(n.match(paba, aab));
 
-    //Correlations
+    // Correlations
     auto label1 = std::make_shared<pattern::op::Label>(a);
     auto tmp = label1 + b;
     auto label2 = std::make_shared<pattern::op::Label>(tmp, nullptr, NodeVector{tmp});
@@ -529,7 +529,7 @@ TEST(pattern, matcher)
 
 TEST(pattern, sum)
 {
-    //Sum
+    // Sum
     TestMatcher n(nullptr);
     auto reducee_const = std::make_shared<op::Constant>(
         element::i32, Shape{2, 2}, std::vector<std::string>({"0", "0", "0", "0"}));
@@ -551,7 +551,7 @@ TEST(pattern, sum)
 
 TEST(pattern, mean)
 {
-    //construct mean
+    // construct mean
     TestMatcher n(nullptr);
 
     auto input = std::make_shared<op::Parameter>(element::f32, Shape{2, 3});
@@ -566,7 +566,7 @@ TEST(pattern, mean)
 
 TEST(pattern, variance)
 {
-    //construct variance
+    // construct variance
     TestMatcher n(nullptr);
     auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
     auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 3});
@@ -629,7 +629,7 @@ TEST(pattern, recurrent_pattern)
     ASSERT_EQ(recurrent_matches.at(1), add1);
     ASSERT_EQ(recurrent_matches.at(2), b);
 
-    //Multiple labels in a reccuring pattern
+    // Multiple labels in a reccuring pattern
     auto iconst1 = construct_constant_node(1);
     auto iconst_label = std::make_shared<pattern::op::Label>(iconst1, nullptr, NodeVector{iconst1});
     auto add2_2 = iconst1 + add1;
@@ -647,7 +647,7 @@ TEST(pattern, recurrent_pattern)
     ASSERT_EQ(iconst_matches.at(1), iconst1);
     ASSERT_EQ(iconst_matches.at(2), iconst0);
 
-    //Non-matching correlated labels
+    // Non-matching correlated labels
     std::set<std::shared_ptr<pattern::op::Label>> correlated_matches;
     correlated_matches.insert(iconst_label);
     RecurrentMatcher rm3(padd2, rpattern, correlated_matches, nullptr);
@@ -657,8 +657,8 @@ TEST(pattern, recurrent_pattern)
     ASSERT_EQ(iconst_matches.size(), 1);
     ASSERT_EQ(iconst_matches.at(0), iconst0);
 
-    //Matching correlated labels and
-    //testing if RecurrentMatcher can be reused for different nodes
+    // Matching correlated labels and
+    // testing if RecurrentMatcher can be reused for different nodes
     ASSERT_TRUE(rm3.match(add3));
     ASSERT_EQ(rm3.get_number_of_bound_labels(), 2);
     recurrent_matches = rm3.get_bound_nodes_for_pattern(rpattern);
@@ -707,8 +707,8 @@ public:
             }
 
             auto number_of_adds = rm.get_number_of_recurrent_matches();
-            //replace the topmost add with the seed (i.e. the first parameter to add)
-            //matches are added in reverse order (i.e. the first match is the topmost node)
+            // replace the topmost add with the seed (i.e. the first parameter to add)
+            // matches are added in reverse order (i.e. the first match is the topmost node)
             auto arg = rm.get_bound_nodes_for_pattern(rpattern).at(number_of_adds - 1);
             NGRAPH_DEBUG << "Replacing " << rm.get_match_root()->get_name() << " with "
                          << arg->get_name();
