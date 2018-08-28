@@ -19,11 +19,13 @@
 
 #include "core/attribute.hpp"
 #include "op/add.hpp"
+#include "op/average_pool.hpp"
 #include "op/batch_norm.hpp"
 #include "op/constant.hpp"
 #include "op/conv.hpp"
 #include "op/gemm.hpp"
 #include "op/matmul.hpp"
+#include "op/max_pool.hpp"
 #include "op/mul.hpp"
 #include "op/relu.hpp"
 #include "op/softmax.hpp"
@@ -73,12 +75,15 @@ namespace ngraph
                 ops_bridge()
                 {
                     m_map.emplace("Add", std::bind(op::add, std::placeholders::_1));
+                    m_map.emplace("AveragePool",
+                                  std::bind(op::average_pool, std::placeholders::_1));
                     m_map.emplace("BatchNormalization",
                                   std::bind(op::batch_norm, std::placeholders::_1));
                     m_map.emplace("Constant", std::bind(op::constant, std::placeholders::_1));
                     m_map.emplace("Conv", std::bind(op::conv, std::placeholders::_1));
                     m_map.emplace("Gemm", std::bind(op::gemm, std::placeholders::_1));
                     m_map.emplace("MatMul", std::bind(op::matmul, std::placeholders::_1));
+                    m_map.emplace("MaxPool", std::bind(op::max_pool, std::placeholders::_1));
                     m_map.emplace("Mul", std::bind(op::mul, std::placeholders::_1));
                     m_map.emplace("Relu", std::bind(op::relu, std::placeholders::_1));
                     m_map.emplace("Softmax", std::bind(op::softmax, std::placeholders::_1));
