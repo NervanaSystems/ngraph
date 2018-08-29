@@ -61,16 +61,16 @@ namespace ngraph
 
             bool get_stale() { return m_stale; }
             void set_stale(bool val) { m_stale = val; }
-            /// @brief Write bytes directly into the tensor
-            /// @param p Pointer to source of data
-            /// @param tensor_offset Offset into tensor storage to begin writing. Must be element-aligned.
-            /// @param n Number of bytes to write, must be integral number of elements.
+            /// \brief Write bytes directly into the tensor
+            /// \param p Pointer to source of data
+            /// \param tensor_offset Offset into tensor storage to begin writing. Must be element-aligned.
+            /// \param n Number of bytes to write, must be integral number of elements.
             virtual void write(const void* p, size_t tensor_offset, size_t n) = 0;
 
-            /// @brief Read bytes directly from the tensor
-            /// @param p Pointer to destination for data
-            /// @param tensor_offset Offset into tensor storage to begin reading. Must be element-aligned.
-            /// @param n Number of bytes to read, must be integral number of elements.
+            /// \brief Read bytes directly from the tensor
+            /// \param p Pointer to destination for data
+            /// \param tensor_offset Offset into tensor storage to begin reading. Must be element-aligned.
+            /// \param n Number of bytes to read, must be integral number of elements.
             virtual void read(void* p, size_t tensor_offset, size_t n) const = 0;
 
         protected:
