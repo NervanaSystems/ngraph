@@ -25,7 +25,10 @@ set(SRC
     cpu_tensor_view.cpp
     cpu_tracing.cpp
     builder/add.cpp
+    builder/allreduce.cpp
     builder/avg_pool.cpp
+    builder/argmin.cpp
+    builder/argmax.cpp
     builder/batch_norm.cpp
     builder/broadcast.cpp
     builder/bounded_relu.cpp
@@ -80,13 +83,14 @@ set(SRC
     op/rnn.cpp
     op/sigmoid_mul.cpp
     pass/cpu_assignment.cpp
+    pass/cpu_collapse_dims.cpp
     pass/cpu_concat_inputs.cpp
     pass/cpu_fusion.cpp
     pass/cpu_layout.cpp
+    pass/cpu_loop_kernel_fusion.cpp
+    pass/cpu_mat_fusion.cpp
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
-    pass/cpu_mat_fusion.cpp
-    pass/cpu_loop_kernel_fusion.cpp
     pass/cpu_workspace_insertion.cpp
 )
 

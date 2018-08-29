@@ -525,16 +525,6 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             {
                 do_equal_propagation(topology, get_input_name(op), get_output_name(op));
             }
-            else if (get_input_shape(op).empty())
-            {
-                do_bcast_sum_operation_scalar(topology,
-                                              get_input_name(op),
-                                              get_input_shape(op),
-                                              get_output_name(op),
-                                              get_output_shape(op),
-                                              get_output_type(op),
-                                              true);
-            }
             else
             {
                 do_bcast_sum_operation(topology,
@@ -557,16 +547,6 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             if (axis.empty())
             {
                 do_equal_propagation(topology, get_input_name(op), get_output_name(op));
-            }
-            else if (get_output_shape(op).empty())
-            {
-                do_bcast_sum_operation_scalar(topology,
-                                              get_input_name(op),
-                                              get_input_shape(op),
-                                              get_output_name(op),
-                                              get_output_shape(op),
-                                              get_output_type(op),
-                                              false);
             }
             else
             {
@@ -767,6 +747,45 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                              pad_below,
                              pad_interior);
         }
+        else if ("BatchNormBackprop" == op->description())
+        {
+            arguments_check(op, 6, 3);
+
+            const shared_ptr<op::BatchNormBackprop> batch_norm =
+                static_pointer_cast<op::BatchNormBackprop>(op);
+            const double eps = batch_norm->get_eps_value();
+
+            do_create_mean(topology,
+                           get_output_name(op, 2), // d_beta
+                           get_output_type(op, 2),
+                           get_input_name(op, 5), // delta
+                           get_input_shape(op, 5),
+                           true);
+
+            do_create_variance_back(topology,
+                                    get_output_name(op, 1), // d_gamma
+                                    get_output_type(op, 1),
+                                    eps,
+                                    get_input_name(op, 2), // input
+                                    get_input_shape(op, 2),
+                                    get_input_name(op, 3),  // gamma
+                                    get_input_name(op, 4),  // beta
+                                    get_input_name(op, 5)); // delta
+
+            do_batch_norm_backprop_operation(topology,
+                                             get_input_shape(op, 2),
+                                             get_input_type(op, 2),
+                                             get_input_name(op, 0),
+                                             get_input_name(op, 1),
+                                             get_input_name(op, 2),
+                                             get_input_name(op, 3),
+                                             get_input_name(op, 4),
+                                             get_input_name(op, 5),
+                                             eps,
+                                             get_output_name(op, 0),
+                                             get_output_name(op, 1),
+                                             get_output_name(op, 2));
+        }
         else if ("BatchNorm" == op->description())
         {
             const shared_ptr<op::BatchNorm> batch_norm = static_pointer_cast<op::BatchNorm>(op);
@@ -788,14 +807,13 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
                 do_create_mean(topology,
                                mean_name,
-                               get_input_shape(op),
                                get_output_type(op),
                                get_input_name(op, 2),
-                               get_input_shape(op, 2));
+                               get_input_shape(op, 2),
+                               false);
 
                 do_create_variance(topology,
                                    variance_name,
-                                   get_input_shape(op),
                                    get_output_type(op),
                                    get_input_name(op, 2),
                                    get_input_shape(op, 2),
@@ -814,13 +832,11 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
                 do_batch_norm_operation(topology,
                                         get_output_name(op),
-                                        get_output_shape(op),
                                         get_output_type(op),
                                         eps,
                                         get_input_name(op, 2),
                                         get_input_shape(op, 2),
                                         get_input_name(op, 0),
-                                        get_input_shape(op, 0),
                                         get_input_name(op, 1),
                                         mean_name,
                                         variance_name);

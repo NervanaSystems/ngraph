@@ -37,6 +37,7 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/pattern/matcher.hpp"
+#include "ngraph/util.hpp"
 
 using namespace ngraph;
 
@@ -116,8 +117,7 @@ static bool simplify_concat(std::shared_ptr<Node> n)
         {
             if (auto rcarg = std::dynamic_pointer_cast<op::Reshape>(carg))
             {
-                Shape default_shape(rcarg->get_argument(0)->get_shape().size());
-                std::iota(begin(default_shape), end(default_shape), 0);
+                auto default_shape = ngraph::get_default_order(rcarg->get_argument(0)->get_shape());
                 if (default_shape != rcarg->get_input_order())
                 {
                     NGRAPH_DEBUG << carg->get_name() << " reshape also does transposes";
@@ -349,7 +349,7 @@ static bool simplify_reduction(std::shared_ptr<Node> n)
     auto multiplier = reduction_shape_size(reduction->get_reduction_axes(), broadcast->get_shape());
     auto reduction_cnst = F(cnst, multiplier);
 
-    //Unsupported type
+    // Unsupported type
     if (!reduction_cnst)
     {
         NGRAPH_DEBUG << "unsupported type";

@@ -165,6 +165,7 @@ add_custom_command(TARGET ext_mkldnn POST_BUILD
 )
 
 add_library(libmkldnn INTERFACE)
+add_dependencies(libmkldnn ext_mkldnn)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
 target_link_libraries(libmkldnn INTERFACE
     ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn${CMAKE_SHARED_LIBRARY_SUFFIX}

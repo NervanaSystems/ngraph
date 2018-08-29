@@ -25,6 +25,7 @@
 
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/softmax.hpp"
 
 namespace ngraph
@@ -46,6 +47,7 @@ namespace ngraph
                 size_t build_primitive(const op::Softmax* node);
                 size_t build_primitive(const op::Convolution* node);
                 size_t build_primitive(const op::MaxPool* node);
+                size_t build_primitive(const op::ReplaceSlice* node, bool in_place_op);
 
             public:
                 size_t build_pad(const std::array<std::string, 2>& dtypes,
@@ -113,6 +115,18 @@ namespace ngraph
                         dtypes, tensor_shape, CudaOpMap<T>::op, CudaOpMap<T>::math_kernel);
                 }
 
+                template <typename T>
+                size_t build_reduce(const std::vector<std::string>& dtypes,
+                                    NVShape tensor_shape,
+                                    NVShape reduce_axis)
+                {
+                    return build_reduce(dtypes,
+                                        tensor_shape,
+                                        reduce_axis,
+                                        CudaOpMap<T>::op,
+                                        CudaOpMap<T>::math_kernel);
+                }
+
                 template <typename ELEMENTWISE_OP_TYPE, typename REDUCE_OP_TYPE = ngraph::op::Nop>
                 size_t build_elementwise_collective(const std::vector<std::string>& dtypes,
                                                     NVShape tensor_shape,
@@ -129,13 +143,6 @@ namespace ngraph
                                                         CudaOpMap<REDUCE_OP_TYPE>::atomic,
                                                         save_elementwise);
                 }
-
-                size_t build_replace_slice(const std::array<std::string, 3>& dtypes,
-                                           NVShape tensor_shape,
-                                           NVShape source_shape,
-                                           NVShape lower_bounds,
-                                           NVShape upper_bounds,
-                                           NVShape slice_stride);
 
                 size_t build_broadcast(const std::array<std::string, 2>& dtypes,
                                        NVShape result_shape,
@@ -186,7 +193,11 @@ namespace ngraph
                                                     const char* kernel,
                                                     const char* reduce_op,
                                                     bool save_elementwise);
-
+                size_t build_reduce(const std::vector<std::string>& dtypes,
+                                    NVShape tensor_shape,
+                                    NVShape reduce_axis,
+                                    const char* op,
+                                    const char* kernel);
                 GPUPrimitiveEmitter* m_primitive_emitter;
                 GPURuntimeContext* m_ctx;
             };

@@ -25,6 +25,8 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/argmax.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -386,6 +388,18 @@ static shared_ptr<ngraph::Function>
             else if (node_op == "And")
             {
                 node = make_shared<op::And>(args[0], args[1]);
+            }
+            else if (node_op == "ArgMin")
+            {
+                auto axis = node_js.at("axis").get<size_t>();
+                auto target_type = read_element_type(node_js.at("index_element_type"));
+                node = make_shared<op::ArgMin>(args[0], axis, target_type);
+            }
+            else if (node_op == "ArgMax")
+            {
+                auto axis = node_js.at("axis").get<size_t>();
+                auto target_type = read_element_type(node_js.at("index_element_type"));
+                node = make_shared<op::ArgMax>(args[0], axis, target_type);
             }
             else if (node_op == "Asin")
             {
@@ -933,8 +947,8 @@ static shared_ptr<ngraph::Function>
         }
     }
 
-    //This handles both graphs w/ `op::Result` and legacy graphs w/o it
-    //If we are dealing w/ a legacy graph, add op::Result for each output node
+    // This handles both graphs w/ `op::Result` and legacy graphs w/o it
+    // If we are dealing w/ a legacy graph, add op::Result for each output node
     ResultVector result;
     size_t results = 0;
     for (auto result_name : func_result)
@@ -943,7 +957,7 @@ static shared_ptr<ngraph::Function>
         if (auto res = std::dynamic_pointer_cast<op::Result>(fr))
         {
             result.push_back(res);
-            //make sure we have `op::Result` on top of all outputs
+            // make sure we have `op::Result` on top of all outputs
             results++;
         }
         else
@@ -1010,6 +1024,18 @@ static json write(const Node& n, bool binary_constant_data)
     }
     else if (node_op == "Add")
     {
+    }
+    else if (node_op == "ArgMin")
+    {
+        auto tmp = dynamic_cast<const op::ArgMin*>(&n);
+        node["axis"] = tmp->get_reduction_axis();
+        node["index_element_type"] = write_element_type(tmp->get_element_type());
+    }
+    else if (node_op == "ArgMax")
+    {
+        auto tmp = dynamic_cast<const op::ArgMax*>(&n);
+        node["axis"] = tmp->get_reduction_axis();
+        node["index_element_type"] = write_element_type(tmp->get_element_type());
     }
     else if (node_op == "AllReduce")
     {

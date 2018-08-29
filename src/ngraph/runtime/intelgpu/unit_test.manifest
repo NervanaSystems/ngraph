@@ -28,7 +28,7 @@ backwards_sigmoid
 backwards_sign
 backwards_slice
 backwards_tan
-batchnorm_bprop_n4c3h2w2
+backwards_tanh
 batch_norm_one_output
 batch_norm_three_outputs
 broadcast_vector_rowwise_int64
@@ -108,7 +108,6 @@ zero_sized_maximum
 zero_sized_minimum
 zero_sized_multiply
 zero_sized_negative
-zero_sized_not
 zero_sized_not_equal
 zero_sized_power
 zero_sized_sign
@@ -118,3 +117,5 @@ zero_sized_sqrt
 zero_sized_subtract
 zero_sized_tan
 zero_sized_tanh
+argmin_trivial
+argmax_trivial

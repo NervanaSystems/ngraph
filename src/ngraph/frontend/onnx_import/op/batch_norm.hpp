@@ -16,13 +16,7 @@
 
 #pragma once
 
-#include <memory>
-
-#include "ngraph/frontend/onnx_import/exceptions.hpp"
-#include "ngraph/frontend/onnx_import/node.hpp"
-
-#include "ngraph/node_vector.hpp"
-#include "ngraph/op/batch_norm.hpp"
+#include "core/node.hpp"
 
 namespace ngraph
 {
@@ -30,45 +24,7 @@ namespace ngraph
     {
         namespace op
         {
-            inline NodeVector batch_norm(const Node& node, const NodeVector& inputs)
-            {
-                auto x = inputs.at(0);
-                auto scale = inputs.at(1);
-                auto bias = inputs.at(2);
-                std::shared_ptr<ngraph::Node> mean{nullptr};
-                std::shared_ptr<ngraph::Node> var{nullptr};
-
-                int is_test{node.get_attribute_value<int>("is_test", 1)};
-                int spatial{node.get_attribute_value<int>("spatial", 1)};
-                double epsilon{node.get_attribute_value<double>("epsilon", 1e-5)};
-                // TODO: Implement learning mode support
-                // float momentum{node.get_attribute_value<float>("momentum", 0.9f)};
-                bool training = false;
-
-                if (!is_test)
-                {
-                    throw error::not_supported_error("BatchNormalization",
-                                                     node.get_name(),
-                                                     "only 'is_test' mode is currently supported.");
-                }
-                if (!spatial)
-                {
-                    throw error::not_supported_error("BatchNormalization",
-                                                     node.get_name(),
-                                                     "only 'spatial' mode is currently supported.");
-                }
-
-                if (inputs.size() >= 5)
-                {
-                    mean = inputs.at(3);
-                    var = inputs.at(4);
-                    return {std::make_shared<ngraph::op::BatchNorm>(
-                        epsilon, scale, bias, x, mean, var, training)};
-                }
-
-                return {std::make_shared<ngraph::op::BatchNorm>(epsilon, scale, bias, x)};
-            }
-
+            NodeVector batch_norm(const Node& node);
         } // namespace  op
 
     } // namespace  onnx_import

@@ -28,6 +28,8 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/argmax.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -376,27 +378,27 @@ namespace ngraph
             {
                 const ngraph::op::MatmulBias* cg = static_cast<const ngraph::op::MatmulBias*>(node);
 
-                const Shape& arg0_shape = pad_with(cg->get_a_shape(), 1, 3); //A
-                const Shape& arg1_shape = pad_with(cg->get_b_shape(), 1, 3); //B
-                const Shape& arg2_shape = node->get_shape();                 //bias (C)
+                const Shape& arg0_shape = pad_with(cg->get_a_shape(), 1, 3); // A
+                const Shape& arg1_shape = pad_with(cg->get_b_shape(), 1, 3); // B
+                const Shape& arg2_shape = node->get_shape();                 // bias (C)
                 const Shape& padded_result_shape = pad_with(node->get_shape(), 1, 3);
-                //Step 1: dot(A,B)
+                // Step 1: dot(A,B)
                 emitBatchDot<ngraph::op::MatmulBias>(
                     node, arg0_shape, arg1_shape, padded_result_shape, args, out, writer);
 
-                //Step 2: add bias
+                // Step 2: add bias
                 if (args.size() < 3)
                 {
-                    //no bias
+                    // no bias
                     return;
                 }
                 auto mat_c = args[2];
 
-                //the bias argument of add(dot(A,B), broadcast(C)) is typically C
-                //In order to broadcast C to the same shape as dot(A,B)
-                //we use cblas_gemm_batch(ones, C) or cblas_gemm_batch(C, ones)
-                //where ones is a tensor of appropriate shape
-                //consisting of the identity element
+                // the bias argument of add(dot(A,B), broadcast(C)) is typically C
+                // In order to broadcast C to the same shape as dot(A,B)
+                // we use cblas_gemm_batch(ones, C) or cblas_gemm_batch(C, ones)
+                // where ones is a tensor of appropriate shape
+                // consisting of the identity element
 
                 // Consider an example of broadcasing a tensor of Shape{1,3}
                 // to Shape {4,3}
@@ -406,7 +408,7 @@ namespace ngraph
                 //  1   *         1 2 3
                 //  1]            1 2 3]
 
-                //The next example is broadcasting a tensor of Shape{3,1} to Shape {3,4}
+                // The next example is broadcasting a tensor of Shape{3,1} to Shape {3,4}
                 //
                 // [1  [1 1 1 1]  [1 1 1 1
                 // 2  *           2 2 2 2
@@ -447,7 +449,7 @@ namespace ngraph
                                                       "1.0f",
                                                       arg2_shape.at(1));
                         emitCblasSgemmBatch(writer,
-                                            Shape{1, arg2_shape.at(0), 1}, //C shape
+                                            Shape{1, arg2_shape.at(0), 1}, // C shape
                                             Shape{1, 1, arg2_shape.at(1)}, // ones shape
                                             node->get_shape(),
                                             false, // C transpose
@@ -2292,6 +2294,43 @@ namespace ngraph
                 writer.block_end();
             }
 
+            static void emitArgMinArgMax(const std::vector<TensorViewWrapper>& args,
+                                         const std::vector<TensorViewWrapper>& out,
+                                         size_t reduction_axis,
+                                         const char* kernel_name,
+                                         codegen::CodeWriter& writer)
+            {
+                if (out[0].get_element_type() != element::i64 &&
+                    out[0].get_element_type() != element::i32)
+                {
+                    throw ngraph_error("Unsupported index element type");
+                }
+
+                writer.block_begin();
+                writer << "reference::" << kernel_name << "<" << args[0].get_type() << ", "
+                       << out[0].get_element_type().c_type_string() << ">(" << args[0].get_name()
+                       << ",\n";
+                writer << "                   " << out[0].get_name() << ",\n";
+                writer << "                   {" << join(args[0].get_shape()) << "},\n";
+                writer << "                   {" << join(out[0].get_shape()) << "},\n";
+                writer << "                   " << reduction_axis << ");\n";
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::ArgMin)
+            {
+                auto argmin = static_cast<const ngraph::op::ArgMin*>(node);
+                emitArgMinArgMax(args, out, argmin->get_reduction_axis(), "argmin", writer);
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::ArgMax)
+            {
+                auto argmax = static_cast<const ngraph::op::ArgMax*>(node);
+                emitArgMinArgMax(args, out, argmax->get_reduction_axis(), "argmax", writer);
+            }
+
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Power)
             {
@@ -2592,12 +2631,12 @@ namespace ngraph
                             padding_below,
                             padding_above);
 
-                    //create workspace for holding the result of converting weights layouts
+                    // create workspace for holding the result of converting weights layouts
                     auto ws = std::unique_ptr<MKLDNNWorkspace>(new MKLDNNWorkspace(
                         shape_size(args[1].get_shape()) * args[1].get_element_type().size()));
                     auto ws_buf_index = mkldnn_emitter->insert_workspace(ws);
 
-                    //descriptors for reorder operation
+                    // descriptors for reorder operation
                     auto input_reorder_desc =
                         mkldnn_emitter->build_memory_descriptor(weights_shape_groups,
                                                                 args[1].get_element_type(),
@@ -2613,7 +2652,7 @@ namespace ngraph
                         weights_optimized_format);
 
                     auto prim_indices = mkldnn_emitter->build_group_convolution_forward(
-                        input_reorder_desc, //weights
+                        input_reorder_desc, // weights
                         input_data_desc,
                         weights_desc,
                         result_reorder_desc,
@@ -2623,7 +2662,7 @@ namespace ngraph
                         padding_below,
                         padding_above);
 
-                    //invoke reorder primitive
+                    // invoke reorder primitive
                     {
                         size_t reorder_index = prim_indices.first;
                         auto& deps = mkldnn_emitter->get_primitive_deps(reorder_index);
@@ -2638,7 +2677,7 @@ namespace ngraph
                                << to_string(reorder_index) << ");\n";
                     }
 
-                    //invoke group convolution
+                    // invoke group convolution
                     {
                         size_t conv_index = prim_indices.second;
                         auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
@@ -3019,7 +3058,7 @@ namespace ngraph
                 string si = iv_prefix + std::to_string(rs->get_sequence_axis());
                 auto arg_shape = args[0].get_shape();
 
-                //iterate over seq_lengths make sure indices aren't out of bounds and normalize
+                // iterate over seq_lengths make sure indices aren't out of bounds and normalize
                 writer << "std::vector<size_t> norm_seq_lengths (" << arg_shape.at(ibi) << ");\n";
                 writer << emit_for_lt(iv_prefix, ibi, arg_shape.at(ibi));
                 writer.block_begin();
@@ -3048,7 +3087,7 @@ namespace ngraph
                     sdims.push_back(std::to_string(d));
                 }
 
-                //convert input and output into multidimensional arrays
+                // convert input and output into multidimensional arrays
                 auto isdims = emit_indices(sdims);
                 writer << args[0].get_type() << "(&src)" << isdims << " = *reinterpret_cast<"
                        << args[0].get_type() << " (*)" << isdims << ">(" << args[0].get_name()
@@ -3058,7 +3097,7 @@ namespace ngraph
                        << args[0].get_type() << " (*)" << isdims << ">(" << out[0].get_name()
                        << ");\n";
 
-                //reverse sequence
+                // reverse sequence
                 std::vector<std::string> source_indices;
                 for (size_t i = 0; i < arg_shape.size(); i++)
                 {
@@ -4283,8 +4322,8 @@ namespace ngraph
                                       std::function<std::string(const std::vector<std::string>&)>>
                 inline_emitters = initialize_inline_emitters();
 
-            //GOEE doesn't see GOEs in subgraphs that are hidden inside LoopKernels
-            //we have to manually propagate the source output
+            // GOEE doesn't see GOEs in subgraphs that are hidden inside LoopKernels
+            // we have to manually propagate the source output
             static const ngraph::descriptor::Output*
                 get_goe_input_output(ngraph::descriptor::Output* output)
             {
@@ -4302,7 +4341,7 @@ namespace ngraph
             {
                 std::unordered_map<const ngraph::descriptor::Output*, std::string>
                     loop_symbol_table;
-                //pre-fill symbol table with inputs
+                // pre-fill symbol table with inputs
 
                 const ngraph::runtime::cpu::op::LoopKernel* clk =
                     static_cast<const ngraph::runtime::cpu::op::LoopKernel*>(node);
@@ -4317,12 +4356,12 @@ namespace ngraph
                     loop_symbol_table.insert(entry);
                 }
 
-                //add outputs so we write output values directly into their
-                //corresponding tensors
+                // add outputs so we write output values directly into their
+                // corresponding tensors
                 for (size_t i = 0; i < out.size(); i++)
                 {
                     std::string sname = std::string(out[i].get_name()) + "[i]";
-                    //TODO: no support for multiple-output ops in loop kernel
+                    // TODO: no support for multiple-output ops in loop kernel
                     auto entry = std::make_pair(&output_nodes.at(i)->get_outputs().at(0), sname);
                     loop_symbol_table.insert(entry);
                 }
@@ -4342,23 +4381,23 @@ namespace ngraph
                     {
                         //"allocate" a new temp
                         tmp = tmp_prefix + std::to_string(i);
-                        //remember the new temp in symbol name
+                        // remember the new temp in symbol name
                         auto entry = std::make_pair(op, tmp);
                         loop_symbol_table.insert(entry);
-                        //declare a new tmp
+                        // declare a new tmp
                         writer << op->get_element_type().c_type_string() << " ";
                     }
                     else
                     {
-                        //this means we are dealing with an output
+                        // this means we are dealing with an output
                         tmp = loop_symbol_table.at(op);
                     }
 
-                    //prepare arguments
+                    // prepare arguments
                     std::vector<std::string> sargs;
                     for (auto& input : op_node->get_inputs())
                     {
-                        //args are expected to be in a map already
+                        // args are expected to be in a map already
                         sargs.push_back(
                             loop_symbol_table.at(get_goe_input_output(&input.get_output())));
                     }

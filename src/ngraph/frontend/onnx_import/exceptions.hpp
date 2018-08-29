@@ -24,29 +24,28 @@ namespace ngraph
     {
         namespace error
         {
-            struct not_supported_error : ngraph_error
+            struct NotSupported : ngraph_error
             {
-                explicit not_supported_error(const std::string& op_name,
-                                             const std::string& name,
-                                             const std::string& message)
+                explicit NotSupported(const std::string& op_name,
+                                      const std::string& name,
+                                      const std::string& message)
                     : ngraph_error{op_name + " node (" + name + "): " + message}
                 {
                 }
             };
 
-            namespace op
+            namespace parameter
             {
-                struct op_value_error : ngraph_error
+                struct Value : ngraph_error
                 {
-                    explicit op_value_error(const std::string& op_name,
-                                            const std::string& name,
-                                            const std::string& message)
+                    Value(const std::string& op_name,
+                          const std::string& name,
+                          const std::string& message)
                         : ngraph_error{op_name + " node (" + name + "): " + message}
                     {
                     }
                 };
-
-            } // namespace  op
+            } // namespace paramter
 
         } // namespace  error
 

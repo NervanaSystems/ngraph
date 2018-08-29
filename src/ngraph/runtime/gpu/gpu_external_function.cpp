@@ -105,6 +105,7 @@
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
+#include "ngraph/runtime/gpu/pass/gpu_layout.hpp"
 #include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
 
 using namespace std;
@@ -500,10 +501,10 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
         m_writer.block_begin();
         {
             m_writer << "m_runtime_context = ctx;\n";
-            //set constant pointers during the first run
+            // set constant pointers during the first run
             m_writer << "invoke_constant_mem_ptr();\n";
 
-            //alocate temp memory pool
+            // alocate temp memory pool
             emit_temp_mem_pool_allocation(current_function);
 
             // Add inputs to the variable name map
@@ -532,8 +533,8 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 ss << "((" << type << "*)(outputs[" << i << "]))";
                 m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
 
-                //it should be safe to assign both descriptors to one output*
-                //since needs_copy == false makes `op::Result` an nop
+                // it should be safe to assign both descriptors to one output*
+                // since needs_copy == false makes `op::Result` an nop
                 auto res = dynamic_pointer_cast<ngraph::op::Result>(op);
                 if (!res->needs_copy())
                 {
@@ -647,6 +648,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     m_pass_manager
         .register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
 
+    m_pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
     m_pass_manager.register_pass<ngraph::pass::Liveness>();
 
     m_pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);

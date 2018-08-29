@@ -181,6 +181,85 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
     return;
 }
 
+//each thread calculate the whole reduction of one output
+void runtime::gpu::CudaKernelBuilder::get_reduce_op(codegen::CodeWriter& writer,
+                                                    const std::string& name,
+                                                    runtime::gpu::GPUKernelArgs& args,
+                                                    const std::vector<std::string>& data_types,
+                                                    const std::string& reduce_op,
+                                                    size_t out_rank,
+                                                    size_t reduce_rank)
+{
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
+    writer.block_begin();
+    {
+        writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x; \n";
+        writer << "if (tid < nthreads)\n";
+        writer.block_begin();
+        {
+            if (out_rank > 0)
+            {
+                writer << "uint32_t dim_idx_generator = tid;\n";
+            }
+            writer << "uint32_t in_idx = 0;\n";
+            writer << data_types[1] << " r = 0;\n";
+
+            // loop through all reduction axis
+            for (int64_t i = 0; i < static_cast<int64_t>(out_rank); i++)
+            {
+                writer << "in_idx += (dim_idx_generator / out_strides" << i
+                       << ") * non_reduce_strides" << i << ";\n";
+                writer << "dim_idx_generator %= out_strides" << i << ";\n";
+            }
+            int64_t last_r_idx = static_cast<int64_t>(reduce_rank) - 1;
+            for (int64_t j = 0; j < last_r_idx; j++)
+            {
+                writer << "for(int idx" << j << " = 0; idx" << j << "< reduce_shape" << j << "; idx"
+                       << j << "++)\n";
+                writer.block_begin();
+            }
+            {
+                writer << "uint32_t reduce_idx = in_idx;\n";
+                for (int64_t j = 0; j < last_r_idx; j++)
+                {
+                    writer << "reduce_idx += idx" << j << " * reduce_strides" << j << ";\n";
+                }
+                writer << "int idx" << last_r_idx << " = 0;\n";
+                writer << "uint32_t step = reduce_strides" << last_r_idx << ";\n";
+                // unroll last reduction axis
+                writer << "for(; idx" << last_r_idx << " < (reduce_shape" << last_r_idx
+                       << " >> 3); idx" << last_r_idx << "++)\n";
+                writer.block_begin();
+                {
+                    for (int k = 0; k < 8; k++)
+                    {
+                        writer << "r = " << reduce_op << "(r , in[reduce_idx]);\n";
+                        writer << "reduce_idx += step;\n";
+                    }
+                }
+                writer.block_end();
+                writer << "idx" << last_r_idx << " <<= 3;\n";
+                writer << "for(; idx" << last_r_idx << " < reduce_shape" << last_r_idx << "; idx"
+                       << last_r_idx << "++)\n";
+                writer.block_begin();
+                {
+                    writer << "r = " << reduce_op << "(r , in[reduce_idx]);\n";
+                    writer << "reduce_idx += step;\n";
+                }
+                writer.block_end();
+            }
+            for (int64_t j = 0; j < last_r_idx; j++)
+            {
+                writer.block_end();
+            }
+            writer << "out[tid] = r;\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+    return;
+}
+
 void runtime::gpu::CudaKernelBuilder::get_broadcast_op(codegen::CodeWriter& writer,
                                                        const std::string& name,
                                                        runtime::gpu::GPUKernelArgs& args,
@@ -306,12 +385,11 @@ void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
 void runtime::gpu::CudaKernelBuilder::get_pad_dynamic_op(
     codegen::CodeWriter& writer,
     const std::string& name,
-    const std::array<std::string, 2>& data_types)
+    GPUKernelArgs& args,
+    const std::array<std::string, 2>& data_types,
+    size_t rank)
 {
-    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
-           << data_types[1] << "* out, uint32_t* input_strides, uint32_t* output_strides, "
-                               "uint32_t* padding_below, uint32_t* "
-                               "padding_interior, uint32_t rank, uint32_t n)\n";
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
         writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
@@ -319,17 +397,19 @@ void runtime::gpu::CudaKernelBuilder::get_pad_dynamic_op(
         writer.block_begin();
         {
             writer << "uint32_t output_idx = 0;\n";
-            writer << "uint32_t input_idx = tid;\n";
 
-            writer << "for(uint32_t i = 0; i < rank; i++)\n";
-            writer.block_begin();
+            if (rank > 0)
             {
-                writer << "output_idx += (input_idx / input_strides[i] * padding_interior[i]  + "
-                          "padding_below[i]) "
-                          "* output_strides[i];\n";
-                writer << "input_idx %= input_strides[i];\n";
+                writer << "uint32_t input_idx = tid;\n";
             }
-            writer.block_end();
+            for (size_t i = 0; i < rank; i++)
+            {
+                writer << "output_idx += (input_idx / input_strides" << i << " * padding_interior"
+                       << i << "  + "
+                               "padding_below"
+                       << i << ") * output_strides" << i << ";\n";
+                writer << "input_idx %= input_strides" << i << ";\n";
+            }
             writer << "out[output_idx] = in[tid];\n";
         }
         writer.block_end();
@@ -474,7 +554,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_window_op(
         writer.block_begin();
         {
             writer << "int output_idx = tid;\n";
-            writer << "int idx_init = 0; //result will be initial to in[idx_init]\n";
+            writer << "int idx_init = 0; // result will be initial to in[idx_init]\n";
             for (int i = static_cast<int>(rank) - 1; i >= 0; i--)
             {
                 writer << "int output_idx_" << i << " = output_idx % output_shape[" << i << "];\n";
@@ -502,7 +582,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_window_op(
                 writer << "input_idx += i_" << i << " * input_strides[" << i << "];\n";
             }
             writer << "result = (input_idx == idx_init) ? result : " << op
-                   << "(result, in[input_idx]); //skip in[idx_init] in loop\n";
+                   << "(result, in[input_idx]); // skip in[idx_init] in loop\n";
             for (int i = 0; i < rank; i++)
             {
                 writer.block_end();

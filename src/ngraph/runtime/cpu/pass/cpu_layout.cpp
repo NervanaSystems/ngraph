@@ -103,7 +103,6 @@ shared_ptr<Node> runtime::cpu::pass::CPULayout::insert_input_conversions(
         {
             auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
             layout->set_mkldnn_md(required_mds[index]);
-
             auto new_node = std::shared_ptr<Node>(
                 new runtime::cpu::op::ConvertLayout(output.get_node(), output.get_index(), layout));
             new_args.push_back(new_node);
@@ -186,9 +185,7 @@ void runtime::cpu::pass::CPULayout::set_native_layouts(
             if (!mkldnn_utils::compare_mkldnn_mds(cpu_tvl->get_mkldnn_md(), native_md))
             {
                 auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
-
                 layout->set_mkldnn_md(native_md);
-
                 auto new_node = std::shared_ptr<Node>(new runtime::cpu::op::ConvertLayout(
                     output.get_node(), output.get_index(), layout));
                 new_args.push_back(new_node);
@@ -367,7 +364,7 @@ namespace ngraph
 
                     if (default_weights_format)
                     {
-                        //note, we need the original shape (4D) while arg_shape1 is redefined
+                        // note, we need the original shape (4D) while arg_shape1 is redefined
                         i_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
                             node.get(), 1, false, memory::format::oihw));
                     }
@@ -1077,9 +1074,15 @@ namespace ngraph
                 void CPULayout::LAYOUT_DECL(ngraph::op::Result)
                 {
                     auto result = static_cast<const ngraph::op::Result*>(node.get());
-                    if (result->needs_default_layout() ||
-                        mkldnn_utils::get_input_mkldnn_md(node.get(), 0).data.format ==
-                            mkldnn_format_undef)
+                    auto cpu_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
+                        node->get_inputs()[0]
+                            .get_output()
+                            .get_tensor_view()
+                            ->get_tensor_view_layout());
+
+                    if (result->needs_default_layout() || !cpu_tvl->is_mkldnn_layout() ||
+                        cpu_tvl->get_size() * cpu_tvl->get_element_type().size() !=
+                            cpu_tvl->get_allocated_size())
                     {
                         set_native_layouts(external_function, node, false);
                     }
@@ -1096,7 +1099,9 @@ namespace ngraph
                 void CPULayout::LAYOUT_DECL(ngraph::op::Reshape)
                 {
                     auto reshape = static_cast<ngraph::op::Reshape*>(node.get());
-                    if (reshape->get_is_transpose())
+                    if (reshape->get_is_transpose() &&
+                        reshape->get_output_shape().size() ==
+                            reshape->get_argument(0)->get_shape().size())
                     {
                         auto axis_order = reshape->get_input_order();
                         auto tvl = node->get_inputs()[0]
@@ -1238,7 +1243,7 @@ namespace ngraph
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        //ensure delta and input have same layout
+                        // ensure delta and input have same layout
                         i_mds.push_back(input_md);
                         i_mds.push_back(input_md);
                         o_mds.push_back(input_md);

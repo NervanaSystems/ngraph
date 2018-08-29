@@ -42,7 +42,7 @@ public:
     {
         assert(
             pattern_node &&
-            graph_node); //the same condition throws an exception in the non-test version of `match`
+            graph_node); // the same condition throws an exception in the non-test version of `match`
         NGRAPH_DEBUG << "Starting match pattern = " << pattern_node->get_name()
                      << " , graph_node = " << graph_node->get_name();
 
