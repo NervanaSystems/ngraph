@@ -26,12 +26,12 @@ namespace ngraph
 {
     namespace autodiff
     {
-        /// @brief numeric approximation of the derivative
-        /// @param f A function
-        /// @param args Values for the arguments (the independent variables)
-        /// @param delta increment for the variables
-        /// @param indep_params parameters with respect to which to compute derivatives
-        /// @returns vector of dy/dvar, where each dy/dvar's shape is concat(y.shape(), var.shape())
+        /// \brief numeric approximation of the derivative
+        /// \param f A function
+        /// \param args Values for the arguments (the independent variables)
+        /// \param delta increment for the variables
+        /// \param indep_params parameters with respect to which to compute derivatives
+        /// \returns vector of dy/dvar, where each dy/dvar's shape is concat(y.shape(), var.shape())
         template <typename T>
         std::vector<std::shared_ptr<runtime::TensorView>>
             numeric_derivative(const std::shared_ptr<runtime::Backend>& backend,
