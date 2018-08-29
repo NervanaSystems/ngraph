@@ -46,6 +46,8 @@ add_library(onnx_import STATIC
         op/max_pool.hpp
         op/mul.hpp
         op/relu.hpp
+        op/softmax.cpp
+        op/softmax.hpp
         op/split.cpp
         op/split.hpp
         ops_bridge.cpp
