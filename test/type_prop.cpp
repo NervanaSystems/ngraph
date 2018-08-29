@@ -488,9 +488,10 @@ TEST(type_prop, dot_deduce_element_type_mismatch)
         // Should have thrown, so fail if it didn't
         FAIL() << "Element type mismatch not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments to dot must have the same element type"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Arguments do not have the same element type"));
     }
     catch (...)
     {
@@ -509,9 +510,12 @@ TEST(type_prop, dot_deduce_reduction_axes_size_mismatch)
         // Should have thrown, so fail if it didn't
         FAIL() << "Dot reduction axes size mismatch not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Dot axes do not have same length"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Paired axes (axis 1 from arg0, axis 0 from arg1) do not have same length"));
     }
     catch (...)
     {
@@ -1560,10 +1564,11 @@ TEST(type_prop, tensor_constant_bad_count)
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect number of literals not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Constant does not have the expected number of literals"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Did not get the expected number of literals for a "
+                                         "constant of shape Shape{2, 2} (got 3, expected 1 or 4)"));
     }
     catch (...)
     {

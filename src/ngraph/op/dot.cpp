@@ -59,30 +59,33 @@ op::Dot::Dot(const shared_ptr<Node>& arg0,
     auto& input_0 = get_inputs().at(0);
     auto& input_1 = get_inputs().at(1);
 
-    if (input_0.get_element_type() != input_1.get_element_type())
-    {
-        throw ngraph_error("Arguments to dot must have the same element type");
-    }
+    NODE_VALIDATION_ASSERT(this, input_0.get_element_type() == input_1.get_element_type())
+        << "Arguments do not have the same element type (arg0 element type: "
+        << input_0.get_element_type() << ", arg1 element type: " << input_1.get_element_type()
+        << ").";
 
     Shape input_0_shape = input_0.get_shape();
     Shape input_1_shape = input_1.get_shape();
 
-    if (reduction_axes_count > input_0_shape.size())
-    {
-        throw ngraph_error("Dot has too many axes for arg0");
-    }
-
-    if (reduction_axes_count > input_1_shape.size())
-    {
-        throw ngraph_error("Dot has too many axes for arg1");
-    }
+    NODE_VALIDATION_ASSERT(this,
+                           reduction_axes_count <= input_0_shape.size() &&
+                               reduction_axes_count <= input_1_shape.size())
+        << "Reduction axes count (" << reduction_axes_count
+        << ") is too large (arg0 shape: " << input_0_shape << ", arg1 shape: " << input_1_shape
+        << ").";
 
     for (size_t i = 0; i < reduction_axes_count; i++)
     {
-        if (input_0_shape[input_0_shape.size() - reduction_axes_count + i] != input_1_shape[i])
-        {
-            throw ngraph_error("Dot axes do not have same length");
-        }
+        size_t axis_index_arg0 = input_0_shape.size() - reduction_axes_count + i;
+        size_t axis_index_arg1 = i;
+
+        NODE_VALIDATION_ASSERT(this,
+                               input_0_shape[axis_index_arg0] == input_1_shape[axis_index_arg1])
+            << "Paired axes (axis " << axis_index_arg0 << " from arg0, axis " << axis_index_arg1
+            << " from arg1) "
+            << "do not have same length (arg0 shape: " << input_0_shape
+            << ", arg1 shape: " << input_1_shape << ", "
+            << "reduction axes count: " << reduction_axes_count << ").";
     }
 
     Shape result_shape(input_0_shape.size() + input_1_shape.size() - 2 * reduction_axes_count);

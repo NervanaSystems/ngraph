@@ -48,17 +48,20 @@ namespace ngraph
             {
                 auto vt = std::make_shared<TensorViewType>(type, shape);
                 set_value_type_checked(vt);
+
+                NODE_VALIDATION_ASSERT(this,
+                                       values.size() == 1 || values.size() == shape_size(m_shape))
+                    << "Did not get the expected number of literals for a constant of shape "
+                    << m_shape << " (got " << values.size() << ", expected "
+                    << (shape_size(m_shape) == 1 ? "" : "1 or ") << shape_size(m_shape) << ").";
+
                 if (values.size() == 1)
                 {
                     write_values(std::vector<T>(shape_size(m_shape), values[0]));
                 }
-                else if (values.size() == shape_size(m_shape))
-                {
-                    write_values(values);
-                }
                 else
                 {
-                    throw ngraph_error("Constant does not have the expected number of literals");
+                    write_values(values);
                 }
             }
 
@@ -77,10 +80,12 @@ namespace ngraph
             {
                 auto vt = std::make_shared<TensorViewType>(type, shape);
                 set_value_type_checked(vt);
-                if (values.size() != shape_size(m_shape))
-                {
-                    throw ngraph_error("Constant does not have the expected number of literals");
-                }
+
+                NODE_VALIDATION_ASSERT(this, values.size() == shape_size(m_shape))
+                    << "Did not get the expected number of literals for a constant of shape "
+                    << m_shape << " (got " << values.size() << ", expected " << shape_size(m_shape)
+                    << ".";
+
                 std::vector<double> dvalues = parse_string<double>(values);
                 write_values(dvalues);
             }
