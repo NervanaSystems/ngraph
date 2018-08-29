@@ -22,9 +22,9 @@ namespace ngraph
     namespace onnx_import
     {
         Graph::Graph(const onnx::GraphProto& graph_proto)
-            : m_graph_proto(graph_proto)
+            : m_graph_proto{&graph_proto}
         {
-            for (const auto& tensor : m_graph_proto.initializer())
+            for (const auto& tensor : m_graph_proto->initializer())
             {
                 if (tensor.has_name())
                 {
@@ -33,20 +33,20 @@ namespace ngraph
             }
 
             // Process all ONNX graph inputs, convert them to nGraph nodes and store in cache
-            for (const auto& input : m_graph_proto.input())
+            for (const auto& input : m_graph_proto->input())
             {
                 m_inputs.emplace_back(input);
                 m_ng_node_cache[input.name()] =
                     m_inputs.back().get_ng_node(m_parameters, m_initializers);
             }
 
-            for (const auto& output : m_graph_proto.output())
+            for (const auto& output : m_graph_proto->output())
             {
                 m_outputs.emplace_back(output);
             }
 
             // Process ONNX graph nodes, convert to nGraph nodes
-            for (const auto& node_proto : m_graph_proto.node())
+            for (const auto& node_proto : m_graph_proto->node())
             {
                 m_nodes.emplace_back(node_proto, this);
                 const Node& node{m_nodes.back()};

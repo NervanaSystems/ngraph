@@ -198,7 +198,7 @@ namespace ngraph
 
             Tensor() = delete;
             explicit Tensor(const onnx::TensorProto& tensor)
-                : m_tensor_proto{tensor}
+                : m_tensor_proto{&tensor}
                 , m_shape{std::begin(tensor.dims()), std::end(tensor.dims())}
             {
             }
@@ -213,34 +213,34 @@ namespace ngraph
             template <typename T>
             std::vector<T> get_data() const
             {
-                return detail::tensor::get_data<T>(m_tensor_proto);
+                return detail::tensor::get_data<T>(*m_tensor_proto);
             }
 
             const std::string& get_name() const
             {
-                if (!m_tensor_proto.has_name())
+                if (!m_tensor_proto->has_name())
                 {
                     throw error::tensor::unspecified_name{};
                 }
-                return m_tensor_proto.name();
+                return m_tensor_proto->name();
             }
 
             Type get_type() const
             {
-                if (!m_tensor_proto.has_data_type())
+                if (!m_tensor_proto->has_data_type())
                 {
                     throw error::tensor::unspecified_data_type{};
                 }
-                return static_cast<Type>(m_tensor_proto.data_type());
+                return static_cast<Type>(m_tensor_proto->data_type());
             }
 
             const element::Type& get_ng_type() const
             {
-                if (!m_tensor_proto.has_data_type())
+                if (!m_tensor_proto->has_data_type())
                 {
                     throw error::tensor::unspecified_data_type{};
                 }
-                switch (m_tensor_proto.data_type())
+                switch (m_tensor_proto->data_type())
                 {
                 case onnx::TensorProto_DataType::TensorProto_DataType_BOOL: return element::boolean;
                 case onnx::TensorProto_DataType::TensorProto_DataType_FLOAT:
@@ -254,13 +254,13 @@ namespace ngraph
                 case onnx::TensorProto_DataType::TensorProto_DataType_UINT16: return element::u16;
                 case onnx::TensorProto_DataType::TensorProto_DataType_UINT32: return element::u32;
                 case onnx::TensorProto_DataType::TensorProto_DataType_UINT64: return element::u64;
-                default: throw error::tensor::unsupported_data_type{m_tensor_proto.data_type()};
+                default: throw error::tensor::unsupported_data_type{m_tensor_proto->data_type()};
                 }
             }
 
-            operator onnx::TensorProto_DataType() const { return m_tensor_proto.data_type(); }
+            operator onnx::TensorProto_DataType() const { return m_tensor_proto->data_type(); }
         private:
-            const onnx::TensorProto& m_tensor_proto;
+            const onnx::TensorProto* m_tensor_proto;
             Shape m_shape;
         };
 
