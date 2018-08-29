@@ -282,8 +282,7 @@ void runtime::intelgpu::gen_window_loop(codegen::CodeWriter& writer,
             {
                 writer << " && ";
             }
-            writer << "(win_idx" << i << " >= 0) && (win_idx" << i << " < "
-                   << output_shape.at(i + 2) << ")";
+            writer << "(win_idx" << i << " < " << output_shape.at(i + 2) << ")";
         }
         writer << ")\n";
         writer.block_begin();
@@ -317,7 +316,7 @@ void runtime::intelgpu::do_max_pool_backprop_operation(cldnn::topology& topology
     vector<size_t> gws;
 
     // The kernel name and parameters
-    runtime::intelgpu::gen_func_def(
+    gen_func_def(
         writer, entry_point_name, {2, "float"}, {input_shape, delta_shape}, "float", output_shape);
 
     writer.block_begin();
@@ -464,18 +463,8 @@ void runtime::intelgpu::do_avg_pool_backprop_operation(cldnn::topology& topology
     const Shape delta_data(delta_shape.cbegin() + 2, delta_shape.cend());
     const Shape output_data(output_shape.cbegin() + 2, output_shape.cend());
 
-    bool is_zero_pad = true;
-    for (auto const& i : pad_below)
-    {
-        if (i != 0)
-        {
-            is_zero_pad = false;
-            break;
-        }
-    }
-
     size_t win_elems_size = 1;
-    if (include_padding || is_zero_pad)
+    if (include_padding || shape_size<Shape>(pad_below) == 0)
     {
         for (auto const& i : win_shape)
         {
@@ -484,13 +473,12 @@ void runtime::intelgpu::do_avg_pool_backprop_operation(cldnn::topology& topology
     }
 
     // The kernel name and parameters
-    runtime::intelgpu::gen_func_def(
-        writer, entry_point_name, {"float"}, {delta_shape}, "float", output_shape);
+    gen_func_def(writer, entry_point_name, {"float"}, {delta_shape}, "float", output_shape);
 
     writer.block_begin();
     {
         writer << "size_t win_elems_size = " << win_elems_size << ";\n";
-        writer << "float computed_val = 0;\n";
+        writer << "float computed_val = 0.0f;\n";
 
         // Main loop over delta input array
         writer << "const uint i0 = get_global_id(0);";
@@ -519,7 +507,7 @@ void runtime::intelgpu::do_avg_pool_backprop_operation(cldnn::topology& topology
                 {
                     writer << "[j" << i << "]";
                 }
-                writer << " = 0.0;\n";
+                writer << " = 0.0f;\n";
 
                 // Closing brackets for Initialization loop
                 for (auto const& i : output_data)
@@ -538,7 +526,7 @@ void runtime::intelgpu::do_avg_pool_backprop_operation(cldnn::topology& topology
                     ++var_idx;
                 }
 
-                if (!include_padding && !is_zero_pad)
+                if (!include_padding)
                 {
                     writer << "win_elems_size = 0;\n";
 
@@ -558,7 +546,7 @@ void runtime::intelgpu::do_avg_pool_backprop_operation(cldnn::topology& topology
                 gen_window_loop(writer, output_shape, win_shape, win_stride, pad_below, true);
 
                 writer << "computed_val = input0" << access_dims(delta_shape)
-                       << "/win_elems_size;\n";
+                       << " / win_elems_size;\n";
 
                 writer << "output[i0][i1]";
                 // additional dimensions for input
