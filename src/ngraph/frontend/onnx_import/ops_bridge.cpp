@@ -19,14 +19,23 @@
 
 #include "core/attribute.hpp"
 #include "op/add.hpp"
+#include "op/average_pool.hpp"
 #include "op/batch_norm.hpp"
 #include "op/constant.hpp"
 #include "op/conv.hpp"
+#include "op/div.hpp"
 #include "op/gemm.hpp"
 #include "op/matmul.hpp"
+#include "op/max.hpp"
+#include "op/max_pool.hpp"
+#include "op/mean.hpp"
+#include "op/min.hpp"
 #include "op/mul.hpp"
 #include "op/relu.hpp"
+#include "op/softmax.hpp"
 #include "op/split.hpp"
+#include "op/sub.hpp"
+#include "op/sum.hpp"
 #include "ops_bridge.hpp"
 
 namespace ngraph
@@ -72,15 +81,25 @@ namespace ngraph
                 ops_bridge()
                 {
                     m_map.emplace("Add", std::bind(op::add, std::placeholders::_1));
+                    m_map.emplace("AveragePool",
+                                  std::bind(op::average_pool, std::placeholders::_1));
                     m_map.emplace("BatchNormalization",
                                   std::bind(op::batch_norm, std::placeholders::_1));
                     m_map.emplace("Constant", std::bind(op::constant, std::placeholders::_1));
                     m_map.emplace("Conv", std::bind(op::conv, std::placeholders::_1));
+                    m_map.emplace("Div", std::bind(op::div, std::placeholders::_1));
                     m_map.emplace("Gemm", std::bind(op::gemm, std::placeholders::_1));
                     m_map.emplace("MatMul", std::bind(op::matmul, std::placeholders::_1));
+                    m_map.emplace("MaxPool", std::bind(op::max_pool, std::placeholders::_1));
+                    m_map.emplace("Max", std::bind(op::max, std::placeholders::_1));
+                    m_map.emplace("Mean", std::bind(op::mean, std::placeholders::_1));
+                    m_map.emplace("Min", std::bind(op::min, std::placeholders::_1));
                     m_map.emplace("Mul", std::bind(op::mul, std::placeholders::_1));
                     m_map.emplace("Relu", std::bind(op::relu, std::placeholders::_1));
+                    m_map.emplace("Softmax", std::bind(op::softmax, std::placeholders::_1));
                     m_map.emplace("Split", std::bind(op::split, std::placeholders::_1));
+                    m_map.emplace("Sub", std::bind(op::sub, std::placeholders::_1));
+                    m_map.emplace("Sum", std::bind(op::sum, std::placeholders::_1));
                 }
 
                 NodeVector operator()(const Node& node) const

@@ -26,7 +26,7 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        namespace attribute
+        namespace convpool
         {
             /// \brief Get shape of kernel (filter) in pixels.
             ///
@@ -84,7 +84,37 @@ namespace ngraph
             {
                 return get_pads(node, get_kernel_shape(node));
             }
-        } // namespace attribute
+
+            /**
+             * @brief Create an nGraph pooling operation based on an ONNX pooling op.
+             *
+             * @tparam T Class of an nGraph pooling operation (e.g. AveragePool, MaxPool)
+             * @param node incoming ONNX opearation
+             * @return nGraph node equivalent of the ONNX operation
+             */
+            template <class T>
+            inline NodeVector make_ng_pool(const Node& node)
+            {
+                // Fetch input node for the pooling operation
+                auto data = node.get_ng_inputs().at(0);
+
+                // Parse ONNX op attributes
+                Shape kernel_shape = convpool::get_kernel_shape(node);
+                auto strides = convpool::get_strides(node);
+                auto dilations = convpool::get_dilations(node);
+                auto paddings = convpool::get_pads(node);
+
+                // Convert padding from CoordinateDiff to Shape objects
+                const CoordinateDiff& padding_below{paddings.first};
+                const CoordinateDiff& padding_above{paddings.second};
+                Shape padding_below_shape{std::begin(padding_below), std::end(padding_below)};
+                Shape padding_above_shape{std::begin(padding_above), std::end(padding_above)};
+
+                return {std::make_shared<T>(
+                    data, kernel_shape, strides, padding_below_shape, padding_above_shape)};
+            }
+
+        } // namespace convpool
 
     } // namespace  onnx_import
 
