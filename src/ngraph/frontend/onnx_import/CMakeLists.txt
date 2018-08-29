@@ -39,6 +39,8 @@ add_library(onnx_import STATIC
         op/constant.cpp
         op/constant.hpp
         op/conv.cpp
+        op/flatten.cpp
+        op/flatten.hpp
         op/gemm.cpp
         op/gemm.hpp
         op/matmul.hpp

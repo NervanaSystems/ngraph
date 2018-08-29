@@ -1,18 +1,18 @@
-/*******************************************************************************
- * Copyright 2017-2018 Intel Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+//****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//****************************************************************************
 
 #include <numeric>
 
@@ -24,6 +24,37 @@ namespace ngraph
 {
     namespace onnx_import
     {
+        namespace utils
+        {
+            std::shared_ptr<ngraph::Node> flatten(const std::shared_ptr<ngraph::Node>& node,
+                                                  int axis)
+            {
+                auto data_shape = node->get_shape();
+
+                auto first_dim = 1;
+                auto last_dim = 1;
+
+                for (auto index = 0; index < data_shape.size(); ++index)
+                {
+                    last_dim *= data_shape.at(index);
+                    if (index < axis)
+                    {
+                        first_dim = last_dim;
+                    }
+                }
+
+                last_dim /= first_dim;
+
+                std::vector<size_t> axis_order(data_shape.size());
+                std::iota(std::begin(axis_order), std::end(axis_order), 0);
+
+                ngraph::AxisVector axis_vector{std::begin(axis_order), std::end(axis_order)};
+                ngraph::Shape output_shape{first_dim, last_dim};
+
+                return std::make_shared<ngraph::op::Reshape>(node, axis_vector, output_shape);
+            }
+        } // namespace utils
+
         std::shared_ptr<ngraph::Node> reorder_axes(const std::shared_ptr<ngraph::Node>& node,
                                                    std::vector<size_t> axes_order = {})
         {

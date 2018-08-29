@@ -22,13 +22,31 @@ namespace ngraph
 {
     namespace onnx_import
     {
+        namespace utils
+        {
+            /**
+             * @brief Flatten the input tensor into a 2D matrix.
+             *
+             * @details Flattening happens at axis specified by 'axis' attribute.
+             *  First dimension of output tensor is the product of [d_0, ... d_{axis-1}] dimensions of input tensor.
+             *  The last dimension is the product of the rest of input tensor dimensions: [d_{axis}, ..., d_n]
+             *
+             * @param node The tensor to be flattened.
+             * @param axis The axis dividing shape.
+             *
+             * @return The new node being a 2D matrix representing flattened input node.
+             */
+            std::shared_ptr<ngraph::Node> flatten(const std::shared_ptr<ngraph::Node>& node,
+                                                  int axis);
+        } // namespace utils
+
         /**
          * @brief Permute axes according to specified axes_order parameter.
          *
          * @param node The node which axes we want to permute.
          * @param axes_order The permutation of node tensor axes.
          *
-         * @return: New node with permuted axes.
+         * @return New node with permuted axes.
          */
         std::shared_ptr<ngraph::Node> reorder_axes(const std::shared_ptr<ngraph::Node>& node,
                                                    std::vector<int> axes_order);
@@ -38,7 +56,7 @@ namespace ngraph
          *
          * @param node Input tensor we want to transpose
          *
-         * @return: New node with reversed dimensions.
+         * @return New node with reversed dimensions.
          */
         std::shared_ptr<ngraph::Node> transpose(const std::shared_ptr<ngraph::Node>& node);
     } // namespace onnx_import
