@@ -2703,8 +2703,6 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Quantize)
             {
-                auto arg0_shape = args[0].get_shape();
-                auto result_shape = out[0].get_shape();
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
