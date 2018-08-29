@@ -382,21 +382,65 @@ TEST(onnx, model_softmax)
 
     auto expected_output =
         ngraph::test::NDArray<float, 3>(
-            {{{1.50461533e-26, 4.08996852e-26, 1.11176871e-25, 3.02210068e-25, 8.21492137e-25},
-              {2.23304715e-24, 6.07005148e-24, 1.65001106e-23, 4.48519509e-23, 1.21920243e-22},
-              {3.31413582e-22, 9.00875516e-22, 2.44883355e-21, 6.65661973e-21, 1.80945684e-20},
-              {4.91861366e-20, 1.33701781e-19, 3.63439123e-19, 9.87929963e-19, 2.68547207e-18}},
+            {{{1.50461533e-26f, 4.08996852e-26f, 1.11176871e-25f, 3.02210068e-25f, 8.21492137e-25f},
+              {2.23304715e-24f, 6.07005148e-24f, 1.65001106e-23f, 4.48519509e-23f, 1.21920243e-22f},
+              {3.31413582e-22f, 9.00875516e-22f, 2.44883355e-21f, 6.65661973e-21f, 1.80945684e-20f},
+              {4.91861366e-20f,
+               1.33701781e-19f,
+               3.63439123e-19f,
+               9.87929963e-19f,
+               2.68547207e-18f}},
 
-             {{7.29986992e-18, 1.98431037e-17, 5.39391483e-17, 1.46621807e-16, 3.98559393e-16},
-              {1.08339676e-15, 2.94497771e-15, 8.00527940e-15, 2.17606055e-14, 5.91514586e-14},
-              {1.60790335e-13, 4.37073446e-13, 1.18808881e-12, 3.22956021e-12, 8.77885484e-12},
-              {2.38634016e-11, 6.48674509e-11, 1.76328013e-10, 4.79309234e-10, 1.30289758e-09}},
+             {{7.29986992e-18f, 1.98431037e-17f, 5.39391483e-17f, 1.46621807e-16f, 3.98559393e-16f},
+              {1.08339676e-15f, 2.94497771e-15f, 8.00527940e-15f, 2.17606055e-14f, 5.91514586e-14f},
+              {1.60790335e-13f, 4.37073446e-13f, 1.18808881e-12f, 3.22956021e-12f, 8.77885484e-12f},
+              {2.38634016e-11f,
+               6.48674509e-11f,
+               1.76328013e-10f,
+               4.79309234e-10f,
+               1.30289758e-09f}},
 
-             {{3.54164282e-09, 9.62718331e-09, 2.61693974e-08, 7.11357975e-08, 1.93367146e-07},
-              {5.25626399e-07, 1.42880069e-06, 3.88388295e-06, 1.05574884e-05, 2.86982290e-05},
-              {7.80098743e-05, 2.12052824e-04, 5.76419338e-04, 1.56687021e-03, 4.25919482e-03},
-              {1.15776919e-02, 3.14714295e-02, 8.55482149e-02, 2.32544158e-01, 6.32120559e-01}}})
+             {{3.54164282e-09f, 9.62718331e-09f, 2.61693974e-08f, 7.11357975e-08f, 1.93367146e-07f},
+              {5.25626399e-07f, 1.42880069e-06f, 3.88388295e-06f, 1.05574884e-05f, 2.86982290e-05f},
+              {7.80098743e-05f, 2.12052824e-04f, 5.76419338e-04f, 1.56687021e-03f, 4.25919482e-03f},
+              {1.15776919e-02f,
+               3.14714295e-02f,
+               8.55482149e-02f,
+               2.32544158e-01f,
+               6.32120559e-01f}}})
             .get_vector();
+
+    auto result_vectors = execute(function, inputs, "INTERPRETER");
+    EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
+}
+
+TEST(onnx, model_sub)
+{
+    auto function = ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/sub.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(ngraph::test::NDArray<float, 3>({{{1, 2, 3}}}).get_vector());
+
+    inputs.emplace_back(ngraph::test::NDArray<float, 3>({{{4, 5, 7}}}).get_vector());
+
+    auto expected_output = ngraph::test::NDArray<float, 3>({{{-3, -3, -4}}}).get_vector();
+
+    auto result_vectors = execute(function, inputs, "INTERPRETER");
+    EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
+}
+
+TEST(onnx, model_div)
+{
+    auto function = ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/div.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(ngraph::test::NDArray<float, 3>({{{1, 2, 3}}}).get_vector());
+
+    inputs.emplace_back(ngraph::test::NDArray<float, 3>({{{1, 4, 12}}}).get_vector());
+
+    auto expected_output = ngraph::test::NDArray<float, 3>({{{1, 0.5, 0.25}}}).get_vector();
 
     auto result_vectors = execute(function, inputs, "INTERPRETER");
     EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
