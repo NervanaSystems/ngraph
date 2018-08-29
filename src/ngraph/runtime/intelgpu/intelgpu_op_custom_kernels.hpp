@@ -53,6 +53,7 @@ namespace ngraph
                                                 const Shape& win_shape,
                                                 const Shape& win_stride,
                                                 const Shape& pad_below);
+
             void do_avg_pool_backprop_operation(cldnn::topology& topology,
                                                 const std::string& delta_name,
                                                 const Shape& delta_shape,
@@ -152,12 +153,6 @@ namespace ngraph
                               const std::vector<Shape>& input_shapes,
                               const std::string& output_type,
                               const Shape& output_shape);
-            void gen_window_loop(codegen::CodeWriter& writer,
-                                 const Shape& output_shape,
-                                 const Shape& win_shape,
-                                 const Shape& win_stride,
-                                 const Shape& pad_below,
-                                 bool is_begin);
         }
     }
 }

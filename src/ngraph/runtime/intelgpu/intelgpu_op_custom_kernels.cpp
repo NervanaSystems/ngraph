@@ -252,12 +252,12 @@ void runtime::intelgpu::do_pad_operation(cldnn::topology& topology,
     topology.add(op_pad);
 }
 
-void runtime::intelgpu::gen_window_loop(codegen::CodeWriter& writer,
-                                        const Shape& output_shape,
-                                        const Shape& win_shape,
-                                        const Shape& win_stride,
-                                        const Shape& pad_below,
-                                        bool is_begin)
+static void gen_window_loop(codegen::CodeWriter& writer,
+                            const Shape& output_shape,
+                            const Shape& win_shape,
+                            const Shape& win_stride,
+                            const Shape& pad_below,
+                            bool is_begin)
 {
     size_t var_idx = 0;
 
@@ -463,14 +463,7 @@ void runtime::intelgpu::do_avg_pool_backprop_operation(cldnn::topology& topology
     const Shape delta_data(delta_shape.cbegin() + 2, delta_shape.cend());
     const Shape output_data(output_shape.cbegin() + 2, output_shape.cend());
 
-    size_t win_elems_size = 1;
-    if (include_padding || shape_size<Shape>(pad_below) == 0)
-    {
-        for (auto const& i : win_shape)
-        {
-            win_elems_size *= i;
-        }
-    }
+    size_t win_elems_size = shape_size<Shape>(win_shape);
 
     // The kernel name and parameters
     gen_func_def(writer, entry_point_name, {"float"}, {delta_shape}, "float", output_shape);
