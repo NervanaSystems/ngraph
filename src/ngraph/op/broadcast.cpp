@@ -31,16 +31,26 @@ op::Broadcast::Broadcast(const shared_ptr<Node>& arg,
     Shape target_shape = m_shape;
     for (auto i = m_broadcast_axes.rbegin(); i != m_broadcast_axes.rend(); ++i)
     {
-        if (*i >= target_shape.size())
-        {
-            throw ngraph_error("Broadcast axis exceeds target shape rank");
-        }
+        NODE_VALIDATION_ASSERT(this, *i < target_shape.size())
+            << "Broadcast axis index (" << *i << ") exceeds target shape rank "
+            << "(broadcast axes: " << m_broadcast_axes << ", target shape: " << target_shape
+            << ").";
+
         target_shape.erase(target_shape.begin() + *i);
     }
-    if (Shape{target_shape} != input.get_shape())
-    {
-        throw ngraph_error("Broadcast arg, shape, and axes are incompatible");
-    }
+
+    // TODO(amprocte): We can probably have a more helpful error message here.
+    // There are two things that can go wrong, which are being picked up in
+    // one fell swoop by this check: either the number of broadcast axes is not
+    // enough (arg->get_shape().size() + broadcast_axes.size() != shape.size())
+    // or there is a mismatch with one of the pre-broadcast axis lengths
+    // (i.e. target_shape.size() == arg->get_shape.size() but there is some i
+    // where target_shape[i] != arg->get_shape[i]).
+    NODE_VALIDATION_ASSERT(this, target_shape == input.get_shape())
+        << "Broadcast argument shape, target shape, and axes are incompatible "
+        << "(argument shape: " << arg->get_shape() << ", target shape: " << m_shape
+        << ", broadcast axes: " << m_broadcast_axes << ").";
+
     set_value_type_checked(make_shared<TensorViewType>(input.get_element_type(), m_shape));
 }
 

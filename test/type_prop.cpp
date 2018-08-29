@@ -53,9 +53,11 @@ TEST(type_prop, broadcast_deduce_incorrect)
         // Should have thrown, so fail if it didn't
         FAIL() << "Deduced type should disagree with specified type";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Broadcast arg, shape, and axes are incompatible"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Broadcast argument shape, target shape, and axes are incompatible"));
     }
     catch (...)
     {
