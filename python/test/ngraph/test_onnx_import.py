@@ -27,7 +27,7 @@ def test_import_onnx_function():
     cur_dir = os.path.dirname(__file__)
     model_path = os.path.join(cur_dir, 'models/add_abc.onnx')
     ng_function = load_onnx_model_file(model_path)[0]
-    computation = runtime.computation_function(ng_function)
+    computation = runtime.computation(ng_function)
 
     value_a = np.array([1.0], dtype=dtype)
     value_b = np.array([2.0], dtype=dtype)

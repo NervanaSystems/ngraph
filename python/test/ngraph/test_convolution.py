@@ -43,8 +43,8 @@ def test_convolution_2d():
         [1., 0., -1.]], dtype=np.float32).reshape(1, 1, 3, 3))
 
     # convolution with padding=1 should produce 9 x 9 output:
-    model = runtime.computation_node(ng.convolution(input_x, input_filter, padding_above=[1, 1],
-                                                    padding_below=[1, 1]))
+    model = runtime.computation(ng.convolution(input_x, input_filter, padding_above=[1, 1],
+                                               padding_below=[1, 1]))
     result = model()
 
     assert np.allclose(result,
@@ -60,7 +60,7 @@ def test_convolution_2d():
                                 dtype=np.float32))
 
     # convolution with padding=0 should produce 7 x 7 output:
-    model = runtime.computation_node(ng.convolution(input_x, input_filter))
+    model = runtime.computation(ng.convolution(input_x, input_filter))
     result = model()
     assert np.allclose(result,
                        np.array([[[[-20, -20, 20, 20, 0, 0, 0],
@@ -73,7 +73,7 @@ def test_convolution_2d():
                                 dtype=np.float32))
 
     # convolution with strides=2 should produce 4 x 4 output:
-    model = runtime.computation_node(ng.convolution(input_x, input_filter, filter_strides=[2, 2]))
+    model = runtime.computation(ng.convolution(input_x, input_filter, filter_strides=[2, 2]))
     result = model()
     assert np.allclose(result,
                        np.array([[[[-20., 20., 0., 0.],
@@ -83,8 +83,8 @@ def test_convolution_2d():
                                 dtype=np.float32))
 
     # convolution with dilation=2 should produce 5 x 5 output:
-    model = runtime.computation_node(ng.convolution(input_x, input_filter,
-                                                    filter_dilation_strides=(2, 2)))
+    model = runtime.computation(ng.convolution(input_x, input_filter,
+                                               filter_dilation_strides=(2, 2)))
     result = model()
     assert np.allclose(result,
                        np.array([[[[0, 0, 20, 20, 0],
@@ -122,7 +122,7 @@ def test_convolution_backprop_data():
         [2., 0., -2.],
         [1., 0., -1.]], dtype=np.float32).reshape(1, 1, 3, 3)
 
-    model = runtime.computation_node(deconvolution, filter_param, output_delta_param)
+    model = runtime.computation(deconvolution, filter_param, output_delta_param)
     result = model(filter_data, data_batch_data)
     assert np.allclose(result,
                        np.array([[[[-20., -20., 40., 40., -20., -20., 0., 0., 0.],
