@@ -32,6 +32,7 @@ namespace ngraph
                 auto sum = variadic::make_ng_variadic_op<ngraph::op::Add>(node).front();
                 auto shape = sum->get_shape();
 
+                // Create a Constant representing the number of inputs with the same shape as sum
                 auto count = ngraph::op::Constant::create(
                     sum->get_element_type(),
                     shape,
