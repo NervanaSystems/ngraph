@@ -26,10 +26,10 @@ op::AllReduce::AllReduce(const shared_ptr<Node>& arg)
     set_value_type_checked(
         make_shared<TensorViewType>(input.get_element_type(), input.get_shape()));
 
-    if ((arg->get_element_type() != element::f32) && (arg->get_element_type() != element::f64))
-    {
-        throw ngraph_error("Unsupported data type for AllReduce");
-    }
+    NODE_VALIDATION_ASSERT(
+        this, arg->get_element_type() == element::f32 || arg->get_element_type() == element::f64)
+        << "Only element types f32 and f64 are supported (argument element type: "
+        << arg->get_element_type() << ")";
 }
 
 shared_ptr<Node> op::AllReduce::copy_with_new_args(const NodeVector& new_args) const

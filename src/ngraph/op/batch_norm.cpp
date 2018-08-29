@@ -29,21 +29,16 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
     , m_epsilon(eps)
     , m_training(true)
 {
-    if (m_bn_input_shape.size() < 2)
-    {
-        throw ngraph_error("input tensor to batchnorm must have tensor of at least rank 2");
-    }
-    else
-    {
-        this->m_bn_variance_shape.push_back(input->get_shape()[1]);
-        this->m_bn_mean_shape.push_back(input->get_shape()[1]);
-    }
+    NODE_VALIDATION_ASSERT(this, m_bn_input_shape.size() >= 2)
+        << "Data input must have rank of at least 2 (data input shape: " << input->get_shape()
+        << ").";
 
-    if (m_bn_input_shape[1] == 0)
-    {
-        throw ngraph_error(
-            "input tensor must have at least one channel axis for batch normalization");
-    }
+    this->m_bn_variance_shape.push_back(input->get_shape()[1]);
+    this->m_bn_mean_shape.push_back(input->get_shape()[1]);
+
+    NODE_VALIDATION_ASSERT(this, m_bn_input_shape[1] != 0)
+        << "Data input batch must have at least one channel (data input shape: "
+        << input->get_shape() << ").";
 
     auto et = input->get_element_type();
     Shape channel_shape{m_bn_input_shape[1]};
@@ -51,19 +46,17 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
 
     for (size_t i = 0; i < 2; i++)
     {
-        if (get_argument(i)->get_element_type() != et)
-        {
-            auto err_msg = std::string("The element type of ") + input_names[i] +
-                           " isn't equal to input data's type";
-            throw ngraph_error(err_msg.c_str());
-        }
+        NODE_VALIDATION_ASSERT(this, get_argument(i)->get_element_type() == et)
+            << "Element type for " << input_names[i] << " is not the same as "
+            << "the data input's element type (" << input_names[i]
+            << " element type: " << get_argument(i)->get_element_type()
+            << ", data input element type: " << et << ").";
 
-        if (get_argument(i)->get_shape() != channel_shape)
-        {
-            auto err_msg = std::string("The shape of ") + input_names[i] +
-                           " isn't equal to input channel's shape";
-            throw ngraph_error(err_msg.c_str());
-        }
+        NODE_VALIDATION_ASSERT(this, get_argument(i)->get_shape() == channel_shape)
+            << "Shape for " << input_names[i] << " must be rank 1, with length equal to "
+            << "the number of channels in the data batch (" << input_names[i]
+            << " shape: " << get_argument(i)->get_shape() << ", expected: " << channel_shape
+            << ").";
     }
 
     add_output(input->get_element_type(), m_bn_input_shape);
@@ -85,51 +78,36 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
     , m_epsilon(eps)
     , m_training(training)
 {
-    const size_t INPUT_INDEX = 2;
+    NODE_VALIDATION_ASSERT(this, m_bn_input_shape.size() >= 2)
+        << "Data input must have rank of at least 2 (data input shape: " << input->get_shape()
+        << ").";
 
-    if (m_bn_input_shape.size() < 2)
-    {
-        throw ngraph_error("input tensor to batchnorm must have tensor of at least rank 2");
-    }
-
-    if (m_bn_input_shape[1] == 0)
-    {
-        throw ngraph_error(
-            "input tensor must have at least one channel axis for batch normalization");
-    }
+    NODE_VALIDATION_ASSERT(this, m_bn_input_shape[1] != 0)
+        << "Data input batch must have at least one channel (data input shape: "
+        << input->get_shape() << ").";
 
     auto et = input->get_element_type();
+    Shape channel_shape{m_bn_input_shape[1]};
     const char* input_names[] = {"gamma", "beta", "input", "mean", "variance"};
+
+    const size_t INPUT_INDEX = 2;
 
     for (size_t i = 0; i < get_input_size(); i++)
     {
-        if (get_argument(i)->get_element_type() != et)
+        if (i != INPUT_INDEX)
         {
-            auto err_msg = std::string("The element type of ") + input_names[i] +
-                           " isn't equal to input data's type";
-            throw ngraph_error(err_msg.c_str());
-        }
-    }
-    for (size_t index = 0; index < get_input_size(); index++)
-    {
-        if (index != INPUT_INDEX && get_argument(index)->get_shape().size() != 1)
-        {
-            auto err_msg = std::string(input_names[index]) + " should have rank of 1";
-            throw ngraph_error(err_msg.c_str());
-        }
+            NODE_VALIDATION_ASSERT(this, get_argument(i)->get_element_type() == et)
+                << "Element type for " << input_names[i] << " is not the same as "
+                << "the data input's element type (" << input_names[i]
+                << " element type: " << get_argument(i)->get_element_type()
+                << ", data input element type: " << et << ").";
 
-        if (index != INPUT_INDEX && get_argument(index)->get_shape()[0] != m_bn_input_shape[1])
-        {
-            auto err_msg = std::string(input_names[index]) +
-                           " shape should match the input channel size (" +
-                           std::to_string(m_bn_input_shape[1]) + ",)";
-            throw ngraph_error(err_msg.c_str());
+            NODE_VALIDATION_ASSERT(this, get_argument(i)->get_shape() == channel_shape)
+                << "Shape for " << input_names[i] << " must be rank 1, with length equal to "
+                << "the number of channels in the data batch (" << input_names[i]
+                << " shape: " << get_argument(i)->get_shape() << ", expected: " << channel_shape
+                << ").";
         }
-    }
-
-    if (variance->get_shape()[0] != mean->get_shape()[0])
-    {
-        throw ngraph_error("mean and variance should have same size");
     }
 
     add_output(input->get_element_type(), m_bn_input_shape);
@@ -138,7 +116,7 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
 std::shared_ptr<ngraph::Node>
     ngraph::op::BatchNorm::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (this->m_training)
+    if (m_training)
     {
         if (get_arguments().size() == 3)
         {
@@ -189,22 +167,19 @@ ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
     , epsilon(eps)
 
 {
-    if (input->get_shape().size() != 4)
-    {
-        throw ngraph_error("Input expected to be a 4D tensor");
-    }
+    NODE_VALIDATION_ASSERT(this, input->get_shape().size() == 4)
+        << "Data input must have rank 4 (data input shape: " << input->get_shape() << ").";
 
     auto et = input->get_element_type();
     const char* input_names[] = {"gamma", "beta", "input", "mean", "variance", "delta"};
 
     for (size_t i = 0; i < get_input_size(); i++)
     {
-        if (get_argument(i)->get_element_type() != et)
-        {
-            auto err_msg = std::string("The element type of ") + input_names[i] +
-                           " isn't equal to input data's type";
-            throw ngraph_error(err_msg.c_str());
-        }
+        NODE_VALIDATION_ASSERT(this, get_argument(i)->get_element_type() == et)
+            << "Element type for " << input_names[i] << " is not the same as "
+            << "the data input's element type (" << input_names[i]
+            << " element type: " << get_argument(i)->get_element_type()
+            << ", data input element type: " << et << ").";
     }
 
     Shape channel_shape{input->get_shape().at(1)};
@@ -216,18 +191,16 @@ ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
             continue;
         }
 
-        if (get_argument(i)->get_shape() != channel_shape)
-        {
-            auto err_msg = std::string("The shape of ") + input_names[i] +
-                           " isn't equal to input channel's shape";
-            throw ngraph_error(err_msg.c_str());
-        }
+        NODE_VALIDATION_ASSERT(this, get_argument(i)->get_shape() == channel_shape)
+            << "Shape for " << input_names[i] << " must be rank 1, with length equal to "
+            << "the number of channels in the data batch (" << input_names[i]
+            << " shape: " << get_argument(i)->get_shape() << ", expected: " << channel_shape
+            << ").";
     }
 
-    if (delta->get_shape() != input->get_shape())
-    {
-        throw ngraph_error("delta shape is expected to be equal to input shape");
-    }
+    NODE_VALIDATION_ASSERT(this, delta->get_shape() == input->get_shape())
+        << "Data input and delta must have the same shape (data input shape: " << input->get_shape()
+        << ", delta shape: " << delta->get_shape() << ").";
 
     add_output(input->get_element_type(), input->get_shape());
     add_output(gamma->get_element_type(), gamma->get_shape());
