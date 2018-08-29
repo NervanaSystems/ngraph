@@ -33,7 +33,7 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg_tensor = external_function->get_tensor_data(args[1].get_name());
                 auto count = static_cast<int>(args[1].get_size());
                 auto data_type = MPI_FLOAT;
 
