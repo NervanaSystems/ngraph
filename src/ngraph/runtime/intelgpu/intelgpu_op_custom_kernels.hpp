@@ -139,6 +139,15 @@ namespace ngraph
                                       const Shape& output_shape,
                                       const element::Type& output_type);
 
+            void do_sigmoid_backprop_operation(cldnn::topology& topology,
+                                               const std::string& input_name,
+                                               const Shape& input_shape,
+                                               const std::string& delta_name,
+                                               const Shape& delta_shape,
+                                               const std::string& output_name,
+                                               const Shape& output_shape,
+                                               const element::Type& output_type);
+
             // Helper functions used in cldnn::custom_gpu_primitive kernels
             std::vector<cldnn_arg> get_kernel_args(size_t input, size_t output);
             std::string array_dims(const Shape& dimentions, const AxisSet& axis = {});
