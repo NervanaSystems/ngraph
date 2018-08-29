@@ -204,8 +204,7 @@ void runtime::intelgpu::do_pad_operation(cldnn::topology& topology,
     vector<size_t> gws;
 
     // The kernel name and parameters
-    gen_func_def(
-        writer, entry_point_name, {2, "float"}, {input_shape, {1}}, "float", output_shape);
+    gen_func_def(writer, entry_point_name, {2, "float"}, {input_shape, {1}}, "float", output_shape);
 
     writer.block_begin();
     {
@@ -734,8 +733,7 @@ void runtime::intelgpu::do_slice_operation(cldnn::topology& topology,
     codegen::CodeWriter writer;
     vector<size_t> gws;
 
-    gen_func_def(
-        writer, entry_point_name, {"float"}, {input_shape}, "float", output_shape);
+    gen_func_def(writer, entry_point_name, {"float"}, {input_shape}, "float", output_shape);
 
     writer.block_begin();
     {
@@ -778,11 +776,11 @@ void runtime::intelgpu::do_select_operation(cldnn::topology& topology,
     vector<size_t> gws;
 
     gen_func_def(writer,
-                                    entry_point_name,
-                                    {"char", "float", "float"},
-                                    {input0_shape, input1_shape, input2_shape},
-                                    "float",
-                                    output_shape);
+                 entry_point_name,
+                 {"char", "float", "float"},
+                 {input0_shape, input1_shape, input2_shape},
+                 "float",
+                 output_shape);
 
     writer.block_begin();
     {
@@ -827,11 +825,11 @@ void runtime::intelgpu::do_logic_kernel(cldnn::topology& topology,
     vector<size_t> gws;
 
     gen_func_def(writer,
-                                    entry_point_name,
-                                    {2, input0_type},
-                                    {input0_shape, input1_shape},
-                                    "char",
-                                    output_shape);
+                 entry_point_name,
+                 {2, input0_type},
+                 {input0_shape, input1_shape},
+                 "char",
+                 output_shape);
 
     writer.block_begin();
     {
@@ -870,8 +868,7 @@ void runtime::intelgpu::do_reverse_operation(cldnn::topology& topology,
     codegen::CodeWriter writer;
     vector<size_t> gws;
 
-    gen_func_def(
-        writer, entry_point_name, {"float"}, {input_shape}, "float", output_shape);
+    gen_func_def(writer, entry_point_name, {"float"}, {input_shape}, "float", output_shape);
 
     writer.block_begin();
     {
@@ -907,8 +904,7 @@ void runtime::intelgpu::do_not_operation(cldnn::topology& topology,
     codegen::CodeWriter writer;
     vector<size_t> gws;
 
-    gen_func_def(
-        writer, entry_point_name, {"char"}, {input_shape}, "char", output_shape);
+    gen_func_def(writer, entry_point_name, {"char"}, {input_shape}, "char", output_shape);
 
     writer.block_begin();
     {
@@ -947,11 +943,11 @@ void runtime::intelgpu::do_one_hot_operation(cldnn::topology& topology,
     vector<size_t> gws;
 
     gen_func_def(writer,
-                                    entry_point_name,
-                                    {input_type.c_type_string()},
-                                    {input_shape},
-                                    output_type.c_type_string(),
-                                    output_shape);
+                 entry_point_name,
+                 {input_type.c_type_string()},
+                 {input_shape},
+                 output_type.c_type_string(),
+                 output_shape);
 
     writer.block_begin();
     {
