@@ -419,7 +419,7 @@ TEST(onnx, model_flatten)
     auto function = onnx_import::import_onnx_function(
         file_util::path_join(SERIALIZED_ZOO, "onnx/flatten.onnx"));
 
-    std::vector<std::vector<float>> inputs;
+    Inputs inputs;
 
     inputs.emplace_back(
         test::NDArray<float, 4>(
