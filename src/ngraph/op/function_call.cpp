@@ -27,9 +27,9 @@ op::FunctionCall::FunctionCall(shared_ptr<Function> function, const NodeVector& 
 {
     auto& function_params = m_function->get_parameters();
 
-    //TODO : [nikolayk] this needs to be rewritten as follows
-    //for each i : FunctionCall->get_inputs.at(i).get_tensor_view_type ==
-    //flatten(function_parms).at(i)
+    // TODO : [nikolayk] this needs to be rewritten as follows
+    // for each i : FunctionCall->get_inputs.at(i).get_tensor_view_type ==
+    // flatten(function_parms).at(i)
     if (get_input_size() != function_params.size())
     {
         throw ngraph_error("Wrong number of arguments.");

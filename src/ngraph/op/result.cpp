@@ -32,7 +32,7 @@ op::Result::Result(const shared_ptr<Node>& arg)
         throw ngraph_error("Expected a single-output argument");
     }
 
-    //always borrow the placement conf even the default one
+    // always borrow the placement conf even the default one
     set_placement(arg->get_placement());
     set_value_type_checked(arg->get_element_type(), arg->get_shape());
 }

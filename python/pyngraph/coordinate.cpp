@@ -14,7 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/coordinate.hpp" //ngraph::Coordinate
+#include "ngraph/coordinate.hpp" // ngraph::Coordinate
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include "pyngraph/coordinate.hpp"

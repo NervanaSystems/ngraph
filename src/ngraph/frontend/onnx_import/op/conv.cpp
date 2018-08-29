@@ -118,9 +118,9 @@ namespace ngraph
                                                       std::to_string(groups)};
                 }
 
-                auto strides = attribute::get_strides(node);
-                auto dilations = attribute::get_dilations(node);
-                auto paddings = attribute::get_pads(node);
+                auto strides = convpool::get_strides(node);
+                auto dilations = convpool::get_dilations(node);
+                auto paddings = convpool::get_pads(node);
                 const auto& padding_below = paddings.first;
                 const auto& padding_above = paddings.second;
 

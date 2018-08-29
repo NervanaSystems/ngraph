@@ -448,12 +448,12 @@ namespace ngraph
                             padding_below,
                             padding_above);
 
-                    //create workspace for holding the result of converting weights layouts
+                    // create workspace for holding the result of converting weights layouts
                     auto ws = std::unique_ptr<MKLDNNWorkspace>(new MKLDNNWorkspace(
                         shape_size(args[1].get_shape()) * args[1].get_element_type().size()));
                     auto ws_buf_index = mkldnn_emitter->insert_workspace(ws);
 
-                    //descriptors for reorder operation
+                    // descriptors for reorder operation
                     auto input_reorder_desc =
                         mkldnn_emitter->build_memory_descriptor(weights_shape_groups,
                                                                 args[1].get_element_type(),
@@ -469,7 +469,7 @@ namespace ngraph
                         weights_optimized_format);
 
                     auto prim_indices = mkldnn_emitter->build_group_convolution_forward(
-                        input_reorder_desc, //weights
+                        input_reorder_desc, // weights
                         input_data_desc,
                         weights_desc,
                         result_reorder_desc,
@@ -487,13 +487,13 @@ namespace ngraph
                     auto functor =
                         [&, conv_index, reorder_index, ws_buf_index](CPURuntimeContext* ctx) {
 
-                            //reorder
+                            // reorder
                             cpu::mkldnn_utils::set_memory_ptr(ctx, reorder_deps[0], arg1_tensor);
                             cpu::mkldnn_utils::set_memory_ptr(
                                 ctx, reorder_deps[1], ctx->mkldnn_workspaces[ws_buf_index]);
                             cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, reorder_index);
 
-                            //group convolution
+                            // group convolution
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                             cpu::mkldnn_utils::set_memory_ptr(
                                 ctx, deps[1], ctx->mkldnn_workspaces[ws_buf_index]);

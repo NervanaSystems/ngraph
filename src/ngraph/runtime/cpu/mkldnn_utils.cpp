@@ -138,7 +138,7 @@ static const std::set<memory::format> s_filter_formats{
     memory::format::ihwo,
     memory::format::hwio,
     // TODO (nishant): Uncomment after the next release of mkl-dnn"
-    //memory::format::dhwio,
+    // memory::format::dhwio,
     memory::format::oidhw,
     memory::format::OIdhw16i16o,
     memory::format::OIdhw16o16i,

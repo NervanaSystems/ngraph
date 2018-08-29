@@ -947,8 +947,8 @@ static shared_ptr<ngraph::Function>
         }
     }
 
-    //This handles both graphs w/ `op::Result` and legacy graphs w/o it
-    //If we are dealing w/ a legacy graph, add op::Result for each output node
+    // This handles both graphs w/ `op::Result` and legacy graphs w/o it
+    // If we are dealing w/ a legacy graph, add op::Result for each output node
     ResultVector result;
     size_t results = 0;
     for (auto result_name : func_result)
@@ -957,7 +957,7 @@ static shared_ptr<ngraph::Function>
         if (auto res = std::dynamic_pointer_cast<op::Result>(fr))
         {
             result.push_back(res);
-            //make sure we have `op::Result` on top of all outputs
+            // make sure we have `op::Result` on top of all outputs
             results++;
         }
         else
