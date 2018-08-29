@@ -31,8 +31,8 @@ namespace ngraph
             {
                 auto data_shape = node->get_shape();
 
-                auto first_dim = 1;
-                auto last_dim = 1;
+                size_t first_dim = 1;
+                size_t last_dim = 1;
 
                 for (auto index = 0; index < data_shape.size(); ++index)
                 {
