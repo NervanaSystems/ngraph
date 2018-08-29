@@ -29,6 +29,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/result_vector.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/shape.hpp"
 #include "ngraph/util.hpp"
 
 #include <iostream>
@@ -235,7 +236,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     // are still connected to the bprop graph as parameters
     ngraph::clone_nodes(bprop->get_ops(), *(fprop_cache.node_param_map));
 
-    //invert the fprop_cache cloned node map for easy back and for acces.
+    // invert the fprop_cache cloned node map for easy back and for acces.
     std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>> inverted_node_map;
     for (auto kv : fprop_cache.node_param_map->get_node_map())
     {
@@ -451,6 +452,28 @@ void ngraph::check_fp_values_isnan(const char* name, const double* array, size_t
         }
     }
 }
+
+template <typename T>
+T ngraph::apply_permutation(T input, AxisVector order)
+{
+    if (input.size() != order.size())
+    {
+        throw "input and order sizes don't match!";
+    }
+
+    T output(input.size());
+
+    for (size_t i = 0; i < order.size(); i++)
+    {
+        output[i] = input.at(order.at(i));
+    }
+
+    return output;
+}
+
+template AxisVector ngraph::apply_permutation<AxisVector>(AxisVector input, AxisVector order);
+template Shape ngraph::apply_permutation<Shape>(Shape input, AxisVector order);
+
 AxisVector ngraph::get_default_order(const Shape& shape)
 {
     return get_default_order(shape.size());

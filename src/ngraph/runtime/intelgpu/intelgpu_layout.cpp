@@ -100,7 +100,7 @@ cldnn::tensor runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(const Shape
         }
     }
 
-    //Parameters for this ctor: batch, feature, spatial_x, spatial_y
+    // Parameters for this ctor: batch, feature, spatial_x, spatial_y
     const cldnn::tensor tns(idx.at(3), idx.at(2), idx.at(0), idx.at(1));
 
     return tns;

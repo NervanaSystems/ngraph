@@ -14,15 +14,52 @@
  * limitations under the License.
  *******************************************************************************/
 
-#include "convpool.hpp"
 #include <cmath>
+
+#include "ngraph/coordinate_diff.hpp"
+#include "ngraph/shape.hpp"
+
+#include "convpool.hpp"
+#include "core/attribute.hpp"
+#include "core/node.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        namespace attribute
+        namespace convpool
         {
+            Shape get_kernel_shape(const Node& node)
+            {
+                return node.get_attribute_value<std::vector<std::size_t>>("kernel_shape", {1, 1});
+            }
+
+            namespace detail
+            {
+                Strides get_strides_helper(const Node& node,
+                                           const std::string& name,
+                                           const Shape& kernel_shape)
+                {
+                    return node.get_attribute_value<std::vector<std::size_t>>(
+                        name, std::vector<std::size_t>(kernel_shape.size(), 1UL));
+                }
+            } // namespace detail
+
+            Strides get_strides(const Node& node, const Shape& kernel_shape)
+            {
+                return detail::get_strides_helper(node, "strides", kernel_shape);
+            }
+
+            Strides get_strides(const Node& node)
+            {
+                return get_strides(node, get_kernel_shape(node));
+            }
+
+            Strides get_dilations(const Node& node)
+            {
+                return detail::get_strides_helper(node, "dilations", get_kernel_shape(node));
+            }
+
             namespace
             {
                 CoordinateDiff get_auto_pads(const Shape& kernel_shape, const std::string& auto_pad)
@@ -81,7 +118,7 @@ namespace ngraph
                 }
                 if (pads.empty())
                 {
-                    pads = {static_cast<std::ptrdiff_t>(kernel_shape.size()), 0UL};
+                    pads = CoordinateDiff(static_cast<std::ptrdiff_t>(kernel_shape.size()), 0UL);
                 }
 
                 if (pads.size() <= 3)
@@ -96,6 +133,6 @@ namespace ngraph
                 }
             }
 
-        } // namespace attribute
+        } // namespace convpool
     }     // namespace onnx_import
 } // namespace ngraph

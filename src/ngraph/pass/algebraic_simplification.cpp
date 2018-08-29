@@ -349,7 +349,7 @@ static bool simplify_reduction(std::shared_ptr<Node> n)
     auto multiplier = reduction_shape_size(reduction->get_reduction_axes(), broadcast->get_shape());
     auto reduction_cnst = F(cnst, multiplier);
 
-    //Unsupported type
+    // Unsupported type
     if (!reduction_cnst)
     {
         NGRAPH_DEBUG << "unsupported type";
