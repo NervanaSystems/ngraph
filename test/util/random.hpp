@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -26,7 +26,7 @@ namespace ngraph
 {
     namespace test
     {
-        /// @brief A predictable pseudo-random number generator
+        /// \brief A predictable pseudo-random number generator
         /// The seed is initialized so that we get repeatable pseudo-random numbers for tests
         template <typename T>
         class Uniform
@@ -39,8 +39,8 @@ namespace ngraph
             {
             }
 
-            /// @brief Randomly initialize a tensor
-            /// @param ptv The tensor to initialize
+            /// \brief Randomly initialize a tensor
+            /// \param ptv The tensor to initialize
             const std::shared_ptr<runtime::TensorView>
                 initialize(const std::shared_ptr<runtime::TensorView>& ptv)
             {
@@ -49,8 +49,8 @@ namespace ngraph
                 write_vector(ptv, vec);
                 return ptv;
             }
-            /// @brief Randomly initialize a vector
-            /// @param vec The tensor to initialize
+            /// \brief Randomly initialize a vector
+            /// \param vec The tensor to initialize
             void initialize(std::vector<T>& vec)
             {
                 for (T& elt : vec)
