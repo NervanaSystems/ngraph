@@ -31,27 +31,29 @@ namespace ngraph
             {
                 auto data_shape = node->get_shape();
 
-                size_t first_dim = 1;
-                size_t last_dim = 1;
+                size_t first_dim_size = 1;
+                size_t last_dim_size = 1;
 
+                // calculate axis lengths after flattening
                 for (auto index = 0; index < data_shape.size(); ++index)
                 {
-                    last_dim *= data_shape.at(index);
+                    last_dim_size *= data_shape.at(index);
                     if (index < axis)
                     {
-                        first_dim = last_dim;
+                        first_dim_size = last_dim_size;
                     }
                 }
 
-                last_dim /= first_dim;
+                last_dim_size /= first_dim_size;
 
+                // generate axisVector for ngraph::op::Reshape
                 std::vector<size_t> axis_order(data_shape.size());
                 std::iota(std::begin(axis_order), std::end(axis_order), 0);
 
-                ngraph::AxisVector axis_vector{std::begin(axis_order), std::end(axis_order)};
-                ngraph::Shape output_shape{first_dim, last_dim};
-
-                return std::make_shared<ngraph::op::Reshape>(node, axis_vector, output_shape);
+                return std::make_shared<ngraph::op::Reshape>(
+                    node,
+                    ngraph::AxisVector{axis_order},
+                    ngraph::Shape{first_dim_size, last_dim_size});
             }
         } // namespace utils
 
