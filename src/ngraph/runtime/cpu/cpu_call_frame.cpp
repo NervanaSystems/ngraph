@@ -74,7 +74,7 @@ void runtime::cpu::CPU_CallFrame::call(
         m_external_function->get_executor()(ctx, inputs, outputs);
     }
 
-    if (std::getenv("NGRAPH_DEX_DEBUG") != nullptr)
+    if ((std::getenv("NGRAPH_DEX_DEBUG") != nullptr) && (std::getenv("NGRAPH_DEX") != nullptr))
     {
         for (shared_ptr<Node> node : m_external_function->get_function()->get_ordered_ops())
         {
@@ -111,10 +111,7 @@ void runtime::cpu::CPU_CallFrame::call(
 
             string filename = file_util::path_join(
                 "debug", m_external_function->get_function_name() + "_debug.txt");
-            std::ofstream out(filename, std::ofstream::app);
-            string code = writer.get_code();
-            out << code;
-            out.close();
+            m_external_function->write_to_file(writer, "debug", filename);
         }
         //now we can release the function, once we have the dump all the references to
         //debug manifest

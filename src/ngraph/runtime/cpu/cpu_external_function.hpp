@@ -136,6 +136,10 @@ namespace ngraph
                 bool is_direct_execution() const { return m_direct_execution; }
                 bool is_release_function() const { return m_release_function; }
                 void release_function() { m_function = nullptr; }
+                void write_to_file(ngraph::codegen::CodeWriter& writer,
+                                   const std::string& directory,
+                                   const std::string& filename);
+
             protected:
                 void build();
 
