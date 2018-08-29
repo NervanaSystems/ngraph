@@ -230,8 +230,8 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                 // unroll last reduction axis
                 uint32_t unroll_num = 8;
                 uint32_t unroll_shift = 3;
-                writer << "for(; idx" << last_r_idx << " < (reduce_shape" << last_r_idx
-                       << " >> " << unroll_shift << "); idx" << last_r_idx << "++)\n";
+                writer << "for(; idx" << last_r_idx << " < (reduce_shape" << last_r_idx << " >> "
+                       << unroll_shift << "); idx" << last_r_idx << "++)\n";
                 writer.block_begin();
                 {
                     for (int k = 0; k < unroll_num; k++)
@@ -287,7 +287,6 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
         writer.block_end();
         //accumulate reduction to blockDim.x threads
         uint32_t unroll_num = 8;
-        uint32_t unroll_shift = 3;
         writer << "while(in_idx + (step * " << unroll_num - 1 << ") < nthreads)\n";
         writer.block_begin();
         {
@@ -371,7 +370,6 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
         writer.block_end();
         //accumulate reduction to step threads
         uint32_t unroll_num = 8;
-        uint32_t unroll_shift = 3;
         writer << "while(in_idx + (step * " << unroll_num - 1 << ") < nthreads)\n";
         writer.block_begin();
         {

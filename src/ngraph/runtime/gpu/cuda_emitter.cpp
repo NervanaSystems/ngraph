@@ -1485,8 +1485,17 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_scalar(const std::vector<std::
                                    .resolve_placeholder(1, &outputs[0])
                                    .get_argument_list();
 
-            CUDA_SAFE_CALL(cuLaunchKernel(
-                *compiled_kernel.get(), 1, 1, 1, block_size_x, 1, 1, shared_data_bytes, NULL, args_list, 0));
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          1,
+                                          1,
+                                          1,
+                                          block_size_x,
+                                          1,
+                                          1,
+                                          shared_data_bytes,
+                                          NULL,
+                                          args_list,
+                                          0));
             debug_sync();
         }});
     primitive_index = this->m_primitive_emitter->insert(std::move(reduce));
@@ -1620,7 +1629,8 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
             NVShape acc_output_shape{nthreads_acc};
             size_t reduce_scalar_acc_idx = build_reduce_to_scalar_acc(
                 dtypes, input_shape, acc_output_shape, block_size_x_acc, op, kernel);
-            size_t reduce_scalar_idx = build_reduce_to_scalar(dtypes, data_bytes, acc_output_shape, op, kernel);
+            size_t reduce_scalar_idx =
+                build_reduce_to_scalar(dtypes, data_bytes, acc_output_shape, op, kernel);
             // get an allocator for transient per kernel gpu memory
             GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
             size_t idx_workspace = allocator.reserve_workspace(nthreads_acc * data_bytes);
@@ -1640,7 +1650,8 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
         }
         else
         {
-            size_t reduce_scalar_idx = build_reduce_to_scalar(dtypes, data_bytes, input_shape, op, kernel);
+            size_t reduce_scalar_idx =
+                build_reduce_to_scalar(dtypes, data_bytes, input_shape, op, kernel);
             std::unique_ptr<gpu::primitive> reduce_scalar(
                 new gpu::primitive{[=](void** inputs, void** outputs) mutable {
                     gpu::invoke_primitive(m_ctx,
