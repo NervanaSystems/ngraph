@@ -109,7 +109,7 @@ float test_accuracy(MNistDataLoader& loader,
 
 int main(int argc, const char* argv[])
 {
-    MPI::Init();
+    MPI_Init(&argc, &argv);
 
     size_t epochs = 5;
     size_t batch_size = 128;
@@ -291,7 +291,7 @@ int main(int argc, const char* argv[])
         }
     }
 
-    MPI::Finalize();
+    MPI_Finalize();
 
     return 0;
 }

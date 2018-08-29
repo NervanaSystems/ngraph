@@ -34,10 +34,10 @@ protected:
         MPI_Initialized(&flag);
         if (!flag)
         {
-            MPI::Init();
+            MPI_Init(&argc, &argv);
         }
     }
-    virtual void TearDown() { MPI::Finalize(); }
+    virtual void TearDown() { MPI_Finalize(); }
     virtual ~MpiEnvironment() {}
 };
 

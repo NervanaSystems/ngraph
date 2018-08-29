@@ -207,7 +207,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::AllReduce)
             {
-                const element::Type& element_type = args[0].get_element_type();
+                const element::Type& element_type = args[1].get_element_type();
                 auto data_type = "MPI_FLOAT";
 
                 if (element_type == element::f32)
@@ -220,7 +220,7 @@ namespace ngraph
                 }
 
                 writer.block_begin();
-                writer << "MPI_Allreduce(" << args[0].get_name() << ", " << out[0].get_name()
+                writer << "MPI_Allreduce(" << args[1].get_name() << ", " << out[0].get_name()
                        << ", " << out[0].get_size() << ", " << data_type
                        << ", MPI_SUM, MPI_COMM_WORLD);\n";
                 writer.block_end();
