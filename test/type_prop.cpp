@@ -289,9 +289,9 @@ TEST(type_prop, concat_deduce_wrong_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Deduced type should disagree with specified type";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments to concat do not have same rank"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Not all arguments have the same rank"));
     }
     catch (...)
     {
@@ -312,10 +312,8 @@ TEST(type_prop, concat_deduce_wrong_shape)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Arguments to concat do not have same dimension on a non-concatenation axis"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Dimensions of argument 2 do not match for axis 2"));
     }
     catch (...)
     {
@@ -334,9 +332,11 @@ TEST(type_prop, concat_deduce_axis_oob)
         // Should have thrown, so fail if it didn't
         FAIL() << "Deduced type should disagree with specified type";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Concatenation axis is out of bounds"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Concatenation axis (3) is out of bounds (inputs have rank 3)"));
     }
     catch (...)
     {
@@ -366,9 +366,10 @@ TEST(type_prop, concat_deduce_elem_type_mismatch)
         // Should have thrown, so fail if it didn't
         FAIL() << "Deduced type should disagree with specified type";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Argument element types do not match"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Not all arguments have the same element type"));
     }
     catch (...)
     {
