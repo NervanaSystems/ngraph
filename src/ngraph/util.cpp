@@ -236,7 +236,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     // are still connected to the bprop graph as parameters
     ngraph::clone_nodes(bprop->get_ops(), *(fprop_cache.node_param_map));
 
-    //invert the fprop_cache cloned node map for easy back and for acces.
+    // invert the fprop_cache cloned node map for easy back and for acces.
     std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>> inverted_node_map;
     for (auto kv : fprop_cache.node_param_map->get_node_map())
     {

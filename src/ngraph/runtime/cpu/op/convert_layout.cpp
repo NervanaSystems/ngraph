@@ -49,7 +49,7 @@ runtime::cpu::op::ConvertLayout::ConvertLayout(
 
     if (!arg_layout)
     {
-        //throw ngraph_error("Layout conversion input tensor is missing layout information");
+        // throw ngraph_error("Layout conversion input tensor is missing layout information");
     }
 
     add_output(layout->get_element_type(), layout->get_shape());

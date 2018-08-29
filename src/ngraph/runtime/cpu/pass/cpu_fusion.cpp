@@ -74,7 +74,7 @@ static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
                          << ngraph::vector_to_string(arg->get_shape());
             return false;
         }
-        return true; //nth to do; reshape isn't a reshape
+        return true; // nth to do; reshape isn't a reshape
     }
 
     if (r_w->get_shape().size() != 2)
@@ -85,10 +85,10 @@ static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
     }
 
     auto io = r_w->get_input_order();
-    if (r_w->get_shape().size() != arg->get_shape().size()) //reshape
+    if (r_w->get_shape().size() != arg->get_shape().size()) // reshape
     {
         auto dio = ngraph::get_default_order(io);
-        if (io != dio) //we can't reshape and transpose at the same time
+        if (io != dio) // we can't reshape and transpose at the same time
         {
             NGRAPH_DEBUG << "Reshape for " << reshape->get_name() << " is not in default order "
                          << ngraph::vector_to_string(io);
@@ -105,7 +105,7 @@ static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
         {
             transpose_w = true;
         }
-        //otherwise no-op reshape
+        // otherwise no-op reshape
     }
 
     return true;
@@ -129,7 +129,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias()
         NGRAPH_DEBUG << "In callback for construct_matmulbias_pattern against node = "
                      << m.get_match_root()->get_name();
 
-        auto mpattern = m.get_match_root(); //add
+        auto mpattern = m.get_match_root(); // add
         auto m_matmul = ngraph::pattern::Matcher::unique_match<op::MatmulBias>(mpattern);
         auto m_broadcast = ngraph::pattern::Matcher::unique_match<op::Broadcast>(mpattern);
         auto m_bias = m_broadcast->get_argument(0);
@@ -257,28 +257,28 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
     auto sqrt_variance_eps = std::make_shared<op::Sqrt>(add1);
     auto divide_mean_variance = std::make_shared<op::Divide>(input_diff_mean, sqrt_variance_eps);
 
-    //Gamma
+    // Gamma
     auto gamma_label = std::make_shared<pattern::op::Label>(element::f32, Shape{3});
     auto gamma_with_broadcast =
         std::make_shared<op::Broadcast>(gamma_label, Shape{2, 3}, AxisSet{0});
     auto multiply_gamma =
         std::make_shared<op::Multiply>(gamma_with_broadcast, divide_mean_variance);
 
-    //Beta
+    // Beta
     auto beta_label = std::make_shared<pattern::op::Label>(element::f32, Shape{3});
     auto beta_with_broadcast = std::make_shared<op::Broadcast>(beta_label, Shape{2, 3}, AxisSet{0});
 
     auto add_beta = std::make_shared<op::Add>(beta_with_broadcast, multiply_gamma);
     // This completes fprop bn pattern
 
-    //Define a call back that needs to called once the DFG matches the pattern
+    // Define a call back that needs to called once the DFG matches the pattern
     ngraph::pattern::graph_rewrite_callback callback =
         [variance_label, mean_label, input, eps_label, gamma_label, beta_label](
             pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_fprop_bn pattern against "
                          << m.get_match_root()->get_name();
 
-            //TODO - add assert's based on the matched node
+            // TODO - add assert's based on the matched node
             auto pattern_map = m.get_pattern_map();
             NGRAPH_DEBUG << "Input: " << pattern_map[input]->get_name() << " "
                          << pattern_map[input]->get_shape().size();
@@ -750,8 +750,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
         auto m_bn = std::dynamic_pointer_cast<op::BatchNorm>(
             m.get_match_root()->get_argument(0)->get_inputs().at(0).get_output().get_node());
 
-        //as of now, only MKLDNN supports this fusion
-        //and it requires input data's rank to be equal to 4
+        // as of now, only MKLDNN supports this fusion
+        // and it requires input data's rank to be equal to 4
         if (pattern_map[input]->get_shape().size() != 4)
         {
             NGRAPH_DEBUG << " Input data's rank isn't equal to 4. Shape = "
@@ -772,7 +772,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
             return false;
         }
 
-        mgoes[0] = m.get_match_root(); //replace relu instead of its GetOutputElement
+        mgoes[0] = m.get_match_root(); // replace relu instead of its GetOutputElement
 
         auto bn_relu = std::make_shared<op::BatchNormRelu>(
             m_bn->get_eps_value(), pattern_map[gamma], pattern_map[beta], pattern_map[input]);
@@ -820,8 +820,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
             auto m_bn = std::dynamic_pointer_cast<op::BatchNorm>(
                 m.get_match_root()->get_inputs().at(0).get_output().get_node());
 
-            //as of now, only MKLDNN supports this fusion
-            //and it requires input data's rank to be equal to 4
+            // as of now, only MKLDNN supports this fusion
+            // and it requires input data's rank to be equal to 4
             if (pattern_map[input]->get_shape().size() != 4)
             {
                 NGRAPH_DEBUG << " Input data's rank isn't equal to 4. Shape = "
@@ -874,7 +874,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
 
         auto conv = std::dynamic_pointer_cast<op::Convolution>(m.get_match_root()->get_argument(0));
 
-        //These checks are to make sure a MKLDNN Convolution kernel can be used.
+        // These checks are to make sure a MKLDNN Convolution kernel can be used.
         bool data_dilated = false;
         for (size_t s : conv->get_data_dilation_strides())
         {
@@ -942,7 +942,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
         auto conv =
             std::dynamic_pointer_cast<op::ConvolutionBias>(m.get_match_root()->get_argument(0));
 
-        //These checks are to make sure a MKLDNN Convolution kernel can be used.
+        // These checks are to make sure a MKLDNN Convolution kernel can be used.
         bool data_dilated = false;
         for (size_t s : conv->get_data_dilation_strides())
         {
@@ -1026,7 +1026,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
             inplace_input = add_m->get_argument(1);
         }
 
-        //These checks are to make sure a MKLDNN Convolution kernel can be used.
+        // These checks are to make sure a MKLDNN Convolution kernel can be used.
         bool data_dilated = false;
         for (size_t s : conv_m->get_data_dilation_strides())
         {
@@ -1249,7 +1249,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
             throw ngraph_error("alpha must be constant for bounded relu");
         }
 
-        //we wont fuse if the alpha and the Relu output element type are not same
+        // we wont fuse if the alpha and the Relu output element type are not same
         if (pattern_map[alpha]->get_element_type() != pattern_map[relu_input]->get_element_type())
         {
             return false;
