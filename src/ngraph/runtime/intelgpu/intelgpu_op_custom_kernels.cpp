@@ -1049,19 +1049,19 @@ void runtime::intelgpu::do_sigmoid_backprop_operation(cldnn::topology& topology,
     codegen::CodeWriter writer;
     vector<size_t> gws;
 
-    runtime::intelgpu::gen_func_def(
+    gen_func_def(
         writer, entry_point_name, {2, "float"}, {input_shape, delta_shape}, "float", output_shape);
 
     writer.block_begin();
     {
         writer << "float func_x = 0.0f;\n";
-        gws = runtime::intelgpu::generate_loops(writer, output_shape, true);
+        gws = generate_loops(writer, output_shape, true);
 
-        writer << "func_x = 1/(1+ exp(-input0" << access_dims(input_shape) << "));\n";
+        writer << "func_x = 1.0f/(1.0f+ exp(-input0" << access_dims(input_shape) << "));\n";
         writer << "output" << access_dims(output_shape) << " = input1" << access_dims(delta_shape)
-               << " * func_x * (1 - func_x);\n";
+               << " * func_x * (1.0f - func_x);\n";
 
-        runtime::intelgpu::generate_loops(writer, output_shape, false);
+        generate_loops(writer, output_shape, false);
     }
     writer.block_end();
 
