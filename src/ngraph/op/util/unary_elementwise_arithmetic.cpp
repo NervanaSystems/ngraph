@@ -22,8 +22,7 @@ op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::stri
                                                                  const std::shared_ptr<Node>& arg)
     : UnaryElementwise(node_type, arg->get_element_type(), arg)
 {
-    if (arg->get_element_type() == element::boolean)
-    {
-        throw ngraph_error("Operands for arithmetic operators must have numeric element type");
-    }
+    NODE_VALIDATION_ASSERT(this, arg->get_element_type() != element::boolean)
+        << "Argument cannot have boolean element type (argument element type: "
+        << arg->get_element_type() << ")";
 }

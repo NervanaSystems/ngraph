@@ -24,9 +24,9 @@ op::util::BinaryElementwiseLogical::BinaryElementwiseLogical(const string& node_
                                                              const shared_ptr<Node>& arg1)
     : BinaryElementwise(node_type, element::boolean, arg0, arg1)
 {
-    if (arg0->get_element_type() != element::boolean ||
-        arg1->get_element_type() != element::boolean)
-    {
-        throw ngraph_error("Arguments must have boolean element type");
-    }
+    NODE_VALIDATION_ASSERT(this,
+                           arg0->get_element_type() == element::boolean &&
+                               arg1->get_element_type() == element::boolean)
+        << "Both arguments must have boolean element type (arg0 element type: "
+        << arg0->get_element_type() << ", arg1 element type: " << arg1->get_element_type() << ")";
 }

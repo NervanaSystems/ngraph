@@ -24,8 +24,7 @@ op::util::BinaryElementwiseComparison::BinaryElementwiseComparison(const string&
                                                                    const shared_ptr<Node>& arg1)
     : BinaryElementwise(node_type, element::boolean, arg0, arg1)
 {
-    if (arg0->get_element_type() != arg1->get_element_type())
-    {
-        throw ngraph_error("Arguments must have the same tensor view element type");
-    }
+    NODE_VALIDATION_ASSERT(this, arg0->get_element_type() == arg1->get_element_type())
+        << "Arguments must have the same element type (arg0 element type: "
+        << arg0->get_element_type() << ", arg1 element type: " << arg1->get_element_type() << ")";
 }

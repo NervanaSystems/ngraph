@@ -533,9 +533,9 @@ void test_binary(std::string node_type,
             // Should have thrown, so fail if it didn't
             FAIL() << "Incompatible view arguments not detected.";
         }
-        catch (const ngraph_error& error)
+        catch (const NodeValidationError& error)
         {
-            EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+            EXPECT_HAS_SUBSTRING(error.what(), std::string("Arguments must have the same shape"));
         }
         catch (...)
         {
@@ -552,10 +552,10 @@ void test_binary(std::string node_type,
             // Should have thrown, so fail if it didn't
             FAIL() << "Incompatible view arguments not detected.";
         }
-        catch (const ngraph_error& error)
+        catch (const NodeValidationError& error)
         {
-            EXPECT_EQ(error.what(),
-                      std::string("Arguments must have the same tensor view element type"));
+            EXPECT_HAS_SUBSTRING(error.what(),
+                                 std::string("Arguments must have the same element type"));
         }
         catch (...)
         {
@@ -625,9 +625,9 @@ void test_binary_logical(std::string node_type,
             // Should have thrown, so fail if it didn't
             FAIL() << "Incompatible view arguments not detected.";
         }
-        catch (const ngraph_error& error)
+        catch (const NodeValidationError& error)
         {
-            EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+            EXPECT_HAS_SUBSTRING(error.what(), std::string("Arguments must have the same shape"));
         }
         catch (...)
         {
@@ -644,9 +644,10 @@ void test_binary_logical(std::string node_type,
             // Should have thrown, so fail if it didn't
             FAIL() << "Incompatible view arguments not detected.";
         }
-        catch (const ngraph_error& error)
+        catch (const NodeValidationError& error)
         {
-            EXPECT_EQ(error.what(), std::string("Arguments must have boolean element type"));
+            EXPECT_HAS_SUBSTRING(error.what(),
+                                 std::string("Both arguments must have boolean element type"));
         }
         catch (...)
         {
@@ -720,10 +721,10 @@ TEST(type_prop, unary_arithmetic_bad_argument_element_types)
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Operands for arithmetic operators must have numeric element type"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Arguments cannot have boolean element type"));
     }
     catch (...)
     {
@@ -6448,10 +6449,9 @@ TEST(type_prop, sum_axis_oob)
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect out-of-bound axis for sum";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Reduction axis for arithmetic reduction operator is out of bounds"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Reduction axis (2) is out of bounds"));
     }
     catch (...)
     {
@@ -6485,7 +6485,7 @@ TEST(type_prop, index_reduction_invalid_rank)
     try
     {
         auto argmin = make_shared<op::ArgMin>(a, 2, element::i32);
-        FAIL() << "ArgMin c-tor should throw for scalar shapes";
+        FAIL() << "ArgMin c-tor should throw for axis out of bounds";
     }
     catch (const NodeValidationError& error)
     {
@@ -6504,7 +6504,7 @@ TEST(type_prop, index_reduction_invalid_index_type)
     try
     {
         auto argmin = make_shared<op::ArgMin>(a, 1, element::f32);
-        FAIL() << "ArgMin c-tor should throw for scalar shapes";
+        FAIL() << "ArgMin c-tor should throw for invalid index type";
     }
     catch (const NodeValidationError& error)
     {

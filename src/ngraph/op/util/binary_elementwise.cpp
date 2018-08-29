@@ -30,10 +30,9 @@ op::util::BinaryElementwise::BinaryElementwise(const std::string& node_type,
 {
     auto& input_0 = get_inputs().at(0);
     auto& input_1 = get_inputs().at(1);
-    if (input_0.get_shape() != input_1.get_shape())
-    {
-        throw ngraph_error("Arguments must have the same tensor view shape");
-    }
+    NODE_VALIDATION_ASSERT(this, input_0.get_shape() == input_1.get_shape())
+        << "Arguments must have the same shape (arg0 shape: " << input_0.get_shape()
+        << ", arg1 shape: " << input_1.get_shape() << ")";
 
     set_value_type_checked(make_shared<TensorViewType>(result_element_type, input_0.get_shape()));
 }

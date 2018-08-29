@@ -25,13 +25,11 @@ op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(
     const std::shared_ptr<Node>& arg1)
     : BinaryElementwise(node_type, arg0->get_element_type(), arg0, arg1)
 {
-    if (arg0->get_element_type() != arg1->get_element_type())
-    {
-        throw ngraph_error("Arguments must have the same tensor view element type");
-    }
+    NODE_VALIDATION_ASSERT(this, arg0->get_element_type() == arg1->get_element_type())
+        << "Arguments must have the same element type (arg0 element type: "
+        << arg0->get_element_type() << ", arg1 element type: " << arg1->get_element_type() << ")";
 
-    if (arg0->get_element_type() == element::boolean)
-    {
-        throw ngraph_error("Operands for arithmetic operators must have numeric element type");
-    }
+    NODE_VALIDATION_ASSERT(this, arg0->get_element_type() != element::boolean)
+        << "Arguments cannot have boolean element type (argument element type: "
+        << arg0->get_element_type() << ")";
 }
