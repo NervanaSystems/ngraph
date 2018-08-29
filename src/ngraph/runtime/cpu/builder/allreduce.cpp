@@ -34,22 +34,21 @@ namespace ngraph
                 auto& functors = external_function->get_functors();
 
                 auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
-                auto count = static_cast<int>(out[0].get_size());
+                auto count = static_cast<int>(args[1].get_size());
                 auto data_type = MPI_FLOAT;
 
-                if (args[0].get_element_type() == element::f32)
+                if (args[1].get_element_type() == element::f32)
                 {
                     data_type = MPI_FLOAT;
                 }
-                else if (args[0].get_element_type() == element::f64)
+                else if (args[1].get_element_type() == element::f64)
                 {
                     data_type = MPI_DOUBLE;
                 }
 
                 auto functor = [&, count, data_type](CPURuntimeContext* ctx) {
                     MPI_Allreduce(
-                        MPI_IN_PLACE, arg_tensor, out_tensor, count, data_type, MPI_SUM, MPI_COMM_WORLD);
+                        MPI_IN_PLACE, arg_tensor, count, data_type, MPI_SUM, MPI_COMM_WORLD);
                 };
 
                 functors.emplace_back(functor);

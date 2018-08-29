@@ -28,7 +28,7 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
-            void allreduce(const T* arg, T* out, const element::Type element_type, int count)
+            void allreduce(const T* arg, const element::Type element_type, int count)
             {
                 auto data_type = MPI_FLOAT;
 
@@ -41,7 +41,7 @@ namespace ngraph
                     data_type = MPI_DOUBLE;
                 }
 
-                MPI_Allreduce(MPI_IN_PLACE, arg, out, count, data_type, MPI_SUM, MPI_COMM_WORLD);
+                MPI_Allreduce(MPI_IN_PLACE, arg, count, data_type, MPI_SUM, MPI_COMM_WORLD);
             }
         }
     }

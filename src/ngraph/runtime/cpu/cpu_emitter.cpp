@@ -220,8 +220,8 @@ namespace ngraph
                 }
 
                 writer.block_begin();
-                writer << "MPI_Allreduce(" << args[1].get_name() << ", " << out[0].get_name()
-                       << ", " << out[0].get_size() << ", " << data_type
+                writer << "MPI_Allreduce(" << args[1].get_name() << ", " << args[1].get_name()
+                       << ", " << args[1].get_size() << ", " << data_type
                        << ", MPI_SUM, MPI_COMM_WORLD);\n";
                 writer.block_end();
             }
