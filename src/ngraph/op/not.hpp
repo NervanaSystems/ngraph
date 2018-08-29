@@ -16,14 +16,14 @@
 
 #pragma once
 
-#include "ngraph/op/util/unary_elementwise.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Elementwise logical negation operation.
-        class Not : public util::UnaryElementwise
+        class Not : public Op
         {
         public:
             /// \brief Constructs a logical negation operation.

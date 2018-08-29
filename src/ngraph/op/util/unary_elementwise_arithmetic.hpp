@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/op/util/unary_elementwise.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
@@ -41,7 +41,7 @@ namespace ngraph
             /// | Type                   | Description                                                                                                                                                             |
             /// | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
             /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg}[i_1,\dots,i_n])\f$. This will always have the same shape and element type as the input tensor. |
-            class UnaryElementwiseArithmetic : public UnaryElementwise
+            class UnaryElementwiseArithmetic : public Op
             {
             protected:
                 /// \brief Constructs a unary elementwise arithmetic operation.

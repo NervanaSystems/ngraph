@@ -109,10 +109,8 @@ set (SRC
     op/util/binary_elementwise_arithmetic.cpp
     op/util/binary_elementwise_comparison.cpp
     op/util/binary_elementwise_logical.cpp
-    op/util/binary_elementwise.cpp
     op/util/index_reduction.cpp
     op/util/unary_elementwise_arithmetic.cpp
-    op/util/unary_elementwise.cpp
     pass/assign_placement.cpp
     pass/algebraic_simplification.cpp
     pass/common_function_collection.cpp

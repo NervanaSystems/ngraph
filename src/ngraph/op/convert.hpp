@@ -16,14 +16,14 @@
 
 #pragma once
 
-#include "ngraph/op/util/unary_elementwise.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Elementwise type conversion operation.
-        class Convert : public util::UnaryElementwise
+        class Convert : public Op
         {
         public:
             /// \brief Constructs a conversion operation.

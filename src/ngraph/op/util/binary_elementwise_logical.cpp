@@ -22,7 +22,7 @@ using namespace ngraph;
 op::util::BinaryElementwiseLogical::BinaryElementwiseLogical(const string& node_type,
                                                              const shared_ptr<Node>& arg0,
                                                              const shared_ptr<Node>& arg1)
-    : BinaryElementwise(node_type, arg0, arg1)
+    : Op(node_type, check_single_output_args({arg0, arg1}))
 {
 }
 
