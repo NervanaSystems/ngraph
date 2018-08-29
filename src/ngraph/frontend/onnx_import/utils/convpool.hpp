@@ -68,18 +68,17 @@ namespace ngraph
             std::pair<CoordinateDiff, CoordinateDiff> get_pads(const Node& node,
                                                                const Shape& kernel_shape);
 
-            
-             /// \brief Get padding values for the operation described by an ONNX node.
-             /// \details If `auto_pad` attribute is specified as SAME_UPPER or SAME_LOWER, or VALID
-             ///          values are calculated. Otherwise values are taken from the `pads` attribute.
-             ///
-             ///          `pads` value should follow [x1_begin, x2_begin..., x1_end, x2_end,...].
-             ///
-             /// \param node The Node ptr representing ONNX operation.
-             ///
-             /// \return A pair of (padding_above, padding_below), which elements contains number of
-             ///         pixels to pad in respective dimensions (height, width, depth).
-             
+            /// \brief Get padding values for the operation described by an ONNX node.
+            /// \details If `auto_pad` attribute is specified as SAME_UPPER or SAME_LOWER, or VALID
+            ///          values are calculated. Otherwise values are taken from the `pads` attribute.
+            ///
+            ///          `pads` value should follow [x1_begin, x2_begin..., x1_end, x2_end,...].
+            ///
+            /// \param node The Node ptr representing ONNX operation.
+            ///
+            /// \return A pair of (padding_above, padding_below), which elements contains number of
+            ///         pixels to pad in respective dimensions (height, width, depth).
+
             inline std::pair<CoordinateDiff, CoordinateDiff> get_pads(const Node& node)
             {
                 return get_pads(node, get_kernel_shape(node));
