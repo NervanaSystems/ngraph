@@ -124,8 +124,7 @@ TEST(onnx, model_split_variable_parts_2d)
 
 namespace
 {
-    std::vector<std::vector<float>>
-        conv2d_execute(const std::shared_ptr<Function>& function)
+    std::vector<std::vector<float>> conv2d_execute(const std::shared_ptr<Function>& function)
     {
         std::vector<std::vector<float>> args;
 
@@ -182,8 +181,8 @@ TEST(onnx, model_conv2d_strides_no_padding)
 TEST(onnx, model_conv2d_strides_assymetric_padding)
 {
     // Convolution with strides=2 and padding=1
-    auto function = onnx_import::import_onnx_function(file_util::path_join(
-        SERIALIZED_ZOO, "onnx/conv_with_strides_and_asymmetric_padding.onnx"));
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/conv_with_strides_and_asymmetric_padding.onnx"));
 
     // (1, 1, 4, 2)
     auto expected_output =
@@ -297,8 +296,8 @@ TEST(onnx, model_batchnorm_default)
 TEST(onnx, model_relu)
 {
     // Simple ReLU test
-    auto function = onnx_import::import_onnx_function(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/relu.onnx"));
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/relu.onnx"));
 
     Inputs inputs{{-1, -2, 0, 1, 2, 3}};
     Outputs expected_outputs{{0, 0, 0, 1, 2, 3}};
@@ -386,7 +385,7 @@ TEST(onnx, model_mean)
 TEST(onnx, model_gemm_abc)
 {
     auto function = onnx_import::import_onnx_function(
-    file_util::path_join(SERIALIZED_ZOO, "onnx/gemm_abc.onnx"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/gemm_abc.onnx"));
 
     Inputs inputs;
     inputs.emplace_back(test::NDArray<float, 2>(
@@ -394,11 +393,11 @@ TEST(onnx, model_gemm_abc)
                             .get_vector());
 
     inputs.emplace_back(test::NDArray<float, 2>({{19, 20, 21, 22},
-                                                         {23, 24, 25, 26},
-                                                         {27, 28, 29, 30},
-                                                         {31, 32, 33, 34},
-                                                         {35, 36, 37, 38},
-                                                         {39, 40, 41, 42}})
+                                                 {23, 24, 25, 26},
+                                                 {27, 28, 29, 30},
+                                                 {31, 32, 33, 34},
+                                                 {35, 36, 37, 38},
+                                                 {39, 40, 41, 42}})
                             .get_vector());
 
     inputs.emplace_back(
