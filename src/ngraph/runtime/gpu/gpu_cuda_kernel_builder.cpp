@@ -304,33 +304,35 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
         writer << "sdata[tid] = r;\n";
         writer << "__syncthreads();\n";
 
-        for(int i = 512; i >= 64; i >>= 1)
+        for (int i = 512; i >= 64; i >>= 1)
         {
             if (block_size_x > i)
             {
-            writer << " if (tid < " << i << ")\n";
-            writer.block_begin();
-            writer << "sdata[tid] =" << reduce_op << "(sdata[tid], sdata[tid + " << i << "]);\n";
-            writer.block_end();
-            writer<< "__syncthreads();\n";
+                writer << " if (tid < " << i << ")\n";
+                writer.block_begin();
+                writer << "sdata[tid] =" << reduce_op << "(sdata[tid], sdata[tid + " << i
+                       << "]);\n";
+                writer.block_end();
+                writer << "__syncthreads();\n";
             }
         }
 
         if (block_size_x > 32)
         {
-        writer << " if (tid < 32)\n"; 
-        writer.block_begin();
-        writer << "r =" << reduce_op << "(sdata[tid], sdata[tid + 32]);\n";
-        writer.block_end();
+            writer << " if (tid < 32)\n";
+            writer.block_begin();
+            writer << "r =" << reduce_op << "(sdata[tid], sdata[tid + 32]);\n";
+            writer.block_end();
         }
 
         //accumulate 32 threads
-        for(int i = 16; i >=1; i >>= 1)
+        for (int i = 16; i >= 1; i >>= 1)
         {
-         if (block_size_x > i)
-         {
-            writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, " << i << ", 32));\n";
-         }
+            if (block_size_x > i)
+            {
+                writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, " << i
+                       << ", 32));\n";
+            }
         }
 
         writer << "if(tid == 0)\n";
