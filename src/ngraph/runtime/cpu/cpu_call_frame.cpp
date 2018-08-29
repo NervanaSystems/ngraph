@@ -113,12 +113,6 @@ void runtime::cpu::CPU_CallFrame::call(
                 "debug", m_external_function->get_function_name() + "_debug.txt");
             m_external_function->write_to_file(writer, "debug", filename);
         }
-        //now we can release the function, once we have the dump all the references to
-        //debug manifest
-        if (m_external_function->is_release_function())
-        {
-            m_external_function->release_function();
-        }
     }
 
     if (runtime::cpu::IsTracingEnabled())
