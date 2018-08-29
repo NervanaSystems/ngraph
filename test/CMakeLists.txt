@@ -44,7 +44,6 @@ set(SRC
     util.cpp
     uuid.cpp
     zero_dim_tensor_elimination.cpp
-    quantize_cpu.cpp
 )
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
@@ -56,7 +55,7 @@ if (NGRAPH_INTERPRETER_ENABLE)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
-    set(SRC ${SRC} core_fusion.cpp)
+    set(SRC ${SRC} core_fusion.cpp quantize_cpu.cpp)
 endif()
 
 add_subdirectory(models)
