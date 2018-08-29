@@ -228,18 +228,20 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                 writer << "int idx" << last_r_idx << " = 0;\n";
                 writer << "uint32_t step = reduce_strides" << last_r_idx << ";\n";
                 // unroll last reduction axis
+                uint32_t unroll_num = 8;
+                uint32_t unroll_shift = 3;
                 writer << "for(; idx" << last_r_idx << " < (reduce_shape" << last_r_idx
-                       << " >> 3); idx" << last_r_idx << "++)\n";
+                       << " >> " << unroll_shift << "); idx" << last_r_idx << "++)\n";
                 writer.block_begin();
                 {
-                    for (int k = 0; k < 8; k++)
+                    for (int k = 0; k < unroll_num; k++)
                     {
                         writer << "r = " << reduce_op << "(r , in[reduce_idx]);\n";
                         writer << "reduce_idx += step;\n";
                     }
                 }
                 writer.block_end();
-                writer << "idx" << last_r_idx << " <<= 3;\n";
+                writer << "idx" << last_r_idx << " <<= " << unroll_shift << ";\n";
                 writer << "for(; idx" << last_r_idx << " < reduce_shape" << last_r_idx << "; idx"
                        << last_r_idx << "++)\n";
                 writer.block_begin();
@@ -272,7 +274,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
-        writer << "extern __shared__ " << data_types[1] << " sdata[1024];\n";
+        writer << "extern __shared__ " << data_types[1] << " sdata[];\n";
         writer << "uint32_t tid = threadIdx.x; \n";
         writer << "uint32_t step = blockDim.x; \n";
         writer << "sdata[tid] = 0;\n";
@@ -284,10 +286,12 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
         writer << "in_idx += step;\n";
         writer.block_end();
         //accumulate reduction to blockDim.x threads
-        writer << "while(in_idx + (step * 7) < nthreads)\n";
+        uint32_t unroll_num = 8;
+        uint32_t unroll_shift = 3;
+        writer << "while(in_idx + (step * " << unroll_num - 1 << ") < nthreads)\n";
         writer.block_begin();
         {
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < unroll_num; i++)
             {
                 writer << "r = " << reduce_op << "(r , in[in_idx]);\n";
                 writer << "in_idx += step;\n";
@@ -366,10 +370,12 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
         writer << "in_idx += step;\n";
         writer.block_end();
         //accumulate reduction to step threads
-        writer << "while(in_idx + (step * 7) < nthreads)\n";
+        uint32_t unroll_num = 8;
+        uint32_t unroll_shift = 3;
+        writer << "while(in_idx + (step * " << unroll_num - 1 << ") < nthreads)\n";
         writer.block_begin();
         {
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < unroll_num; i++)
             {
                 writer << "r = " << reduce_op << "(r , in[in_idx]);\n";
                 writer << "in_idx += step;\n";

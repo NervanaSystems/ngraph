@@ -865,7 +865,7 @@ namespace ngraph
                             auto& cuda_emitter =
                                 external_function->get_primitive_emitter()->get_cuda_emitter();
                             auto sum_index = cuda_emitter->build_reduce<ngraph::op::Add>(
-                                dtypes, args[0].get_shape(), axes_vec);
+                                dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
 
                             writer << "gpu::invoke_primitive(ctx, " << sum_index << ", ";
                             writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
