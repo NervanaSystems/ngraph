@@ -304,37 +304,45 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
             writer << "in_idx += step;\n";
         }
         writer.block_end();
-        writer << "sdata[tid] = r;\n";
-        writer << "__syncthreads();\n";
 
-        for (int i = 512; i >= 64; i >>= 1)
-        {
-            if (block_size_x > i)
-            {
-                writer << " if (tid < " << i << ")\n";
-                writer.block_begin();
-                writer << "sdata[tid] =" << reduce_op << "(sdata[tid], sdata[tid + " << i
-                       << "]);\n";
-                writer.block_end();
-                writer << "__syncthreads();\n";
-            }
-        }
-
-        if (block_size_x > 32)
-        {
-            writer << " if (tid < 32)\n";
-            writer.block_begin();
-            writer << "r =" << reduce_op << "(sdata[tid], sdata[tid + 32]);\n";
-            writer.block_end();
-        }
-
-        //accumulate 32 threads
+        //accumulate 32 threads for each warp
         for (int i = 16; i >= 1; i >>= 1)
         {
             if (block_size_x > i)
             {
                 writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, " << i
                        << ", 32));\n";
+            }
+        }
+
+        if (block_size_x > 32)
+        {
+            writer << "uint32_t lane_idx = tid & 0x1f; \n";
+            writer << "uint32_t warp_idx = tid >> 5; \n";
+            writer << "if(lane_idx == 0)\n";
+            writer.block_begin();
+            {
+                writer << "sdata[warp_idx] = r;\n";
+            }
+            writer.block_end();
+            writer << "__syncthreads();\n";
+
+            uint32_t warp_size = block_size_x >> 5;
+
+            writer << "if(tid < " << warp_size << ")\n";
+            writer.block_begin();
+            {
+                writer << "r = sdata[tid];\n";
+            }
+            writer.block_end();
+            //accumulate 32 threads
+            for (int i = 16; i >= 1; i >>= 1)
+            {
+                if (warp_size > i)
+                {
+                    writer << "r = " << reduce_op << "(r, __shfl_down_sync(0xffffffff, r, " << i
+                           << ", 32));\n";
+                }
             }
         }
 
