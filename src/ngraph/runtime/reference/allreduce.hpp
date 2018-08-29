@@ -41,7 +41,7 @@ namespace ngraph
                     data_type = MPI_DOUBLE;
                 }
 
-                MPI_Allreduce(arg, out, count, data_type, MPI_SUM, MPI_COMM_WORLD);
+                MPI_Allreduce(MPI_IN_PLACE, arg, out, count, data_type, MPI_SUM, MPI_COMM_WORLD);
             }
         }
     }
