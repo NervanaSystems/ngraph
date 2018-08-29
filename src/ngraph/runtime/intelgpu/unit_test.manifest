@@ -21,7 +21,6 @@ backwards_maxpool_n4_c1_hw4_2x2_max
 backwards_replace_slice
 backwards_reverse_sequence_n3_c2_h3
 backwards_reverse_sequence_n4d2c3h2w2
-backwards_sigmoid
 backwards_sign
 backwards_slice
 backwards_tan
@@ -79,7 +78,6 @@ scalar_constant_int64
 select_and_scatter_3d_without_overlap
 select_and_scatter_without_overlap
 select_and_scatter_with_overlap
-sigmoid_bprop_n1c1h4
 sign
 tan
 tensor_constant_int64
