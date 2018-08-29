@@ -45,6 +45,8 @@ add_library(onnx_import STATIC
         op/max_pool.cpp
         op/max_pool.hpp
         op/max.hpp
+        op/mean.cpp
+        op/mean.hpp
         op/min.hpp
         op/mul.hpp
         op/relu.hpp

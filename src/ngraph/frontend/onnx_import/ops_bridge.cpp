@@ -25,8 +25,9 @@
 #include "op/conv.hpp"
 #include "op/gemm.hpp"
 #include "op/matmul.hpp"
-#include "op/max_pool.hpp"
 #include "op/max.hpp"
+#include "op/max_pool.hpp"
+#include "op/mean.hpp"
 #include "op/min.hpp"
 #include "op/mul.hpp"
 #include "op/relu.hpp"
@@ -88,6 +89,7 @@ namespace ngraph
                     m_map.emplace("MatMul", std::bind(op::matmul, std::placeholders::_1));
                     m_map.emplace("MaxPool", std::bind(op::max_pool, std::placeholders::_1));
                     m_map.emplace("Max", std::bind(op::max, std::placeholders::_1));
+                    m_map.emplace("Mean", std::bind(op::mean, std::placeholders::_1));
                     m_map.emplace("Min", std::bind(op::min, std::placeholders::_1));
                     m_map.emplace("Mul", std::bind(op::mul, std::placeholders::_1));
                     m_map.emplace("Relu", std::bind(op::relu, std::placeholders::_1));
