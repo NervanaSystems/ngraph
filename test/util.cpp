@@ -362,7 +362,7 @@ TEST(graph_util, get_subgraph_outputs_trivial_tests)
         ngraph::get_subgraph_outputs(NodeVector{B, abs_b, neg_b, abs_b_neg, add_b}, NodeVector{});
     ASSERT_EQ(outputs, (NodeVector{}));
 
-    //now add_b uses abs_b_neg
+    // now add_b uses abs_b_neg
     outputs = ngraph::get_subgraph_outputs(NodeVector{B, abs_b, abs_b_neg}, NodeVector{});
     ASSERT_EQ(outputs, (NodeVector{B, abs_b_neg}));
 }

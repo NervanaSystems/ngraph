@@ -123,7 +123,7 @@ namespace ngraph
             /// \param pattern is a recurring pattern
             /// \param rpattern specifies a node to recur from next
             /// \param patterns a map from labels to matches
-            friend op::Label; //TODO: refine to match_class
+            friend op::Label; // TODO: refine to match_class
 
         protected:
             void add_node(std::shared_ptr<Node> node) { m_matched_list.push_back(node); }

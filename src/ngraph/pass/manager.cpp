@@ -119,7 +119,7 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func, bool transitiv
 
         if (m_visualize || m_serialize)
         {
-            //visualizations and serializations will be named after the outermost function
+            // visualizations and serializations will be named after the outermost function
             const size_t num_digits_in_pass_index = 3;
             std::string index_str = std::to_string(index);
             index_str = std::string(num_digits_in_pass_index - index_str.length(), '0') + index_str;
@@ -134,7 +134,7 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func, bool transitiv
 
             if (m_serialize)
             {
-                //no "." in the extension
+                // no "." in the extension
                 pass::Serialization st(base_filename + "json");
                 st.run_on_module(fs);
             }

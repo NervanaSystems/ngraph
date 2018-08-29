@@ -33,23 +33,9 @@
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/util.hpp"
 
-template <typename T>
-static std::vector<T> apply_permutation(std::vector<T> input, ngraph::AxisVector order)
-{
-    if (input.size() != order.size())
-    {
-        throw "input and order sizes don't match!";
-    }
-
-    std::vector<T> output(input.size());
-
-    for (size_t i = 0; i < order.size(); i++)
-    {
-        output[i] = input.at(order.at(i));
-    }
-
-    return output;
-}
+extern template ngraph::AxisVector
+    ngraph::apply_permutation<ngraph::AxisVector>(ngraph::AxisVector input,
+                                                  ngraph::AxisVector order);
 
 void ngraph::pass::ReshapeElimination::construct_identity_reshape_pattern()
 {
@@ -133,8 +119,8 @@ void ngraph::pass::ReshapeElimination::construct_reshapex2_pattern()
             return true;
         }
 
-        auto perm1 = apply_permutation(do_r1, r1->get_input_order());
-        auto perm2 = apply_permutation(perm1, r2->get_input_order());
+        auto perm1 = ngraph::apply_permutation(do_r1, r1->get_input_order());
+        auto perm2 = ngraph::apply_permutation(perm1, r2->get_input_order());
         if (perm2 == do_r1)
         {
             NGRAPH_DEBUG << "Two transposes were removed!";
@@ -150,7 +136,7 @@ void ngraph::pass::ReshapeElimination::construct_reshapex2_pattern()
 
 void ngraph::pass::ReshapeElimination::construct_dot_transpose_pattern()
 {
-    //dot(A,B).T = dot (B.T, A.T)
+    // dot(A,B).T = dot (B.T, A.T)
     auto dot_pred = [](std::shared_ptr<Node> n) {
         return static_cast<bool>(std::dynamic_pointer_cast<op::Dot>(n));
     };
@@ -163,7 +149,7 @@ void ngraph::pass::ReshapeElimination::construct_dot_transpose_pattern()
                      << m.get_match_root()->get_name();
 
         auto mtranspose = std::dynamic_pointer_cast<op::Reshape>(m.get_match_root());
-        //this also checks the rank
+        // this also checks the rank
         if (mtranspose->get_input_order() != AxisVector{1, 0})
         {
             NGRAPH_DEBUG << "Reshape isn't transpose. "

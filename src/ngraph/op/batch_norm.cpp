@@ -209,7 +209,7 @@ ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
 
     for (size_t i = 0; i < get_input_size(); i++)
     {
-        if (i == 2 || i == 5) //don't check input and delta
+        if (i == 2 || i == 5) // don't check input and delta
         {
             continue;
         }
@@ -261,12 +261,12 @@ void ngraph::op::BatchNorm::generate_adjoints(autodiff::Adjoints& adjoints,
     {
         throw ngraph_error("generate_adjoints called on BatchNormInference op " + this->get_name());
     }
-    //Extract mean and variance outputs from BatchNorm
-    //as these are used by BatchNormBackprop.
-    //The users of the outputs (GetOutputElements' Inputs) aren't sorted
-    //and get_n() is used to sort the inputs in the same order as Batchnorm's outputs
-    //Next, Mean and Variance (`at(1)` and `at(2)`) are extracted
-    //Please see `add_output` in `BatchNorm::BatchNorm` for more details
+    // Extract mean and variance outputs from BatchNorm
+    // as these are used by BatchNormBackprop.
+    // The users of the outputs (GetOutputElements' Inputs) aren't sorted
+    // and get_n() is used to sort the inputs in the same order as Batchnorm's outputs
+    // Next, Mean and Variance (`at(1)` and `at(2)`) are extracted
+    // Please see `add_output` in `BatchNorm::BatchNorm` for more details
     if (this->get_training_flag() && get_input_size() == 3)
     {
         auto goes = op::get_output_elements(shared_from_this());
