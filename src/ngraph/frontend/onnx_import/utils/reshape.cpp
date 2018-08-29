@@ -34,7 +34,8 @@ namespace ngraph
                 size_t first_dim_size = 1;
                 size_t last_dim_size = 1;
 
-                // calculate axis lengths after flattening
+                //  First dimension of output tensor is the product of [d_0, ... d_{axis-1}] dimensions of input tensor.
+                //  The last dimension is the product of the rest of input tensor dimensions: [d_{axis}, ..., d_n]
                 for (auto index = 0; index < data_shape.size(); ++index)
                 {
                     last_dim_size *= data_shape.at(index);
@@ -46,13 +47,13 @@ namespace ngraph
 
                 last_dim_size /= first_dim_size;
 
-                // generate axisVector for ngraph::op::Reshape
-                std::vector<size_t> axis_order(data_shape.size());
-                std::iota(std::begin(axis_order), std::end(axis_order), 0);
+                // Generate an increasing sequence (0,1,2,3..) as input_order for Reshape
+                std::vector<size_t> input_order(data_shape.size());
+                std::iota(std::begin(input_order), std::end(input_order), 0);
 
                 return std::make_shared<ngraph::op::Reshape>(
                     node,
-                    ngraph::AxisVector{axis_order},
+                    ngraph::AxisVector{input_order},
                     ngraph::Shape{first_dim_size, last_dim_size});
             }
         } // namespace utils

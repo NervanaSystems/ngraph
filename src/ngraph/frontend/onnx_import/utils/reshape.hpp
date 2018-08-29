@@ -27,10 +27,6 @@ namespace ngraph
             /**
              * @brief Flatten the input tensor into a 2D matrix.
              *
-             * @details Flattening happens at axis specified by 'axis' attribute.
-             *  First dimension of output tensor is the product of [d_0, ... d_{axis-1}] dimensions of input tensor.
-             *  The last dimension is the product of the rest of input tensor dimensions: [d_{axis}, ..., d_n]
-             *
              * @param node The tensor to be flattened.
              * @param axis The axis dividing shape.
              *
