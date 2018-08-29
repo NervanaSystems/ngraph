@@ -25,12 +25,12 @@ namespace ngraph
 {
     namespace test
     {
-        /// @brief Check if the two f32 numbers are close
-        /// @param a First number to compare
-        /// @param b Second number to compare
-        /// @param mantissa_bits The mantissa width of the underlying number before casting to float
-        /// @param tolerance_bits Bit tolerance error
-        /// @returns True iff the distance between a and b is within 2 ^ tolerance_bits ULP
+        /// \brief Check if the two f32 numbers are close
+        /// \param a First number to compare
+        /// \param b Second number to compare
+        /// \param mantissa_bits The mantissa width of the underlying number before casting to float
+        /// \param tolerance_bits Bit tolerance error
+        /// \returns True iff the distance between a and b is within 2 ^ tolerance_bits ULP
         ///
         /// References:
         /// - https://en.wikipedia.org/wiki/Unit_in_the_last_place
@@ -48,33 +48,33 @@ namespace ngraph
         /// bfloat and f32.
         bool close_f(float a, float b, int mantissa_bits = 8, int tolerance_bits = 2);
 
-        /// @brief Check if the two floating point vectors are all close
-        /// @param a First number to compare
-        /// @param b Second number to compare
-        /// @param mantissa_bits The mantissa width of the underlying number before casting to float
-        /// @param tolerance_bits Bit tolerance error
-        /// @returns true iff the two floating point vectors are close
+        /// \brief Check if the two floating point vectors are all close
+        /// \param a First number to compare
+        /// \param b Second number to compare
+        /// \param mantissa_bits The mantissa width of the underlying number before casting to float
+        /// \param tolerance_bits Bit tolerance error
+        /// \returns true iff the two floating point vectors are close
         bool all_close_f(const std::vector<float>& a,
                          const std::vector<float>& b,
                          int mantissa_bits = 8,
                          int tolerance_bits = 2);
 
-        /// @brief Check if the two TensorViews are all close in float
-        /// @param a First TensorView to compare
-        /// @param b Second TensorView to compare
-        /// @param mantissa_bits The mantissa width of the underlying number before casting to float
-        /// @param tolerance_bits Bit tolerance error
+        /// \brief Check if the two TensorViews are all close in float
+        /// \param a First TensorView to compare
+        /// \param b Second TensorView to compare
+        /// \param mantissa_bits The mantissa width of the underlying number before casting to float
+        /// \param tolerance_bits Bit tolerance error
         /// Returns true iff the two TensorViews are all close in float
         bool all_close_f(const std::shared_ptr<runtime::TensorView>& a,
                          const std::shared_ptr<runtime::TensorView>& b,
                          int mantissa_bits = 8,
                          int tolerance_bits = 2);
 
-        /// @brief Check if the two vectors of TensorViews are all close in float
-        /// @param as First vector of TensorView to compare
-        /// @param bs Second vector of TensorView to compare
-        /// @param mantissa_bits The mantissa width of the underlying number before casting to float
-        /// @param tolerance_bits Bit tolerance error
+        /// \brief Check if the two vectors of TensorViews are all close in float
+        /// \param as First vector of TensorView to compare
+        /// \param bs Second vector of TensorView to compare
+        /// \param mantissa_bits The mantissa width of the underlying number before casting to float
+        /// \param tolerance_bits Bit tolerance error
         /// Returns true iff the two TensorViews are all close in float
         bool all_close_f(const std::vector<std::shared_ptr<runtime::TensorView>>& as,
                          const std::vector<std::shared_ptr<runtime::TensorView>>& bs,

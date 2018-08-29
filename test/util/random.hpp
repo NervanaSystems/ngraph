@@ -26,7 +26,7 @@ namespace ngraph
 {
     namespace test
     {
-        /// @brief A predictable pseudo-random number generator
+        /// \brief A predictable pseudo-random number generator
         /// The seed is initialized so that we get repeatable pseudo-random numbers for tests
         template <typename T>
         class Uniform
@@ -39,8 +39,8 @@ namespace ngraph
             {
             }
 
-            /// @brief Randomly initialize a tensor
-            /// @param ptv The tensor to initialize
+            /// \brief Randomly initialize a tensor
+            /// \param ptv The tensor to initialize
             const std::shared_ptr<runtime::TensorView>
                 initialize(const std::shared_ptr<runtime::TensorView>& ptv)
             {
@@ -49,8 +49,8 @@ namespace ngraph
                 write_vector(ptv, vec);
                 return ptv;
             }
-            /// @brief Randomly initialize a vector
-            /// @param vec The tensor to initialize
+            /// \brief Randomly initialize a vector
+            /// \param vec The tensor to initialize
             void initialize(std::vector<T>& vec)
             {
                 for (T& elt : vec)

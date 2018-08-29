@@ -37,9 +37,9 @@ namespace ngraph
         class Output
         {
         public:
-            /// @param node Node that owns this output.
-            /// @param index Position of the output tensor in all output tensors
-            /// @param tensor_view The view of this tensor; where the value will be written
+            /// \param node Node that owns this output.
+            /// \param index Position of the output tensor in all output tensors
+            /// \param tensor_view The view of this tensor; where the value will be written
             Output(Node* node, size_t index, const std::shared_ptr<TensorView>& tensor_view);
 
             std::shared_ptr<Node> get_node() const;
@@ -54,9 +54,9 @@ namespace ngraph
             const std::set<Input*>& get_inputs() const { return m_inputs; }
             Tensor& get_tensor() const;
 
-            /// @return the shape of the output
+            /// \return the shape of the output
             const Shape& get_shape() const;
-            /// @return the element type of the output
+            /// \return the element type of the output
             const element::Type& get_element_type() const;
 
         protected:

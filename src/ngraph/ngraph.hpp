@@ -24,23 +24,23 @@
 #error("ngraph.hpp is for external use only")
 #endif
 
-/// @namespace ngraph
-/// @brief The Intel Nervana Graph C++ API.
+/// \namespace ngraph
+/// \brief The Intel Nervana Graph C++ API.
 
-/// @namespace ngraph::descriptor
-/// @brief Descriptors are compile-time representations of objects that will appear at run-time.
+/// \namespace ngraph::descriptor
+/// \brief Descriptors are compile-time representations of objects that will appear at run-time.
 
-/// @namespace ngraph::descriptor::layout
-/// @brief Layout descriptors describe how tensor views are implemented.
+/// \namespace ngraph::descriptor::layout
+/// \brief Layout descriptors describe how tensor views are implemented.
 
-/// @namespace ngraph::op
-/// @brief Ops used in graph-building.
+/// \namespace ngraph::op
+/// \brief Ops used in graph-building.
 
-/// @namespace ngraph::runtime
-/// @brief The objects used for executing the graph.
+/// \namespace ngraph::runtime
+/// \brief The objects used for executing the graph.
 
-/// @namespace ngraph::builder
-/// @brief Convenience functions that create addional graph nodes to implement commonly-used
+/// \namespace ngraph::builder
+/// \brief Convenience functions that create addional graph nodes to implement commonly-used
 ///        recipes, for example auto-broadcast.
 
 #include "ngraph/builder/autobroadcast.hpp"
