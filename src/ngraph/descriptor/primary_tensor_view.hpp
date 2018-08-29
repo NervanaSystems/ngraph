@@ -27,13 +27,13 @@ namespace ngraph
 
     namespace descriptor
     {
-        /// @brief A PrimaryTensorView owns the tensor. All other views are the result
+        /// \brief A PrimaryTensorView owns the tensor. All other views are the result
         /// of some index operation on the primary view.
         class PrimaryTensorView : public TensorView
         {
         public:
-            /// @param tensor_view_type The type for this view.
-            /// @param name Description of the tensor, for debugging.
+            /// \param tensor_view_type The type for this view.
+            /// \param name Description of the tensor, for debugging.
             PrimaryTensorView(const std::shared_ptr<const TensorViewType>& tensor_view_type,
                               const std::string& name);
 

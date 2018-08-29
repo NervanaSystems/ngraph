@@ -34,7 +34,7 @@ namespace ngraph
 
         namespace layout
         {
-            /// @brief Interface for describing implementations of tensor views.
+            /// \brief Interface for describing implementations of tensor views.
             ///
             /// Kernel selection will need to pay attention to the layout.
             class TensorViewLayout
@@ -59,7 +59,7 @@ namespace ngraph
                 const element::Type& get_element_type() const;
                 const Shape& get_shape() const;
                 virtual const Strides& get_strides() const = 0;
-                /// @brief Return true if this and other have the same element interpretation
+                /// \brief Return true if this and other have the same element interpretation
                 virtual bool operator==(const TensorViewLayout& other) const = 0;
                 bool operator!=(const TensorViewLayout& other) const { return !(*this == other); }
                 void set_tensor_view_type(const element::Type& element_type, const Shape& shape);
