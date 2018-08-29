@@ -16,8 +16,8 @@
 
 #include "flatten.hpp"
 
-#include "ngraph/frontend/onnx_import/exceptions.hpp"
-#include "ngraph/frontend/onnx_import/utils/reshape.hpp"
+#include "exceptions.hpp"
+#include "utils/reshape.hpp"
 
 namespace ngraph
 {
