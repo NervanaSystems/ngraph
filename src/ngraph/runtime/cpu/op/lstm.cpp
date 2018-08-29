@@ -126,7 +126,7 @@ op::Lstm::Lstm(std::shared_ptr<Node> src_layer,
                std::shared_ptr<Node> weights_layer,
                std::shared_ptr<Node> weights_iter,
                std::shared_ptr<Node> bias)
-    : RequiresTensorViewArgs("Lstm", {src_layer, src_iter, weights_layer, weights_iter, bias})
+    : Op("Lstm", check_single_output_args({src_layer, src_iter, weights_layer, weights_iter, bias}))
     , m_output_tensor_shape(src_layer->get_shape())
     , m_output_cell_shape(src_iter->get_shape())
     , m_num_timesteps(1)

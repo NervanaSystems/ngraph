@@ -31,9 +31,5 @@ op::util::BinaryElementwise::BinaryElementwise(const std::string& node_type,
 
 void op::util::BinaryElementwise::validate_and_infer_types()
 {
-    if (get_input_shape(0) != get_input_shape(1))
-    {
-        throw ngraph_error("Arguments must have the same tensor view shape");
-    }
-    set_output_type(0, get_input_element_type(0), get_input_shape(0));
+    validate_and_infer_elementwise();
 }

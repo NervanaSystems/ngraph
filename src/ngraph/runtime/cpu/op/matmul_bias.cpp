@@ -61,8 +61,6 @@ op::MatmulBias::MatmulBias(shared_ptr<Node> W,
 
 void op::MatmulBias::validate_and_infer_types()
 {
-    util::RequiresTensorViewArgs::validate_and_infer_types();
-
     auto et = get_input_element_type(0);
     bool have_b = get_input_size() > 2;
     if (m_broadcast_axes.size() == 0 && have_b)

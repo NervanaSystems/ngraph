@@ -44,7 +44,7 @@ op::ConvolutionRelu::ConvolutionRelu(const std::shared_ptr<Node>& data_batch,
                                      const CoordinateDiff& padding_below,
                                      const CoordinateDiff& padding_above,
                                      const Strides& data_dilation_strides)
-    : RequiresTensorViewArgs("ConvolutionRelu", {data_batch, filters})
+    : Op("ConvolutionRelu", check_single_output_args({data_batch, filters}))
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)

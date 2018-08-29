@@ -28,12 +28,5 @@ op::util::BinaryElementwiseLogical::BinaryElementwiseLogical(const string& node_
 
 void op::util::BinaryElementwiseLogical::validate_and_infer_types()
 {
-    BinaryElementwise::validate_and_infer_types();
-
-    if (get_input_element_type(0) != element::boolean ||
-        get_input_element_type(1) != element::boolean)
-    {
-        throw ngraph_error("Arguments must have boolean element type");
-    }
-    set_output_type(0, element::boolean, get_input_shape(0));
+    validate_and_infer_elementwise_logical();
 }

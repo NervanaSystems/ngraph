@@ -109,7 +109,7 @@ op::SigmoidMultiplyBackprop::SigmoidMultiplyBackprop(std::shared_ptr<Node> input
                                                      std::shared_ptr<Node> input_1,
                                                      shared_ptr<Node> delta,
                                                      const std::array<FunctionType, 2>& input_type)
-    : RequiresTensorViewArgs("SigmoidMultiplyBackprop", {input_0, input_1, delta})
+    : Op("SigmoidMultiplyBackprop", check_single_output_args({input_0, input_1, delta}))
     , m_input_type(input_type)
 {
     constructor_validate_and_infer_types();

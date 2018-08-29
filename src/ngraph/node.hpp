@@ -90,6 +90,14 @@ namespace ngraph
         // Called in constructors during transition
         void constructor_validate_and_infer_types();
 
+        void validate_and_infer_elementwise(element::Type result_type);
+        void validate_and_infer_elementwise()
+        {
+            validate_and_infer_elementwise(get_input_element_type(0));
+        }
+        void validate_and_infer_elementwise_arithmetic();
+        void validate_and_infer_elementwise_logical();
+
         Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
         virtual ~Node();
 

@@ -86,7 +86,7 @@ ngraph::op::BatchNormRelu::BatchNormRelu(double eps,
                                          std::shared_ptr<ngraph::Node> mean,
                                          std::shared_ptr<ngraph::Node> variance,
                                          bool training)
-    : RequiresTensorViewArgs("BatchNormRelu", {gamma, beta, input, mean, variance})
+    : Op("BatchNormRelu", check_single_output_args({gamma, beta, input, mean, variance}))
     , m_bn_input_shape(input->get_shape())
     , m_bn_variance_shape(variance->get_shape())
     , m_bn_mean_shape(mean->get_shape())

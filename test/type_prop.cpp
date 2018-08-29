@@ -423,7 +423,7 @@ void test_binary(std::string node_type,
         }
         catch (const ngraph_error& error)
         {
-            EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+            EXPECT_HAS_SUBSTRING(error.what(), "differs in shape");
         }
         catch (...)
         {
@@ -442,8 +442,7 @@ void test_binary(std::string node_type,
         }
         catch (const ngraph_error& error)
         {
-            EXPECT_EQ(error.what(),
-                      std::string("Arguments must have the same tensor view element type"));
+            EXPECT_HAS_SUBSTRING(error.what(), "differs in element type");
         }
         catch (...)
         {
@@ -515,7 +514,7 @@ void test_binary_logical(std::string node_type,
         }
         catch (const ngraph_error& error)
         {
-            EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+            EXPECT_HAS_SUBSTRING(error.what(), "differs in shape");
         }
         catch (...)
         {
@@ -524,8 +523,8 @@ void test_binary_logical(std::string node_type,
     };
     test_binary_bad_arguments_view_shapes(tv0_2_4_param_0, tv0_4_2_param);
 
-    auto test_binary_bad_arguments_view_element_types = [&](const shared_ptr<Node>& x,
-                                                            const shared_ptr<Node>& y) {
+    auto test_binary_differ_arguments_view_element_types = [&](const shared_ptr<Node>& x,
+                                                               const shared_ptr<Node>& y) {
         try
         {
             auto node = f(x, y);
@@ -534,7 +533,7 @@ void test_binary_logical(std::string node_type,
         }
         catch (const ngraph_error& error)
         {
-            EXPECT_EQ(error.what(), std::string("Arguments must have boolean element type"));
+            EXPECT_HAS_SUBSTRING(error.what(), "differs in element type");
         }
         catch (...)
         {
@@ -542,9 +541,28 @@ void test_binary_logical(std::string node_type,
         }
     };
 
-    test_binary_bad_arguments_view_element_types(tv0_2_4_param_0, tv0_2_4_param_2);
-    test_binary_bad_arguments_view_element_types(tv0_2_4_param_2, tv0_2_4_param_0);
-    test_binary_bad_arguments_view_element_types(tv0_2_4_param_2, tv0_2_4_param_3);
+    auto test_binary_non_bool_arguments_view_element_types = [&](const shared_ptr<Node>& x,
+                                                                 const shared_ptr<Node>& y) {
+        try
+        {
+            auto node = f(x, y);
+            // Should have thrown, so fail if it didn't
+            FAIL() << "Incompatible view arguments not detected.";
+        }
+        catch (const ngraph_error& error)
+        {
+            EXPECT_HAS_SUBSTRING(error.what(), "must have boolean element type");
+        }
+        catch (...)
+        {
+            FAIL() << "Deduced type check failed for unexpected reason";
+        }
+
+    };
+
+    test_binary_differ_arguments_view_element_types(tv0_2_4_param_0, tv0_2_4_param_2);
+    test_binary_non_bool_arguments_view_element_types(tv0_2_4_param_2, tv0_2_4_param_0);
+    test_binary_non_bool_arguments_view_element_types(tv0_2_4_param_2, tv0_2_4_param_3);
 
     auto test_binary_good_arguments = [&](const shared_ptr<Node>& x, const shared_ptr<Node>& y) {
         auto node = f(x, y);
@@ -590,8 +608,7 @@ TEST(type_prop, binary_arithmetic_bad_argument_element_types)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Operands for arithmetic operators must have numeric element type"));
+        EXPECT_HAS_SUBSTRING(error.what(), "must have numeric element type");
     }
     catch (...)
     {
@@ -610,8 +627,7 @@ TEST(type_prop, unary_arithmetic_bad_argument_element_types)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Operands for arithmetic operators must have numeric element type"));
+        EXPECT_HAS_SUBSTRING(error.what(), "must have numeric element type");
     }
     catch (...)
     {
@@ -3204,10 +3220,9 @@ TEST(type_prop, conv_invalid_input_spatial_size_zero_after_padding)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Convolution input spatial dimension after dilation is zero even with padding."));
+        EXPECT_EQ(error.what(),
+                  std::string("Convolution input spatial dimension after "
+                              "dilation is zero even with padding."));
     }
     catch (...)
     {
@@ -3229,10 +3244,9 @@ TEST(type_prop, conv_invalid_input_spatial_size_0)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Convolution input spatial dimension after dilation is zero even with padding."));
+        EXPECT_EQ(error.what(),
+                  std::string("Convolution input spatial dimension after "
+                              "dilation is zero even with padding."));
     }
     catch (...)
     {
@@ -3712,10 +3726,9 @@ TEST(type_prop, max_pool_invalid_dilated_too_large)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Max-pool window shape is larger than the spatial dimensions even after padding."));
+        EXPECT_EQ(error.what(),
+                  std::string("Max-pool window shape is larger than the spatial "
+                              "dimensions even after padding."));
     }
     catch (...)
     {
@@ -5573,10 +5586,9 @@ TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_result_element_
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Return element type from scatter function does not match the init value type"));
+        EXPECT_EQ(error.what(),
+                  std::string("Return element type from scatter function does "
+                              "not match the init value type"));
     }
     catch (...)
     {

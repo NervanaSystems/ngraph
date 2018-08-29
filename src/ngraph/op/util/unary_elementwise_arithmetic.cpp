@@ -26,8 +26,5 @@ op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::stri
 
 void op::util::UnaryElementwiseArithmetic::validate_and_infer_types()
 {
-    if (get_input_element_type(0) == element::boolean)
-    {
-        throw ngraph_error("Operands for arithmetic operators must have numeric element type");
-    }
+    validate_and_infer_elementwise_arithmetic();
 }

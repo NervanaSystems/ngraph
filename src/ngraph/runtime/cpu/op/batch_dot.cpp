@@ -32,7 +32,7 @@ shared_ptr<Node> op::BatchDot::copy_with_new_args(const NodeVector& new_args) co
 }
 
 op::BatchDot::BatchDot(shared_ptr<Node> a, shared_ptr<Node> b, bool transpose_a, bool transpose_b)
-    : RequiresTensorViewArgs("BatchDot", vector<shared_ptr<Node>>{a, b})
+    : Op("BatchDot", check_single_output_args({a, b}))
     , m_transpose_a(transpose_a)
     , m_transpose_b(transpose_b)
 {

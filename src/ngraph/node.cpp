@@ -191,15 +191,14 @@ namespace ngraph
 {
     ostream& operator<<(ostream& out, const Node& node)
     {
-        auto parameter_tmp = dynamic_cast<const op::Parameter*>(&node);
-        if (parameter_tmp)
+        out << node.description() << '[' << node.get_name() << "](";
+        string sep = "";
+        for (auto arg : node.get_arguments())
         {
-            out << "Parameter(" << parameter_tmp->get_name() << ")";
+            out << sep << arg->get_name();
+            sep = ", ";
         }
-        else
-        {
-            out << "Node(" << node.get_name() << ")";
-        }
+        out << ")";
         return out;
     }
 }
@@ -365,7 +364,43 @@ const NodeVector& ngraph::check_single_output_args(const NodeVector& args)
 std::string ngraph::type_check_assert_string(const Node* node)
 {
     std::stringstream ss;
-    ss << "While type-checking node '" << node->get_name() << "' of type '" << node->description()
-       << "'";
+    ss << "While type-checking node " << *node;
     return ss.str();
+}
+
+void Node::validate_and_infer_elementwise(element::Type result_type)
+{
+    const element::Type& element_type = get_input_element_type(0);
+    const Shape& shape = get_input_shape(0);
+    if (get_input_size() > 1)
+    {
+        for (size_t i = 1; i < get_input_size(); ++i)
+        {
+            TYPE_CHECK_ASSERT(this, get_input_element_type(i) == element_type)
+                << "Argument 0 element type " << element_type
+                << " differs in element type from argument " << i << " " << *get_argument(i)
+                << " element type " << get_input_element_type(i);
+
+            TYPE_CHECK_ASSERT(this, get_input_shape(i) == shape)
+                << "Argument 0 shape " << shape << " differs in shape from argument " << i << " "
+                << *get_argument(i) << " shape " << get_input_shape(i);
+        }
+    }
+    set_output_type(0, result_type, shape);
+}
+
+void Node::validate_and_infer_elementwise_arithmetic()
+{
+    TYPE_CHECK_ASSERT(this, get_input_element_type(0) != element::boolean)
+        << "Operands for arithmetic operators must have numeric element type but have element type "
+        << get_input_element_type(0);
+    validate_and_infer_elementwise(get_input_element_type(0));
+}
+
+void Node::validate_and_infer_elementwise_logical()
+{
+    TYPE_CHECK_ASSERT(this, get_input_element_type(0) == element::boolean)
+        << "Operands for logical operators must have boolean element type but have element type "
+        << get_input_element_type(0);
+    validate_and_infer_elementwise(get_input_element_type(0));
 }

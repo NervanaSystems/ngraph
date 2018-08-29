@@ -194,7 +194,7 @@ op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
     const CoordinateDiff& padding_below_forward,
     const CoordinateDiff& padding_above_forward,
     const Strides& data_dilation_strides_forward)
-    : Op("ConvolutionBiasBackpropFiltersBias", check_single_output_arg({data_batch, output_delta}))
+    : Op("ConvolutionBiasBackpropFiltersBias", check_single_output_args({data_batch, output_delta}))
     , m_filters_shape(filters_shape)
     , m_bias_shape(bias_shape)
     , m_window_movement_strides_forward(window_movement_strides_forward)

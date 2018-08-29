@@ -26,6 +26,11 @@ op::Not::Not(const shared_ptr<Node>& arg)
     constructor_validate_and_infer_types();
 }
 
+void op::Not::validate_and_infer_types()
+{
+    validate_and_infer_elementwise();
+}
+
 shared_ptr<Node> op::Not::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 1)
