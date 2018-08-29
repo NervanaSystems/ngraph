@@ -9,22 +9,23 @@ git:
   depth: false
 
 env:
-  - TASK=cpp_test
-  - TASK=python2_test
-  - TASK=python3_test
+  - TASK=cpp_test OS=ubuntu
+  - TASK=cpp_test OS=centos
+  - TASK=python2_test OS=ubuntu
+  - TASK=python3_test OS=ubuntu
 
 before_install:
   - |
-    if [ "TASK" == "cpp_test" ]; then 
-      docker build -t test_ngraph -f .ci/travis/ubuntu/Dockerfile .
+    if [ "TASK" == "cpp_test" ]; then
+      docker build -t test_ngraph -f .ci/travis/$OS/Dockerfile .
     else
-      docker build -t test_ngraph -f .ci/travis/ubuntu/Dockerfile --build-arg buildtype=interpreter .
+      docker build -t test_ngraph -f .ci/travis/$OS/Dockerfile --build-arg buildtype=interpreter .
     fi
 
 install: true
 
 script:
-  - .ci/travis/ubuntu/run_test.sh
+  - .ci/travis/run_test.sh
 
 branches:
   only:
