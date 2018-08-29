@@ -327,10 +327,19 @@ NodeVector Node::get_users() const
     return result;
 }
 
-std::string ngraph::type_check_assert_string(const Node* node)
+std::string ngraph::node_validation_assertion_string(const Node* node)
 {
     std::stringstream ss;
-    ss << "While type-checking node '" << node->get_name() << "' of type '" << node->description()
+    ss << "While validating node '" << node->get_name() << "' of type '" << node->description()
        << "'";
     return ss.str();
+}
+
+void ngraph::check_new_args_count(const Node* node,
+                                  const NodeVector& new_args,
+                                  size_t expected_count)
+{
+    NODE_VALIDATION_ASSERT(node, new_args.size() == expected_count)
+        << "copy_with_new_args() expected " << expected_count << " argument"
+        << (expected_count == 1 ? "" : "s") << " but got " << new_args.size();
 }

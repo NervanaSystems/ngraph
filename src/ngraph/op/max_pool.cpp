@@ -208,10 +208,7 @@ op::MaxPool::MaxPool(const shared_ptr<Node>& arg, const Shape& window_shape)
 
 shared_ptr<Node> op::MaxPool::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args, 1);
     return make_shared<MaxPool>(new_args.at(0),
                                 m_window_shape,
                                 m_window_movement_strides,
@@ -380,18 +377,13 @@ shared_ptr<op::MaxPool> op::MaxPoolBackprop::get_forward_op() const
 
 shared_ptr<Node> op::MaxPoolBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 2)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
-
-    MaxPoolBackprop* mpbp = new MaxPoolBackprop(new_args.at(0),
-                                                new_args.at(1),
-                                                m_window_shape,
-                                                m_window_movement_strides,
-                                                m_padding_below,
-                                                m_padding_above);
-    return shared_ptr<op::MaxPoolBackprop>(mpbp);
+    check_new_args_count(this, new_args, 2);
+    return make_shared<op::MaxPoolBackprop>(new_args.at(0),
+                                            new_args.at(1),
+                                            m_window_shape,
+                                            m_window_movement_strides,
+                                            m_padding_below,
+                                            m_padding_above);
 }
 
 void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

@@ -77,6 +77,7 @@ op::Concat::Concat(const NodeVector& args, size_t concatenation_axis)
 
 shared_ptr<Node> op::Concat::copy_with_new_args(const NodeVector& new_args) const
 {
+    // TODO(amprocte): Should we check the new_args count here?
     return make_shared<Concat>(new_args, m_concatenation_axis);
 }
 

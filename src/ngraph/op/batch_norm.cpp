@@ -140,13 +140,15 @@ std::shared_ptr<ngraph::Node>
 {
     if (this->m_training)
     {
-        if (new_args.size() == 3)
+        if (get_arguments().size() == 3)
         {
+            check_new_args_count(this, new_args, 3);
             return std::make_shared<BatchNorm>(
                 m_epsilon, new_args.at(0), new_args.at(1), new_args.at(2));
         }
-        else if (new_args.size() == 5)
+        else if (get_arguments().size() == 5)
         {
+            check_new_args_count(this, new_args, 5);
             return std::make_shared<BatchNorm>(m_epsilon,
                                                new_args.at(0),
                                                new_args.at(1),
@@ -157,15 +159,15 @@ std::shared_ptr<ngraph::Node>
         }
         else
         {
-            throw ngraph_error("Incorrect number of new arguments");
+            NODE_VALIDATION_FAIL(this)
+                << "copy_with_new_args: BatchNorm node had neither 3 nor 5 arguments";
+            // Have to do this to make the compiler happy:
+            return nullptr;
         }
     }
     else
     {
-        if (new_args.size() != 5)
-        {
-            throw ngraph_error("Incorrect number of new arguments");
-        }
+        check_new_args_count(this, new_args, 5);
         return std::make_shared<BatchNorm>(m_epsilon,
                                            new_args.at(0),
                                            new_args.at(1),
@@ -235,10 +237,7 @@ ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
 std::shared_ptr<ngraph::Node>
     ngraph::op::BatchNormBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 6)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args, 6);
     return std::make_shared<op::BatchNormBackprop>(epsilon,
                                                    new_args.at(0),
                                                    new_args.at(1),

@@ -26,9 +26,6 @@ op::Floor::Floor(const shared_ptr<Node>& arg)
 
 shared_ptr<Node> op::Floor::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args, 1);
     return make_shared<Floor>(new_args.at(0));
 }

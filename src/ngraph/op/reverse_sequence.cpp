@@ -58,11 +58,7 @@ op::ReverseSequence::ReverseSequence(const std::shared_ptr<Node> arg,
 
 shared_ptr<Node> op::ReverseSequence::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 2)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
-
+    check_new_args_count(this, new_args, 2);
     auto res =
         make_shared<ReverseSequence>(new_args.at(0), new_args.at(1), m_batch_axis, m_seq_axis);
     return res;

@@ -35,10 +35,7 @@ op::LRN::LRN(const std::shared_ptr<Node>& arg, double alpha, double beta, double
 
 shared_ptr<Node> op::LRN::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args, 1);
     return make_shared<op::LRN>(new_args.at(0), m_alpha, m_beta, m_bias, m_size);
 }
 

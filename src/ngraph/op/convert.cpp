@@ -29,10 +29,7 @@ op::Convert::Convert(const shared_ptr<Node>& arg, const element::Type& element_t
 
 shared_ptr<Node> op::Convert::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args, 1);
     return make_shared<Convert>(new_args.at(0), m_element_type);
 }
 

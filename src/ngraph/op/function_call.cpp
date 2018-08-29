@@ -52,6 +52,7 @@ op::FunctionCall::FunctionCall(shared_ptr<Function> function, const NodeVector& 
 
 shared_ptr<Node> op::FunctionCall::copy_with_new_args(const NodeVector& new_args) const
 {
+    check_new_args_count(this, new_args, m_function->get_parameters().size());
     shared_ptr<FunctionCall> fc = make_shared<FunctionCall>(m_function, new_args);
     fc->m_function = clone_function(*m_function);
     return fc;

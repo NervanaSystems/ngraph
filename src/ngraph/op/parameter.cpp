@@ -32,10 +32,7 @@ op::Parameter::Parameter(const element::Type& element_type,
 
 shared_ptr<Node> op::Parameter::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 0)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args, 0);
     const descriptor::Output& output = get_outputs().at(0);
     return make_shared<Parameter>(output.get_element_type(), output.get_shape());
 }

@@ -53,10 +53,7 @@ op::Select::Select(const shared_ptr<Node>& arg0,
 
 shared_ptr<Node> op::Select::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 3)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args, 3);
     return make_shared<Select>(new_args.at(0), new_args.at(1), new_args.at(2));
 }
 
