@@ -23,22 +23,26 @@
 using namespace std;
 
 #ifdef NGRAPH_DISTRIBUTED
-#include <mpi.h>
+#include <mlsl.hpp>
 
-class MpiEnvironment : public ::testing::Environment
+class MlslEnvironment : public ::testing::Environment
 {
 protected:
     virtual void SetUp()
     {
-        int flag = 0;
-        MPI_Initialized(&flag);
-        if (!flag)
+        if(!MLSL::Environment::GetEnv().IsInitialized())
         {
-            MPI::Init();
+            MLSL::Environment::GetEnv().Init(nullptr, nullptr);
         }
     }
-    virtual void TearDown() { MPI::Finalize(); }
-    virtual ~MpiEnvironment() {}
+    virtual void TearDown()
+    {
+        if(MLSL::Environment::GetEnv().IsInitialized())
+        {
+            MLSL::Environment::GetEnv().Finalize();
+        }
+    }
+    virtual ~MlslEnvironment() {}
 };
 
 #endif
@@ -57,7 +61,7 @@ int main(int argc, char** argv)
 
     ::testing::InitGoogleTest(&argc, argv_vector.data());
 #ifdef NGRAPH_DISTRIBUTED
-    ::testing::AddGlobalTestEnvironment(new MpiEnvironment);
+    ::testing::AddGlobalTestEnvironment(new MlslEnvironment);
 #endif
     int rc = RUN_ALL_TESTS();
 
