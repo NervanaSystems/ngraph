@@ -39,6 +39,8 @@ add_library(onnx_import STATIC
         op/constant.cpp
         op/constant.hpp
         op/conv.cpp
+        op/conv.hpp
+        op/div.hpp
         op/flatten.cpp
         op/flatten.hpp
         op/gemm.cpp
@@ -52,6 +54,7 @@ add_library(onnx_import STATIC
         op/softmax.hpp
         op/split.cpp
         op/split.hpp
+        op/sub.hpp
         ops_bridge.cpp
         utils/broadcasting.cpp
         utils/broadcasting.hpp
