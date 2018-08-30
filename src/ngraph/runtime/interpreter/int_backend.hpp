@@ -200,10 +200,9 @@ private:
 #ifdef NGRAPH_DISTRIBUTED
         else if (node_op == "AllReduce")
         {
-            reference::allreduce<T>(args[0]->get_data_ptr<T>(),
-                                    out[0]->get_data_ptr<T>(),
-                                    args[0]->get_element_type(),
-                                    static_cast<int>(args[0]->get_element_count()));
+            reference::allreduce<T>(args[1]->get_data_ptr<T>(),
+                                    args[1]->get_element_type(),
+                                    static_cast<int>(args[1]->get_element_count()));
         }
 #endif
         else if (node_op == "And")
