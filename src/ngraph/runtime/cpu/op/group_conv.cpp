@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <numeric>
 
@@ -58,16 +58,16 @@ op::GroupConvolution::GroupConvolution(const shared_ptr<Node>& data_batch,
 
 Shape op::GroupConvolution::get_weights_dimensions() const
 {
-    //reshape weights into 5d tensors that includes groups
+    // reshape weights into 5d tensors that includes groups
     const size_t OC = 0;
     const size_t OC_IN_OUTPUT = 1;
     const size_t IC = 1;
     Shape weights_shape_groups{get_inputs().at(1).get_shape()};
-    //adjust output and channel given a number of groups
+    // adjust output and channel given a number of groups
 
     weights_shape_groups.at(OC) = get_shape().at(OC_IN_OUTPUT) / get_groups();
     weights_shape_groups.at(IC) = get_inputs().at(0).get_shape().at(IC) / get_groups();
-    //push_front the number of groups
+    // push_front the number of groups
     weights_shape_groups.insert(weights_shape_groups.begin(), get_groups());
     return weights_shape_groups;
 }

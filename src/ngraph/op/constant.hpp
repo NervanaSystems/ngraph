@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -99,7 +99,7 @@ namespace ngraph
             {
                 size_t size = shape_size(m_shape) * m_element_type.size();
                 m_data = ngraph::aligned_alloc(m_element_type.size(), size);
-                memcpy(m_data, data, size);
+                std::memcpy(m_data, data, size);
                 auto vt = std::make_shared<TensorViewType>(type, shape);
                 set_value_type_checked(vt);
             }
@@ -242,6 +242,11 @@ namespace ngraph
             element::Type m_element_type;
             Shape m_shape;
             void* m_data;
+
+        private:
+            Constant(const Constant&) = delete;
+            Constant(Constant&&) = delete;
+            Constant operator=(const Constant*) = delete;
         };
     }
 }

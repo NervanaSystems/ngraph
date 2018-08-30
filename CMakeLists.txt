@@ -43,6 +43,10 @@ endif()
 
 project (ngraph)
 
+if (UNIX AND NOT APPLE)
+    set(LINUX TRUE)
+endif()
+
 SET(GCC_MIN_VERSION 4.8)
 SET(CLANG_MIN_VERSION 3.8)
 SET(APPLE_CLANG_MIN_VERSION 8.1)
@@ -102,16 +106,26 @@ endif()
 # Installation logic...
 #-----------------------------------------------------------------------------------------------
 
+if (LINUX)
+    include(GNUInstallDirs)
+    include(cmake/platform.cmake)
+else()
+    set(CMAKE_INSTALL_BINDIR "bin")
+    set(CMAKE_INSTALL_INCLUDEDIR "include")
+    set(CMAKE_INSTALL_DOCDIR "doc")
+    set(CMAKE_INSTALL_LIBDIR "lib")
+endif()
+
 if (DEFINED NGRAPH_INSTALL_PREFIX)
     set(CMAKE_INSTALL_PREFIX ${NGRAPH_INSTALL_PREFIX})
 endif()
 message(STATUS "Installation directory: ${CMAKE_INSTALL_PREFIX}")
 
 # Destinations
-set(NGRAPH_INSTALL_LIB "${CMAKE_INSTALL_PREFIX}/lib")
-set(NGRAPH_INSTALL_INCLUDE "${CMAKE_INSTALL_PREFIX}/include")
-set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/doc")
-set(NGRAPH_INSTALL_BIN "${CMAKE_INSTALL_PREFIX}/bin")
+set(NGRAPH_INSTALL_LIB "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+set(NGRAPH_INSTALL_INCLUDE "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
+set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DOCDIR}")
+set(NGRAPH_INSTALL_BIN "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}")
 set(CMAKE_INSTALL_RPATH "$ORIGIN")
 
 #-----------------------------------------------------------------------------------------------
@@ -228,6 +242,12 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
         include(cmake/external_protobuf.cmake)
     else()
         find_package(Protobuf 2.6.1 REQUIRED)
+    endif()
+    if (NGRAPH_ONNXIFI_ENABLE)
+        include(cmake/external_onnx.cmake)
+        if (TARGET ext_protobuf)
+            add_dependencies(ext_onnx ext_protobuf)
+        endif()
     endif()
 endif()
 

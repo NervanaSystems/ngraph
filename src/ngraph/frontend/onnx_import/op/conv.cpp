@@ -1,28 +1,35 @@
-/*******************************************************************************
- * Copyright 2018 Intel Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <cstddef>
 #include <memory>
 #include <vector>
 
-#include "ngraph/frontend/onnx_import/op/conv.hpp"
+#include "op/conv.hpp"
 
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/slice.hpp"
+
+#include "ngraph/frontend/onnx_import/exceptions.hpp"
+#include "ngraph/frontend/onnx_import/op/conv.hpp"
+#include "ngraph/frontend/onnx_import/utils/broadcasting.hpp"
+#include "ngraph/frontend/onnx_import/utils/convpool.hpp"
 
 namespace ngraph
 {
@@ -111,14 +118,14 @@ namespace ngraph
                                                       std::to_string(groups)};
                 }
 
-                auto strides{attribute::get_strides(node)};
-                auto dilations{attribute::get_dilations(node)};
-                auto paddings{attribute::get_pads(node)};
-                const auto& padding_below{paddings.first};
-                const auto& padding_above{paddings.second};
+                auto strides = convpool::get_strides(node);
+                auto dilations = convpool::get_dilations(node);
+                auto paddings = convpool::get_pads(node);
+                const auto& padding_below = paddings.first;
+                const auto& padding_above = paddings.second;
 
-                auto conv_node{make_ng_convolution(
-                    data, filters, strides, dilations, padding_below, padding_above, groups)};
+                auto conv_node = make_ng_convolution(
+                    data, filters, strides, dilations, padding_below, padding_above, groups);
 
                 // no bias param
                 if (inputs.size() < 3)
@@ -126,11 +133,11 @@ namespace ngraph
                     return {conv_node};
                 }
 
-                auto bias{inputs.at(2)};
+                auto bias = inputs.at(2);
                 const Shape& new_shape = conv_node->get_shape();
 
-                auto broadcasted_bias{std::make_shared<ngraph::op::Broadcast>(
-                    bias, new_shape, calculate_broadcast_axes(new_shape, bias->get_shape(), 1))};
+                auto broadcasted_bias = std::make_shared<ngraph::op::Broadcast>(
+                    bias, new_shape, calculate_broadcast_axes(new_shape, bias->get_shape(), 1));
                 return {std::make_shared<ngraph::op::Add>(conv_node, broadcasted_bias)};
             }
 

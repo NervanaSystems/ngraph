@@ -14,24 +14,21 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "node.hpp"
-#include "graph.hpp"
-#include "ops_bridge.hpp"
+#pragma once
+
+#include "ngraph/node_vector.hpp"
+
+#include "core/node.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        NodeVector Node::get_ng_nodes() const { return ops_bridge::make_ng_nodes(*this); }
-        NodeVector Node::get_ng_inputs() const
+        namespace op
         {
-            NodeVector result;
-            for (const auto& name : m_node_proto.input())
-            {
-                result.push_back(m_graph->get_ng_node_from_cache(name));
-            }
-            return result;
-        }
+            NodeVector mean(const Node& node);
+
+        } // namespace op
 
     } // namespace onnx_import
 
