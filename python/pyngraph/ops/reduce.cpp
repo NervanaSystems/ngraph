@@ -28,7 +28,7 @@ void regclass_pyngraph_op_Reduce(py::module m)
 {
     py::class_<ngraph::op::Reduce,
                std::shared_ptr<ngraph::op::Reduce>,
-               ngraph::op::util::RequiresTensorViewArgs>
+               ngraph::op::Op>
         reduce(m, "Reduce");
     reduce.doc() = "ngraph.impl.op.Reduce wraps ngraph::op::Reduce";
     reduce.def(py::init<const std::shared_ptr<ngraph::Node>&,

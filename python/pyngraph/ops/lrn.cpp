@@ -26,7 +26,7 @@ void regclass_pyngraph_op_LRN(py::module m)
 {
     py::class_<ngraph::op::LRN,
                std::shared_ptr<ngraph::op::LRN>,
-               ngraph::op::util::RequiresTensorViewArgs>
+               ngraph::op::Op>
         lrn(m, "LRN");
     lrn.doc() = "ngraph.impl.op.LRN wraps ngraph::op::LRN";
 

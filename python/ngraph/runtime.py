@@ -19,8 +19,9 @@ from typing import List
 
 import numpy as np
 
-from ngraph.impl import Function, Node, serialize, TensorViewType, util
-from ngraph.impl.runtime import Backend
+# from ngraph.impl import Function, Node, serialize, TensorViewType, util
+from ngraph.impl import Function, Node, serialize, util
+from ngraph.impl.runtime import Backend, TensorView
 from ngraph.impl.op import Parameter
 
 from ngraph.utils.types import get_dtype, NumericData
@@ -59,7 +60,7 @@ class Computation:
         self.runtime = runtime
         self.node = node
         self.parameters = parameters
-        self.tensor_views = []  # type: List[TensorViewType]
+        self.tensor_views = []  # type: List[TensorView]
         for parameter in parameters:
             shape = parameter.get_shape()
             element_type = parameter.get_element_type()
@@ -101,12 +102,12 @@ class Computation:
         return serialize(self.function, indent)
 
     @staticmethod
-    def _get_buffer_size(element_type, element_count):  # type: (TensorViewType, int) -> int
+    def _get_buffer_size(element_type, element_count):  # type: (TensorView, int) -> int
         return int((element_type.bitwidth / 8.0) * element_count)
 
     @staticmethod
     def _write_ndarray_to_tensor_view(value, tensor_view):
-        # type: (np.ndarray, TensorViewType) -> None
+        # type: (np.ndarray, TensorView) -> None
         tensor_view_dtype = get_dtype(tensor_view.element_type)
         if list(tensor_view.shape) != list(value.shape) and len(value.shape) > 0:
             raise UserInputError('Provided tensor\'s shape: %s does not match the expected: %s.',
@@ -126,7 +127,7 @@ class Computation:
 
     @staticmethod
     def _read_tensor_view_to_ndarray(tensor_view, output):
-        # type: (TensorViewType, np.ndarray) -> None
+        # type: (TensorView, np.ndarray) -> None
         buffer_size = Computation._get_buffer_size(
             tensor_view.element_type, tensor_view.element_count)
         tensor_view.read(util.numpy_to_c(output), 0, buffer_size)

@@ -18,7 +18,7 @@
 
 #include <pybind11/pybind11.h>
 #include "pyngraph/types/element_type.hpp"
-#include "pyngraph/types/type.hpp"
+//#include "pyngraph/types/type.hpp"
 
 namespace py = pybind11;
 

@@ -26,6 +26,6 @@ void regclass_pyngraph_op_util_UnaryElementwise(py::module m)
 {
     py::class_<ngraph::op::util::UnaryElementwise,
                std::shared_ptr<ngraph::op::util::UnaryElementwise>,
-               ngraph::op::util::RequiresTensorViewArgs>
+               ngraph::op::Op>
         unaryElementwise(m, "UnaryElementwise");
 }
