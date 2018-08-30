@@ -492,8 +492,8 @@ TEST(onnx, model_softmax)
 
 TEST(onnx, model_concat)
 {
-    auto function = onnx_import::import_onnx_function(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/concat.onnx"));
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/concat.onnx"));
 
     Inputs inputs;
 

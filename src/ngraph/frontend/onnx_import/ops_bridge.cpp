@@ -21,8 +21,8 @@
 #include "op/add.hpp"
 #include "op/average_pool.hpp"
 #include "op/batch_norm.hpp"
-#include "op/constant.hpp"
 #include "op/concat.hpp"
+#include "op/constant.hpp"
 #include "op/conv.hpp"
 #include "op/div.hpp"
 #include "op/flatten.hpp"
@@ -87,8 +87,8 @@ namespace ngraph
                                   std::bind(op::average_pool, std::placeholders::_1));
                     m_map.emplace("BatchNormalization",
                                   std::bind(op::batch_norm, std::placeholders::_1));
-                    m_map.emplace("Constant", std::bind(op::constant, std::placeholders::_1));
                     m_map.emplace("Concat", std::bind(op::concat, std::placeholders::_1));
+                    m_map.emplace("Constant", std::bind(op::constant, std::placeholders::_1));
                     m_map.emplace("Conv", std::bind(op::conv, std::placeholders::_1));
                     m_map.emplace("Div", std::bind(op::div, std::placeholders::_1));
                     m_map.emplace("Flatten", std::bind(op::flatten, std::placeholders::_1));
