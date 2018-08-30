@@ -691,8 +691,9 @@ using namespace ngraph::runtime;
             m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
             m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::OUTPUT;
 
-            //it should be safe to assign both descriptors to one output*
-            //since needs_copy == false makes `op::Result` an nop
+            //keep assigning different outputs to a result descriptor
+            //op::Result emitter will check if in and out descriptors are the same
+            //and skip a copy
             auto res = std::dynamic_pointer_cast<ngraph::op::Result>(op);
             auto input_node = res->get_inputs().at(0).get_output().get_node();
             if (!input_node->is_constant() && !input_node->is_parameter())
@@ -1234,8 +1235,12 @@ void runtime::cpu::CPU_ExternalFunction::build()
         function_output_index.emplace_back(tensor_data[tv->get_tensor().get_name()], i);
         m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::OUTPUT;
 
+        //keep assigning different outputs to a result descriptor
+        //op::Result emitter will check if in and out descriptors are the same
+        //and skip a copy
         auto res = std::dynamic_pointer_cast<ngraph::op::Result>(op);
-        if (!res->needs_copy())
+        auto input_node = res->get_inputs().at(0).get_output().get_node();
+        if (!input_node->is_constant() && !input_node->is_parameter())
         {
             shared_ptr<descriptor::TensorView> itv =
                 res->get_inputs().at(0).get_output().get_tensor_view();
