@@ -524,25 +524,25 @@ TEST(onnx, model_sub)
 
 TEST(onnx, model_unsqueeze)
 {
-    auto function = ngraph::onnx_import::import_onnx_function(
-        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/unsqueeze.onnx"));
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/unsqueeze.onnx"));
 
     Inputs inputs;
-    inputs.emplace_back(ngraph::test::NDArray<float, 3>(
+    inputs.emplace_back(test::NDArray<float, 3>(
                             {{{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
                              {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
                              {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}}})
                             .get_vector());
 
-    auto expected_output =
-        ngraph::test::NDArray<float, 4>(
+    Outputs expected_output{
+        test::NDArray<float, 4>(
             {{{{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
               {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
               {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}}}})
-            .get_vector();
+            .get_vector()};
 
-    auto result_vectors = execute(function, inputs, "INTERPRETER");
-    EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
 TEST(onnx, model_div)

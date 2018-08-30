@@ -21,7 +21,6 @@
 #include "ngraph/op/reshape.hpp"
 
 #include "exceptions.hpp"
-#include "utils/reshape.hpp"
 
 namespace ngraph
 {
@@ -40,20 +39,20 @@ namespace ngraph
                     throw error::parameter::Value(
                         "Unsqueeze", node.get_name(), "axes attribute is mandatory.");
                 }
-                std::sort(axes.begin(), axes.end(), std::greater<int64_t>());
+                std::sort(std::begin(axes), std::end(axes), std::greater<int64_t>());
 
                 // Generate an increasing sequence (0,1,2,3..) as input_order for Reshape
-                ngraph::AxisVector input_order(data_shape.size());
+                AxisVector input_order(data_shape.size());
                 std::iota(std::begin(input_order), std::end(input_order), 0);
 
                 for (auto axis : axes)
                 {
-                    if (axis < 0 || axis > data_shape.size())
+                    if ((axis < 0) || (axis > data_shape.size()))
                     {
                         throw error::parameter::Value(
                             "Unsqueeze", node.get_name(), "provided axes attribute is not valid.");
                     }
-                    data_shape.insert(data_shape.begin() + axis, 1);
+                    data_shape.insert(std::next(std::begin(data_shape), axis), 1);
                 }
 
                 return {std::make_shared<ngraph::op::Reshape>(data, input_order, data_shape)};
