@@ -22,6 +22,7 @@ using namespace ngraph;
 op::Max::Max(const shared_ptr<Node>& arg, const AxisSet& reduction_axes)
     : ArithmeticReduction("Max", arg, reduction_axes)
 {
+    constructor_validate_and_infer_types();
 }
 
 shared_ptr<Node> op::Max::copy_with_new_args(const NodeVector& new_args) const

@@ -24,8 +24,13 @@ using namespace std;
 using namespace ngraph;
 
 op::Concat::Concat(const NodeVector& args, size_t concatenation_axis)
-    : RequiresTensorViewArgs("Concat", args)
+    : Op("Concat", check_single_output_args(args))
     , m_concatenation_axis(concatenation_axis)
+{
+    constructor_validate_and_infer_types();
+}
+
+void op::Concat::validate_and_infer_types()
 {
     NODE_VALIDATION_ASSERT(this, m_inputs.size() >= 1) << "At least one argument required.";
 
@@ -74,7 +79,7 @@ op::Concat::Concat(const NodeVector& args, size_t concatenation_axis)
     Shape concatenated_shape = first_input_shape;
     concatenated_shape[m_concatenation_axis] = concatenation_axis_output_length;
 
-    set_value_type_checked(make_shared<TensorViewType>(expected_et, concatenated_shape));
+    set_output_type(0, expected_et, concatenated_shape);
 }
 
 shared_ptr<Node> op::Concat::copy_with_new_args(const NodeVector& new_args) const

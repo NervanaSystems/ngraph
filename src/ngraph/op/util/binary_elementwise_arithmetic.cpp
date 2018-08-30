@@ -23,13 +23,11 @@ op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(
     const std::string& node_type,
     const std::shared_ptr<Node>& arg0,
     const std::shared_ptr<Node>& arg1)
-    : BinaryElementwise(node_type, arg0->get_element_type(), arg0, arg1)
+    : Op(node_type, check_single_output_args({arg0, arg1}))
 {
-    NODE_VALIDATION_ASSERT(this, arg0->get_element_type() == arg1->get_element_type())
-        << "Arguments must have the same element type (arg0 element type: "
-        << arg0->get_element_type() << ", arg1 element type: " << arg1->get_element_type() << ")";
+}
 
-    NODE_VALIDATION_ASSERT(this, arg0->get_element_type() != element::boolean)
-        << "Arguments cannot have boolean element type (argument element type: "
-        << arg0->get_element_type() << ")";
+void op::util::BinaryElementwiseArithmetic::validate_and_infer_types()
+{
+    validate_and_infer_elementwise_arithmetic();
 }

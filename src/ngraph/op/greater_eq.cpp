@@ -22,6 +22,7 @@ using namespace ngraph;
 op::GreaterEq::GreaterEq(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
     : BinaryElementwiseComparison("GreaterEq", arg0, arg1)
 {
+    constructor_validate_and_infer_types();
 }
 
 shared_ptr<Node> op::GreaterEq::copy_with_new_args(const NodeVector& new_args) const

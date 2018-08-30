@@ -19,7 +19,6 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
 #include "ngraph/util.hpp"
 

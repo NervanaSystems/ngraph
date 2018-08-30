@@ -26,11 +26,13 @@ op::Pad::Pad(const shared_ptr<Node>& arg,
              const Shape& padding_below,
              const Shape& padding_above,
              const Shape& padding_interior)
-    : RequiresTensorViewArgs("Pad", {arg, arg_pad_value})
+    : Op("Pad", check_single_output_args({arg, arg_pad_value}))
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
     , m_padding_interior(padding_interior)
 {
+    constructor_validate_and_infer_types();
+
     NODE_VALIDATION_ASSERT(this, get_input_element_type(0) == get_input_element_type(1))
         << "Argument element types do not match (arg0 element type: " << get_input_element_type(0)
         << ", arg1 element type: " << get_input_element_type(1) << ").";
@@ -63,7 +65,7 @@ op::Pad::Pad(const shared_ptr<Node>& arg,
             padding_above[i]);
     }
 
-    set_value_type_checked(get_input_element_type(0), result_shape);
+    set_output_type(0, get_input_element_type(0), result_shape);
 }
 
 shared_ptr<Node> op::Pad::copy_with_new_args(const NodeVector& new_args) const

@@ -33,6 +33,7 @@ using namespace ngraph;
 op::Atan::Atan(const shared_ptr<Node>& arg)
     : UnaryElementwiseArithmetic("Atan", arg)
 {
+    constructor_validate_and_infer_types();
 }
 
 shared_ptr<Node> op::Atan::copy_with_new_args(const NodeVector& new_args) const

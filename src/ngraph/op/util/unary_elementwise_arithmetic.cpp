@@ -20,9 +20,11 @@ using namespace ngraph;
 
 op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::string& node_type,
                                                                  const std::shared_ptr<Node>& arg)
-    : UnaryElementwise(node_type, arg->get_element_type(), arg)
+    : Op(node_type, check_single_output_args({arg}))
 {
-    NODE_VALIDATION_ASSERT(this, arg->get_element_type() != element::boolean)
-        << "Argument cannot have boolean element type (argument element type: "
-        << arg->get_element_type() << ")";
+}
+
+void op::util::UnaryElementwiseArithmetic::validate_and_infer_types()
+{
+    validate_and_infer_elementwise_arithmetic();
 }

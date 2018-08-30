@@ -48,9 +48,10 @@ op::FunctionCall::FunctionCall(shared_ptr<Function> function, const NodeVector& 
             << ", function expects shape " << function->get_parameters()[i]->get_shape();
     }
 
+    set_output_size(m_function->get_output_size());
     for (size_t i = 0; i < m_function->get_output_size(); ++i)
     {
-        add_output(function->get_output_element_type(i), function->get_output_shape(i));
+        set_output_type(i, function->get_output_element_type(i), function->get_output_shape(i));
     }
 }
 

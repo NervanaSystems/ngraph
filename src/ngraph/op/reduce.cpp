@@ -25,10 +25,12 @@ op::Reduce::Reduce(const shared_ptr<Node>& arg_reductee,
                    const shared_ptr<Node>& arg_init,
                    const shared_ptr<Function>& reduction_function,
                    const AxisSet& reduction_axes)
-    : RequiresTensorViewArgs("Reduce", {arg_reductee, arg_init})
+    : Op("Reduce", check_single_output_args({arg_reductee, arg_init}))
     , m_reduction_function(reduction_function)
     , m_reduction_axes(reduction_axes)
 {
+    constructor_validate_and_infer_types();
+
     auto& input_reductee = get_inputs().at(0);
 
     auto& input_init = get_inputs().at(1);
@@ -91,7 +93,7 @@ op::Reduce::Reduce(const shared_ptr<Node>& arg_reductee,
         throw ngraph_error("Return shape from reduction function is not a scalar");
     }
 
-    add_output(input_reductee.get_element_type(), result_shape);
+    set_output_type(0, input_reductee.get_element_type(), result_shape);
 }
 
 shared_ptr<Node> op::Reduce::copy_with_new_args(const NodeVector& new_args) const

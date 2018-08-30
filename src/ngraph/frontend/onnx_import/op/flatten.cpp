@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,29 +14,35 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "flatten.hpp"
 
-#include "ngraph/node.hpp"
-#include "ngraph/pattern/op/pattern.hpp"
+#include "exceptions.hpp"
+#include "utils/reshape.hpp"
 
 namespace ngraph
 {
-    namespace pattern
+    namespace onnx_import
     {
         namespace op
         {
-            /// \brief \p Skip allows users to specify unexpected nodes in a pattern
-            /// and skip them if a predicate condition is satisfied.
-            ///
-            class Skip : public Pattern
+            NodeVector flatten(const Node& node)
             {
-            public:
-                Skip(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr)
-                    : Pattern("Skip", NodeVector{arg}, predicate)
+                NodeVector inputs{node.get_ng_inputs()};
+                auto data = inputs.at(0);
+                auto axis = node.get_attribute_value<int64_t>("axis", 1);
+
+                if (axis < 0 || axis > data->get_shape().size())
                 {
-                    set_output_type(0, arg->get_element_type(), arg->get_shape());
+                    throw error::parameter::Value("Flatten node (",
+                                                  node.get_name(),
+                                                  "): provided axis attribute is not valid.");
                 }
-            };
-        }
-    }
-}
+
+                return {utils::flatten(data, axis)};
+            }
+
+        } // namespace  op
+
+    } // namespace  onnx_import
+
+} // namespace  ngraph

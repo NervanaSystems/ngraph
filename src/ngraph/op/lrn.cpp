@@ -27,6 +27,7 @@ op::LRN::LRN(const std::shared_ptr<Node>& arg, double alpha, double beta, double
     , m_bias(bias)
     , m_size(nsize)
 {
+    constructor_validate_and_infer_types();
     NODE_VALIDATION_ASSERT(this, arg->get_shape().size() >= 3)
         << "Argument must have rank >= 3 (argument shape: " << arg->get_shape() << ").";
 }

@@ -25,10 +25,8 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Slice(py::module m)
 {
-    py::class_<ngraph::op::Slice,
-               std::shared_ptr<ngraph::op::Slice>,
-               ngraph::op::util::RequiresTensorViewArgs>
-        slice(m, "Slice");
+    py::class_<ngraph::op::Slice, std::shared_ptr<ngraph::op::Slice>, ngraph::op::Op> slice(
+        m, "Slice");
     slice.doc() = "ngraph.impl.op.Slice wraps ngraph::op::Slice";
     slice.def(py::init<const std::shared_ptr<ngraph::Node>&,
                        const ngraph::Coordinate&,

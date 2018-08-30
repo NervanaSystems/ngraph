@@ -20,16 +20,20 @@ using namespace std;
 using namespace ngraph;
 
 op::AllReduce::AllReduce(const shared_ptr<Node>& arg)
-    : RequiresTensorViewArgs("AllReduce", {arg})
+    : Op("AllReduce", check_single_output_args({arg}))
 {
-    auto& input = m_inputs.at(0);
-    set_value_type_checked(
-        make_shared<TensorViewType>(input.get_element_type(), input.get_shape()));
+    constructor_validate_and_infer_types();
+}
 
-    NODE_VALIDATION_ASSERT(
-        this, arg->get_element_type() == element::f32 || arg->get_element_type() == element::f64)
+void op::AllReduce::validate_and_infer_types()
+{
+    NODE_VALIDATION_ASSERT(this,
+                           get_input_element_type(0) == element::f32 ||
+                               get_input_element_type(0) == element::f64)
         << "Only element types f32 and f64 are supported (argument element type: "
-        << arg->get_element_type() << ")";
+        << get_input_element_type(0) << ").";
+
+    set_output_type(0, get_input_element_type(0), get_input_shape(0));
 }
 
 shared_ptr<Node> op::AllReduce::copy_with_new_args(const NodeVector& new_args) const
