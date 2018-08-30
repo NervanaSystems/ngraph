@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <fstream>
 #include <sstream>
@@ -303,6 +303,82 @@ TEST(onnx, model_relu)
     Inputs inputs{{-1, -2, 0, 1, 2, 3}};
     Outputs expected_outputs{{0, 0, 0, 1, 2, 3}};
 
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_sum)
+{
+    // Simple Sum test
+    auto function = ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/sum.onnx"));
+
+    // input data shape (3, )
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{3.f, 0.f, 2.f});
+    inputs.emplace_back(std::vector<float>{1.f, 3.f, 4.f});
+    inputs.emplace_back(std::vector<float>{2.f, 6.f, 6.f});
+
+    Outputs expected_outputs{{6.f, 9.f, 12.f}};
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_sum_one_input)
+{
+    auto function = ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/sum_one_input.onnx"));
+
+    // input data shape (3, )
+    Inputs inputs{{3.f, 0.f, 2.f}};
+    Outputs expected_outputs{{3.f, 0.f, 2.f}};
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_min_two_inputs)
+{
+    auto function = ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/min_two_inputs.onnx"));
+
+    // input data shape (3, )
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{1.f, 2.f, 1.f});
+    inputs.emplace_back(std::vector<float>{1.f, 4.f, 4.f});
+
+    Outputs expected_outputs{{1.f, 2.f, 1.f}};
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_max)
+{
+    auto function = ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/max.onnx"));
+
+    // input data shape (3, )
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{3.f, 2.f, 1.f});
+    inputs.emplace_back(std::vector<float>{1.f, 4.f, 4.f});
+    inputs.emplace_back(std::vector<float>{2.f, 5.f, 3.f});
+
+    Outputs expected_outputs{{3.f, 5.f, 4.f}};
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_mean)
+{
+    auto function = ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/mean.onnx"));
+
+    // input data shape (3, )
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{3.f, 0.f, 2.f});
+    inputs.emplace_back(std::vector<float>{1.f, 3.f, 4.f});
+    inputs.emplace_back(std::vector<float>{2.f, 6.f, 6.f});
+
+    Outputs expected_outputs{{2.f, 3.f, 4.f}};
     Outputs outputs{execute(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }

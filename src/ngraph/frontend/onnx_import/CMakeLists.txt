@@ -48,6 +48,10 @@ add_library(onnx_import STATIC
         op/matmul.hpp
         op/max_pool.cpp
         op/max_pool.hpp
+        op/max.hpp
+        op/mean.cpp
+        op/mean.hpp
+        op/min.hpp
         op/mul.hpp
         op/relu.hpp
         op/softmax.cpp
@@ -55,13 +59,15 @@ add_library(onnx_import STATIC
         op/split.cpp
         op/split.hpp
         op/sub.hpp
+        op/sum.hpp
         ops_bridge.cpp
         utils/broadcasting.cpp
         utils/broadcasting.hpp
         utils/convpool.cpp
         utils/convpool.hpp
         utils/reshape.cpp
-        utils/reshape.hpp)
+        utils/reshape.hpp
+        utils/variadic.hpp)
 
 add_dependencies(onnx_import onnx_import_interface)
 
