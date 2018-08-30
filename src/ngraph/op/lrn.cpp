@@ -27,10 +27,8 @@ op::LRN::LRN(const std::shared_ptr<Node>& arg, double alpha, double beta, double
     , m_bias(bias)
     , m_size(nsize)
 {
-    if (arg->get_shape().size() < 3)
-    {
-        throw ngraph_error("LRN expects a tensor at least of rank of 3");
-    }
+    NODE_VALIDATION_ASSERT(this, arg->get_shape().size() >= 3)
+        << "Argument must have rank >= 3 (argument shape: " << arg->get_shape() << ").";
 }
 
 shared_ptr<Node> op::LRN::copy_with_new_args(const NodeVector& new_args) const

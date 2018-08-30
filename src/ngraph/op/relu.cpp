@@ -23,7 +23,6 @@ using namespace ngraph;
 op::Relu::Relu(shared_ptr<Node> arg)
     : UnaryElementwiseArithmetic("Relu", {arg})
 {
-    set_value_type_checked(arg->get_element_type(), arg->get_shape());
 }
 
 shared_ptr<Node> op::Relu::copy_with_new_args(const NodeVector& new_args) const
@@ -33,17 +32,8 @@ shared_ptr<Node> op::Relu::copy_with_new_args(const NodeVector& new_args) const
 }
 
 op::ReluBackprop::ReluBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
-    : RequiresTensorViewArgs("ReluBackprop", {arg, delta})
+    : BinaryElementwiseArithmetic("ReluBackprop", arg, delta)
 {
-    if (arg->get_element_type() != delta->get_element_type())
-    {
-        throw ngraph_error("Argument and delta element types for Relu backprop do not match");
-    }
-    if (arg->get_shape() != delta->get_shape())
-    {
-        throw ngraph_error("Argument and delta shape for Relu backprop do not match");
-    }
-    set_value_type_checked(delta->get_element_type(), delta->get_shape());
 }
 
 shared_ptr<Node> op::ReluBackprop::copy_with_new_args(const NodeVector& new_args) const

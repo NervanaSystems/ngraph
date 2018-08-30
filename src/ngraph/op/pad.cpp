@@ -31,32 +31,27 @@ op::Pad::Pad(const shared_ptr<Node>& arg,
     , m_padding_above(padding_above)
     , m_padding_interior(padding_interior)
 {
-    if (get_input_element_type(0) != get_input_element_type(1))
-    {
-        throw ngraph_error("Pad argument tensor and padding value element types do not match");
-    }
+    NODE_VALIDATION_ASSERT(this, get_input_element_type(0) == get_input_element_type(1))
+        << "Argument element types do not match (arg0 element type: " << get_input_element_type(0)
+        << ", arg1 element type: " << get_input_element_type(1) << ").";
 
-    if (get_input_shape(1) != Shape{})
-    {
-        throw ngraph_error("Padding value for pad is not a scalar");
-    }
+    NODE_VALIDATION_ASSERT(this, get_input_shape(1) == Shape{})
+        << "Argument for padding value is not a scalar (shape: " << get_input_shape(1) << ").";
 
     auto arg_shape = get_input_shape(0);
 
-    if (arg_shape.size() != padding_below.size())
-    {
-        throw ngraph_error("Pad rank for below-padding does not match rank of argument tensor");
-    }
+    NODE_VALIDATION_ASSERT(this, arg_shape.size() == padding_below.size())
+        << "Rank for padding below does not match the rank of the data argument (padding below: "
+        << padding_below << ", data argument shape: " << arg_shape << ").";
 
-    if (arg_shape.size() != padding_above.size())
-    {
-        throw ngraph_error("Pad rank for above-padding does not match rank of argument tensor");
-    }
+    NODE_VALIDATION_ASSERT(this, arg_shape.size() == padding_above.size())
+        << "Rank for padding above does not match the rank of the data argument (padding above: "
+        << padding_above << ", data argument shape: " << arg_shape << ").";
 
-    if (arg_shape.size() != padding_interior.size())
-    {
-        throw ngraph_error("Pad rank for interior padding does not match rank of argument tensor");
-    }
+    NODE_VALIDATION_ASSERT(this, arg_shape.size() == padding_interior.size())
+        << "Rank for interior padding does not match the rank of the data argument (interior "
+           "padding: "
+        << padding_interior << ", data argument shape: " << arg_shape << ").";
 
     Shape result_shape;
 

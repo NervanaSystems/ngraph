@@ -33,19 +33,16 @@ op::Reshape::Reshape(const shared_ptr<Node>& arg,
     auto input_shape = input.get_shape();
     auto input_rank = input_shape.size();
 
-    if (m_input_order.size() != input_rank)
-    {
-        throw ngraph_error("Input axis order for reshape is not a permutation of argument's axes");
-    }
+    NODE_VALIDATION_ASSERT(this, m_input_order.size() == input_rank)
+        << "Input axis order is not a permutation of argument's axis indices (axis order: "
+        << m_input_order << ", argument shape: " << input_shape << ").";
 
     for (size_t i = 0; i < input_rank; i++)
     {
         auto it = find(begin(m_input_order), end(m_input_order), i);
-        if (end(m_input_order) == it)
-        {
-            throw ngraph_error(
-                "Input axis order for reshape is not a permutation of argument's axes");
-        }
+        NODE_VALIDATION_ASSERT(this, it != end(m_input_order))
+            << "Input axis order is not a permutation of argument's axis indices (axis order: "
+            << m_input_order << ", argument shape: " << input_shape << ").";
     }
 
     size_t input_shape_product = 1;
@@ -60,12 +57,9 @@ op::Reshape::Reshape(const shared_ptr<Node>& arg,
         output_shape_product *= i;
     }
 
-    if (input_shape_product != output_shape_product)
-    {
-        throw ngraph_error(
-            "Product of output shape dimensions does not match product of argument shape "
-            "dimensions for reshape");
-    }
+    NODE_VALIDATION_ASSERT(this, input_shape_product == output_shape_product)
+        << "Product of output shape dimensions does not match product of argument shape dimensions "
+        << "(output shape: " << m_output_shape << ", argument shape: " << input_shape << ").";
 
     if (!std::is_sorted(m_input_order.begin(), m_input_order.end()))
     {

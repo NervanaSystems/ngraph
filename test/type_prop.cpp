@@ -1208,11 +1208,11 @@ TEST(type_prop, reshape_deduce_not_enough_axes)
         // Should have thrown, so fail if it didn't
         FAIL() << "Not enough axes not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Input axis order for reshape is not a permutation of argument's axes"));
+            std::string("Input axis order is not a permutation of argument's axis indices"));
     }
     catch (...)
     {
@@ -1229,11 +1229,11 @@ TEST(type_prop, reshape_deduce_too_many_axes)
         // Should have thrown, so fail if it didn't
         FAIL() << "Too many axes not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Input axis order for reshape is not a permutation of argument's axes"));
+            std::string("Input axis order is not a permutation of argument's axis indices"));
     }
     catch (...)
     {
@@ -1250,11 +1250,11 @@ TEST(type_prop, reshape_deduce_duplicate_axes)
         // Should have thrown, so fail if it didn't
         FAIL() << "Too many axes not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Input axis order for reshape is not a permutation of argument's axes"));
+            std::string("Input axis order is not a permutation of argument's axis indices"));
     }
     catch (...)
     {
@@ -1271,11 +1271,11 @@ TEST(type_prop, reshape_deduce_wrong_output_shape)
         // Should have thrown, so fail if it didn't
         FAIL() << "Too many axes not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Product of output shape dimensions does not match "
-                              "product of argument shape dimensions for reshape"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Product of output shape dimensions does not match "
+                                         "product of argument shape dimensions"));
     }
     catch (...)
     {
@@ -1661,11 +1661,10 @@ TEST(type_prop, replace_slice_deduce_vector_invalid_strides)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid slice strides not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string(
-                      "Number of strides provided for slice does not match number of input axes"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("Rank of strides (2) does not match rank of argument (1)"));
     }
     catch (...)
     {
@@ -1684,9 +1683,9 @@ TEST(type_prop, replace_slice_deduce_matrix_arg_rank_mismatch)
         // Should have thrown, so fail if it didn't
         FAIL() << "Argument rank mismatch not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Replace-slice argument ranks do not match"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument ranks do not match"));
     }
     catch (...)
     {
@@ -1705,10 +1704,9 @@ TEST(type_prop, replace_slice_deduce_matrix_arg_element_type_mismatch)
         // Should have thrown, so fail if it didn't
         FAIL() << "Argument element type mismatch not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Element types for replace-slice arguments do not match"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument element types do not match"));
     }
     catch (...)
     {
@@ -1727,10 +1725,11 @@ TEST(type_prop, replace_slice_deduce_matrix_slice_shape_mismatch)
         // Should have thrown, so fail if it didn't
         FAIL() << "Slice shape mismatch not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Shape of replacement tensor does not match slice shape"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Shape of replacement tensor (Shape{3, 6}) does not match "
+                                         "the slice shape (Shape{4, 6})"));
     }
     catch (...)
     {
@@ -1749,10 +1748,12 @@ TEST(type_prop, replace_slice_deduce_matrix_slice_shape_mismatch_strided)
         // Should have thrown, so fail if it didn't
         FAIL() << "Slice shape mismatch not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Shape of replacement tensor does not match slice shape"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Shape of replacement tensor (Shape{4, 6}) does not match the slice shape"));
     }
     catch (...)
     {
@@ -1770,9 +1771,10 @@ TEST(type_prop, replace_slice_deduce_vector_edge_upper_oob)
         // Should have thrown, so fail if it didn't
         FAIL() << "Upper bound out of range not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Upper bound for slice is out of range"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Upper bound for slice at axis 0 is out of range"));
     }
     catch (...)
     {
@@ -1791,9 +1793,10 @@ TEST(type_prop, replace_slice_deduce_matrix_edge_upper_oob)
         // Should have thrown, so fail if it didn't
         FAIL() << "Upper bound out of range not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Upper bound for slice is out of range"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Upper bound for slice at axis 1 is out of range"));
     }
     catch (...)
     {
@@ -1811,9 +1814,11 @@ TEST(type_prop, replace_slice_deduce_vector_lower_above_upper)
         // Should have thrown, so fail if it didn't
         FAIL() << "Lower bound above upper not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Lower bound for slice is greater than upper bound"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Lower bound for slice is greater than upper bound at axis 0"));
     }
     catch (...)
     {
@@ -1832,9 +1837,11 @@ TEST(type_prop, replace_slice_deduce_matrix_lower_above_upper)
         // Should have thrown, so fail if it didn't
         FAIL() << "Lower bound above upper not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Lower bound for slice is greater than upper bound"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Lower bound for slice is greater than upper bound at axis 1"));
     }
     catch (...)
     {
@@ -1852,11 +1859,11 @@ TEST(type_prop, replace_slice_deduce_matrix_lower_missing)
         // Should have thrown, so fail if it didn't
         FAIL() << "Missing lower bound coordinate not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Number of lower bounds provided for slice does "
-                              "not match number of input axes"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank of lower bounds (1) does not match rank of argument (2)"));
     }
     catch (...)
     {
@@ -1874,11 +1881,11 @@ TEST(type_prop, replace_slice_deduce_matrix_upper_missing)
         // Should have thrown, so fail if it didn't
         FAIL() << "Missing upper bound coordinate not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Number of upper bounds provided for slice does "
-                              "not match number of input axes"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank of upper bounds (1) does not match rank of argument (2)"));
     }
     catch (...)
     {
@@ -1897,11 +1904,11 @@ TEST(type_prop, replace_slice_deduce_matrix_lower_extra)
         // Should have thrown, so fail if it didn't
         FAIL() << "Extra lower bound coordinate not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Number of lower bounds provided for slice does "
-                              "not match number of input axes"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank of lower bounds (3) does not match rank of argument (2)"));
     }
     catch (...)
     {
@@ -1920,11 +1927,11 @@ TEST(type_prop, replace_slice_deduce_matrix_upper_extra)
         // Should have thrown, so fail if it didn't
         FAIL() << "Extra upper bound coordinate not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Number of upper bounds provided for slice does "
-                              "not match number of input axes"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank of upper bounds (3) does not match rank of argument (2)"));
     }
     catch (...)
     {
@@ -1997,9 +2004,9 @@ TEST(type_prop, one_hot_deduce_axis_oob)
         // Should have thrown, so fail if it didn't
         FAIL() << "One-hot axis out of bounds not detected.";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("One-hot axis is out of bounds"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("One-hot axis (3) is out of bounds"));
     }
     catch (...)
     {
@@ -2018,9 +2025,9 @@ TEST(type_prop, one_hot_deduce_shape_incompatible)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("One-hot argument shape is not compatible with desired output shape"));
+            std::string("Argument shape Shape{12, 24} does not match the expected shape"));
     }
     catch (...)
     {
@@ -6310,10 +6317,9 @@ TEST(type_prop, pad_deduce_element_type_mismatch)
         // Should have thrown, so fail if it didn't
         FAIL() << "Element tpye mismatch not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Pad argument tensor and padding value element types do not match"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument element types do not match"));
     }
     catch (...)
     {
@@ -6337,9 +6343,10 @@ TEST(type_prop, pad_deduce_nonscalar_pad_value)
         // Should have thrown, so fail if it didn't
         FAIL() << "Non-scalar pad value not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Padding value for pad is not a scalar"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Argument for padding value is not a scalar"));
     }
     catch (...)
     {
@@ -6363,10 +6370,11 @@ TEST(type_prop, pad_deduce_below_padding_wrong_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Wrong below-padding rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Pad rank for below-padding does not match rank of argument tensor"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank for padding below does not match the rank of the data argument"));
     }
     catch (...)
     {
@@ -6390,10 +6398,11 @@ TEST(type_prop, pad_deduce_above_padding_wrong_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Wrong above-padding rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Pad rank for above-padding does not match rank of argument tensor"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank for padding above does not match the rank of the data argument"));
     }
     catch (...)
     {
@@ -6419,9 +6428,9 @@ TEST(type_prop, pad_deduce_interior_padding_wrong_rank)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Pad rank for interior padding does not match rank of argument tensor"));
+            std::string("Rank for interior padding does not match the rank of the data argument"));
     }
     catch (...)
     {
