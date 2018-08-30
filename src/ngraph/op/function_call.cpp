@@ -30,18 +30,22 @@ op::FunctionCall::FunctionCall(shared_ptr<Function> function, const NodeVector& 
     // TODO : [nikolayk] this needs to be rewritten as follows
     // for each i : FunctionCall->get_inputs.at(i).get_tensor_view_type ==
     // flatten(function_parms).at(i)
-    if (get_input_size() != function_params.size())
-    {
-        throw ngraph_error("Wrong number of arguments.");
-    }
+    NODE_VALIDATION_ASSERT(this, get_input_size() == function_params.size())
+        << "Number of arguments (" << get_input_size() << ") does not match "
+        << "number of function parameters (" << function_params.size() << ").";
 
     for (size_t i = 0; i < get_input_size(); i++)
     {
-        if (get_input_element_type(i) != function->get_parameters().at(i)->get_element_type() ||
-            get_input_shape(i) != function->get_parameters().at(i)->get_shape())
-        {
-            throw ngraph_error("Function argument type mismatch.");
-        }
+        NODE_VALIDATION_ASSERT(
+            this, get_input_element_type(i) == function->get_parameters()[i]->get_element_type())
+            << "Element type mismatch for argument " << i << " (argument has type "
+            << get_input_element_type(i) << ", function expects type "
+            << function->get_parameters()[i]->get_element_type();
+
+        NODE_VALIDATION_ASSERT(this,
+                               get_input_shape(i) == function->get_parameters()[i]->get_shape())
+            << "Shape mismatch for argument " << i << " (argument has shape " << get_input_shape(i)
+            << ", function expects shape " << function->get_parameters()[i]->get_shape();
     }
 
     for (size_t i = 0; i < m_function->get_output_size(); ++i)
