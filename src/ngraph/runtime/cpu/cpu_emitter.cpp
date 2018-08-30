@@ -4233,7 +4233,7 @@ namespace ngraph
             {
                 if (args[0].get_name() == out[0].get_name())
                 {
-                    writer << "//Skipping generation for " << node->get_name() << "\n";
+                    writer << "// Skipping generation for " << node->get_name() << "\n";
                     return;
                 }
 
