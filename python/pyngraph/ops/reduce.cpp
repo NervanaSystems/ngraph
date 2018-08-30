@@ -14,10 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "ngraph/op/reduce.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include "ngraph/function.hpp"
-#include "ngraph/op/reduce.hpp"
 #include "ngraph/shape.hpp"
 #include "pyngraph/ops/reduce.hpp"
 

@@ -14,9 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "ngraph/op/op.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/op/op.hpp"
 #include "pyngraph/ops/op.hpp"
 
 namespace py = pybind11;

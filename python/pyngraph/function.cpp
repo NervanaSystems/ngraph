@@ -14,9 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "ngraph/function.hpp" // ngraph::Function
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/function.hpp"     // ngraph::Function
 #include "ngraph/op/parameter.hpp" // ngraph::op::Parameter
 #include "pyngraph/function.hpp"
 

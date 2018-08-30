@@ -14,9 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "ngraph/runtime/backend.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "pyngraph/runtime/backend.hpp"
 
