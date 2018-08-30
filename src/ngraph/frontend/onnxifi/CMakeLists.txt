@@ -18,7 +18,7 @@ add_library(onnxifi-ngraph SHARED onnxifi.cpp)
 target_link_libraries(onnxifi-ngraph PRIVATE ngraph)
 
 add_dependencies(onnxifi-ngraph onnx::libonnx)
-target_include_directories(onnxifi-ngraph PRIVATE ${ONNX_INCLUDE_DIR})
+target_include_directories(onnxifi-ngraph SYSTEM PRIVATE ${ONNX_INCLUDE_DIR})
 
 set(ONNXIFI_VERSION ${NGRAPH_VERSION})
 set(ONNXIFI_ABI_VERSION 1)

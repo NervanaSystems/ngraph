@@ -1,19 +1,20 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
+#include <cstddef>
 #include <cstdint>
 #include <onnxifi.h>
 
@@ -81,10 +82,11 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxReleaseEvent(onnx
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
     onnxInitGraph(onnxBackend backend,
+                  const uint64_t* auxPropertiesList,
                   std::size_t onnxModelSize,
                   const void* onnxModel,
-                  std::uint32_t weightsCount,
-                  const onnxTensorDescriptor* weightDescriptors,
+                  uint32_t weightsCount,
+                  const onnxTensorDescriptorV1* weightDescriptors,
                   onnxGraph* graph)
 {
     return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
@@ -93,15 +95,15 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
     onnxSetGraphIO(onnxGraph graph,
                    std::uint32_t inputsCount,
-                   const onnxTensorDescriptor* inputDescriptors,
+                   const onnxTensorDescriptorV1* inputDescriptors,
                    std::uint32_t outputsCount,
-                   const onnxTensorDescriptor* outputDescriptors)
+                   const onnxTensorDescriptorV1* outputDescriptors)
 {
     return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
 }
 
-ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
-    onnxRunGraph(onnxGraph graph, const onnxMemoryFence* inputFence, onnxMemoryFence* outputFence)
+ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxRunGraph(
+    onnxGraph graph, const onnxMemoryFenceV1* inputFence, onnxMemoryFenceV1* outputFence)
 {
     return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
 }
