@@ -5,22 +5,22 @@ git:
 
 matrix:
   include:
-#  - os: linux
-#    sudo: required
-#    services: docker
-#    env: TASK=cpp_test OS=ubuntu
-#  - os: linux
-#    sudo: required
-#    services: docker
-#    env: TASK=cpp_test OS=centos
-#  - os: linux
-#    sudo: required
-#    services: docker
-#    env: TASK=python2_test OS=ubuntu
-#  - os: linux
-#    sudo: required
-#    services: docker
-#    env: TASK=python3_test OS=ubuntu
+  - os: linux
+    sudo: required
+    services: docker
+    env: TASK=cpp_test OS=ubuntu
+  - os: linux
+    sudo: required
+    services: docker
+    env: TASK=cpp_test OS=centos
+  - os: linux
+    sudo: required
+    services: docker
+    env: TASK=python2_test OS=ubuntu
+  - os: linux
+    sudo: required
+    services: docker
+    env: TASK=python3_test OS=ubuntu
   - os: osx
     env: TASK=cpp_test
 
@@ -36,7 +36,7 @@ install:
     mkdir $TRAVIS_BUILD_DIR/build
     cd $TRAVIS_BUILD_DIR/build
     cmake .. -DNGRAPH_CPU_ENABLE=FALSE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="~/ngraph_dist"
-    make
+    make -j"$(nproc)"
   fi
 
 script:

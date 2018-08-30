@@ -25,6 +25,7 @@ RUN apt-get update && apt-get install -y \
   python3-dev \
   python-pip && \
   apt-get clean autoclean && apt-get autoremove -y
+
 RUN pip install --upgrade pip setuptools wheel
 RUN pip install tox
 
@@ -33,7 +34,7 @@ COPY . /root/ngraph
 RUN mkdir /root/ngraph/build
 WORKDIR /root/ngraph/build
 RUN cmake .. -DNGRAPH_CPU_ENABLE=FALSE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="~/ngraph_dist"
-RUN make
+RUN make -j"$(nproc)"
 RUN make install
 
 # Prepare nGraph Python API
