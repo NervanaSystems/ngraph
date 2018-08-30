@@ -126,7 +126,14 @@ namespace ngraph
         const std::deque<descriptor::Output>& get_outputs() const;
 
         /// Get control dependencies registered on the node
-        std::set<std::shared_ptr<Node>> get_control_dependencies() const;
+        const std::set<std::shared_ptr<Node>>& get_control_dependencies() const;
+
+        void add_control_dependency(std::shared_ptr<Node> node);
+
+        void remove_control_dependency(std::shared_ptr<Node> node)
+        {
+            m_control_dependencies.erase(node);
+        }
 
         /// Returns the number of outputs on the for the node.
         size_t get_output_size() const;

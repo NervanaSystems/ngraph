@@ -39,12 +39,12 @@ using namespace std;
 using namespace ngraph;
 
 void ngraph::traverse_nodes(const std::shared_ptr<const Function> p,
-                            std::function<void(std::shared_ptr<Node>)> f)
+                            std::function<void(std::shared_ptr<Node>)> f, bool include_control_deps)
 {
-    traverse_nodes(p.get(), f);
+    traverse_nodes(p.get(), f, include_control_deps);
 }
 
-void ngraph::traverse_nodes(const Function* p, std::function<void(std::shared_ptr<Node>)> f)
+void ngraph::traverse_nodes(const Function* p, std::function<void(std::shared_ptr<Node>)> f, bool include_control_deps)
 {
     NodeVector nodes;
 
@@ -58,14 +58,14 @@ void ngraph::traverse_nodes(const Function* p, std::function<void(std::shared_pt
         nodes.push_back(param);
     }
 
-    traverse_nodes(nodes, f);
+    traverse_nodes(nodes, f, include_control_deps);
 }
 
 // This version of traverses directly from input/output nodes to perform functions on
 // graphs that are not wrapped by functions. Most useful for finding parameters of a graph
 // directly from the result nodes, not from function parameters.
 void ngraph::traverse_nodes(const NodeVector& io_nodes,
-                            std::function<void(std::shared_ptr<Node>)> f)
+                            std::function<void(std::shared_ptr<Node>)> f, bool include_control_deps)
 {
     std::unordered_set<std::shared_ptr<Node>> instances_seen;
     std::deque<std::shared_ptr<Node>> stack;
@@ -89,6 +89,18 @@ void ngraph::traverse_nodes(const NodeVector& io_nodes,
             if (instances_seen.count(arg) == 0)
             {
                 stack.push_front(arg);
+            }
+        }
+
+        if (include_control_deps)
+        {
+            for (auto cdep : n->get_control_dependencies())
+            {
+                if (instances_seen.count(cdep) == 0)
+                {
+                    stack.push_front(cdep);
+                }
+
             }
         }
     }
@@ -190,13 +202,17 @@ std::list<std::shared_ptr<ngraph::Node>>
         result_list.push_back(node_map[independent_node]);
         independent_nodes.pop_front();
 
-        std::set<Node*> worklist;
         for (auto user_sp : independent_node->get_users())
         {
             Node* user = user_sp.get();
             node_dependency_count[user] -= 1;
-            worklist.insert(user);
+            auto count = node_dependency_count[user];
+            if (count == 0)
+            {
+                independent_nodes.push_back(user);
+            }
         }
+        
         if (include_control_deps)
         {
             auto cdit = control_deps_users.find(independent_node);
@@ -204,16 +220,12 @@ std::list<std::shared_ptr<ngraph::Node>>
                 for (auto cd_user : cdit->second)
                 {
                     node_dependency_count[cd_user] -= 1;
-                    worklist.insert(cd_user);
+                    auto count = node_dependency_count[cd_user];
+                    if (count == 0)
+                    {
+                        independent_nodes.push_back(cd_user);
+                    }
                 }
-        }
-
-        for (auto user : worklist)
-        {
-            if (node_dependency_count[user] == 0)
-            {
-                independent_nodes.push_back(user);
-            }
         }
     }
 
@@ -282,7 +294,7 @@ std::list<std::shared_ptr<ngraph::Node>>
     ngraph::clone_nodes(const std::list<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map)
 {
     // for each node in topological order
-    auto sorted_nodes = topological_sort(nodes);
+    auto sorted_nodes = topological_sort(nodes, true);
     for (auto node : sorted_nodes)
     {
         if (!node_map.exists(node))
@@ -293,7 +305,14 @@ std::list<std::shared_ptr<ngraph::Node>>
             {
                 cloned_args.push_back(node_map.get(arg));
             }
-            node_map.add(node, node->copy_with_new_args(cloned_args));
+            auto cloned_node = node->copy_with_new_args(cloned_args);
+
+            //copy control dependencies
+            for (auto cdep : node->get_control_dependencies())
+            {
+                cloned_node->add_control_dependency(node_map.get(cdep));
+            }
+            node_map.add(node, cloned_node);
         }
     }
 
@@ -317,7 +336,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(const ngraph::Function&
                                                          NodeMap& node_map)
 {
     // clone function operations
-    clone_nodes(func.get_ops(), node_map);
+    clone_nodes(func.get_ops_with_control_dependencies(), node_map);
 
     // get cloned function results and parameters
     ResultVector cloned_results;

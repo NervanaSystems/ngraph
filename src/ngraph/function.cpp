@@ -86,12 +86,17 @@ void Function::init()
                 throw ngraph_error("Function references undeclared parameter");
             }
         }
-    });
+    }, true /*include control dependencies*/);
 }
 
 std::list<shared_ptr<Node>> Function::get_ordered_ops()
 {
-    return topological_sort(get_ops());
+    return topological_sort(get_ops(), false /* no control deps */);
+}
+
+std::list<shared_ptr<Node>> Function::get_ordered_ops_with_control_dependencies()
+{
+    return topological_sort(get_ops_with_control_dependencies(), true);
 }
 
 const std::string& Function::get_friendly_name() const
@@ -168,7 +173,14 @@ shared_ptr<Node> Function::get_result() const
 std::list<shared_ptr<Node>> Function::get_ops() const
 {
     std::list<std::shared_ptr<Node>> ops;
-    traverse_nodes(this, [&](shared_ptr<Node> node) { ops.push_back(node); });
+    traverse_nodes(this, [&](shared_ptr<Node> node) { ops.push_back(node); }, false /* no control deps */);
+    return ops;
+}
+
+std::list<shared_ptr<Node>> Function::get_ops_with_control_dependencies() const
+{
+    std::list<std::shared_ptr<Node>> ops;
+    traverse_nodes(this, [&](shared_ptr<Node> node) { ops.push_back(node); }, true);
     return ops;
 }
 

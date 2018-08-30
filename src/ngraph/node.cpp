@@ -167,10 +167,17 @@ NodeVector Node::get_arguments() const
     return result;
 }
 
-std::set<std::shared_ptr<Node>> Node::get_control_dependencies() const
+const std::set<std::shared_ptr<Node>>& Node::get_control_dependencies() const
 {
     return m_control_dependencies;
 }
+
+void Node::add_control_dependency(std::shared_ptr<Node> node) 
+{
+    m_control_dependencies.insert(node);
+}
+
+
 
 std::vector<std::shared_ptr<Function>> Node::get_functions() const
 {

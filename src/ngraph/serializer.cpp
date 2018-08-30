@@ -170,7 +170,7 @@ void ngraph::serialize(ostream& out, shared_ptr<ngraph::Function> func, size_t i
                                                       c->get_output_element_type(0).size());
                 writer.write(c->get_name(), c->get_data_ptr(), size);
             }
-        });
+        }, true);
     });
 
     writer.close();
@@ -310,7 +310,7 @@ static json write(const Function& f, bool binary_constant_data)
             {
                 independent_nodes.push_back(node.get());
             }
-        });
+        }, true);
 
         while (independent_nodes.size() > 0)
         {
@@ -358,9 +358,11 @@ static shared_ptr<ngraph::Function>
             string node_name = node_js.at("name").get<string>();
             string node_op = node_js.at("op").get<string>();
             vector<string> node_inputs = node_js.at("inputs").get<vector<string>>();
+            vector<string> control_deps_inputs = get_or_default<vector<string>>(node_js, "control_deps", vector<string> {});
             vector<string> node_outputs = node_js.at("outputs").get<vector<string>>();
             shared_ptr<Node> node;
             vector<shared_ptr<Node>> args;
+            vector<shared_ptr<Node>> control_deps;
             for (const string& name : node_inputs)
             {
                 args.push_back(node_map.at(name));
@@ -906,6 +908,12 @@ static shared_ptr<ngraph::Function>
                 ss << "unsupported op " << node_op;
                 throw runtime_error(ss.str());
             }
+
+            for (const string& name : control_deps_inputs)
+            {
+                node->add_control_dependency(node_map.at(name));
+            }
+
             node_map[node_name] = node;
 
             // Typically, it could be unsafe to change the name of a node since it may break nameing
@@ -972,11 +980,16 @@ static json write(const Node& n, bool binary_constant_data)
     node["op"] = n.description();
     // TODO Multiple outputs
     json inputs = json::array();
+    json control_deps = json::array();
     json outputs = json::array();
 
     for (const descriptor::Input& input : n.get_inputs())
     {
         inputs.push_back(input.get_output().get_node()->get_name());
+    }
+    for (auto cdep : n.get_control_dependencies())
+    {
+        control_deps.push_back(cdep->get_name());
     }
     for (size_t i = 0; i < n.get_output_size(); ++i)
     {
@@ -984,6 +997,7 @@ static json write(const Node& n, bool binary_constant_data)
     }
 
     node["inputs"] = inputs;
+    node["control_deps"] = control_deps;
     node["outputs"] = outputs;
 
     if (std::getenv("NGRAPH_SERIALIZER_OUTPUT_SHAPES") != nullptr)

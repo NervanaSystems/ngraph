@@ -210,7 +210,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
                 in_bprop.insert(node);
             }
         }
-    });
+    }, false /* no control dependencies */);
 
     // Traverse fprop to make a map that stores parameters with the same
     // shape and element type as the nodes in fprop iff they are in bprop
@@ -287,7 +287,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
             {
                 fprop_cache.fprop_output_nodes.push_back(inverted_node_map.at(node));
             }
-        });
+        }, false /* no control dependencies */);
 
     // create the new outputs for fprop and the new fprop function
     ResultVector fprop_outputs = fprop->get_results();
