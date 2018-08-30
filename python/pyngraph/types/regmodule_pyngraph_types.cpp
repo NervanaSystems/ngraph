@@ -14,8 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "pyngraph/types/regmodule_pyngraph_types.hpp"
 #include <pybind11/pybind11.h>
+
+#include "pyngraph/types/regmodule_pyngraph_types.hpp"
 
 namespace py = pybind11;
 

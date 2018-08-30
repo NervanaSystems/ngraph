@@ -14,9 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/dot.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+#include "ngraph/op/dot.hpp"
 #include "pyngraph/ops/dot.hpp"
 
 namespace py = pybind11;

@@ -14,9 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/greater.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+#include "ngraph/op/greater.hpp"
 #include "pyngraph/ops/greater.hpp"
 
 namespace py = pybind11;

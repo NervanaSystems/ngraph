@@ -14,9 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/allreduce.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+#include "ngraph/op/allreduce.hpp"
 #include "pyngraph/ops/allreduce.hpp"
 
 namespace py = pybind11;

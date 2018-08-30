@@ -14,9 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/node.hpp" // ngraph::Node
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+#include "ngraph/node.hpp"        // ngraph::Node
 #include "ngraph/op/add.hpp"      // ngraph::op::Add
 #include "ngraph/op/divide.hpp"   // ngraph::op::Divide
 #include "ngraph/op/multiply.hpp" // ngraph::op::Multiply

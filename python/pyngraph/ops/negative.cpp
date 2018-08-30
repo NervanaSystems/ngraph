@@ -14,9 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/negative.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+#include "ngraph/op/negative.hpp"
 #include "pyngraph/ops/negative.hpp"
 
 namespace py = pybind11;
