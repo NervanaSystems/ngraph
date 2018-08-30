@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
 
 namespace ngraph
@@ -24,7 +25,35 @@ namespace ngraph
     {
         namespace reshape
         {
+            ///
+            /// \brief      Gets the AxisVector filled with monotonic increasing sequence.
+            ///
+            /// \param[in]  data_shape_size  The data shape size.
+            /// \param[in]  start_value      The start_value for sequence.
+            ///
+            /// \return     The filled AxisVector.
+            ///
+            ngraph::AxisVector get_default_axis_vector(std::size_t data_shape_size,
+                                                       std::size_t start_value);
 
+            ///
+            /// \brief      Infer `output_shape` dimension values.
+            ///
+            /// \par Inferention rules
+            ///     \li         The input_shape may consist at most on -1 value. In this case the value
+            ///                 is inferred from the size of the tensor and the remaining dimensions.
+            ///     \li         If a dimension value is equal to 0, then its output value is going to
+            ///                 be copied from the input_shape argument.
+            ///
+            /// \param[in]  node_name     The node name.
+            /// \param[in]  input_shape   The input node shape.
+            /// \param[in]  output_shape  The requested output shape for the input node data.
+            ///
+            /// \return     A vector containig new, valid node shape.
+            ///
+            std::vector<std::size_t> infer_dimensions(std::string node_name,
+                                                      std::vector<std::size_t> input_shape,
+                                                      std::vector<std::size_t> output_shape);
 
             /// \brief Permute axes according to specified axes_order parameter.
             ///
