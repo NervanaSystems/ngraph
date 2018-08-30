@@ -14,10 +14,10 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/node_vector.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include "ngraph/node.hpp" // ngraph::Node
-#include "ngraph/node_vector.hpp"
 #include "pyngraph/node.hpp"
 #include "pyngraph/node_vector.hpp"
 

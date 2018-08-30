@@ -14,9 +14,9 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/op/convert.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/op/convert.hpp"
 #include "pyngraph/ops/convert.hpp"
 
 namespace py = pybind11;

@@ -14,9 +14,9 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/op/sum.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "ngraph/op/sum.hpp"
 #include "ngraph/shape.hpp"
 #include "pyngraph/ops/sum.hpp"
 
