@@ -1075,13 +1075,13 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add()
 
         for (auto add_user : m.get_match_root()->get_users())
         {
-            if (add_user->is_output())
+            /*if (add_user->is_output())
             {
                 // TODO: Remove restriction once we handle this case in codegen
                 NGRAPH_DEBUG
                     << "Unsafe to use in-place kernel since add's in-place output is a result";
                 return false;
-            }
+            }*/
         }
 
         auto conv_add =
@@ -1090,8 +1090,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add()
         return true;
     };
 
-    //auto m = std::make_shared<pattern::Matcher>(padd, callback, "conv_add");
-    //this->add_matcher(m);
+    auto m = std::make_shared<pattern::Matcher>(padd, callback, "conv_add");
+    this->add_matcher(m);
 }
 
 void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add_relu()
@@ -1227,13 +1227,13 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
 
         for (auto add_user : m.get_match_root()->get_users())
         {
-            if (add_user->is_output())
+            /*if (add_user->is_output())
             {
                 // TODO: Remove restriction once we handle this case in codegen
                 NGRAPH_DEBUG
                     << "Unsafe to use in-place kernel since add's in-place output is a result";
                 return false;
-            }
+            }*/
         }
 
         auto conv_add =
