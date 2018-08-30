@@ -24,10 +24,8 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Convert(py::module m)
 {
-    py::class_<ngraph::op::Convert,
-               std::shared_ptr<ngraph::op::Convert>,
-               ngraph::op::Op>
-        convert(m, "Convert");
+    py::class_<ngraph::op::Convert, std::shared_ptr<ngraph::op::Convert>, ngraph::op::Op> convert(
+        m, "Convert");
     convert.doc() = "ngraph.impl.op.Convert wraps ngraph::op::Convert";
     convert.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::element::Type&>());
 }
