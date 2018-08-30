@@ -16,10 +16,8 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-//#include <string>
 #include "ngraph/function.hpp"     // ngraph::Function
 #include "ngraph/op/parameter.hpp" // ngraph::op::Parameter
-//#include "ngraph/type/type.hpp"    // ngraph::TensorViewType
 #include "pyngraph/function.hpp"
 
 namespace py = pybind11;

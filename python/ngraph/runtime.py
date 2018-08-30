@@ -19,7 +19,6 @@ from typing import List
 
 import numpy as np
 
-# from ngraph.impl import Function, Node, serialize, TensorViewType, util
 from ngraph.impl import Function, Node, serialize, util
 from ngraph.impl.runtime import Backend, TensorView
 from ngraph.impl.op import Parameter

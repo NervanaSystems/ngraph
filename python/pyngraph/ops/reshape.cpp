@@ -16,7 +16,6 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-//#include <string>
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/shape.hpp"
 #include "pyngraph/ops/reshape.hpp"

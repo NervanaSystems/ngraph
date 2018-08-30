@@ -16,7 +16,6 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-//#include <string>
 #include "ngraph/function.hpp"
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/shape.hpp"
