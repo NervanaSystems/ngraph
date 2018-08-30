@@ -23,10 +23,10 @@ namespace ngraph
     {
         std::vector<Graph> Attribute::get_graph_array() const
         {
-            return {std::begin(m_attribute_proto.graphs()), std::end(m_attribute_proto.graphs())};
+            return {std::begin(m_attribute_proto->graphs()), std::end(m_attribute_proto->graphs())};
         }
 
-        Graph Attribute::get_graph() const { return Graph{m_attribute_proto.g()}; }
+        Graph Attribute::get_graph() const { return Graph{m_attribute_proto->g()}; }
     } // namespace onnx_import
 
 } // namespace ngraph
