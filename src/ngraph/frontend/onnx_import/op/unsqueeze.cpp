@@ -38,7 +38,7 @@ namespace ngraph
                 if (axes.empty())
                 {
                     throw error::parameter::Value(
-                        "Unsqueeze node (", node.get_name(), "): axes attribute is mandatory.");
+                        "Unsqueeze", node.get_name(), "axes attribute is mandatory.");
                 }
                 std::sort(axes.begin(), axes.end(), std::greater<int64_t>());
 
@@ -50,9 +50,8 @@ namespace ngraph
                 {
                     if (axis < 0 || axis > data_shape.size())
                     {
-                        throw error::parameter::Value("Unsqueeze node (",
-                                                      node.get_name(),
-                                                      "): provided axes attribute is not valid.");
+                        throw error::parameter::Value(
+                            "Unsqueeze", node.get_name(), "provided axes attribute is not valid.");
                     }
                     data_shape.insert(data_shape.begin() + axis, 1);
                 }
