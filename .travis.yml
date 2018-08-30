@@ -36,7 +36,7 @@ install:
     mkdir $TRAVIS_BUILD_DIR/build
     cd $TRAVIS_BUILD_DIR/build
     cmake .. -DNGRAPH_CPU_ENABLE=FALSE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="~/ngraph_dist"
-    make -j"$(nproc)"
+    make -j 2
   fi
 
 script:
