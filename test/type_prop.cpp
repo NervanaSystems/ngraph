@@ -227,6 +227,54 @@ TEST(type_prop, concat_deduce)
     ASSERT_EQ(c->get_shape(), (Shape{2, 12, 4}));
 }
 
+TEST(type_prop, concat_deduce_wrong_rank)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 7, 4});
+    auto param2 = make_shared<op::Parameter>(element::f32,
+                                             Shape{
+                                                 2, 2,
+                                             });
+    try
+    {
+        auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 1);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Deduced type should disagree with specified type";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Arguments to concat do not have same rank"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, concat_deduce_wrong_shape)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 7, 4});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 2, 5});
+    try
+    {
+        auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 1);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Deduced type should disagree with specified type";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string(
+                "Arguments to concat do not have same dimension on a non-concatenation axis"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, concat_deduce_axis_oob)
 {
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
