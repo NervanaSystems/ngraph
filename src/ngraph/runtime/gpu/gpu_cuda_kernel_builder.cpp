@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 #include <algorithm>
 
 #include "ngraph/codegen/code_writer.hpp"
@@ -204,7 +204,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_op(codegen::CodeWriter& writer,
             writer << "uint32_t in_idx = 0;\n";
             writer << data_types[1] << " r = 0;\n";
 
-            //loop through all reduction axis
+            // loop through all reduction axis
             for (int64_t i = 0; i < static_cast<int64_t>(out_rank); i++)
             {
                 writer << "in_idx += (dim_idx_generator / out_strides" << i
@@ -226,7 +226,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_op(codegen::CodeWriter& writer,
                 }
                 writer << "int idx" << last_r_idx << " = 0;\n";
                 writer << "uint32_t step = reduce_strides" << last_r_idx << ";\n";
-                //unroll last reduction axis
+                // unroll last reduction axis
                 writer << "for(; idx" << last_r_idx << " < (reduce_shape" << last_r_idx
                        << " >> 3); idx" << last_r_idx << "++)\n";
                 writer.block_begin();
@@ -554,7 +554,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_window_op(
         writer.block_begin();
         {
             writer << "int output_idx = tid;\n";
-            writer << "int idx_init = 0; //result will be initial to in[idx_init]\n";
+            writer << "int idx_init = 0; // result will be initial to in[idx_init]\n";
             for (int i = static_cast<int>(rank) - 1; i >= 0; i--)
             {
                 writer << "int output_idx_" << i << " = output_idx % output_shape[" << i << "];\n";
@@ -582,7 +582,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_window_op(
                 writer << "input_idx += i_" << i << " * input_strides[" << i << "];\n";
             }
             writer << "result = (input_idx == idx_init) ? result : " << op
-                   << "(result, in[input_idx]); //skip in[idx_init] in loop\n";
+                   << "(result, in[input_idx]); // skip in[idx_init] in loop\n";
             for (int i = 0; i < rank; i++)
             {
                 writer.block_end();

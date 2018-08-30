@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/function.hpp"
@@ -155,12 +155,12 @@ op::MaxPoolWithIndices::MaxPoolWithIndices(const shared_ptr<Node>& arg,
     copy(output_item_shape.begin(), output_item_shape.end(), result_shape.begin() + 2);
 
     add_output(get_input_element_type(0), result_shape);
-    //MKLDNN can pick one of the two following datatypes
-    //to store maximum indices: s32 and u8.
-    //For smaller kernels, where 255 positions is enough
-    //to span the entire kernel, u8 is picked.
-    //We conservatively always use s32
-    //to simplify MaxPoolWithIndices c-tor.
+    // MKLDNN can pick one of the two following datatypes
+    // to store maximum indices: s32 and u8.
+    // For smaller kernels, where 255 positions is enough
+    // to span the entire kernel, u8 is picked.
+    // We conservatively always use s32
+    // to simplify MaxPoolWithIndices c-tor.
     add_output(element::i32, result_shape);
 }
 
