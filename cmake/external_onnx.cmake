@@ -28,7 +28,7 @@ set(ONNX_VERSION pre-1.3)
 #------------------------------------------------------------------------------
 
 set(ONNX_GIT_REPO_URL https://github.com/onnx/onnx.git)
-set(ONNX_GIT_SHA1 73b2d4d799a97fba18a7b3d9c077ff6e59749c3f)
+set(ONNX_GIT_SHA1 42c06046ac0033380fde00c97c27eaf372047369)
 
 # The 'BUILD_BYPRODUCTS' arguments was introduced in CMake 3.2.
 if (${CMAKE_VERSION} VERSION_LESS 3.2)
