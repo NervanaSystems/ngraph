@@ -16,15 +16,14 @@
 
 #pragma once
 
-#include "ngraph/op/util/unary_elementwise.hpp"
-#include "ngraph/type/type.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Elementwise type conversion operation.
-        class Convert : public util::UnaryElementwise
+        class Convert : public Op
         {
         public:
             /// \brief Constructs a conversion operation.
@@ -32,6 +31,8 @@ namespace ngraph
             /// \param arg          Node that produces the input tensor.
             /// \param element_type Element type for the output tensor.
             Convert(const std::shared_ptr<Node>& arg, const ngraph::element::Type& element_type);
+
+            void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

@@ -52,7 +52,6 @@
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
-#include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/descriptor/tensor_view.hpp"
 #include "ngraph/except.hpp"
@@ -129,4 +128,3 @@
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
-#include "ngraph/type/type.hpp"

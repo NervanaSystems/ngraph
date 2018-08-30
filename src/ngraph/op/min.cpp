@@ -22,6 +22,7 @@ using namespace ngraph;
 op::Min::Min(const shared_ptr<Node>& arg, const AxisSet& reduction_axes)
     : ArithmeticReduction("Min", arg, reduction_axes)
 {
+    constructor_validate_and_infer_types();
 }
 
 shared_ptr<Node> op::Min::copy_with_new_args(const NodeVector& new_args) const

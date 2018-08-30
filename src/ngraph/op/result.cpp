@@ -17,24 +17,29 @@
 #include <memory>
 #include <typeindex>
 #include <typeinfo>
-#include "ngraph/node.hpp"
 
+#include "ngraph/node.hpp"
 #include "ngraph/op/result.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 op::Result::Result(const shared_ptr<Node>& arg)
-    : RequiresTensorViewArgs("Result", {arg})
+    : Op("Result", check_single_output_args({arg}))
 {
-    if (arg->get_outputs().size() != 1)
+    constructor_validate_and_infer_types();
+}
+
+void op::Result::validate_and_infer_types()
+{
+    if (get_input_size() != 1)
     {
-        throw ngraph_error("Expected a single-output argument");
+        throw ngraph_error("Result expected a single-output argument");
     }
 
     // always borrow the placement conf even the default one
-    set_placement(arg->get_placement());
-    set_value_type_checked(arg->get_element_type(), arg->get_shape());
+    set_placement(get_argument(0)->get_placement());
+    set_output_type(0, get_input_element_type(0), get_input_shape(0));
 }
 
 shared_ptr<Node> op::Result::copy_with_new_args(const NodeVector& new_args) const
@@ -46,7 +51,7 @@ shared_ptr<Node> op::Result::copy_with_new_args(const NodeVector& new_args) cons
 
     if (new_args.at(0)->get_outputs().size() != 1)
     {
-        throw ngraph_error("Expected a single-output argument");
+        throw ngraph_error("Result::copy_with_new_args expected a single-output argument");
     }
 
     auto res = make_shared<Result>(new_args.at(0));

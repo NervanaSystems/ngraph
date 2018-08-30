@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 #include "ngraph/util.hpp"
 
 #include <array>
@@ -26,7 +26,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Fused Sigmoid functions (logistic and tanh) with multiplication forward prop.
-        class SigmoidMultiply : public util::RequiresTensorViewArgs
+        class SigmoidMultiply : public Op
         {
         public:
             /// Defines valid function types
@@ -61,7 +61,7 @@ namespace ngraph
 
         /// \brief Elementwise SigmoidMultiplyBackprop operation.
         ///
-        class SigmoidMultiplyBackprop : public util::RequiresTensorViewArgs
+        class SigmoidMultiplyBackprop : public Op
         {
         public:
             typedef SigmoidMultiply::FunctionType FunctionType;

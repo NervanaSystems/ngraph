@@ -14,10 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/parameter_vector.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
 #include "ngraph/op/parameter.hpp" // ngraph::op::Parameter
+#include "ngraph/op/parameter_vector.hpp"
 #include "pyngraph/ops/parameter.hpp"
 #include "pyngraph/ops/parameter_vector.hpp"
 
