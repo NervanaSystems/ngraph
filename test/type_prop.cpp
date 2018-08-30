@@ -1356,11 +1356,10 @@ TEST(type_prop, slice_deduce_vector_invalid_strides)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid slice strides not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string(
-                      "Number of strides provided for slice does not match number of input axes"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("Rank of strides (2) does not match rank of argument (1)"));
     }
     catch (...)
     {
@@ -1377,9 +1376,10 @@ TEST(type_prop, slice_deduce_vector_edge_upper_oob)
         // Should have thrown, so fail if it didn't
         FAIL() << "Upper bound out of range not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Upper bound for slice is out of range"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Upper bound for slice at axis 0 is out of range"));
     }
     catch (...)
     {
@@ -1396,9 +1396,10 @@ TEST(type_prop, slice_deduce_matrix_edge_upper_oob)
         // Should have thrown, so fail if it didn't
         FAIL() << "Upper bound out of range not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Upper bound for slice is out of range"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Upper bound for slice at axis 1 is out of range"));
     }
     catch (...)
     {
@@ -1415,9 +1416,11 @@ TEST(type_prop, slice_deduce_vector_lower_above_upper)
         // Should have thrown, so fail if it didn't
         FAIL() << "Lower bound above upper not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Lower bound for slice is greater than upper bound"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Lower bound for slice is greater than upper bound at axis 0"));
     }
     catch (...)
     {
@@ -1434,9 +1437,11 @@ TEST(type_prop, slice_deduce_matrix_lower_above_upper)
         // Should have thrown, so fail if it didn't
         FAIL() << "Lower bound above upper not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Lower bound for slice is greater than upper bound"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Lower bound for slice is greater than upper bound at axis 1"));
     }
     catch (...)
     {
@@ -1453,11 +1458,11 @@ TEST(type_prop, slice_deduce_matrix_lower_missing)
         // Should have thrown, so fail if it didn't
         FAIL() << "Missing lower bound coordinate not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Number of lower bounds provided for slice does "
-                              "not match number of input axes"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank of lower bounds (1) does not match rank of argument (2)"));
     }
     catch (...)
     {
@@ -1474,11 +1479,11 @@ TEST(type_prop, slice_deduce_matrix_upper_missing)
         // Should have thrown, so fail if it didn't
         FAIL() << "Missing upper bound coordinate not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Number of upper bounds provided for slice does "
-                              "not match number of input axes"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank of upper bounds (1) does not match rank of argument (2)"));
     }
     catch (...)
     {
@@ -1495,11 +1500,11 @@ TEST(type_prop, slice_deduce_matrix_lower_extra)
         // Should have thrown, so fail if it didn't
         FAIL() << "Extra lower bound coordinate not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Number of lower bounds provided for slice does "
-                              "not match number of input axes"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank of lower bounds (3) does not match rank of argument (2)"));
     }
     catch (...)
     {
@@ -1516,11 +1521,11 @@ TEST(type_prop, slice_deduce_matrix_upper_extra)
         // Should have thrown, so fail if it didn't
         FAIL() << "Extra upper bound coordinate not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Number of upper bounds provided for slice does "
-                              "not match number of input axes"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank of upper bounds (3) does not match rank of argument (2)"));
     }
     catch (...)
     {
