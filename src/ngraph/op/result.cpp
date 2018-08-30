@@ -27,10 +27,8 @@ using namespace ngraph;
 op::Result::Result(const shared_ptr<Node>& arg)
     : RequiresTensorViewArgs("Result", {arg})
 {
-    if (arg->get_outputs().size() != 1)
-    {
-        throw ngraph_error("Expected a single-output argument");
-    }
+    NODE_VALIDATION_ASSERT(this, arg->get_outputs().size() == 1)
+        << "Argument has " << arg->get_outputs().size() << " outputs (1 expected).";
 
     // always borrow the placement conf even the default one
     set_placement(arg->get_placement());
@@ -41,10 +39,8 @@ shared_ptr<Node> op::Result::copy_with_new_args(const NodeVector& new_args) cons
 {
     check_new_args_count(this, new_args, 1);
 
-    if (new_args.at(0)->get_outputs().size() != 1)
-    {
-        throw ngraph_error("Expected a single-output argument");
-    }
+    NODE_VALIDATION_ASSERT(this, new_args[0]->get_outputs().size() == 1)
+        << "Argument has " << new_args[0]->get_outputs().size() << " outputs (1 expected).";
 
     auto res = make_shared<Result>(new_args.at(0));
     res->set_needs_copy(m_needs_copy);

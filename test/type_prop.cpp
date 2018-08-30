@@ -4038,9 +4038,9 @@ TEST(type_prop, reverse_3d_deduce_oob)
         // Should have thrown, so fail if it didn't
         FAIL() << "Axis out of bounds not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Reverse axis 3 is out of bounds (input rank is 3)."));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Reverse axis (3) is out of bounds"));
     }
     catch (...)
     {
@@ -4059,9 +4059,10 @@ TEST(type_prop, reverse_sequence_1_dim)
         auto bc = make_shared<op::ReverseSequence>(data, seq_lenghts, batch_axis, seq_axis);
         FAIL() << "ReverseSequence c-tor should throw for seq_lenghts whose rank isn't equal to 1";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("indices should be a 1-dimensional array"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Sequence indices must be a 1-dimensional tensor"));
     }
     catch (...)
     {
@@ -4080,9 +4081,9 @@ TEST(type_prop, reverse_sequence_batch_index_oob)
         auto bc = make_shared<op::ReverseSequence>(data, seq_lenghts, batch_axis, seq_axis);
         FAIL() << "ReverseSequence c-tor should throw for out-of-bounds batch axis index";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("batch axis index is out of bounds"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Batch axis index (3) is out of bounds"));
     }
     catch (...)
     {
@@ -4093,17 +4094,17 @@ TEST(type_prop, reverse_sequence_batch_index_oob)
 TEST(type_prop, reverse_sequence_sequence_index_oob)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2});
-    auto seq_lenghts = make_shared<op::Parameter>(element::f32, Shape{3});
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, Shape{3});
     try
     {
         size_t batch_axis = 1;
         size_t seq_axis = 3;
-        auto bc = make_shared<op::ReverseSequence>(data, seq_lenghts, batch_axis, seq_axis);
+        auto bc = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
         FAIL() << "ReverseSequence c-tor should throw for out-of-bounds sequence axis index";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("sequence axis index is out of bounds"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Sequence axis index (3) is out of bounds"));
     }
     catch (...)
     {
@@ -4123,10 +4124,11 @@ TEST(type_prop, reverse_sequence_seq_len_size_equal_to_batch_dim)
         FAIL() << "ReverseSequence c-tor should throw when sequence length size isn't equal to "
                   "batch dimension";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Sequence length size should be equal to batch axis dimension"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Sequence length (3) is not equal to batch axis dimension (4)"));
     }
     catch (...)
     {

@@ -33,25 +33,23 @@ op::ReverseSequence::ReverseSequence(const std::shared_ptr<Node> arg,
     , m_batch_axis(batch_axis)
     , m_seq_axis(seq_axis)
 {
-    if (seq_indices->get_shape().size() != 1)
-    {
-        throw ngraph_error("indices should be a 1-dimensional array");
-    }
+    NODE_VALIDATION_ASSERT(this, seq_indices->get_shape().size() == 1)
+        << "Sequence indices must be a 1-dimensional tensor (sequence indices shape: "
+        << seq_indices->get_shape() << ").";
 
-    if (batch_axis >= arg->get_shape().size())
-    {
-        throw ngraph_error("batch axis index is out of bounds");
-    }
+    NODE_VALIDATION_ASSERT(this, batch_axis < arg->get_shape().size())
+        << "Batch axis index (" << batch_axis
+        << ") is out of bounds (argument shape: " << arg->get_shape() << ").";
 
-    if (seq_axis >= arg->get_shape().size())
-    {
-        throw ngraph_error("sequence axis index is out of bounds");
-    }
+    NODE_VALIDATION_ASSERT(this, seq_axis < arg->get_shape().size())
+        << "Sequence axis index (" << seq_axis
+        << ") is out of bounds (argument shape: " << arg->get_shape() << ").";
 
-    if (arg->get_shape().at(batch_axis) != seq_indices->get_shape().at(0))
-    {
-        throw ngraph_error("Sequence length size should be equal to batch axis dimension");
-    }
+    NODE_VALIDATION_ASSERT(this, arg->get_shape()[batch_axis] == seq_indices->get_shape()[0])
+        << "Sequence length (" << seq_indices->get_shape()[0] << ") is not equal to batch axis "
+        << "dimension (" << arg->get_shape()[batch_axis]
+        << ") (argument shape: " << arg->get_shape()
+        << ", sequence indices shape: " << seq_indices->get_shape() << ").";
 
     set_value_type_checked(arg->get_element_type(), arg->get_shape());
 }

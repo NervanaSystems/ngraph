@@ -34,13 +34,9 @@ op::Reverse::Reverse(const shared_ptr<Node>& arg, const AxisSet& reversed_axes)
     // Make sure all reversed axis indices are valid.
     for (size_t axis : reversed_axes)
     {
-        if (axis >= input_rank)
-        {
-            stringstream ss;
-            ss << "Reverse axis " << axis << " is out of bounds (input rank is " << input_rank
-               << ").";
-            throw ngraph_error(ss.str());
-        }
+        NODE_VALIDATION_ASSERT(this, axis < input_rank)
+            << "Reverse axis (" << axis << ") is out of bounds (argument shape: " << input_shape
+            << ").";
     }
 
     set_value_type_checked(input.get_element_type(), input_shape);
