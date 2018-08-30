@@ -99,7 +99,7 @@ namespace ngraph
             {
                 size_t size = shape_size(m_shape) * m_element_type.size();
                 m_data = ngraph::aligned_alloc(m_element_type.size(), size);
-                memcpy(m_data, data, size);
+                std::memcpy(m_data, data, size);
                 auto vt = std::make_shared<TensorViewType>(type, shape);
                 set_value_type_checked(vt);
             }
@@ -242,6 +242,11 @@ namespace ngraph
             element::Type m_element_type;
             Shape m_shape;
             void* m_data;
+
+        private:
+            Constant(const Constant&) = delete;
+            Constant(Constant&&) = delete;
+            Constant operator=(const Constant*) = delete;
         };
     }
 }

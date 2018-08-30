@@ -63,6 +63,10 @@ namespace ngraph
                 static constexpr int BufferAlignment = NGRAPH_CPU_ALIGNMENT;
 
             private:
+                CPUTensorView(const CPUTensorView&) = delete;
+                CPUTensorView(CPUTensorView&&) = delete;
+                CPUTensorView& operator=(const CPUTensorView&) = delete;
+
                 char* buffer;
                 char* aligned_buffer;
                 size_t buffer_size;
