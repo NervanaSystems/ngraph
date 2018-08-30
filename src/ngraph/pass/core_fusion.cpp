@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <algorithm>
 #include <unordered_set>
@@ -86,7 +86,7 @@ void pass::CoreFusion::construct_relu()
 
 void pass::CoreFusion::construct_sigmoid()
 {
-    //construct variance
+    // construct variance
     auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
     auto neg_input = std::make_shared<op::Negative>(input);
     auto exp_neg_input = std::make_shared<op::Exp>(neg_input);
@@ -98,7 +98,7 @@ void pass::CoreFusion::construct_sigmoid()
     auto add_exp = std::make_shared<op::Add>(exp_neg_input, broadcast_constant);
     auto divide_1_over_exp = std::make_shared<op::Divide>(broadcast_constant, add_exp);
 
-    //Define a call back that needs to called once the DFG matches the pattern
+    // Define a call back that needs to called once the DFG matches the pattern
     ngraph::pattern::graph_rewrite_callback callback = [input](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
                      << m.get_match_root()->get_name();
@@ -129,7 +129,7 @@ void pass::CoreFusion::construct_sigmoid()
 
 void pass::CoreFusion::construct_sigmoid_bprop()
 {
-    //construct variance
+    // construct variance
     auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
     auto neg_input = std::make_shared<op::Negative>(input);
     auto exp_neg_input = std::make_shared<op::Exp>(neg_input);
@@ -139,7 +139,7 @@ void pass::CoreFusion::construct_sigmoid_bprop()
     auto broadcast_constant = std::make_shared<op::Broadcast>(constant, Shape{3, 4}, AxisSet{0, 1});
 
     auto add_exp = std::make_shared<op::Add>(exp_neg_input, broadcast_constant);
-    // //auto divide_1_over_exp = std::make_shared<op::Divide>(broadcast_constant, add_exp);
+    // auto divide_1_over_exp = std::make_shared<op::Divide>(broadcast_constant, add_exp);
     auto sigmoid_fwd = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
 
     auto delta = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
@@ -151,7 +151,7 @@ void pass::CoreFusion::construct_sigmoid_bprop()
     auto multiply_2 = std::make_shared<op::Multiply>(divide_2, exp_neg_input);
     auto negtive_2 = std::make_shared<op::Negative>(multiply_2);
 
-    //Define a call back that needs to called once the DFG matches the pattern
+    // Define a call back that needs to called once the DFG matches the pattern
     ngraph::pattern::graph_rewrite_callback callback = [input, delta](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
                      << m.get_match_root()->get_name();

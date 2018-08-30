@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 //
 // The public API for ngraph++
@@ -24,23 +24,23 @@
 #error("ngraph.hpp is for external use only")
 #endif
 
-/// @namespace ngraph
-/// @brief The Intel Nervana Graph C++ API.
+/// \namespace ngraph
+/// \brief The Intel Nervana Graph C++ API.
 
-/// @namespace ngraph::descriptor
-/// @brief Descriptors are compile-time representations of objects that will appear at run-time.
+/// \namespace ngraph::descriptor
+/// \brief Descriptors are compile-time representations of objects that will appear at run-time.
 
-/// @namespace ngraph::descriptor::layout
-/// @brief Layout descriptors describe how tensor views are implemented.
+/// \namespace ngraph::descriptor::layout
+/// \brief Layout descriptors describe how tensor views are implemented.
 
-/// @namespace ngraph::op
-/// @brief Ops used in graph-building.
+/// \namespace ngraph::op
+/// \brief Ops used in graph-building.
 
-/// @namespace ngraph::runtime
-/// @brief The objects used for executing the graph.
+/// \namespace ngraph::runtime
+/// \brief The objects used for executing the graph.
 
-/// @namespace ngraph::builder
-/// @brief Convenience functions that create addional graph nodes to implement commonly-used
+/// \namespace ngraph::builder
+/// \brief Convenience functions that create addional graph nodes to implement commonly-used
 ///        recipes, for example auto-broadcast.
 
 #include "ngraph/builder/autobroadcast.hpp"

@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 // tool to benchmark any ngraph json model with given backend.
 // compile and run with:
@@ -21,9 +21,11 @@
 // sample models are under ../../test/models
 
 #include <fstream>
+#include <iomanip>
 
 #include "benchmark.hpp"
 #include "ngraph/file_util.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/backend.hpp"
@@ -32,6 +34,121 @@
 
 using namespace std;
 using namespace ngraph;
+
+class PerfShape : public ngraph::runtime::PerformanceCounter
+{
+public:
+    PerfShape(const runtime::PerformanceCounter& p, Shape s)
+        : PerformanceCounter(p)
+        , shape(s)
+    {
+    }
+    Shape shape;
+};
+
+unordered_map<string, shared_ptr<Node>> get_node_map(shared_ptr<Function> func)
+{
+    unordered_map<string, shared_ptr<Node>> node_map;
+    vector<shared_ptr<Function>> fs;
+    traverse_functions(func, [&](shared_ptr<Function> f) { fs.push_back(f); });
+    for (shared_ptr<Function> f : fs)
+    {
+        for (shared_ptr<Node> node : f->get_ops())
+        {
+            node_map.insert({node->get_name(), node});
+        }
+    }
+    return node_map;
+}
+
+vector<PerfShape> to_perf_shape(shared_ptr<Function> f,
+                                const vector<runtime::PerformanceCounter>& perf_data)
+{
+    vector<PerfShape> result;
+    auto node_map = get_node_map(f);
+    for (const runtime::PerformanceCounter& p : perf_data)
+    {
+        auto node = node_map[p.name()];
+        Shape shape = node->get_outputs()[0].get_shape();
+        result.push_back(PerfShape(p, shape));
+    }
+    return result;
+}
+
+multimap<size_t, string> aggregate_timing_details(const vector<PerfShape>& perf_data)
+{
+    unordered_map<string, size_t> timing;
+    unordered_map<string, size_t> count;
+    for (const PerfShape& p : perf_data)
+    {
+        string op = p.name().substr(0, p.name().find('_'));
+        string shape_name = " {" + join(p.shape) + "} ";
+        timing[op + shape_name] += p.microseconds();
+        count[op + shape_name] += 1;
+    }
+
+    multimap<size_t, string> rc;
+    for (const pair<string, size_t>& t : timing)
+    {
+        rc.insert({t.second, t.first + to_string(count[t.first])});
+    }
+    return rc;
+}
+
+multimap<size_t, string> aggregate_timing(const vector<PerfShape>& perf_data)
+{
+    unordered_map<string, size_t> timing;
+    for (const PerfShape& p : perf_data)
+    {
+        string op = p.name().substr(0, p.name().find('_'));
+        timing[op] += p.microseconds();
+    }
+
+    multimap<size_t, string> rc;
+    for (const pair<string, size_t>& t : timing)
+    {
+        rc.insert({t.second, t.first});
+    }
+    return rc;
+}
+
+void print_times(const multimap<size_t, string>& timing)
+{
+    // set the column widths
+    int name_width = 0;
+    int time_width = 0;
+    for (const pair<size_t, string>& p : timing)
+    {
+        name_width = max(name_width, static_cast<int>(p.second.size()));
+        stringstream ss;
+        ss.imbue(locale(""));
+        ss << p.first;
+        time_width = max(time_width, static_cast<int>(ss.str().size()));
+    }
+    for (auto it = timing.rbegin(); it != timing.rend(); it++)
+    {
+        cout << setw(name_width + 2) << left << it->second << " " << setw(time_width + 2) << right
+             << it->first << "us\n";
+    }
+}
+
+void print_results(vector<PerfShape> perf_data, bool timing_detail)
+{
+    sort(perf_data.begin(), perf_data.end(), [](const PerfShape& p1, const PerfShape& p2) {
+        return p1.total_microseconds() > p2.total_microseconds();
+    });
+    multimap<size_t, string> timing = aggregate_timing(perf_data);
+    multimap<size_t, string> timing_details = aggregate_timing_details(perf_data);
+
+    if (timing_detail)
+    {
+        cout << "\n---- Aggregate times per op type ----\n";
+        print_times(timing);
+
+        cout << "\n---- Aggregate times per op type/shape/count ----\n";
+        print_times(timing_details);
+    }
+}
 
 int main(int argc, char** argv)
 {
@@ -190,6 +307,7 @@ OPTIONS
     else if (!directory.empty())
     {
         vector<string> models;
+        vector<PerfShape> aggregate_perf_data;
         file_util::iterate_files(directory,
                                  [&](const string& file, bool is_dir) {
                                      if (!is_dir)
@@ -198,27 +316,35 @@ OPTIONS
                                      }
                                  },
                                  true);
+        unordered_map<string, Shape> shape_info;
         for (const string& m : models)
         {
             try
             {
                 shared_ptr<Function> f = deserialize(m);
-                cout << "Benchmarking " << m << ", " << backend << " backend, " << iterations
-                     << " iterations.\n";
-                run_benchmark(f, backend, iterations, timing_detail, warmup_iterations);
+                // cout << "Benchmarking " << m << ", " << backend << " backend, " << iterations
+                //      << " iterations.\n";
+                auto perf_data =
+                    run_benchmark(f, backend, iterations, timing_detail, warmup_iterations);
+                auto perf_shape = to_perf_shape(f, perf_data);
+                aggregate_perf_data.insert(
+                    aggregate_perf_data.end(), perf_shape.begin(), perf_shape.end());
             }
             catch (exception e)
             {
                 cout << "Exception caught on '" << m << "'\n" << e.what() << endl;
             }
         }
+        print_results(aggregate_perf_data, timing_detail);
     }
     else if (iterations > 0)
     {
         shared_ptr<Function> f = deserialize(model);
         cout << "Benchmarking " << model << ", " << backend << " backend, " << iterations
              << " iterations.\n";
-        run_benchmark(f, backend, iterations, timing_detail, warmup_iterations);
+        auto perf_data = run_benchmark(f, backend, iterations, timing_detail, warmup_iterations);
+        auto perf_shape = to_perf_shape(f, perf_data);
+        print_results(perf_shape, timing_detail);
     }
 
     return 0;

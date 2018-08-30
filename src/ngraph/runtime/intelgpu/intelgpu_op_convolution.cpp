@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <CPP/custom_gpu_primitive.hpp>
 
@@ -202,7 +202,7 @@ void runtime::intelgpu::do_convolution_operation(cldnn::topology& topology,
                         writer.block_begin();
                         {
                             // Generate other conditionals
-                            writer << "//Since we use unsigned indexes we don't need "
+                            writer << "// Since we use unsigned indexes we don't need "
                                    << "(input_idx_data_dilationX >= 0) extra check\n"
                                    << "if (";
                             var_idx = 0;
@@ -229,10 +229,10 @@ void runtime::intelgpu::do_convolution_operation(cldnn::topology& topology,
                                        << array_dim(filter_data, "f", reverse_filter) << ";\n";
                             }
                             writer.block_end();
-                            //End of other conditional generation
+                            // End of other conditional generation
                         }
                         writer.block_end();
-                        //End of dilation conditional generation
+                        // End of dilation conditional generation
 
                         // Closing brackets for filter loop
                         for (auto const& i : filter_data)

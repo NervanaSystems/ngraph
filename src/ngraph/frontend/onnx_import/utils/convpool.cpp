@@ -1,25 +1,25 @@
-/*******************************************************************************
- * Copyright 2018 Intel Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
-#include "convpool.hpp"
 #include <cmath>
 
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/shape.hpp"
 
+#include "convpool.hpp"
 #include "core/attribute.hpp"
 #include "core/node.hpp"
 
@@ -27,7 +27,7 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        namespace attribute
+        namespace convpool
         {
             Shape get_kernel_shape(const Node& node)
             {
@@ -118,7 +118,7 @@ namespace ngraph
                 }
                 if (pads.empty())
                 {
-                    pads = {static_cast<std::ptrdiff_t>(kernel_shape.size()), 0UL};
+                    pads = CoordinateDiff(static_cast<std::ptrdiff_t>(kernel_shape.size()), 0UL);
                 }
 
                 if (pads.size() <= 3)
@@ -133,6 +133,6 @@ namespace ngraph
                 }
             }
 
-        } // namespace attribute
+        } // namespace convpool
     }     // namespace onnx_import
 } // namespace ngraph
