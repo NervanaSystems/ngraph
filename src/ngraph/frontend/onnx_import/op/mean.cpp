@@ -14,19 +14,35 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "attribute.hpp"
-#include "graph.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/divide.hpp"
+
+#include "mean.hpp"
+#include "utils/variadic.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        std::vector<Graph> Attribute::get_graph_array() const
+        namespace op
         {
-            return {std::begin(m_attribute_proto.graphs()), std::end(m_attribute_proto.graphs())};
-        }
+            NodeVector mean(const Node& node)
+            {
+                auto sum = variadic::make_ng_variadic_op<ngraph::op::Add>(node).front();
+                auto shape = sum->get_shape();
 
-        Graph Attribute::get_graph() const { return Graph{m_attribute_proto.g()}; }
+                // Create a Constant representing the number of inputs with the same shape as sum
+                auto count = ngraph::op::Constant::create(
+                    sum->get_element_type(),
+                    shape,
+                    std::vector<int>(shape_size(shape), node.get_ng_inputs().size()));
+
+                return {sum / count};
+            }
+
+        } // namespace op
+
     } // namespace onnx_import
 
 } // namespace ngraph

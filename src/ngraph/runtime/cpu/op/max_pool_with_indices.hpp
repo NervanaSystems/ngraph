@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -23,11 +23,11 @@ namespace ngraph
 {
     namespace op
     {
-        //MaxPoolWithIndices produces two outputs.
-        //The first output is equivalent to what MaxPool produces
-        //The second one contains the indices of the maximum numbers
-        //for each window in input (arg)
-        //These indices are used by MKLDNN for a back propagation pass
+        // MaxPoolWithIndices produces two outputs.
+        // The first output is equivalent to what MaxPool produces
+        // The second one contains the indices of the maximum numbers
+        // for each window in input (arg)
+        // These indices are used by MKLDNN for a back propagation pass
         class MaxPoolWithIndices : public util::RequiresTensorViewArgs
         {
         public:
@@ -59,8 +59,8 @@ namespace ngraph
             Shape m_padding_above;
         };
 
-        //MaxPoolWithIndicesBackprop takes MaxPoolWithIndices' outputs and
-        //pass the indices directly to MKLDNN to avoid max indices recomputation
+        // MaxPoolWithIndicesBackprop takes MaxPoolWithIndices' outputs and
+        // pass the indices directly to MKLDNN to avoid max indices recomputation
         class MaxPoolWithIndicesBackprop : public util::RequiresTensorViewArgs
         {
         public:

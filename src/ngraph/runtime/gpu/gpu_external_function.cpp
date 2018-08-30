@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <cstdlib>
 #include <cublas_v2.h>
@@ -501,10 +501,10 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
         m_writer.block_begin();
         {
             m_writer << "m_runtime_context = ctx;\n";
-            //set constant pointers during the first run
+            // set constant pointers during the first run
             m_writer << "invoke_constant_mem_ptr();\n";
 
-            //alocate temp memory pool
+            // alocate temp memory pool
             emit_temp_mem_pool_allocation(current_function);
 
             // Add inputs to the variable name map
@@ -533,8 +533,8 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 ss << "((" << type << "*)(outputs[" << i << "]))";
                 m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
 
-                //it should be safe to assign both descriptors to one output*
-                //since needs_copy == false makes `op::Result` an nop
+                // it should be safe to assign both descriptors to one output*
+                // since needs_copy == false makes `op::Result` an nop
                 auto res = dynamic_pointer_cast<ngraph::op::Result>(op);
                 if (!res->needs_copy())
                 {

@@ -7,10 +7,7 @@ backwards_abs
 backwards_atan
 backwards_avgpool_n1_c1_hw2x2
 backwards_avgpool_n1_c1_hw4x4
-backwards_avgpool_n2_c2_hw2x2_win_2x2_str_1x1_padding_numeric
 backwards_avgpool_n2_c2_hw4x4
-backwards_avgpool_n2_c2_hw4x4_numeric
-backwards_avgpool_n2_c2_hw4x4_win_2x2_str_1x1_numeric
 backwards_batch_norm_three_outputs
 backwards_ceiling
 backwards_dot_scalar_tensor
@@ -24,7 +21,6 @@ backwards_maxpool_n4_c1_hw4_2x2_max
 backwards_replace_slice
 backwards_reverse_sequence_n3_c2_h3
 backwards_reverse_sequence_n4d2c3h2w2
-backwards_sigmoid
 backwards_sign
 backwards_slice
 backwards_tan
@@ -82,7 +78,6 @@ scalar_constant_int64
 select_and_scatter_3d_without_overlap
 select_and_scatter_without_overlap
 select_and_scatter_with_overlap
-sigmoid_bprop_n1c1h4
 sign
 tan
 tensor_constant_int64

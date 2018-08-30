@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <exception>
 #include <sstream>
@@ -49,9 +49,14 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
                 {
                     auto output = &node->get_outputs().at(oi_pair.output).get_tensor();
                     auto input = &node->get_inputs().at(oi_pair.input).get_tensor();
+                    auto input_node = node->get_inputs().at(oi_pair.input).get_output().get_node();
 
-                    if (node->liveness_free_list.count(input) != 0 &&
-                        node->liveness_new_list.count(output) != 0)
+                    // an input tensor can be reused if this is the last use or
+                    // an op isn't destructive (i.e. Reshape(DimShuffle))
+                    if ((node->liveness_free_list.count(input) != 0 &&
+                         node->liveness_new_list.count(output) != 0) ||
+                        (!oi_pair.destructive && !input_node->is_parameter() &&
+                         !input_node->is_constant()))
                     {
                         in_place_outputs.insert({output, input});
                         reused_inputs.insert(input);
