@@ -36,14 +36,14 @@ op::Sigmoid::Sigmoid(shared_ptr<Node> arg)
 op::SigmoidBackprop::SigmoidBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
     : RequiresTensorViewArgs("SigmoidBackprop", {arg, delta})
 {
-    if (arg->get_element_type() != delta->get_element_type())
-    {
-        throw ngraph_error("Argument and delta element types for Sigmoid backprop do not match");
-    }
-    if (arg->get_shape() != delta->get_shape())
-    {
-        throw ngraph_error("Argument and delta shape for Sigmoid backprop do not match");
-    }
+    NODE_VALIDATION_ASSERT(this, arg->get_element_type() == delta->get_element_type())
+        << "Argument and delta element types do not match (argument element type: "
+        << arg->get_element_type() << ", delta element type: " << delta->get_element_type() << ").";
+
+    NODE_VALIDATION_ASSERT(this, arg->get_shape() == delta->get_shape())
+        << "Argument and delta shapes do not match (argument shape: " << arg->get_shape()
+        << ", delta shape: " << delta->get_shape() << ").";
+
     set_value_type_checked(delta->get_element_type(), delta->get_shape());
 }
 
