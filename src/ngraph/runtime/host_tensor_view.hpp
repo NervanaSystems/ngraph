@@ -74,6 +74,10 @@ public:
     void read(void* p, size_t tensor_offset, size_t n) const override;
 
 private:
+    HostTensorView(const HostTensorView&) = delete;
+    HostTensorView(HostTensorView&&) = delete;
+    HostTensorView& operator=(const HostTensorView&) = delete;
+
     char* m_allocated_buffer_pool;
     char* m_aligned_buffer_pool;
     size_t m_buffer_size;
