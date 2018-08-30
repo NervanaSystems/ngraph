@@ -97,7 +97,7 @@ namespace ngraph
             {
                 size_t size = shape_size(m_shape) * m_element_type.size();
                 m_data = ngraph::aligned_alloc(m_element_type.size(), size);
-                memcpy(m_data, data, size);
+                std::memcpy(m_data, data, size);
                 constructor_validate_and_infer_types();
             }
 
@@ -257,6 +257,9 @@ namespace ngraph
             element::Type m_element_type;
             Shape m_shape{};
             void* m_data{nullptr};
+            Constant(const Constant&) = delete;
+            Constant(Constant&&) = delete;
+            Constant operator=(const Constant*) = delete;
         };
 
         class ScalarConstantLikeBase : public Constant
