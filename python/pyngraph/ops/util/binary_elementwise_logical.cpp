@@ -26,6 +26,6 @@ void regclass_pyngraph_op_util_BinaryElementwiseLogical(py::module m)
 {
     py::class_<ngraph::op::util::BinaryElementwiseLogical,
                std::shared_ptr<ngraph::op::util::BinaryElementwiseLogical>,
-               ngraph::op::util::BinaryElementwise>
+               ngraph::op::Op>
         binaryElementwiseLogical(m, "BinaryElementwiseLogical");
 }

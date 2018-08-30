@@ -17,6 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "ngraph/op/op.hpp"
 #include "ngraph/op/util/arithmetic_reduction.hpp"
 #include "pyngraph/ops/util/arithmetic_reduction.hpp"
 
@@ -26,7 +27,7 @@ void regclass_pyngraph_op_util_ArithmeticReduction(py::module m)
 {
     py::class_<ngraph::op::util::ArithmeticReduction,
                std::shared_ptr<ngraph::op::util::ArithmeticReduction>,
-               ngraph::op::util::RequiresTensorViewArgs>
+               ngraph::op::Op>
         arithmeticReduction(m, "ArithmeticRedection");
     // arithmeticReduction.def(py::init<const std::string&, const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet& >());
     arithmeticReduction.def_property_readonly(

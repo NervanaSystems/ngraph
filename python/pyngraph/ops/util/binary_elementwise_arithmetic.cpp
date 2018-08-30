@@ -26,6 +26,6 @@ void regclass_pyngraph_op_util_BinaryElementwiseArithmetic(py::module m)
 {
     py::class_<ngraph::op::util::BinaryElementwiseArithmetic,
                std::shared_ptr<ngraph::op::util::BinaryElementwiseArithmetic>,
-               ngraph::op::util::BinaryElementwise>
+               ngraph::op::Op>
         binaryElementwiseArithmetic(m, "BinaryElementwiseArithmetic");
 }

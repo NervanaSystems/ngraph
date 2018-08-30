@@ -26,6 +26,6 @@ void regclass_pyngraph_op_util_BinaryElementwise(py::module m)
 {
     py::class_<ngraph::op::util::BinaryElementwise,
                std::shared_ptr<ngraph::op::util::BinaryElementwise>,
-               ngraph::op::util::RequiresTensorViewArgs>
+               ngraph::op::Op>
         binaryElementwise(m, "BinaryElementwise ");
 }
