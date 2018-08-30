@@ -49,9 +49,10 @@ namespace ngraph
     std::string join(const T& v, const std::string& sep = ", ")
     {
         std::ostringstream ss;
+        size_t count = 0;
         for (const auto& x : v)
         {
-            if (&x != &*(v.begin()))
+            if (count++ > 0)
             {
                 ss << sep;
             }

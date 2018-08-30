@@ -50,6 +50,10 @@ namespace ngraph
                 MKLDNNWorkspace(size_t size) { buf = reinterpret_cast<char*>(malloc(size)); }
                 ~MKLDNNWorkspace() { free(buf); }
                 char* buf;
+
+                MKLDNNWorkspace(const MKLDNNWorkspace&) = delete;
+                MKLDNNWorkspace(MKLDNNWorkspace&&) = delete;
+                MKLDNNWorkspace& operator=(const MKLDNNWorkspace&) = delete;
             };
 
             class MKLDNNEmitter

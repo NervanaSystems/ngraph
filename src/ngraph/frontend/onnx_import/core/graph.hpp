@@ -42,9 +42,9 @@ namespace ngraph
                 return m_ng_node_cache.at(name);
             }
 
-            const std::string& get_name() const { return m_graph_proto.name(); }
+            const std::string& get_name() const { return m_graph_proto->name(); }
         private:
-            const onnx::GraphProto& m_graph_proto;
+            const onnx::GraphProto* m_graph_proto;
             std::vector<Node> m_nodes;
             std::vector<ValueInfo> m_inputs;
             std::vector<ValueInfo> m_outputs;

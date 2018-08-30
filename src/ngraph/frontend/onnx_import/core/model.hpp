@@ -28,7 +28,7 @@ namespace ngraph
         public:
             Model() = delete;
             explicit Model(const onnx::ModelProto& model_proto)
-                : m_model_proto{model_proto}
+                : m_model_proto{&model_proto}
             {
             }
 
@@ -38,16 +38,16 @@ namespace ngraph
             Model& operator=(Model&&) noexcept = delete;
             Model& operator=(const Model&) = delete;
 
-            const std::string& get_producer_name() const { return m_model_proto.producer_name(); }
-            const onnx::GraphProto& get_graph() const { return m_model_proto.graph(); }
-            std::int64_t get_model_version() const { return m_model_proto.model_version(); }
+            const std::string& get_producer_name() const { return m_model_proto->producer_name(); }
+            const onnx::GraphProto& get_graph() const { return m_model_proto->graph(); }
+            std::int64_t get_model_version() const { return m_model_proto->model_version(); }
             const std::string& get_producer_version() const
             {
-                return m_model_proto.producer_version();
+                return m_model_proto->producer_version();
             }
 
         private:
-            const onnx::ModelProto& m_model_proto;
+            const onnx::ModelProto* m_model_proto;
         };
 
         inline std::ostream& operator<<(std::ostream& outs, const Model& model)

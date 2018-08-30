@@ -91,6 +91,7 @@ namespace ngraph
     private:
         Function(const Function&) = delete;
         Function(const Function&&) = delete;
+        Function& operator=(const Function&) = delete;
 
         static std::atomic<size_t> m_next_instance_id;
         size_t m_instance_id;
