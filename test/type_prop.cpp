@@ -763,9 +763,9 @@ TEST(type_prop, select_shape_mismatch_a)
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments must have the same shape"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Arguments do not all have the same shape"));
     }
     catch (...)
     {
@@ -784,9 +784,9 @@ TEST(type_prop, select_shape_mismatch_b)
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments must have the same shape"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Arguments do not all have the same shape"));
     }
     catch (...)
     {
@@ -805,9 +805,9 @@ TEST(type_prop, select_shape_mismatch_c)
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments must have the same shape"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Arguments do not all have the same shape"));
     }
     catch (...)
     {
@@ -826,11 +826,10 @@ TEST(type_prop, select_elem_mismatch_a)
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string("Argument 0 for arithmetic operators must have boolean element type"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Argument 0 does not have boolean element type"));
     }
     catch (...)
     {
@@ -849,9 +848,10 @@ TEST(type_prop, select_elem_mismatch_bc)
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments 1 and 2 must have the same element type"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Arguments 1 and 2 do not have the same element type"));
     }
     catch (...)
     {
