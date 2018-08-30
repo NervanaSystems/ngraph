@@ -35,10 +35,9 @@ op::Softmax::Softmax(const shared_ptr<Node>& arg, const AxisSet& axes)
 {
     for (auto axis : m_axes)
     {
-        if (axis >= get_shape().size())
-        {
-            throw ngraph_error("Axis for softmax reduction operator is out of bounds");
-        }
+        NODE_VALIDATION_ASSERT(this, axis < get_shape().size())
+            << "Reduction axis (" << axis << ") is out of bounds (argument shape: " << get_shape()
+            << ").";
     }
 
     // empty axes == all axes
