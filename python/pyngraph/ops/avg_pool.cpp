@@ -25,10 +25,8 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_AvgPool(py::module m)
 {
-    py::class_<ngraph::op::AvgPool,
-               std::shared_ptr<ngraph::op::AvgPool>,
-               ngraph::op::Op>
-        avg_pool(m, "AvgPool");
+    py::class_<ngraph::op::AvgPool, std::shared_ptr<ngraph::op::AvgPool>, ngraph::op::Op> avg_pool(
+        m, "AvgPool");
     avg_pool.doc() = "ngraph.impl.op.AvgPool wraps ngraph::op::AvgPool";
     avg_pool.def(py::init<const std::shared_ptr<ngraph::Node>&,
                           const ngraph::Shape&,

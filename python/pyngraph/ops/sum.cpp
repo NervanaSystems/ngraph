@@ -25,10 +25,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Sum(py::module m)
 {
-    py::class_<ngraph::op::Sum,
-               std::shared_ptr<ngraph::op::Sum>,
-               ngraph::op::Op>
-        sum(m, "Sum");
+    py::class_<ngraph::op::Sum, std::shared_ptr<ngraph::op::Sum>, ngraph::op::Op> sum(m, "Sum");
     sum.doc() = "ngraph.impl.op.Sum wraps ngraph::op::Sum";
     sum.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet&>());
 }

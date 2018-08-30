@@ -33,9 +33,7 @@ void regclass_pyngraph_op_Relu(py::module m)
 
 void regclass_pyngraph_op_ReluBackprop(py::module m)
 {
-    py::class_<ngraph::op::ReluBackprop,
-               std::shared_ptr<ngraph::op::ReluBackprop>,
-               ngraph::op::Op>
+    py::class_<ngraph::op::ReluBackprop, std::shared_ptr<ngraph::op::ReluBackprop>, ngraph::op::Op>
         relu_backprop(m, "ReluBackprop");
     relu_backprop.def(py::init<std::shared_ptr<ngraph::Node>&, std::shared_ptr<ngraph::Node>&>());
 }
