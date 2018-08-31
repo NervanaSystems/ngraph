@@ -44,25 +44,32 @@ void op::Broadcast::validate_and_infer_types()
     Shape target_shape = m_shape;
     for (auto i = m_broadcast_axes.rbegin(); i != m_broadcast_axes.rend(); ++i)
     {
-        if (*i >= target_shape.size())
-        {
-            throw ngraph_error("Broadcast axis exceeds target shape rank");
-        }
+        NODE_VALIDATION_ASSERT(this, *i < target_shape.size())
+            << "Broadcast axis index (" << *i << ") exceeds target shape rank "
+            << "(broadcast axes: " << m_broadcast_axes << ", target shape: " << target_shape
+            << ").";
+
         target_shape.erase(target_shape.begin() + *i);
     }
-    if (Shape{target_shape} != get_input_shape(0))
-    {
-        throw ngraph_error("Broadcast arg, shape, and axes are incompatible");
-    }
+
+    // TODO(amprocte): We can probably have a more helpful error message here.
+    // There are two things that can go wrong, which are being picked up in
+    // one fell swoop by this check: either the number of broadcast axes is not
+    // enough (arg->get_shape().size() + broadcast_axes.size() != shape.size())
+    // or there is a mismatch with one of the pre-broadcast axis lengths
+    // (i.e. target_shape.size() == arg->get_shape.size() but there is some i
+    // where target_shape[i] != arg->get_shape[i]).
+    NODE_VALIDATION_ASSERT(this, target_shape == get_input_shape(0))
+        << "Broadcast argument shape, target shape, and axes are incompatible "
+        << "(argument shape: " << get_input_shape(0) << ", target shape: " << m_shape
+        << ", broadcast axes: " << m_broadcast_axes << ").";
+
     set_output_type(0, get_input_element_type(0), m_shape);
 }
 
 shared_ptr<Node> op::Broadcast::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return make_shared<Broadcast>(new_args.at(0), m_shape, m_broadcast_axes);
 }
 

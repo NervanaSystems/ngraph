@@ -60,16 +60,16 @@ void op::AvgPool::validate_and_infer_types()
     // Make sure batch size and channel count are not zero, and that we have at least one spatial
     // dimension (in other words, that arg has shape NCDi for some Di of rank>0, N != 0, C != 0).
     //
-    TYPE_CHECK_ASSERT(this, arg_shape.size() >= 3)
+    NODE_VALIDATION_ASSERT(this, arg_shape.size() >= 3)
         << "Data input shape does not have rank of at least 3 (data input shape: " << arg_shape
         << ").";
 
     size_t batch_size = arg_shape[0];
-    TYPE_CHECK_ASSERT(this, batch_size != 0)
+    NODE_VALIDATION_ASSERT(this, batch_size != 0)
         << "Data batch size is zero (data input shape: " << arg_shape << ").";
 
     size_t channel_count = arg_shape[1];
-    TYPE_CHECK_ASSERT(this, channel_count != 0)
+    NODE_VALIDATION_ASSERT(this, channel_count != 0)
         << "Channel count is zero (data input shape: " << arg_shape << ").";
 
     size_t spatial_dimension_count = arg_shape.size() - 2;
@@ -77,17 +77,17 @@ void op::AvgPool::validate_and_infer_types()
     //
     // Make sure window shape, window movement strides, and padding have same rank as Di.
     //
-    TYPE_CHECK_ASSERT(this, m_window_shape.size() == spatial_dimension_count)
+    NODE_VALIDATION_ASSERT(this, m_window_shape.size() == spatial_dimension_count)
         << "Window shape rank does not match number of spatial dimensions (window shape: "
         << m_window_shape << ", data input shape: " << arg_shape << ").";
-    TYPE_CHECK_ASSERT(this, m_window_movement_strides.size() == spatial_dimension_count)
+    NODE_VALIDATION_ASSERT(this, m_window_movement_strides.size() == spatial_dimension_count)
         << "Window movement stride rank does not match number of spatial dimensions (window "
            "movement strides: "
         << m_window_movement_strides << ", data input shape: " << arg_shape << ").";
-    TYPE_CHECK_ASSERT(this, m_padding_below.size() == spatial_dimension_count)
+    NODE_VALIDATION_ASSERT(this, m_padding_below.size() == spatial_dimension_count)
         << "Below-padding rank does not match number of spatial dimensions (padding below: "
         << m_padding_below << ", data input shape: " << arg_shape << ").";
-    TYPE_CHECK_ASSERT(this, m_padding_above.size() == spatial_dimension_count)
+    NODE_VALIDATION_ASSERT(this, m_padding_above.size() == spatial_dimension_count)
         << "Above-padding rank does not match number of spatial dimensions (padding above: "
         << m_padding_above << ", data input shape: " << arg_shape << ").";
 
@@ -105,7 +105,7 @@ void op::AvgPool::validate_and_infer_types()
 
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        TYPE_CHECK_ASSERT(this, input_item_virtual_shape[i] != 0)
+        NODE_VALIDATION_ASSERT(this, input_item_virtual_shape[i] != 0)
             << "Data input spatial dimension " << i
             << " has zero length even after padding (virtual shape of input item: "
             << input_item_virtual_shape << ").";
@@ -116,7 +116,7 @@ void op::AvgPool::validate_and_infer_types()
     //
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        TYPE_CHECK_ASSERT(this, m_window_shape[i] != 0)
+        NODE_VALIDATION_ASSERT(this, m_window_shape[i] != 0)
             << "Window shape dimension " << i
             << " has zero length (window shape: " << m_window_shape << ").";
     }
@@ -126,9 +126,8 @@ void op::AvgPool::validate_and_infer_types()
     //
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        TYPE_CHECK_ASSERT(this, m_window_shape[i] <= input_item_virtual_shape[i])
-            << "Window shape after padding is larger than the spatial dimensions (window "
-               "shape: "
+        NODE_VALIDATION_ASSERT(this, m_window_shape[i] <= input_item_virtual_shape[i])
+            << "Window shape after padding is larger than the spatial dimensions (window shape: "
             << m_window_shape << ", virtual shape of input item: " << input_item_virtual_shape
             << ").";
     }
@@ -140,7 +139,7 @@ void op::AvgPool::validate_and_infer_types()
 
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        TYPE_CHECK_ASSERT(this, m_window_movement_strides[i] != 0)
+        NODE_VALIDATION_ASSERT(this, m_window_movement_strides[i] != 0)
             << "Window movement strides dimension " << i
             << " has zero length (window movement strides: " << m_window_movement_strides << ").";
         output_item_shape.push_back(ceil_div(input_item_virtual_shape[i] - m_window_shape[i] + 1,
@@ -164,7 +163,8 @@ void op::AvgPool::validate_and_infer_types()
 
             // Checking the lower edge of each dimension is easy, because there's no mystery
             // regarding the window's lower-edge placement...
-            TYPE_CHECK_ASSERT(this, dim_padding_below == 0 || dim_window_size > dim_padding_below)
+            NODE_VALIDATION_ASSERT(this,
+                                   dim_padding_below == 0 || dim_window_size > dim_padding_below)
                 << "Window will sometimes reside entirely within the below-padding region, but"
                 << " include_padding_in_avg_computation was not set (padding below: "
                 << m_padding_below << ", window shape: " << m_window_shape << ").";
@@ -175,11 +175,11 @@ void op::AvgPool::validate_and_infer_types()
                 const size_t dim_window_max_lower_offset = dim_num_strides * dim_stride;
                 const size_t dim_padding_above_start_offset = dim_virtual_size - dim_padding_above;
 
-                TYPE_CHECK_ASSERT(this,
-                                  dim_padding_above == 0 ||
-                                      dim_window_max_lower_offset < dim_padding_above_start_offset)
-                    << "Window will sometimes reside entirely within the above-padding region, "
-                       "but"
+                NODE_VALIDATION_ASSERT(this,
+                                       dim_padding_above == 0 ||
+                                           dim_window_max_lower_offset <
+                                               dim_padding_above_start_offset)
+                    << "Window will sometimes reside entirely within the above-padding region, but"
                     << " include_padding_in_avg_computation was not set (padding above: "
                     << m_padding_above << ", window shape: " << m_window_shape << ").";
             }
@@ -211,11 +211,7 @@ op::AvgPool::AvgPool(const shared_ptr<Node>& arg, const Shape& window_shape)
 
 shared_ptr<Node> op::AvgPool::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
-
+    check_new_args_count(this, new_args);
     return make_shared<AvgPool>(new_args.at(0),
                                 m_window_shape,
                                 m_window_movement_strides,
@@ -251,61 +247,39 @@ void op::AvgPoolBackprop::validate_and_infer_types()
     auto& delta_shape = get_input_shape(0);
 
     //
-    // Make sure arg: NCDi for some Di of rank>0, N != 0, C != 0.
+    // Make sure batch size and channel count are not zero, and that we have at least one spatial
+    // dimension (in other words, that arg has shape NCDi for some Di of rank>0, N != 0, C != 0).
     //
-    if (m_forward_arg_shape.size() < 3)
-    {
-        throw ngraph_error(
-            "Average-pool backprop: data batch shape must have rank of at least 3 (one batch "
-            "axis, "
-            "one channel axis, at least one spatial dimension).");
-    }
+    NODE_VALIDATION_ASSERT(this, m_forward_arg_shape.size() >= 3)
+        << "Forward input shape does not have rank of at least 3 (forward input shape: "
+        << m_forward_arg_shape << ").";
 
     size_t batch_size = m_forward_arg_shape[0];
-    if (batch_size == 0)
-    {
-        throw ngraph_error("Average-pool backprop: data batch size is zero.");
-    }
+    NODE_VALIDATION_ASSERT(this, batch_size != 0)
+        << "Data batch size is zero (forward input shape: " << m_forward_arg_shape << ").";
 
     size_t channel_count = m_forward_arg_shape[1];
-    if (channel_count == 0)
-    {
-        throw ngraph_error("Average-pool backprop: requires at least one feature channel.");
-    }
+    NODE_VALIDATION_ASSERT(this, channel_count != 0)
+        << "Channel count is zero (forward input shape: " << m_forward_arg_shape << ").";
 
     size_t spatial_dimension_count = m_forward_arg_shape.size() - 2;
 
     //
     // Make sure window shape, window movement strides, and padding have same rank as Di.
     //
-    if (m_window_shape.size() != spatial_dimension_count)
-    {
-        throw ngraph_error(
-            "Average-pool backprop: window shape rank does not match number of spatial "
-            "dimensions.");
-    }
-
-    if (m_window_movement_strides.size() != spatial_dimension_count)
-    {
-        throw ngraph_error(
-            "Average-pool backprop: window movement stride rank does not match number of "
-            "spatial "
-            "dimensions.");
-    }
-
-    if (m_padding_below.size() != spatial_dimension_count)
-    {
-        throw ngraph_error(
-            "Average-pool backprop: below-padding rank does not match number of spatial "
-            "dimensions.");
-    }
-
-    if (m_padding_above.size() != spatial_dimension_count)
-    {
-        throw ngraph_error(
-            "Average-pool backprop: above-padding rank does not match number of spatial "
-            "dimensions.");
-    }
+    NODE_VALIDATION_ASSERT(this, m_window_shape.size() == spatial_dimension_count)
+        << "Window shape rank does not match number of spatial dimensions (window shape: "
+        << m_window_shape << ", forward input shape: " << m_forward_arg_shape << ").";
+    NODE_VALIDATION_ASSERT(this, m_window_movement_strides.size() == spatial_dimension_count)
+        << "Window movement stride rank does not match number of spatial dimensions (window "
+           "movement strides: "
+        << m_window_movement_strides << ", forward input shape: " << m_forward_arg_shape << ").";
+    NODE_VALIDATION_ASSERT(this, m_padding_below.size() == spatial_dimension_count)
+        << "Below-padding rank does not match number of spatial dimensions (padding below: "
+        << m_padding_below << ", forward input shape: " << m_forward_arg_shape << ").";
+    NODE_VALIDATION_ASSERT(this, m_padding_above.size() == spatial_dimension_count)
+        << "Above-padding rank does not match number of spatial dimensions (padding above: "
+        << m_padding_above << ", forward input shape: " << m_forward_arg_shape << ").";
 
     //
     // Extract input item shape Di and make sure all dimensions are larger than 0.
@@ -317,13 +291,14 @@ void op::AvgPoolBackprop::validate_and_infer_types()
         size_t dim_size = m_forward_arg_shape[1 + 1 + i];
         size_t virtual_dim_size = m_padding_below[i] + dim_size + m_padding_above[i];
         input_item_virtual_shape.push_back(virtual_dim_size);
+    }
 
-        if (virtual_dim_size == 0)
-        {
-            throw ngraph_error(
-                "Average-pool backprop: data batch spatial dimension is zero even after "
-                "padding.");
-        }
+    for (size_t i = 0; i < spatial_dimension_count; i++)
+    {
+        NODE_VALIDATION_ASSERT(this, input_item_virtual_shape[i] != 0)
+            << "Forward input spatial dimension " << i
+            << " has zero length even after padding (virtual shape of input item: "
+            << input_item_virtual_shape << ").";
     }
 
     //
@@ -331,25 +306,20 @@ void op::AvgPoolBackprop::validate_and_infer_types()
     //
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        if (m_window_shape[i] == 0)
-        {
-            throw ngraph_error("Average-pool backprop: window shape has a zero-length axis.");
-        }
+        NODE_VALIDATION_ASSERT(this, m_window_shape[i] != 0)
+            << "Window shape dimension " << i
+            << " has zero length (window shape: " << m_window_shape << ").";
     }
 
     //
-    // Make the max pooling window fits within the spatial dimensions.
+    // Make sure the pooling window fits within the spatial dimensions.
     //
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        if (m_window_shape[i] > input_item_virtual_shape[i])
-        {
-            throw ngraph_error(
-                "Average-pool backprop: window shape is larger than the spatial dimensions "
-                "even "
-                "after "
-                "padding.");
-        }
+        NODE_VALIDATION_ASSERT(this, m_window_shape[i] <= input_item_virtual_shape[i])
+            << "Window shape after padding is larger than the spatial dimensions (window shape: "
+            << m_window_shape << ", virtual shape of input item: " << input_item_virtual_shape
+            << ").";
     }
 
     //
@@ -359,10 +329,9 @@ void op::AvgPoolBackprop::validate_and_infer_types()
 
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        if (m_window_movement_strides[i] == 0)
-        {
-            throw ngraph_error("Average-pool backprop: window axis movement stride is zero.");
-        }
+        NODE_VALIDATION_ASSERT(this, m_window_movement_strides[i] != 0)
+            << "Window movement strides dimension " << i
+            << " has zero length (window movement strides: " << m_window_movement_strides << ").";
         output_item_shape.push_back(ceil_div(input_item_virtual_shape[i] - m_window_shape[i] + 1,
                                              m_window_movement_strides[i]));
     }
@@ -384,12 +353,11 @@ void op::AvgPoolBackprop::validate_and_infer_types()
 
             // Checking the lower edge of each dimension is easy, because there's no mystery
             // regarding the window's lower-edge placement...
-            if ((dim_padding_below > 0) && (dim_window_size <= dim_padding_below))
-            {
-                throw ngraph_error(
-                    "AvgPoolBackprop window will sometimes reside entirely within the "
-                    "padding-below region, but the op disregards padding elements.");
-            }
+            NODE_VALIDATION_ASSERT(this,
+                                   dim_padding_below == 0 || dim_window_size > dim_padding_below)
+                << "Window will sometimes reside entirely within the below-padding region, but"
+                << " include_padding_in_avg_computation was not set (padding below: "
+                << m_padding_below << ", window shape: " << m_window_shape << ").";
 
             // Now check the upper-bound...
             {
@@ -397,13 +365,13 @@ void op::AvgPoolBackprop::validate_and_infer_types()
                 const size_t dim_window_max_lower_offset = dim_num_strides * dim_stride;
                 const size_t dim_padding_above_start_offset = dim_virtual_size - dim_padding_above;
 
-                if ((dim_padding_above > 0) &&
-                    (dim_window_max_lower_offset >= dim_padding_above_start_offset))
-                {
-                    throw ngraph_error(
-                        "AvgPoolBackprop window will sometimes reside entirely within the "
-                        "padding-above region, but the op disregards padding elements.");
-                }
+                NODE_VALIDATION_ASSERT(this,
+                                       dim_padding_above == 0 ||
+                                           dim_window_max_lower_offset <
+                                               dim_padding_above_start_offset)
+                    << "Window will sometimes reside entirely within the above-padding region, but"
+                    << " include_padding_in_avg_computation was not set (padding above: "
+                    << m_padding_above << ", window shape: " << m_window_shape << ").";
             }
         }
     }
@@ -416,22 +384,17 @@ void op::AvgPoolBackprop::validate_and_infer_types()
     forward_result_shape[1] = channel_count;
     copy(output_item_shape.begin(), output_item_shape.end(), forward_result_shape.begin() + 2);
 
-    if (forward_result_shape != delta_shape)
-    {
-        throw ngraph_error(
-            "Average-pool backprop: forward result shape does not match delta shape.");
-    }
+    NODE_VALIDATION_ASSERT(this, forward_result_shape == delta_shape)
+        << "Inferred forward output shape does not match delta shape (inferred forward output "
+           "shape: "
+        << forward_result_shape << ", delta shape: " << delta_shape << ").";
 
     set_output_type(0, get_input_element_type(0), m_forward_arg_shape);
 }
 
 shared_ptr<Node> op::AvgPoolBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
-
+    check_new_args_count(this, new_args);
     AvgPoolBackprop* avpn = new AvgPoolBackprop(m_forward_arg_shape,
                                                 new_args.at(0),
                                                 m_window_shape,

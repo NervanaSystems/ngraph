@@ -37,28 +37,27 @@ op::Select::Select(const shared_ptr<Node>& arg0,
     auto& input_1 = get_inputs().at(1);
     auto& input_2 = get_inputs().at(2);
 
-    if (input_0.get_element_type() != element::boolean)
-    {
-        throw ngraph_error("Argument 0 for arithmetic operators must have boolean element type");
-    }
-    if (input_0.get_shape() != input_1.get_shape() || input_0.get_shape() != input_2.get_shape())
-    {
-        throw ngraph_error("Arguments must have the same shape");
-    }
-    if (input_1.get_element_type() != input_2.get_element_type())
-    {
-        throw ngraph_error("Arguments 1 and 2 must have the same element type");
-    }
+    NODE_VALIDATION_ASSERT(this, input_0.get_element_type() == element::boolean)
+        << "Argument 0 does not have boolean element type (element type: "
+        << input_0.get_element_type() << ").";
+
+    NODE_VALIDATION_ASSERT(this,
+                           input_0.get_shape() == input_1.get_shape() &&
+                               input_0.get_shape() == input_2.get_shape())
+        << "Arguments do not all have the same shape (arg0 shape: " << input_0.get_shape()
+        << ", arg1 shape: " << input_1.get_shape() << ", arg2 shape: " << input_2.get_shape()
+        << ").";
+
+    NODE_VALIDATION_ASSERT(this, input_1.get_element_type() == input_2.get_element_type())
+        << "Arguments 1 and 2 do not have the same element type (arg1 type: "
+        << input_1.get_element_type() << ", arg2 type: " << input_2.get_element_type() << ").";
 
     set_output_type(0, input_1.get_element_type(), input_1.get_shape());
 }
 
 shared_ptr<Node> op::Select::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 3)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return make_shared<Select>(new_args.at(0), new_args.at(1), new_args.at(2));
 }
 
