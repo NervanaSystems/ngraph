@@ -64,6 +64,10 @@ namespace ngraph
                                                          size_t i);
     const NodeVector& check_single_output_args(const NodeVector& args);
 
+    const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
+                                                         size_t i);
+    const NodeVector& check_single_output_args(const NodeVector& args);
+
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// view or a (possibly empty) tuple of values.

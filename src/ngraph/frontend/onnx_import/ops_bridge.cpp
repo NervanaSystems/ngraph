@@ -21,6 +21,7 @@
 #include "op/add.hpp"
 #include "op/average_pool.hpp"
 #include "op/batch_norm.hpp"
+#include "op/concat.hpp"
 #include "op/constant.hpp"
 #include "op/conv.hpp"
 #include "op/div.hpp"
@@ -37,6 +38,7 @@
 #include "op/split.hpp"
 #include "op/sub.hpp"
 #include "op/sum.hpp"
+#include "op/unsqueeze.hpp"
 #include "ops_bridge.hpp"
 
 namespace ngraph
@@ -86,6 +88,7 @@ namespace ngraph
                                   std::bind(op::average_pool, std::placeholders::_1));
                     m_map.emplace("BatchNormalization",
                                   std::bind(op::batch_norm, std::placeholders::_1));
+                    m_map.emplace("Concat", std::bind(op::concat, std::placeholders::_1));
                     m_map.emplace("Constant", std::bind(op::constant, std::placeholders::_1));
                     m_map.emplace("Conv", std::bind(op::conv, std::placeholders::_1));
                     m_map.emplace("Div", std::bind(op::div, std::placeholders::_1));
@@ -102,6 +105,7 @@ namespace ngraph
                     m_map.emplace("Split", std::bind(op::split, std::placeholders::_1));
                     m_map.emplace("Sub", std::bind(op::sub, std::placeholders::_1));
                     m_map.emplace("Sum", std::bind(op::sum, std::placeholders::_1));
+                    m_map.emplace("Unsqueeze", std::bind(op::unsqueeze, std::placeholders::_1));
                 }
 
                 NodeVector operator()(const Node& node) const

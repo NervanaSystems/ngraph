@@ -41,7 +41,6 @@ void op::Parameter::validate_and_infer_types()
 shared_ptr<Node> op::Parameter::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args, 0);
-    const descriptor::Output& output = get_outputs().at(0);
     return make_shared<Parameter>(m_element_type, m_shape);
 }
 
