@@ -521,3 +521,147 @@ TEST(onnx, model_div)
     auto result_vectors = execute(function, inputs, "INTERPRETER");
     EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
 }
+
+TEST(onnx, model_reshape_reduced_dims)
+{
+    auto function = ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/reshape_reduced_dims.onnx"));
+
+    Inputs inputs;
+    // input data shape (2, 3, 4)
+    inputs.emplace_back(
+        ngraph::test::NDArray<float, 3>({{{0, 1, 2, 3}, {4, 5, 6, 7}, {8, 9, 10, 11}},
+                                         {{12, 13, 14, 15}, {16, 17, 18, 19}, {20, 21, 22, 23}}})
+            .get_vector());
+
+    // output data shape (2, 12)
+    Outputs expected_outputs;
+    expected_outputs.emplace_back(
+        ngraph::test::NDArray<float, 2>({{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
+                                         {12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}})
+            .get_vector());
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reshape_reordered_dims)
+{
+    auto function = ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/reshape_reordered_dims.onnx"));
+
+    Inputs inputs;
+    // input data shape (2, 3, 4)
+    inputs.emplace_back(
+        ngraph::test::NDArray<float, 3>({{{0, 1, 2, 3}, {4, 5, 6, 7}, {8, 9, 10, 11}},
+
+                                         {{12, 13, 14, 15}, {16, 17, 18, 19}, {20, 21, 22, 23}}})
+            .get_vector());
+    // output data shape (4, 2, 3)
+    Outputs expected_outputs;
+    expected_outputs.emplace_back(ngraph::test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}},
+                                                                   {{6, 7, 8}, {9, 10, 11}},
+                                                                   {{12, 13, 14}, {15, 16, 17}},
+                                                                   {{18, 19, 20}, {21, 22, 23}}})
+                                      .get_vector());
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reshape_extended_dims)
+{
+    auto function = ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/reshape_extended_dims.onnx"));
+
+    Inputs inputs;
+    // input data shape (2, 3, 4)
+    inputs.emplace_back(
+        ngraph::test::NDArray<float, 3>({{{0, 1, 2, 3}, {4, 5, 6, 7}, {8, 9, 10, 11}},
+
+                                         {{12, 13, 14, 15}, {16, 17, 18, 19}, {20, 21, 22, 23}}})
+            .get_vector());
+    // output data shape (3, 2, 2, 2)
+    Outputs expected_outputs;
+    expected_outputs.emplace_back(
+        ngraph::test::NDArray<float, 4>({{{{0, 1}, {2, 3}}, {{4, 5}, {6, 7}}},
+                                         {{{8, 9}, {10, 11}}, {{12, 13}, {14, 15}}},
+                                         {{{16, 17}, {18, 19}}, {{20, 21}, {22, 23}}}})
+            .get_vector());
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reshape_single_dim)
+{
+    auto function = ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/reshape_single_dim.onnx"));
+
+    Inputs inputs;
+    // input data shape (2, 3, 4)
+    inputs.emplace_back(
+        ngraph::test::NDArray<float, 3>({{{0, 1, 2, 3}, {4, 5, 6, 7}, {8, 9, 10, 11}},
+
+                                         {{12, 13, 14, 15}, {16, 17, 18, 19}, {20, 21, 22, 23}}})
+            .get_vector());
+    // output data shape (24, )
+    Outputs expected_outputs;
+    expected_outputs.emplace_back(
+        ngraph::test::NDArray<float, 1>(
+            {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23})
+            .get_vector());
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reshape_negative_dim)
+{
+    auto function = ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/reshape_negative_dim.onnx"));
+
+    Inputs inputs;
+    // input data shape (2, 3, 4)
+    inputs.emplace_back(
+        ngraph::test::NDArray<float, 3>({{{0, 1, 2, 3}, {4, 5, 6, 7}, {8, 9, 10, 11}},
+
+                                         {{12, 13, 14, 15}, {16, 17, 18, 19}, {20, 21, 22, 23}}})
+            .get_vector());
+    // output data shape (6, 2, 2)
+    Outputs expected_outputs;
+    expected_outputs.emplace_back(ngraph::test::NDArray<float, 3>({{{0, 1}, {2, 3}},
+                                                                   {{4, 5}, {6, 7}},
+                                                                   {{8, 9}, {10, 11}},
+                                                                   {{12, 13}, {14, 15}},
+                                                                   {{16, 17}, {18, 19}},
+                                                                   {{20, 21}, {22, 23}}})
+                                      .get_vector());
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reshape_negative_with_zero_dim)
+{
+    auto function = ngraph::onnx_import::import_onnx_function(
+        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/reshape_negative_with_zero_dims.onnx"));
+
+    Inputs inputs;
+    // input data shape (2, 3, 4)
+    inputs.emplace_back(
+        ngraph::test::NDArray<float, 3>({{{0, 1, 2, 3}, {4, 5, 6, 7}, {8, 9, 10, 11}},
+
+                                         {{12, 13, 14, 15}, {16, 17, 18, 19}, {20, 21, 22, 23}}})
+            .get_vector());
+    // output data shape (2, 6, 2)
+    Outputs expected_outputs;
+    expected_outputs.emplace_back(
+        ngraph::test::NDArray<float, 3>(
+            {{{0, 1}, {2, 3}, {4, 5}, {6, 7}, {8, 9}, {10, 11}},
+             {{12, 13}, {14, 15}, {16, 17}, {18, 19}, {20, 21}, {22, 23}}})
+            .get_vector());
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
