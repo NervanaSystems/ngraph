@@ -59,9 +59,9 @@ namespace ngraph
             ///
             /// \return     A vector containig new, valid node shape.
             ///
-            std::vector<std::size_t> infer_dimensions(std::string node_name,
-                                                      std::vector<std::size_t> input_shape,
-                                                      std::vector<std::size_t> output_shape);
+            std::vector<std::size_t> infer_dimensions(const std::string& node_name,
+                                                      const std::vector<std::size_t>& input_shape,
+                                                      const std::vector<std::size_t>& output_shape);
 
             /// \brief Permute axes according to specified axes_order parameter.
             ///

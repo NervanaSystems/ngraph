@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include <cstddef>
-#include <numeric>
 #include <vector>
 
 #include "ngraph/axis_vector.hpp"
