@@ -21,10 +21,6 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/host_tensor_view.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
-
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -49,11 +45,13 @@
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
+#include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
-
-#include "ngraph/op/select_and_scatter.hpp"
+#include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/host_tensor_view.hpp"
+#include "ngraph/runtime/interpreter/node_wrapper.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
@@ -119,6 +117,7 @@
 #include "ngraph/runtime/reference/sum.hpp"
 #include "ngraph/runtime/reference/tan.hpp"
 #include "ngraph/runtime/reference/tanh.hpp"
+#include "ngraph/runtime/tensor_view.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/runtime/reference/allreduce.hpp"
@@ -163,6 +162,7 @@ private:
         bool m_nan_check_enabled = false;
         bool m_performance_counters_enabled = false;
         std::unordered_map<const Node*, stopwatch> m_timer_map;
+        std::vector<NodeWrapper> m_wrapped_nodes;
     };
     std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
 
@@ -170,15 +170,16 @@ private:
                                   const Node* op = nullptr);
 
     void generate_calls(const element::Type& type,
-                        Node& op,
+                        const NodeWrapper& op,
                         const std::vector<std::shared_ptr<HostTensorView>>& outputs,
                         const std::vector<std::shared_ptr<HostTensorView>>& inputs);
 
     template <typename T>
-    void op_engine(Node& node,
+    void op_engine(const NodeWrapper& node_wrapper,
                    const std::vector<std::shared_ptr<HostTensorView>>& out,
                    const std::vector<std::shared_ptr<HostTensorView>>& args)
     {
+        Node& node = node_wrapper.get_node();
         std::string node_op = node.description();
         if (node_op == "Abs")
         {
