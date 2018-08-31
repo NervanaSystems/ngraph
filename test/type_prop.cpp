@@ -262,7 +262,7 @@ TEST(type_prop, concat_deduce_wrong_shape)
         // Should have thrown, so fail if it didn't
         FAIL() << "Deduced type should disagree with specified type";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Dimensions of argument 2 do not match for axis 2"));
@@ -6385,7 +6385,7 @@ TEST(type_prop, pad_deduce_interior_padding_wrong_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Wrong interior padding rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
