@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <functional>
+#include <iterator>
 #include <numeric>
 #include <stdexcept>
 
@@ -73,15 +74,17 @@ namespace ngraph
                                                       const std::vector<std::size_t>& input_shape,
                                                       const std::vector<std::size_t>& output_shape)
             {
+                std::vector<std::size_t> inferred_dims{output_shape};
+
                 // If an output dimension is equal to zero its actual value is copied from the input
                 // shape argument.
-                for (std::size_t idx = 0; idx < output_shape.size(); ++idx)
+                for (std::size_t idx = 0; idx < inferred_dims.size(); ++idx)
                 {
-                    if (output_shape.at(idx) == 0)
+                    if (inferred_dims.at(idx) == 0)
                     {
                         if (idx < input_shape.size())
                         {
-                            output_shape.at(idx) = input_shape.at(idx);
+                            inferred_dims.at(idx) = input_shape.at(idx);
                         }
                         else
                         {
@@ -97,16 +100,18 @@ namespace ngraph
                 // Check whether there are dimensions equal to -1 in output_shape. There may be at most
                 // one such case. Its value is then inferred from the size of the tensor and the
                 // remaining dimensions.
-                auto neg_value_it = std::find(std::begin(output_shape), std::end(output_shape), -1);
-                auto sec_neg_value_it = std::find(neg_value_it, std::end(output_shape), -1);
-                if (sec_neg_value_it != std::end(output_shape))
+                auto neg_value_it =
+                    std::find(std::begin(inferred_dims), std::end(inferred_dims), -1);
+                auto sec_neg_value_it =
+                    std::find(std::next(neg_value_it), std::end(inferred_dims), -1);
+                if (sec_neg_value_it != std::end(inferred_dims))
                 {
                     throw error::parameter::Value("Reshape",
                                                   node_name,
                                                   "more than one dimension is set to (-1). Only "
                                                   "one dimension value can be inferred.");
                 }
-                if (neg_value_it != std::end(output_shape))
+                if (neg_value_it != std::end(inferred_dims))
                 {
                     *neg_value_it = 1;
                     std::size_t input_shape_product =
@@ -115,14 +120,14 @@ namespace ngraph
                                         1UL,
                                         std::multiplies<std::size_t>());
                     std::size_t output_shape_product =
-                        std::accumulate(std::begin(output_shape),
-                                        std::end(output_shape),
+                        std::accumulate(std::begin(inferred_dims),
+                                        std::end(inferred_dims),
                                         1UL,
                                         std::multiplies<std::size_t>());
                     *neg_value_it = input_shape_product / output_shape_product;
                 }
 
-                return output_shape;
+                return inferred_dims;
             }
 
             std::shared_ptr<ngraph::Node> reorder_axes(const std::shared_ptr<ngraph::Node>& node,
