@@ -8,21 +8,21 @@ matrix:
   - os: linux
     sudo: required
     services: docker
+    env: TASK=python2_test OS=ubuntu
+  - os: linux
+    sudo: required
+    services: docker
+    env: TASK=python3_test OS=ubuntu
+  - os: linux
+    sudo: required
+    services: docker
     env: TASK=cpp_test OS=ubuntu
   - os: linux
     sudo: required
     services: docker
     env: TASK=cpp_test OS=centos
   - os: osx
-    env: TASK=cpp_test
-  - os: linux
-    sudo: required
-    services: docker
-    env: TASK=python2_test OS=ubuntu
-  - os: linux
-    sudo: required
-    services: docker
-    env: TASK=python3_test OS=ubuntu
+    env: TASK=cpp_test OS=osx
 
 install:
 - |
