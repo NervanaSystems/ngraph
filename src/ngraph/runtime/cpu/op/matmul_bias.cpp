@@ -46,9 +46,9 @@ op::MatmulBias::MatmulBias(shared_ptr<Node> W,
                            bool transpose_w,
                            bool transpose_x,
                            AxisSet axes)
-    : RequiresTensorViewArgs("MatMulBias",
-                             b == nullptr ? vector<shared_ptr<Node>>{W, x}
-                                          : vector<shared_ptr<Node>>{W, x, b})
+    : Op("MatmulBias",
+         check_single_output_args(b == nullptr ? vector<shared_ptr<Node>>{W, x}
+                                               : vector<shared_ptr<Node>>{W, x, b}))
     , m_shape_w(shape_w)
     , m_shape_x(shape_x)
     , m_transpose_w(transpose_w)
@@ -56,53 +56,60 @@ op::MatmulBias::MatmulBias(shared_ptr<Node> W,
     , m_broadcast_axes(axes)
 
 {
-    if (axes.size() == 0 && b != nullptr)
+    constructor_validate_and_infer_types();
+}
+
+void op::MatmulBias::validate_and_infer_types()
+{
+    auto et = get_input_element_type(0);
+    bool have_b = get_input_size() > 2;
+    if (m_broadcast_axes.size() == 0 && have_b)
     {
         throw ngraph_error("Bias but no broadcast axes");
     }
 
-    if (b == nullptr && axes.size() != 0)
+    if (!have_b && m_broadcast_axes.size() != 0)
     {
         throw ngraph_error("Broadcast axes but no bias");
     }
 
-    if (axes.size() > 2)
+    if (m_broadcast_axes.size() > 2)
     {
         throw ngraph_error("Broadcasting to > 2D tensor");
     }
 
-    if (shape_w.size() != 2)
+    if (m_shape_w.size() != 2)
     {
-        NGRAPH_DEBUG << "W shape = " << vector_to_string(shape_w);
+        NGRAPH_DEBUG << "W shape = " << vector_to_string(m_shape_w);
         throw ngraph_error("W.shape.rank != 2 while creating MatmulBias");
     }
 
-    if (shape_x.size() != 2)
+    if (m_shape_x.size() != 2)
     {
-        NGRAPH_DEBUG << "x shape = " << vector_to_string(shape_x);
+        NGRAPH_DEBUG << "x shape = " << vector_to_string(m_shape_x);
         throw ngraph_error("x.shape.rank != 2 while creating MatmulBias");
     }
 
-    size_t dot_dimension_w = (transpose_w) ? 0 : 1;
-    size_t dot_dimension_x = (transpose_x) ? 1 : 0;
+    size_t dot_dimension_w = (m_transpose_w) ? 0 : 1;
+    size_t dot_dimension_x = (m_transpose_x) ? 1 : 0;
 
     NGRAPH_DEBUG << "dot_dimension_w = " << dot_dimension_w
                  << " , dot_dimension_x = " << dot_dimension_x;
-    NGRAPH_DEBUG << "W shape = " << vector_to_string(shape_w)
-                 << " , x shape = " << vector_to_string(shape_x);
+    NGRAPH_DEBUG << "W shape = " << vector_to_string(m_shape_w)
+                 << " , x shape = " << vector_to_string(m_shape_x);
 
-    if (shape_w.at(dot_dimension_w) != shape_x.at(dot_dimension_x))
+    if (m_shape_w.at(dot_dimension_w) != m_shape_x.at(dot_dimension_x))
     {
         throw ngraph_error("product dimensions are not equal while creating MatmulBias");
     }
 
-    Shape dot_shape{shape_w.at(1 - dot_dimension_w), shape_x.at(1 - dot_dimension_x)};
+    Shape dot_shape{m_shape_w.at(1 - dot_dimension_w), m_shape_x.at(1 - dot_dimension_x)};
     NGRAPH_DEBUG << "dot_shape shape = " << vector_to_string(dot_shape);
 
-    if (b)
+    if (have_b)
     {
-        NGRAPH_DEBUG << "b shape = " << vector_to_string(b->get_shape());
+        NGRAPH_DEBUG << "b shape = " << vector_to_string(get_input_shape(2));
     }
 
-    add_output(W->get_element_type(), dot_shape);
+    set_output_type(0, et, dot_shape);
 }

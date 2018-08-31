@@ -29,35 +29,32 @@
 using namespace std;
 using namespace ngraph;
 
-//
-// Helper function to compute the number of dot axes according to default behavior when
-// they are not specified.
-//
-size_t default_reduction_axes_count(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
-{
-    if (arg0->get_shape().size() == 0 || arg1->get_shape().size() == 0)
-    {
-        return 0;
-    }
-    else
-    {
-        return 1;
-    }
-}
-
 op::Dot::Dot(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
-    : Dot(arg0, arg1, default_reduction_axes_count(arg0, arg1))
+    : Dot(arg0, arg1, 0, false)
 {
 }
 
 op::Dot::Dot(const shared_ptr<Node>& arg0,
              const shared_ptr<Node>& arg1,
-             size_t reduction_axes_count)
-    : RequiresTensorViewArgs("Dot", {arg0, arg1})
+             size_t reduction_axes_count,
+             bool has_reduction_axes_count)
+    : Op("Dot", check_single_output_args({arg0, arg1}))
     , m_reduction_axes_count(reduction_axes_count)
+    , m_has_reduction_axes_count(has_reduction_axes_count)
+{
+    constructor_validate_and_infer_types();
+}
+
+void op::Dot::validate_and_infer_types()
 {
     auto& input_0 = get_inputs().at(0);
     auto& input_1 = get_inputs().at(1);
+
+    if (!m_has_reduction_axes_count)
+    {
+        m_reduction_axes_count =
+            (input_0.get_shape().size() == 0 || input_1.get_shape().size() == 0) ? 0 : 1;
+    }
 
     if (input_0.get_element_type() != input_1.get_element_type())
     {
@@ -67,33 +64,32 @@ op::Dot::Dot(const shared_ptr<Node>& arg0,
     Shape input_0_shape = input_0.get_shape();
     Shape input_1_shape = input_1.get_shape();
 
-    if (reduction_axes_count > input_0_shape.size())
+    if (m_reduction_axes_count > input_0_shape.size())
     {
         throw ngraph_error("Dot has too many axes for arg0");
     }
 
-    if (reduction_axes_count > input_1_shape.size())
+    if (m_reduction_axes_count > input_1_shape.size())
     {
         throw ngraph_error("Dot has too many axes for arg1");
     }
 
-    for (size_t i = 0; i < reduction_axes_count; i++)
+    for (size_t i = 0; i < m_reduction_axes_count; i++)
     {
-        if (input_0_shape[input_0_shape.size() - reduction_axes_count + i] != input_1_shape[i])
+        if (input_0_shape[input_0_shape.size() - m_reduction_axes_count + i] != input_1_shape[i])
         {
             throw ngraph_error("Dot axes do not have same length");
         }
     }
 
-    Shape result_shape(input_0_shape.size() + input_1_shape.size() - 2 * reduction_axes_count);
+    Shape result_shape(input_0_shape.size() + input_1_shape.size() - 2 * m_reduction_axes_count);
 
-    copy(input_0_shape.begin(), input_0_shape.end() - reduction_axes_count, result_shape.begin());
-    copy(input_1_shape.begin() + reduction_axes_count,
+    copy(input_0_shape.begin(), input_0_shape.end() - m_reduction_axes_count, result_shape.begin());
+    copy(input_1_shape.begin() + m_reduction_axes_count,
          input_1_shape.end(),
-         result_shape.begin() + (input_0_shape.size() - reduction_axes_count));
+         result_shape.begin() + (input_0_shape.size() - m_reduction_axes_count));
 
-    auto result_type = make_shared<TensorViewType>(input_0.get_element_type(), result_shape);
-    set_value_type_checked(result_type);
+    set_output_type(0, input_0.get_element_type(), result_shape);
 }
 
 shared_ptr<op::Reshape> make_reshape_axes_to_front(const shared_ptr<Node>& n,
