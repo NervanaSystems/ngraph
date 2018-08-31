@@ -156,5 +156,5 @@ namespace ngraph
             }
 
         } // namespace  reshape
-    }  // namespace onnx_import
+    }     // namespace onnx_import
 } // namespace ngraph

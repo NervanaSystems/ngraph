@@ -80,5 +80,5 @@ namespace ngraph
             std::shared_ptr<ngraph::Node> transpose(const std::shared_ptr<ngraph::Node>& node);
 
         } // namespace  reshape
-    }  // namespace onnx_import
+    }     // namespace onnx_import
 } // namespace ngraph
