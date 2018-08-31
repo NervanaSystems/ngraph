@@ -21,7 +21,6 @@ import numpy as np
 
 from ngraph.impl import Function, Node, Shape, serialize, util
 from ngraph.impl.runtime import Backend, TensorView
-from ngraph.impl.op import Parameter
 from ngraph.utils.types import get_dtype, NumericData
 from ngraph.exceptions import UserInputError
 
