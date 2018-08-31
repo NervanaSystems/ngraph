@@ -15,11 +15,15 @@
 //*****************************************************************************
 
 #include <cstddef>
+#include <memory>
 #include <vector>
 
 #include "ngraph/axis_vector.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/shape.hpp"
 
+#include "exceptions.hpp"
 #include "reshape.hpp"
 #include "utils/reshape.hpp"
 
@@ -34,9 +38,28 @@ namespace ngraph
                 NodeVector ng_inputs{node.get_ng_inputs()};
                 auto data = ng_inputs.at(0);
                 auto data_shape = data->get_shape();
+
                 auto output_shape = node.get_attribute_value<std::vector<std::size_t>>("shape", {});
 
-                if (output_shape.empty())
+                // If no shape argument (opset >= 5) and there is second input.
+                if (output_shape.empty() && ng_inputs.size() == 2)
+                {
+                    auto output_shape_node =
+                        std::dynamic_pointer_cast<ngraph::op::Constant>(ng_inputs.at(1));
+                    if (output_shape_node != nullptr)
+                    {
+                        output_shape = output_shape_node->get_vector<std::size_t>();
+                    }
+                    else
+                    {
+                        throw error::NotSupported("Reshape",
+                                                  node.get_name(),
+                                                  "doesn't support "
+                                                  "shape input of other type than Constant.");
+                    }
+                }
+                // Do nothing if there is no shape argument nor second node input.
+                else if (output_shape.empty())
                 {
                     return {data};
                 }
