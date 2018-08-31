@@ -3496,6 +3496,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_large_1d_to_scalar)
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
+    random_generator.seed(2);
     vector<float> v_a(1000000, 0);
     double r = 0;
     for (int i = 0; i < 1000000; i++)
