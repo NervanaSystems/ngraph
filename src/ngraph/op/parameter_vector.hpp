@@ -44,6 +44,8 @@ namespace ngraph
             {
             }
 
+            ParameterVector& operator=(const ParameterVector& parameters) = default;
+
             ParameterVector() {}
         };
     }
