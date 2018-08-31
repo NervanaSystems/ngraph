@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,19 +14,26 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "attribute.hpp"
-#include "graph.hpp"
+#include "concat.hpp"
+
+#include "ngraph/op/concat.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        std::vector<Graph> Attribute::get_graph_array() const
+        namespace op
         {
-            return {std::begin(m_attribute_proto->graphs()), std::end(m_attribute_proto->graphs())};
-        }
+            NodeVector concat(const Node& node)
+            {
+                NodeVector inputs{node.get_ng_inputs()};
+                auto axis = node.get_attribute_value<int64_t>("axis");
 
-        Graph Attribute::get_graph() const { return Graph{m_attribute_proto->g()}; }
-    } // namespace onnx_import
+                return {std::make_shared<ngraph::op::Concat>(inputs, axis)};
+            }
 
-} // namespace ngraph
+        } // namespace  op
+
+    } // namespace  onnx_import
+
+} // namespace  ngraph

@@ -81,12 +81,12 @@ bool element::Type::operator==(const element::Type& other) const
 bool element::Type::operator<(const Type& other) const
 {
     size_t v1 = m_bitwidth << 2;
-    v1 |= (m_is_real ? 2 : 0);
-    v1 |= (m_is_signed ? 1 : 0);
+    v1 |= static_cast<size_t>(m_is_real ? 2 : 0);
+    v1 |= static_cast<size_t>(m_is_signed ? 1 : 0);
 
     size_t v2 = other.m_bitwidth << 2;
-    v2 |= (other.m_is_real ? 2 : 0);
-    v2 |= (other.m_is_signed ? 1 : 0);
+    v2 |= static_cast<size_t>(other.m_is_real ? 2 : 0);
+    v2 |= static_cast<size_t>(other.m_is_signed ? 1 : 0);
 
     return v1 < v2;
 }

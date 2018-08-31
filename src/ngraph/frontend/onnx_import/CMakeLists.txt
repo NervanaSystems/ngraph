@@ -36,11 +36,15 @@ add_library(onnx_import STATIC
         op/average_pool.hpp
         op/batch_norm.cpp
         op/batch_norm.hpp
+        op/concat.cpp
+        op/concat.hpp
         op/constant.cpp
         op/constant.hpp
         op/conv.cpp
         op/conv.hpp
         op/div.hpp
+        op/flatten.cpp
+        op/flatten.hpp
         op/gemm.cpp
         op/gemm.hpp
         op/matmul.hpp

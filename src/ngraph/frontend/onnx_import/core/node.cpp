@@ -26,7 +26,7 @@ namespace ngraph
         NodeVector Node::get_ng_inputs() const
         {
             NodeVector result;
-            for (const auto& name : m_node_proto.input())
+            for (const auto& name : m_node_proto->input())
             {
                 result.push_back(m_graph->get_ng_node_from_cache(name));
             }

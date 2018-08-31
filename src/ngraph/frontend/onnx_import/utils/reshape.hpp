@@ -25,7 +25,15 @@ namespace ngraph
     {
         namespace reshape
         {
+            /// \brief Flatten the input tensor into a 2D matrix.
             ///
+            /// \param node The tensor to be flattened.
+            /// \param axis The axis dividing shape.
+            ///
+            /// \return The new node being a 2D matrix representing flattened input node.
+            std::shared_ptr<ngraph::Node> flatten(const std::shared_ptr<ngraph::Node>& node,
+                                                  int axis);
+
             /// \brief      Gets the AxisVector filled with monotonic increasing
             ///             sequence.
             ///
@@ -37,7 +45,6 @@ namespace ngraph
             ngraph::AxisVector get_default_axis_vector(std::size_t data_shape_size,
                                                        std::size_t start_value = 0);
 
-            ///
             /// \brief      Infer `output_shape` dimension values.
             ///
             /// \par Inferention rules
@@ -73,5 +80,5 @@ namespace ngraph
             std::shared_ptr<ngraph::Node> transpose(const std::shared_ptr<ngraph::Node>& node);
 
         } // namespace  reshape
-    }     // namespace onnx_import
+    }  // namespace onnx_import
 } // namespace ngraph
