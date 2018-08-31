@@ -43,6 +43,8 @@ using namespace ngraph;
 
 #define TI(x) std::type_index(typeid(x))
 
+extern template ngraph::Shape ngraph::apply_permutation<ngraph::Shape>(ngraph::Shape input,
+                                                                       ngraph::AxisVector order);
 template <typename T>
 static std::shared_ptr<pattern::Matcher>
     create_binary_matcher(std::shared_ptr<pattern::op::Label> label,
@@ -137,8 +139,33 @@ static bool simplify_concat(std::shared_ptr<Node> n)
     auto replacement = branch_tip;
     if (branch_tip->get_shape().size() != n->get_shape().size())
     {
+        auto concat = std::dynamic_pointer_cast<op::Concat>(n);
         auto default_shape = ngraph::get_default_order(branch_tip->get_shape());
-        auto reshape = std::make_shared<op::Reshape>(branch_tip, default_shape, n->get_shape());
+        std::shared_ptr<op::Reshape> reshape = nullptr;
+        if (concat->get_concatenation_axis() == 0)
+        {
+            // logical reshape
+            reshape = std::make_shared<op::Reshape>(branch_tip, default_shape, n->get_shape());
+        }
+        else
+        {
+            // logical reshape + axis reordering
+            Shape concat_shape = n->get_shape();
+            AxisVector order = ngraph::get_default_order(concat_shape);
+            size_t concat_axis = concat->get_concatenation_axis();
+            for (size_t i = order.size() - 1; i > 0; i--)
+            {
+                if (i <= concat_axis)
+                {
+                    order[i] = order[i - 1];
+                }
+            }
+            order.front() = concat_axis;
+            auto output_shape = ngraph::apply_permutation(concat_shape, order);
+            auto logical_reshape =
+                std::make_shared<op::Reshape>(branch_tip, default_shape, output_shape);
+            reshape = std::make_shared<op::Reshape>(logical_reshape, order, concat_shape);
+        }
         replacement = reshape;
     }
 
