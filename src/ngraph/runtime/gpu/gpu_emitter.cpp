@@ -516,6 +516,31 @@ namespace ngraph
                     return;
                 }
                 auto reshape = static_cast<const op::Reshape*>(node);
+                auto can_skip_reshape = [&]() {
+                    if (!reshape->get_is_transpose())
+                    {
+                        return true;
+                    }
+                    auto annotation = reshape->get_op_annotations();
+                    if (annotation && annotation->get_in_place_oi_pairs().size() > 0)
+                    {
+                        return true;
+                    }
+                    return false;
+                };
+
+                if (can_skip_reshape())
+                {
+                    writer.block_begin();
+                    writer << "// Reshape eliminated but copy if needed.\n";
+                    if (out[0].get_name() != args[0].get_name())
+                    {
+                        kernel::emit_memcpyDtD(writer, out[0], args[0]);
+                    }
+                    writer.block_end();
+                    return;
+                }
+
                 writer.block_begin();
                 auto arg_shape = args[0].get_shape();
                 auto arg_rank = arg_shape.size();
