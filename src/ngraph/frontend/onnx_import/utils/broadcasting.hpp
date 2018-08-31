@@ -25,6 +25,14 @@ namespace ngraph
 {
     namespace onnx_import
     {
+        NodeVector binary_op_numpy_broadcasting(const std::shared_ptr<ngraph::Node>& left,
+                                                const std::shared_ptr<ngraph::Node>& right);
+
+        inline NodeVector binary_op_numpy_broadcasting(NodeVector inputs)
+        {
+            return binary_op_numpy_broadcasting(inputs.at(0), inputs.at(1));
+        }
+
         /// \brief Generate a list of broadcast axes.
         ///
         /// \details Informally, a broadcast "adds" axes to the input tensor, replicating
