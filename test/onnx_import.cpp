@@ -310,8 +310,8 @@ TEST(onnx, model_relu)
 TEST(onnx, model_sum)
 {
     // Simple Sum test
-    auto function = onnx_import::import_onnx_function(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/sum.onnx"));
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/sum.onnx"));
 
     // input data shape (3, )
     Inputs inputs;
@@ -353,8 +353,8 @@ TEST(onnx, model_min_two_inputs)
 
 TEST(onnx, model_max)
 {
-    auto function = onnx_import::import_onnx_function(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/max.onnx"));
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/max.onnx"));
 
     // input data shape (3, )
     Inputs inputs;
@@ -369,8 +369,8 @@ TEST(onnx, model_max)
 
 TEST(onnx, model_mean)
 {
-    auto function = onnx_import::import_onnx_function(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/mean.onnx"));
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/mean.onnx"));
 
     // input data shape (3, )
     Inputs inputs;
@@ -523,8 +523,8 @@ TEST(onnx, model_flatten)
 
 TEST(onnx, model_sub)
 {
-    auto function = onnx_import::import_onnx_function(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/sub.onnx"));
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/sub.onnx"));
 
     Inputs inputs;
     inputs.emplace_back(test::NDArray<float, 3>({{{1, 2, 3}}}).get_vector());
@@ -539,8 +539,8 @@ TEST(onnx, model_sub)
 
 TEST(onnx, model_div)
 {
-    auto function = onnx_import::import_onnx_function(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/div.onnx"));
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/div.onnx"));
 
     Inputs inputs;
     inputs.emplace_back(test::NDArray<float, 3>({{{1, 2, 3}}}).get_vector());
