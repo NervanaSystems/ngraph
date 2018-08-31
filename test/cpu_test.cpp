@@ -45,24 +45,6 @@
 using namespace ngraph;
 using namespace std;
 
-class UnhandledOp : public ngraph::op::Abs
-{
-public:
-    UnhandledOp(const std::shared_ptr<Node>& arg)
-        : Abs(arg)
-    {
-    }
-};
-
-TEST(cpu_test, unhandled_op)
-{
-    auto A = make_shared<op::Parameter>(element::f32, Shape{});
-    auto unhandled = make_shared<UnhandledOp>(A);
-    auto f = make_shared<Function>(unhandled, op::ParameterVector{A});
-    auto backend = runtime::Backend::create("CPU");
-    ASSERT_THROW(backend->compile(f), ngraph_error);
-}
-
 TEST(cpu_test, trivial_in_place_relu)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{16, 1});
