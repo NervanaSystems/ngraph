@@ -83,7 +83,7 @@ namespace ngraph
                         {
                             output_shape.at(idx) = input_shape.at(idx);
                         }
-                        catch (const std::out_of_range& e)
+                        catch (const std::out_of_range&)
                         {
                             throw error::parameter::Value(
                                 "Reshape",
