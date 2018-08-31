@@ -38,6 +38,7 @@
 #include "op/split.hpp"
 #include "op/sub.hpp"
 #include "op/sum.hpp"
+#include "op/unsqueeze.hpp"
 #include "ops_bridge.hpp"
 
 namespace ngraph
@@ -104,6 +105,7 @@ namespace ngraph
                     m_map.emplace("Split", std::bind(op::split, std::placeholders::_1));
                     m_map.emplace("Sub", std::bind(op::sub, std::placeholders::_1));
                     m_map.emplace("Sum", std::bind(op::sum, std::placeholders::_1));
+                    m_map.emplace("Unsqueeze", std::bind(op::unsqueeze, std::placeholders::_1));
                 }
 
                 NodeVector operator()(const Node& node) const
