@@ -49,10 +49,10 @@ TEST(type_prop, batchnorm_rank_less_than_2)
         auto bc = make_shared<op::BatchNorm>(0.001, dummy, dummy, dummy);
         FAIL() << "BatchNorm c-tor should throw for tensors whose rank is less than 2";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("input tensor to batchnorm must have tensor of at least rank 2"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input argument must have rank of at least 2"));
     }
     catch (...)
     {
@@ -68,11 +68,11 @@ TEST(type_prop, batchnorm_zero_channel_check)
         auto bc = make_shared<op::BatchNorm>(0.001, dummy, dummy, dummy);
         FAIL() << "BatchNorm c-tor should throw for tensors w/ zero-dimension channels";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("input tensor must have at least one channel for batch normalization"));
+            std::string("Input argument's channel dimension must have size of at least 1"));
     }
     catch (...)
     {
@@ -91,11 +91,11 @@ TEST(type_prop, batchnorm_et_check)
         auto bc = make_shared<op::BatchNorm>(0.001, dummy_f32, dummy_f64, param);
         FAIL() << "BatchNorm c-tor should throw for different element types";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("The element type element::Type{64, 1, 1,double} of input beta isn't "
-                              "equal to the input data's type element::Type{32, 1, 1,float}"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Element type of beta"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("is not equal to the element type of input"));
     }
     catch (...)
     {
@@ -114,11 +114,11 @@ TEST(type_prop, batchnorm_shape_check)
         auto bc = make_shared<op::BatchNorm>(0.001, dummy_4, dummy_3, param);
         FAIL() << "BatchNorm c-tor should throw if gamma and beta shapes don't match";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string(
-                      "The shape Shape{4} of gamma isn't equal to input channel's shape Shape{3}"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Shape of gamma must match the channel dimension of the input data"));
     }
     catch (...)
     {
@@ -137,9 +137,9 @@ TEST(type_prop, batchnorm_backprop_4d_check)
             make_shared<op::BatchNormBackprop>(0.001, dummy, dummy, param, dummy, dummy, dummy);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Input expected to be a 4D tensor"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input data shape is not a 4D tensor"));
     }
     catch (...)
     {
@@ -159,10 +159,11 @@ TEST(type_prop, batchnorm_backprop_et_check)
             0.001, dummy_f32, dummy_f64, param, dummy_f32, dummy_f32, dummy_f32);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("The element type of beta isn't equal to input data's type"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Element type of beta"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("is not equal to the element type of input"));
     }
     catch (...)
     {
@@ -182,10 +183,11 @@ TEST(type_prop, batchnorm_backprop_shape_check)
             make_shared<op::BatchNormBackprop>(0.001, dummy, dummy2, param, dummy2, dummy2, dummy2);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("The shape of beta isn't equal to input channel's shape"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Shape of beta must match the channel dimension of the input data"));
     }
     catch (...)
     {
@@ -206,9 +208,10 @@ TEST(type_prop, batchnorm_backprop_delta_check)
             make_shared<op::BatchNormBackprop>(0.001, dummy, dummy, param, dummy, dummy, delta);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("delta shape is expected to be equal to input shape"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Shape of delta must match the shape of the input data"));
     }
     catch (...)
     {
