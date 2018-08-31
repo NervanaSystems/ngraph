@@ -21,7 +21,6 @@ import numpy as np
 
 from ngraph.impl import Function, Node, Shape, serialize, TensorViewType, util
 from ngraph.impl.runtime import Backend
-from ngraph.impl.op import Parameter
 
 from ngraph.utils.types import get_dtype, NumericData
 from ngraph.exceptions import UserInputError
@@ -50,31 +49,31 @@ class Runtime:
     def computation(self, node_or_function, *inputs):
         # type: (Union[Node, Function], *Node) -> 'Computation'
         """Return a callable Computation object."""
-        return Computation(self, node_or_function, *inputs)
+        if isinstance(node_or_function, Node):
+            ng_function = Function(node_or_function, inputs, node_or_function.name)
+            return Computation(self, ng_function)
+        elif isinstance(node_or_function, Function):
+            return Computation(self, node_or_function)
+        else:
+            raise TypeError('Runtime.computation must be called with an nGraph Function object '
+                            'or an nGraph node object an optionally Parameter node objects. '
+                            'Called with: %s', node_or_function)
 
 
 class Computation(object):
     """ngraph callable computation object."""
 
-    def __init__(self, runtime, node_or_function, *parameters):
-        # type: (Runtime, Union[Node, Function], *Parameter) -> None
+    def __init__(self, runtime, ng_function):
+        # type: (Runtime, Function) -> None
         self.runtime = runtime
-        if isinstance(node_or_function, Node):
-            self.parameters = parameters
-            self.function = Function(node_or_function, self.parameters, 'ngraph_computation')
-        elif isinstance(node_or_function, Function):
-            self.parameters = node_or_function.get_parameters()
-            self.function = node_or_function
-        else:
-            raise TypeError('Unsupported type: second parameter must by of '
-                            'Node or Function type!')
+        self.function = ng_function
+        self.parameters = ng_function.get_parameters()
 
         self.tensor_views = []  # type: List[TensorViewType]
         for parameter in self.parameters:
             shape = parameter.get_shape()
             element_type = parameter.get_element_type()
             self.tensor_views.append(runtime.backend.create_tensor(element_type, shape))
-        self.backend = runtime.backend
 
     def __repr__(self):  # type: () -> str
         params_string = ', '.join([param.name for param in self.parameters])
@@ -94,7 +93,7 @@ class Computation(object):
         result_view = self.runtime.backend.create_tensor(result_element_type, result_shape)
         result_arr = np.empty(result_shape, dtype=result_dtype)
 
-        self.backend.call(self.function, [result_view], self.tensor_views)
+        self.runtime.backend.call(self.function, [result_view], self.tensor_views)
 
         Computation._read_tensor_view_to_ndarray(result_view, result_arr)
         result_arr = result_arr.reshape(result_shape)
