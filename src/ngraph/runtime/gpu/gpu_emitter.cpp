@@ -532,10 +532,15 @@ namespace ngraph
                 if (can_skip_reshape())
                 {
                     writer.block_begin();
-                    writer << "// Reshape eliminated but copy if needed.\n";
-                    if (out[0].get_name() != args[0].get_name())
                     {
-                        kernel::emit_memcpyDtD(writer, out[0], args[0]);
+                        writer << "// Reshape eliminated but copy if needed.\n";
+                        writer << "if (" << out[0].get_name() << " != " << args[0].get_name()
+                               << ")\n";
+                        writer.block_begin();
+                        {
+                            kernel::emit_memcpyDtD(writer, out[0], args[0]);
+                        }
+                        writer.block_end();
                     }
                     writer.block_end();
                     return;
