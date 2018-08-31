@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,18 +14,21 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#pragma once
 
-#include "ngraph/op/util/unary_elementwise.hpp"
-#include "pyngraph/ops/util/unary_elementwise.hpp"
+#include "ngraph/node_vector.hpp"
 
-namespace py = pybind11;
+#include "core/node.hpp"
 
-void regclass_pyngraph_op_util_UnaryElementwise(py::module m)
+namespace ngraph
 {
-    py::class_<ngraph::op::util::UnaryElementwise,
-               std::shared_ptr<ngraph::op::util::UnaryElementwise>,
-               ngraph::op::util::RequiresTensorViewArgs>
-        unaryElementwise(m, "UnaryElementwise");
-}
+    namespace onnx_import
+    {
+        namespace op
+        {
+            NodeVector unsqueeze(const Node& node);
+        } // namespace  op
+
+    } // namespace  onnx_import
+
+} // namespace  ngraph

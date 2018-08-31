@@ -16,24 +16,8 @@
 
 #pragma once
 
-#include "ngraph/node_vector.hpp"
-#include "ngraph/op/op.hpp"
+#include <pybind11/pybind11.h>
 
-namespace ngraph
-{
-    namespace op
-    {
-        namespace util
-        {
-            /// \brief Abstract base class for ops on tensors views.
-            class RequiresTensorViewArgs : public ngraph::op::Op
-            {
-            protected:
-                /// \brief Constructs an operation on tensor view arguments.
-                ///
-                /// \param args The nodes producing this node's input tensors.
-                RequiresTensorViewArgs(const std::string& node_type, const NodeVector& args);
-            };
-        }
-    }
-}
+namespace py = pybind11;
+
+void regmodule_pyngraph_onnx_import(py::module m);

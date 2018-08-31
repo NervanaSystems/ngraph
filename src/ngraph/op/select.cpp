@@ -29,8 +29,10 @@ using namespace ngraph;
 op::Select::Select(const shared_ptr<Node>& arg0,
                    const shared_ptr<Node>& arg1,
                    const shared_ptr<Node>& arg2)
-    : RequiresTensorViewArgs("Select", NodeVector{arg0, arg1, arg2})
+    : Op("Select", check_single_output_args({arg0, arg1, arg2}))
 {
+    constructor_validate_and_infer_types();
+
     auto& input_0 = get_inputs().at(0);
     auto& input_1 = get_inputs().at(1);
     auto& input_2 = get_inputs().at(2);
@@ -48,7 +50,7 @@ op::Select::Select(const shared_ptr<Node>& arg0,
         throw ngraph_error("Arguments 1 and 2 must have the same element type");
     }
 
-    set_value_type_checked(input_1.get_element_type(), input_1.get_shape());
+    set_output_type(0, input_1.get_element_type(), input_1.get_shape());
 }
 
 shared_ptr<Node> op::Select::copy_with_new_args(const NodeVector& new_args) const

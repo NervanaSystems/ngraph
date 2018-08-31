@@ -46,8 +46,6 @@ namespace ngraph
                 , m_data(ngraph::aligned_alloc(m_element_type.size(),
                                                shape_size(m_shape) * m_element_type.size()))
             {
-                auto vt = std::make_shared<TensorViewType>(type, shape);
-                set_value_type_checked(vt);
                 if (values.size() == 1)
                 {
                     write_values(std::vector<T>(shape_size(m_shape), values[0]));
@@ -60,6 +58,7 @@ namespace ngraph
                 {
                     throw ngraph_error("Constant does not have the expected number of literals");
                 }
+                constructor_validate_and_infer_types();
             }
 
             /// \brief Constructs a tensor constant
@@ -75,14 +74,13 @@ namespace ngraph
                 , m_data(ngraph::aligned_alloc(m_element_type.size(),
                                                shape_size(m_shape) * m_element_type.size()))
             {
-                auto vt = std::make_shared<TensorViewType>(type, shape);
-                set_value_type_checked(vt);
                 if (values.size() != shape_size(m_shape))
                 {
                     throw ngraph_error("Constant does not have the expected number of literals");
                 }
                 std::vector<double> dvalues = parse_string<double>(values);
                 write_values(dvalues);
+                constructor_validate_and_infer_types();
             }
 
             /// \brief Constructs a tensor constant with the same initialization value copied across
@@ -100,11 +98,17 @@ namespace ngraph
                 size_t size = shape_size(m_shape) * m_element_type.size();
                 m_data = ngraph::aligned_alloc(m_element_type.size(), size);
                 std::memcpy(m_data, data, size);
-                auto vt = std::make_shared<TensorViewType>(type, shape);
-                set_value_type_checked(vt);
+                constructor_validate_and_infer_types();
             }
 
             virtual ~Constant() override;
+
+            void validate_and_infer_types() override
+            {
+                Node::validate_and_infer_types();
+                infer_element_type();
+                set_output_type(0, m_element_type, m_shape);
+            }
 
             /// \brief Wrapper around constructing a shared_ptr of a Constant
             ///
@@ -115,7 +119,9 @@ namespace ngraph
             static std::shared_ptr<op::Constant>
                 create(const element::Type& type, Shape shape, const std::vector<T> values)
             {
-                return std::make_shared<op::Constant>(type, shape, values);
+                auto result = std::make_shared<op::Constant>(type, shape, values);
+                result->validate_and_infer_types();
+                return result;
             }
 
             /// \brief Wrapper around constructing a shared_ptr of a Constant
@@ -127,7 +133,9 @@ namespace ngraph
             static std::shared_ptr<op::Constant>
                 create(const element::Type& type, Shape shape, std::initializer_list<T> values)
             {
-                return std::make_shared<op::Constant>(type, shape, std::vector<T>{values});
+                auto result = std::make_shared<op::Constant>(type, shape, std::vector<T>{values});
+                result->validate_and_infer_types();
+                return result;
             }
 
             virtual std::shared_ptr<Node>
@@ -162,6 +170,13 @@ namespace ngraph
 
             bool is_constant() const override { return true; }
         protected:
+            Constant(const std::string& name, const NodeVector& args)
+                : Node(name, args)
+                , m_shape({})
+            {
+            }
+
+            virtual void infer_element_type() {}
             template <typename T>
             void write_values(const std::vector<T>& values)
             {
@@ -240,13 +255,61 @@ namespace ngraph
             }
 
             element::Type m_element_type;
-            Shape m_shape;
-            void* m_data;
-
-        private:
+            Shape m_shape{};
+            void* m_data{nullptr};
             Constant(const Constant&) = delete;
             Constant(Constant&&) = delete;
             Constant operator=(const Constant*) = delete;
+        };
+
+        class ScalarConstantLikeBase : public Constant
+        {
+        public:
+            std::shared_ptr<op::Constant> as_constant() const;
+
+        protected:
+            ScalarConstantLikeBase(const std::string& name, const NodeVector& args)
+                : Constant(name, args)
+            {
+            }
+        };
+
+        /// \brief A scalar constant whose element type is the same as like.
+        template <typename T>
+        class ScalarConstantLike : public ScalarConstantLikeBase
+        {
+        public:
+            /// \brief A scalar constant whose element type is the same as like.
+            ///
+            /// Once the element type is known, the dependency on like will be removed and
+            /// this node will be replaced with an equivalent constant.
+            ///
+            /// \param like A tensor that will supply the element type.
+            /// \param value The value of the scalar.
+            ScalarConstantLike(const std::shared_ptr<Node>& like, T value)
+                : ScalarConstantLikeBase("ScalarConstantLike", {like})
+                , m_value(value)
+            {
+                constructor_validate_and_infer_types();
+            }
+
+            std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override
+            {
+                return std::make_shared<ScalarConstantLike<T>>(new_args.at(0), m_value);
+            }
+
+        protected:
+            void infer_element_type() override
+            {
+                m_element_type = get_input_element_type(0);
+                if (nullptr == m_data)
+                {
+                    m_data = ngraph::aligned_alloc(m_element_type.size(), m_element_type.size());
+                    write_values(std::vector<T>(1, m_value));
+                }
+            }
+
+            T m_value;
         };
     }
 }

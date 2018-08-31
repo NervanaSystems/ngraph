@@ -63,10 +63,13 @@ shared_ptr<Node>
 ngraph::runtime::cpu::op::LoopKernel::LoopKernel(const NodeVector& node_list,
                                                  const NodeVector& outputs,
                                                  const NodeVector& args)
-    : RequiresTensorViewArgs("LoopKernel", {args})
+    : Op("LoopKernel", check_single_output_args({args}))
     , m_node_list(node_list)
     , m_output_nodes(outputs)
 {
+    constructor_validate_and_infer_types();
+    set_output_size(m_output_nodes.size());
+
     auto ref = node_list.at(0);
     for (auto n : node_list)
     {
@@ -76,12 +79,14 @@ ngraph::runtime::cpu::op::LoopKernel::LoopKernel(const NodeVector& node_list,
         }
     }
 
-    for (auto o : outputs)
+    for (size_t i = 0; i < outputs.size(); ++i)
     {
+        auto& o = outputs.at(i);
+
         if (std::find(node_list.begin(), node_list.end(), o) == node_list.end())
         {
             throw ngraph_error(o->get_name() + " isn't in node_list");
         }
-        add_output(o->get_element_type(), o->get_shape());
+        set_output_type(i, o->get_element_type(), o->get_shape());
     }
 }

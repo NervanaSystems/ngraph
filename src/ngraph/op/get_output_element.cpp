@@ -30,7 +30,7 @@ op::GetOutputElement::GetOutputElement(const shared_ptr<Node>& arg, size_t n)
         throw ngraph_error("Indexing tuple beyond its size");
     }
 
-    set_value_type_checked(arg->get_output_element_type(n), arg->get_output_shape(n));
+    set_output_type(0, arg->get_output_element_type(n), arg->get_output_shape(n));
 }
 
 shared_ptr<Node> op::GetOutputElement::copy_with_new_args(const NodeVector& new_args) const

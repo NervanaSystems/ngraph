@@ -25,10 +25,8 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_MaxPool(py::module m)
 {
-    py::class_<ngraph::op::MaxPool,
-               std::shared_ptr<ngraph::op::MaxPool>,
-               ngraph::op::util::RequiresTensorViewArgs>
-        max_pool(m, "MaxPool");
+    py::class_<ngraph::op::MaxPool, std::shared_ptr<ngraph::op::MaxPool>, ngraph::op::Op> max_pool(
+        m, "MaxPool");
     max_pool.def(py::init<const std::shared_ptr<ngraph::Node>&,
                           const ngraph::Shape&,
                           const ngraph::Strides&,
@@ -44,7 +42,7 @@ void regclass_pyngraph_op_MaxPoolBackprop(py::module m)
 {
     py::class_<ngraph::op::MaxPoolBackprop,
                std::shared_ptr<ngraph::op::MaxPoolBackprop>,
-               ngraph::op::util::RequiresTensorViewArgs>
+               ngraph::op::Op>
         max_pool_backprop(m, "MaxPoolBackprop");
     max_pool_backprop.doc() = "ngraph.impl.op.MaxPoolBackprop wraps ngraph::op::MaxPoolBackprop";
     max_pool_backprop.def(py::init<const std::shared_ptr<ngraph::Node>&,

@@ -26,7 +26,6 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/parameter_vector.hpp"
 #include "ngraph/op/result_vector.hpp"
-#include "ngraph/type/type.hpp"
 
 namespace ngraph
 {
@@ -82,6 +81,8 @@ namespace ngraph
         void set_temporary_pool_size(size_t);
         // updates graph and m_results list
         void replace_node(std::shared_ptr<Node> old, std::shared_ptr<Node> repl);
+
+        void validate_nodes_and_infer_types();
 
     protected:
         ResultVector m_results;

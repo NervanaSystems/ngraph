@@ -30,8 +30,6 @@ namespace ngraph
 
     namespace descriptor
     {
-        class TensorView;
-
         namespace layout
         {
             /// \brief Interface for describing implementations of tensor views.
