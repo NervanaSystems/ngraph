@@ -328,6 +328,10 @@ OPTIONS
                 aggregate_perf_data.insert(
                     aggregate_perf_data.end(), perf_shape.begin(), perf_shape.end());
             }
+            catch(ngraph::unsupported_op ue)
+            {
+                
+            }
             catch (exception e)
             {
                 cout << "Exception caught on '" << m << "'\n" << e.what() << endl;
