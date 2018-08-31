@@ -24,14 +24,11 @@ matrix:
     services: docker
     env: TASK=python3_test OS=ubuntu
 
-before_install:
+install:
 - |
   if [ "$TRAVIS_OS_NAME" == "linux" ]; then
     docker build -t test_ngraph -f .ci/travis/$OS/Dockerfile .
   fi
-
-install:
-- |
   if [ "$TRAVIS_OS_NAME" == "osx" ]; then
     mkdir $TRAVIS_BUILD_DIR/build
     cd $TRAVIS_BUILD_DIR/build
@@ -44,13 +41,12 @@ install:
 
 script:
 - |
+  if [ "$TRAVIS_OS_NAME" == "linux" ]; then
+    .ci/travis/run_test.sh
+  fi
   if [ "$TRAVIS_OS_NAME" == "osx" ]; then
     cd $TRAVIS_BUILD_DIR/build
     make unit-test-check
-  fi
-- |
-  if [ "$TRAVIS_OS_NAME" == "linux" ]; then
-    .ci/travis/run_test.sh
   fi
 
 branches:
