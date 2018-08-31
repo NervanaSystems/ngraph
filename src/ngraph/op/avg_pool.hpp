@@ -17,7 +17,7 @@
 #pragma once
 
 #include "ngraph/graph_util.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
@@ -25,7 +25,7 @@ namespace ngraph
     {
         /// \brief Batched average pooling operation, with optional padding and window stride.
         ///
-        class AvgPool : public util::RequiresTensorViewArgs
+        class AvgPool : public Op
         {
         public:
             /// \brief Constructs a batched average pooling operation.
@@ -70,6 +70,8 @@ namespace ngraph
             /// `[n]`
             AvgPool(const std::shared_ptr<Node>& arg, const Shape& window_shape);
 
+            void validate_and_infer_types() override;
+
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -102,7 +104,7 @@ namespace ngraph
             bool m_include_padding_in_avg_computation;
         };
 
-        class AvgPoolBackprop : public util::RequiresTensorViewArgs
+        class AvgPoolBackprop : public Op
         {
         public:
             AvgPoolBackprop(const Shape& forward_arg_shape,
@@ -112,6 +114,8 @@ namespace ngraph
                             const Shape& padding_below,
                             const Shape& padding_above,
                             bool include_padding_in_avg_computation);
+
+            void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

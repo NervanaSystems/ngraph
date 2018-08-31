@@ -20,13 +20,16 @@ using namespace std;
 using namespace ngraph;
 
 op::AllReduce::AllReduce(const shared_ptr<Node>& arg)
-    : RequiresTensorViewArgs("AllReduce", {arg})
+    : Op("AllReduce", check_single_output_args({arg}))
 {
-    auto& input = m_inputs.at(0);
-    set_value_type_checked(
-        make_shared<TensorViewType>(input.get_element_type(), input.get_shape()));
+    constructor_validate_and_infer_types();
+}
 
-    if ((arg->get_element_type() != element::f32) && (arg->get_element_type() != element::f64))
+void op::AllReduce::validate_and_infer_types()
+{
+    set_output_type(0, get_input_element_type(0), get_input_shape(0));
+
+    if ((get_input_element_type(0) != element::f32) && (get_input_element_type(0) != element::f64))
     {
         throw ngraph_error("Unsupported data type for AllReduce");
     }

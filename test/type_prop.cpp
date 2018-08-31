@@ -41,28 +41,6 @@ TEST(type_prop, broadcast_deduce)
     ASSERT_EQ(bc->get_shape(), bc_shape);
 }
 
-TEST(type_prop, broadcast_deduce_incorrect)
-{
-    // Check deduced type against incorrectly specified type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    try
-    {
-        auto bc = make_shared<op::Broadcast>(param, Shape{2, 4, 3}, AxisSet{1});
-        bc->set_value_type_checked(element::f32, Shape{2, 3, 4});
-
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Deduced type should disagree with specified type";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_EQ(error.what(), std::string("Broadcast arg, shape, and axes are incompatible"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
 TEST(type_prop, batchnorm_rank_less_than_2)
 {
     auto dummy = make_shared<op::Parameter>(element::f32, Shape{1});
@@ -92,9 +70,9 @@ TEST(type_prop, batchnorm_zero_channel_check)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string(
-                      "input tensor must have at least one channel axis for batch normalization"));
+        EXPECT_EQ(
+            error.what(),
+            std::string("input tensor must have at least one channel for batch normalization"));
     }
     catch (...)
     {
@@ -116,7 +94,8 @@ TEST(type_prop, batchnorm_et_check)
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(error.what(),
-                  std::string("The element type of beta isn't equal to input data's type"));
+                  std::string("The element type element::Type{64, 1, 1,double} of input beta isn't "
+                              "equal to the input data's type element::Type{32, 1, 1,float}"));
     }
     catch (...)
     {
@@ -138,7 +117,8 @@ TEST(type_prop, batchnorm_shape_check)
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(error.what(),
-                  std::string("The shape of gamma isn't equal to input channel's shape"));
+                  std::string(
+                      "The shape Shape{4} of gamma isn't equal to input channel's shape Shape{3}"));
     }
     catch (...)
     {
@@ -245,29 +225,6 @@ TEST(type_prop, concat_deduce)
     auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 1);
     ASSERT_EQ(c->get_element_type(), element::f32);
     ASSERT_EQ(c->get_shape(), (Shape{2, 12, 4}));
-}
-
-TEST(type_prop, concat_deduce_incorrect)
-{
-    // Check deduced type against incorrectly specified type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 7, 4});
-    auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 2, 4});
-    try
-    {
-        auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 1);
-        c->set_value_type_checked(element::f32, (Shape{2, 14, 4}));
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Deduced type should disagree with specified type";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_EQ(error.what(), std::string("Setting value type to a different ValueType"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
 }
 
 TEST(type_prop, concat_deduce_wrong_rank)
@@ -378,27 +335,6 @@ TEST(type_prop, convert_deduce)
     auto c = make_shared<op::Convert>(param, element::i32);
     ASSERT_EQ(c->get_element_type(), element::i32);
     ASSERT_EQ(c->get_shape(), (Shape{2, 3, 4}));
-}
-
-TEST(type_prop, convert_deduce_incorrect)
-{
-    // Check deduced type against incorrectly specified type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
-    try
-    {
-        auto c = make_shared<op::Convert>(param, element::i32);
-        c->set_value_type_checked(element::i32, Shape{2, 14, 4});
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Deduced type should disagree with specified type";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_EQ(error.what(), std::string("Setting value type to a different ValueType"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
 }
 
 TEST(type_prop, dot_deduce_scalar_2d)
@@ -535,7 +471,7 @@ void test_binary(std::string node_type,
         }
         catch (const ngraph_error& error)
         {
-            EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+            EXPECT_HAS_SUBSTRING(error.what(), "differs in shape");
         }
         catch (...)
         {
@@ -554,8 +490,7 @@ void test_binary(std::string node_type,
         }
         catch (const ngraph_error& error)
         {
-            EXPECT_EQ(error.what(),
-                      std::string("Arguments must have the same tensor view element type"));
+            EXPECT_HAS_SUBSTRING(error.what(), "differs in element type");
         }
         catch (...)
         {
@@ -627,7 +562,7 @@ void test_binary_logical(std::string node_type,
         }
         catch (const ngraph_error& error)
         {
-            EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+            EXPECT_HAS_SUBSTRING(error.what(), "differs in shape");
         }
         catch (...)
         {
@@ -636,8 +571,8 @@ void test_binary_logical(std::string node_type,
     };
     test_binary_bad_arguments_view_shapes(tv0_2_4_param_0, tv0_4_2_param);
 
-    auto test_binary_bad_arguments_view_element_types = [&](const shared_ptr<Node>& x,
-                                                            const shared_ptr<Node>& y) {
+    auto test_binary_differ_arguments_view_element_types = [&](const shared_ptr<Node>& x,
+                                                               const shared_ptr<Node>& y) {
         try
         {
             auto node = f(x, y);
@@ -646,7 +581,7 @@ void test_binary_logical(std::string node_type,
         }
         catch (const ngraph_error& error)
         {
-            EXPECT_EQ(error.what(), std::string("Arguments must have boolean element type"));
+            EXPECT_HAS_SUBSTRING(error.what(), "differs in element type");
         }
         catch (...)
         {
@@ -654,9 +589,28 @@ void test_binary_logical(std::string node_type,
         }
     };
 
-    test_binary_bad_arguments_view_element_types(tv0_2_4_param_0, tv0_2_4_param_2);
-    test_binary_bad_arguments_view_element_types(tv0_2_4_param_2, tv0_2_4_param_0);
-    test_binary_bad_arguments_view_element_types(tv0_2_4_param_2, tv0_2_4_param_3);
+    auto test_binary_non_bool_arguments_view_element_types = [&](const shared_ptr<Node>& x,
+                                                                 const shared_ptr<Node>& y) {
+        try
+        {
+            auto node = f(x, y);
+            // Should have thrown, so fail if it didn't
+            FAIL() << "Incompatible view arguments not detected.";
+        }
+        catch (const ngraph_error& error)
+        {
+            EXPECT_HAS_SUBSTRING(error.what(), "must have boolean element type");
+        }
+        catch (...)
+        {
+            FAIL() << "Deduced type check failed for unexpected reason";
+        }
+
+    };
+
+    test_binary_differ_arguments_view_element_types(tv0_2_4_param_0, tv0_2_4_param_2);
+    test_binary_non_bool_arguments_view_element_types(tv0_2_4_param_2, tv0_2_4_param_0);
+    test_binary_non_bool_arguments_view_element_types(tv0_2_4_param_2, tv0_2_4_param_3);
 
     auto test_binary_good_arguments = [&](const shared_ptr<Node>& x, const shared_ptr<Node>& y) {
         auto node = f(x, y);
@@ -702,8 +656,7 @@ TEST(type_prop, binary_arithmetic_bad_argument_element_types)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Operands for arithmetic operators must have numeric element type"));
+        EXPECT_HAS_SUBSTRING(error.what(), "must have numeric element type");
     }
     catch (...)
     {
@@ -722,8 +675,7 @@ TEST(type_prop, unary_arithmetic_bad_argument_element_types)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Operands for arithmetic operators must have numeric element type"));
+        EXPECT_HAS_SUBSTRING(error.what(), "must have numeric element type");
     }
     catch (...)
     {
@@ -3316,10 +3268,9 @@ TEST(type_prop, conv_invalid_input_spatial_size_zero_after_padding)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Convolution input spatial dimension after dilation is zero even with padding."));
+        EXPECT_EQ(error.what(),
+                  std::string("Convolution input spatial dimension after "
+                              "dilation is zero even with padding."));
     }
     catch (...)
     {
@@ -3341,10 +3292,9 @@ TEST(type_prop, conv_invalid_input_spatial_size_0)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Convolution input spatial dimension after dilation is zero even with padding."));
+        EXPECT_EQ(error.what(),
+                  std::string("Convolution input spatial dimension after "
+                              "dilation is zero even with padding."));
     }
     catch (...)
     {
@@ -3824,10 +3774,9 @@ TEST(type_prop, max_pool_invalid_dilated_too_large)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Max-pool window shape is larger than the spatial dimensions even after padding."));
+        EXPECT_EQ(error.what(),
+                  std::string("Max-pool window shape is larger than the spatial "
+                              "dimensions even after padding."));
     }
     catch (...)
     {
@@ -5685,10 +5634,9 @@ TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_result_element_
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Return element type from scatter function does not match the init value type"));
+        EXPECT_EQ(error.what(),
+                  std::string("Return element type from scatter function does "
+                              "not match the init value type"));
     }
     catch (...)
     {

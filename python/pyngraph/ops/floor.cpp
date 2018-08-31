@@ -14,9 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/floor.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+#include "ngraph/op/floor.hpp"
 #include "pyngraph/ops/floor.hpp"
 
 namespace py = pybind11;

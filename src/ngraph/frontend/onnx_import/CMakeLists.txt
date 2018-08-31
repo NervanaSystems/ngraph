@@ -36,6 +36,8 @@ add_library(onnx_import STATIC
         op/average_pool.hpp
         op/batch_norm.cpp
         op/batch_norm.hpp
+        op/concat.cpp
+        op/concat.hpp
         op/constant.cpp
         op/constant.hpp
         op/conv.cpp
@@ -60,6 +62,8 @@ add_library(onnx_import STATIC
         op/split.hpp
         op/sub.hpp
         op/sum.hpp
+        op/unsqueeze.cpp
+        op/unsqueeze.hpp
         ops_bridge.cpp
         utils/broadcasting.cpp
         utils/broadcasting.hpp

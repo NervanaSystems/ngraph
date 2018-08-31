@@ -18,15 +18,13 @@
 #include "ngraph/except.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
-#include "ngraph/type/type.hpp"
 
 using namespace ngraph;
 
 descriptor::layout::DenseTensorViewLayout::DenseTensorViewLayout(const TensorView& tensor_view)
     : TensorViewLayout(tensor_view)
 {
-    auto tensor_view_type = tensor_view.get_tensor_view_type();
-    Shape shape = tensor_view_type->get_shape();
+    const Shape& shape = tensor_view.get_shape();
     m_size = ngraph::shape_size(shape);
     m_strides = ngraph::row_major_strides(shape);
 }

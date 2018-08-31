@@ -23,27 +23,31 @@ op::Slice::Slice(const shared_ptr<Node>& arg,
                  const Coordinate& lower_bounds,
                  const Coordinate& upper_bounds,
                  const Strides& strides)
-    : RequiresTensorViewArgs("Slice", {arg})
+    : Op("Slice", check_single_output_args({arg}))
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
     , m_strides(strides)
 {
-    check_args();
+    constructor_validate_and_infer_types();
 }
 
 op::Slice::Slice(const shared_ptr<Node>& arg,
                  const Coordinate& lower_bounds,
                  const Coordinate& upper_bounds)
-    : RequiresTensorViewArgs("Slice", {arg})
+    : Op("Slice", check_single_output_args({arg}))
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
-    , m_strides(Strides(lower_bounds.size(), 1))
+    , m_strides(Strides())
 {
-    check_args();
+    constructor_validate_and_infer_types();
 }
 
-void op::Slice::check_args()
+void op::Slice::validate_and_infer_types()
 {
+    if (0 == m_strides.size())
+    {
+        m_strides = Strides(m_lower_bounds.size(), 1);
+    }
     auto& input = get_inputs().at(0);
     auto& input_shape = input.get_shape();
 
@@ -90,7 +94,7 @@ void op::Slice::check_args()
         result_shape.push_back(result_axis_size);
     }
 
-    set_value_type_checked(input.get_element_type(), result_shape);
+    set_output_type(0, input.get_element_type(), result_shape);
 }
 
 shared_ptr<Node> op::Slice::copy_with_new_args(const NodeVector& new_args) const

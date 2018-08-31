@@ -22,6 +22,7 @@ using namespace ngraph;
 op::Floor::Floor(const shared_ptr<Node>& arg)
     : UnaryElementwiseArithmetic("Floor", arg)
 {
+    constructor_validate_and_infer_types();
 }
 
 shared_ptr<Node> op::Floor::copy_with_new_args(const NodeVector& new_args) const

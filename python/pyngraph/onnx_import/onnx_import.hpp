@@ -20,4 +20,4 @@
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_util_BinaryElementwise(py::module m);
+void regmodule_pyngraph_onnx_import(py::module m);

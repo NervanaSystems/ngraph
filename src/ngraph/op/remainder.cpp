@@ -22,6 +22,7 @@ using namespace ngraph;
 op::Remainder::Remainder(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
     : BinaryElementwiseArithmetic("Remainder", arg0, arg1)
 {
+    constructor_validate_and_infer_types();
 }
 
 shared_ptr<Node> op::Remainder::copy_with_new_args(const NodeVector& new_args) const
