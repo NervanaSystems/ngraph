@@ -153,12 +153,9 @@ static bool simplify_concat(std::shared_ptr<Node> n)
             Shape concat_shape = n->get_shape();
             AxisVector order = ngraph::get_default_order(concat_shape);
             size_t concat_axis = concat->get_concatenation_axis();
-            for (size_t i = order.size() - 1; i > 0; i--)
+            for (size_t i = concat_axis; i > 0; i--)
             {
-                if (i <= concat_axis)
-                {
-                    order[i] = order[i - 1];
-                }
+                order[i] = order[i - 1];
             }
             order.front() = concat_axis;
             auto output_shape = ngraph::apply_permutation(concat_shape, order);
