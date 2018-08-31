@@ -552,8 +552,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 auto handler = dispatcher.find(type_index(typeid(n)));
                 if (handler == dispatcher.end())
                 {
-                    throw ngraph_error("Unhandled op during code generation : " +
-                                       node->description());
+                    throw ngraph::unsupported_op(node->description());
                 }
                 vector<GPU_TensorViewWrapper> in;
                 vector<string> node_input_names;

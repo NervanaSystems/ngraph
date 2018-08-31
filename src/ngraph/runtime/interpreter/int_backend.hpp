@@ -1027,9 +1027,7 @@ private:
         }
         else
         {
-            std::stringstream ss;
-            ss << "unsupported op " << node_op;
-            throw ngraph_error(ss.str());
+            throw ngraph::unsupported_op(node_op);
         }
     }
 };

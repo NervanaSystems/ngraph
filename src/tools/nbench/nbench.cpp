@@ -322,8 +322,6 @@ OPTIONS
             try
             {
                 shared_ptr<Function> f = deserialize(m);
-                // cout << "Benchmarking " << m << ", " << backend << " backend, " << iterations
-                //      << " iterations.\n";
                 auto perf_data =
                     run_benchmark(f, backend, iterations, timing_detail, warmup_iterations);
                 auto perf_shape = to_perf_shape(f, perf_data);
