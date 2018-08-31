@@ -240,7 +240,7 @@ namespace ngraph
         }
     };
 
-    void check_new_args_count(const Node* node, const NodeVector& new_args, size_t expected_count);
+    void check_new_args_count(const Node* node, const NodeVector& new_args);
 }
 
 #define NODE_VALIDATION_ASSERT(node, cond)                                                         \

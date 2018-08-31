@@ -151,7 +151,7 @@ vector<string> op::Constant::get_value_strings() const
 
 shared_ptr<Node> op::Constant::copy_with_new_args(const NodeVector& new_args) const
 {
-    check_new_args_count(this, new_args, 0);
+    check_new_args_count(this, new_args);
     return make_shared<Constant>(m_element_type, m_shape, m_data);
 }
 

@@ -46,6 +46,6 @@ op::OneHot::OneHot(const shared_ptr<Node>& arg, const Shape& shape, size_t one_h
 
 shared_ptr<Node> op::OneHot::copy_with_new_args(const NodeVector& new_args) const
 {
-    check_new_args_count(this, new_args, 1);
+    check_new_args_count(this, new_args);
     return make_shared<OneHot>(new_args.at(0), m_shape, m_one_hot_axis);
 }

@@ -98,7 +98,7 @@ op::Reduce::Reduce(const shared_ptr<Node>& arg_reductee,
 
 shared_ptr<Node> op::Reduce::copy_with_new_args(const NodeVector& new_args) const
 {
-    check_new_args_count(this, new_args, 2);
+    check_new_args_count(this, new_args);
     shared_ptr<Reduce> fc =
         make_shared<Reduce>(new_args.at(0), new_args.at(1), m_reduction_function, m_reduction_axes);
     fc->m_reduction_function = clone_function(*m_reduction_function);

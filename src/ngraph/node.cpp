@@ -351,13 +351,11 @@ std::string ngraph::node_validation_assertion_string(const Node* node)
     return ss.str();
 }
 
-void ngraph::check_new_args_count(const Node* node,
-                                  const NodeVector& new_args,
-                                  size_t expected_count)
+void ngraph::check_new_args_count(const Node* node, const NodeVector& new_args)
 {
-    NODE_VALIDATION_ASSERT(node, new_args.size() == expected_count)
-        << "copy_with_new_args() expected " << expected_count << " argument"
-        << (expected_count == 1 ? "" : "s") << " but got " << new_args.size();
+    NODE_VALIDATION_ASSERT(node, new_args.size() == node->get_arguments().size())
+        << "copy_with_new_args() expected " << node->get_arguments().size() << " argument"
+        << (node->get_arguments().size() == 1 ? "" : "s") << " but got " << new_args.size();
 }
 
 const std::shared_ptr<Node>& ngraph::check_single_output_arg(const std::shared_ptr<Node>& node,

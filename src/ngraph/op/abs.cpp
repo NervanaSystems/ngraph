@@ -29,7 +29,7 @@ op::Abs::Abs(const shared_ptr<Node>& arg)
 
 shared_ptr<Node> op::Abs::copy_with_new_args(const NodeVector& new_args) const
 {
-    check_new_args_count(this, new_args, 1);
+    check_new_args_count(this, new_args);
     return make_shared<Abs>(new_args.at(0));
 }
 

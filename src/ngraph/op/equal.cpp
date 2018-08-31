@@ -27,6 +27,6 @@ op::Equal::Equal(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
 
 shared_ptr<Node> op::Equal::copy_with_new_args(const NodeVector& new_args) const
 {
-    check_new_args_count(this, new_args, 2);
+    check_new_args_count(this, new_args);
     return make_shared<Equal>(new_args.at(0), new_args.at(1));
 }

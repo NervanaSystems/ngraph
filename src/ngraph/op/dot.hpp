@@ -56,7 +56,7 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override
             {
-                check_new_args_count(this, new_args, 2);
+                check_new_args_count(this, new_args);
                 return std::make_shared<Dot>(
                     new_args.at(0), new_args.at(1), m_reduction_axes_count);
             }

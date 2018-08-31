@@ -70,7 +70,7 @@ op::Pad::Pad(const shared_ptr<Node>& arg,
 
 shared_ptr<Node> op::Pad::copy_with_new_args(const NodeVector& new_args) const
 {
-    check_new_args_count(this, new_args, 2);
+    check_new_args_count(this, new_args);
     return make_shared<Pad>(
         new_args.at(0), new_args.at(1), m_padding_below, m_padding_above, m_padding_interior);
 }

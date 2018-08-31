@@ -201,7 +201,7 @@ op::MaxPool::MaxPool(const shared_ptr<Node>& arg, const Shape& window_shape)
 
 shared_ptr<Node> op::MaxPool::copy_with_new_args(const NodeVector& new_args) const
 {
-    check_new_args_count(this, new_args, 1);
+    check_new_args_count(this, new_args);
     return make_shared<MaxPool>(new_args.at(0),
                                 m_window_shape,
                                 m_window_movement_strides,
@@ -375,7 +375,7 @@ shared_ptr<op::MaxPool> op::MaxPoolBackprop::get_forward_op() const
 
 shared_ptr<Node> op::MaxPoolBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
-    check_new_args_count(this, new_args, 2);
+    check_new_args_count(this, new_args);
     return make_shared<op::MaxPoolBackprop>(new_args.at(0),
                                             new_args.at(1),
                                             m_window_shape,

@@ -61,7 +61,7 @@ void op::ReverseSequence::validate_and_infer_types()
 
 shared_ptr<Node> op::ReverseSequence::copy_with_new_args(const NodeVector& new_args) const
 {
-    check_new_args_count(this, new_args, 2);
+    check_new_args_count(this, new_args);
     auto res =
         make_shared<ReverseSequence>(new_args.at(0), new_args.at(1), m_batch_axis, m_seq_axis);
     return res;

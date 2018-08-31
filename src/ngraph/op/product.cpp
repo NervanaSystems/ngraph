@@ -27,6 +27,6 @@ op::Product::Product(const shared_ptr<Node>& arg, const AxisSet& reduction_axes)
 
 shared_ptr<Node> op::Product::copy_with_new_args(const NodeVector& new_args) const
 {
-    check_new_args_count(this, new_args, 1);
+    check_new_args_count(this, new_args);
     return make_shared<Product>(new_args.at(0), m_reduction_axes);
 }
