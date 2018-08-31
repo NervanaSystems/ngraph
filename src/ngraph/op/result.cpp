@@ -44,9 +44,6 @@ shared_ptr<Node> op::Result::copy_with_new_args(const NodeVector& new_args) cons
 {
     check_new_args_count(this, new_args, 1);
 
-    NODE_VALIDATION_ASSERT(this, new_args[0]->get_outputs().size() == 1)
-        << "Argument has " << new_args[0]->get_outputs().size() << " outputs (1 expected).";
-
     auto res = make_shared<Result>(new_args.at(0));
     if (res)
     {

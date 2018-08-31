@@ -34,22 +34,21 @@ void op::Concat::validate_and_infer_types()
 {
     NODE_VALIDATION_ASSERT(this, m_inputs.size() >= 1) << "At least one argument required.";
 
-    Shape first_input_shape = get_inputs()[0].get_shape();
+    Shape first_input_shape = get_input_shape(0);
     size_t expected_rank = first_input_shape.size();
-    element::Type expected_et = get_inputs()[0].get_element_type();
+    element::Type expected_et = get_input_element_type(0);
 
     for (auto i = 1; i < get_inputs().size(); i++)
     {
-        NODE_VALIDATION_ASSERT(this, get_inputs()[i].get_shape().size() == expected_rank)
+        NODE_VALIDATION_ASSERT(this, get_input_shape(i).size() == expected_rank)
             << "Not all arguments have the same rank: argument 0 has shape " << first_input_shape
             << " of rank " << expected_rank << " but argument " << i << " has shape "
-            << get_inputs()[i].get_shape() << " of rank " << get_inputs()[i].get_shape().size()
-            << ".";
+            << get_input_shape(i) << " of rank " << get_input_shape(i).size() << ".";
 
-        NODE_VALIDATION_ASSERT(this, get_inputs()[i].get_element_type() == expected_et)
+        NODE_VALIDATION_ASSERT(this, get_input_element_type(i) == expected_et)
             << "Not all arguments have the same element type: argument 0 has element type "
             << expected_et << " but argument " << i << " has element type "
-            << get_inputs()[i].get_element_type() << ".";
+            << get_input_element_type(i) << ".";
     }
 
     NODE_VALIDATION_ASSERT(this, m_concatenation_axis < expected_rank)
@@ -60,18 +59,18 @@ void op::Concat::validate_and_infer_types()
 
     for (auto i = 1; i < get_inputs().size(); i++)
     {
-        for (auto j = 0; j < get_inputs()[i].get_shape().size(); j++)
+        for (auto j = 0; j < get_input_shape(i).size(); j++)
         {
             if (j != m_concatenation_axis)
             {
-                NODE_VALIDATION_ASSERT(this, first_input_shape[j] == get_inputs()[i].get_shape()[j])
+                NODE_VALIDATION_ASSERT(this, first_input_shape[j] == get_input_shape(i)[j])
                     << "Dimensions of argument " << i << " do not match for axis " << j
-                    << " (expected " << first_input_shape[j] << ", got "
-                    << get_inputs()[i].get_shape()[j] << ").";
+                    << " (expected " << first_input_shape[j] << ", got " << get_input_shape(i)[j]
+                    << ").";
             }
             else
             {
-                concatenation_axis_output_length += get_inputs()[i].get_shape()[j];
+                concatenation_axis_output_length += get_input_shape(i)[j];
             }
         }
     }
