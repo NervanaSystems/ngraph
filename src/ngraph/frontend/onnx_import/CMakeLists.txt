@@ -62,6 +62,8 @@ add_library(onnx_import STATIC
         op/split.hpp
         op/sub.hpp
         op/sum.hpp
+        op/unsqueeze.cpp
+        op/unsqueeze.hpp
         ops_bridge.cpp
         utils/broadcasting.cpp
         utils/broadcasting.hpp
