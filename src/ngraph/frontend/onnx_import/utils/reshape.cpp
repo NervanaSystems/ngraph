@@ -31,10 +31,9 @@ namespace ngraph
     {
         namespace reshape
         {
-            ngraph::AxisVector get_default_axis_vector(std::size_t data_shape_size,
-                                                       std::size_t start_value)
+            AxisVector get_default_axis_vector(std::size_t data_shape_size, std::size_t start_value)
             {
-                ngraph::AxisVector axis_vector(data_shape_size);
+                AxisVector axis_vector(data_shape_size);
                 std::iota(std::begin(axis_vector), std::end(axis_vector), start_value);
                 return axis_vector;
             }
@@ -80,12 +79,12 @@ namespace ngraph
                 if (neg_value_it != std::end(output_shape))
                 {
                     *neg_value_it = 1;
-                    std::size_t = input_shape_product =
+                    std::size_t input_shape_product =
                         std::accumulate(std::begin(input_shape),
                                         std::end(input_shape),
                                         1UL,
                                         std::multiplies<std::size_t>());
-                    std::size_t = output_shape_product =
+                    std::size_t output_shape_product =
                         std::accumulate(std::begin(output_shape),
                                         std::end(output_shape),
                                         1UL,
@@ -113,7 +112,7 @@ namespace ngraph
                     }
                 }
 
-                auto axis_vector = ngraph::AxisVector{axes_order.begin(), axes_order.end()};
+                auto axis_vector = AxisVector{axes_order.begin(), axes_order.end()};
                 return std::make_shared<ngraph::op::Reshape>(node, axis_vector, out_shape);
             }
 

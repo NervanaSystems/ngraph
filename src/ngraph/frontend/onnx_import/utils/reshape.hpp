@@ -26,15 +26,16 @@ namespace ngraph
         namespace reshape
         {
             ///
-            /// \brief      Gets the AxisVector filled with monotonic increasing sequence.
+            /// \brief      Gets the AxisVector filled with monotonic increasing
+            ///             sequence.
             ///
             /// \param[in]  data_shape_size  The data shape size.
-            /// \param[in]  start_value      The start_value for sequence.
+            /// \param[in]  start_value      The start_value for sequence. Default equals 0.
             ///
             /// \return     The filled AxisVector.
             ///
             ngraph::AxisVector get_default_axis_vector(std::size_t data_shape_size,
-                                                       std::size_t start_value);
+                                                       std::size_t start_value = 0);
 
             ///
             /// \brief      Infer `output_shape` dimension values.
