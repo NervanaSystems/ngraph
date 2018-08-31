@@ -20,12 +20,15 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
+#include "util/test_control.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-TEST(nop_elimination, eliminate_pad)
+static string s_manifest = "${MANIFEST}";
+
+NGRAPH_TEST(${BACKEND_NAME}, eliminate_pad)
 {
     Shape shape_a{2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -38,27 +41,25 @@ TEST(nop_elimination, eliminate_pad)
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
         op::ParameterVector{A, B});
 
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::NopElimination>();
-    pass_manager.run_passes(f);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    backend->compile(f);
 
     ASSERT_EQ(count_ops_of_type<op::Pad>(f), 0);
 }
 
-TEST(nop_elimination, eliminate_sum)
+NGRAPH_TEST(${BACKEND_NAME}, eliminate_sum)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), op::ParameterVector{A});
 
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::NopElimination>();
-    pass_manager.run_passes(f);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    backend->compile(f);
 
     ASSERT_EQ(count_ops_of_type<op::Sum>(f), 0);
 }
 
-TEST(nop_elimination, eliminate_convert)
+NGRAPH_TEST(${BACKEND_NAME}, eliminate_convert)
 {
     Shape shape{};
     auto type = element::f32;
@@ -66,50 +67,46 @@ TEST(nop_elimination, eliminate_convert)
     auto f =
         make_shared<Function>(make_shared<op::Convert>(A, element::f32), op::ParameterVector{A});
 
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::NopElimination>();
-    pass_manager.run_passes(f);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    backend->compile(f);
 
     ASSERT_EQ(count_ops_of_type<op::Convert>(f), 0);
 }
 
-TEST(nop_elimination, eliminate_slice)
+NGRAPH_TEST(${BACKEND_NAME}, eliminate_slice)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Slice>(A, Coordinate{0, 0}, Coordinate{2, 2}),
                                    op::ParameterVector{A});
 
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::NopElimination>();
-    pass_manager.run_passes(f);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    backend->compile(f);
 
     ASSERT_EQ(count_ops_of_type<op::Slice>(f), 0);
 }
 
-TEST(nop_elimination, eliminate_broadcast)
+NGRAPH_TEST(${BACKEND_NAME}, eliminate_broadcast)
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape, AxisSet{}),
                                    op::ParameterVector{A});
 
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::NopElimination>();
-    pass_manager.run_passes(f);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    backend->compile(f);
 
     ASSERT_EQ(count_ops_of_type<op::Broadcast>(f), 0);
 }
 
-TEST(nop_elimination, eliminate_stop_gradient)
+NGRAPH_TEST(${BACKEND_NAME}, eliminate_stop_gradient)
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::StopGradient>(A), op::ParameterVector{A});
 
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::NopElimination>();
-    pass_manager.run_passes(f);
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    backend->compile(f);
 
     ASSERT_EQ(count_ops_of_type<op::StopGradient>(f), 0);
 }

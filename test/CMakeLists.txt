@@ -16,29 +16,28 @@
 
 set(SRC
     algebraic_simplification.cpp
+    all_close_f.cpp
     assertion.cpp
-    builder_autobroadcast.cpp
     build_graph.cpp
+    builder_autobroadcast.cpp
     constant_folding.cpp
     copy.cpp
     cpio.cpp
     cse.cpp
     element_type.cpp
     file_util.cpp
-    all_close_f.cpp
+    graph_partition.cpp
     inliner.cpp
     input_output_assign.cpp
     main.cpp
     op.cpp
-    graph_partition.cpp
-    nop_elimination.cpp
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
-    serialize.cpp
     pattern.cpp
-    shape.cpp
     reshape_elimination.cpp
+    serialize.cpp
+    shape.cpp
     tensor.cpp
     type_prop.cpp
     util.cpp
@@ -78,8 +77,10 @@ foreach(TEST_CONFIG ${UNIT_TEST_CONFIG_LIST})
 
     configure_file(backend_test.in.cpp backend_test_${BACKEND_NAME}.cpp)
     configure_file(convolution_test.in.cpp convolution_test_${BACKEND_NAME}.cpp)
+    configure_file(nop_elimination.in.cpp nop_elimination_${BACKEND_NAME}.cpp)
     set(SRC ${CMAKE_CURRENT_BINARY_DIR}/backend_test_${BACKEND_NAME}.cpp ${SRC})
     set(SRC ${CMAKE_CURRENT_BINARY_DIR}/convolution_test_${BACKEND_NAME}.cpp ${SRC})
+    set(SRC ${CMAKE_CURRENT_BINARY_DIR}/nop_elimination_${BACKEND_NAME}.cpp ${SRC})
     if(NGRAPH_DISTRIBUTED_ENABLE)
         configure_file(distributed.cpp distributed_${BACKEND_NAME}.cpp)
         set(SRC ${CMAKE_CURRENT_BINARY_DIR}/distributed_${BACKEND_NAME}.cpp  ${SRC})
