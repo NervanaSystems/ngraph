@@ -26,7 +26,6 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/parameter_vector.hpp"
 #include "ngraph/op/result_vector.hpp"
-#include "ngraph/type/type.hpp"
 
 namespace ngraph
 {
@@ -83,6 +82,8 @@ namespace ngraph
         // updates graph and m_results list
         void replace_node(std::shared_ptr<Node> old, std::shared_ptr<Node> repl);
 
+        void validate_nodes_and_infer_types();
+
     protected:
         ResultVector m_results;
         op::ParameterVector m_parameters;
@@ -91,6 +92,7 @@ namespace ngraph
     private:
         Function(const Function&) = delete;
         Function(const Function&&) = delete;
+        Function& operator=(const Function&) = delete;
 
         static std::atomic<size_t> m_next_instance_id;
         size_t m_instance_id;

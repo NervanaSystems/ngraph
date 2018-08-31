@@ -14,27 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <algorithm>
-#include <memory>
-#include <sstream>
+#pragma once
 
-#include "ngraph/except.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
-#include "ngraph/type/type.hpp"
+#include <pybind11/pybind11.h>
 
-using namespace ngraph;
-using namespace std;
+namespace py = pybind11;
 
-op::util::RequiresTensorViewArgs::RequiresTensorViewArgs(const std::string& node_type,
-                                                         const NodeVector& args)
-    : Op(node_type, args)
-{
-    for (auto arg : args)
-    {
-        if (arg->get_output_size() != 1)
-        {
-            throw ngraph_error("Arguments for node type \"" + node_type +
-                               "\" must be tensor views");
-        }
-    }
-}
+void regmodule_pyngraph_onnx_import(py::module m);

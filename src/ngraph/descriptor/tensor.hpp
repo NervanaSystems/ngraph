@@ -19,7 +19,9 @@
 #include <iostream>
 #include <memory>
 #include <vector>
-#include "ngraph/type/type.hpp"
+
+#include "ngraph/shape.hpp"
+#include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
@@ -33,22 +35,19 @@ namespace ngraph
     namespace descriptor
     {
         class TensorView;
-        class PrimaryTensorView;
         class Tensor;
     }
 }
 
 class ngraph::descriptor::Tensor
 {
-    friend class PrimaryTensorView;
+    friend class TensorView;
 
 private:
     Tensor(const Tensor&) = delete;
     Tensor& operator=(const Tensor&) = delete;
 
-    Tensor(const element::Type& element_type,
-           PrimaryTensorView* tensor_view,
-           const std::string& name);
+    Tensor(const element::Type& element_type, TensorView* tensor_view, const std::string& name);
     std::string get_next_view_name();
 
 public:
@@ -59,10 +58,10 @@ public:
     const element::Type& get_element_type() const { return m_element_type; }
     void set_element_type(const element::Type& element_type);
     static std::string make_tensor_name(const Node* node, size_t value_index);
-    PrimaryTensorView* get_primary_tensor_view() const { return m_primary_tensor_view; }
+
 protected:
     element::Type m_element_type;
-    PrimaryTensorView* m_primary_tensor_view;
+    TensorView* m_tensor_view;
     std::string m_name;
     size_t m_next_view_id;
     size_t m_pool_offset;

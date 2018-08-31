@@ -46,7 +46,7 @@ namespace ngraph
                       const NodeVector& wrapped_nodes = NodeVector{})
                     : Pattern("Label", wrapped_nodes, pred)
                 {
-                    add_output(type, s);
+                    set_output_type(0, type, s);
                 }
 
                 /// \brief creates a Label node containing a sub-pattern described by the type and shape of \sa node.

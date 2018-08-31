@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/node.hpp"
 #include <memory>
 #include <sstream>
 #include <typeindex>
@@ -22,7 +21,7 @@
 
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
-#include "ngraph/descriptor/primary_tensor_view.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/placement.hpp"
@@ -32,7 +31,7 @@ using namespace ngraph;
 
 atomic<size_t> Node::m_next_instance_id(0);
 
-Node::Node(const std::string& node_type, const NodeVector& arguments)
+Node::Node(const std::string& node_type, const NodeVector& arguments, size_t output_size)
     : m_node_type(node_type)
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_unique_name(description() + "_" + to_string(m_instance_id))
@@ -46,32 +45,48 @@ Node::Node(const std::string& node_type, const NodeVector& arguments)
             m_inputs.emplace_back(this, i++, output);
         }
     }
+    set_output_size(output_size);
 }
 
-void Node::set_value_type_checked(const element::Type& element_type, const Shape& shape)
+// While we are still doing validation and type inference in the constructor, this is true
+// It can be set to false to debug doing validation/inference after construction. When that
+// is working, these two functions will be removed.
+static bool in_transition = true;
+
+void Node::constructor_validate_and_infer_types()
 {
-    if (m_outputs.size() == 0)
+    if (in_transition)
     {
-        add_output(element_type, shape);
+        validate_and_infer_types();
     }
-    if (element_type != get_element_type() || shape != get_shape())
+}
+
+void Node::delayed_validate_and_infer_types()
+{
+    if (!in_transition)
     {
-        throw ngraph_error("Setting value type to a different ValueType");
+        validate_and_infer_types();
     }
 }
 
-void Node::add_output(const element::Type& element_type, const Shape& shape)
+void Node::set_output_size(size_t n)
 {
-    shared_ptr<TensorViewType> tensor_view_type = make_shared<TensorViewType>(element_type, shape);
-    size_t i = m_outputs.size();
-    auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(
-        tensor_view_type, ngraph::descriptor::Tensor::make_tensor_name(this, i));
-    m_outputs.emplace_back(this, i, tensor_view_descriptor);
+    m_outputs.clear();
+    for (size_t i = m_outputs.size(); i < n; ++i)
+    {
+        auto tensor_view_descriptor = make_shared<descriptor::TensorView>(
+            element::unspecified, Shape(), ngraph::descriptor::Tensor::make_tensor_name(this, i));
+        m_outputs.emplace_back(this, i, tensor_view_descriptor);
+    }
 }
 
-void Node::set_value_type_checked(const shared_ptr<const TensorViewType>& value_type)
+void Node::validate_and_infer_types()
 {
-    set_value_type_checked(value_type->get_element_type(), value_type->get_shape());
+}
+
+void Node::set_output_type(size_t i, const element::Type& element_type, const Shape& shape)
+{
+    m_outputs.at(i).get_tensor_view()->set_tensor_view_type(element_type, shape);
 }
 
 std::deque<descriptor::Output>& Node::get_outputs()
@@ -176,15 +191,14 @@ namespace ngraph
 {
     ostream& operator<<(ostream& out, const Node& node)
     {
-        auto parameter_tmp = dynamic_cast<const op::Parameter*>(&node);
-        if (parameter_tmp)
+        out << node.description() << '[' << node.get_name() << "](";
+        string sep = "";
+        for (auto arg : node.get_arguments())
         {
-            out << "Parameter(" << parameter_tmp->get_name() << ")";
+            out << sep << arg->get_name();
+            sep = ", ";
         }
-        else
-        {
-            out << "Node(" << node.get_name() << ")";
-        }
+        out << ")";
         return out;
     }
 }
@@ -217,7 +231,10 @@ const Shape& Node::get_shape() const
 {
     if (get_output_size() != 1)
     {
-        throw ngraph_error("get_shape() must be called on a node with exactly one output.");
+        stringstream es;
+        es << "get_shape() must be called on a node with exactly one output (" << description()
+           << ")";
+        throw ngraph_error(es);
     }
     return get_output_shape(0);
 }
@@ -327,10 +344,63 @@ NodeVector Node::get_users() const
     return result;
 }
 
+const std::shared_ptr<Node>& ngraph::check_single_output_arg(const std::shared_ptr<Node>& node,
+                                                             size_t i)
+{
+    NGRAPH_ASSERT(node->get_output_size() == 1) << "Argument " << i << node
+                                                << " must produce exactly one value.";
+    return node;
+}
+
+const NodeVector& ngraph::check_single_output_args(const NodeVector& args)
+{
+    for (size_t i = 0; i < args.size(); ++i)
+    {
+        ngraph::check_single_output_arg(args.at(i), i);
+    }
+    return args;
+}
+
 std::string ngraph::type_check_assert_string(const Node* node)
 {
     std::stringstream ss;
-    ss << "While type-checking node '" << node->get_name() << "' of type '" << node->description()
-       << "'";
+    ss << "While type-checking node " << *node;
     return ss.str();
+}
+
+void Node::validate_and_infer_elementwise(element::Type result_type)
+{
+    const element::Type& element_type = get_input_element_type(0);
+    const Shape& shape = get_input_shape(0);
+    if (get_input_size() > 1)
+    {
+        for (size_t i = 1; i < get_input_size(); ++i)
+        {
+            TYPE_CHECK_ASSERT(this, get_input_element_type(i) == element_type)
+                << "Argument 0 element type " << element_type
+                << " differs in element type from argument " << i << " " << *get_argument(i)
+                << " element type " << get_input_element_type(i);
+
+            TYPE_CHECK_ASSERT(this, get_input_shape(i) == shape)
+                << "Argument 0 shape " << shape << " differs in shape from argument " << i << " "
+                << *get_argument(i) << " shape " << get_input_shape(i);
+        }
+    }
+    set_output_type(0, result_type, shape);
+}
+
+void Node::validate_and_infer_elementwise_arithmetic()
+{
+    TYPE_CHECK_ASSERT(this, get_input_element_type(0) != element::boolean)
+        << "Operands for arithmetic operators must have numeric element type but have element type "
+        << get_input_element_type(0);
+    validate_and_infer_elementwise(get_input_element_type(0));
+}
+
+void Node::validate_and_infer_elementwise_logical()
+{
+    TYPE_CHECK_ASSERT(this, get_input_element_type(0) == element::boolean)
+        << "Operands for logical operators must have boolean element type but have element type "
+        << get_input_element_type(0);
+    validate_and_infer_elementwise(get_input_element_type(0));
 }

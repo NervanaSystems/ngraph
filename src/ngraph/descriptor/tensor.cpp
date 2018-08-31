@@ -16,17 +16,16 @@
 
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
-#include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/node.hpp"
 
 using namespace ngraph;
 using namespace std;
 
 descriptor::Tensor::Tensor(const element::Type& element_type,
-                           PrimaryTensorView* primary_tensor_view,
+                           TensorView* tensor_view,
                            const string& name)
     : m_element_type(element_type)
-    , m_primary_tensor_view(primary_tensor_view)
+    , m_tensor_view(tensor_view)
     , m_name{name}
     , m_next_view_id{0}
 {
@@ -54,14 +53,13 @@ size_t descriptor::Tensor::get_pool_offset() const
 
 size_t descriptor::Tensor::size() const
 {
-    if (auto tvl = m_primary_tensor_view->get_tensor_view_layout())
+    if (auto tvl = m_tensor_view->get_tensor_view_layout())
     {
         return tvl->get_allocated_size();
     }
     else
     {
-        auto tvt = m_primary_tensor_view->get_tensor_view_type();
-        return shape_size(tvt->get_shape()) * m_element_type.size();
+        return shape_size(m_tensor_view->get_shape()) * m_element_type.size();
     }
 }
 

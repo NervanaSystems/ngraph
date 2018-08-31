@@ -23,6 +23,7 @@ using namespace ngraph;
 op::Log::Log(const shared_ptr<Node>& arg)
     : UnaryElementwiseArithmetic("Log", arg)
 {
+    constructor_validate_and_infer_types();
 }
 
 shared_ptr<Node> op::Log::copy_with_new_args(const NodeVector& new_args) const

@@ -18,13 +18,13 @@
 
 #include <memory>
 
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class ReverseSequence : public util::RequiresTensorViewArgs
+        class ReverseSequence : public Op
         {
         public:
             /// \brief Constructs an arcsin operation.
@@ -34,6 +34,8 @@ namespace ngraph
                             const std::shared_ptr<Node> seq_lengths,
                             size_t batch_axis,
                             size_t seq_axis);
+
+            void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

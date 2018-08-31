@@ -14,10 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/reshape.hpp"
-#include "ngraph/function.hpp"
-
 #include <algorithm>
+#include <iostream>
+
+#include "ngraph/function.hpp"
+#include "ngraph/op/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -25,9 +26,14 @@ using namespace ngraph;
 op::Reshape::Reshape(const shared_ptr<Node>& arg,
                      const AxisVector& input_order,
                      const Shape& output_shape)
-    : RequiresTensorViewArgs("Reshape", {arg})
+    : Op("Reshape", check_single_output_args({arg}))
     , m_input_order(input_order)
     , m_output_shape(output_shape)
+{
+    constructor_validate_and_infer_types();
+}
+
+void op::Reshape::validate_and_infer_types()
 {
     auto& input = get_inputs().at(0);
     auto input_shape = input.get_shape();
@@ -71,8 +77,7 @@ op::Reshape::Reshape(const shared_ptr<Node>& arg,
     {
         m_is_transpose = true;
     }
-
-    set_value_type_checked(input.get_element_type(), m_output_shape);
+    set_output_type(0, input.get_element_type(), m_output_shape);
 }
 
 shared_ptr<Node> op::Reshape::copy_with_new_args(const NodeVector& new_args) const

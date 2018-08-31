@@ -26,11 +26,13 @@ op::ReplaceSlice::ReplaceSlice(const shared_ptr<Node>& arg0,
                                const Coordinate& lower_bounds,
                                const Coordinate& upper_bounds,
                                const Strides& strides)
-    : RequiresTensorViewArgs("ReplaceSlice", {arg0, arg1})
+    : Op("ReplaceSlice", check_single_output_args({arg0, arg1}))
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
     , m_strides(strides)
 {
+    constructor_validate_and_infer_types();
+
     check_args();
 }
 
@@ -38,11 +40,13 @@ op::ReplaceSlice::ReplaceSlice(const shared_ptr<Node>& arg0,
                                const shared_ptr<Node>& arg1,
                                const Coordinate& lower_bounds,
                                const Coordinate& upper_bounds)
-    : RequiresTensorViewArgs("ReplaceSlice", {arg0, arg1})
+    : Op("ReplaceSlice", check_single_output_args({arg0, arg1}))
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
     , m_strides(Strides(lower_bounds.size(), 1))
 {
+    constructor_validate_and_infer_types();
+
     check_args();
 }
 
@@ -114,7 +118,7 @@ void op::ReplaceSlice::check_args()
         throw ngraph_error("Shape of replacement tensor does not match slice shape");
     }
 
-    set_value_type_checked(input_0_element_type, input_0_shape);
+    set_output_type(0, input_0_element_type, input_0_shape);
 }
 
 shared_ptr<Node> op::ReplaceSlice::copy_with_new_args(const NodeVector& new_args) const

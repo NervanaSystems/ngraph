@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,8 +16,21 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include <memory>
 
-namespace py = pybind11;
+#include "ngraph/node_vector.hpp"
 
-void regclass_pyngraph_op_util_BinaryElementwise(py::module m);
+#include "core/node.hpp"
+
+namespace ngraph
+{
+    namespace onnx_import
+    {
+        namespace op
+        {
+            NodeVector flatten(const Node& node);
+        } // namespace  op
+
+    } // namespace  onnx_import
+
+} // namespace  ngraph
