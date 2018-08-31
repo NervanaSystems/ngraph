@@ -181,6 +181,10 @@ private:
     {
         Node& node = node_wrapper.get_node();
         std::string node_op = node.description();
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+#pragma GCC diagnostic error "-Wcovered-switch-default"
         switch (node_wrapper.get_typeid())
         {
         case OP_TYPEID::Abs_TYPEID:
@@ -203,16 +207,15 @@ private:
                               out[0]->get_element_count());
             break;
         }
+        case OP_TYPEID::AllReduce_TYPEID: {
 #ifdef NGRAPH_DISTRIBUTED
-        case OP_TYPEID::AllReduce_TYPEID:
-        {
             reference::allreduce<T>(args[0]->get_data_ptr<T>(),
                                     out[0]->get_data_ptr<T>(),
                                     args[0]->get_element_type(),
                                     static_cast<int>(args[0]->get_element_count()));
+#endif
             break;
         }
-#endif
         case OP_TYPEID::And_TYPEID:
         {
             reference::logical_and(args[0]->get_data_ptr<T>(),
@@ -1070,6 +1073,11 @@ private:
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
+        case OP_TYPEID::StopGradient_TYPEID:
+        {
+            // TODO: Throw a real unsupported_op when available
+            throw std::runtime_error("Unsupported op 'StopGradient'");
+        }
         case OP_TYPEID::Subtract_TYPEID:
         {
             reference::subtract<T>(args[0]->get_data_ptr<T>(),
@@ -1101,5 +1109,6 @@ private:
             break;
         }
         }
+#pragma GCC diagnostic pop
     }
 };
