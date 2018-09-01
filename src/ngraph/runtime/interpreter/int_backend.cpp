@@ -29,88 +29,14 @@
 using namespace std;
 using namespace ngraph;
 
-#define ADD_TYPE(a)                                                                                \
+#define NGRAPH_OP_LIST(a)                                                                          \
     {                                                                                              \
         #a, runtime::interpreter::OP_TYPEID::a##_TYPEID                                            \
-    }
-
+    },
 static unordered_map<string, runtime::interpreter::OP_TYPEID> s_typeid_map{
-    ADD_TYPE(Abs),
-    ADD_TYPE(Acos),
-    ADD_TYPE(Add),
-    ADD_TYPE(AllReduce),
-    ADD_TYPE(And),
-    ADD_TYPE(ArgMax),
-    ADD_TYPE(ArgMin),
-    ADD_TYPE(Asin),
-    ADD_TYPE(Atan),
-    ADD_TYPE(AvgPool),
-    ADD_TYPE(AvgPoolBackprop),
-    ADD_TYPE(BatchNorm),
-    ADD_TYPE(BatchNormBackprop),
-    ADD_TYPE(Broadcast),
-    ADD_TYPE(Ceiling),
-    ADD_TYPE(Concat),
-    ADD_TYPE(Constant),
-    ADD_TYPE(Convert),
-    ADD_TYPE(Convolution),
-    ADD_TYPE(ConvolutionBackpropData),
-    ADD_TYPE(ConvolutionBackpropFilters),
-    ADD_TYPE(Cos),
-    ADD_TYPE(Cosh),
-    ADD_TYPE(Divide),
-    ADD_TYPE(Dot),
-    ADD_TYPE(Equal),
-    ADD_TYPE(Exp),
-    ADD_TYPE(Floor),
-    ADD_TYPE(FunctionCall),
-    ADD_TYPE(GetOutputElement),
-    ADD_TYPE(Greater),
-    ADD_TYPE(GreaterEq),
-    ADD_TYPE(Less),
-    ADD_TYPE(LessEq),
-    ADD_TYPE(Log),
-    ADD_TYPE(LRN),
-    ADD_TYPE(Max),
-    ADD_TYPE(Maximum),
-    ADD_TYPE(MaxPool),
-    ADD_TYPE(MaxPoolBackprop),
-    ADD_TYPE(Min),
-    ADD_TYPE(Minimum),
-    ADD_TYPE(Multiply),
-    ADD_TYPE(Negative),
-    ADD_TYPE(Not),
-    ADD_TYPE(NotEqual),
-    ADD_TYPE(OneHot),
-    ADD_TYPE(Or),
-    ADD_TYPE(Pad),
-    ADD_TYPE(Parameter),
-    ADD_TYPE(Power),
-    ADD_TYPE(Product),
-    ADD_TYPE(Reduce),
-    ADD_TYPE(ReduceWindow),
-    ADD_TYPE(Relu),
-    ADD_TYPE(ReluBackprop),
-    ADD_TYPE(ReplaceSlice),
-    ADD_TYPE(Reshape),
-    ADD_TYPE(Result),
-    ADD_TYPE(Reverse),
-    ADD_TYPE(ReverseSequence),
-    ADD_TYPE(Select),
-    ADD_TYPE(SelectAndScatter),
-    ADD_TYPE(Sigmoid),
-    ADD_TYPE(SigmoidBackprop),
-    ADD_TYPE(Sign),
-    ADD_TYPE(Sin),
-    ADD_TYPE(Sinh),
-    ADD_TYPE(Slice),
-    ADD_TYPE(Softmax),
-    ADD_TYPE(Sqrt),
-    ADD_TYPE(StopGradient),
-    ADD_TYPE(Subtract),
-    ADD_TYPE(Sum),
-    ADD_TYPE(Tan),
-    ADD_TYPE(Tanh)};
+#include "op.tbl"
+};
+#undef NGRAPH_OP_LIST
 
 using descriptor::layout::DenseTensorViewLayout;
 
