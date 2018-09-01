@@ -29,16 +29,6 @@
 using namespace std;
 using namespace ngraph;
 
-// This expands the op list in op.tbl into a list of enumerations that look like this:
-// {"Abs", runtime::interpreter::OP_TYPEID::Abs_TYPEID},
-// {"Acos", runtime::interpreter::OP_TYPEID::Acos_TYPEID},
-// ...
-#define NGRAPH_OP_LIST(a) {#a, runtime::interpreter::OP_TYPEID::a##_TYPEID},
-static unordered_map<string, runtime::interpreter::OP_TYPEID> s_typeid_map{
-#include "ngraph/op/op.tbl"
-};
-#undef NGRAPH_OP_LIST
-
 using descriptor::layout::DenseTensorViewLayout;
 
 extern "C" const char* get_ngraph_version_string()
@@ -82,16 +72,7 @@ bool runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
 
         for (const shared_ptr<Node>& node : function->get_ordered_ops())
         {
-            auto it = s_typeid_map.find(node->description());
-            if (it != s_typeid_map.end())
-            {
-                instance.m_wrapped_nodes.emplace_back(node, it->second);
-            }
-            else
-            {
-                // TODO: use unsupported_op when that is merged to master
-                throw runtime_error(node->description());
-            }
+            instance.m_wrapped_nodes.emplace_back(node);
         }
     }
 

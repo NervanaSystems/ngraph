@@ -14,46 +14,32 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "ngraph/runtime/interpreter/node_wrapper.hpp"
 
-#include <memory>
+using namespace ngraph;
+using namespace std;
 
-#include "ngraph/node.hpp"
-
-namespace ngraph
+runtime::interpreter::NodeWrapper::NodeWrapper(const shared_ptr<const Node>& node)
+    : m_node{node}
 {
-    namespace runtime
-    {
-        namespace interpreter
-        {
-            enum class OP_TYPEID;
-            class NodeWrapper;
-        }
-    }
-}
-
 // This expands the op list in op.tbl into a list of enumerations that look like this:
-// Abs_TYPEID,
-// Acos_TYPEID,
+// {"Abs", runtime::interpreter::OP_TYPEID::Abs_TYPEID},
+// {"Acos", runtime::interpreter::OP_TYPEID::Acos_TYPEID},
 // ...
-#define NGRAPH_OP_LIST(a) a##_TYPEID,
-enum class ngraph::runtime::interpreter::OP_TYPEID
-{
+#define NGRAPH_OP_LIST(a) {#a, runtime::interpreter::OP_TYPEID::a##_TYPEID},
+    static unordered_map<string, runtime::interpreter::OP_TYPEID> typeid_map{
 #include "ngraph/op/op.tbl"
-};
+    };
 #undef NGRAPH_OP_LIST
 
-/// \brief This class allows adding an enum typeid to each Node. This makes dealing with
-/// collections of Nodes a little easier and faster as we can use switch() instead of
-/// if/else statements
-class ngraph::runtime::interpreter::NodeWrapper
-{
-public:
-    NodeWrapper(const std::shared_ptr<const ngraph::Node>& node);
-
-    const Node& get_node() const { return *m_node; }
-    ngraph::runtime::interpreter::OP_TYPEID get_typeid() const { return m_typeid; }
-private:
-    std::shared_ptr<const ngraph::Node> m_node;
-    OP_TYPEID m_typeid;
-};
+    auto it = typeid_map.find(m_node->description());
+    if (it != typeid_map.end())
+    {
+        m_typeid = it->second;
+    }
+    else
+    {
+        // TODO: use unsupported_op when that is merged to master
+        throw runtime_error(m_node->description());
+    }
+}
