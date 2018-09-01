@@ -292,7 +292,7 @@ private:
         }
         case OP_TYPEID::AvgPool_TYPEID:
         {
-            const op::AvgPool* avg_pool = dynamic_cast<const op::AvgPool*>(&node);
+            const op::AvgPool* avg_pool = static_cast<const op::AvgPool*>(&node);
 
             reference::avg_pool<T>(args[0]->get_data_ptr<T>(),
                                    out[0]->get_data_ptr<T>(),
@@ -316,7 +316,7 @@ private:
         }
         case OP_TYPEID::BatchNorm_TYPEID:
         {
-            const ngraph::op::BatchNorm* bn = dynamic_cast<const ngraph::op::BatchNorm*>(&node);
+            const ngraph::op::BatchNorm* bn = static_cast<const ngraph::op::BatchNorm*>(&node);
             if (bn->get_output_size() == 3)
             {
                 reference::batch_norm_three_outputs<T>(
@@ -345,7 +345,7 @@ private:
         case OP_TYPEID::BatchNormBackprop_TYPEID:
         {
             const ngraph::op::BatchNormBackprop* bn_bprop =
-                dynamic_cast<const ngraph::op::BatchNormBackprop*>(&node);
+                static_cast<const ngraph::op::BatchNormBackprop*>(&node);
             reference::batch_norm_backprop(bn_bprop->get_eps_value(),
                                            reinterpret_cast<T*>(args[0]->get_data_ptr()),
                                            reinterpret_cast<T*>(args[1]->get_data_ptr()),
@@ -361,7 +361,7 @@ private:
         }
         case OP_TYPEID::AvgPoolBackprop_TYPEID:
         {
-            const op::AvgPoolBackprop* apb = dynamic_cast<const op::AvgPoolBackprop*>(&node);
+            const op::AvgPoolBackprop* apb = static_cast<const op::AvgPoolBackprop*>(&node);
             reference::avg_pool_backprop<T>(args[0]->get_data_ptr<T>(),
                                             out[0]->get_data_ptr<T>(),
                                             args[0]->get_shape(),
@@ -375,7 +375,7 @@ private:
         }
         case OP_TYPEID::Broadcast_TYPEID:
         {
-            const op::Broadcast* broadcast = dynamic_cast<const op::Broadcast*>(&node);
+            const op::Broadcast* broadcast = static_cast<const op::Broadcast*>(&node);
             Shape in_shape = args[0]->get_shape();
             Shape out_shape = out[0]->get_shape();
             AxisSet broadcast_axes = broadcast->get_broadcast_axes();
@@ -588,7 +588,7 @@ private:
         }
         case OP_TYPEID::Dot_TYPEID:
         {
-            const op::Dot* dot = dynamic_cast<const op::Dot*>(&node);
+            const op::Dot* dot = static_cast<const op::Dot*>(&node);
 
             reference::dot(args[0]->get_data_ptr<T>(),
                            args[1]->get_data_ptr<T>(),
@@ -708,7 +708,7 @@ private:
         }
         case OP_TYPEID::MaxPool_TYPEID:
         {
-            const op::MaxPool* max_pool = dynamic_cast<const op::MaxPool*>(&node);
+            const op::MaxPool* max_pool = static_cast<const op::MaxPool*>(&node);
 
             reference::max_pool<T>(args[0]->get_data_ptr<T>(),
                                    out[0]->get_data_ptr<T>(),
@@ -723,7 +723,7 @@ private:
         case OP_TYPEID::MaxPoolBackprop_TYPEID:
         {
             const op::MaxPoolBackprop* max_pool_backprop =
-                dynamic_cast<const op::MaxPoolBackprop*>(&node);
+                static_cast<const op::MaxPoolBackprop*>(&node);
 
             reference::max_pool_backprop<T>(args[0]->get_data_ptr<T>(),
                                             args[1]->get_data_ptr<T>(),
@@ -804,7 +804,7 @@ private:
         }
         case OP_TYPEID::Pad_TYPEID:
         {
-            const op::Pad* pad = dynamic_cast<const op::Pad*>(&node);
+            const op::Pad* pad = static_cast<const op::Pad*>(&node);
 
             reference::pad(args[0]->get_data_ptr<T>(),
                            args[1]->get_data_ptr<T>(),
@@ -836,7 +836,7 @@ private:
         }
         case OP_TYPEID::Reduce_TYPEID:
         {
-            const op::Reduce* reduce = dynamic_cast<const op::Reduce*>(&node);
+            const op::Reduce* reduce = static_cast<const op::Reduce*>(&node);
             std::shared_ptr<Function> reduction_function = reduce->get_functions()[0];
 
             std::function<T(T, T)> f = [this, &node, reduction_function](T x, T y) -> T {
@@ -863,7 +863,7 @@ private:
         }
         case OP_TYPEID::ReduceWindow_TYPEID:
         {
-            const op::ReduceWindow* reduce_window = dynamic_cast<const op::ReduceWindow*>(&node);
+            const op::ReduceWindow* reduce_window = static_cast<const op::ReduceWindow*>(&node);
             std::shared_ptr<Function> reduction_function = reduce_window->get_functions()[0];
 
             std::function<T(T, T)> f = [this, &node, reduction_function](T x, T y) -> T {
@@ -918,7 +918,7 @@ private:
         }
         case OP_TYPEID::Reshape_TYPEID:
         {
-            const op::Reshape* reshape = dynamic_cast<const op::Reshape*>(&node);
+            const op::Reshape* reshape = static_cast<const op::Reshape*>(&node);
             reference::reshape(args[0]->get_data_ptr<T>(),
                                out[0]->get_data_ptr<T>(),
                                args[0]->get_shape(),
@@ -928,7 +928,7 @@ private:
         }
         case OP_TYPEID::Result_TYPEID:
         {
-            const op::Result* res = dynamic_cast<const op::Result*>(&node);
+            const op::Result* res = static_cast<const op::Result*>(&node);
             reference::result(args[0]->get_data_ptr<T>(),
                               out[0]->get_data_ptr<T>(),
                               shape_size(res->get_shape()));
@@ -936,7 +936,7 @@ private:
         }
         case OP_TYPEID::Reverse_TYPEID:
         {
-            const op::Reverse* reverse = dynamic_cast<const op::Reverse*>(&node);
+            const op::Reverse* reverse = static_cast<const op::Reverse*>(&node);
             reference::reverse(args[0]->get_data_ptr<T>(),
                                out[0]->get_data_ptr<T>(),
                                args[0]->get_shape(),
@@ -946,7 +946,7 @@ private:
         }
         case OP_TYPEID::ReverseSequence_TYPEID:
         {
-            const op::ReverseSequence* reverse = dynamic_cast<const op::ReverseSequence*>(&node);
+            const op::ReverseSequence* reverse = static_cast<const op::ReverseSequence*>(&node);
 
             if (args[1]->get_element_type() == element::i32)
             {
@@ -975,7 +975,7 @@ private:
         case OP_TYPEID::SelectAndScatter_TYPEID:
         {
             const ngraph::op::SelectAndScatter* select_and_scatter =
-                dynamic_cast<const ngraph::op::SelectAndScatter*>(&node);
+                static_cast<const ngraph::op::SelectAndScatter*>(&node);
 
             std::shared_ptr<ngraph::Function> selection_function =
                 select_and_scatter->get_functions()[0];
