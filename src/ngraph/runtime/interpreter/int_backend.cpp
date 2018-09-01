@@ -152,15 +152,15 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     // for each ordered op in the graph
     for (const NodeWrapper& wrapped : instance.m_wrapped_nodes)
     {
-        Node& op = wrapped.get_node();
+        Node* op = &wrapped.get_node();
         auto type_id = wrapped.get_typeid();
-        if (op.description() == "Parameter")
+        if (op->description() == "Parameter")
         {
             continue;
         }
         // get op inputs from map
         vector<shared_ptr<runtime::HostTensorView>> op_inputs;
-        for (const descriptor::Input& input : op.get_inputs())
+        for (const descriptor::Input& input : op->get_inputs())
         {
             descriptor::TensorView* tv = input.get_output().get_tensor_view().get();
             op_inputs.push_back(tensor_map.at(tv));
@@ -168,16 +168,16 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
 
         // get op outputs from map or create
         vector<shared_ptr<runtime::HostTensorView>> op_outputs;
-        for (size_t i = 0; i < op.get_output_size(); ++i)
+        for (size_t i = 0; i < op->get_output_size(); ++i)
         {
-            descriptor::TensorView* tv = op.get_output_tensor_view(i).get();
+            descriptor::TensorView* tv = op->get_output_tensor_view(i).get();
             shared_ptr<runtime::HostTensorView> htv;
             if (!contains_key(tensor_map, tv))
             {
                 // the output tensor is not in the tensor map so create a new tensor
-                const Shape& shape = op.get_output_shape(i);
-                const element::Type& type = op.get_output_element_type(i);
-                string name = op.get_output_tensor(i).get_name();
+                const Shape& shape = op->get_output_shape(i);
+                const element::Type& type = op->get_output_element_type(i);
+                string name = op->get_output_tensor(i).get_name();
                 htv = make_shared<runtime::HostTensorView>(type, shape, name);
                 tensor_map.insert({tv, htv});
             }
@@ -193,7 +193,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         switch (type_id)
         {
         case OP_TYPEID::Convert_TYPEID:
-            type = op.get_inputs().at(0).get_tensor().get_element_type();
+            type = op->get_inputs().at(0).get_tensor().get_element_type();
             break;
         case OP_TYPEID::Equal_TYPEID:
         case OP_TYPEID::Greater_TYPEID:
@@ -204,27 +204,27 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
             // Get the type of the second input, not the first
             // All BinaryElementwiseComparision ops have the same type for inputs
             // Select has bool for first input and the type we are interested in for the second
-            type = op.get_inputs().at(1).get_tensor().get_element_type();
+            type = op->get_inputs().at(1).get_tensor().get_element_type();
             break;
-        default: type = op.get_outputs().at(0).get_element_type(); break;
+        default: type = op->get_outputs().at(0).get_element_type(); break;
         }
 
         if (instance.m_performance_counters_enabled)
         {
-            instance.m_timer_map[&op].start();
+            instance.m_timer_map[op].start();
         }
         generate_calls(type, wrapped, op_outputs, op_inputs);
         if (instance.m_performance_counters_enabled)
         {
-            instance.m_timer_map[&op].stop();
+            instance.m_timer_map[op].stop();
         }
         if (instance.m_nan_check_enabled)
         {
-            perform_nan_check(op_outputs, &op);
+            perform_nan_check(op_outputs, op);
         }
 
         // delete any obsolete tensors
-        for (const descriptor::Tensor* t : op.liveness_free_list)
+        for (const descriptor::Tensor* t : op->liveness_free_list)
         {
             for (auto it = tensor_map.begin(); it != tensor_map.end(); ++it)
             {
