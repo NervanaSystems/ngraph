@@ -30,6 +30,10 @@ namespace ngraph
     }
 }
 
+// This expands the op list in op.tbl into a list of enumerations that look like this:
+// Abs_TYPEID,
+// Acos_TYPEID,
+// ...
 #define NGRAPH_OP_LIST(a) a##_TYPEID,
 enum class ngraph::runtime::interpreter::OP_TYPEID
 {
@@ -37,6 +41,9 @@ enum class ngraph::runtime::interpreter::OP_TYPEID
 };
 #undef NGRAPH_OP_LIST
 
+/// \brief This class allows adding an enum typeid to each Node. This makes dealing with
+/// collections of Nodes a little easier and faster as we can use switch() instead of
+/// if/else statements
 class ngraph::runtime::interpreter::NodeWrapper
 {
 public:

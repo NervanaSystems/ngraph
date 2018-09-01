@@ -29,6 +29,10 @@
 using namespace std;
 using namespace ngraph;
 
+// This expands the op list in op.tbl into a list of enumerations that look like this:
+// {"Abs", runtime::interpreter::OP_TYPEID::Abs_TYPEID},
+// {"Acos", runtime::interpreter::OP_TYPEID::Acos_TYPEID},
+// ...
 #define NGRAPH_OP_LIST(a) {#a, runtime::interpreter::OP_TYPEID::a##_TYPEID},
 static unordered_map<string, runtime::interpreter::OP_TYPEID> s_typeid_map{
 #include "ngraph/op/op.tbl"

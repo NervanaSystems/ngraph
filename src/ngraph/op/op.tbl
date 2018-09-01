@@ -27,6 +27,11 @@
 // };
 // #undef NGRAPH_OP_LIST
 //
+// This sample expands to a list like this:
+// "Abs",
+// "Acos",
+// ...
+//
 // It's that easy. You can use this for fun and profit.
 
 NGRAPH_OP_LIST(Abs)

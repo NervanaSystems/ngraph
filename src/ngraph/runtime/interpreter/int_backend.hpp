@@ -181,6 +181,10 @@ private:
     {
         Node& node = node_wrapper.get_node();
         std::string node_op = node.description();
+
+// We want to check that every OP_TYPEID enumeration is included in the list.
+// These GCC flags enable compile-time checking so that if an enumeration
+// is not in the list an error is generated.
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
