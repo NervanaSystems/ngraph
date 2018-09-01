@@ -47,16 +47,16 @@ enum class ngraph::runtime::interpreter::OP_TYPEID
 class ngraph::runtime::interpreter::NodeWrapper
 {
 public:
-    NodeWrapper(const std::shared_ptr<ngraph::Node>& node,
+    NodeWrapper(const std::shared_ptr<const ngraph::Node>& node,
                 ngraph::runtime::interpreter::OP_TYPEID tid)
         : m_node{node}
         , m_typeid{tid}
     {
     }
 
-    Node& get_node() const { return *m_node; }
+    const Node& get_node() const { return *m_node; }
     ngraph::runtime::interpreter::OP_TYPEID get_typeid() const { return m_typeid; }
 private:
-    std::shared_ptr<ngraph::Node> m_node;
+    std::shared_ptr<const ngraph::Node> m_node;
     OP_TYPEID m_typeid;
 };
