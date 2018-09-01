@@ -17,14 +17,14 @@
 #pragma once
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Operation which "adds" axes to an input tensor, replicating elements from the input as needed along the new axes.
-        class Broadcast : public util::RequiresTensorViewArgs
+        class Broadcast : public Op
         {
         public:
             /// \brief Constructs a conversion operation.
@@ -37,6 +37,8 @@ namespace ngraph
                       const Shape& shape,
                       const AxisSet& broadcast_axes);
 
+            void validate_and_infer_types() override;
+
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -44,11 +46,40 @@ namespace ngraph
             const AxisSet& get_broadcast_axes() const { return m_broadcast_axes; }
             const Shape& get_broadcast_shape() const { return m_shape; }
         protected:
+            Broadcast(const std::string& node_type,
+                      const NodeVector& args,
+                      const Shape& shape,
+                      const AxisSet& broadcast_axes);
+
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
 
+            virtual void infer_shape() {}
             Shape m_shape;
             AxisSet m_broadcast_axes;
+        };
+
+        /// \brief Broadcast arg to the same shape as like_arg.
+        class BroadcastLike : public Broadcast
+        {
+        public:
+            /// \brief Broadcast arg to the same shape as like_arg.
+            ///
+            /// Once the shape of like_arg is known, this op will be replaced with an equivalent
+            /// Broadcast op.
+            ///
+            /// \param arg The argument to be broadcast.
+            /// \param like_arg Provides the shape for the result.
+            /// \param broadcast_axes indicates which axes will be broadcast. If empty,
+            /// arg must be scalar and all axes are broadcast.
+            BroadcastLike(const std::shared_ptr<Node>& arg,
+                          const std::shared_ptr<Node>& like_arg,
+                          const AxisSet& broadcast_axes);
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+            void infer_shape() override;
         };
     }
 }

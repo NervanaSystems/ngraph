@@ -54,7 +54,7 @@ static function<Placement(shared_ptr<Node>)> int_with_cpu_mul_policy = [](shared
 // 1. HybridBackend's main use case is to test device placement and graph partition routines.
 // 2. It also shows how glued-hybrid runtime can be built by combining different runtimes.
 //
-// By default, HybridBackend operates on INTERPRETER (for example, the primary tensor view is
+// By default, HybridBackend operates on INTERPRETER (for example, the tensor view is
 // INTERPRETER tensor view). It falls back to CPU when requested by placement.
 class HybridBackend
 {
