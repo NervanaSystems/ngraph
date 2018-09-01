@@ -36,7 +36,7 @@ namespace ngraph
         class TensorView
         {
         protected:
-            TensorView(const std::shared_ptr<ngraph::descriptor::TensorView>& descriptor)
+            TensorView(const std::shared_ptr<ngraph::descriptor::Tensor>& descriptor)
                 : m_descriptor(descriptor)
                 , m_stale(true)
             {
@@ -78,6 +78,6 @@ namespace ngraph
             bool m_stale;
         };
 
-        using TensorViewPtrs = std::vector<std::shared_ptr<Tensor>>;
+        using TensorViewPtrs = std::vector<std::shared_ptr<TensorView>>;
     }
 }
