@@ -19,7 +19,7 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/descriptor/tensor_view.hpp"
+#include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -46,7 +46,7 @@ namespace ngraph
             virtual ~TensorView() {}
             TensorView& operator=(const TensorView&) = default;
 
-            std::shared_ptr<const ngraph::descriptor::TensorView>
+            std::shared_ptr<const ngraph::descriptor::Tensor>
                 get_tensor_view_descriptor() const;
 
             virtual std::shared_ptr<descriptor::TensorView> get_descriptor() const;
@@ -74,10 +74,10 @@ namespace ngraph
             virtual void read(void* p, size_t tensor_offset, size_t n) const = 0;
 
         protected:
-            std::shared_ptr<ngraph::descriptor::TensorView> m_descriptor;
+            std::shared_ptr<ngraph::descriptor::Tensor> m_descriptor;
             bool m_stale;
         };
 
-        using TensorViewPtrs = std::vector<std::shared_ptr<TensorView>>;
+        using TensorViewPtrs = std::vector<std::shared_ptr<Tensor>>;
     }
 }
