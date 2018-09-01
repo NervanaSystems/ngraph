@@ -29,12 +29,9 @@
 using namespace std;
 using namespace ngraph;
 
-#define NGRAPH_OP_LIST(a)                                                                          \
-    {                                                                                              \
-        #a, runtime::interpreter::OP_TYPEID::a##_TYPEID                                            \
-    },
+#define NGRAPH_OP_LIST(a) {#a, runtime::interpreter::OP_TYPEID::a##_TYPEID},
 static unordered_map<string, runtime::interpreter::OP_TYPEID> s_typeid_map{
-#include "op.tbl"
+#include "ngraph/op/op.tbl"
 };
 #undef NGRAPH_OP_LIST
 

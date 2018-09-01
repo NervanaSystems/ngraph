@@ -14,6 +14,21 @@
 // limitations under the License.
 //*****************************************************************************
 
+// This collection contains one entry for each op. If an op is added it must be
+// added to this list.
+//
+// In order to use this list you want to define a macro named exactly NGRAPH_OP_LIST
+// When you are done you should undef the macro
+// As an example if you wanted to make a list of all op names as strings you could do this:
+//
+// #define NGRAPH_OP_LIST(a) #a,
+// std::vector<std::string> op_names{
+// #include "this include file name"
+// };
+// #undef NGRAPH_OP_LIST
+//
+// It's that easy. You can use this for fun and profit.
+
 NGRAPH_OP_LIST(Abs)
 NGRAPH_OP_LIST(Acos)
 NGRAPH_OP_LIST(Add)

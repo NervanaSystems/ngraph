@@ -33,7 +33,7 @@ namespace ngraph
 #define NGRAPH_OP_LIST(a) a##_TYPEID,
 enum class ngraph::runtime::interpreter::OP_TYPEID
 {
-#include "op.tbl"
+#include "ngraph/op/op.tbl"
 };
 #undef NGRAPH_OP_LIST
 
