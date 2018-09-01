@@ -68,7 +68,8 @@ op::ConvolutionRelu::ConvolutionRelu(const std::shared_ptr<Node>& data_batch,
 
     set_output_type(0,
                     data_batch_et,
-                    util::infer_convolution_output_shape(data_batch_shape,
+                    util::infer_convolution_output_shape(this,
+                                                         data_batch_shape,
                                                          filters_shape,
                                                          window_movement_strides,
                                                          window_dilation_strides,
@@ -80,8 +81,8 @@ op::ConvolutionRelu::ConvolutionRelu(const std::shared_ptr<Node>& data_batch,
                                                          1, /* input_channel_axis_filters,   */
                                                          0, /* output_channel_axis_filters,  */
                                                          0, /* batch_axis_result,            */
-                                                         1, /* output_channel_axis_result,   */
-                                                         ""));
+                                                         1  /* output_channel_axis_result,   */
+                                                         ));
 }
 
 std::shared_ptr<Node> op::ConvolutionRelu::copy_with_new_args(const NodeVector& new_args) const
