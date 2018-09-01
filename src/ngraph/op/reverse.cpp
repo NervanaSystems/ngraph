@@ -38,13 +38,9 @@ void op::Reverse::validate_and_infer_types()
     // Make sure all reversed axis indices are valid.
     for (size_t axis : m_reversed_axes)
     {
-        if (axis >= input_rank)
-        {
-            stringstream ss;
-            ss << "Reverse axis " << axis << " is out of bounds (input rank is " << input_rank
-               << ").";
-            throw ngraph_error(ss.str());
-        }
+        NODE_VALIDATION_ASSERT(this, axis < input_rank)
+            << "Reverse axis (" << axis << ") is out of bounds (argument shape: " << input_shape
+            << ").";
     }
 
     set_output_type(0, get_input_element_type(0), input_shape);
@@ -52,10 +48,7 @@ void op::Reverse::validate_and_infer_types()
 
 shared_ptr<Node> op::Reverse::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return make_shared<Reverse>(new_args.at(0), m_reversed_axes);
 }
 
