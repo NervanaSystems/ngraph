@@ -3566,12 +3566,10 @@ TEST(type_prop, max_pool_invalid_0d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 0D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Max-pool data batch input must have rank of at "
-                              "least 3 (one batch axis, one channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data input shape does not have rank of at least 3"));
     }
     catch (...)
     {
@@ -3591,12 +3589,10 @@ TEST(type_prop, max_pool_invalid_1d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 1D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Max-pool data batch input must have rank of at "
-                              "least 3 (one batch axis, one channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data input shape does not have rank of at least 3"));
     }
     catch (...)
     {
@@ -3616,12 +3612,10 @@ TEST(type_prop, max_pool_invalid_2d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 2D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Max-pool data batch input must have rank of at "
-                              "least 3 (one batch axis, one channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data input shape does not have rank of at least 3"));
     }
     catch (...)
     {
@@ -3641,9 +3635,9 @@ TEST(type_prop, max_pool_invalid_0_batch_size)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 batch size not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Max-pool data batch size is zero."));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch size is zero"));
     }
     catch (...)
     {
@@ -3663,9 +3657,9 @@ TEST(type_prop, max_pool_invalid_0_channels)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 channels not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Max-pool requires at least one feature channel."));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Channel count is zero"));
     }
     catch (...)
     {
@@ -3685,11 +3679,11 @@ TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_many)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too many window dimensions not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Max-pool window shape rank does not match number of spatial dimensions."));
+            std::string("Window shape rank does not match number of spatial dimensions"));
     }
     catch (...)
     {
@@ -3709,11 +3703,11 @@ TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_few)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too few window dimensions not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Max-pool window shape rank does not match number of spatial dimensions."));
+            std::string("Window shape rank does not match number of spatial dimensions"));
     }
     catch (...)
     {
@@ -3734,11 +3728,11 @@ TEST(type_prop, max_pool_invalid_movement_stride_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong movement stride rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Max-pool window movement stride rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Window movement stride rank does not match number of spatial dimensions"));
     }
     catch (...)
     {
@@ -3758,10 +3752,11 @@ TEST(type_prop, max_pool_invalid_input_data_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length spatial axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Max-pool input spatial dimension is zero even after padding."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Data input spatial dimension 0 has zero length even after padding"));
     }
     catch (...)
     {
@@ -3781,9 +3776,9 @@ TEST(type_prop, max_pool_invalid_window_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length window axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Max-pool window shape has a zero-length axis."));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Window shape dimension 1 has zero length"));
     }
     catch (...)
     {
@@ -3803,11 +3798,11 @@ TEST(type_prop, max_pool_invalid_dilated_too_large)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with oversized window not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Max-pool window shape is larger than the spatial "
-                              "dimensions even after padding."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Window shape after padding is larger than the spatial dimensions"));
     }
     catch (...)
     {
@@ -3828,9 +3823,10 @@ TEST(type_prop, max_pool_invalid_movement_stride_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0-length movement stride axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Max-pool window axis movement stride is zero."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Window movement strides dimension 0 has zero length"));
     }
     catch (...)
     {
