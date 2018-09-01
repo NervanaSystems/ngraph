@@ -16,10 +16,10 @@
 
 #pragma once
 
-#include <iostream>
 #include <memory>
-#include <vector>
+#include <string>
 
+#include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -27,44 +27,58 @@ namespace ngraph
 {
     class Node;
 
-    namespace element
-    {
-        class Type;
-    }
-
     namespace descriptor
     {
-        class TensorView;
-        class Tensor;
+        namespace layout
+        {
+            class TensorViewLayout;
+        }
+
+        /// \brief Compile-time descriptor of a first-class value that is a view of a tensor.
+        class Tensor
+        {
+            Tensor(const Tensor&) = delete;
+            Tensor& operator=(const Tensor&) = delete;
+
+        public:
+            Tensor(const element::Type& element_type, const Shape& shape, const std::string& name);
+
+            const std::string& get_name() const { return m_name; }
+            void set_tensor_view_type(const element::Type& element_type, const Shape& shape);
+
+            const element::Type& get_element_type() const { return m_element_type; }
+            const Shape& get_shape() const { return m_shape; }
+            const std::shared_ptr<layout::TensorViewLayout>& get_tensor_view_layout() const
+            {
+                return m_tensor_view_layout;
+            }
+
+            void set_tensor_view_layout(
+                const std::shared_ptr<layout::TensorViewLayout>& tensor_view_layout)
+            {
+                m_tensor_view_layout = tensor_view_layout;
+            }
+
+            void set_pool_offset(size_t);
+            size_t get_pool_offset() const;
+
+            size_t size() const;
+
+            const Tensor& get_tensor() const { return *this; }
+            Tensor& get_tensor() { return *this; }
+            const Tensor& get_tensor_view() const { return *this; }
+            Tensor& get_tensor_view() { return *this; }
+        protected:
+            element::Type m_element_type;
+            Shape m_shape;
+            std::string m_name;
+            std::shared_ptr<layout::TensorViewLayout> m_tensor_view_layout;
+            size_t m_pool_offset;
+        };
+
+        using TensorView = Tensor;
+
+        using TensorViewPtrs = std::vector<std::shared_ptr<TensorView>>;
+        std::ostream& operator<<(std::ostream&, const ngraph::descriptor::Tensor&);
     }
 }
-
-class ngraph::descriptor::Tensor
-{
-    friend class TensorView;
-
-private:
-    Tensor(const Tensor&) = delete;
-    Tensor& operator=(const Tensor&) = delete;
-
-    Tensor(const element::Type& element_type, TensorView* tensor_view, const std::string& name);
-    std::string get_next_view_name();
-
-public:
-    const std::string& get_name() const { return m_name; }
-    void set_pool_offset(size_t);
-    size_t size() const;
-    size_t get_pool_offset() const;
-    const element::Type& get_element_type() const { return m_element_type; }
-    void set_element_type(const element::Type& element_type);
-    static std::string make_tensor_name(const Node* node, size_t value_index);
-
-protected:
-    element::Type m_element_type;
-    TensorView* m_tensor_view;
-    std::string m_name;
-    size_t m_next_view_id;
-    size_t m_pool_offset;
-};
-
-std::ostream& operator<<(std::ostream&, const ngraph::descriptor::Tensor&);
