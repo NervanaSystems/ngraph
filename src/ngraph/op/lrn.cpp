@@ -28,18 +28,13 @@ op::LRN::LRN(const std::shared_ptr<Node>& arg, double alpha, double beta, double
     , m_size(nsize)
 {
     constructor_validate_and_infer_types();
-    if (arg->get_shape().size() < 3)
-    {
-        throw ngraph_error("LRN expects a tensor at least of rank of 3");
-    }
+    NODE_VALIDATION_ASSERT(this, arg->get_shape().size() >= 3)
+        << "Argument must have rank >= 3 (argument shape: " << arg->get_shape() << ").";
 }
 
 shared_ptr<Node> op::LRN::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return make_shared<op::LRN>(new_args.at(0), m_alpha, m_beta, m_bias, m_size);
 }
 

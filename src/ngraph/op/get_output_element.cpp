@@ -25,20 +25,16 @@ op::GetOutputElement::GetOutputElement(const shared_ptr<Node>& arg, size_t n)
     : Node("GetOutputElement", {arg})
     , m_n{n}
 {
-    if (m_n >= arg->get_output_size())
-    {
-        throw ngraph_error("Indexing tuple beyond its size");
-    }
+    NODE_VALIDATION_ASSERT(this, m_n < arg->get_output_size())
+        << "Output at index " << m_n << " requested, but argument has only "
+        << arg->get_output_size() << " outputs.";
 
     set_output_type(0, arg->get_output_element_type(n), arg->get_output_shape(n));
 }
 
 shared_ptr<Node> op::GetOutputElement::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return make_shared<GetOutputElement>(new_args.at(0), m_n);
 }
 

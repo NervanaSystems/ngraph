@@ -32,10 +32,8 @@ op::Result::Result(const shared_ptr<Node>& arg)
 
 void op::Result::validate_and_infer_types()
 {
-    if (get_input_size() != 1)
-    {
-        throw ngraph_error("Result expected a single-output argument");
-    }
+    NODE_VALIDATION_ASSERT(this, get_input_size() == 1) << "Argument has " << get_input_size()
+                                                        << " outputs (1 expected).";
 
     // always borrow the placement conf even the default one
     set_placement(get_argument(0)->get_placement());
@@ -44,15 +42,7 @@ void op::Result::validate_and_infer_types()
 
 shared_ptr<Node> op::Result::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
-
-    if (new_args.at(0)->get_outputs().size() != 1)
-    {
-        throw ngraph_error("Result::copy_with_new_args expected a single-output argument");
-    }
+    check_new_args_count(this, new_args);
 
     auto res = make_shared<Result>(new_args.at(0));
     if (res)

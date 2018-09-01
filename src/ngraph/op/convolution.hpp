@@ -155,8 +155,8 @@ namespace ngraph
             Strides m_data_dilation_strides;
 
         private:
-            static Strides default_strides(const Shape& data_batch_shape);
-            static CoordinateDiff default_padding(const Shape& data_batch_shape);
+            static Strides default_strides(const Node* node, const Shape& data_batch_shape);
+            static CoordinateDiff default_padding(const Node* node, const Shape& data_batch_shape);
         };
 
         /// \brief Data batch backprop for batched convolution operation.
@@ -356,7 +356,8 @@ namespace ngraph
 
         namespace util
         {
-            Shape infer_convolution_output_shape(const Shape& data_batch_shape,
+            Shape infer_convolution_output_shape(const Node* node,
+                                                 const Shape& data_batch_shape,
                                                  const Shape& filters_shape,
                                                  const Strides& window_movement_strides,
                                                  const Strides& window_dilation_strides,
@@ -368,8 +369,7 @@ namespace ngraph
                                                  size_t input_channel_axis_filters,
                                                  size_t output_channel_axis_filters,
                                                  size_t batch_axis_result,
-                                                 size_t output_channel_axis_result,
-                                                 const std::string& error_prefix);
+                                                 size_t output_channel_axis_result);
         }
     }
 }
