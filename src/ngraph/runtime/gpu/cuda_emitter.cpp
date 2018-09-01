@@ -1624,7 +1624,8 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
         uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
         //if the data size is large, call reduce_to_scalar_acc first and then reduce_to_scalar.
         //other wise, call reduce to scalar directly.
-        if (nthreads > nthreads_acc * 9)
+        const uint32_t unroll_size = 8;
+        if (nthreads > nthreads_acc * (unroll_size + 1))
         {
             NVShape acc_output_shape{nthreads_acc};
             size_t reduce_scalar_acc_idx = build_reduce_to_scalar_acc(
