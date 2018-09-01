@@ -210,7 +210,8 @@ void op::MaxPoolBackprop::validate_and_infer_types()
         << ").";
 
     //
-    // TODO(amprocte): de-duplicate almost all the rest of this code from MaxPool::MaxPool.
+    // TODO(amprocte): de-duplicate almost all the rest of this code from
+    // MaxPool::validate_and_infer_types().
     //
 
     auto& arg_shape = get_input_shape(0);
