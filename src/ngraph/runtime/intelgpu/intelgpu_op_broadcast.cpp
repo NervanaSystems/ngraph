@@ -59,43 +59,45 @@ void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
         }
         else
         {
-            gws = {1}; // non parallel version
-            // Initialize destination output by zeroes
+            writer << "float result = 0.0f;\n";
+
+            // Generate indexes related to input order with GWS
             size_t var_idx = 0;
-            for (auto const& i : output_shape)
+            size_t gws_idx = 0;
+            for (auto const& i : input_shape)
             {
-                writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
-                       << var_idx << ")\n";
-                writer.block_begin();
+                if (axis.find(var_idx) == axis.end())
+                {
+                    writer << "const uint i" << var_idx << " = get_global_id(" << gws_idx
+                           << "); /*trip count " << i << "*/\n";
+                    gws.push_back(i);
+                    ++gws_idx;
+                }
                 ++var_idx;
             }
 
-            writer << "output" << access_dims(output_shape) << " = 0.0f;\n";
-
-            // Closing brackets for Sum initialization loop
-            for (auto const& i : output_shape)
-            {
-                writer.block_end();
-            }
-
-            // Now do the Sum operation
+            // Generate loops with indexes related to input order
             var_idx = 0;
             for (auto const& i : input_shape)
             {
-                writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
-                       << var_idx << ")\n";
+                if (axis.find(var_idx) != axis.end())
+                {
+                    writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i
+                           << "; ++i" << var_idx << ")\n";
+                }
                 writer.block_begin();
                 ++var_idx;
             }
 
-            writer << "output" << access_dims(input_shape, axis) << " += input0"
-                   << access_dims(input_shape) << ";\n";
+            writer << "result += input0" << access_dims(input_shape) << ";\n";
 
-            // Closing brackets for Sum loop
+            // Closing brackets for loops
             for (auto const& i : input_shape)
             {
                 writer.block_end();
             }
+
+            writer << "output" << access_dims(input_shape, "i", axis) << " = result;\n";
         }
     } // End of function bracket
     writer.block_end();
