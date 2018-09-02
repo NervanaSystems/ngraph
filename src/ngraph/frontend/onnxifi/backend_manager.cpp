@@ -49,7 +49,7 @@ namespace ngraph
             *count = m_registered_backends.size();
             if (requested < *count)
             {
-                throw std::out_of_range{"not enough space"};
+                throw std::length_error{"not enough space"};
             }
             if (backendIDs != nullptr)
             {
