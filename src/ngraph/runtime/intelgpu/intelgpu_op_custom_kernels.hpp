@@ -152,6 +152,7 @@ namespace ngraph
             std::vector<cldnn_arg> get_kernel_args(size_t input, size_t output);
             std::string array_dims(const Shape& dimentions, const AxisSet& axis = {});
             std::string access_dims(const Shape& dimentions,
+                                    const std::string& var = "i",
                                     const AxisSet& axis = {},
                                     bool is_reversed = false);
             std::vector<size_t>

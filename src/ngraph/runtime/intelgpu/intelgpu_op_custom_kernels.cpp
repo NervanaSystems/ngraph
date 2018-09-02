@@ -65,8 +65,10 @@ string runtime::intelgpu::array_dims(const Shape& dimentions, const AxisSet& axi
     return buffer;
 }
 
-string
-    runtime::intelgpu::access_dims(const Shape& dimentions, const AxisSet& axis, bool is_reversed)
+string runtime::intelgpu::access_dims(const Shape& dimentions,
+                                      const string& var,
+                                      const AxisSet& axis,
+                                      bool is_reversed)
 {
     size_t var_idx = 0;
     string buffer;
@@ -75,11 +77,11 @@ string
     {
         if (axis.find(var_idx) == axis.end())
         {
-            buffer += "[i" + to_string(var_idx) + "]";
+            buffer += "[" + var + to_string(var_idx) + "]";
         }
         else if (is_reversed)
         {
-            buffer += "[" + to_string(i) + " - i" + to_string(var_idx) + " - 1]";
+            buffer += "[" + to_string(i) + " - " + var + to_string(var_idx) + " - 1]";
         }
         ++var_idx;
     }
@@ -1028,7 +1030,7 @@ void runtime::intelgpu::do_reverse_operation(cldnn::topology& topology,
         gws = generate_loops(writer, output_shape, true);
 
         writer << "output" << access_dims(output_shape) << " = input0"
-               << access_dims(output_shape, reversed_axes, true) << ";\n";
+               << access_dims(output_shape, "i", reversed_axes, true) << ";\n";
 
         generate_loops(writer, output_shape, false);
     }
