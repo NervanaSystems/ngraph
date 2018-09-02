@@ -19,13 +19,13 @@
 #include <memory>
 #include <string>
 
+#include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
     class Node;
-    class TensorViewType;
 
     namespace descriptor
     {
@@ -35,35 +35,22 @@ namespace ngraph
             class TensorViewLayout;
         }
 
-        class Tensor;
-        class TensorView;
-
         /// \brief Compile-time descriptor of a first-class value that is a view of a tensor.
         class TensorView
         {
             TensorView(const TensorView&) = delete;
             TensorView& operator=(const TensorView&) = delete;
 
-        protected:
-            TensorView(const std::shared_ptr<const TensorViewType>& tensor_view_type)
-                : m_tensor_view_type(tensor_view_type)
-            {
-            }
-
         public:
-            virtual ~TensorView() {}
-            virtual const Tensor& get_tensor() const = 0;
-            virtual Tensor& get_tensor() = 0;
+            TensorView(const element::Type& element_type,
+                       const Shape& shape,
+                       const std::string& name);
 
-            virtual std::shared_ptr<const TensorViewType> get_value_type() const;
+            const Tensor& get_tensor() const;
+            Tensor& get_tensor();
+
             const std::string& get_name() const { return m_name; }
-            std::shared_ptr<const TensorViewType> get_tensor_view_type() const
-            {
-                return m_tensor_view_type;
-            }
-
-            virtual void set_tensor_view_type(const element::Type& element_type,
-                                              const Shape& shape);
+            void set_tensor_view_type(const element::Type& element_type, const Shape& shape);
 
             const element::Type& get_element_type() const;
             const Shape& get_shape() const;
@@ -80,9 +67,11 @@ namespace ngraph
             }
 
         protected:
-            std::shared_ptr<const TensorViewType> m_tensor_view_type;
+            element::Type m_element_type;
+            Shape m_shape;
             std::shared_ptr<layout::TensorViewLayout> m_tensor_view_layout;
             std::string m_name;
+            Tensor m_tensor;
         };
 
         using TensorViewPtrs = std::vector<std::shared_ptr<TensorView>>;

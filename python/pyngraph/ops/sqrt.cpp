@@ -14,9 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/sqrt.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+#include "ngraph/op/sqrt.hpp"
 #include "pyngraph/ops/sqrt.hpp"
 
 namespace py = pybind11;

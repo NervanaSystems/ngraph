@@ -40,7 +40,7 @@ namespace ngraph
                     {
                         throw ngraph_error("predicate is required");
                     }
-                    add_output(type, s);
+                    set_output_type(0, type, s);
                 }
 
                 /// \brief creates a Any node containing a sub-pattern described by the type and shape of \sa node.

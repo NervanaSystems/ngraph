@@ -25,7 +25,6 @@
 
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/shape.hpp"
-#include "ngraph/type/type.hpp"
 
 namespace ngraph
 {
