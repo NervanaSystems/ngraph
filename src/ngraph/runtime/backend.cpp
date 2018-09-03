@@ -95,16 +95,14 @@ void runtime::Backend::validate_call(shared_ptr<const Function> function,
         {
             stringstream ss;
             ss << "Output " << i << " type '" << outputs[i]->get_tensor().get_element_type()
-               << "' does not match Parameter type '" << function->get_output_element_type(i)
-               << "'";
+               << "' does not match Result type '" << function->get_output_element_type(i) << "'";
             throw runtime_error(ss.str());
         }
         if (function->get_output_shape(i) != outputs[i]->get_shape())
         {
             stringstream ss;
             ss << "Output " << i << " shape {" << join(outputs[i]->get_shape())
-               << "} does not match Parameter shape {" << join(function->get_output_shape(i))
-               << "}";
+               << "} does not match Result shape {" << join(function->get_output_shape(i)) << "}";
             throw runtime_error(ss.str());
         }
     }

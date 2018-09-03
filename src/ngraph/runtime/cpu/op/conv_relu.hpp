@@ -17,7 +17,7 @@
 #pragma once
 
 #include "ngraph/op/convolution.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 
 namespace ngraph
@@ -25,7 +25,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Relu(Convolution) forward prop for batched convolution operation.
-        class ConvolutionRelu : public util::RequiresTensorViewArgs
+        class ConvolutionRelu : public Op
         {
         public:
             ConvolutionRelu(const std::shared_ptr<op::Convolution>& conv);

@@ -16,7 +16,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-//#include <string>
+
 #include "ngraph/op/subtract.hpp" // ngraph::op::Subtract
 #include "pyngraph/ops/subtract.hpp"
 

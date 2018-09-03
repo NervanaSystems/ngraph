@@ -31,10 +31,7 @@ else:
     flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
 sys.setdlopenflags(flags)
 
-from _pyngraph.op.util import RequiresTensorViewArgs
-from _pyngraph.op.util import UnaryElementwise
 from _pyngraph.op.util import UnaryElementwiseArithmetic
-from _pyngraph.op.util import BinaryElementwise
 from _pyngraph.op.util import BinaryElementwiseComparison
 from _pyngraph.op.util import BinaryElementwiseArithmetic
 from _pyngraph.op.util import BinaryElementwiseLogical
