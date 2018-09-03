@@ -39,87 +39,63 @@ op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
+// TODO(amprocte): This code is now *exactly* the same as AvgPool::validate_and_infer_types(),
+// except that for AvgPool we also have an optional check that the pooling window is never
+// entirely in the padding. Should unify in a utility function, but not sure where it belongs
+// at this juncture.
 void op::MaxPool::validate_and_infer_types()
 {
-    if (m_inputs.size() != 1)
-    {
-        throw ngraph_error("Max-pool data batch argument must have exactly one output");
-    }
-
     auto& arg_shape = get_input_shape(0);
-    if (arg_shape.size() < 3)
-    {
-        // For consistency we should throw the same error message here that we throw in the constructor.
-        throw ngraph_error(
-            "Max-pool data batch input must have rank of at least 3 (one batch axis, one "
-            "channel axis, at least one spatial dimension).");
-    }
-    Shape default_padding(arg_shape.size() - 2, 0);
-    if (m_padding_below.size() == 0)
-    {
-        m_padding_below = default_padding;
-    }
-    if (m_padding_above.size() == 0)
-    {
-        m_padding_above = default_padding;
-    }
 
-    if (m_window_movement_strides.size() == 0)
+    if (0 == m_window_movement_strides.size() && arg_shape.size() > 2)
     {
         m_window_movement_strides = Strides(arg_shape.size() - 2, 1);
     }
 
-    //
-    // Make sure arg: NCDi for some Di of rank>0, N != 0, C != 0.
-    //
-    if (arg_shape.size() < 3)
+    if (0 == m_padding_below.size() && arg_shape.size() > 2)
     {
-        throw ngraph_error(
-            "Max-pool data batch input must have rank of at least 3 (one batch axis, one "
-            "channel axis, at least one spatial dimension).");
+        m_padding_below = Shape(arg_shape.size() - 2, 0);
     }
+
+    if (0 == m_padding_above.size() && arg_shape.size() > 2)
+    {
+        m_padding_above = Shape(arg_shape.size() - 2, 0);
+    }
+
+    //
+    // Make sure batch size and channel count are not zero, and that we have at least one spatial
+    // dimension (in other words, that arg has shape NCDi for some Di of rank>0, N != 0, C != 0).
+    //
+    NODE_VALIDATION_ASSERT(this, arg_shape.size() >= 3)
+        << "Data input shape does not have rank of at least 3 (data input shape: " << arg_shape
+        << ").";
 
     size_t batch_size = arg_shape[0];
-    if (batch_size == 0)
-    {
-        throw ngraph_error("Max-pool data batch size is zero.");
-    }
+    NODE_VALIDATION_ASSERT(this, batch_size != 0)
+        << "Data batch size is zero (data input shape: " << arg_shape << ").";
 
     size_t channel_count = arg_shape[1];
-    if (channel_count == 0)
-    {
-        throw ngraph_error("Max-pool requires at least one feature channel.");
-    }
+    NODE_VALIDATION_ASSERT(this, channel_count != 0)
+        << "Channel count is zero (data input shape: " << arg_shape << ").";
 
     size_t spatial_dimension_count = arg_shape.size() - 2;
 
     //
     // Make sure window shape, window movement strides, and padding have same rank as Di.
     //
-    if (m_window_shape.size() != spatial_dimension_count)
-    {
-        throw ngraph_error(
-            "Max-pool window shape rank does not match number of spatial dimensions.");
-    }
-
-    if (m_window_movement_strides.size() != spatial_dimension_count)
-    {
-        throw ngraph_error(
-            "Max-pool window movement stride rank does not match number of spatial "
-            "dimensions.");
-    }
-
-    if (m_padding_below.size() != spatial_dimension_count)
-    {
-        throw ngraph_error(
-            "Max-pool below-padding rank does not match number of spatial dimensions.");
-    }
-
-    if (m_padding_above.size() != spatial_dimension_count)
-    {
-        throw ngraph_error(
-            "Max-pool above-padding rank does not match number of spatial dimensions.");
-    }
+    NODE_VALIDATION_ASSERT(this, m_window_shape.size() == spatial_dimension_count)
+        << "Window shape rank does not match number of spatial dimensions (window shape: "
+        << m_window_shape << ", data input shape: " << arg_shape << ").";
+    NODE_VALIDATION_ASSERT(this, m_window_movement_strides.size() == spatial_dimension_count)
+        << "Window movement stride rank does not match number of spatial dimensions (window "
+           "movement strides: "
+        << m_window_movement_strides << ", data input shape: " << arg_shape << ").";
+    NODE_VALIDATION_ASSERT(this, m_padding_below.size() == spatial_dimension_count)
+        << "Below-padding rank does not match number of spatial dimensions (padding below: "
+        << m_padding_below << ", data input shape: " << arg_shape << ").";
+    NODE_VALIDATION_ASSERT(this, m_padding_above.size() == spatial_dimension_count)
+        << "Above-padding rank does not match number of spatial dimensions (padding above: "
+        << m_padding_above << ", data input shape: " << arg_shape << ").";
 
     //
     // Extract input item shape Di and make sure all dimensions are larger than 0.
@@ -131,11 +107,14 @@ void op::MaxPool::validate_and_infer_types()
         size_t dim_size = arg_shape[1 + 1 + i];
         size_t virtual_dim_size = m_padding_below[i] + dim_size + m_padding_above[i];
         input_item_virtual_shape.push_back(virtual_dim_size);
+    }
 
-        if (virtual_dim_size == 0)
-        {
-            throw ngraph_error("Max-pool input spatial dimension is zero even after padding.");
-        }
+    for (size_t i = 0; i < spatial_dimension_count; i++)
+    {
+        NODE_VALIDATION_ASSERT(this, input_item_virtual_shape[i] != 0)
+            << "Data input spatial dimension " << i
+            << " has zero length even after padding (virtual shape of input item: "
+            << input_item_virtual_shape << ").";
     }
 
     //
@@ -143,35 +122,32 @@ void op::MaxPool::validate_and_infer_types()
     //
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        if (m_window_shape[i] == 0)
-        {
-            throw ngraph_error("Max-pool window shape has a zero-length axis.");
-        }
+        NODE_VALIDATION_ASSERT(this, m_window_shape[i] != 0)
+            << "Window shape dimension " << i
+            << " has zero length (window shape: " << m_window_shape << ").";
     }
 
     //
-    // Make the max pooling window fits within the spatial dimensions.
+    // Make sure the pooling window fits within the spatial dimensions.
     //
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        if (m_window_shape[i] > input_item_virtual_shape[i])
-        {
-            throw ngraph_error(
-                "Max-pool window shape is larger than the spatial dimensions even after "
-                "padding.");
-        }
+        NODE_VALIDATION_ASSERT(this, m_window_shape[i] <= input_item_virtual_shape[i])
+            << "Window shape after padding is larger than the spatial dimensions (window shape: "
+            << m_window_shape << ", virtual shape of input item: " << input_item_virtual_shape
+            << ").";
     }
 
     //
     // Compute output item shape Do, checking at the same time that all window movement strides are larger than 0.
     //
     Shape output_item_shape;
+
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        if (m_window_movement_strides[i] == 0)
-        {
-            throw ngraph_error("Max-pool window axis movement stride is zero.");
-        }
+        NODE_VALIDATION_ASSERT(this, m_window_movement_strides[i] != 0)
+            << "Window movement strides dimension " << i
+            << " has zero length (window movement strides: " << m_window_movement_strides << ").";
         output_item_shape.push_back(ceil_div(input_item_virtual_shape[i] - m_window_shape[i] + 1,
                                              m_window_movement_strides[i]));
     }
@@ -201,10 +177,7 @@ op::MaxPool::MaxPool(const shared_ptr<Node>& arg, const Shape& window_shape)
 
 shared_ptr<Node> op::MaxPool::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return make_shared<MaxPool>(new_args.at(0),
                                 m_window_shape,
                                 m_window_movement_strides,
@@ -231,72 +204,52 @@ op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
 
 void op::MaxPoolBackprop::validate_and_infer_types()
 {
-    // --
-    // TODO: de-duplicate this code from MaxPool::MaxPool.
-    // --
-
-    if (get_input_element_type(0) != get_input_element_type(1))
-    {
-        throw ngraph_error("Max-pool backprop: data batch and delta element types do not match.");
-    }
-
-    auto& arg_forward_shape = get_input_shape(0);
-    auto& delta_shape = get_input_shape(1);
+    NODE_VALIDATION_ASSERT(this, get_input_element_type(0) == get_input_element_type(1))
+        << "Data input and delta element types do not match (data input element type: "
+        << get_input_element_type(0) << ", delta element type: " << get_input_element_type(1)
+        << ").";
 
     //
-    // Make sure arg: NCDi for some Di of rank>0, N != 0, C != 0.
+    // TODO(amprocte): de-duplicate almost all the rest of this code from
+    // MaxPool::validate_and_infer_types().
     //
-    if (arg_forward_shape.size() < 3)
-    {
-        throw ngraph_error(
-            "Max-pool backprop: data batch shape must have rank of at least 3 (one batch axis, "
-            "one channel axis, at least one spatial dimension).");
-    }
 
-    size_t batch_size = arg_forward_shape[0];
-    if (batch_size == 0)
-    {
-        throw ngraph_error("Max-pool backprop: data batch size is zero.");
-    }
+    auto& arg_shape = get_input_shape(0);
 
-    size_t channel_count = arg_forward_shape[1];
-    if (channel_count == 0)
-    {
-        throw ngraph_error("Max-pool backprop: requires at least one feature channel.");
-    }
+    //
+    // Make sure batch size and channel count are not zero, and that we have at least one spatial
+    // dimension (in other words, that arg has shape NCDi for some Di of rank>0, N != 0, C != 0).
+    //
+    NODE_VALIDATION_ASSERT(this, arg_shape.size() >= 3)
+        << "Data input shape does not have rank of at least 3 (data input shape: " << arg_shape
+        << ").";
 
-    size_t spatial_dimension_count = arg_forward_shape.size() - 2;
+    size_t batch_size = arg_shape[0];
+    NODE_VALIDATION_ASSERT(this, batch_size != 0)
+        << "Data batch size is zero (data input shape: " << arg_shape << ").";
+
+    size_t channel_count = arg_shape[1];
+    NODE_VALIDATION_ASSERT(this, channel_count != 0)
+        << "Channel count is zero (data input shape: " << arg_shape << ").";
+
+    size_t spatial_dimension_count = arg_shape.size() - 2;
 
     //
     // Make sure window shape, window movement strides, and padding have same rank as Di.
     //
-    if (m_window_shape.size() != spatial_dimension_count)
-    {
-        throw ngraph_error(
-            "Max-pool backprop: window shape rank does not match number of spatial "
-            "dimensions.");
-    }
-
-    if (m_window_movement_strides.size() != spatial_dimension_count)
-    {
-        throw ngraph_error(
-            "Max-pool backprop: window movement stride rank does not match number of spatial "
-            "dimensions.");
-    }
-
-    if (m_padding_below.size() != spatial_dimension_count)
-    {
-        throw ngraph_error(
-            "Max-pool backprop: below-padding rank does not match number of spatial "
-            "dimensions.");
-    }
-
-    if (m_padding_above.size() != spatial_dimension_count)
-    {
-        throw ngraph_error(
-            "Max-pool backprop: above-padding rank does not match number of spatial "
-            "dimensions.");
-    }
+    NODE_VALIDATION_ASSERT(this, m_window_shape.size() == spatial_dimension_count)
+        << "Window shape rank does not match number of spatial dimensions (window shape: "
+        << m_window_shape << ", data input shape: " << arg_shape << ").";
+    NODE_VALIDATION_ASSERT(this, m_window_movement_strides.size() == spatial_dimension_count)
+        << "Window movement stride rank does not match number of spatial dimensions (window "
+           "movement strides: "
+        << m_window_movement_strides << ", data input shape: " << arg_shape << ").";
+    NODE_VALIDATION_ASSERT(this, m_padding_below.size() == spatial_dimension_count)
+        << "Below-padding rank does not match number of spatial dimensions (padding below: "
+        << m_padding_below << ", data input shape: " << arg_shape << ").";
+    NODE_VALIDATION_ASSERT(this, m_padding_above.size() == spatial_dimension_count)
+        << "Above-padding rank does not match number of spatial dimensions (padding above: "
+        << m_padding_above << ", data input shape: " << arg_shape << ").";
 
     //
     // Extract input item shape Di and make sure all dimensions are larger than 0.
@@ -305,15 +258,17 @@ void op::MaxPoolBackprop::validate_and_infer_types()
 
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        size_t dim_size = arg_forward_shape[1 + 1 + i];
+        size_t dim_size = arg_shape[1 + 1 + i];
         size_t virtual_dim_size = m_padding_below[i] + dim_size + m_padding_above[i];
         input_item_virtual_shape.push_back(virtual_dim_size);
+    }
 
-        if (virtual_dim_size == 0)
-        {
-            throw ngraph_error(
-                "Max-pool backprop: data batch spatial dimension is zero even after padding.");
-        }
+    for (size_t i = 0; i < spatial_dimension_count; i++)
+    {
+        NODE_VALIDATION_ASSERT(this, input_item_virtual_shape[i] != 0)
+            << "Data input spatial dimension " << i
+            << " has zero length even after padding (virtual shape of input item: "
+            << input_item_virtual_shape << ").";
     }
 
     //
@@ -321,23 +276,20 @@ void op::MaxPoolBackprop::validate_and_infer_types()
     //
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        if (m_window_shape[i] == 0)
-        {
-            throw ngraph_error("Max-pool backprop: window shape has a zero-length axis.");
-        }
+        NODE_VALIDATION_ASSERT(this, m_window_shape[i] != 0)
+            << "Window shape dimension " << i
+            << " has zero length (window shape: " << m_window_shape << ").";
     }
 
     //
-    // Make the max pooling window fits within the spatial dimensions.
+    // Make sure the pooling window fits within the spatial dimensions.
     //
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        if (m_window_shape[i] > input_item_virtual_shape[i])
-        {
-            throw ngraph_error(
-                "Max-pool backprop: window shape is larger than the spatial dimensions even after "
-                "padding.");
-        }
+        NODE_VALIDATION_ASSERT(this, m_window_shape[i] <= input_item_virtual_shape[i])
+            << "Window shape after padding is larger than the spatial dimensions (window shape: "
+            << m_window_shape << ", virtual shape of input item: " << input_item_virtual_shape
+            << ").";
     }
 
     //
@@ -347,10 +299,9 @@ void op::MaxPoolBackprop::validate_and_infer_types()
 
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        if (m_window_movement_strides[i] == 0)
-        {
-            throw ngraph_error("Max-pool backprop: window axis movement stride is zero.");
-        }
+        NODE_VALIDATION_ASSERT(this, m_window_movement_strides[i] != 0)
+            << "Window movement strides dimension " << i
+            << " has zero length (window movement strides: " << m_window_movement_strides << ").";
         output_item_shape.push_back(ceil_div(input_item_virtual_shape[i] - m_window_shape[i] + 1,
                                              m_window_movement_strides[i]));
     }
@@ -358,17 +309,16 @@ void op::MaxPoolBackprop::validate_and_infer_types()
     //
     // Construct result shape: NCDo.
     //
-    Shape forward_result_shape(1 + 1 + spatial_dimension_count);
-    forward_result_shape[0] = batch_size;
-    forward_result_shape[1] = channel_count;
-    copy(output_item_shape.begin(), output_item_shape.end(), forward_result_shape.begin() + 2);
+    Shape result_shape(1 + 1 + spatial_dimension_count);
+    result_shape[0] = batch_size;
+    result_shape[1] = channel_count;
+    copy(output_item_shape.begin(), output_item_shape.end(), result_shape.begin() + 2);
 
-    if (forward_result_shape != delta_shape)
-    {
-        throw ngraph_error("Max-pool backprop: forward result shape does not match delta shape.");
-    }
+    NODE_VALIDATION_ASSERT(this, get_input_shape(1) == result_shape)
+        << "Forward result shape and delta shape do not match (forward result shape: "
+        << result_shape << ", delta shape: " << get_input_shape(1) << ").";
 
-    set_output_type(0, get_input_element_type(0), arg_forward_shape);
+    set_output_type(0, get_input_element_type(0), arg_shape);
 }
 
 shared_ptr<op::MaxPool> op::MaxPoolBackprop::get_forward_op() const
@@ -378,18 +328,13 @@ shared_ptr<op::MaxPool> op::MaxPoolBackprop::get_forward_op() const
 
 shared_ptr<Node> op::MaxPoolBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 2)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
-
-    MaxPoolBackprop* mpbp = new MaxPoolBackprop(new_args.at(0),
-                                                new_args.at(1),
-                                                m_window_shape,
-                                                m_window_movement_strides,
-                                                m_padding_below,
-                                                m_padding_above);
-    return shared_ptr<op::MaxPoolBackprop>(mpbp);
+    check_new_args_count(this, new_args);
+    return make_shared<op::MaxPoolBackprop>(new_args.at(0),
+                                            new_args.at(1),
+                                            m_window_shape,
+                                            m_window_movement_strides,
+                                            m_padding_below,
+                                            m_padding_above);
 }
 
 void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
