@@ -1740,6 +1740,23 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, tensor_2constant)
+{
+    Shape shape{2, 2, 2};
+    auto A = op::Constant::create(element::f32, shape, {1, 2, 3, 4, 5, 6, 7, 8});
+    auto f = make_shared<Function>(NodeVector{A, A}, op::ParameterVector{});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto result0 = backend->create_tensor(element::f32, shape);
+    auto result1 = backend->create_tensor(element::f32, shape);
+
+    backend->call_with_validate(f, {result0, result1}, {});
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result0));
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result1));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_with_op)
 {
     Shape shape{2, 2, 2};
