@@ -47,11 +47,11 @@ namespace ngraph
 
                 if (trans_a != 0)
                 {
-                    input_a = transpose(input_a);
+                    input_a = reshape::transpose(input_a);
                 }
                 if (trans_b != 0)
                 {
-                    input_b = transpose(input_b);
+                    input_b = reshape::transpose(input_b);
                 }
 
                 // code from python not implemented in c++ yet.
