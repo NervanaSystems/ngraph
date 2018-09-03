@@ -16,8 +16,16 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include "ngraph/pass/pass.hpp"
 
-namespace py = pybind11;
-
-void regclass_pyngraph_op_util_UnaryElementwise(py::module m);
+namespace ngraph
+{
+    namespace pass
+    {
+        class LikeReplacement : public FunctionPass
+        {
+        public:
+            bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+        };
+    }
+}

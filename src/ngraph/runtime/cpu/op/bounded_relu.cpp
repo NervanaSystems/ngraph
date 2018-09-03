@@ -20,10 +20,11 @@ using namespace std;
 using namespace ngraph;
 
 op::BoundedRelu::BoundedRelu(shared_ptr<Node> arg, float alpha)
-    : RequiresTensorViewArgs("BoundedRelu", {arg})
+    : Op("BoundedRelu", check_single_output_args({arg}))
     , m_alpha(alpha)
 {
-    set_value_type_checked(arg->get_element_type(), arg->get_shape());
+    constructor_validate_and_infer_types();
+    set_output_type(0, arg->get_element_type(), arg->get_shape());
 }
 
 shared_ptr<Node> op::BoundedRelu::copy_with_new_args(const NodeVector& new_args) const

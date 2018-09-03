@@ -34,11 +34,12 @@ shared_ptr<Node> op::Sigmoid::copy_with_new_args(const NodeVector& new_args) con
 op::Sigmoid::Sigmoid(shared_ptr<Node> arg)
     : UnaryElementwiseArithmetic("Sigmoid", {arg})
 {
-    set_value_type_checked(arg->get_element_type(), arg->get_shape());
+    set_output_type(0, arg->get_element_type(), arg->get_shape());
+    constructor_validate_and_infer_types();
 }
 
 op::SigmoidBackprop::SigmoidBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
-    : RequiresTensorViewArgs("SigmoidBackprop", {arg, delta})
+    : Op("SigmoidBackprop", check_single_output_args({arg, delta}))
 {
     if (arg->get_element_type() != delta->get_element_type())
     {
@@ -48,7 +49,7 @@ op::SigmoidBackprop::SigmoidBackprop(shared_ptr<Node> arg, shared_ptr<Node> delt
     {
         throw ngraph_error("Argument and delta shape for Sigmoid backprop do not match");
     }
-    set_value_type_checked(delta->get_element_type(), delta->get_shape());
+    set_output_type(0, delta->get_element_type(), delta->get_shape());
 }
 
 shared_ptr<Node> op::SigmoidBackprop::copy_with_new_args(const NodeVector& new_args) const

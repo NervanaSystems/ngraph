@@ -21,10 +21,12 @@ using namespace std;
 using namespace ngraph;
 
 op::OneHot::OneHot(const shared_ptr<Node>& arg, const Shape& shape, size_t one_hot_axis)
-    : RequiresTensorViewArgs("OneHot", {arg})
+    : Op("OneHot", check_single_output_args({arg}))
     , m_shape(shape)
     , m_one_hot_axis(one_hot_axis)
 {
+    constructor_validate_and_infer_types();
+
     auto& input = m_inputs.at(0);
     auto& input_element_type = input.get_element_type();
 
@@ -41,7 +43,7 @@ op::OneHot::OneHot(const shared_ptr<Node>& arg, const Shape& shape, size_t one_h
         throw ngraph_error("One-hot argument shape is not compatible with desired output shape");
     }
 
-    set_value_type_checked(make_shared<TensorViewType>(input_element_type, shape));
+    set_output_type(0, input_element_type, shape);
 }
 
 shared_ptr<Node> op::OneHot::copy_with_new_args(const NodeVector& new_args) const

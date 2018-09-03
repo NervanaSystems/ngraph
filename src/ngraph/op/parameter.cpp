@@ -26,8 +26,16 @@ op::Parameter::Parameter(const element::Type& element_type,
                          const bool cacheable)
     : Op("Parameter", {})
     , m_cacheable(cacheable)
+    , m_shape(shape)
+    , m_element_type(element_type)
 {
-    add_output(element_type, shape);
+    constructor_validate_and_infer_types();
+}
+
+void op::Parameter::validate_and_infer_types()
+{
+    Op::validate_and_infer_types();
+    set_output_type(0, m_element_type, m_shape);
 }
 
 shared_ptr<Node> op::Parameter::copy_with_new_args(const NodeVector& new_args) const
@@ -36,8 +44,7 @@ shared_ptr<Node> op::Parameter::copy_with_new_args(const NodeVector& new_args) c
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    const descriptor::Output& output = get_outputs().at(0);
-    return make_shared<Parameter>(output.get_element_type(), output.get_shape());
+    return make_shared<Parameter>(m_element_type, m_shape);
 }
 
 void op::Parameter::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

@@ -24,15 +24,19 @@ using namespace std;
 using namespace ngraph;
 
 op::Reverse::Reverse(const shared_ptr<Node>& arg, const AxisSet& reversed_axes)
-    : RequiresTensorViewArgs("Reverse", {arg})
+    : Op("Reverse", check_single_output_args({arg}))
     , m_reversed_axes(reversed_axes)
 {
-    auto& input = get_inputs().at(0);
-    auto input_shape = input.get_shape();
+    constructor_validate_and_infer_types();
+}
+
+void op::Reverse::validate_and_infer_types()
+{
+    auto input_shape = get_input_shape(0);
     auto input_rank = input_shape.size();
 
     // Make sure all reversed axis indices are valid.
-    for (size_t axis : reversed_axes)
+    for (size_t axis : m_reversed_axes)
     {
         if (axis >= input_rank)
         {
@@ -43,7 +47,7 @@ op::Reverse::Reverse(const shared_ptr<Node>& arg, const AxisSet& reversed_axes)
         }
     }
 
-    set_value_type_checked(input.get_element_type(), input_shape);
+    set_output_type(0, get_input_element_type(0), input_shape);
 }
 
 shared_ptr<Node> op::Reverse::copy_with_new_args(const NodeVector& new_args) const

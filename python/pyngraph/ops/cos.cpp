@@ -14,9 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/cos.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+#include "ngraph/op/cos.hpp"
 #include "pyngraph/ops/cos.hpp"
 
 namespace py = pybind11;

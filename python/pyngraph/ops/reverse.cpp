@@ -25,10 +25,8 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Reverse(py::module m)
 {
-    py::class_<ngraph::op::Reverse,
-               std::shared_ptr<ngraph::op::Reverse>,
-               ngraph::op::util::RequiresTensorViewArgs>
-        reverse(m, "Reverse");
+    py::class_<ngraph::op::Reverse, std::shared_ptr<ngraph::op::Reverse>, ngraph::op::Op> reverse(
+        m, "Reverse");
     reverse.doc() = "ngraph.impl.op.Reverse wraps ngraph::op::Reverse";
     reverse.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet&>());
 }

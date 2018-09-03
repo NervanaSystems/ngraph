@@ -537,6 +537,29 @@ TEST(onnx, model_sub)
     EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
 }
 
+TEST(onnx, model_unsqueeze)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/unsqueeze.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(test::NDArray<float, 3>(
+                            {{{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
+                             {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
+                             {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}}})
+                            .get_vector());
+
+    Outputs expected_output{
+        test::NDArray<float, 4>(
+            {{{{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
+              {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
+              {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}}}})
+            .get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
 TEST(onnx, model_div)
 {
     auto function =

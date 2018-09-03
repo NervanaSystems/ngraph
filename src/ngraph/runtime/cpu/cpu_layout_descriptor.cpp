@@ -33,7 +33,7 @@ namespace ngraph
             LayoutDescriptor::LayoutDescriptor(const ngraph::descriptor::TensorView& tv)
                 : TensorViewLayout(tv)
                 , m_offset(0)
-                , m_size(ngraph::shape_size(tv.get_tensor_view_type()->get_shape()))
+                , m_size(ngraph::shape_size(tv.get_shape()))
                 , m_mkldnn_md(LayoutDescriptor::DummyDesc)
             {
                 auto shape = get_shape();
@@ -45,9 +45,7 @@ namespace ngraph
                     s *= shape[shape.size() - (i + 1)];
                 }
                 std::reverse(m_strides.begin(), m_strides.end());
-                auto tvt = tv.get_tensor_view_type();
-                m_mkldnn_memory_size =
-                    shape_size(tvt->get_shape()) * tvt->get_element_type().size();
+                m_mkldnn_memory_size = shape_size(tv.get_shape()) * tv.get_element_type().size();
             }
 
             size_t LayoutDescriptor::get_index_offset(const std::vector<size_t>& indices)
