@@ -288,7 +288,7 @@ else()
     message(STATUS "unit tests disabled")
 endif()
 
-if (NOT NGRAPH_DOC_BUILD_DISABLE)
+if (NGRAPH_DOC_BUILD_ENABLE)
     add_subdirectory(doc)
 endif()
 
