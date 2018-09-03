@@ -52,7 +52,7 @@ void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
             gws = runtime::intelgpu::generate_loops(writer, output_shape, true);
 
             writer << "output" << access_dims(output_shape) << " = input0"
-                   << access_dims(output_shape, axis) << ";\n";
+                   << access_dims(output_shape, "i", axis) << ";\n";
 
             // Closing brackets for Broadcast loop
             runtime::intelgpu::generate_loops(writer, output_shape, false);
@@ -137,10 +137,10 @@ void runtime::intelgpu::do_max_min_operation(cldnn::topology& topology,
             }
 
             writer << "if (input" << access_dims(input_shape) << operation << "output"
-                   << access_dims(input_shape, axis) << ")\n";
+                   << access_dims(input_shape, "i", axis) << ")\n";
             writer.block_begin();
             {
-                writer << "output" << access_dims(input_shape, axis) << " = input"
+                writer << "output" << access_dims(input_shape, "i", axis) << " = input"
                        << access_dims(input_shape) << ";\n";
             }
             writer.block_end();
@@ -214,7 +214,7 @@ void runtime::intelgpu::do_product_operation(cldnn::topology& topology,
                 ++var_idx;
             }
 
-            writer << "output" << access_dims(input_shape, axis) << " *= input"
+            writer << "output" << access_dims(input_shape, "i", axis) << " *= input"
                    << access_dims(input_shape) << ";\n";
 
             // Closing brackets for loop
