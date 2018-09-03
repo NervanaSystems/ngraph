@@ -8,10 +8,12 @@ matrix:
   - os: linux
     sudo: required
     services: docker
+    language: python
     env: TASK=python2_test OS=ubuntu
   - os: linux
     sudo: required
     services: docker
+    language: python
     env: TASK=python3_test OS=ubuntu
   - os: linux
     sudo: required
@@ -26,7 +28,6 @@ matrix:
 
 install:
 - |
-  set -e
   if [ "$TRAVIS_OS_NAME" == "linux" ]; then
     docker build -t test_ngraph -f .ci/travis/$OS/Dockerfile .
   fi
