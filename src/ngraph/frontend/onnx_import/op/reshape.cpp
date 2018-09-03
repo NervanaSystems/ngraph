@@ -44,10 +44,11 @@ namespace ngraph
                 // If no shape argument (opset >= 5) and there is second input.
                 if (output_shape.empty() && ng_inputs.size() == 2)
                 {
-                    auto output_shape_node =
-                        std::dynamic_pointer_cast<ngraph::op::Constant>(ng_inputs.at(1));
-                    if (output_shape_node != nullptr)
+                    // Currently only support Constant node.
+                    if (ng_inputs.at(1)->description() == "Constant")
                     {
+                        auto output_shape_node =
+                            std::dynamic_pointer_cast<ngraph::op::Constant>(ng_inputs.at(1));
                         output_shape = output_shape_node->get_vector<std::size_t>();
                     }
                     else
