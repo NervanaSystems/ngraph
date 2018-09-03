@@ -20,6 +20,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
 #include "ngraph/axis_set.hpp" // ngraph::AxisSet
 #include "pyngraph/axis_set.hpp"
 

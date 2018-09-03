@@ -22,17 +22,20 @@ using namespace std;
 using namespace ngraph;
 
 op::Convert::Convert(const shared_ptr<Node>& arg, const element::Type& element_type)
-    : UnaryElementwise("Convert", element_type, arg)
+    : Op("Convert", check_single_output_args({arg}))
     , m_element_type(element_type)
 {
+    constructor_validate_and_infer_types();
+}
+
+void op::Convert::validate_and_infer_types()
+{
+    set_output_type(0, m_element_type, get_input_shape(0));
 }
 
 shared_ptr<Node> op::Convert::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return make_shared<Convert>(new_args.at(0), m_element_type);
 }
 

@@ -14,18 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#pragma once
 
-#include "ngraph/op/util/unary_elementwise.hpp"
-#include "pyngraph/ops/util/unary_elementwise.hpp"
+#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_util_UnaryElementwise(py::module m)
-{
-    py::class_<ngraph::op::util::UnaryElementwise,
-               std::shared_ptr<ngraph::op::util::UnaryElementwise>,
-               ngraph::op::util::RequiresTensorViewArgs>
-        unaryElementwise(m, "UnaryElementwise");
-}
+void regmodule_pyngraph_onnx_import(py::module m);
