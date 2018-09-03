@@ -20,6 +20,7 @@
 #include "ngraph/op/subtract.hpp"
 
 #include "core/node.hpp"
+#include "utils/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -29,7 +30,7 @@ namespace ngraph
         {
             inline NodeVector sub(const Node& node)
             {
-                NodeVector ng_inputs{node.get_ng_inputs()};
+                NodeVector ng_inputs{binary_op_numpy_broadcasting(node.get_ng_inputs())};
                 return {std::make_shared<ngraph::op::Subtract>(ng_inputs.at(0), ng_inputs.at(1))};
             }
 
