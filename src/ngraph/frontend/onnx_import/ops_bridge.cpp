@@ -34,6 +34,7 @@
 #include "op/min.hpp"
 #include "op/mul.hpp"
 #include "op/relu.hpp"
+#include "op/reshape.hpp"
 #include "op/softmax.hpp"
 #include "op/split.hpp"
 #include "op/sub.hpp"
@@ -101,6 +102,7 @@ namespace ngraph
                     m_map.emplace("Min", std::bind(op::min, std::placeholders::_1));
                     m_map.emplace("Mul", std::bind(op::mul, std::placeholders::_1));
                     m_map.emplace("Relu", std::bind(op::relu, std::placeholders::_1));
+                    m_map.emplace("Reshape", std::bind(op::reshape, std::placeholders::_1));
                     m_map.emplace("Softmax", std::bind(op::softmax, std::placeholders::_1));
                     m_map.emplace("Split", std::bind(op::split, std::placeholders::_1));
                     m_map.emplace("Sub", std::bind(op::sub, std::placeholders::_1));

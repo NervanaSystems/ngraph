@@ -14,10 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "flatten.hpp"
+#pragma once
 
-#include "exceptions.hpp"
-#include "utils/reshape.hpp"
+#include "ngraph/node_vector.hpp"
+
+#include "core/node.hpp"
 
 namespace ngraph
 {
@@ -25,24 +26,17 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector flatten(const Node& node)
-            {
-                NodeVector inputs{node.get_ng_inputs()};
-                auto data = inputs.at(0);
-                auto axis = node.get_attribute_value<int64_t>("axis", 1);
+            ///
+            /// \brief      Reshape the input tensor similar to numpy.reshape.
+            ///
+            /// \param[in]  node  The ONNX node representing this operation.
+            ///
+            /// \return     Ngraph node representing this operation.
+            ///
+            NodeVector reshape(const Node& node);
 
-                if (axis < 0 || axis > data->get_shape().size())
-                {
-                    throw error::parameter::Value("Flatten node (",
-                                                  node.get_name(),
-                                                  "): provided axis attribute is not valid.");
-                }
+        } // namespace op
 
-                return {reshape::flatten(data, axis)};
-            }
+    } // namespace onnx_import
 
-        } // namespace  op
-
-    } // namespace  onnx_import
-
-} // namespace  ngraph
+} // namespace ngraph
