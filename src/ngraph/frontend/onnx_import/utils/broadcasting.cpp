@@ -22,33 +22,34 @@
 
 #include "broadcasting.hpp"
 
+static std::vector<ngraph::Shape> calculate_numpy_broadcast_shape(ngraph::Shape left_shape,
+                                                                  ngraph::Shape right_shape)
+{
+    ngraph::Shape output_shape;
+    auto rank_left = left_shape.size();
+    auto rank_right = right_shape.size();
+    auto max_rank = std::max(rank_left, rank_right);
+
+    for (auto i = 0; i < (max_rank - rank_left); ++i)
+    {
+        left_shape.insert(std::begin(left_shape), 1);
+    }
+    for (auto i = 0; i < (max_rank - rank_right); ++i)
+    {
+        right_shape.insert(std::begin(right_shape), 1);
+    }
+    for (auto index = 0; index < max_rank; ++index)
+    {
+        output_shape.push_back(std::max(left_shape.at(index), right_shape.at(index)));
+    }
+
+    return {output_shape, left_shape, right_shape};
+}
+
 namespace ngraph
 {
     namespace onnx_import
     {
-        std::vector<Shape> calculate_numpy_broadcast_shape(Shape left_shape, Shape right_shape)
-        {
-            Shape output_shape;
-            auto rank_left = left_shape.size();
-            auto rank_right = right_shape.size();
-            auto max_rank = std::max(rank_left, rank_right);
-
-            for (auto i = 0; i < (max_rank - rank_left); ++i)
-            {
-                left_shape.insert(std::begin(left_shape), 1);
-            }
-            for (auto i = 0; i < (max_rank - rank_right); ++i)
-            {
-                right_shape.insert(std::begin(right_shape), 1);
-            }
-            for (auto index = 0; index < max_rank; ++index)
-            {
-                output_shape.push_back(std::max(left_shape.at(index), right_shape.at(index)));
-            }
-
-            return {output_shape, left_shape, right_shape};
-        }
-
         NodeVector binary_op_numpy_broadcasting(const std::shared_ptr<Node>& left,
                                                 const std::shared_ptr<Node>& right)
         {
