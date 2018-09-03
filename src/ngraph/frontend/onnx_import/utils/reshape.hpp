@@ -42,8 +42,8 @@ namespace ngraph
             ///
             /// \return     The filled AxisVector.
             ///
-            ngraph::AxisVector get_default_axis_vector(std::size_t data_shape_size,
-                                                       std::size_t start_value = 0);
+            AxisVector get_default_axis_vector(std::size_t data_shape_size,
+                                               std::size_t start_value = 0);
 
             /// \brief      Infer `output_shape` dimension values.
             ///

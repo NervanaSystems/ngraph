@@ -102,17 +102,19 @@ namespace ngraph
                 // remaining dimensions.
                 auto neg_value_it =
                     std::find(std::begin(inferred_dims), std::end(inferred_dims), -1);
-                auto sec_neg_value_it =
-                    std::find(std::next(neg_value_it), std::end(inferred_dims), -1);
-                if (sec_neg_value_it != std::end(inferred_dims))
-                {
-                    throw error::parameter::Value("Reshape",
-                                                  node_name,
-                                                  "more than one dimension is set to (-1). Only "
-                                                  "one dimension value can be inferred.");
-                }
                 if (neg_value_it != std::end(inferred_dims))
                 {
+                    // only single '-1' value is allowed
+                    if (std::find(std::next(neg_value_it), std::end(inferred_dims), -1) !=
+                        std::end(inferred_dims))
+                    {
+                        throw error::parameter::Value("Reshape",
+                                                      node_name,
+                                                      "more than one dimension is set to (-1). "
+                                                      "Only one dimension value can be inferred.");
+                    }
+
+                    // Set dimension value to 1 temporarily to be able to calculate its value.
                     *neg_value_it = 1;
                     std::size_t input_shape_product =
                         std::accumulate(std::begin(input_shape),
