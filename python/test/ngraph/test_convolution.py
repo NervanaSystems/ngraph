@@ -43,8 +43,8 @@ def test_convolution_2d():
         [1., 0., -1.]], dtype=np.float32).reshape(1, 1, 3, 3))
 
     # convolution with padding=1 should produce 9 x 9 output:
-    model = runtime.computation(ng.convolution(input_x, input_filter,
-                                               padding_above=[1, 1], padding_below=[1, 1]))
+    model = runtime.computation(ng.convolution(input_x, input_filter, padding_above=[1, 1],
+                                               padding_below=[1, 1]))
     result = model()
 
     assert np.allclose(result,

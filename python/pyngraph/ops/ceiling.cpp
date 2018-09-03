@@ -14,9 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/ceiling.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+#include "ngraph/op/ceiling.hpp"
 #include "pyngraph/ops/ceiling.hpp"
 
 namespace py = pybind11;

@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
@@ -26,7 +26,7 @@ namespace ngraph
         {
             /// \brief Abstract base class for arithmetic reduction operations, i.e., operations where chosen axes of the input tensors
             ///        are eliminated (reduced out) by repeated application of a particular binary arithmetic operation.
-            class ArithmeticReduction : public RequiresTensorViewArgs
+            class ArithmeticReduction : public Op
             {
             public:
                 /// \brief Constructs an arithmetic reduction operation.
@@ -36,6 +36,8 @@ namespace ngraph
                 ArithmeticReduction(const std::string& node_type,
                                     const std::shared_ptr<Node>& arg,
                                     const AxisSet& reduction_axes);
+
+                void validate_and_infer_types() override;
 
                 /// \return The axis positions (0-based) to be eliminated through reduction.
                 const AxisSet& get_reduction_axes() const { return m_reduction_axes; }

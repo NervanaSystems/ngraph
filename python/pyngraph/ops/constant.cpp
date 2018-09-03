@@ -20,6 +20,7 @@
 #include <pybind11/buffer_info.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
 #include "ngraph/op/constant.hpp"
 #include "ngraph/shape.hpp"
 #include "pyngraph/ops/constant.hpp"
