@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
@@ -43,7 +43,7 @@ namespace ngraph
         /// | Type                   | Description                                                                                                                                                               |
         /// | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \texttt{arg}[j_1,\dots,j_n]\f$ and \f$j_k = d_k - i_k - 1\f$ if axis \f$k\f$ is in the reverse set; else \f$j_k = i_k\f$. |
-        class Reverse : public util::RequiresTensorViewArgs
+        class Reverse : public Op
         {
         public:
             /// \brief Constructs a reverse operation.
@@ -51,6 +51,8 @@ namespace ngraph
             /// \param arg The input tensor view, some of whose axes are to be reversed.
             /// \param reversed_axes The axes to reverse.
             Reverse(const std::shared_ptr<Node>& arg, const AxisSet& reversed_axes);
+
+            void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

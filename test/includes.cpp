@@ -46,7 +46,6 @@ TEST(DISABLED_include, complete)
                                     "ngraph/descriptor/layout/dense_tensor_view_layout.hpp",
                                     "ngraph/descriptor/layout/tensor_view_layout.hpp",
                                     "ngraph/descriptor/output.hpp",
-                                    "ngraph/descriptor/primary_tensor_view.hpp",
                                     "ngraph/descriptor/tensor.hpp",
                                     "ngraph/descriptor/tensor_view.hpp",
                                     "ngraph/except.hpp",

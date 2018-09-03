@@ -30,12 +30,14 @@ op::MaxPoolWithIndices::MaxPoolWithIndices(const shared_ptr<Node>& arg,
                                            const Strides& window_movement_strides,
                                            const Shape& padding_below,
                                            const Shape& padding_above)
-    : RequiresTensorViewArgs("MaxPoolWithIndices", {arg})
+    : Op("MaxPoolWithIndices", check_single_output_args({arg}))
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
 {
+    constructor_validate_and_infer_types();
+
     auto& arg_shape = get_input_shape(0);
 
     //
@@ -154,14 +156,15 @@ op::MaxPoolWithIndices::MaxPoolWithIndices(const shared_ptr<Node>& arg,
     result_shape[1] = channel_count;
     copy(output_item_shape.begin(), output_item_shape.end(), result_shape.begin() + 2);
 
-    add_output(get_input_element_type(0), result_shape);
+    set_output_size(2);
+    set_output_type(0, get_input_element_type(0), result_shape);
     // MKLDNN can pick one of the two following datatypes
     // to store maximum indices: s32 and u8.
     // For smaller kernels, where 255 positions is enough
     // to span the entire kernel, u8 is picked.
     // We conservatively always use s32
     // to simplify MaxPoolWithIndices c-tor.
-    add_output(element::i32, result_shape);
+    set_output_type(1, element::i32, result_shape);
 }
 
 shared_ptr<Node> op::MaxPoolWithIndices::copy_with_new_args(const NodeVector& new_args) const
@@ -184,12 +187,14 @@ op::MaxPoolWithIndicesBackprop::MaxPoolWithIndicesBackprop(const shared_ptr<Node
                                                            const Strides& window_movement_strides,
                                                            const Shape& padding_below,
                                                            const Shape& padding_above)
-    : RequiresTensorViewArgs("MaxPoolWithIndicesBackprop", {arg_forward, delta, indices})
+    : Op("MaxPoolWithIndicesBackprop", check_single_output_args({arg_forward, delta, indices}))
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
 {
+    constructor_validate_and_infer_types();
+
     if (delta->get_shape() != indices->get_shape())
     {
         throw ngraph_error("delta shape doesn't match indices' ");
@@ -328,7 +333,7 @@ op::MaxPoolWithIndicesBackprop::MaxPoolWithIndicesBackprop(const shared_ptr<Node
         throw ngraph_error("Max-pool backprop: forward result shape does not match delta shape.");
     }
 
-    set_value_type_checked(get_input_element_type(0), arg_forward_shape);
+    set_output_type(0, get_input_element_type(0), arg_forward_shape);
 }
 
 shared_ptr<Node>

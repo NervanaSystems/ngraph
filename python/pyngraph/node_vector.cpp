@@ -16,7 +16,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-//#include <string>
+
 #include "ngraph/node.hpp" // ngraph::Node
 #include "ngraph/node_vector.hpp"
 #include "pyngraph/node.hpp"

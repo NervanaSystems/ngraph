@@ -14,8 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "pyngraph/ops/regmodule_pyngraph_op.hpp"
 #include <pybind11/pybind11.h>
+
+#include "pyngraph/ops/regmodule_pyngraph_op.hpp"
 
 namespace py = pybind11;
 

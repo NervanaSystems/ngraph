@@ -132,7 +132,7 @@ void runtime::intelgpu::do_softmax_operation(cldnn::topology& topology,
     const string entry_point_name = "softmax_" + output_name;
     const string middle_name = entry_point_name + "_middle";
     const string entry_point_middle_name = "softmax_middle_" + output_name;
-    const string expression = "output" + access_dims(input_shape, axes) + " = 0.0f;\n";
+    const string expression = "output" + access_dims(input_shape, "i", axes) + " = 0.0f;\n";
     const Shape new_shape = shape_dims(output_shape, axes);
     const cldnn::layout layout_middle = IntelGPULayout::create_cldnn_layout(output_type, new_shape);
     codegen::CodeWriter writer0;
@@ -147,7 +147,7 @@ void runtime::intelgpu::do_softmax_operation(cldnn::topology& topology,
     {
         gws = generate_loops_w_axes(writer0, output_shape, true, axes, expression);
 
-        writer0 << "output" << access_dims(input_shape, axes) << " += exp(input"
+        writer0 << "output" << access_dims(input_shape, "i", axes) << " += exp(input"
                 << access_dims(input_shape) << ");\n";
 
         generate_loops_w_axes(writer0, output_shape, false, axes, "");
@@ -173,7 +173,7 @@ void runtime::intelgpu::do_softmax_operation(cldnn::topology& topology,
     {
         gws = generate_loops(writer1, output_shape, true);
         writer1 << "output" << access_dims(input_shape) << " = exp(input0"
-                << access_dims(input_shape) << ")/input1" << access_dims(input_shape, axes)
+                << access_dims(input_shape) << ")/input1" << access_dims(input_shape, "i", axes)
                 << ";\n";
         generate_loops(writer1, output_shape, false);
     }

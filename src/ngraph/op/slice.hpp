@@ -17,7 +17,7 @@
 #pragma once
 
 #include "ngraph/coordinate.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 #include "ngraph/strides.hpp"
 
 namespace ngraph
@@ -50,7 +50,7 @@ namespace ngraph
         /// | Type                                                                           | Description                       |
         /// | ------------------------------------------------------------------------------ | --------------------------------- |
         /// | \f$E[d'_1,\dots,d'_n]\f$ where \f$d'_i = \lceil(u_i - l_i)\, /\, s_i\rceil\f$. | The tensor sliced from the input. |
-        class Slice : public util::RequiresTensorViewArgs
+        class Slice : public Op
         {
         public:
             /// \brief Constructs a tensor slice operation.
@@ -86,11 +86,11 @@ namespace ngraph
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-            void check_args();
+            void validate_and_infer_types() override;
 
-            const Coordinate m_lower_bounds;
-            const Coordinate m_upper_bounds;
-            const Strides m_strides;
+            Coordinate m_lower_bounds;
+            Coordinate m_upper_bounds;
+            Strides m_strides;
         };
     }
 }
