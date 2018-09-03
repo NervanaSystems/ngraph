@@ -22,7 +22,7 @@ include(ExternalProject)
 #------------------------------------------------------------------------------
 
 set(PROTOBUF_GIT_REPO_URL https://github.com/google/protobuf.git)
-set(PROTOBUF_GIT_BRANCH origin/3.5.x)
+set(PROTOBUF_GIT_TAG v3.5.1)
 
 # The 'BUILD_BYPRODUCTS' arguments was introduced in CMake 3.2.
 if (${CMAKE_VERSION} VERSION_LESS 3.2)
@@ -30,11 +30,13 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
         ext_protobuf
         PREFIX protobuf
         GIT_REPOSITORY ${PROTOBUF_GIT_REPO_URL}
-        GIT_TAG ${PROTOBUF_GIT_BRANCH}
+        GIT_TAG ${PROTOBUF_GIT_TAG}
         INSTALL_COMMAND ""
         UPDATE_COMMAND ""
         PATCH_COMMAND ""
-        CONFIGURE_COMMAND ./autogen.sh && ./configure --disable-shared CXXFLAGS=-fPIC
+        CONFIGURE_COMMAND git submodule update --init --recursive
+        COMMAND ./autogen.sh
+        COMMAND ./configure --disable-shared CXXFLAGS=-fPIC
         BUILD_COMMAND ${MAKE}
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
@@ -50,11 +52,13 @@ else()
             ext_protobuf
             PREFIX ext_protobuf
             GIT_REPOSITORY ${PROTOBUF_GIT_REPO_URL}
-            GIT_TAG ${PROTOBUF_GIT_BRANCH}
+            GIT_TAG ${PROTOBUF_GIT_TAG}
             INSTALL_COMMAND ""
             UPDATE_COMMAND ""
             PATCH_COMMAND ""
-            CONFIGURE_COMMAND ./autogen.sh && ./configure --disable-shared CXXFLAGS=-fPIC
+            CONFIGURE_COMMAND git submodule update --init --recursive
+            COMMAND ./autogen.sh
+            COMMAND ./configure --disable-shared CXXFLAGS=-fPIC
             BUILD_COMMAND ${MAKE}
             TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
             STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
@@ -71,12 +75,14 @@ else()
             ext_protobuf
             PREFIX ext_protobuf
             GIT_REPOSITORY ${PROTOBUF_GIT_REPO_URL}
-            GIT_TAG ${PROTOBUF_GIT_BRANCH}
+            GIT_TAG ${PROTOBUF_GIT_TAG}
             GIT_SHALLOW TRUE
             INSTALL_COMMAND ""
             UPDATE_COMMAND ""
             PATCH_COMMAND ""
-            CONFIGURE_COMMAND ./autogen.sh && ./configure --disable-shared CXXFLAGS=-fPIC
+            CONFIGURE_COMMAND git submodule update --init --recursive
+            COMMAND ./autogen.sh
+            COMMAND ./configure --disable-shared CXXFLAGS=-fPIC
             BUILD_COMMAND ${MAKE}
             TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
             STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
