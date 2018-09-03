@@ -41,7 +41,7 @@ def test_simple_computation_on_ndarrays(dtype):
     value_b = np.array([[5, 6], [7, 8]], dtype=dtype)
     value_c = np.array([[9, 10], [11, 12]], dtype=dtype)
     result = computation(value_a, value_b, value_c)
-    assert np.allclose(result, np.array([[54, 80], [110, 144]], dtype=dtype))
+    assert np.allclose(result, np.array([[54, 80], [110, 0]], dtype=dtype))
 
     value_a = np.array([[13, 14], [15, 16]], dtype=dtype)
     value_b = np.array([[17, 18], [19, 20]], dtype=dtype)
