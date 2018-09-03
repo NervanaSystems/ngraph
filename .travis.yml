@@ -5,24 +5,24 @@ git:
 
 matrix:
   include:
-#  - os: linux
-#    sudo: required
-#    services: docker
-#    language: python
-#    env: TASK=python2_test OS=ubuntu
-#  - os: linux
-#    sudo: required
-#    services: docker
-#    language: python
-#    env: TASK=python3_test OS=ubuntu
-#  - os: linux
-#    sudo: required
-#    services: docker
-#    env: TASK=cpp_test OS=ubuntu
-#  - os: linux
-#    sudo: required
-#    services: docker
-#    env: TASK=cpp_test OS=centos
+  - os: linux
+    sudo: required
+    services: docker
+    language: python
+    env: TASK=python2_test OS=ubuntu
+  - os: linux
+    sudo: required
+    services: docker
+    language: python
+    env: TASK=python3_test OS=ubuntu
+  - os: linux
+    sudo: required
+    services: docker
+    env: TASK=cpp_test OS=ubuntu
+  - os: linux
+    sudo: required
+    services: docker
+    env: TASK=cpp_test OS=centos
   - os: osx
     env: TASK=cpp_test OS=osx
 
