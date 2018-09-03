@@ -26,6 +26,7 @@ matrix:
 
 install:
 - |
+  set -e
   if [ "$TRAVIS_OS_NAME" == "linux" ]; then
     docker build -t test_ngraph -f .ci/travis/$OS/Dockerfile .
   fi
@@ -41,6 +42,7 @@ install:
 
 script:
 - |
+  set -e
   if [ "$TRAVIS_OS_NAME" == "linux" ]; then
     .ci/travis/run_test.sh
   fi
