@@ -59,45 +59,16 @@ void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
         }
         else
         {
-            writer << "float result = 0.0f;\n";
+            const string reduction_str =
+                "output" + access_dims(input_shape, "i", axis) + " = result;\n";
 
-            // Generate indexes related to input order with GWS
-            size_t var_idx = 0;
-            size_t gws_idx = 0;
-            for (auto const& i : input_shape)
-            {
-                if (axis.find(var_idx) == axis.end())
-                {
-                    writer << "const uint i" << var_idx << " = get_global_id(" << gws_idx
-                           << "); /*trip count " << i << "*/\n";
-                    gws.push_back(i);
-                    ++gws_idx;
-                }
-                ++var_idx;
-            }
-
-            // Generate loops with indexes related to input order
-            var_idx = 0;
-            for (auto const& i : input_shape)
-            {
-                if (axis.find(var_idx) != axis.end())
-                {
-                    writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i
-                           << "; ++i" << var_idx << ")\n";
-                }
-                writer.block_begin();
-                ++var_idx;
-            }
+            // Generate loops related to input order with GWS
+            gws = generate_loops_w_axes(writer, input_shape, true, axis, "float result = 0.0f;\n");
 
             writer << "result += input0" << access_dims(input_shape) << ";\n";
 
-            // Closing brackets for loops
-            for (auto const& i : input_shape)
-            {
-                writer.block_end();
-            }
-
-            writer << "output" << access_dims(input_shape, "i", axis) << " = result;\n";
+            // Close brackets related to input order with reduction
+            generate_loops_w_axes(writer, input_shape, false, axis, reduction_str);
         }
     } // End of function bracket
     writer.block_end();

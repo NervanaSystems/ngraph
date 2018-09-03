@@ -3507,6 +3507,33 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_matrix_columns)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, sum_matrix_6d)
+{
+    Shape shape_a{2, 6, 4, 5, 7, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_rt{2, 4, 5, 3};
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1, 4}), op::ParameterVector{A});
+
+    auto backend_wrk = runtime::Backend::create("${BACKEND_NAME}");
+    auto backend_ref = runtime::Backend::create("INTERPRETER");
+
+    // Create some tensors for input/output
+    auto a_wrk = backend_wrk->create_tensor(element::f32, shape_a);
+    auto a_ref = backend_ref->create_tensor(element::f32, shape_a);
+    auto result_wrk = backend_wrk->create_tensor(element::f32, shape_rt);
+    auto result_ref = backend_ref->create_tensor(element::f32, shape_rt);
+
+    vector<float> inp_data(shape_size<const Shape>(shape_a));
+    iota(inp_data.begin(), inp_data.end(), 1);
+    copy_data(a_wrk, inp_data);
+    copy_data(a_ref, inp_data);
+
+    backend_wrk->call_with_validate(f, {result_wrk}, {a_wrk});
+    backend_ref->call_with_validate(f, {result_ref}, {a_ref});
+
+    EXPECT_EQ(read_vector<float>(result_ref), read_vector<float>(result_wrk));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, sum_matrix_rows)
 {
     Shape shape_a{3, 2};
