@@ -22,15 +22,15 @@ from test.ngraph.util import get_runtime
 
 
 def test_import_onnx_function():
-    dtype = np.float32
-    cur_dir = os.path.dirname(__file__)
-    model_path = os.path.join(cur_dir, 'models/add_abc.onnx')
+    model_path = os.path.join(os.path.dirname(__file__), 'models/add_abc.onnx')
     ng_function = load_onnx_model_file(model_path)[0]
 
+    dtype = np.float32
     value_a = np.array([1.0], dtype=dtype)
     value_b = np.array([2.0], dtype=dtype)
     value_c = np.array([3.0], dtype=dtype)
 
-    result = ng_function(value_a, value_b, value_c, runtime=get_runtime())
-
+    runtime = get_runtime()
+    computation = runtime.computation(ng_function)
+    result = computation(value_a, value_b, value_c)
     assert np.allclose(result, np.array([6], dtype=dtype))
