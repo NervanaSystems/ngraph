@@ -91,7 +91,7 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
         if (!handle)
         {
             stringstream ss;
-            ss << "Backend '" << type << "' not registered";
+            ss << "Backend '" << type << "' not registered. Error:" << dlerror();
             throw runtime_error(ss.str());
         }
         function<const char*()> get_ngraph_version_string =

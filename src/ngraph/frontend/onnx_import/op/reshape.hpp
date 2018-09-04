@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,10 +17,8 @@
 #pragma once
 
 #include "ngraph/node_vector.hpp"
-#include "ngraph/op/multiply.hpp"
 
 #include "core/node.hpp"
-#include "utils/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -28,12 +26,14 @@ namespace ngraph
     {
         namespace op
         {
-            inline NodeVector mul(const Node& node)
-            {
-                NodeVector ng_inputs{
-                    numpy_style_broadcast_for_binary_operation(node.get_ng_inputs())};
-                return {std::make_shared<ngraph::op::Multiply>(ng_inputs.at(0), ng_inputs.at(1))};
-            }
+            ///
+            /// \brief      Reshape the input tensor similar to numpy.reshape.
+            ///
+            /// \param[in]  node  The ONNX node representing this operation.
+            ///
+            /// \return     Ngraph node representing this operation.
+            ///
+            NodeVector reshape(const Node& node);
 
         } // namespace op
 

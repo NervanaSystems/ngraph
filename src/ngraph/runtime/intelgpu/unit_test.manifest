@@ -80,6 +80,7 @@ select_and_scatter_without_overlap
 select_and_scatter_with_overlap
 sign
 tan
+tensor_2constant
 tensor_constant_int64
 validate_call_input_type
 validate_call_output_type

@@ -47,11 +47,11 @@ namespace ngraph
 
                 if (trans_a != 0)
                 {
-                    input_a = transpose(input_a);
+                    input_a = reshape::transpose(input_a);
                 }
                 if (trans_b != 0)
                 {
-                    input_b = transpose(input_b);
+                    input_b = reshape::transpose(input_b);
                 }
 
                 // code from python not implemented in c++ yet.
@@ -68,7 +68,9 @@ namespace ngraph
                 std::shared_ptr<ngraph::Node> beta_node = std::make_shared<ngraph::op::Constant>(
                     input_c->get_element_type(), ngraph::Shape{}, std::vector<double>{beta});
                 beta_node = make_broadcast_node(beta_node, input_c->get_shape());
+
                 input_c = std::make_shared<ngraph::op::Multiply>(beta_node, input_c);
+                input_c = make_broadcast_node(input_c, a_dot_b->get_shape());
 
                 return {std::make_shared<ngraph::op::Add>(a_dot_b, input_c)};
             }
