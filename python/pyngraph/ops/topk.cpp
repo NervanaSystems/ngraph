@@ -14,22 +14,20 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "pyngraph/ops/util/regmodule_pyngraph_op_util.hpp"
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+#include "ngraph/op/topk.hpp" // ngraph::op::TopK
+#include "pyngraph/ops/topk.hpp"
 
 namespace py = pybind11;
 
-void regmodule_pyngraph_op_util(py::module m)
+void regclass_pyngraph_op_TopK(py::module m)
 {
-    py::module m_util = m.def_submodule("util", "module pyngraph.op.util");
-    //    regclass_pyngraph_op_util_RequiresTensorViewArgs(m_util);
-    regclass_pyngraph_op_util_OpAnnotations(m_util);
-    regclass_pyngraph_op_util_ArithmeticReduction(m_util);
-    //    regclass_pyngraph_op_util_BinaryElementwise(m_util);
-    regclass_pyngraph_op_util_BinaryElementwiseArithmetic(m_util);
-    regclass_pyngraph_op_util_BinaryElementwiseComparison(m_util);
-    regclass_pyngraph_op_util_BinaryElementwiseLogical(m_util);
-    //    regclass_pyngraph_op_util_UnaryElementwise(m_util);
-    regclass_pyngraph_op_util_UnaryElementwiseArithmetic(m_util);
-    regclass_pyngraph_op_util_IndexReduction(m_util);
+    py::class_<ngraph::op::TopK,
+               std::shared_ptr<ngraph::op::TopK>,
+               ngraph::op::Op>
+        add(m, "TopK");
+    add.doc() = "ngraph.impl.op.TopK wraps ngraph::op::TopK";
+    add.def(py::init<const std::shared_ptr<ngraph::Node>&, size_t, const ngraph::element::Type&, size_t, bool>());
 }
