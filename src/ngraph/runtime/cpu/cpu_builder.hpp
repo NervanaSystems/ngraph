@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -91,24 +91,6 @@
         KV = K<ET, 6>;                                                                             \
     else if (R == 7)                                                                               \
         KV = K<ET, 7>;                                                                             \
-    else if (R == 8)                                                                               \
-        KV = K<ET, 8>;                                                                             \
-    else if (R == 9)                                                                               \
-        KV = K<ET, 9>;                                                                             \
-    else if (R == 10)                                                                              \
-        KV = K<ET, 10>;                                                                            \
-    else if (R == 11)                                                                              \
-        KV = K<ET, 11>;                                                                            \
-    else if (R == 12)                                                                              \
-        KV = K<ET, 12>;                                                                            \
-    else if (R == 13)                                                                              \
-        KV = K<ET, 13>;                                                                            \
-    else if (R == 14)                                                                              \
-        KV = K<ET, 14>;                                                                            \
-    else if (R == 15)                                                                              \
-        KV = K<ET, 15>;                                                                            \
-    else if (R == 16)                                                                              \
-        KV = K<ET, 16>;                                                                            \
     else                                                                                           \
         throw ngraph_error("Unsupported rank " + std::to_string(R) + " for kernel " #K);
 
@@ -204,14 +186,13 @@
 
 #define BUILD_UNARY_ELEMWISE_FUNCTOR(OP)                                                           \
     auto& functors = external_function->get_functors();                                            \
-    auto& tensor_data = external_function->get_tensor_data();                                      \
     std::function<void(void*, void*, size_t)> kernel;                                              \
                                                                                                    \
     SELECT_KERNEL(kernel, args[0].get_element_type(), OP);                                         \
                                                                                                    \
     auto element_count = out[0].get_size();                                                        \
-    auto& arg0_tensor = tensor_data[args[0].get_name()];                                           \
-    auto& out0_tensor = tensor_data[out[0].get_name()];                                            \
+    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());                    \
+    auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());                     \
                                                                                                    \
     auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {                            \
         kernel(arg0_tensor, out0_tensor, element_count);                                           \
@@ -220,15 +201,14 @@
 
 #define BUILD_BINARY_ELEMWISE_FUNCTOR(OP)                                                          \
     auto& functors = external_function->get_functors();                                            \
-    auto& tensor_data = external_function->get_tensor_data();                                      \
     std::function<void(void*, void*, void*, size_t)> kernel;                                       \
                                                                                                    \
     SELECT_KERNEL(kernel, args[0].get_element_type(), OP);                                         \
                                                                                                    \
     auto element_count = out[0].get_size();                                                        \
-    auto& arg0_tensor = tensor_data[args[0].get_name()];                                           \
-    auto& arg1_tensor = tensor_data[args[1].get_name()];                                           \
-    auto& out0_tensor = tensor_data[out[0].get_name()];                                            \
+    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());                    \
+    auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());                    \
+    auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());                     \
                                                                                                    \
     auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {                            \
         kernel(arg0_tensor, arg1_tensor, out0_tensor, element_count);                              \

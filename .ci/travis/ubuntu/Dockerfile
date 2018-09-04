@@ -1,8 +1,5 @@
 FROM ubuntu:16.04
 
-#buildtype argument
-ARG buildtype=regular
-
 # nGraph dependencies
 RUN apt-get update && apt-get install -y \
   build-essential \
@@ -11,11 +8,13 @@ RUN apt-get update && apt-get install -y \
   clang-format-3.9 \
   git \
   curl \
-  protobuf-compiler \
-  libprotoc-dev \
   zlib1g \
   zlib1g-dev \
-  libtinfo-dev && \
+  libtinfo-dev \
+  unzip \
+  autoconf \
+  automake \
+  libtool && \
   apt-get clean autoclean && apt-get autoremove -y
 
 # Python dependencies
@@ -26,6 +25,7 @@ RUN apt-get update && apt-get install -y \
   python3-dev \
   python-pip && \
   apt-get clean autoclean && apt-get autoremove -y
+
 RUN pip install --upgrade pip setuptools wheel
 RUN pip install tox
 
@@ -33,15 +33,8 @@ RUN pip install tox
 COPY . /root/ngraph
 RUN mkdir /root/ngraph/build
 WORKDIR /root/ngraph/build
-
-RUN if  [ "$buildtype" = "interpreter" ] ; then \
-        cmake .. -DNGRAPH_CPU_ENABLE=FALSE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE\
-                 -DCMAKE_INSTALL_PREFIX="~/ngraph_dist";\
-    else \
-        cmake ..  -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="~/ngraph_dist" ;\
-    fi
-
-RUN make
+RUN cmake .. -DNGRAPH_CPU_ENABLE=FALSE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="~/ngraph_dist"
+RUN make -j"$(nproc)"
 RUN make install
 
 # Prepare nGraph Python API

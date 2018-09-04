@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "ngraph/op/concat.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
@@ -36,7 +36,6 @@ namespace ngraph
                     (static_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
 
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
                 vector<reference_wrapper<void*>> arg_tensors;
                 vector<Shape> arg_shapes;
@@ -44,12 +43,13 @@ namespace ngraph
                 {
                     if (shape_size(arg.get_shape()))
                     {
-                        arg_tensors.emplace_back(tensor_data[arg.get_name()]);
+                        arg_tensors.emplace_back(
+                            external_function->get_tensor_data(arg.get_name()));
                         arg_shapes.emplace_back(arg.get_shape());
                     }
                 }
 
-                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
                 auto out_shape = out[0].get_shape();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))

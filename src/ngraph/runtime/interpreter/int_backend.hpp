@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -25,6 +25,8 @@
 #include "ngraph/runtime/host_tensor_view.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
+#include "ngraph/op/argmax.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
@@ -56,6 +58,8 @@
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
 #include "ngraph/runtime/reference/and.hpp"
+#include "ngraph/runtime/reference/argmax.hpp"
+#include "ngraph/runtime/reference/argmin.hpp"
 #include "ngraph/runtime/reference/asin.hpp"
 #include "ngraph/runtime/reference/atan.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
@@ -208,6 +212,54 @@ private:
                                    args[1]->get_data_ptr<T>(),
                                    out[0]->get_data_ptr<T>(),
                                    out[0]->get_element_count());
+        }
+        else if (node_op == "ArgMin")
+        {
+            const op::ArgMin* argmin = static_cast<const op::ArgMin*>(&node);
+            if (out[0]->get_element_type() == element::i64)
+            {
+                reference::argmin<T, int64_t>(args[0]->get_data_ptr<T>(),
+                                              out[0]->get_data_ptr<int64_t>(),
+                                              args[0]->get_shape(),
+                                              out[0]->get_shape(),
+                                              argmin->get_reduction_axis());
+            }
+            else if (out[0]->get_element_type() == element::i32)
+            {
+                reference::argmin<T, int32_t>(args[0]->get_data_ptr<T>(),
+                                              out[0]->get_data_ptr<int32_t>(),
+                                              args[0]->get_shape(),
+                                              out[0]->get_shape(),
+                                              argmin->get_reduction_axis());
+            }
+            else
+            {
+                throw ngraph_error("Unexpected type");
+            }
+        }
+        else if (node_op == "ArgMax")
+        {
+            const op::ArgMax* argmax = static_cast<const op::ArgMax*>(&node);
+            if (out[0]->get_element_type() == element::i64)
+            {
+                reference::argmax<T, int64_t>(args[0]->get_data_ptr<T>(),
+                                              out[0]->get_data_ptr<int64_t>(),
+                                              args[0]->get_shape(),
+                                              out[0]->get_shape(),
+                                              argmax->get_reduction_axis());
+            }
+            else if (out[0]->get_element_type() == element::i32)
+            {
+                reference::argmax<T, int32_t>(args[0]->get_data_ptr<T>(),
+                                              out[0]->get_data_ptr<int32_t>(),
+                                              args[0]->get_shape(),
+                                              out[0]->get_shape(),
+                                              argmax->get_reduction_axis());
+            }
+            else
+            {
+                throw ngraph_error("Unexpected type");
+            }
         }
         else if (node_op == "Asin")
         {

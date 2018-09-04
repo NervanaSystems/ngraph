@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <cassert>
 #include <deque>
@@ -164,75 +164,6 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
             input->replace_output(replacement->get_outputs().at(i));
         }
     }
-}
-
-std::list<std::shared_ptr<ngraph::Node>>
-    ngraph::topological_sort(const std::list<std::shared_ptr<Node>>& nodes,
-                             bool include_control_deps)
-{
-    deque<ngraph::Node*> independent_nodes;
-    unordered_map<const ngraph::Node*, size_t> node_dependency_count;
-    unordered_map<ngraph::Node*, shared_ptr<ngraph::Node>> node_map;
-
-    unordered_map<ngraph::Node*, std::set<Node*>> control_deps_users;
-
-    for (auto node : nodes)
-    {
-        //build an equivalent of node->get_users() but for control dependencies
-        size_t control_deps_count = 0;
-        if (include_control_deps)
-        {
-            for (auto cd : node->get_control_dependencies())
-            {
-                control_deps_users[cd.get()].insert(node.get());
-            }
-            control_deps_count = node->get_control_dependencies().size();
-        }
-
-        node_map[node.get()] = node;
-        size_t deps_count = node->get_arguments().size() + control_deps_count;
-        node_dependency_count[node.get()] = deps_count;
-        if (deps_count == 0)
-        {
-            independent_nodes.push_back(node.get());
-        }
-    }
-
-    list<shared_ptr<ngraph::Node>> result_list;
-    while (independent_nodes.size() > 0)
-    {
-        auto independent_node = independent_nodes.front();
-        result_list.push_back(node_map[independent_node]);
-        independent_nodes.pop_front();
-
-        for (auto user_sp : independent_node->get_users())
-        {
-            Node* user = user_sp.get();
-            node_dependency_count[user] -= 1;
-            size_t count = node_dependency_count[user];
-            if (count == 0)
-            {
-                independent_nodes.push_back(user);
-            }
-        }
-
-        if (include_control_deps)
-        {
-            auto cdit = control_deps_users.find(independent_node);
-            if (cdit != control_deps_users.end())
-                for (auto cd_user : cdit->second)
-                {
-                    node_dependency_count[cd_user] -= 1;
-                    size_t count = node_dependency_count[cd_user];
-                    if (count == 0)
-                    {
-                        independent_nodes.push_back(cd_user);
-                    }
-                }
-        }
-    }
-
-    return result_list;
 }
 
 // Check if all paths from X to a result go through Y
@@ -599,28 +530,6 @@ size_t ngraph::get_user_count(Node* node)
     return count;
 }
 
-bool ngraph::computes_result(Node* node)
-{
-    if (node->is_output())
-    {
-        return true;
-    }
-
-    // Check if node feeds a result node that has been copy eliminated
-    for (const descriptor::Output& output : node->get_outputs())
-    {
-        for (const descriptor::Input* input : output.get_inputs())
-        {
-            auto res = std::dynamic_pointer_cast<ngraph::op::Result>(input->get_node());
-            if (res && !res->needs_copy())
-            {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 bool ngraph::possibly_overwritten(Node* node)
 {
     for (const descriptor::Output& output : node->get_outputs())
@@ -633,7 +542,7 @@ bool ngraph::possibly_overwritten(Node* node)
                 {
                     for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                     {
-                        if (input->get_index() == oi_pair.input)
+                        if (input->get_index() == oi_pair.input && oi_pair.destructive)
                         {
                             return true;
                         }

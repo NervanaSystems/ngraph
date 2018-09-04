@@ -28,9 +28,7 @@ set (SRC
     descriptor/layout/dense_tensor_view_layout.cpp
     descriptor/layout/tensor_view_layout.cpp
     descriptor/output.cpp
-    descriptor/primary_tensor_view.cpp
     descriptor/tensor.cpp
-    descriptor/tensor_view.cpp
     file_util.cpp
     function.cpp
     log.cpp
@@ -40,6 +38,8 @@ set (SRC
     op/add.cpp
     op/allreduce.cpp
     op/and.cpp
+    op/argmin.cpp
+    op/argmax.cpp
     op/asin.cpp
     op/atan.cpp
     op/avg_pool.cpp
@@ -108,10 +108,8 @@ set (SRC
     op/util/binary_elementwise_arithmetic.cpp
     op/util/binary_elementwise_comparison.cpp
     op/util/binary_elementwise_logical.cpp
-    op/util/binary_elementwise.cpp
-    op/util/requires_tensor_view_args.cpp
+    op/util/index_reduction.cpp
     op/util/unary_elementwise_arithmetic.cpp
-    op/util/unary_elementwise.cpp
     pass/assign_placement.cpp
     pass/algebraic_simplification.cpp
     pass/common_function_collection.cpp
@@ -121,6 +119,7 @@ set (SRC
     pass/get_output_element_elimination.cpp
     pass/graph_rewrite.cpp
     pass/inliner.cpp
+    pass/like_replacement.cpp
     pass/liveness.cpp
     pass/manager.cpp
     pass/manager_state.cpp
@@ -146,7 +145,6 @@ set (SRC
     shape.cpp
     strides.cpp
     type/element_type.cpp
-    type/type.cpp
     util.cpp
     graph_util.cpp
     placement.cpp

@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -55,9 +55,9 @@ namespace ngraph
                     void reduce(const ElementType v, ElementType* R)
                     {
                         TensorViewPtrs inputs, outputs;
-                        ElementType p __attribute__((aligned(CPUTensorView::BufferAlignment))) = v;
-                        ElementType q __attribute__((aligned(CPUTensorView::BufferAlignment))) = *R;
-                        ElementType r __attribute__((aligned(CPUTensorView::BufferAlignment)));
+                        ElementType p __attribute__((aligned(NGRAPH_CPU_ALIGNMENT))) = v;
+                        ElementType q __attribute__((aligned(NGRAPH_CPU_ALIGNMENT))) = *R;
+                        ElementType r __attribute__((aligned(NGRAPH_CPU_ALIGNMENT)));
 
                         inputs.emplace_back(backend->create_tensor(
                             ngraph::element::from<ElementType>(), Shape{}, &p));

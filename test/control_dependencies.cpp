@@ -70,12 +70,12 @@ public:
 
         if (args.size() != 0)
         {
-            add_output(args.at(0)->get_element_type(), args.at(0)->get_shape());
+            set_output_type(0, args.at(0)->get_element_type(), args.at(0)->get_shape());
         }
         else
         {
             auto dn = *(deps.begin());
-            add_output(dn->get_element_type(), dn->get_shape());
+            set_output_type(0, dn->get_element_type(), dn->get_shape());
         }
     }
 };

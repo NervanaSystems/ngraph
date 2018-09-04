@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
@@ -46,15 +46,14 @@ namespace ngraph
                         "kernel");
                 }
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& src_layer_tensor = tensor_data[args[0].get_name()];
-                auto& src_iter_tensor = tensor_data[args[1].get_name()];
-                auto& weights_layer_tensor = tensor_data[args[2].get_name()];
-                auto& weights_iter_tensor = tensor_data[args[3].get_name()];
-                auto& bias_tensor = tensor_data[args[4].get_name()];
-                auto& dst_layer_tensor = tensor_data[out[0].get_name()];
-                auto& dst_iter_tensor = tensor_data[out[1].get_name()];
+                auto& src_layer_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& src_iter_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& weights_layer_tensor = external_function->get_tensor_data(args[2].get_name());
+                auto& weights_iter_tensor = external_function->get_tensor_data(args[3].get_name());
+                auto& bias_tensor = external_function->get_tensor_data(args[4].get_name());
+                auto& dst_layer_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& dst_iter_tensor = external_function->get_tensor_data(out[1].get_name());
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto lstm_index = mkldnn_emitter->build_rnn<ngraph::op::Lstm>(node, args, out);

@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
@@ -32,11 +32,10 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::MatmulBias)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& out0_tensor = tensor_data[out[0].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 const ngraph::op::MatmulBias* mm = static_cast<const ngraph::op::MatmulBias*>(node);
 
@@ -91,7 +90,7 @@ namespace ngraph
 
                 if (args.size() > 2)
                 {
-                    auto& arg2_tensor = tensor_data[args[2].get_name()];
+                    auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
 
                     auto axes = mm->get_broadcast_axes();
                     if (axes.size() == 1)
@@ -288,7 +287,7 @@ namespace ngraph
                 options.offset_b = offset_b;
                 options.offset_c = offset_c;
 
-                //if we were to support more groups
+                // if we were to support more groups
                 const size_t group_count = 1;
                 options.group_count = group_count;
 
@@ -316,11 +315,10 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::BatchDot)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& mat_a = tensor_data[args[0].get_name()];
-                auto& mat_b = tensor_data[args[1].get_name()];
-                auto& mat_c = tensor_data[out[0].get_name()];
+                auto& mat_a = external_function->get_tensor_data(args[0].get_name());
+                auto& mat_b = external_function->get_tensor_data(args[1].get_name());
+                auto& mat_c = external_function->get_tensor_data(out[0].get_name());
 
                 const auto* cg = static_cast<const ngraph::op::BatchDot*>(node);
 

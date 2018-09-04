@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
@@ -38,15 +38,14 @@ namespace ngraph
                 auto convolution = static_cast<const ngraph::op::Convolution*>(node);
 
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
                 auto arg0_shape = args[0].get_shape();
                 auto arg1_shape = args[1].get_shape();
                 auto result_shape = out[0].get_shape();
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -113,11 +112,10 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::ConvolutionRelu)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -145,12 +143,11 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::ConvolutionBias)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& arg2_tensor = tensor_data[args[2].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -179,12 +176,11 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::ConvolutionBiasAdd)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& arg2_tensor = tensor_data[args[2].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -215,15 +211,14 @@ namespace ngraph
                 auto convolution = static_cast<const ngraph::op::ConvolutionBackpropData*>(node);
 
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
                 auto arg0_shape = args[0].get_shape();
                 auto arg1_shape = args[1].get_shape();
                 auto result_shape = out[0].get_shape();
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -296,15 +291,14 @@ namespace ngraph
                 auto convolution = static_cast<const ngraph::op::ConvolutionBackpropFilters*>(node);
 
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
                 auto arg0_shape = args[0].get_shape();
                 auto arg1_shape = args[1].get_shape();
                 auto result_shape = out[0].get_shape();
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -375,12 +369,11 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::ConvolutionBiasBackpropFiltersBias)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& out0_tensor = tensor_data[out[0].get_name()];
-                auto& out1_tensor = tensor_data[out[1].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -409,11 +402,10 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::GroupConvolution)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 auto convolution = static_cast<const ngraph::op::GroupConvolution*>(node);
 
@@ -456,12 +448,12 @@ namespace ngraph
                             padding_below,
                             padding_above);
 
-                    //create workspace for holding the result of converting weights layouts
+                    // create workspace for holding the result of converting weights layouts
                     auto ws = std::unique_ptr<MKLDNNWorkspace>(new MKLDNNWorkspace(
                         shape_size(args[1].get_shape()) * args[1].get_element_type().size()));
                     auto ws_buf_index = mkldnn_emitter->insert_workspace(ws);
 
-                    //descriptors for reorder operation
+                    // descriptors for reorder operation
                     auto input_reorder_desc =
                         mkldnn_emitter->build_memory_descriptor(weights_shape_groups,
                                                                 args[1].get_element_type(),
@@ -477,7 +469,7 @@ namespace ngraph
                         weights_optimized_format);
 
                     auto prim_indices = mkldnn_emitter->build_group_convolution_forward(
-                        input_reorder_desc, //weights
+                        input_reorder_desc, // weights
                         input_data_desc,
                         weights_desc,
                         result_reorder_desc,
@@ -495,13 +487,13 @@ namespace ngraph
                     auto functor =
                         [&, conv_index, reorder_index, ws_buf_index](CPURuntimeContext* ctx) {
 
-                            //reorder
+                            // reorder
                             cpu::mkldnn_utils::set_memory_ptr(ctx, reorder_deps[0], arg1_tensor);
                             cpu::mkldnn_utils::set_memory_ptr(
                                 ctx, reorder_deps[1], ctx->mkldnn_workspaces[ws_buf_index]);
                             cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, reorder_index);
 
-                            //group convolution
+                            // group convolution
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                             cpu::mkldnn_utils::set_memory_ptr(
                                 ctx, deps[1], ctx->mkldnn_workspaces[ws_buf_index]);

@@ -1,22 +1,23 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <tbb/tbb_stddef.h>
 
 #include "ngraph/graph_util.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
@@ -43,6 +44,16 @@ extern "C" void delete_backend(runtime::Backend* backend)
     delete backend;
 }
 
+namespace
+{
+    static class CPUStaticInit
+    {
+    public:
+        CPUStaticInit() { runtime::BackendManager::register_backend("CPU", new_backend); }
+        ~CPUStaticInit() {}
+    } s_cpu_static_init;
+}
+
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
     const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function)
 {
@@ -67,7 +78,9 @@ bool runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func)
     if (instance.m_external_function == nullptr)
     {
         instance.m_external_function = make_shared<CPU_ExternalFunction>(func);
+#if !defined(NGRAPH_DEX_ONLY)
         instance.m_external_function->m_emit_timing = instance.m_performance_counters_enabled;
+#endif
         auto cf = instance.m_external_function->make_call_frame();
         instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
     }
@@ -95,6 +108,8 @@ void runtime::cpu::CPU_Backend::remove_compiled_function(shared_ptr<Function> fu
 {
     m_function_map.erase(func);
 }
+
+#if !defined(NGRAPH_DEX_ONLY)
 
 void runtime::cpu::CPU_Backend::enable_performance_data(shared_ptr<Function> func, bool enable)
 {
@@ -139,3 +154,5 @@ vector<runtime::PerformanceCounter>
     }
     return rc;
 }
+
+#endif

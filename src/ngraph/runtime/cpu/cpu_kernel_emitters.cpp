@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 #include <algorithm>
 #include <map>
 
@@ -71,14 +71,28 @@ vector<string>
     }
 
     vector<string> index_vars;
+    bool omp_outer = true;
     for (size_t i = 0; i < top.size(); i++)
     {
-        string index_var = writer.generate_temporary_name("_i");
+        // Skip loop for size 1 dimensions
+        if (top[i] == (new_bottom[i] + 1))
+        {
+            string index_var = writer.generate_temporary_name("_i");
+            writer << "{\n";
+            writer.indent++;
+            writer << "size_t " << index_var << " = " << new_bottom[i] << ";\n";
+            index_vars.push_back(index_var);
+        }
+        else
+        {
+            string index_var = writer.generate_temporary_name("_i");
 
-        writer << runtime::cpu::kernel::start_index_loop(index_var, new_bottom[i], top[i], i == 0);
-        writer.indent++;
-
-        index_vars.push_back(index_var);
+            writer << runtime::cpu::kernel::start_index_loop(
+                index_var, new_bottom[i], top[i], omp_outer);
+            writer.indent++;
+            index_vars.push_back(index_var);
+            omp_outer = false;
+        }
     }
 
     return index_vars;

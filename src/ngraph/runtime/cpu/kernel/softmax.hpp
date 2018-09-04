@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -96,6 +96,38 @@ namespace ngraph
                         (in - in.maximum(axes).eval().reshape(rdims).broadcast(bcast)).exp();
                     out.device(eigen::global_thread_pool_device) =
                         out * out.sum(axes).inverse().eval().reshape(rdims).broadcast(bcast);
+                }
+
+                template <typename ElementType, unsigned int Rank>
+                void softmax_innermost_1rd(void* input, void* output, const Shape& input_shape)
+                {
+                    Eigen::array<Eigen::Index, Rank> in_dims, rdims, bcast;
+                    Eigen::IndexList<Eigen::type2index<Rank - 1>> axis;
+                    rdims.fill(1);
+
+                    for (int i = 0; i < Rank; i++)
+                    {
+                        in_dims[i] = input_shape[i];
+                    }
+
+                    for (int i = 0; i < Rank - 1; i++)
+                    {
+                        rdims[i] = in_dims[i];
+                    }
+
+                    for (int i = 0; i < Rank; i++)
+                    {
+                        bcast[i] = in_dims[i] / rdims[i];
+                    }
+
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> out(
+                        static_cast<ElementType *>(output), in_dims),
+                        in(static_cast<ElementType *>(input), in_dims);
+
+                    out.device(eigen::global_thread_pool_device) =
+                        (in - in.maximum(axis).eval().reshape(rdims).broadcast(bcast)).exp();
+                    out.device(eigen::global_thread_pool_device) =
+                        out * out.sum(axis).inverse().eval().reshape(rdims).broadcast(bcast);
                 }
 
                 template <typename ElementType, unsigned int Rank>

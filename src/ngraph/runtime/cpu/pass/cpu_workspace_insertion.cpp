@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "cpu_workspace_insertion.hpp"
 #include <algorithm>
@@ -110,7 +110,7 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
         return false;
     }
 
-    //find the original MaxPool now
+    // find the original MaxPool now
     std::shared_ptr<op::MaxPool> m_max_pool;
     for (auto u : pattern_map[data]->get_users())
     {
@@ -147,7 +147,7 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
     auto max_pool_with_indices_indices =
         std::make_shared<op::GetOutputElement>(max_pool_with_indices, 1);
 
-    //rewire users to use a new MaxPoolWithIndices (maxpool's output)
+    // rewire users to use a new MaxPoolWithIndices (maxpool's output)
     for (auto& o : m_max_pool->get_outputs())
     {
         std::set<ngraph::descriptor::Input*> copy{begin(o.get_inputs()), end(o.get_inputs())};
@@ -157,7 +157,7 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
         }
     }
 
-    //create a new max_pool_with_indices_bprop
+    // create a new max_pool_with_indices_bprop
     auto max_pool_with_indices_bprop =
         std::make_shared<op::MaxPoolWithIndicesBackprop>(pattern_map[data],
                                                          pattern_map[delta],

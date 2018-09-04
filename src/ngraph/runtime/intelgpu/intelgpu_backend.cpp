@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <CPP/activation.hpp>
 #include <CPP/activation_grad.hpp>
@@ -28,6 +28,7 @@
 #include <CPP/reorder.hpp>
 #include <CPP/reshape.hpp>
 #include <CPP/scale.hpp>
+#include <CPP/softmax.hpp>
 #include <CPP/topology.hpp>
 
 #include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
@@ -36,6 +37,7 @@
 #include "ngraph/runtime/intelgpu/intelgpu_op_broadcast.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_convolution.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_op_softmax.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
 
 #include "ngraph/function.hpp"
@@ -51,12 +53,14 @@
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
+#include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter_vector.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/util.hpp"
 
@@ -141,7 +145,6 @@ static void do_pooling_operation(cldnn::topology& topology,
                                  const Shape& pool_shape,
                                  const Strides& pool_strides,
                                  const Shape& pad_below,
-                                 const Shape& pad_above,
                                  const cldnn::pooling_mode mode)
 {
     arguments_check(op, 1, 1);
@@ -375,6 +378,50 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             const cldnn::concatenation cldnn_concat(get_output_name(op), inputs, cldnn_axis);
             topology.add(cldnn_concat);
         }
+        else if ("Softmax" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const shared_ptr<op::Softmax> softmax_op = static_pointer_cast<op::Softmax>(op);
+            const AxisSet& axes = softmax_op->get_axes();
+            const size_t axes_size = axes.size();
+            const size_t shape_dim_count = get_input_shape(op, 0).size();
+
+            // clDNN has limited support for Softmax operation
+            // following are the checks to go with custom kernel
+            if ((shape_dim_count > 3) || ((shape_dim_count == 3) && (axes_size == 2)))
+            {
+                do_softmax_operation(topology,
+                                     get_input_name(op),
+                                     get_input_shape(op),
+                                     get_input_type(op),
+                                     get_output_name(op),
+                                     get_output_shape(op),
+                                     get_output_type(op),
+                                     axes);
+            }
+            else
+            {
+                cldnn::softmax::dimension_t dimension = cldnn::softmax::normalize_fyx;
+                if (axes_size == 1)
+                {
+                    size_t axes_idx = shape_dim_count - *(axes.begin()) - 1;
+                    switch (axes_idx)
+                    {
+                    case 0: dimension = cldnn::softmax::normalize_x; break;
+                    case 1: dimension = cldnn::softmax::normalize_y; break;
+                    case 2: dimension = cldnn::softmax::normalize_f; break;
+                    default:
+                        throw invalid_argument("Softmax operation: wrong axis " +
+                                               to_string(axes_idx));
+                    }
+                }
+
+                const cldnn::softmax cldnn_softmax(
+                    get_output_name(op), get_input_name(op), dimension);
+                topology.add(cldnn_softmax);
+            }
+        }
         else if ("Add" == op->description())
         {
             do_eltwise_operation(topology, op, cldnn::eltwise_mode::sum);
@@ -390,6 +437,10 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         else if ("Maximum" == op->description())
         {
             do_eltwise_operation(topology, op, cldnn::eltwise_mode::max);
+        }
+        else if ("Minimum" == op->description())
+        {
+            do_eltwise_operation(topology, op, cldnn::eltwise_mode::min);
         }
         else if ("Constant" == op->description())
         {
@@ -422,32 +473,64 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         else if ("MaxPool" == op->description())
         {
             const shared_ptr<op::MaxPool> max_pool = static_pointer_cast<op::MaxPool>(op);
-            const Shape& pool_shape = max_pool->get_window_shape();
-            const Strides& pool_strides = max_pool->get_window_movement_strides();
-            const Shape& pad_below = max_pool->get_padding_below();
-            const Shape& pad_above = max_pool->get_padding_above();
 
             do_pooling_operation(topology,
                                  op,
-                                 pool_shape,
-                                 pool_strides,
-                                 pad_below,
-                                 pad_above,
+                                 max_pool->get_window_shape(),
+                                 max_pool->get_window_movement_strides(),
+                                 max_pool->get_padding_below(),
                                  cldnn::pooling_mode::max);
+        }
+        else if ("MaxPoolBackprop" == op->description())
+        {
+            arguments_check(op, 2, 1);
+
+            const shared_ptr<op::MaxPoolBackprop> max_pool_b =
+                static_pointer_cast<op::MaxPoolBackprop>(op);
+
+            do_max_pool_backprop_operation(topology,
+                                           get_input_name(op, 0),
+                                           get_input_shape(op, 0),
+                                           get_input_name(op, 1),
+                                           get_input_shape(op, 1),
+                                           get_output_name(op),
+                                           get_output_shape(op),
+                                           get_output_type(op),
+                                           max_pool_b->get_window_shape(),
+                                           max_pool_b->get_window_movement_strides(),
+                                           max_pool_b->get_padding_below());
         }
         else if ("AvgPool" == op->description())
         {
             const shared_ptr<op::AvgPool> avg_pool = static_pointer_cast<op::AvgPool>(op);
-            const Shape& pool_shape = avg_pool->get_window_shape();
-            const Strides& pool_strides = avg_pool->get_window_movement_strides();
-            const Shape& pad_below = avg_pool->get_padding_below();
-            const Shape& pad_above = avg_pool->get_padding_above();
             const cldnn::pooling_mode mode = avg_pool->get_include_padding_in_avg_computation()
                                                  ? cldnn::pooling_mode::average
                                                  : cldnn::pooling_mode::average_no_padding;
 
-            do_pooling_operation(
-                topology, op, pool_shape, pool_strides, pad_below, pad_above, mode);
+            do_pooling_operation(topology,
+                                 op,
+                                 avg_pool->get_window_shape(),
+                                 avg_pool->get_window_movement_strides(),
+                                 avg_pool->get_padding_below(),
+                                 mode);
+        }
+        else if ("AvgPoolBackprop" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const shared_ptr<op::AvgPoolBackprop> avg_pool_b =
+                static_pointer_cast<op::AvgPoolBackprop>(op);
+
+            do_avg_pool_backprop_operation(topology,
+                                           get_input_name(op, 0),
+                                           get_input_shape(op, 0),
+                                           get_output_name(op),
+                                           get_output_shape(op),
+                                           get_output_type(op),
+                                           avg_pool_b->get_window_shape(),
+                                           avg_pool_b->get_window_movement_strides(),
+                                           avg_pool_b->get_padding_below(),
+                                           avg_pool_b->get_include_padding_in_avg_computation());
         }
         else if ("Broadcast" == op->description())
         {
@@ -459,16 +542,6 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             if (axis.empty())
             {
                 do_equal_propagation(topology, get_input_name(op), get_output_name(op));
-            }
-            else if (get_input_shape(op).empty())
-            {
-                do_bcast_sum_operation_scalar(topology,
-                                              get_input_name(op),
-                                              get_input_shape(op),
-                                              get_output_name(op),
-                                              get_output_shape(op),
-                                              get_output_type(op),
-                                              true);
             }
             else
             {
@@ -492,16 +565,6 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             if (axis.empty())
             {
                 do_equal_propagation(topology, get_input_name(op), get_output_name(op));
-            }
-            else if (get_output_shape(op).empty())
-            {
-                do_bcast_sum_operation_scalar(topology,
-                                              get_input_name(op),
-                                              get_input_shape(op),
-                                              get_output_name(op),
-                                              get_output_shape(op),
-                                              get_output_type(op),
-                                              false);
             }
             else
             {
@@ -632,6 +695,30 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             do_unary_operation(topology, op, activation_logistic);
         }
+        else if ("SigmoidBackprop" == op->description())
+        {
+            arguments_check(op, 2, 1);
+
+            do_sigmoid_backprop_operation(topology,
+                                          get_input_name(op, 0),
+                                          get_input_shape(op, 0),
+                                          get_input_name(op, 1),
+                                          get_input_shape(op, 1),
+                                          get_output_name(op),
+                                          get_output_shape(op),
+                                          get_output_type(op));
+        }
+        else if ("Not" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            do_not_operation(topology,
+                             get_input_name(op),
+                             get_input_shape(op),
+                             get_output_name(op),
+                             get_output_shape(op),
+                             get_output_type(op));
+        }
         else if ("Greater" == op->description())
         {
             do_logical_operation(topology, op, " > ");
@@ -677,7 +764,6 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             arguments_check(op, 2, 1);
 
             const shared_ptr<op::Pad> pad = static_pointer_cast<op::Pad>(op);
-            const Shape& pad_above = pad->get_padding_above();
             const Shape& pad_below = pad->get_padding_below();
             const Shape& pad_interior = pad->get_padding_interior();
 
@@ -690,6 +776,45 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                              get_output_type(op),
                              pad_below,
                              pad_interior);
+        }
+        else if ("BatchNormBackprop" == op->description())
+        {
+            arguments_check(op, 6, 3);
+
+            const shared_ptr<op::BatchNormBackprop> batch_norm =
+                static_pointer_cast<op::BatchNormBackprop>(op);
+            const double eps = batch_norm->get_eps_value();
+
+            do_create_mean(topology,
+                           get_output_name(op, 2), // d_beta
+                           get_output_type(op, 2),
+                           get_input_name(op, 5), // delta
+                           get_input_shape(op, 5),
+                           true);
+
+            do_create_variance_back(topology,
+                                    get_output_name(op, 1), // d_gamma
+                                    get_output_type(op, 1),
+                                    eps,
+                                    get_input_name(op, 2), // input
+                                    get_input_shape(op, 2),
+                                    get_input_name(op, 3),  // gamma
+                                    get_input_name(op, 4),  // beta
+                                    get_input_name(op, 5)); // delta
+
+            do_batch_norm_backprop_operation(topology,
+                                             get_input_shape(op, 2),
+                                             get_input_type(op, 2),
+                                             get_input_name(op, 0),
+                                             get_input_name(op, 1),
+                                             get_input_name(op, 2),
+                                             get_input_name(op, 3),
+                                             get_input_name(op, 4),
+                                             get_input_name(op, 5),
+                                             eps,
+                                             get_output_name(op, 0),
+                                             get_output_name(op, 1),
+                                             get_output_name(op, 2));
         }
         else if ("BatchNorm" == op->description())
         {
@@ -712,14 +837,13 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
                 do_create_mean(topology,
                                mean_name,
-                               get_input_shape(op),
                                get_output_type(op),
                                get_input_name(op, 2),
-                               get_input_shape(op, 2));
+                               get_input_shape(op, 2),
+                               false);
 
                 do_create_variance(topology,
                                    variance_name,
-                                   get_input_shape(op),
                                    get_output_type(op),
                                    get_input_name(op, 2),
                                    get_input_shape(op, 2),
@@ -738,13 +862,11 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
                 do_batch_norm_operation(topology,
                                         get_output_name(op),
-                                        get_output_shape(op),
                                         get_output_type(op),
                                         eps,
                                         get_input_name(op, 2),
                                         get_input_shape(op, 2),
                                         get_input_name(op, 0),
-                                        get_input_shape(op, 0),
                                         get_input_name(op, 1),
                                         mean_name,
                                         variance_name);
@@ -893,13 +1015,32 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                  axis,
                                  false);
         }
+        else if ("OneHot" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const shared_ptr<op::OneHot> one_hot_op = static_pointer_cast<op::OneHot>(op);
+            const size_t one_hot_axis = one_hot_op->get_one_hot_axis();
+
+            do_one_hot_operation(topology,
+                                 get_input_name(op),
+                                 get_input_shape(op),
+                                 get_input_type(op),
+                                 get_output_name(op),
+                                 get_output_shape(op),
+                                 get_output_type(op),
+                                 one_hot_axis);
+        }
         else
         {
             throw invalid_argument("IntelGPU: Unsupported operation \"" + op->description() + "\"");
         }
     }
 
-    instance.ocl_network = make_shared<cldnn::network>(*ocl_engine, topology);
+    cldnn::build_options network_build_options(cldnn::build_option::optimize_data(true));
+
+    instance.ocl_network =
+        make_shared<cldnn::network>(*ocl_engine, topology, network_build_options);
 
     return true;
 }

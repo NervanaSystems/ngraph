@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <algorithm>
 #include <cstdio>
@@ -1561,6 +1561,63 @@ TEST(cpu_fusion, batch_norm_folding)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
+TEST(cpu_fusion, affine_folding)
+{
+    Shape shape_input{1, 8, 3, 3};
+    Shape shape_weights{2, 8, 1, 1};
+    Shape shape_norm{2};
+
+    auto make_function = [shape_input, shape_weights, shape_norm]() {
+        auto input = std::make_shared<op::Parameter>(element::f32, shape_input);
+        auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
+
+        auto a = std::make_shared<op::Parameter>(element::f32, shape_norm);
+        auto b = std::make_shared<op::Parameter>(element::f32, shape_norm);
+        auto conv = std::make_shared<op::Convolution>(input, weights, Strides{1, 1}, Strides{1, 1});
+        auto out = std::make_shared<op::Add>(
+            std::make_shared<op::Multiply>(
+                conv, std::make_shared<op::Broadcast>(a, conv->get_shape(), AxisSet{0, 2, 3})),
+            std::make_shared<op::Broadcast>(b, conv->get_shape(), AxisSet{0, 2, 3}));
+        auto f = make_shared<Function>(NodeVector{out}, op::ParameterVector{input, weights, a, b});
+        return f;
+    };
+
+    auto int_f = make_function();
+    auto cpu_f = make_function();
+
+    vector<vector<float>> args{
+        {1.25f,  2.25f, 5.25f, 6.25f,  -1.25f, -1.25f, 3.25f, -4.25f, 7.25f,  8.25f,  -1.25f,
+         -1.25f, 1.25f, 2.25f, -3.25f, 2.25f,  4.25f,  4.25f, 1.25f,  2.25f,  -4.25f, 2.25f,
+         4.25f,  4.25f, 0.f,   0.f,    -1.f,   0.f,    2.f,   2.f,    0.f,    0.f,    0.f,
+         0.f,    2.f,   2.f,   1.25f,  2.25f,  5.25f,  6.25f, 1.25f,  1.25f,  3.25f,  4.25f,
+         -7.25f, 8.25f, 1.25f, -1.25f, -1.25f, 2.25f,  3.25f, 2.25f,  -4.25f, -4.25f, -1.25f,
+         -2.25f, 4.25f, 2.25f, 4.25f,  4.25f,  0.f,    0.f,   1.f,    0.f,    -2.f,   2.f,
+         0.f,    0.f,   0.f,   0.f,    -2.f,   -2.f},
+        {1.25f,
+         2.25f,
+         5.25f,
+         6.25f,
+         -1.25f,
+         -1.25f,
+         3.25f,
+         -4.25f,
+         7.25f,
+         8.25f,
+         -1.25f,
+         0.f,
+         0.f,
+         0.f,
+         0.f,
+         -2.f},
+        {-0.9384f, 0.01875f},
+        {11.0f, 1.3f},
+    };
+
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+}
+
 TEST(cpu_fusion, group_convolution_fusion)
 {
     Shape shape_a{1, 32, 2, 2};
@@ -1660,16 +1717,16 @@ TEST(cpu_fusion, group_convolution)
 
     auto av = read_vector<float>(a_);
     auto bv = read_vector<float>(b_);
-    auto c_ = backend->create_tensor(element::f32, shape_c, av.data()); //lower data
-    auto d_ = backend->create_tensor(element::f32, shape_d, bv.data()); //upper data
+    auto c_ = backend->create_tensor(element::f32, shape_c, av.data()); // lower data
+    auto d_ = backend->create_tensor(element::f32, shape_d, bv.data()); // upper data
 
     auto e_ =
-        backend->create_tensor(element::f32, shape_c, av.data() + av.size() / 2); //lower weights
+        backend->create_tensor(element::f32, shape_c, av.data() + av.size() / 2); // lower weights
     auto f_ =
-        backend->create_tensor(element::f32, shape_d, bv.data() + bv.size() / 2); //upper weights
+        backend->create_tensor(element::f32, shape_d, bv.data() + bv.size() / 2); // upper weights
 
     Shape shape_ur{1, 1, 2, 2};
-    //allocate a contigious storage for both lower and upper halves.
+    // allocate a contigious storage for both lower and upper halves.
     vector<float> erv(shape_size(shape_r), 0);
     auto lower_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(
         backend->create_tensor(element::f32, shape_ur, erv.data()));
@@ -1680,6 +1737,8 @@ TEST(cpu_fusion, group_convolution)
     ASSERT_EQ(rv, erv);
 }
 
+//TODO(Pruthvi) enable this test after MKLDNN RNN bug is fixed
+#if 0
 TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
 {
     auto src_layer = make_shared<op::Parameter>(element::f32, Shape{10, 100});
@@ -1757,6 +1816,7 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     EXPECT_TRUE(test::all_close(expected_ht, read_vector<float>(result_ht)));
     EXPECT_TRUE(test::all_close(expected_ct, read_vector<float>(result_ct)));
 }
+#endif
 
 TEST(cpu_fusion, fuse_lstm_cells)
 {
