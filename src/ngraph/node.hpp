@@ -213,6 +213,8 @@ namespace ngraph
         NodeVector get_users() const;
 
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
+        /// Use instance ids for comparison instead of memory addresses to improve determinism
+        bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
     protected:
         void set_output_size(size_t n);
 
