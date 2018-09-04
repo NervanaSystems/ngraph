@@ -61,6 +61,7 @@ set(SRC
     builder/slice.cpp
     builder/softmax.cpp
     builder/sum.cpp
+    builder/topk.cpp
     kernel/eigen_thread_pool.cpp
     kernel/pad.cpp
     kernel/reduce_max.cpp

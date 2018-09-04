@@ -34,3 +34,9 @@ max_pool_3d
 avg_pool_3d
 argmin_trivial
 argmax_trivial
+topk_max_trivial_all
+topk_max_trivial_partial
+topk_mak_trivial_one
+topk_min_trivial_all
+topk_min_trivial_partial
+topk_min_trivial_one
