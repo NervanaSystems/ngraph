@@ -157,6 +157,12 @@ namespace ngraph
                                     bool is_reversed = false);
             std::vector<size_t>
                 generate_loops(codegen::CodeWriter& writer, const Shape& shape, bool is_begin);
+            std::vector<size_t>
+                generate_loops_w_axes(codegen::CodeWriter& writer,
+                                      const Shape& shape,
+                                      bool is_begin,
+                                      const AxisSet& axis = {},
+                                      const std::string& expression = std::string());
             void gen_func_def(codegen::CodeWriter& writer,
                               const std::string& entry_point_name,
                               const std::vector<std::string>& input_types,
