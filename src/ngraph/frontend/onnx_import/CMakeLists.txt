@@ -56,6 +56,8 @@ add_library(onnx_import STATIC
         op/min.hpp
         op/mul.hpp
         op/relu.hpp
+        op/reshape.cpp
+        op/reshape.hpp
         op/softmax.cpp
         op/softmax.hpp
         op/split.cpp
