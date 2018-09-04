@@ -25,12 +25,11 @@
 using namespace ngraph;
 using namespace std;
 
-runtime::intelgpu::IntelGPUTensorView::IntelGPUTensorView(const ngraph::element::Type& element_type,
+runtime::intelgpu::IntelGPUTensorView::IntelGPUTensorView(const element::Type& element_type,
                                                           const Shape& shape,
                                                           const cldnn::engine& backend_engine,
                                                           void* memory_pointer)
-    : runtime::TensorView(std::make_shared<ngraph::descriptor::TensorView>(
-          std::make_shared<ngraph::TensorViewType>(element_type, shape), "external"))
+    : runtime::TensorView(make_shared<descriptor::TensorView>(element_type, shape, "external"))
 {
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(element_type, shape);
 
