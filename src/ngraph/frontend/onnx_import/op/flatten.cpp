@@ -38,7 +38,7 @@ namespace ngraph
                                                   "): provided axis attribute is not valid.");
                 }
 
-                return {utils::flatten(data, axis)};
+                return {reshape::flatten(data, axis)};
             }
 
         } // namespace  op

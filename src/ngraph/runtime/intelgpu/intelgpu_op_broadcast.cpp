@@ -52,50 +52,23 @@ void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
             gws = runtime::intelgpu::generate_loops(writer, output_shape, true);
 
             writer << "output" << access_dims(output_shape) << " = input0"
-                   << access_dims(output_shape, axis) << ";\n";
+                   << access_dims(output_shape, "i", axis) << ";\n";
 
             // Closing brackets for Broadcast loop
             runtime::intelgpu::generate_loops(writer, output_shape, false);
         }
         else
         {
-            gws = {1}; // non parallel version
-            // Initialize destination output by zeroes
-            size_t var_idx = 0;
-            for (auto const& i : output_shape)
-            {
-                writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
-                       << var_idx << ")\n";
-                writer.block_begin();
-                ++var_idx;
-            }
+            const string reduction_str =
+                "output" + access_dims(input_shape, "i", axis) + " = result;\n";
 
-            writer << "output" << access_dims(output_shape) << " = 0.0f;\n";
+            // Generate loops related to input order with GWS
+            gws = generate_loops_w_axes(writer, input_shape, true, axis, "float result = 0.0f;\n");
 
-            // Closing brackets for Sum initialization loop
-            for (auto const& i : output_shape)
-            {
-                writer.block_end();
-            }
+            writer << "result += input0" << access_dims(input_shape) << ";\n";
 
-            // Now do the Sum operation
-            var_idx = 0;
-            for (auto const& i : input_shape)
-            {
-                writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
-                       << var_idx << ")\n";
-                writer.block_begin();
-                ++var_idx;
-            }
-
-            writer << "output" << access_dims(input_shape, axis) << " += input0"
-                   << access_dims(input_shape) << ";\n";
-
-            // Closing brackets for Sum loop
-            for (auto const& i : input_shape)
-            {
-                writer.block_end();
-            }
+            // Close brackets related to input order with reduction
+            generate_loops_w_axes(writer, input_shape, false, axis, reduction_str);
         }
     } // End of function bracket
     writer.block_end();
@@ -164,10 +137,10 @@ void runtime::intelgpu::do_max_min_operation(cldnn::topology& topology,
             }
 
             writer << "if (input" << access_dims(input_shape) << operation << "output"
-                   << access_dims(input_shape, axis) << ")\n";
+                   << access_dims(input_shape, "i", axis) << ")\n";
             writer.block_begin();
             {
-                writer << "output" << access_dims(input_shape, axis) << " = input"
+                writer << "output" << access_dims(input_shape, "i", axis) << " = input"
                        << access_dims(input_shape) << ";\n";
             }
             writer.block_end();
@@ -241,7 +214,7 @@ void runtime::intelgpu::do_product_operation(cldnn::topology& topology,
                 ++var_idx;
             }
 
-            writer << "output" << access_dims(input_shape, axis) << " *= input"
+            writer << "output" << access_dims(input_shape, "i", axis) << " *= input"
                    << access_dims(input_shape) << ";\n";
 
             // Closing brackets for loop
