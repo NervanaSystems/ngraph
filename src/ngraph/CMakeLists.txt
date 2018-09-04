@@ -29,7 +29,6 @@ set (SRC
     descriptor/layout/tensor_view_layout.cpp
     descriptor/output.cpp
     descriptor/tensor.cpp
-    descriptor/tensor_view.cpp
     file_util.cpp
     function.cpp
     log.cpp

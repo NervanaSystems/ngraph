@@ -17,7 +17,7 @@
 #pragma once
 
 #include "ngraph/node_vector.hpp"
-#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/power.hpp"
 
 #include "core/node.hpp"
 #include "utils/broadcasting.hpp"
@@ -28,11 +28,11 @@ namespace ngraph
     {
         namespace op
         {
-            inline NodeVector mul(const Node& node)
+            inline NodeVector pow(const Node& node)
             {
                 NodeVector ng_inputs{
                     numpy_style_broadcast_for_binary_operation(node.get_ng_inputs())};
-                return {std::make_shared<ngraph::op::Multiply>(ng_inputs.at(0), ng_inputs.at(1))};
+                return {std::make_shared<ngraph::op::Power>(ng_inputs.at(0), ng_inputs.at(1))};
             }
 
         } // namespace op

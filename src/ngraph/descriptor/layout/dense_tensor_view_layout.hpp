@@ -25,7 +25,7 @@ namespace ngraph
 {
     namespace descriptor
     {
-        class TensorView;
+        class Tensor;
 
         namespace layout
         {
@@ -36,7 +36,7 @@ namespace ngraph
             {
             public:
                 ~DenseTensorViewLayout() override {}
-                DenseTensorViewLayout(const TensorView& tensor_view);
+                DenseTensorViewLayout(const Tensor& tensor);
 
                 virtual size_t get_size() override { return m_size; }
                 size_t get_offset() const { return m_offset; }
