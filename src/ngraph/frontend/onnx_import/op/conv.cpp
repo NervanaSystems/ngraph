@@ -106,7 +106,7 @@ namespace ngraph
                 auto data = inputs.at(0);
                 auto filters = inputs.at(1);
 
-                int groups{node.get_attribute_value<int>("group", 1)};
+                int64_t groups{node.get_attribute_value<int64_t>("group", 1)};
 
                 // TODO: update to ASSERTION CHECK
                 if (groups < 0 || groups > data->get_shape().at(1) ||
