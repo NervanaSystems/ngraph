@@ -159,6 +159,99 @@ vector<size_t> runtime::intelgpu::generate_loops(codegen::CodeWriter& writer,
     return gws;
 }
 
+vector<size_t> runtime::intelgpu::generate_loops_w_axes(codegen::CodeWriter& writer,
+                                                        const Shape& shape,
+                                                        bool is_begin,
+                                                        const AxisSet& axis,
+                                                        const string& expression)
+{
+    const size_t cldnn_gws_lim = 3;
+    vector<size_t> gws;
+    size_t var_idx = 0;
+    size_t dim_idx = 0;
+
+    if (is_begin)
+    {
+        for (auto const& i : shape)
+        {
+            if (axis.find(var_idx) == axis.end())
+            {
+                if (dim_idx < cldnn_gws_lim)
+                {
+                    writer << "const unsigned i" << var_idx << " = get_global_id(" << dim_idx
+                           << "); /* trip count " << i << "*/\n";
+                    gws.push_back(i);
+                    ++dim_idx;
+                }
+                else
+                {
+                    writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i
+                           << "; ++i" << var_idx << ")\n";
+                    writer.block_begin();
+                }
+            }
+            ++var_idx;
+        }
+
+        if (!expression.empty())
+        {
+            writer << expression;
+        }
+
+        var_idx = 0;
+        for (auto const& i : shape)
+        {
+            if (axis.find(var_idx) != axis.end())
+            {
+                writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
+                       << var_idx << ")\n";
+                writer.block_begin();
+            }
+            ++var_idx;
+        }
+    }
+    else
+    { // is_begin == false
+        for (auto const& i : shape)
+        {
+            if (axis.find(var_idx) != axis.end())
+            {
+                writer.block_end();
+            }
+            ++var_idx;
+        }
+
+        if (!expression.empty())
+        {
+            writer << expression;
+        }
+
+        var_idx = 0;
+        for (auto const& i : shape)
+        {
+            if (axis.find(var_idx) == axis.end())
+            {
+                if (dim_idx < cldnn_gws_lim)
+                {
+                    ++dim_idx;
+                }
+                else
+                {
+                    writer.block_end();
+                }
+            }
+            ++var_idx;
+        }
+    }
+
+    if (gws.empty())
+    {
+        gws.push_back(1);
+    }
+
+    return gws;
+}
+
 static string access_dims_strided(const Shape& dimentions,
                                   const Shape& pad_below,
                                   const Shape& pad_interior,
