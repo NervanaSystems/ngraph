@@ -22,23 +22,22 @@ using namespace ngraph;
 using namespace std;
 
 descriptor::Tensor::Tensor(const element::Type& element_type,
-                           TensorView* tensor_view,
-                           const string& name)
+                           const Shape& shape,
+                           const std::string& name)
     : m_element_type(element_type)
-    , m_tensor_view(tensor_view)
-    , m_name{name}
-    , m_next_view_id{0}
+    , m_shape(shape)
+    , m_name(name)
 {
 }
 
-string descriptor::Tensor::make_tensor_name(const Node* node, size_t value_index)
+void descriptor::Tensor::set_tensor_view_type(const element::Type& element_type, const Shape& shape)
 {
-    return node->get_name() + "_" + to_string(value_index);
-}
-
-string descriptor::Tensor::get_next_view_name()
-{
-    return m_name + "_TV" + to_string(m_next_view_id++);
+    m_shape = shape;
+    m_element_type = element_type;
+    if (nullptr != m_tensor_view_layout)
+    {
+        m_tensor_view_layout->set_tensor_view_type(element_type, shape);
+    }
 }
 
 void descriptor::Tensor::set_pool_offset(size_t offset)
@@ -53,19 +52,14 @@ size_t descriptor::Tensor::get_pool_offset() const
 
 size_t descriptor::Tensor::size() const
 {
-    if (auto tvl = m_tensor_view->get_tensor_view_layout())
+    if (auto tvl = get_tensor_view_layout())
     {
         return tvl->get_allocated_size();
     }
     else
     {
-        return shape_size(m_tensor_view->get_shape()) * m_element_type.size();
+        return shape_size(get_shape()) * m_element_type.size();
     }
-}
-
-void descriptor::Tensor::set_element_type(const element::Type& element_type)
-{
-    m_element_type = element_type;
 }
 
 ostream& operator<<(ostream& out, const descriptor::Tensor& tensor)

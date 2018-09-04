@@ -16,36 +16,27 @@
 
 #pragma once
 
-#include <memory>
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/power.hpp"
 
-#include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/type/element_type.hpp"
+#include "core/node.hpp"
+#include "utils/broadcasting.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace onnx_import
     {
-        namespace gpu
+        namespace op
         {
-            class GPU_TensorViewWrapper;
-        }
-    }
-}
+            inline NodeVector pow(const Node& node)
+            {
+                NodeVector ng_inputs{
+                    numpy_style_broadcast_for_binary_operation(node.get_ng_inputs())};
+                return {std::make_shared<ngraph::op::Power>(ng_inputs.at(0), ng_inputs.at(1))};
+            }
 
-class ngraph::runtime::gpu::GPU_TensorViewWrapper
-{
-public:
-    GPU_TensorViewWrapper(const std::shared_ptr<descriptor::Tensor>&,
-                          const std::string& alias = "");
+        } // namespace op
 
-    size_t get_size() const;
-    const Shape& get_shape() const;
-    const Strides& get_strides() const;
-    const element::Type& get_element_type() const;
-    const std::string& get_name() const;
-    const std::string& get_type() const;
+    } // namespace onnx_import
 
-private:
-    std::shared_ptr<descriptor::Tensor> m_tensor;
-    std::string m_alias;
-};
+} // namespace ngraph

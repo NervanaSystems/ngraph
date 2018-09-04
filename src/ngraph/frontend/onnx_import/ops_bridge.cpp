@@ -33,6 +33,7 @@
 #include "op/mean.hpp"
 #include "op/min.hpp"
 #include "op/mul.hpp"
+#include "op/pow.hpp"
 #include "op/relu.hpp"
 #include "op/reshape.hpp"
 #include "op/softmax.hpp"
@@ -101,6 +102,7 @@ namespace ngraph
                     m_map.emplace("Mean", std::bind(op::mean, std::placeholders::_1));
                     m_map.emplace("Min", std::bind(op::min, std::placeholders::_1));
                     m_map.emplace("Mul", std::bind(op::mul, std::placeholders::_1));
+                    m_map.emplace("Pow", std::bind(op::pow, std::placeholders::_1));
                     m_map.emplace("Relu", std::bind(op::relu, std::placeholders::_1));
                     m_map.emplace("Reshape", std::bind(op::reshape, std::placeholders::_1));
                     m_map.emplace("Softmax", std::bind(op::softmax, std::placeholders::_1));

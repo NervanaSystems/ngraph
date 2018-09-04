@@ -117,11 +117,13 @@ namespace ngraph
 
                 template <typename T>
                 size_t build_reduce(const std::vector<std::string>& dtypes,
-                                    NVShape tensor_shape,
+                                    const size_t data_bytes,
+                                    NVShape input_shape,
                                     NVShape reduce_axis)
                 {
                     return build_reduce(dtypes,
-                                        tensor_shape,
+                                        data_bytes,
+                                        input_shape,
                                         reduce_axis,
                                         CudaOpMap<T>::op,
                                         CudaOpMap<T>::math_kernel);
@@ -194,10 +196,31 @@ namespace ngraph
                                                     const char* reduce_op,
                                                     bool save_elementwise);
                 size_t build_reduce(const std::vector<std::string>& dtypes,
-                                    NVShape tensor_shape,
+                                    const size_t data_bytes,
+                                    NVShape input_shape,
                                     NVShape reduce_axis,
                                     const char* op,
                                     const char* kernel);
+                size_t build_reduce_to_nd(const std::vector<std::string>& dtypes,
+                                          NVShape input_shape,
+                                          NVShape reduce_axis,
+                                          const char* op,
+                                          const char* kernel);
+                size_t build_reduce_to_scalar(const std::vector<std::string>& dtypes,
+                                              const size_t data_bytes,
+                                              NVShape input_shape,
+                                              const char* op,
+                                              const char* kernel);
+
+                //This is the preprocess for reduce to scalar if the data size is large than a number.
+                //The number can be tuned based on hardware.
+                //This cuda kernel will accumulate reduction to a certain number of bins depends on hardware.
+                size_t build_reduce_to_scalar_acc(const std::vector<std::string>& dtypes,
+                                                  NVShape input_shape,
+                                                  NVShape output_shape,
+                                                  uint32_t block_size_x,
+                                                  const char* op,
+                                                  const char* kernel);
                 GPUPrimitiveEmitter* m_primitive_emitter;
                 GPURuntimeContext* m_ctx;
             };
