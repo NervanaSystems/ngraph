@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -60,7 +60,7 @@ namespace ngraph
 
             ValueInfo() = delete;
             explicit ValueInfo(const onnx::ValueInfoProto& value_info_proto)
-                : m_value_info_proto{value_info_proto}
+                : m_value_info_proto{&value_info_proto}
             {
                 if (value_info_proto.type().has_tensor_type())
                 {
@@ -74,15 +74,15 @@ namespace ngraph
             ValueInfo& operator=(const ValueInfo&) = delete;
             ValueInfo& operator=(ValueInfo&&) = delete;
 
-            const std::string& get_name() const { return m_value_info_proto.name(); }
+            const std::string& get_name() const { return m_value_info_proto->name(); }
             const Shape& get_shape() const { return m_shape; }
             const element::Type& get_element_type() const
             {
-                if (!m_value_info_proto.type().tensor_type().has_elem_type())
+                if (!m_value_info_proto->type().tensor_type().has_elem_type())
                 {
                     throw error::value_info::unspecified_element_type{};
                 }
-                switch (m_value_info_proto.type().tensor_type().elem_type())
+                switch (m_value_info_proto->type().tensor_type().elem_type())
                 {
                 case onnx::TensorProto_DataType::TensorProto_DataType_BOOL: return element::boolean;
                 case onnx::TensorProto_DataType::TensorProto_DataType_FLOAT:
@@ -98,7 +98,7 @@ namespace ngraph
                 case onnx::TensorProto_DataType::TensorProto_DataType_UINT64: return element::u64;
                 default:
                     throw error::value_info::unsupported_element_type{
-                        m_value_info_proto.type().tensor_type().elem_type()};
+                        m_value_info_proto->type().tensor_type().elem_type()};
                 }
             }
 
@@ -126,7 +126,7 @@ namespace ngraph
 
             std::shared_ptr<op::Constant> get_ng_constant(const Tensor& tensor) const
             {
-                switch (m_value_info_proto.type().tensor_type().elem_type())
+                switch (m_value_info_proto->type().tensor_type().elem_type())
                 {
                 case onnx::TensorProto_DataType::TensorProto_DataType_BOOL:
                     return make_ng_constant<bool>(element::boolean, tensor);
@@ -153,7 +153,7 @@ namespace ngraph
                     return make_ng_constant<uint64_t>(element::u64, tensor);
                 default:
                     throw error::value_info::unsupported_element_type{
-                        m_value_info_proto.type().tensor_type().elem_type()};
+                        m_value_info_proto->type().tensor_type().elem_type()};
                 }
             }
 
@@ -165,7 +165,7 @@ namespace ngraph
             }
 
         private:
-            const onnx::ValueInfoProto& m_value_info_proto;
+            const onnx::ValueInfoProto* m_value_info_proto;
             Shape m_shape;
         };
 

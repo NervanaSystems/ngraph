@@ -43,6 +43,10 @@ endif()
 
 project (ngraph)
 
+if (UNIX AND NOT APPLE)
+    set(LINUX TRUE)
+endif()
+
 SET(GCC_MIN_VERSION 4.8)
 SET(CLANG_MIN_VERSION 3.8)
 SET(APPLE_CLANG_MIN_VERSION 8.1)
@@ -102,8 +106,14 @@ endif()
 # Installation logic...
 #-----------------------------------------------------------------------------------------------
 
-if (NOT APPLE AND NOT WIN32)
+if (LINUX)
+    include(GNUInstallDirs)
     include(cmake/platform.cmake)
+else()
+    set(CMAKE_INSTALL_BINDIR "bin")
+    set(CMAKE_INSTALL_INCLUDEDIR "include")
+    set(CMAKE_INSTALL_DOCDIR "doc")
+    set(CMAKE_INSTALL_LIBDIR "lib")
 endif()
 
 if (DEFINED NGRAPH_INSTALL_PREFIX)
@@ -112,10 +122,10 @@ endif()
 message(STATUS "Installation directory: ${CMAKE_INSTALL_PREFIX}")
 
 # Destinations
-set(NGRAPH_INSTALL_LIB "${CMAKE_INSTALL_PREFIX}/lib")
-set(NGRAPH_INSTALL_INCLUDE "${CMAKE_INSTALL_PREFIX}/include")
-set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/doc")
-set(NGRAPH_INSTALL_BIN "${CMAKE_INSTALL_PREFIX}/bin")
+set(NGRAPH_INSTALL_LIB "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+set(NGRAPH_INSTALL_INCLUDE "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
+set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DOCDIR}")
+set(NGRAPH_INSTALL_BIN "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}")
 set(CMAKE_INSTALL_RPATH "$ORIGIN")
 
 #-----------------------------------------------------------------------------------------------
@@ -129,6 +139,13 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if (DEFINED NGRAPH_USE_CXX_ABI)
+        message( STATUS "nGraph using CXX11 ABI: " ${NGRAPH_USE_CXX_ABI} )
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI}")
+    endif()    
+endif()
 
 ngraph_var(NGRAPH_WARNINGS_AS_ERRORS DEFAULT "OFF")
 if (${NGRAPH_WARNINGS_AS_ERRORS})
@@ -271,4 +288,7 @@ else()
     message(STATUS "unit tests disabled")
 endif()
 
-add_subdirectory(doc)
+if (NGRAPH_DOC_BUILD_ENABLE)
+    add_subdirectory(doc)
+endif()
+

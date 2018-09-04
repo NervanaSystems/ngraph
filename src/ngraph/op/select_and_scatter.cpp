@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/function.hpp"
@@ -30,12 +30,14 @@ op::SelectAndScatter::SelectAndScatter(const shared_ptr<Node>& arg_selectee,
                                        const shared_ptr<Function>& scatter_function,
                                        const Shape& window_shape,
                                        const Strides& window_movement_strides)
-    : RequiresTensorViewArgs("SelectAndScatter", {arg_selectee, arg_source, arg_init})
+    : Op("SelectAndScatter", check_single_output_args({arg_selectee, arg_source, arg_init}))
     , m_selection_function(selection_function)
     , m_scatter_function(scatter_function)
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
 {
+    constructor_validate_and_infer_types();
+
     auto& input_selectee = get_inputs().at(0);
     auto& input_source = get_inputs().at(1);
     auto& input_init = get_inputs().at(2);
@@ -215,15 +217,12 @@ op::SelectAndScatter::SelectAndScatter(const shared_ptr<Node>& arg_selectee,
     //
     // Result type is the same element type and shape as the selectee.
     //
-    set_value_type_checked(input_selectee_element_type, input_selectee_shape);
+    set_output_type(0, input_selectee_element_type, input_selectee_shape);
 }
 
 shared_ptr<Node> op::SelectAndScatter::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 3)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     auto node = make_shared<SelectAndScatter>(new_args.at(0),
                                               new_args.at(1),
                                               new_args.at(2),

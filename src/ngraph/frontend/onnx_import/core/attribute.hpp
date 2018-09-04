@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -38,8 +38,8 @@ namespace ngraph
                 {
                     struct Attribute : ngraph_error
                     {
-                        Attribute(std::string msg, onnx::AttributeProto_AttributeType type)
-                            : ngraph_error{std::move(msg) + ": " +
+                        Attribute(const std::string& msg, onnx::AttributeProto_AttributeType type)
+                            : ngraph_error{msg + ": " +
                                            onnx::AttributeProto_AttributeType_Name(type)}
                         {
                         }
@@ -246,7 +246,7 @@ namespace ngraph
 
             Attribute() = delete;
             explicit Attribute(const onnx::AttributeProto& attribute_proto)
-                : m_attribute_proto{attribute_proto}
+                : m_attribute_proto{&attribute_proto}
             {
             }
 
@@ -256,8 +256,8 @@ namespace ngraph
             Attribute& operator=(Attribute&&) noexcept = delete;
             Attribute& operator=(const Attribute&) = delete;
 
-            const std::string& get_name() const { return m_attribute_proto.name(); }
-            Type get_type() const { return static_cast<Type>(m_attribute_proto.type()); }
+            const std::string& get_name() const { return m_attribute_proto->name(); }
+            Type get_type() const { return static_cast<Type>(m_attribute_proto->type()); }
             bool is_tensor() const { return get_type() == Type::tensor; }
             bool is_tensor_array() const { return get_type() == Type::tensor_array; }
             bool is_float() const { return get_type() == Type::float_point; }
@@ -268,50 +268,50 @@ namespace ngraph
             bool is_string_array() const { return get_type() == Type::string_array; }
             bool is_graph() const { return get_type() == Type::graph; }
             bool is_graph_array() const { return get_type() == Type::graph_array; }
-            Tensor get_tensor() const { return Tensor{m_attribute_proto.t()}; }
-            float get_float() const { return m_attribute_proto.f(); }
-            int64_t get_integer() const { return m_attribute_proto.i(); }
-            const std::string& get_string() const { return m_attribute_proto.s(); }
+            Tensor get_tensor() const { return Tensor{m_attribute_proto->t()}; }
+            float get_float() const { return m_attribute_proto->f(); }
+            int64_t get_integer() const { return m_attribute_proto->i(); }
+            const std::string& get_string() const { return m_attribute_proto->s(); }
             Graph get_graph() const;
 
             std::vector<Tensor> get_tensor_array() const
             {
-                return {std::begin(m_attribute_proto.tensors()),
-                        std::end(m_attribute_proto.tensors())};
+                return {std::begin(m_attribute_proto->tensors()),
+                        std::end(m_attribute_proto->tensors())};
             }
 
             std::vector<float> get_float_array() const
             {
-                return {std::begin(m_attribute_proto.floats()),
-                        std::end(m_attribute_proto.floats())};
+                return {std::begin(m_attribute_proto->floats()),
+                        std::end(m_attribute_proto->floats())};
             }
 
             std::vector<int64_t> get_integer_array() const
             {
-                return {std::begin(m_attribute_proto.ints()), std::end(m_attribute_proto.ints())};
+                return {std::begin(m_attribute_proto->ints()), std::end(m_attribute_proto->ints())};
             }
 
             std::vector<std::string> get_string_array() const
             {
-                return {std::begin(m_attribute_proto.strings()),
-                        std::end(m_attribute_proto.strings())};
+                return {std::begin(m_attribute_proto->strings()),
+                        std::end(m_attribute_proto->strings())};
             }
 
             std::vector<Graph> get_graph_array() const;
 
             /* explicit */ operator onnx::AttributeProto_AttributeType() const
             {
-                return m_attribute_proto.type();
+                return m_attribute_proto->type();
             }
 
             template <typename T>
             T get_value() const
             {
-                return detail::attribute::get_value<T>(m_attribute_proto);
+                return detail::attribute::get_value<T>(*m_attribute_proto);
             }
 
         private:
-            const onnx::AttributeProto& m_attribute_proto;
+            const onnx::AttributeProto* m_attribute_proto;
         };
 
     } // namespace onnx_import

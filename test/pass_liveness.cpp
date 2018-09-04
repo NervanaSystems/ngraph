@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <memory>
 #include <sstream>
@@ -51,13 +51,13 @@ TEST(liveness, constant)
     EXPECT_EQ(0, sorted[0]->liveness_new_list.size());
     EXPECT_EQ(0, sorted[0]->liveness_free_list.size());
 
-    //op::Negative is live on output to op::Result
-    //op::Negative is new
+    // op::Negative is live on output to op::Result
+    // op::Negative is new
     EXPECT_EQ(1, sorted[1]->liveness_new_list.size());
     EXPECT_EQ(0, sorted[1]->liveness_free_list.size());
 
-    //op::Negative is live on input to op::Result
+    // op::Negative is live on input to op::Result
     EXPECT_EQ(0, sorted[2]->liveness_new_list.size());
-    //op::Negative is freed
+    // op::Negative is freed
     EXPECT_EQ(1, sorted[2]->liveness_free_list.size());
 }

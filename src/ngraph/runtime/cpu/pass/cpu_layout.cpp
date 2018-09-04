@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <algorithm>
 #include <memory>
@@ -173,8 +173,8 @@ void runtime::cpu::pass::CPULayout::set_native_layouts(
     {
         const auto& output = input.get_output();
         auto tv = output.get_tensor_view();
-        auto et = tv->get_tensor_view_type()->get_element_type();
-        auto shape = tv->get_tensor_view_type()->get_shape();
+        auto et = tv->get_element_type();
+        auto shape = tv->get_shape();
         auto tvl = tv->get_tensor_view_layout();
         auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
 
@@ -242,8 +242,8 @@ void runtime::cpu::pass::CPULayout::set_native_layouts(
             continue;
         }
 
-        auto shape = tv->get_tensor_view_type()->get_shape();
-        auto et = tv->get_tensor_view_type()->get_element_type();
+        auto shape = tv->get_shape();
+        auto et = tv->get_element_type();
         auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
         if (mkldnn_utils::can_create_mkldnn_md(shape, layout->get_strides(), et))
         {
@@ -364,7 +364,7 @@ namespace ngraph
 
                     if (default_weights_format)
                     {
-                        //note, we need the original shape (4D) while arg_shape1 is redefined
+                        // note, we need the original shape (4D) while arg_shape1 is redefined
                         i_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
                             node.get(), 1, false, memory::format::oihw));
                     }
@@ -1243,7 +1243,7 @@ namespace ngraph
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        //ensure delta and input have same layout
+                        // ensure delta and input have same layout
                         i_mds.push_back(input_md);
                         i_mds.push_back(input_md);
                         o_mds.push_back(input_md);

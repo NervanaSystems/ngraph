@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "sigmoid_mul.hpp"
 #include "ngraph/log.hpp"
@@ -56,8 +56,10 @@ op::SigmoidMultiply::SigmoidMultiply(shared_ptr<Node> input_0,
                                      shared_ptr<Node> input_1,
                                      const FunctionType input_0_type,
                                      const FunctionType input_1_type)
-    : RequiresTensorViewArgs("SigmoidMultiply", {input_0, input_1})
+    : Op("SigmoidMultiply", check_single_output_args({input_0, input_1}))
 {
+    constructor_validate_and_infer_types();
+
     if (input_0->get_element_type() != input_1->get_element_type())
     {
         throw ngraph_error("SigmoidMultiply input element type mismatch");
@@ -72,7 +74,7 @@ op::SigmoidMultiply::SigmoidMultiply(shared_ptr<Node> input_0,
     m_input_type[0] = input_0_type;
     m_input_type[1] = input_1_type;
 
-    add_output(input_0->get_element_type(), input_0->get_shape());
+    set_output_type(0, input_0->get_element_type(), input_0->get_shape());
 }
 
 shared_ptr<Node> op::SigmoidMultiply::copy_with_new_args(const NodeVector& new_args) const
@@ -107,9 +109,11 @@ op::SigmoidMultiplyBackprop::SigmoidMultiplyBackprop(std::shared_ptr<Node> input
                                                      std::shared_ptr<Node> input_1,
                                                      shared_ptr<Node> delta,
                                                      const std::array<FunctionType, 2>& input_type)
-    : RequiresTensorViewArgs("SigmoidMultiplyBackprop", {input_0, input_1, delta})
+    : Op("SigmoidMultiplyBackprop", check_single_output_args({input_0, input_1, delta}))
     , m_input_type(input_type)
 {
+    constructor_validate_and_infer_types();
+
     if (input_0->get_element_type() != input_1->get_element_type())
     {
         throw ngraph_error("Argument element types for SigmoidMultiply backprop do not match");
@@ -127,8 +131,9 @@ op::SigmoidMultiplyBackprop::SigmoidMultiplyBackprop(std::shared_ptr<Node> input
     {
         throw ngraph_error("Argument and delta shape for SigmoidMultiply backprop do not match");
     }
-    add_output(get_input_element_type(0), get_input_shape(0));
-    add_output(get_input_element_type(1), get_input_shape(1));
+    set_output_size(2);
+    set_output_type(0, get_input_element_type(0), get_input_shape(0));
+    set_output_type(1, get_input_element_type(1), get_input_shape(1));
 }
 
 shared_ptr<Node> op::SigmoidMultiplyBackprop::copy_with_new_args(const NodeVector& new_args) const
