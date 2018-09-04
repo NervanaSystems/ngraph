@@ -25,6 +25,26 @@ namespace ngraph
 {
     namespace onnx_import
     {
+        /// \brief Cast shape of two nodes to make them compatible for an element-wise binary operation.
+        ///
+        /// \param left Node which contain input of binary op.
+        /// \param right Node which contain input of binary op.
+        ///
+        /// \return Left and right node after broadcasting.
+        NodeVector
+            numpy_style_broadcast_for_binary_operation(const std::shared_ptr<ngraph::Node>& left,
+                                                       const std::shared_ptr<ngraph::Node>& right);
+
+        /// \brief Cast shape of two nodes to make them compatible for an element-wise binary operation.
+        ///
+        /// \param inputs Left and right node (inputs of the binary op).
+        ///
+        /// \return Left and right node after broadcasting.
+        inline NodeVector numpy_style_broadcast_for_binary_operation(NodeVector inputs)
+        {
+            return numpy_style_broadcast_for_binary_operation(inputs.at(0), inputs.at(1));
+        }
+
         /// \brief Generate a list of broadcast axes.
         ///
         /// \details Informally, a broadcast "adds" axes to the input tensor, replicating
