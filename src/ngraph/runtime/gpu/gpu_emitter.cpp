@@ -851,21 +851,6 @@ namespace ngraph
                         {
                             kernel::emit_memcpyDtD(writer, out[0], args[0]);
                         }
-                        else if (out[0].get_shape().size() == 0)
-                        {
-                            auto& cudnn_emitter =
-                                external_function->get_primitive_emitter()->get_cudnn_emitter();
-                            auto sum_index =
-                                cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_ADD,
-                                                                    out[0].get_type(),
-                                                                    args[0].get_shape(),
-                                                                    sum->get_reduction_axes());
-
-                            writer << "gpu::invoke_primitive(ctx, " << sum_index << ", ";
-                            writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                            writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                            writer << ");\n";
-                        }
                         else
                         {
                             auto axes_set = sum->get_reduction_axes();
@@ -880,7 +865,10 @@ namespace ngraph
                             auto& cuda_emitter =
                                 external_function->get_primitive_emitter()->get_cuda_emitter();
                             auto sum_index = cuda_emitter->build_reduce<ngraph::op::Add>(
-                                dtypes, args[0].get_shape(), axes_vec);
+                                dtypes,
+                                out[0].get_element_type().size(),
+                                args[0].get_shape(),
+                                axes_vec);
 
                             writer << "gpu::invoke_primitive(ctx, " << sum_index << ", ";
                             writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";

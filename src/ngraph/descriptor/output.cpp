@@ -21,10 +21,10 @@
 using namespace std;
 using namespace ngraph;
 
-descriptor::Output::Output(Node* node, size_t index, const shared_ptr<TensorView>& tensor_view)
+descriptor::Output::Output(Node* node, size_t index, const shared_ptr<Tensor>& tensor)
     : m_node(node)
     , m_index(index)
-    , m_tensor_view(tensor_view)
+    , m_tensor(tensor)
 {
 }
 
@@ -46,15 +46,15 @@ shared_ptr<Node> descriptor::Output::get_node() const
 
 descriptor::Tensor& descriptor::Output::get_tensor() const
 {
-    return m_tensor_view->get_tensor();
+    return *m_tensor;
 }
 
 const Shape& descriptor::Output::get_shape() const
 {
-    return m_tensor_view->get_shape();
+    return m_tensor->get_shape();
 }
 
 const element::Type& descriptor::Output::get_element_type() const
 {
-    return m_tensor_view->get_element_type();
+    return m_tensor->get_element_type();
 }
