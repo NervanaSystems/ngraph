@@ -2422,6 +2422,29 @@ namespace ngraph
                     writer << "                         {" << join(out[0].get_shape()) << "});\n";
                 }
 #else
+                //TODO: check if this is inplace
+                // if yes, then call a (newly written )emit_replace_slice inplace
+                // if it is not then call the original emit_replace_slice. 
+                // when calling emit_replace_slice_inplace, it will save 1 copy from in0 to out
+                std::cout << "GD: a0 = " << args[0].get_name() << ", out0 = " << out[0].get_name();
+                if (args[0].get_name() == out[0].get_name())
+                {
+                    std::cout << "\nGD: this is inplace emit. Use in-place emit \n";
+                }
+                else
+                    std::cout << "\nGD: this is NOT inplace emit \n";
+
+                //auto in_off = args[0].get_tensor()->get_pool_offset();
+                //auto out_off = args[1].get_tensor()->get_pool_offset();
+
+                //size_t out_off = &node->get_outputs().at(0).get_pool_tensor();
+                //size_t in_off = &node->get_inputs().at(0).get_pool_tensor();
+                //cout << "GD: in_off= " << in_off << ", out_off= " << out_off << "\n";
+
+                //size_t offset = in_place_outputs.count(tensor)
+                //                ? in_place_outputs.at(tensor)->get_pool_offset()
+
+
                 kernel::emit_replace_slice(writer,
                                            args[0].get_element_type().c_type_string(),
                                            args[0].get_name(),

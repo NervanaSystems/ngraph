@@ -60,6 +60,7 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
                     {
                         in_place_outputs.insert({output, input});
                         reused_inputs.insert(input);
+                        std::cout << "GD: MemoryLayout is inplace, Node name = " << node->get_name() << "\n";
                     }
                 }
             }
@@ -72,6 +73,7 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
                                 : mm.allocate(tensor->size());
 
             tensor->set_pool_offset(offset);
+            std::cout <<" GD: offset = " << offset << ", node = " << node->get_name() <<" \n";
         }
 
         if (!m_disable_memory_sharing)

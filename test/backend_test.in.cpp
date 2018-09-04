@@ -3925,6 +3925,31 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_matrix)
     backend->call_with_validate(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{1, 102, 103, 4, 5, 106, 107, 8, 9, 110, 111, 12, 13, 14, 15, 16}),
               read_vector<float>(result));
+
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, replace_slice_matrix_inplace)
+{
+    Shape shape_a{4, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{3, 2};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{4, 4};
+    auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{0, 1}, Coordinate{3, 3});
+    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, vector<float>{102, 103, 106, 107, 110, 111});
+    //auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call_with_validate(f, {a}, {a, b});
+    EXPECT_EQ((vector<float>{1, 102, 103, 4, 5, 106, 107, 8, 9, 110, 111, 12, 13, 14, 15, 16}),
+              read_vector<float>(a));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, replace_slice_vector)
