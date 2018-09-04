@@ -14,18 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#pragma once
 
-#include "ngraph/op/util/binary_elementwise.hpp"
-#include "pyngraph/ops/util/binary_elementwise.hpp"
+#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_util_BinaryElementwise(py::module m)
-{
-    py::class_<ngraph::op::util::BinaryElementwise,
-               std::shared_ptr<ngraph::op::util::BinaryElementwise>,
-               ngraph::op::util::RequiresTensorViewArgs>
-        binaryElementwise(m, "BinaryElementwise ");
-}
+void regmodule_pyngraph_onnx_import(py::module m);

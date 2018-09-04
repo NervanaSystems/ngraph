@@ -18,19 +18,21 @@
 
 #include <memory>
 
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class Result : public util::RequiresTensorViewArgs
+        class Result : public Op
         {
         public:
             /// \brief Constructs an arcsin operation.
             ///
             /// \param arg Node that produces the input tensor.
             Result(const std::shared_ptr<Node>& arg);
+
+            void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/op/util/binary_elementwise.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
@@ -43,7 +43,7 @@ namespace ngraph
             /// | Type                   | Description                                                                                                                                                                                            |
             /// | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
             /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg0}[i_1,\dots,i_n],\texttt{arg1}[i_1,\dots,i_n])\f$. This will always have the same shape and element type as the input tensors. |
-            class BinaryElementwiseArithmetic : public BinaryElementwise
+            class BinaryElementwiseArithmetic : public Op
             {
             public:
                 /// \brief Constructs a binary elementwise arithmetic operation.
@@ -53,6 +53,8 @@ namespace ngraph
                 BinaryElementwiseArithmetic(const std::string& node_type,
                                             const std::shared_ptr<Node>& arg0,
                                             const std::shared_ptr<Node>& arg1);
+
+                void validate_and_infer_types() override;
             };
         }
     }

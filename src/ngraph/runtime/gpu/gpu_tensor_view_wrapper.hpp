@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "ngraph/descriptor/tensor_view.hpp"
+#include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/type/element_type.hpp"
 
 namespace ngraph
@@ -35,7 +35,7 @@ namespace ngraph
 class ngraph::runtime::gpu::GPU_TensorViewWrapper
 {
 public:
-    GPU_TensorViewWrapper(const std::shared_ptr<descriptor::TensorView>&,
+    GPU_TensorViewWrapper(const std::shared_ptr<descriptor::Tensor>&,
                           const std::string& alias = "");
 
     size_t get_size() const;
@@ -46,6 +46,6 @@ public:
     const std::string& get_type() const;
 
 private:
-    std::shared_ptr<descriptor::TensorView> m_tensor_view;
+    std::shared_ptr<descriptor::Tensor> m_tensor;
     std::string m_alias;
 };

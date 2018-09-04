@@ -17,13 +17,13 @@
 #pragma once
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class MatmulBias : public util::RequiresTensorViewArgs
+        class MatmulBias : public Op
         {
         public:
             MatmulBias(std::shared_ptr<Node> W,
@@ -34,6 +34,8 @@ namespace ngraph
                        bool transpose_w,
                        bool transpose_x,
                        AxisSet axes = AxisSet{});
+
+            void validate_and_infer_types() override;
 
             bool get_is_a_transposed() const { return m_transpose_w; }
             bool get_is_b_transposed() const { return m_transpose_x; }

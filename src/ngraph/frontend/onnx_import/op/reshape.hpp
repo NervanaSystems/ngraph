@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,23 +17,26 @@
 #pragma once
 
 #include "ngraph/node_vector.hpp"
-#include "ngraph/op/op.hpp"
+
+#include "core/node.hpp"
 
 namespace ngraph
 {
-    namespace op
+    namespace onnx_import
     {
-        namespace util
+        namespace op
         {
-            /// \brief Abstract base class for ops on tensors views.
-            class RequiresTensorViewArgs : public ngraph::op::Op
-            {
-            protected:
-                /// \brief Constructs an operation on tensor view arguments.
-                ///
-                /// \param args The nodes producing this node's input tensors.
-                RequiresTensorViewArgs(const std::string& node_type, const NodeVector& args);
-            };
-        }
-    }
-}
+            ///
+            /// \brief      Reshape the input tensor similar to numpy.reshape.
+            ///
+            /// \param[in]  node  The ONNX node representing this operation.
+            ///
+            /// \return     Ngraph node representing this operation.
+            ///
+            NodeVector reshape(const Node& node);
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph
