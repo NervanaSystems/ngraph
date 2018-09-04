@@ -39,12 +39,15 @@ using namespace std;
 using namespace ngraph;
 
 void ngraph::traverse_nodes(const std::shared_ptr<const Function> p,
-                            std::function<void(std::shared_ptr<Node>)> f, bool include_control_deps)
+                            std::function<void(std::shared_ptr<Node>)> f,
+                            bool include_control_deps)
 {
     traverse_nodes(p.get(), f, include_control_deps);
 }
 
-void ngraph::traverse_nodes(const Function* p, std::function<void(std::shared_ptr<Node>)> f, bool include_control_deps)
+void ngraph::traverse_nodes(const Function* p,
+                            std::function<void(std::shared_ptr<Node>)> f,
+                            bool include_control_deps)
 {
     NodeVector nodes;
 
@@ -65,7 +68,8 @@ void ngraph::traverse_nodes(const Function* p, std::function<void(std::shared_pt
 // graphs that are not wrapped by functions. Most useful for finding parameters of a graph
 // directly from the result nodes, not from function parameters.
 void ngraph::traverse_nodes(const NodeVector& io_nodes,
-                            std::function<void(std::shared_ptr<Node>)> f, bool include_control_deps)
+                            std::function<void(std::shared_ptr<Node>)> f,
+                            bool include_control_deps)
 {
     std::unordered_set<std::shared_ptr<Node>> instances_seen;
     std::deque<std::shared_ptr<Node>> stack;
@@ -100,7 +104,6 @@ void ngraph::traverse_nodes(const NodeVector& io_nodes,
                 {
                     stack.push_front(cdep);
                 }
-
             }
         }
     }
@@ -206,13 +209,13 @@ std::list<std::shared_ptr<ngraph::Node>>
         {
             Node* user = user_sp.get();
             node_dependency_count[user] -= 1;
-            auto count = node_dependency_count[user];
+            size_t count = node_dependency_count[user];
             if (count == 0)
             {
                 independent_nodes.push_back(user);
             }
         }
-        
+
         if (include_control_deps)
         {
             auto cdit = control_deps_users.find(independent_node);
@@ -220,7 +223,7 @@ std::list<std::shared_ptr<ngraph::Node>>
                 for (auto cd_user : cdit->second)
                 {
                     node_dependency_count[cd_user] -= 1;
-                    auto count = node_dependency_count[cd_user];
+                    size_t count = node_dependency_count[cd_user];
                     if (count == 0)
                     {
                         independent_nodes.push_back(cd_user);

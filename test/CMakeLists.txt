@@ -44,7 +44,7 @@ set(SRC
     util.cpp
     uuid.cpp
     zero_dim_tensor_elimination.cpp
-    control_deps_test.cpp
+    control_dependencies.cpp
 
 )
 

@@ -74,27 +74,30 @@ Function::Function(const std::shared_ptr<Node>& result,
 
 void Function::init()
 {
-    traverse_nodes(this, [&](shared_ptr<Node> node) {
-        std::shared_ptr<op::Parameter> p = std::dynamic_pointer_cast<op::Parameter>(node);
-        if (nullptr != p)
-        {
-            auto it = std::find_if(m_parameters.begin(),
-                                   m_parameters.end(),
-                                   [p](std::shared_ptr<op::Parameter> q) { return (p == q); });
-            if (it == m_parameters.end())
+    traverse_nodes(
+        this,
+        [&](shared_ptr<Node> node) {
+            std::shared_ptr<op::Parameter> p = std::dynamic_pointer_cast<op::Parameter>(node);
+            if (nullptr != p)
             {
-                throw ngraph_error("Function references undeclared parameter");
+                auto it = std::find_if(m_parameters.begin(),
+                                       m_parameters.end(),
+                                       [p](std::shared_ptr<op::Parameter> q) { return (p == q); });
+                if (it == m_parameters.end())
+                {
+                    throw ngraph_error("Function references undeclared parameter");
+                }
             }
-        }
-    }, true /*include control dependencies*/);
+        },
+        true /*include control dependencies*/);
 }
 
-std::list<shared_ptr<Node>> Function::get_ordered_ops()
+std::list<shared_ptr<Node>> Function::get_ordered_ops() const
 {
     return topological_sort(get_ops(), false /* no control deps */);
 }
 
-std::list<shared_ptr<Node>> Function::get_ordered_ops_with_control_dependencies()
+std::list<shared_ptr<Node>> Function::get_ordered_ops_with_control_dependencies() const
 {
     return topological_sort(get_ops_with_control_dependencies(), true);
 }
@@ -173,7 +176,8 @@ shared_ptr<Node> Function::get_result() const
 std::list<shared_ptr<Node>> Function::get_ops() const
 {
     std::list<std::shared_ptr<Node>> ops;
-    traverse_nodes(this, [&](shared_ptr<Node> node) { ops.push_back(node); }, false /* no control deps */);
+    traverse_nodes(
+        this, [&](shared_ptr<Node> node) { ops.push_back(node); }, false /* no control deps */);
     return ops;
 }
 

@@ -76,8 +76,8 @@ namespace ngraph
         void set_name(const std::string& name);
         std::list<std::shared_ptr<Node>> get_ops() const;
         std::list<std::shared_ptr<Node>> get_ops_with_control_dependencies() const;
-        std::list<std::shared_ptr<Node>> get_ordered_ops();
-        std::list<std::shared_ptr<Node>> get_ordered_ops_with_control_dependencies();
+        std::list<std::shared_ptr<Node>> get_ordered_ops() const;
+        std::list<std::shared_ptr<Node>> get_ordered_ops_with_control_dependencies() const;
         friend std::ostream& operator<<(std::ostream&, const Function&);
         size_t get_instance_id() { return m_instance_id; }
         size_t get_temporary_pool_size();
