@@ -19,7 +19,7 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/descriptor/tensor_view.hpp"
+#include "ngraph/descriptor/tensor.hpp"
 
 namespace ngraph
 {
