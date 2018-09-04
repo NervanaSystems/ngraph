@@ -65,31 +65,33 @@ string runtime::intelgpu::array_dims(const Shape& dimentions, const AxisSet& axi
     return buffer;
 }
 
-string
-    runtime::intelgpu::access_dims(const Shape& dimentions, const AxisSet& axis, bool is_reversed)
+string runtime::intelgpu::access_dims(const Shape& dimentions,
+                                      const string& var,
+                                      const AxisSet& axis,
+                                      bool is_reversed)
 {
     size_t var_idx = 0;
-    string buffer;
+    stringstream buffer;
 
     for (auto const& i : dimentions)
     {
         if (axis.find(var_idx) == axis.end())
         {
-            buffer += "[i" + to_string(var_idx) + "]";
+            buffer << "[" << var << var_idx << "]";
         }
         else if (is_reversed)
         {
-            buffer += "[" + to_string(i) + " - i" + to_string(var_idx) + " - 1]";
+            buffer << "[" << i << " - " << var << var_idx << " - 1]";
         }
         ++var_idx;
     }
 
-    if (buffer.empty())
+    if (!buffer.rdbuf()->in_avail())
     { // it means scalar
-        buffer = "[0]";
+        buffer.str("[0]");
     }
 
-    return buffer;
+    return buffer.str();
 }
 
 void runtime::intelgpu::gen_func_def(codegen::CodeWriter& writer,
@@ -199,7 +201,8 @@ void runtime::intelgpu::do_pad_operation(cldnn::topology& topology,
                                          const Shape& pad_below,
                                          const Shape& pad_interior)
 {
-    const string entry_point_name = "op_pad_kernel_" + output_name;
+    const string entry_point_name = "op_pad_" + output_name;
+    const size_t cldnn_gws_lim = 3;
     codegen::CodeWriter writer;
     vector<size_t> gws;
 
@@ -208,30 +211,65 @@ void runtime::intelgpu::do_pad_operation(cldnn::topology& topology,
 
     writer.block_begin();
     {
-        // Loop for Broadcast scalar over full output tensor
-        gws = generate_loops(writer, output_shape, true);
-
-        writer << "output" << access_dims(output_shape) << " = input1[0];\n";
-
-        // Closing brackets for Broadcast loop
-        generate_loops(writer, output_shape, false);
-
         // Loop for Copy input matrix into output matrix with padding.
         // Padding include "pad_below" and "pad_interior" according nGraph documentation
         size_t var_idx = 0;
-        for (auto const& i : input_shape)
+        for (auto const& i : output_shape)
         {
-            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
-                   << var_idx << ")\n";
+            if (var_idx < cldnn_gws_lim)
+            {
+                writer << "\nconst uint i" << var_idx << " = get_global_id(" << var_idx
+                       << "); /*trip count " << i << "*/\n";
+                gws.push_back(i);
+            }
+            else
+            {
+                writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i << "; ++i"
+                       << var_idx << ")\n";
+            }
             writer.block_begin();
+
+            writer << "uint input_idx" << var_idx << " = i" << var_idx << " - "
+                   << pad_below.at(var_idx) << " /*pad_below*/;\n";
+            writer << "uint input_idx_interior" << var_idx << " = input_idx" << var_idx << " / ("
+                   << pad_interior.at(var_idx) << " /*pad_interior*/ + 1);\n";
+
             ++var_idx;
         }
 
-        writer << "output" << access_dims_strided(input_shape, pad_below, pad_interior, true)
-               << " = input0" << access_dims(input_shape) << ";\n";
+        // Generate padding conditionals
+        writer << "\n// Since we use unsigned indexes we don't need "
+               << "(input_idxX >= 0) extra check\n"
+               << "if (";
+        var_idx = 0;
+        for (auto const& i : input_shape)
+        {
+            if (var_idx)
+            {
+                writer << " && ";
+            }
+
+            writer << "(input_idx_interior" << var_idx << " < " << i << ") && ((input_idx"
+                   << var_idx << " % (" << pad_interior.at(var_idx) << " + 1)) == 0)";
+
+            ++var_idx;
+        }
+        writer << ")\n";
+        writer.block_begin();
+        {
+            writer << "output" << access_dims(output_shape) << " = input0"
+                   << access_dims(input_shape, "input_idx_interior") << ";\n";
+        }
+        writer.block_end();
+        writer << "else\n";
+        writer.block_begin();
+        {
+            writer << "output" << access_dims(output_shape) << " = input1[0];\n";
+        } // End of padding conditionals
+        writer.block_end();
 
         // Closing brackets for main Copy loop
-        for (auto const& i : input_shape)
+        for (auto const& i : output_shape)
         {
             writer.block_end();
         }
@@ -1028,7 +1066,7 @@ void runtime::intelgpu::do_reverse_operation(cldnn::topology& topology,
         gws = generate_loops(writer, output_shape, true);
 
         writer << "output" << access_dims(output_shape) << " = input0"
-               << access_dims(output_shape, reversed_axes, true) << ";\n";
+               << access_dims(output_shape, "i", reversed_axes, true) << ";\n";
 
         generate_loops(writer, output_shape, false);
     }
