@@ -30,27 +30,22 @@ op::OneHot::OneHot(const shared_ptr<Node>& arg, const Shape& shape, size_t one_h
     auto& input = m_inputs.at(0);
     auto& input_element_type = input.get_element_type();
 
-    if (one_hot_axis >= shape.size())
-    {
-        throw ngraph_error("One-hot axis is out of bounds");
-    }
+    NODE_VALIDATION_ASSERT(this, one_hot_axis < shape.size())
+        << "One-hot axis (" << one_hot_axis
+        << ") is out of bounds (requested result shape: " << shape << ").";
 
     auto expected_input_shape = shape;
     expected_input_shape.erase(expected_input_shape.begin() + one_hot_axis);
 
-    if (input.get_shape() != expected_input_shape)
-    {
-        throw ngraph_error("One-hot argument shape is not compatible with desired output shape");
-    }
+    NODE_VALIDATION_ASSERT(this, input.get_shape() == expected_input_shape)
+        << "Argument shape " << input.get_shape() << " does not match the expected shape of "
+        << expected_input_shape << ".";
 
     set_output_type(0, input_element_type, shape);
 }
 
 shared_ptr<Node> op::OneHot::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return make_shared<OneHot>(new_args.at(0), m_shape, m_one_hot_axis);
 }

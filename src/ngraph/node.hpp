@@ -58,7 +58,11 @@ namespace ngraph
                                  const std::shared_ptr<Node>& dst_node,
                                  const std::shared_ptr<Node>& new_node);
 
-    std::string type_check_assert_string(const Node* node);
+    std::string node_validation_assertion_string(const Node* node);
+
+    const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
+                                                         size_t i);
+    const NodeVector& check_single_output_args(const NodeVector& args);
 
     const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
                                                          size_t i);
@@ -209,6 +213,8 @@ namespace ngraph
         NodeVector get_users() const;
 
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
+        /// Use instance ids for comparison instead of memory addresses to improve determinism
+        bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
     protected:
         void set_output_size(size_t n);
 
@@ -223,22 +229,25 @@ namespace ngraph
         Placement m_placement = Placement::DEFAULT;
     };
 
-    class TypeCheckError : public AssertionFailure
+    class NodeValidationError : public AssertionFailure
     {
     public:
-        TypeCheckError(std::string what)
+        NodeValidationError(std::string what)
             : AssertionFailure(what)
         {
         }
-        TypeCheckError(const char* what)
+        NodeValidationError(const char* what)
             : AssertionFailure(what)
         {
         }
     };
+
+    void check_new_args_count(const Node* node, const NodeVector& new_args);
 }
 
-#define TYPE_CHECK_ASSERT(node, cond)                                                              \
+#define NODE_VALIDATION_ASSERT(node, cond)                                                         \
     NGRAPH_ASSERT_STREAM_WITH_LOC(                                                                 \
-        ::ngraph::TypeCheckError, cond, ::ngraph::type_check_assert_string(node))
-#define TYPE_CHECK_FAIL(node)                                                                      \
-    NGRAPH_FAIL_STREAM_WITH_LOC(::ngraph::TypeCheckError, ::ngraph::type_check_assert_string(node))
+        ::ngraph::NodeValidationError, cond, ::ngraph::node_validation_assertion_string(node))
+#define NODE_VALIDATION_FAIL(node)                                                                 \
+    NGRAPH_FAIL_STREAM_WITH_LOC(::ngraph::NodeValidationError,                                     \
+                                ::ngraph::node_validation_assertion_string(node))

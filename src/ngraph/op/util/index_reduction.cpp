@@ -31,10 +31,11 @@ op::util::IndexReduction::IndexReduction(const std::string& node_type,
     constructor_validate_and_infer_types();
     auto rank = arg->get_shape().size();
 
-    TYPE_CHECK_ASSERT(this, rank >= 1) << "Tensor's rank must be at least 1";
-    TYPE_CHECK_ASSERT(this, axis < rank) << "Axis " << axis << " is greater than rank of " << rank;
-    TYPE_CHECK_ASSERT(this,
-                      index_element_type == element::i32 || index_element_type == element::i64)
+    NODE_VALIDATION_ASSERT(this, rank >= 1) << "Argument rank must be at least 1";
+    NODE_VALIDATION_ASSERT(this, axis < rank) << "Axis " << axis << " is greater than rank of "
+                                              << rank;
+    NODE_VALIDATION_ASSERT(this,
+                           index_element_type == element::i32 || index_element_type == element::i64)
         << "Index element type must be i64 or i32";
 
     Shape output_shape = arg->get_shape();

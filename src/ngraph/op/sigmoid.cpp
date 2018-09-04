@@ -23,11 +23,7 @@ using namespace ngraph;
 
 shared_ptr<Node> op::Sigmoid::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
-
+    check_new_args_count(this, new_args);
     return make_shared<Sigmoid>(new_args.at(0));
 }
 
@@ -41,23 +37,20 @@ op::Sigmoid::Sigmoid(shared_ptr<Node> arg)
 op::SigmoidBackprop::SigmoidBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
     : Op("SigmoidBackprop", check_single_output_args({arg, delta}))
 {
-    if (arg->get_element_type() != delta->get_element_type())
-    {
-        throw ngraph_error("Argument and delta element types for Sigmoid backprop do not match");
-    }
-    if (arg->get_shape() != delta->get_shape())
-    {
-        throw ngraph_error("Argument and delta shape for Sigmoid backprop do not match");
-    }
+    NODE_VALIDATION_ASSERT(this, arg->get_element_type() == delta->get_element_type())
+        << "Argument and delta element types do not match (argument element type: "
+        << arg->get_element_type() << ", delta element type: " << delta->get_element_type() << ").";
+
+    NODE_VALIDATION_ASSERT(this, arg->get_shape() == delta->get_shape())
+        << "Argument and delta shapes do not match (argument shape: " << arg->get_shape()
+        << ", delta shape: " << delta->get_shape() << ").";
+
     set_output_type(0, delta->get_element_type(), delta->get_shape());
 }
 
 shared_ptr<Node> op::SigmoidBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 2)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return make_shared<SigmoidBackprop>(new_args.at(0), new_args.at(1));
 }
 

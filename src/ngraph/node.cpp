@@ -75,7 +75,7 @@ void Node::set_output_size(size_t n)
     for (size_t i = m_outputs.size(); i < n; ++i)
     {
         auto tensor_view_descriptor = make_shared<descriptor::TensorView>(
-            element::unspecified, Shape(), ngraph::descriptor::Tensor::make_tensor_name(this, i));
+            element::unspecified, Shape(), get_name() + "_" + to_string(i));
         m_outputs.emplace_back(this, i, tensor_view_descriptor);
     }
 }
@@ -344,6 +344,20 @@ NodeVector Node::get_users() const
     return result;
 }
 
+std::string ngraph::node_validation_assertion_string(const Node* node)
+{
+    std::stringstream ss;
+    ss << "While validating node '" << *node << "' of type '" << node->description() << "'";
+    return ss.str();
+}
+
+void ngraph::check_new_args_count(const Node* node, const NodeVector& new_args)
+{
+    NODE_VALIDATION_ASSERT(node, new_args.size() == node->get_arguments().size())
+        << "copy_with_new_args() expected " << node->get_arguments().size() << " argument"
+        << (node->get_arguments().size() == 1 ? "" : "s") << " but got " << new_args.size();
+}
+
 const std::shared_ptr<Node>& ngraph::check_single_output_arg(const std::shared_ptr<Node>& node,
                                                              size_t i)
 {
@@ -361,13 +375,6 @@ const NodeVector& ngraph::check_single_output_args(const NodeVector& args)
     return args;
 }
 
-std::string ngraph::type_check_assert_string(const Node* node)
-{
-    std::stringstream ss;
-    ss << "While type-checking node " << *node;
-    return ss.str();
-}
-
 void Node::validate_and_infer_elementwise(element::Type result_type)
 {
     const element::Type& element_type = get_input_element_type(0);
@@ -376,12 +383,12 @@ void Node::validate_and_infer_elementwise(element::Type result_type)
     {
         for (size_t i = 1; i < get_input_size(); ++i)
         {
-            TYPE_CHECK_ASSERT(this, get_input_element_type(i) == element_type)
+            NODE_VALIDATION_ASSERT(this, get_input_element_type(i) == element_type)
                 << "Argument 0 element type " << element_type
                 << " differs in element type from argument " << i << " " << *get_argument(i)
                 << " element type " << get_input_element_type(i);
 
-            TYPE_CHECK_ASSERT(this, get_input_shape(i) == shape)
+            NODE_VALIDATION_ASSERT(this, get_input_shape(i) == shape)
                 << "Argument 0 shape " << shape << " differs in shape from argument " << i << " "
                 << *get_argument(i) << " shape " << get_input_shape(i);
         }
@@ -391,16 +398,16 @@ void Node::validate_and_infer_elementwise(element::Type result_type)
 
 void Node::validate_and_infer_elementwise_arithmetic()
 {
-    TYPE_CHECK_ASSERT(this, get_input_element_type(0) != element::boolean)
-        << "Operands for arithmetic operators must have numeric element type but have element type "
-        << get_input_element_type(0);
+    NODE_VALIDATION_ASSERT(this, get_input_element_type(0) != element::boolean)
+        << "Arguments cannot have boolean element type (argument element type: "
+        << get_input_element_type(0) << ").";
     validate_and_infer_elementwise(get_input_element_type(0));
 }
 
 void Node::validate_and_infer_elementwise_logical()
 {
-    TYPE_CHECK_ASSERT(this, get_input_element_type(0) == element::boolean)
+    NODE_VALIDATION_ASSERT(this, get_input_element_type(0) == element::boolean)
         << "Operands for logical operators must have boolean element type but have element type "
-        << get_input_element_type(0);
+        << get_input_element_type(0) << ".";
     validate_and_infer_elementwise(get_input_element_type(0));
 }

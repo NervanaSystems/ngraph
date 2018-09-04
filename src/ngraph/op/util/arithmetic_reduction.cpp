@@ -33,10 +33,10 @@ void op::util::ArithmeticReduction::validate_and_infer_types()
 
     for (auto axis : m_reduction_axes)
     {
-        if (axis >= input_shape.size())
-        {
-            throw ngraph_error("Reduction axis for arithmetic reduction operator is out of bounds");
-        }
+        NODE_VALIDATION_ASSERT(this, axis < input_shape.size())
+            << "Reduction axis (" << axis << ") is out of bounds "
+            << "(argument shape: " << input_shape << ", reduction axes: " << m_reduction_axes
+            << ")";
     }
 
     Shape result_shape;
