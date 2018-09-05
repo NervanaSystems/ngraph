@@ -55,6 +55,7 @@ add_library(onnx_import STATIC
         op/mean.hpp
         op/min.hpp
         op/mul.hpp
+        op/reduce.cpp
         op/reduce.hpp
         op/relu.hpp
         op/reshape.cpp

@@ -19,6 +19,12 @@
 #include <memory>
 
 #include "ngraph/node_vector.hpp"
+#include "ngraph/op/exp.hpp"
+#include "ngraph/op/log.hpp"
+#include "ngraph/op/max.hpp"
+#include "ngraph/op/min.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/product.hpp"
 #include "ngraph/op/sum.hpp"
 
 #include "core/node.hpp"
@@ -31,6 +37,106 @@ namespace ngraph
     {
         namespace op
         {
+            /// \brief      Compute the log sum of the input tensor's elements along the provided axes.
+            ///
+            /// \par Overview
+            ///     The output tensor has the same rank as the input if Node attribute keepdims
+            ///     equals 1. If keepdims equals 0, then the output tensor have the reduced
+            ///     dimension pruned.
+            ///
+            /// \param[in]  node  The ONNX node representing operation.
+            ///
+            /// \return     The nGraph node equivalent of the ONNX operation.
+            ///
+            inline NodeVector reduce_log_sum(const Node& node)
+            {
+                auto sum_node = reduction::make_ng_reduction_op<ngraph::op::Sum>(
+                    node, node.get_ng_inputs().at(0));
+                return {std::make_shared<ngraph::op::Log>(sum_node)};
+            }
+
+            /// \brief      Compute the log sum exponent of the input tensor's elements along the provided axes.
+            ///
+            /// \par Overview
+            ///     The output tensor has the same rank as the input if Node attribute keepdims
+            ///     equals 1. If keepdims equals 0, then the output tensor have the reduced
+            ///     dimension pruned.
+            ///
+            /// \param[in]  node  The ONNX node representing operation.
+            ///
+            /// \return     The nGraph node equivalent of the ONNX operation.
+            ///
+            inline NodeVector reduce_log_sum_exp(const Node& node)
+            {
+                auto exp_node = std::make_shared<ngraph::op::Exp>(node.get_ng_inputs().at(0));
+                auto sum_node = reduction::make_ng_reduction_op<ngraph::op::Sum>(node, exp_node);
+                return {std::make_shared<ngraph::op::Log>(sum_node)};
+            }
+
+            /// \brief      Compute the maximum value of the input tensor's elements along the provided axes.
+            ///
+            /// \par Overview
+            ///     The output tensor has the same rank as the input if Node attribute keepdims
+            ///     equals 1. If keepdims equals 0, then the output tensor have the reduced
+            ///     dimension pruned.
+            ///
+            /// \param[in]  node  The ONNX node representing operation.
+            ///
+            /// \return     The nGraph node equivalent of the ONNX operation.
+            ///
+            inline NodeVector reduce_max(const Node& node)
+            {
+                return {reduction::make_ng_reduction_op<ngraph::op::Max>(
+                    node, node.get_ng_inputs().at(0))};
+            }
+
+            /// \brief      Compute the mean value of the input tensor's elements along the provided axes.
+            ///
+            /// \par Overview
+            ///     The output tensor has the same rank as the input if Node attribute keepdims
+            ///     equals 1. If keepdims equals 0, then the output tensor have the reduced
+            ///     dimension pruned.
+            ///
+            /// \param[in]  node  The ONNX node representing operation.
+            ///
+            /// \return     The nGraph node equivalent of the ONNX operation.
+            ///
+            NodeVector reduce_mean(const Node& node);
+
+            /// \brief      Compute the minimum value of the input tensor's elements along the provided axes.
+            ///
+            /// \par Overview
+            ///     The output tensor has the same rank as the input if Node attribute keepdims
+            ///     equals 1. If keepdims equals 0, then the output tensor have the reduced
+            ///     dimension pruned.
+            ///
+            /// \param[in]  node  The ONNX node representing operation.
+            ///
+            /// \return     The nGraph node equivalent of the ONNX operation.
+            ///
+            inline NodeVector reduce_min(const Node& node)
+            {
+                return {reduction::make_ng_reduction_op<ngraph::op::Min>(
+                    node, node.get_ng_inputs().at(0))};
+            }
+
+            /// \brief      Compute the product of the input tensor's elements along the provided axes.
+            ///
+            /// \par Overview
+            ///     The output tensor has the same rank as the input if Node attribute keepdims
+            ///     equals 1. If keepdims equals 0, then the output tensor have the reduced
+            ///     dimension pruned.
+            ///
+            /// \param[in]  node  The ONNX node representing operation.
+            ///
+            /// \return     The nGraph node equivalent of the ONNX operation.
+            ///
+            inline NodeVector reduce_prod(const Node& node)
+            {
+                return {reduction::make_ng_reduction_op<ngraph::op::Product>(
+                    node, node.get_ng_inputs().at(0))};
+            }
+
             /// \brief      Compute the sum of the input tensor's elements along the provided axes.
             ///
             /// \par Overview
@@ -49,6 +155,11 @@ namespace ngraph
             }
 
             /// \brief      Compute the sum square of the input tensor's element along the provided axes.
+            ///
+            /// \par Overview
+            ///     The output tensor has the same rank as the input if Node attribute keepdims
+            ///     equals 1. If keepdims equals 0, then the output tensor have the reduced
+            ///     dimension pruned.
             ///
             /// \param[in]  node  The ONNX node representing operation.
             ///
