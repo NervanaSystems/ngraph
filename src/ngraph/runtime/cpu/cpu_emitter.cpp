@@ -4231,10 +4231,9 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Result)
             {
-                const ngraph::op::Result* result = static_cast<const ngraph::op::Result*>(node);
-
-                if (!result->needs_copy())
+                if (args[0].get_name() == out[0].get_name())
                 {
+                    writer << "// Skipping generation for " << node->get_name() << "\n";
                     return;
                 }
 
