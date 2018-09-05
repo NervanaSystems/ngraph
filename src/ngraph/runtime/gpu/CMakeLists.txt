@@ -42,8 +42,8 @@ set(SRC
     pass/tensor_memory_reservation.cpp
     gpu_kernel_args.cpp
     pass/gpu_rnn_fusion.cpp
-    ../gpu/op/lstm.cpp
-    ../gpu/op/rnn.cpp
+    op/lstm.cpp
+    op/rnn.cpp
     )
 
 if (NGRAPH_GPU_ENABLE)
