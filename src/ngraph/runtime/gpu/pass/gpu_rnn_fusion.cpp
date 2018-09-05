@@ -407,7 +407,8 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             NGRAPH_DEBUG << "batch_size: " << batch_size;
             NGRAPH_DEBUG << "feature_size: " << feature_size;
 
-            NGRAPH_ASSERT(src_layer->get_arguments().size() == sequence_len || std::dynamic_pointer_cast<op::Parameter>(src_layer))
+            NGRAPH_ASSERT(src_layer->get_arguments().size() == sequence_len ||
+                          std::dynamic_pointer_cast<op::Parameter>(src_layer))
                 << "number of lstm inputs captured in the RNN fusion is not equal to "
                    "src_sequence_length";
             NGRAPH_ASSERT(!std::dynamic_pointer_cast<op::Parameter>(src_layer) || sequence_len == 1)
@@ -419,7 +420,8 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             auto weights_layer_rank = weights_layer->get_shape().size();
             auto weights_iter_rank = weights_iter->get_shape().size();
             auto bias_rank = bias_layer->get_shape().size();
-            NGRAPH_ASSERT(src_layer_rank == 2 && src_iter_rank == 2 && weights_layer_rank == 2 && weights_iter_rank == 2)
+            NGRAPH_ASSERT(src_layer_rank == 2 && src_iter_rank == 2 && weights_layer_rank == 2 &&
+                          weights_iter_rank == 2)
                 << "Pattern matcher error src_layer, weights_layer, src_iter, weights_iter should "
                    "have rank 2 for RNN op";
             NGRAPH_ASSERT(bias_rank == 1) << "Bias should have rank of 1 for Rnn op";
@@ -678,7 +680,8 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         NGRAPH_DEBUG << "batch_size: " << batch_size;
         NGRAPH_DEBUG << "feature_size: " << feature_size;
 
-        NGRAPH_ASSERT(src_layer->get_arguments().size() == rnn_nodes[0]->get_num_timesteps() || std::dynamic_pointer_cast<op::Parameter>(src_layer))
+        NGRAPH_ASSERT(src_layer->get_arguments().size() == rnn_nodes[0]->get_num_timesteps() ||
+                      std::dynamic_pointer_cast<op::Parameter>(src_layer))
             << " input symbols for the layer fused RNN op, should be captured only for the first "
                "layer";
         NGRAPH_ASSERT(!std::dynamic_pointer_cast<op::Parameter>(src_layer) ||

@@ -78,7 +78,8 @@ op::gpu::Rnn::Rnn(std::shared_ptr<Node> src_layer,
         << "src_layer size is not equal t*n*c";
     NGRAPH_ASSERT(bias_layer->get_shape() == bias_iter->get_shape())
         << "bias tensor shapes do not match";
-    NGRAPH_ASSERT(bias_layer->get_shape()[0] == weights_layer->get_shape()[0] && bias_iter->get_shape()[0] == weights_iter->get_shape()[0])
+    NGRAPH_ASSERT(bias_layer->get_shape()[0] == weights_layer->get_shape()[0] &&
+                  bias_iter->get_shape()[0] == weights_iter->get_shape()[0])
         << "bias and weights_shape are not compatible";
 
     auto et = src_layer->get_element_type();
