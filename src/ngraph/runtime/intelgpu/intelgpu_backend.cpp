@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <CPP/activation.hpp>
 #include <CPP/activation_grad.hpp>
@@ -514,6 +514,24 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                  avg_pool->get_padding_below(),
                                  mode);
         }
+        else if ("AvgPoolBackprop" == op->description())
+        {
+            arguments_check(op, 1, 1);
+
+            const shared_ptr<op::AvgPoolBackprop> avg_pool_b =
+                static_pointer_cast<op::AvgPoolBackprop>(op);
+
+            do_avg_pool_backprop_operation(topology,
+                                           get_input_name(op, 0),
+                                           get_input_shape(op, 0),
+                                           get_output_name(op),
+                                           get_output_shape(op),
+                                           get_output_type(op),
+                                           avg_pool_b->get_window_shape(),
+                                           avg_pool_b->get_window_movement_strides(),
+                                           avg_pool_b->get_padding_below(),
+                                           avg_pool_b->get_include_padding_in_avg_computation());
+        }
         else if ("Broadcast" == op->description())
         {
             arguments_check(op, 1, 1);
@@ -677,6 +695,19 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             do_unary_operation(topology, op, activation_logistic);
         }
+        else if ("SigmoidBackprop" == op->description())
+        {
+            arguments_check(op, 2, 1);
+
+            do_sigmoid_backprop_operation(topology,
+                                          get_input_name(op, 0),
+                                          get_input_shape(op, 0),
+                                          get_input_name(op, 1),
+                                          get_input_shape(op, 1),
+                                          get_output_name(op),
+                                          get_output_shape(op),
+                                          get_output_type(op));
+        }
         else if ("Not" == op->description())
         {
             arguments_check(op, 1, 1);
@@ -733,7 +764,6 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             arguments_check(op, 2, 1);
 
             const shared_ptr<op::Pad> pad = static_pointer_cast<op::Pad>(op);
-            const Shape& pad_above = pad->get_padding_above();
             const Shape& pad_below = pad->get_padding_below();
             const Shape& pad_interior = pad->get_padding_interior();
 
@@ -857,16 +887,11 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             const CoordinateDiff& pad_below = conv_op->get_padding_below();
             const CoordinateDiff& pad_above = conv_op->get_padding_above();
 
-            // clDNN failed with filter size 1
-            const Shape filter_data(get_input_shape(op, 1).cbegin() + 2,
-                                    get_input_shape(op, 1).cend());
-            const size_t filter_size = shape_size(filter_data);
-
             // clDNN has quite limited support for Convolution operation
             // following are the checks to go with workaround
             if ((win_stride.size() > 2) || (pad_below.size() > 2 || pad_above.size() > 2) ||
                 (pad_below.at(0) != pad_above.at(0) || pad_below.at(1) != pad_above.at(1)) ||
-                (win_dilation.size() > 2) || (filter_size < 2) ||
+                (win_dilation.size() > 2) ||
                 (data_dilation.size() > 2 || data_dilation.at(0) != 1 || data_dilation.at(1) != 1))
             {
                 do_convolution_operation(topology,

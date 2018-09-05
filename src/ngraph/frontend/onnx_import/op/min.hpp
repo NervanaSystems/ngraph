@@ -16,8 +16,25 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/minimum.hpp"
 
-namespace py = pybind11;
+#include "core/node.hpp"
+#include "utils/variadic.hpp"
 
-void regclass_pyngraph_op_util_RequiresTensorViewArgs(py::module m);
+namespace ngraph
+{
+    namespace onnx_import
+    {
+        namespace op
+        {
+            inline NodeVector min(const Node& node)
+            {
+                return variadic::make_ng_variadic_op<ngraph::op::Minimum>(node);
+            }
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

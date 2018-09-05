@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <algorithm>
 #include <cmath>
@@ -790,6 +790,12 @@ namespace ngraph
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Result)
             {
+                if (args[0].get_name() == out[0].get_name())
+                {
+                    writer << "// Skipping generation for " << node->get_name() << "\n";
+                    return;
+                }
+
                 writer.block_begin();
                 kernel::emit_memcpyDtD(writer, out[0], args[0]);
                 writer.block_end();
@@ -853,21 +859,6 @@ namespace ngraph
                         {
                             kernel::emit_memcpyDtD(writer, out[0], args[0]);
                         }
-                        else if (out[0].get_shape().size() == 0)
-                        {
-                            auto& cudnn_emitter =
-                                external_function->get_primitive_emitter()->get_cudnn_emitter();
-                            auto sum_index =
-                                cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_ADD,
-                                                                    out[0].get_type(),
-                                                                    args[0].get_shape(),
-                                                                    sum->get_reduction_axes());
-
-                            writer << "gpu::invoke_primitive(ctx, " << sum_index << ", ";
-                            writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                            writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                            writer << ");\n";
-                        }
                         else
                         {
                             auto axes_set = sum->get_reduction_axes();
@@ -882,7 +873,10 @@ namespace ngraph
                             auto& cuda_emitter =
                                 external_function->get_primitive_emitter()->get_cuda_emitter();
                             auto sum_index = cuda_emitter->build_reduce<ngraph::op::Add>(
-                                dtypes, args[0].get_shape(), axes_vec);
+                                dtypes,
+                                out[0].get_element_type().size(),
+                                args[0].get_shape(),
+                                axes_vec);
 
                             writer << "gpu::invoke_primitive(ctx, " << sum_index << ", ";
                             writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";

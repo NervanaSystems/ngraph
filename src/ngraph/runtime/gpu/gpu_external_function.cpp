@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <cstdlib>
 #include <cublas_v2.h>
@@ -27,7 +27,6 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
-#include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
@@ -101,13 +100,14 @@
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/common_function_collection.hpp"
-#include "ngraph/runtime/cpu/op/rnn.hpp"
+#include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/op/lstm.hpp"
+#include "ngraph/runtime/gpu/op/rnn.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_layout.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_rnn_fusion.hpp"
 #include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
@@ -283,13 +283,13 @@ void runtime::gpu::GPU_ExternalFunction::emit_header()
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
-#include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
+#include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
@@ -520,7 +520,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 for (size_t i = 0; i < param->get_output_size(); ++i)
                 {
                     shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_view(i);
-                    const element::Type& et = tv->get_tensor_view_type()->get_element_type();
+                    const element::Type& et = tv->get_element_type();
                     string type = et.c_type_string();
                     stringstream ss;
                     ss << "((" << type << "*)(inputs[" << arg_index << "]))";
@@ -534,15 +534,17 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
             {
                 shared_ptr<Node> op = current_function->get_output_op(i);
                 shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
-                string type = tv->get_tensor_view_type()->get_element_type().c_type_string();
+                string type = tv->get_element_type().c_type_string();
                 stringstream ss;
                 ss << "((" << type << "*)(outputs[" << i << "]))";
                 m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
 
-                // it should be safe to assign both descriptors to one output*
-                // since needs_copy == false makes `op::Result` an nop
                 auto res = dynamic_pointer_cast<ngraph::op::Result>(op);
-                if (!res->needs_copy())
+                //keep assigning different outputs to a result descriptor
+                //op::Result emitter will check if in and out descriptors are the same
+                //and skip a copy
+                auto input_node = res->get_inputs().at(0).get_output().get_node();
+                if (!input_node->is_constant() && !input_node->is_parameter())
                 {
                     shared_ptr<descriptor::TensorView> itv =
                         res->get_inputs().at(0).get_output().get_tensor_view();
@@ -660,6 +662,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 
     m_pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
 
+    m_pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     m_pass_manager
         .register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
 

@@ -1,19 +1,20 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
+#include <cstdint>
 #include <fstream>
 #include <sstream>
 
@@ -56,12 +57,12 @@ TEST(onnx, model_add_abc_initializers)
 
 TEST(onnx, model_addmul_abc)
 {
-    auto function = ngraph::onnx_import::import_onnx_function(
-        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/addmul_abc.onnx"));
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/addmul_abc.onnx"));
 
     std::vector<std::vector<float>> inputs;
 
-    ngraph::Shape shape{1, 2, 2};
+    Shape shape{1, 2, 2};
     inputs.emplace_back(test::NDArray<float, 3>({{{9, 10}}, {{11, 12}}}).get_vector());
     inputs.emplace_back(test::NDArray<float, 3>({{{5, 6}}, {{7, 8}}}).get_vector());
     inputs.emplace_back(test::NDArray<float, 3>({{{1, 2}}, {{3, 4}}}).get_vector());
@@ -124,8 +125,7 @@ TEST(onnx, model_split_variable_parts_2d)
 
 namespace
 {
-    std::vector<std::vector<float>>
-        conv2d_execute(const std::shared_ptr<ngraph::Function>& function)
+    std::vector<std::vector<float>> conv2d_execute(const std::shared_ptr<Function>& function)
     {
         std::vector<std::vector<float>> args;
 
@@ -151,8 +151,8 @@ namespace
 TEST(onnx, model_conv2d_strides_padding)
 {
     // Convolution with strides=2 and padding=1
-    auto function = ngraph::onnx_import::import_onnx_function(
-        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/conv_with_strides_padding.onnx"));
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/conv_with_strides_padding.onnx"));
 
     // (1, 1, 4, 3)
     auto expected_output = test::NDArray<float, 4>({{{{12.f, 27.f, 24.f},
@@ -168,8 +168,8 @@ TEST(onnx, model_conv2d_strides_padding)
 TEST(onnx, model_conv2d_strides_no_padding)
 {
     // Convolution with strides=2 and padding=1
-    auto function = ngraph::onnx_import::import_onnx_function(
-        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/conv_with_strides_no_padding.onnx"));
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/conv_with_strides_no_padding.onnx"));
 
     // (1, 1, 3, 2)
     auto expected_output =
@@ -182,8 +182,8 @@ TEST(onnx, model_conv2d_strides_no_padding)
 TEST(onnx, model_conv2d_strides_assymetric_padding)
 {
     // Convolution with strides=2 and padding=1
-    auto function = ngraph::onnx_import::import_onnx_function(ngraph::file_util::path_join(
-        SERIALIZED_ZOO, "onnx/conv_with_strides_and_asymmetric_padding.onnx"));
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/conv_with_strides_and_asymmetric_padding.onnx"));
 
     // (1, 1, 4, 2)
     auto expected_output =
@@ -197,8 +197,8 @@ TEST(onnx, model_conv2d_strides_assymetric_padding)
 TEST(onnx, model_average_pool_2d)
 {
     // Pooling with strides=2 and no padding
-    auto model = ngraph::onnx_import::import_onnx_function(
-        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/average_pool_2d.onnx"));
+    auto model = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/average_pool_2d.onnx"));
 
     // input data shape (1, 1, 4, 4)
     Inputs inputs;
@@ -219,8 +219,8 @@ TEST(onnx, model_average_pool_2d)
 TEST(onnx, model_average_pool_2d_pads)
 {
     // Pooling with strides=2 and padding=1
-    auto model = ngraph::onnx_import::import_onnx_function(
-        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/average_pool_2d_pads.onnx"));
+    auto model = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/average_pool_2d_pads.onnx"));
 
     // input data shape (1, 1, 4, 4)
     Inputs inputs;
@@ -243,8 +243,8 @@ TEST(onnx, model_average_pool_2d_pads)
 TEST(onnx, model_max_pool_2d_pads)
 {
     // Pooling with strides=2 and padding=1
-    auto model = ngraph::onnx_import::import_onnx_function(
-        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/max_pool_2d_pads.onnx"));
+    auto model = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/max_pool_2d_pads.onnx"));
 
     // input data shape (1, 1, 4, 4)
     Inputs inputs;
@@ -297,8 +297,8 @@ TEST(onnx, model_batchnorm_default)
 TEST(onnx, model_relu)
 {
     // Simple ReLU test
-    auto function = ngraph::onnx_import::import_onnx_function(
-        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/relu.onnx"));
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/relu.onnx"));
 
     Inputs inputs{{-1, -2, 0, 1, 2, 3}};
     Outputs expected_outputs{{0, 0, 0, 1, 2, 3}};
@@ -307,13 +307,88 @@ TEST(onnx, model_relu)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
+TEST(onnx, model_sum)
+{
+    // Simple Sum test
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/sum.onnx"));
+
+    // input data shape (3, )
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{3.f, 0.f, 2.f});
+    inputs.emplace_back(std::vector<float>{1.f, 3.f, 4.f});
+    inputs.emplace_back(std::vector<float>{2.f, 6.f, 6.f});
+
+    Outputs expected_outputs{{6.f, 9.f, 12.f}};
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_sum_one_input)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/sum_one_input.onnx"));
+
+    // input data shape (3, )
+    Inputs inputs{{3.f, 0.f, 2.f}};
+    Outputs expected_outputs{{3.f, 0.f, 2.f}};
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_min_two_inputs)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/min_two_inputs.onnx"));
+
+    // input data shape (3, )
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{1.f, 2.f, 1.f});
+    inputs.emplace_back(std::vector<float>{1.f, 4.f, 4.f});
+
+    Outputs expected_outputs{{1.f, 2.f, 1.f}};
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_max)
+{
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/max.onnx"));
+
+    // input data shape (3, )
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{3.f, 2.f, 1.f});
+    inputs.emplace_back(std::vector<float>{1.f, 4.f, 4.f});
+    inputs.emplace_back(std::vector<float>{2.f, 5.f, 3.f});
+
+    Outputs expected_outputs{{3.f, 5.f, 4.f}};
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_mean)
+{
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/mean.onnx"));
+
+    // input data shape (3, )
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{3.f, 0.f, 2.f});
+    inputs.emplace_back(std::vector<float>{1.f, 3.f, 4.f});
+    inputs.emplace_back(std::vector<float>{2.f, 6.f, 6.f});
+
+    Outputs expected_outputs{{2.f, 3.f, 4.f}};
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
 TEST(onnx, model_gemm_abc)
 {
-    auto function = ngraph::onnx_import::import_onnx_function(
-        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/gemm_abc.onnx"));
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/gemm_abc.onnx"));
 
-    std::vector<std::vector<float>> inputs;
-
+    Inputs inputs;
     inputs.emplace_back(test::NDArray<float, 2>(
                             {{1, 2, 3, 4, 5, 6}, {7, 8, 9, 10, 11, 12}, {13, 14, 15, 16, 17, 18}})
                             .get_vector());
@@ -329,13 +404,13 @@ TEST(onnx, model_gemm_abc)
     inputs.emplace_back(
         test::NDArray<float, 2>({{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}}).get_vector());
 
-    auto expected_output =
+    Outputs expected_outputs{
         test::NDArray<float, 2>(
             {{340, 350.5, 361, 371.5}, {862, 890.5, 919, 947.5}, {1384, 1430.5, 1477, 1523.5}})
-            .get_vector();
+            .get_vector()};
 
-    auto result_vectors = execute(function, inputs, "INTERPRETER");
-    EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
 TEST(onnx, model_matmul)
@@ -352,21 +427,21 @@ TEST(onnx, model_matmul)
         test::NDArray<float, 2>({{13, 14, 15}, {16, 17, 18}, {19, 20, 21}, {22, 23, 24}})
             .get_vector());
 
-    auto expected_output =
-        test::NDArray<float, 2>({{190, 200, 210}, {470, 496, 522}, {750, 792, 834}}).get_vector();
+    Outputs expected_outputs{
+        test::NDArray<float, 2>({{190, 200, 210}, {470, 496, 522}, {750, 792, 834}}).get_vector()};
 
-    auto result_vectors = execute(function, inputs, "INTERPRETER");
-    EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
 TEST(onnx, model_softmax)
 {
-    auto function = ngraph::onnx_import::import_onnx_function(
-        ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/softmax.onnx"));
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/softmax.onnx"));
 
     Inputs inputs;
     inputs.emplace_back(
-        ngraph::test::NDArray<float, 3>(
+        test::NDArray<float, 3>(
             {{{1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}, {16, 17, 18, 19, 20}},
 
              {{21, 22, 23, 24, 25},
@@ -381,23 +456,291 @@ TEST(onnx, model_softmax)
             .get_vector());
 
     auto expected_output =
-        ngraph::test::NDArray<float, 3>(
-            {{{1.50461533e-26, 4.08996852e-26, 1.11176871e-25, 3.02210068e-25, 8.21492137e-25},
-              {2.23304715e-24, 6.07005148e-24, 1.65001106e-23, 4.48519509e-23, 1.21920243e-22},
-              {3.31413582e-22, 9.00875516e-22, 2.44883355e-21, 6.65661973e-21, 1.80945684e-20},
-              {4.91861366e-20, 1.33701781e-19, 3.63439123e-19, 9.87929963e-19, 2.68547207e-18}},
+        test::NDArray<float, 3>(
+            {{{1.50461533e-26f, 4.08996852e-26f, 1.11176871e-25f, 3.02210068e-25f, 8.21492137e-25f},
+              {2.23304715e-24f, 6.07005148e-24f, 1.65001106e-23f, 4.48519509e-23f, 1.21920243e-22f},
+              {3.31413582e-22f, 9.00875516e-22f, 2.44883355e-21f, 6.65661973e-21f, 1.80945684e-20f},
+              {4.91861366e-20f,
+               1.33701781e-19f,
+               3.63439123e-19f,
+               9.87929963e-19f,
+               2.68547207e-18f}},
 
-             {{7.29986992e-18, 1.98431037e-17, 5.39391483e-17, 1.46621807e-16, 3.98559393e-16},
-              {1.08339676e-15, 2.94497771e-15, 8.00527940e-15, 2.17606055e-14, 5.91514586e-14},
-              {1.60790335e-13, 4.37073446e-13, 1.18808881e-12, 3.22956021e-12, 8.77885484e-12},
-              {2.38634016e-11, 6.48674509e-11, 1.76328013e-10, 4.79309234e-10, 1.30289758e-09}},
+             {{7.29986992e-18f, 1.98431037e-17f, 5.39391483e-17f, 1.46621807e-16f, 3.98559393e-16f},
+              {1.08339676e-15f, 2.94497771e-15f, 8.00527940e-15f, 2.17606055e-14f, 5.91514586e-14f},
+              {1.60790335e-13f, 4.37073446e-13f, 1.18808881e-12f, 3.22956021e-12f, 8.77885484e-12f},
+              {2.38634016e-11f,
+               6.48674509e-11f,
+               1.76328013e-10f,
+               4.79309234e-10f,
+               1.30289758e-09f}},
 
-             {{3.54164282e-09, 9.62718331e-09, 2.61693974e-08, 7.11357975e-08, 1.93367146e-07},
-              {5.25626399e-07, 1.42880069e-06, 3.88388295e-06, 1.05574884e-05, 2.86982290e-05},
-              {7.80098743e-05, 2.12052824e-04, 5.76419338e-04, 1.56687021e-03, 4.25919482e-03},
-              {1.15776919e-02, 3.14714295e-02, 8.55482149e-02, 2.32544158e-01, 6.32120559e-01}}})
+             {{3.54164282e-09f, 9.62718331e-09f, 2.61693974e-08f, 7.11357975e-08f, 1.93367146e-07f},
+              {5.25626399e-07f, 1.42880069e-06f, 3.88388295e-06f, 1.05574884e-05f, 2.86982290e-05f},
+              {7.80098743e-05f, 2.12052824e-04f, 5.76419338e-04f, 1.56687021e-03f, 4.25919482e-03f},
+              {1.15776919e-02f,
+               3.14714295e-02f,
+               8.55482149e-02f,
+               2.32544158e-01f,
+               6.32120559e-01f}}})
             .get_vector();
 
     auto result_vectors = execute(function, inputs, "INTERPRETER");
     EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
+}
+
+TEST(onnx, model_concat)
+{
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/concat.onnx"));
+
+    Inputs inputs;
+
+    inputs.emplace_back(test::NDArray<float, 1>({1, 2}).get_vector());
+    inputs.emplace_back(test::NDArray<float, 1>({3, 4}).get_vector());
+
+    Outputs expected_outputs{test::NDArray<float, 1>({1, 2, 3, 4}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_flatten)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/flatten.onnx"));
+
+    Inputs inputs;
+
+    inputs.emplace_back(
+        test::NDArray<float, 4>({{{{1, 2}, {3, 4}}, {{5, 6}, {7, 8}}}}).get_vector());
+
+    Outputs expected_outputs{test::NDArray<float, 3>({{{1, 2, 3, 4}, {5, 6, 7, 8}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_sub)
+{
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/sub.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(test::NDArray<float, 3>({{{1, 2, 3}}}).get_vector());
+
+    inputs.emplace_back(test::NDArray<float, 3>({{{4, 5, 7}}}).get_vector());
+
+    auto expected_output = test::NDArray<float, 3>({{{-3, -3, -4}}}).get_vector();
+
+    auto result_vectors = execute(function, inputs, "INTERPRETER");
+    EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
+}
+
+TEST(onnx, model_unsqueeze)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/unsqueeze.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(test::NDArray<float, 3>(
+                            {{{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
+                             {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
+                             {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}}})
+                            .get_vector());
+
+    Outputs expected_output{
+        test::NDArray<float, 4>(
+            {{{{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
+              {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
+              {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}}}})
+            .get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx, model_div)
+{
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/div.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(test::NDArray<float, 3>({{{1, 2, 3}}}).get_vector());
+
+    inputs.emplace_back(test::NDArray<float, 3>({{{1, 4, 12}}}).get_vector());
+
+    auto expected_output = test::NDArray<float, 3>({{{1, 0.5, 0.25}}}).get_vector();
+
+    auto result_vectors = execute(function, inputs, "INTERPRETER");
+    EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
+}
+
+TEST(onnx, model_add_bcast)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/add_bcast.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(test::NDArray<float, 3>(
+                            {{{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
+                             {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
+                             {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}}})
+                            .get_vector());
+
+    inputs.emplace_back(test::NDArray<float, 1>({1, 2, 3, 4, 5}).get_vector());
+
+    Outputs expected_output{
+        test::NDArray<float, 4>(
+            {{{{2, 3, 4, 5, 6}, {2, 3, 4, 5, 6}, {2, 3, 4, 5, 6}, {2, 3, 4, 5, 6}},
+              {{2, 3, 4, 5, 6}, {2, 3, 4, 5, 6}, {2, 3, 4, 5, 6}, {2, 3, 4, 5, 6}},
+              {{2, 3, 4, 5, 6}, {2, 3, 4, 5, 6}, {2, 3, 4, 5, 6}, {2, 3, 4, 5, 6}}}})
+            .get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx, model_reshape_reduced_dims)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reshape_reduced_dims.onnx"));
+
+    // input data shape (2, 3, 4)
+    Inputs inputs{test::NDArray<float, 3>({{{0, 1, 2, 3}, {4, 5, 6, 7}, {8, 9, 10, 11}},
+                                           {{12, 13, 14, 15}, {16, 17, 18, 19}, {20, 21, 22, 23}}})
+                      .get_vector()};
+
+    // output data shape (2, 12)
+    Outputs expected_outputs{
+        test::NDArray<float, 2>({{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
+                                 {12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}})
+            .get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reshape_reordered_dims)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reshape_reordered_dims.onnx"));
+
+    // input data shape (2, 3, 4)
+    Inputs inputs{test::NDArray<float, 3>({{{0, 1, 2, 3}, {4, 5, 6, 7}, {8, 9, 10, 11}},
+                                           {{12, 13, 14, 15}, {16, 17, 18, 19}, {20, 21, 22, 23}}})
+                      .get_vector()};
+
+    // output data shape (4, 2, 3)
+    Outputs expected_outputs{test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}},
+                                                      {{6, 7, 8}, {9, 10, 11}},
+                                                      {{12, 13, 14}, {15, 16, 17}},
+                                                      {{18, 19, 20}, {21, 22, 23}}})
+                                 .get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reshape_extended_dims)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reshape_extended_dims.onnx"));
+
+    // input data shape (2, 3, 4)
+    Inputs inputs{test::NDArray<float, 3>({{{0, 1, 2, 3}, {4, 5, 6, 7}, {8, 9, 10, 11}},
+                                           {{12, 13, 14, 15}, {16, 17, 18, 19}, {20, 21, 22, 23}}})
+                      .get_vector()};
+
+    // output data shape (3, 2, 2, 2)
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{0, 1}, {2, 3}}, {{4, 5}, {6, 7}}},
+                                                      {{{8, 9}, {10, 11}}, {{12, 13}, {14, 15}}},
+                                                      {{{16, 17}, {18, 19}}, {{20, 21}, {22, 23}}}})
+                                 .get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reshape_single_dim)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reshape_single_dim.onnx"));
+
+    // input data shape (2, 3, 4)
+    Inputs inputs{test::NDArray<float, 3>({{{0, 1, 2, 3}, {4, 5, 6, 7}, {8, 9, 10, 11}},
+                                           {{12, 13, 14, 15}, {16, 17, 18, 19}, {20, 21, 22, 23}}})
+                      .get_vector()};
+
+    // output data shape (24, )
+    Outputs expected_outputs{
+        test::NDArray<float, 1>(
+            {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23})
+            .get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reshape_negative_dim)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reshape_negative_dim.onnx"));
+
+    // input data shape (2, 3, 4)
+    Inputs inputs{test::NDArray<float, 3>({{{0, 1, 2, 3}, {4, 5, 6, 7}, {8, 9, 10, 11}},
+                                           {{12, 13, 14, 15}, {16, 17, 18, 19}, {20, 21, 22, 23}}})
+                      .get_vector()};
+
+    // output data shape (6, 2, 2)
+    Outputs expected_outputs{test::NDArray<float, 3>({{{0, 1}, {2, 3}},
+                                                      {{4, 5}, {6, 7}},
+                                                      {{8, 9}, {10, 11}},
+                                                      {{12, 13}, {14, 15}},
+                                                      {{16, 17}, {18, 19}},
+                                                      {{20, 21}, {22, 23}}})
+                                 .get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reshape_negative_with_zero_dim)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reshape_negative_with_zero_dims.onnx"));
+
+    // input data shape (2, 3, 4)
+    Inputs inputs{test::NDArray<float, 3>({{{0, 1, 2, 3}, {4, 5, 6, 7}, {8, 9, 10, 11}},
+                                           {{12, 13, 14, 15}, {16, 17, 18, 19}, {20, 21, 22, 23}}})
+                      .get_vector()};
+
+    // output data shape (2, 6, 2)
+    Outputs expected_outputs{
+        test::NDArray<float, 3>({{{0, 1}, {2, 3}, {4, 5}, {6, 7}, {8, 9}, {10, 11}},
+                                 {{12, 13}, {14, 15}, {16, 17}, {18, 19}, {20, 21}, {22, 23}}})
+            .get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reshape_output_shape_as_input)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reshape_output_shape_as_input.onnx"));
+
+    // input data shape (2, 3, 4)
+    Inputs inputs{test::NDArray<float, 3>({{{0, 1, 2, 3}, {4, 5, 6, 7}, {8, 9, 10, 11}},
+                                           {{12, 13, 14, 15}, {16, 17, 18, 19}, {20, 21, 22, 23}}})
+                      .get_vector()};
+
+    // output data shape (2, 6, 2)
+    Outputs expected_outputs{
+        test::NDArray<float, 3>({{{0, 1}, {2, 3}, {4, 5}, {6, 7}, {8, 9}, {10, 11}},
+                                 {{12, 13}, {14, 15}, {16, 17}, {18, 19}, {20, 21}, {22, 23}}})
+            .get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }

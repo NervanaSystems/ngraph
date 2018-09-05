@@ -16,8 +16,20 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include "ngraph/node_vector.hpp"
 
-namespace py = pybind11;
+#include "core/node.hpp"
 
-void regclass_pyngraph_op_util_BinaryElementwise(py::module m);
+namespace ngraph
+{
+    namespace onnx_import
+    {
+        namespace op
+        {
+            NodeVector mean(const Node& node);
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

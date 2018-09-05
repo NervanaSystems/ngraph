@@ -1,20 +1,21 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <set>
+#include <sstream>
 
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/constant.hpp"
@@ -24,51 +25,67 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
                                  std::shared_ptr<ngraph::Node> gamma,
                                  std::shared_ptr<ngraph::Node> beta,
                                  std::shared_ptr<ngraph::Node> input)
-    : RequiresTensorViewArgs("BatchNorm", {gamma, beta, input})
+    : Op("BatchNorm", check_single_output_args({gamma, beta, input}))
     , m_bn_input_shape(input->get_shape())
     , m_epsilon(eps)
     , m_training(true)
 {
-    if (m_bn_input_shape.size() < 2)
+    constructor_validate_and_infer_types();
+}
+
+void ngraph::op::BatchNorm::validate_and_infer_types()
+{
+    m_bn_input_shape = get_input_shape(INPUT);
+    NODE_VALIDATION_ASSERT(this, m_bn_input_shape.size() >= 2)
+        << "Input argument must have rank of at least 2 (input argument shape: " << m_bn_input_shape
+        << ").";
+
+    NODE_VALIDATION_ASSERT(this, m_bn_input_shape[1] != 0)
+        << "Input argument's channel dimension must have size of at least 1 (input argument shape: "
+        << m_bn_input_shape << ").";
+
+    auto& et = get_input_element_type(INPUT);
+    auto in_size = get_input_size();
+
+    NODE_VALIDATION_ASSERT(this, in_size == 3 || in_size == 5)
+        << "Argument count must be either 3 or 5 (received argument count: " << in_size << ").";
+
+    Shape channel_shape{m_bn_input_shape[1]};
+
+    if (in_size == 3)
     {
-        throw ngraph_error("input tensor to batchnorm must have tensor of at least rank 2");
+        set_output_size(3);
+        m_bn_mean_shape = channel_shape;
+        set_output_type(1, et, m_bn_mean_shape);
+        m_bn_variance_shape = channel_shape;
+        set_output_type(2, et, m_bn_variance_shape);
     }
     else
     {
-        this->m_bn_variance_shape.push_back(input->get_shape()[1]);
-        this->m_bn_mean_shape.push_back(input->get_shape()[1]);
+        set_output_size(1);
     }
 
-    if (m_bn_input_shape[1] == 0)
-    {
-        throw ngraph_error(
-            "input tensor must have at least one channel axis for batch normalization");
-    }
+    set_output_type(0, et, m_bn_input_shape);
 
-    auto et = input->get_element_type();
-    Shape channel_shape{m_bn_input_shape[1]};
-    const char* input_names[] = {"gamma", "beta"};
+    const char* input_names[]{"gamma", "beta", "input", "mean", "variance"};
 
-    for (size_t i = 0; i < 2; i++)
+    for (size_t i = 0; i < get_input_size(); i++)
     {
-        if (get_argument(i)->get_element_type() != et)
+        if (i == INPUT)
         {
-            auto err_msg = std::string("The element type of ") + input_names[i] +
-                           " isn't equal to input data's type";
-            throw ngraph_error(err_msg.c_str());
+            continue;
         }
 
-        if (get_argument(i)->get_shape() != channel_shape)
-        {
-            auto err_msg = std::string("The shape of ") + input_names[i] +
-                           " isn't equal to input channel's shape";
-            throw ngraph_error(err_msg.c_str());
-        }
-    }
+        NODE_VALIDATION_ASSERT(this, get_input_element_type(i) == et)
+            << "Element type of " << input_names[i] << " (" << get_input_element_type(i)
+            << ") is not equal to the element type of input (" << et << ").";
 
-    add_output(input->get_element_type(), m_bn_input_shape);
-    add_output(input->get_element_type(), m_bn_mean_shape);
-    add_output(input->get_element_type(), m_bn_variance_shape);
+        NODE_VALIDATION_ASSERT(this, get_input_shape(i) == channel_shape)
+            << "Shape of " << input_names[i] << " must match the channel dimension of the "
+            << "input data (expected shape: " << channel_shape << ", actual shape of "
+            << input_names[i] << ": " << get_input_shape(i)
+            << ", shape of input: " << m_bn_input_shape << ").";
+    }
 }
 
 ngraph::op::BatchNorm::BatchNorm(double eps,
@@ -78,74 +95,29 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
                                  std::shared_ptr<ngraph::Node> mean,
                                  std::shared_ptr<ngraph::Node> variance,
                                  bool training)
-    : RequiresTensorViewArgs("BatchNorm", {gamma, beta, input, mean, variance})
-    , m_bn_input_shape(input->get_shape())
-    , m_bn_variance_shape(variance->get_shape())
-    , m_bn_mean_shape(mean->get_shape())
+    : Op("BatchNorm", check_single_output_args({gamma, beta, input, mean, variance}))
     , m_epsilon(eps)
     , m_training(training)
 {
-    const size_t INPUT_INDEX = 2;
-
-    if (m_bn_input_shape.size() < 2)
-    {
-        throw ngraph_error("input tensor to batchnorm must have tensor of at least rank 2");
-    }
-
-    if (m_bn_input_shape[1] == 0)
-    {
-        throw ngraph_error(
-            "input tensor must have at least one channel axis for batch normalization");
-    }
-
-    auto et = input->get_element_type();
-    const char* input_names[] = {"gamma", "beta", "input", "mean", "variance"};
-
-    for (size_t i = 0; i < get_input_size(); i++)
-    {
-        if (get_argument(i)->get_element_type() != et)
-        {
-            auto err_msg = std::string("The element type of ") + input_names[i] +
-                           " isn't equal to input data's type";
-            throw ngraph_error(err_msg.c_str());
-        }
-    }
-    for (size_t index = 0; index < get_input_size(); index++)
-    {
-        if (index != INPUT_INDEX && get_argument(index)->get_shape().size() != 1)
-        {
-            auto err_msg = std::string(input_names[index]) + " should have rank of 1";
-            throw ngraph_error(err_msg.c_str());
-        }
-
-        if (index != INPUT_INDEX && get_argument(index)->get_shape()[0] != m_bn_input_shape[1])
-        {
-            auto err_msg = std::string(input_names[index]) +
-                           " shape should match the input channel size (" +
-                           std::to_string(m_bn_input_shape[1]) + ",)";
-            throw ngraph_error(err_msg.c_str());
-        }
-    }
-
-    if (variance->get_shape()[0] != mean->get_shape()[0])
-    {
-        throw ngraph_error("mean and variance should have same size");
-    }
-
-    add_output(input->get_element_type(), m_bn_input_shape);
+    constructor_validate_and_infer_types();
 }
 
 std::shared_ptr<ngraph::Node>
     ngraph::op::BatchNorm::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (this->m_training)
+    check_new_args_count(this, new_args);
+
+    if (m_training)
     {
+        // FIXME(amprocte): is this redundant?
+        NODE_VALIDATION_ASSERT(this, new_args.size() == 3 || new_args.size() == 5);
+
         if (new_args.size() == 3)
         {
             return std::make_shared<BatchNorm>(
                 m_epsilon, new_args.at(0), new_args.at(1), new_args.at(2));
         }
-        else if (new_args.size() == 5)
+        else
         {
             return std::make_shared<BatchNorm>(m_epsilon,
                                                new_args.at(0),
@@ -155,17 +127,11 @@ std::shared_ptr<ngraph::Node>
                                                new_args.at(4),
                                                true);
         }
-        else
-        {
-            throw ngraph_error("Incorrect number of new arguments");
-        }
     }
     else
     {
-        if (new_args.size() != 5)
-        {
-            throw ngraph_error("Incorrect number of new arguments");
-        }
+        NODE_VALIDATION_ASSERT(this, new_args.size() == 5);
+
         return std::make_shared<BatchNorm>(m_epsilon,
                                            new_args.at(0),
                                            new_args.at(1),
@@ -183,62 +149,58 @@ ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
                                                  std::shared_ptr<ngraph::Node> mean,
                                                  std::shared_ptr<ngraph::Node> variance,
                                                  std::shared_ptr<ngraph::Node> delta)
-    : RequiresTensorViewArgs("BatchNormBackprop", {gamma, beta, input, mean, variance, delta})
+    : Op("BatchNormBackprop", check_single_output_args({gamma, beta, input, mean, variance, delta}))
     , epsilon(eps)
 
 {
-    if (input->get_shape().size() != 4)
-    {
-        throw ngraph_error("Input expected to be a 4D tensor");
-    }
+    constructor_validate_and_infer_types();
+}
 
-    auto et = input->get_element_type();
+void ngraph::op::BatchNormBackprop::validate_and_infer_types()
+{
+    set_output_size(3);
+
+    NODE_VALIDATION_ASSERT(this, get_input_shape(INPUT).size() == 4)
+        << "Input data shape is not a 4D tensor (input data shape: " << get_input_shape(INPUT)
+        << ").";
+
+    auto et = get_input_element_type(INPUT);
     const char* input_names[] = {"gamma", "beta", "input", "mean", "variance", "delta"};
 
-    for (size_t i = 0; i < get_input_size(); i++)
-    {
-        if (get_argument(i)->get_element_type() != et)
-        {
-            auto err_msg = std::string("The element type of ") + input_names[i] +
-                           " isn't equal to input data's type";
-            throw ngraph_error(err_msg.c_str());
-        }
-    }
-
-    Shape channel_shape{input->get_shape().at(1)};
+    Shape channel_shape{get_input_shape(INPUT)[1]};
 
     for (size_t i = 0; i < get_input_size(); i++)
     {
-        if (i == 2 || i == 5) // don't check input and delta
+        NODE_VALIDATION_ASSERT(this, get_input_element_type(i) == et)
+            << "Element type of " << input_names[i] << " (" << get_input_element_type(i)
+            << ") is not equal to the element type of input (" << et << ").";
+
+        // Note that the shape of delta, a special case, will be checked after the loop.
+        if (i == DELTA || i == INPUT)
         {
             continue;
         }
 
-        if (get_argument(i)->get_shape() != channel_shape)
-        {
-            auto err_msg = std::string("The shape of ") + input_names[i] +
-                           " isn't equal to input channel's shape";
-            throw ngraph_error(err_msg.c_str());
-        }
+        NODE_VALIDATION_ASSERT(this, get_input_shape(i) == channel_shape)
+            << "Shape of " << input_names[i] << " must match the channel dimension of the "
+            << "input data (expected shape: " << channel_shape << ", actual shape of "
+            << input_names[i] << ": " << get_input_shape(i)
+            << ", shape of input: " << get_input_shape(INPUT) << ").";
     }
 
-    if (delta->get_shape() != input->get_shape())
-    {
-        throw ngraph_error("delta shape is expected to be equal to input shape");
-    }
+    NODE_VALIDATION_ASSERT(this, get_input_shape(DELTA) == get_input_shape(INPUT))
+        << "Shape of delta must match the shape of the input data (expected shape: "
+        << get_input_shape(INPUT) << ", actual shape of delta: " << get_input_shape(DELTA) << ").";
 
-    add_output(input->get_element_type(), input->get_shape());
-    add_output(gamma->get_element_type(), gamma->get_shape());
-    add_output(beta->get_element_type(), beta->get_shape());
+    set_output_type(0, get_input_element_type(INPUT), get_input_shape(INPUT));
+    set_output_type(1, get_input_element_type(GAMMA), get_input_shape(GAMMA));
+    set_output_type(2, get_input_element_type(BETA), get_input_shape(BETA));
 }
 
 std::shared_ptr<ngraph::Node>
     ngraph::op::BatchNormBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 6)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return std::make_shared<op::BatchNormBackprop>(epsilon,
                                                    new_args.at(0),
                                                    new_args.at(1),

@@ -17,23 +17,24 @@
 #pragma once
 
 #include "ngraph/node_vector.hpp"
-#include "ngraph/op/op.hpp"
+#include "ngraph/op/maximum.hpp"
+
+#include "core/node.hpp"
+#include "utils/variadic.hpp"
 
 namespace ngraph
 {
-    namespace op
+    namespace onnx_import
     {
-        namespace util
+        namespace op
         {
-            /// \brief Abstract base class for ops on tensors views.
-            class RequiresTensorViewArgs : public ngraph::op::Op
+            inline NodeVector max(const Node& node)
             {
-            protected:
-                /// \brief Constructs an operation on tensor view arguments.
-                ///
-                /// \param args The nodes producing this node's input tensors.
-                RequiresTensorViewArgs(const std::string& node_type, const NodeVector& args);
-            };
-        }
-    }
-}
+                return variadic::make_ng_variadic_op<ngraph::op::Maximum>(node);
+            }
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

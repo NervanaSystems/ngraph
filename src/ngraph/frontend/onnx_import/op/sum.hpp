@@ -14,18 +14,27 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#pragma once
 
-#include "ngraph/op/util/unary_elementwise.hpp"
-#include "pyngraph/ops/util/unary_elementwise.hpp"
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/add.hpp"
 
-namespace py = pybind11;
+#include "core/node.hpp"
+#include "utils/variadic.hpp"
 
-void regclass_pyngraph_op_util_UnaryElementwise(py::module m)
+namespace ngraph
 {
-    py::class_<ngraph::op::util::UnaryElementwise,
-               std::shared_ptr<ngraph::op::util::UnaryElementwise>,
-               ngraph::op::util::RequiresTensorViewArgs>
-        unaryElementwise(m, "UnaryElementwise");
-}
+    namespace onnx_import
+    {
+        namespace op
+        {
+            inline NodeVector sum(const Node& node)
+            {
+                return variadic::make_ng_variadic_op<ngraph::op::Add>(node);
+            }
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

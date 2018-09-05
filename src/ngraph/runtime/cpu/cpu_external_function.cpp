@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <cstdlib>
 #include <fstream>
@@ -42,7 +42,6 @@
 
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
-#include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
@@ -122,11 +121,11 @@
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
+#include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
-#include "ngraph/pass/result_copy_elimination.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
@@ -371,6 +370,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     // nv_cwi is required only by some frontends
     // in which case they should run this pass(CPUWorkspaceInsertion) explicitly
     NodeVector nv_cwi;
+    pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
     // failing mxnet unit tests.
@@ -388,7 +388,6 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
-    pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     unordered_map<Node*, Node*> node_function_map;
     string common_function_string;
@@ -670,7 +669,7 @@ using namespace ngraph::runtime;
             for (size_t i = 0; i < param->get_output_size(); ++i)
             {
                 shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_view(i);
-                const element::Type& et = tv->get_tensor_view_type()->get_element_type();
+                const element::Type& et = tv->get_element_type();
                 string type = et.c_type_string();
                 stringstream ss;
                 ss << "((" << type << "*)(inputs[" << arg_index << "]))";
@@ -687,20 +686,21 @@ using namespace ngraph::runtime;
         {
             shared_ptr<Node> op = current_function->get_output_op(i);
             shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
-            string type = tv->get_tensor_view_type()->get_element_type().c_type_string();
+            string type = tv->get_element_type().c_type_string();
             stringstream ss;
             ss << "((" << type << "*)(outputs[" << i << "]))";
             m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
             m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::OUTPUT;
 
-            // it should be safe to assign both descriptors to one output*
-            // since needs_copy == false makes `op::Result` an nop
+            //keep assigning different outputs to a result descriptor
+            //op::Result emitter will check if in and out descriptors are the same
+            //and skip a copy
             auto res = std::dynamic_pointer_cast<ngraph::op::Result>(op);
-            if (!res->needs_copy())
+            auto input_node = res->get_inputs().at(0).get_output().get_node();
+            if (!input_node->is_constant() && !input_node->is_parameter())
             {
                 shared_ptr<descriptor::TensorView> itv =
                     res->get_inputs().at(0).get_output().get_tensor_view();
-
                 auto output_name = ss.str();
                 m_variable_name_map[itv->get_tensor().get_name()] = ss.str();
                 m_tensor_roles[itv->get_tensor().get_name()] = CPUTensorRole::OUTPUT;
@@ -1141,7 +1141,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
-    pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
@@ -1237,8 +1236,12 @@ void runtime::cpu::CPU_ExternalFunction::build()
         function_output_index.emplace_back(tensor_data[tv->get_tensor().get_name()], i);
         m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::OUTPUT;
 
+        //keep assigning different outputs to a result descriptor
+        //op::Result emitter will check if in and out descriptors are the same
+        //and skip a copy
         auto res = std::dynamic_pointer_cast<ngraph::op::Result>(op);
-        if (!res->needs_copy())
+        auto input_node = res->get_inputs().at(0).get_output().get_node();
+        if (!input_node->is_constant() && !input_node->is_parameter())
         {
             shared_ptr<descriptor::TensorView> itv =
                 res->get_inputs().at(0).get_output().get_tensor_view();
@@ -1275,6 +1278,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         }
         vector<TensorViewWrapper> out;
         vector<string> out_names;
+
         for (const descriptor::Output& output : node->get_outputs())
         {
             shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
