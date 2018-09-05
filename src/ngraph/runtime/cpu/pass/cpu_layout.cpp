@@ -1288,8 +1288,6 @@ namespace ngraph
                                      vector<memory::desc>& i_mds,
                                      vector<memory::desc>& o_mds)
                 {
-                    auto bn = static_cast<const T*>(node.get());
-
                     auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 2);
                     auto arg0_md = mkldnn_utils::create_default_mkldnn_md(
                         node.get(), 0, false, memory::format::x);
