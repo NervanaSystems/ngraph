@@ -29,7 +29,6 @@ void regclass_pyngraph_op_util_IndexReduction(py::module m)
                std::shared_ptr<ngraph::op::util::IndexReduction>,
                ngraph::op::Op>
         indexReduction(m, "IndexRedection");
-    // indexReduction.def(py::init<const std::string&, const std::shared_ptr<ngraph::Node>&, size_t, const ngraph::element::Type& >());
     indexReduction.def_property_readonly(
         "reduction_axis", &ngraph::op::util::IndexReduction::get_reduction_axis);
     indexReduction.def_property_readonly(

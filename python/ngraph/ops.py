@@ -23,9 +23,9 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, BatchNorm, \
     Broadcast, Ceiling, Concat, Constant, Convert, Convolution, ConvolutionBackpropData, Cos, \
     Cosh, Divide, Dot, Equal, Exp, Floor, FunctionCall, GetOutputElement, Greater, GreaterEq, \
-    Less, LessEq, Log, LRN, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, \
-    OneHot, Or, Pad, Parameter, Product, Power, Reduce, Relu, ReplaceSlice, Reshape, Reverse, \
-    Select, Sign, Sin, Sinh, Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh, TopK
+    Less, LessEq, Log, LRN, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, \
+    NotEqual, OneHot, Or, Pad, Parameter, Product, Power, Reduce, Relu, ReplaceSlice, Reshape, \
+    Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh, TopK
 
 from typing import Callable, Iterable, List, Union
 
@@ -952,52 +952,53 @@ def lrn(data,       # type: Node
 
 
 @nameable_op
-def argmax(data,    # type: Node
-           axis,    # type: int
-           etype,   # type: NumericType
+def argmax(data,     # type: Node
+           axis=0,   # type: int
            ):
     # type: (...) -> Node
-    """return a node which performs ArgMax index reduction operation.
+    """Return a node which performs ArgMax index reduction operation.
+
     :param data: Input data.
     :param axis: Reduction Axis.
-    :param etype: Index element type.
     :return: The new node which performs ArgMax
     """
-    return ArgMax(data, axis, get_element_type(etype))
+    return ArgMax(data, axis, get_element_type(np.int32))
 
 
 @nameable_op
 def argmin(data,    # type: Node
-           axis,    # type: int
-           etype,   # type: NumericType
+           axis=0,  # type: int
            ):
     # type: (...) -> Node
-    """return a node which performs ArgMin index reduction operation.
+    """Return a node which performs ArgMin index reduction operation.
+
     :param data: Input data.
     :param axis: Reduction Axis.
-    :param etype: Index element type.
     :return: The new node which performs ArgMin
     """
-    return ArgMin(data, axis, get_element_type(etype))
+    return ArgMin(data, axis, get_element_type(np.int32))
 
 
 @nameable_op
-def topk(data,    # type: Node
-         kaxis,   # type: int
-         etype,   # type: NumericType
-         k,       # type: int
-         cmax     # type: bool
+def topk(data,       # type: Node
+         k,          # type: int
+         kaxis=-1,   # type: int
+         cmax=True,  # type: bool
          ):
     # type: (...) -> Node
-    """return a node which performs TopK.
+    """Return a node which performs TopK.
+
     :param data: Input data.
     :param kaxis: TopK Axis.
-    :param etype: Index element type.
     :param k: K.
-    :param cmax: Compute TopK largest or smallest?
-    :return: The new node which performs ArgMin
+    :param cmax: Compute TopK largest (True) or smallest (False)
+    :return: The new node which performs TopK (both indices and values)
     """
-    return TopK(data, kaxis, get_element_type(etype), k, cmax)
+    return TopK(data,
+                len(data.get_shape()) - 1 if kaxis == -1 else kaxis,
+                get_element_type(np.int32),
+                k,
+                cmax)
 
 
 @nameable_op

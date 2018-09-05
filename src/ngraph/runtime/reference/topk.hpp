@@ -77,12 +77,12 @@ namespace ngraph
                     sort(workspace.begin(),
                          workspace.end(),
                          compute_max ?
-                             [] (const tuple<T, U>&  a, const tuple<T, U>& b) -> bool { return get<0>(a) == get<0>(b) ? get<1>(a) < get<1>(b) : get<0>(a) > get<0>(b); } :
-                             [] (const tuple<T, U>&  a, const tuple<T, U>& b) -> bool { return get<0>(a) == get<0>(b) ? get<1>(a) < get<1>(b) : get<0>(a) < get<0>(b); });
+                             [] (const tuple<T, U>&  a, const tuple<T, U>& b) -> bool { return a > b; } :
+                             [] (const tuple<T, U>&  a, const tuple<T, U>& b) -> bool { return a < b; });
                     // Write temp vector to output
-                    for(size_t i = 0; i < k ; i++)
+                    for(size_t j = 0; j < k ; j++)
                     {
-                        tuple<T, U> entry = workspace[i];
+                        tuple<T, U> entry = workspace[j];
                         out_values[out_index]=get<0>(entry);
                         out_indices[out_index]=get<1>(entry);
                         out_index += out_axis_stride;

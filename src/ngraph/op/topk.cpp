@@ -14,9 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <functional>
 #include <memory>
-#include <utility>
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/op/topk.hpp"
@@ -25,7 +23,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::TopK::TopK(const std::shared_ptr<Node>& arg,
+op::TopK::TopK(const shared_ptr<Node>& arg,
                size_t top_k_axis,
                const element::Type& index_element_type,
                size_t k,

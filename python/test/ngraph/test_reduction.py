@@ -52,7 +52,7 @@ def test_argmax():
                                     [12, 8, 4],
                                     [6, 1, 5],
                                     [3, 11, 7]], dtype=np.float32))
-    model = runtime.computation(ng.argmax(input_x, 0, np.int32))
+    model = runtime.computation(ng.argmax(input_x, 0))
     result = model()
     assert np.allclose(result,
                        np.array([1, 3, 0], dtype=np.int32))
@@ -65,7 +65,7 @@ def test_argmin():
                                     [9, 8, 4],
                                     [6, 1, 5],
                                     [3, 11, 7]], dtype=np.float32))
-    model = runtime.computation(ng.argmin(input_x, 0, np.int32))
+    model = runtime.computation(ng.argmin(input_x, 0))
     result = model()
     assert np.allclose(result,
                        np.array([3, 2, 1], dtype=np.int32))
@@ -78,7 +78,7 @@ def test_topk():
                                     [12, 8, 4],
                                     [6, 1, 5],
                                     [3, 11, 7]], dtype=np.float32))
-    comp_topk = ng.topk(input_x, 0, np.int32, 4, True)
+    comp_topk = ng.topk(input_x, 4, 0)
     model0 = runtime.computation(ng.get_output_element(comp_topk, 0))
     result0 = model0()
     assert np.allclose(result0,
