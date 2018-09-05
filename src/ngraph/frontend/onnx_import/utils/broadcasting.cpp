@@ -22,6 +22,7 @@
 #include "ngraph/op/reshape.hpp"
 
 #include "broadcasting.hpp"
+#include "reshape.hpp"
 
 /// \brief Calculate output shape of numpy - style broadcast operation.
 ///        https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html#general-broadcasting-rules
@@ -83,21 +84,15 @@ namespace ngraph
                     : new_right_shape.push_back(right_full_shape.at(index));
             }
 
-            // Generate an increasing sequence (0,1,2,3..) as input_order for Reshape
-            std::vector<size_t> left_input_order(left->get_shape().size());
-            std::iota(std::begin(left_input_order), std::end(left_input_order), 0);
+            // Remove dims which have length of 1 from source shape
+            std::shared_ptr<Node> broadcasted_left = std::make_shared<op::Reshape>(
+                left, reshape::get_default_axis_vector(left->get_shape().size()), new_left_shape);
 
             // Remove dims which have length of 1 from source shape
-            std::shared_ptr<Node> broadcasted_left =
-                std::make_shared<op::Reshape>(left, left_input_order, new_left_shape);
-
-            // Generate an increasing sequence (0,1,2,3..) as input_order for Reshape
-            std::vector<size_t> right_input_order(right->get_shape().size());
-            std::iota(std::begin(right_input_order), std::end(right_input_order), 0);
-
-            // Remove dims which have length of 1 from source shape
-            std::shared_ptr<Node> broadcasted_right =
-                std::make_shared<op::Reshape>(right, right_input_order, new_right_shape);
+            std::shared_ptr<Node> broadcasted_right = std::make_shared<op::Reshape>(
+                right,
+                reshape::get_default_axis_vector(right->get_shape().size()),
+                new_right_shape);
 
             broadcasted_left = std::make_shared<op::Broadcast>(
                 broadcasted_left, output_shape, left_broadcast_axes);
