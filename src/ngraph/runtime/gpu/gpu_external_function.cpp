@@ -660,8 +660,6 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 
     m_pass_manager.register_pass<runtime::gpu::pass::MultiLayerRNNFusion>();
 
-    m_pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
-
     m_pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     m_pass_manager
         .register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
