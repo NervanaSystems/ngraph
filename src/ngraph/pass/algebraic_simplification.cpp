@@ -136,34 +136,69 @@ static bool simplify_concat(std::shared_ptr<Node> n)
         }
     }
 
-    auto replacement = branch_tip;
-    if (branch_tip->get_shape().size() != n->get_shape().size())
+    slice = std::dynamic_pointer_cast<op::Slice>(branch_tip->get_users().at(0));
+    if (shape_size(slice->get_strides()) != 1)
     {
-        auto concat = std::dynamic_pointer_cast<op::Concat>(n);
-        auto default_shape = ngraph::get_default_order(branch_tip->get_shape());
-        std::shared_ptr<op::Reshape> reshape = nullptr;
-        if (concat->get_concatenation_axis() == 0)
+        NGRAPH_DEBUG << slice->get_name() << " is strided";
+        return false;
+    }
+
+    auto concat = std::dynamic_pointer_cast<op::Concat>(n);
+    size_t concat_axis = concat->get_concatenation_axis();
+
+    auto slice_shape = branch_tip->get_users().at(0)->get_shape();
+    size_t slice_axis = std::numeric_limits<size_t>::max();
+
+    auto btip_shape = branch_tip->get_shape();
+    for (size_t i = 0; i < btip_shape.size(); i++)
+    {
+        if (btip_shape[i] != slice_shape[i])
         {
-            // logical reshape
-            reshape = std::make_shared<op::Reshape>(branch_tip, default_shape, n->get_shape());
+            if (slice_axis != std::numeric_limits<size_t>::max())
+            {
+                // multi-axis slice + concat do not cancel
+                return false;
+            }
+            slice_axis = i;
+        }
+    }
+
+    auto replacement = branch_tip;
+    if (btip_shape != n->get_shape())
+    {
+        auto default_order = ngraph::get_default_order(btip_shape);
+        if (concat_axis == slice_axis)
+        {
+            // logical reshape only
+            replacement =
+                std::make_shared<op::Reshape>(branch_tip, default_order, concat->get_shape());
         }
         else
         {
-            // logical reshape + axis reordering
-            Shape concat_shape = n->get_shape();
-            AxisVector order = ngraph::get_default_order(concat_shape);
-            size_t concat_axis = concat->get_concatenation_axis();
-            for (size_t i = concat_axis; i > 0; i--)
+            // axis reordering required
+            auto transposed_shape = n->get_shape();
+            AxisVector order = ngraph::get_default_order(transposed_shape);
+            if (btip_shape.size() >= transposed_shape.size())
             {
-                order[i] = order[i - 1];
+                auto ax = order[slice_axis];
+                order[slice_axis] = order[concat_axis];
+                order[concat_axis] = ax;
+                replacement = std::make_shared<op::Reshape>(branch_tip, order, transposed_shape);
             }
-            order.front() = concat_axis;
-            auto output_shape = ngraph::apply_permutation(concat_shape, order);
-            auto logical_reshape =
-                std::make_shared<op::Reshape>(branch_tip, default_shape, output_shape);
-            reshape = std::make_shared<op::Reshape>(logical_reshape, order, concat_shape);
+            else if (btip_shape.size() < transposed_shape.size())
+            {
+                // intermediate logical reshape
+                auto ax = order[slice_axis];
+                order[slice_axis] = order[concat_axis];
+                order[concat_axis] = ax;
+                auto output_shape = ngraph::apply_permutation(transposed_shape, order);
+                auto logical_reshape =
+                    std::make_shared<op::Reshape>(branch_tip, default_order, output_shape);
+                // transpose to final concatenated shape
+                replacement =
+                    std::make_shared<op::Reshape>(logical_reshape, order, transposed_shape);
+            }
         }
-        replacement = reshape;
     }
 
     ngraph::replace_node(n, replacement);
