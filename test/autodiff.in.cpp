@@ -1128,7 +1128,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_select_nested)
         auto X0 = make_shared<op::Parameter>(element::boolean, shape);
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
         auto X2 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Select>(X0, X1 + X2, X2 - X1),
+        return make_shared<Function>(make_shared<op::Select>(X0, X2 + X1, X2 - X1),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
 
