@@ -86,6 +86,8 @@ op::gpu::Lstm::Lstm(std::shared_ptr<Node> input_xt_1,
     NGRAPH_ASSERT(i2h_bias->get_shape()[0] == i2h_weights->get_shape()[0] && h2h_bias->get_shape()[0] == h2h_weights->get_shape()[0])
         << "bias and weights_shape are not compatible";
 
+    NGRAPH_ASSERT(m_output_tensor_shape == m_output_cell_shape) << "shape of recurrent input and cell state are not the same";
+
     auto et = input_xt_1->get_element_type();
     for (auto& lstm_input : get_arguments())
     {
