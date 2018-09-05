@@ -56,13 +56,13 @@ op::gpu::Lstm::Lstm(std::shared_ptr<Node> input_xt_1,
                     std::shared_ptr<Node> h2h_bias,
                     std::shared_ptr<Node> cell_state_ct_1)
     : Op("Lstm",
-                             {input_xt_1,
-                              i2h_weights,
-                              hidden_state_ht_1,
-                              h2h_weights,
-                              i2h_bias,
-                              h2h_bias,
-                              cell_state_ct_1})
+         {input_xt_1,
+          i2h_weights,
+          hidden_state_ht_1,
+          h2h_weights,
+          i2h_bias,
+          h2h_bias,
+          cell_state_ct_1})
     , m_output_tensor_shape(hidden_state_ht_1->get_shape())
     , m_output_cell_shape(cell_state_ct_1->get_shape())
     , m_num_timesteps(1)
@@ -179,10 +179,12 @@ op::gpu::Lstm::Lstm(std::shared_ptr<Node> src_layer,
     }
 
     set_output_size(2);
-    set_output_type(0, src_layer->get_element_type(),
-        Shape{static_cast<unsigned long>(m_num_timesteps * m_batch_size),
-            static_cast<unsigned long>(m_src_iter_feature_size)});
-    set_output_type(1, src_layer->get_element_type(),
-               Shape{static_cast<unsigned long>(m_num_cell_states * m_batch_size),
-                     static_cast<unsigned long>(m_src_iter_feature_size)});
+    set_output_type(0,
+                    src_layer->get_element_type(),
+                    Shape{static_cast<unsigned long>(m_num_timesteps * m_batch_size),
+                          static_cast<unsigned long>(m_src_iter_feature_size)});
+    set_output_type(1,
+                    src_layer->get_element_type(),
+                    Shape{static_cast<unsigned long>(m_num_cell_states * m_batch_size),
+                          static_cast<unsigned long>(m_src_iter_feature_size)});
 }
