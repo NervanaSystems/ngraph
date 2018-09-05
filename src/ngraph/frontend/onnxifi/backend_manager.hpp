@@ -41,7 +41,7 @@ namespace ngraph
 
             static void get_backend_ids(::onnxBackendID* backendIDs, std::size_t* count)
             {
-                instance().get_registered_ids(backendIDs, count);
+                instance().get_ids(backendIDs, count);
             }
 
             static void unregister(::onnxBackendID backendID)
@@ -49,10 +49,10 @@ namespace ngraph
                 instance().unregister_backend(backendID);
             }
 
-            static const Backend& get(::onnxBackendID backendID)
-            {
-                return instance().get_backend(backendID);
-            }
+            static void get_backend_info(::onnxBackendID backendID,
+                                         ::onnxBackendInfo intoType,
+                                         void* infoValue,
+                                         std::size_t* infoValueSize);
 
         private:
             mutable std::mutex m_mutex{};
@@ -77,7 +77,7 @@ namespace ngraph
                 return unregister_backend(reinterpret_cast<std::uintptr_t>(id));
             }
 
-            void get_registered_ids(::onnxBackendID* backendIDs, std::size_t* count) const;
+            void get_ids(::onnxBackendID* backendIDs, std::size_t* count) const;
 
             const Backend& get_backend(std::uintptr_t id) const
             {
