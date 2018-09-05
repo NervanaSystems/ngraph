@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "ngraph/runtime/gpu/op/lstm.hpp"
 #include "ngraph/log.hpp"
@@ -25,10 +25,8 @@ shared_ptr<Node> op::gpu::Lstm::copy_with_new_args(const NodeVector& new_args) c
 {
     if (!m_fused_inputs)
     {
-        if (new_args.size() != 7)
-        {
-            throw ngraph_error("Incorrect number of new arguments");
-        }
+        NGRAPH_ASSERT(new_args.size() == 7) << "Incorrect number of new arguments";
+
         return make_shared<Lstm>(new_args.at(0),
                                  new_args.at(1),
                                  new_args.at(2),
@@ -39,10 +37,9 @@ shared_ptr<Node> op::gpu::Lstm::copy_with_new_args(const NodeVector& new_args) c
     }
     else
     {
-        if (new_args.size() != 5 && m_fused_inputs)
-        {
-            throw ngraph_error("Incorrect number of new arguments");
-        }
+        NGRAPH_ASSERT(new_args.size() == 5 && m_fused_inputs)
+            << "Incorrect number of new arguments";
+
         return make_shared<Lstm>(
             new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), new_args.at(4));
     }
@@ -75,36 +72,19 @@ op::gpu::Lstm::Lstm(std::shared_ptr<Node> input_xt_1,
     , m_num_fused_layers(1)
     , m_fused_inputs(false)
 {
-    if (input_xt_1->get_shape().size() != i2h_weights->get_shape().size())
-    {
-        throw ngraph_error("input_xt_1 and i2h weights size dont match");
-    }
+    NGRAPH_ASSERT(input_xt_1->get_shape().size() == i2h_weights->get_shape().size())
+        << "input_xt_1 and i2h weights size dont match";
+    NGRAPH_ASSERT(hidden_state_ht_1->get_shape().size() == h2h_weights->get_shape().size())
+        << "hidden_state_ht_1 and h2h weights size dont match";
+    NGRAPH_ASSERT(input_xt_1->get_shape().size() == 2) << "input_xt_1 doesnt have a rank 2";
 
-    if (hidden_state_ht_1->get_shape().size() != h2h_weights->get_shape().size())
-    {
-        throw ngraph_error("hidden_state_ht_1 and h2h weights size dont match");
-    }
+    m_batch_size = static_cast<int>(input_xt_1->get_shape()[0]);
 
-    if (input_xt_1->get_shape().size() == 2)
-    {
-        m_batch_size = static_cast<int>(input_xt_1->get_shape()[0]);
-    }
-    else
-    {
-        throw ngraph_error("input_xt_1 doesnt have a rank 2");
-    }
-
-    if (shape_size(input_xt_1->get_shape()) !=
-        m_src_sequence_length * m_batch_size * m_src_layer_feature_size)
-    {
-        throw ngraph_error("input_xt_1 size is not equal t*n*c");
-    }
-
-    if (i2h_bias->get_shape()[0] != i2h_weights->get_shape()[0] ||
-        h2h_bias->get_shape()[0] != h2h_weights->get_shape()[0])
-    {
-        throw ngraph_error("bias and weights_shape are not compatible");
-    }
+    NGRAPH_ASSERT(shape_size(input_xt_1->get_shape()) ==
+                  m_src_sequence_length * m_batch_size * m_src_layer_feature_size)
+        << "input_xt_1 size is not equal t*n*c";
+    NGRAPH_ASSERT(i2h_bias->get_shape()[0] == i2h_weights->get_shape()[0] && h2h_bias->get_shape()[0] == h2h_weights->get_shape()[0])
+        << "bias and weights_shape are not compatible";
 
     auto et = input_xt_1->get_element_type();
     for (auto& lstm_input : get_arguments())
@@ -138,36 +118,20 @@ op::gpu::Lstm::Lstm(std::shared_ptr<Node> src_layer,
     , m_num_fused_layers(1)
     , m_fused_inputs(true)
 {
-    if (src_layer->get_shape().size() != weights_layer->get_shape().size())
-    {
-        throw ngraph_error("src_layer and i2h weights size dont match");
-    }
+    NGRAPH_ASSERT(src_layer->get_shape().size() == weights_layer->get_shape().size())
+        << "src_layer and i2h weights size dont match";
+    NGRAPH_ASSERT(src_iter->get_shape().size() == weights_iter->get_shape().size())
+        << "src_iter and h2h weights size dont match";
+    NGRAPH_ASSERT(src_layer->get_shape().size() == 2) << "src_layer doesnt have a rank 2";
 
-    if (src_iter->get_shape().size() != weights_iter->get_shape().size())
-    {
-        throw ngraph_error("src_iter and h2h weights size dont match");
-    }
+    m_batch_size = static_cast<int>(src_layer->get_shape()[0] / m_num_timesteps);
 
-    if (src_layer->get_shape().size() == 2)
-    {
-        m_batch_size = static_cast<int>(src_layer->get_shape()[0] / m_num_timesteps);
-    }
-    else
-    {
-        throw ngraph_error("src_layer doesnt have a rank 2");
-    }
-
-    if (shape_size(src_layer->get_shape()) !=
-        m_src_sequence_length * m_batch_size * m_src_layer_feature_size)
-    {
-        throw ngraph_error("src_layer size is not equal t*n*c");
-    }
-
-    if (bias->get_shape()[0] != weights_layer->get_shape()[0] ||
-        bias->get_shape()[0] != weights_iter->get_shape()[0])
-    {
-        throw ngraph_error("bias and weights_shape are not compatible");
-    }
+    NGRAPH_ASSERT(shape_size(src_layer->get_shape()) ==
+                  m_src_sequence_length * m_batch_size * m_src_layer_feature_size)
+        << "src_layer size is not equal t*n*c";
+    NGRAPH_ASSERT(bias->get_shape()[0] == weights_layer->get_shape()[0] &&
+                  bias->get_shape()[0] == weights_iter->get_shape()[0])
+        << "bias and weights_shape are not compatible";
 
     auto et = src_layer->get_element_type();
     for (auto& rnn_input : get_arguments())
