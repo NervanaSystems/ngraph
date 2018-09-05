@@ -86,10 +86,14 @@ static bool simplify_concat(std::shared_ptr<Node> n)
     auto slice =
         std::make_shared<op::Slice>(ltip, Coordinate{0, 0}, Coordinate{2, 1}, Strides{1, 1});
 
+    auto lslice = std::make_shared<pattern::op::Label>(slice, nullptr, NodeVector{slice});
+
     auto skip_reshape =
-        std::make_shared<pattern::op::Skip>(slice, pattern::has_class<op::Reshape>());
+        std::make_shared<pattern::op::Skip>(lslice, pattern::has_class<op::Reshape>());
 
     auto matcher = std::make_shared<pattern::Matcher>(skip_reshape, nullptr);
+
+    Coordinate prev_lower_bounds;
 
     for (auto carg : n->get_arguments())
     {
@@ -114,25 +118,38 @@ static bool simplify_concat(std::shared_ptr<Node> n)
             NGRAPH_DEBUG << "setting branch_tip to " << branch_tip->get_name();
         }
 
-        auto it = carg;
-        while (it != branch_tip)
+        auto slice = std::dynamic_pointer_cast<op::Slice>(matcher->get_pattern_map()[lslice]);
+
+        if (branch_tip)
         {
-            if (auto rcarg = std::dynamic_pointer_cast<op::Reshape>(carg))
+            auto cur_lower_bounds = slice->get_lower_bounds();
+            if (cur_lower_bounds < prev_lower_bounds)
             {
-                auto default_shape = ngraph::get_default_order(rcarg->get_argument(0)->get_shape());
-                if (default_shape != rcarg->get_input_order())
-                {
-                    NGRAPH_DEBUG << carg->get_name() << " reshape also does transposes";
-                    return false;
-                }
-            }
-            if (carg->get_users().size() > 1)
-            {
-                NGRAPH_DEBUG << carg->get_name() << " has more than one user";
+                NGRAPH_DEBUG << slice->get_name() << " is in the wrong order";
                 return false;
             }
+            prev_lower_bounds.assign(cur_lower_bounds.begin(), cur_lower_bounds.end());
+        }
+        else
+        {
+            prev_lower_bounds.assign(slice->get_lower_bounds().begin(),
+                                     slice->get_lower_bounds().end());
+        }
 
-            it = it->get_argument(0);
+        if (slice->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << slice->get_name() << " has more than one user";
+            return false;
+        }
+
+        if (auto rcarg = std::dynamic_pointer_cast<op::Reshape>(carg))
+        {
+            auto default_shape = ngraph::get_default_order(rcarg->get_argument(0)->get_shape());
+            if (default_shape != rcarg->get_input_order())
+            {
+                NGRAPH_DEBUG << carg->get_name() << " reshape also does transposes";
+                return false;
+            }
         }
     }
 
