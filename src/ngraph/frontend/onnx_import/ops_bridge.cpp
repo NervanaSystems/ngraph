@@ -33,6 +33,7 @@
 #include "op/mean.hpp"
 #include "op/min.hpp"
 #include "op/mul.hpp"
+#include "op/pow.hpp"
 #include "op/reduce.hpp"
 #include "op/relu.hpp"
 #include "op/reshape.hpp"
@@ -102,6 +103,7 @@ namespace ngraph
                     m_map.emplace("Mean", std::bind(op::mean, std::placeholders::_1));
                     m_map.emplace("Min", std::bind(op::min, std::placeholders::_1));
                     m_map.emplace("Mul", std::bind(op::mul, std::placeholders::_1));
+                    m_map.emplace("Pow", std::bind(op::pow, std::placeholders::_1));
                     m_map.emplace("ReduceLogSum",
                                   std::bind(op::reduce_log_sum, std::placeholders::_1));
                     m_map.emplace("ReduceLogSumExp",

@@ -1323,16 +1323,19 @@ size_t runtime::gpu::CUDAEmitter::build_softmax_divide(const std::vector<std::st
     return primitive_index;
 }
 
-size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& dtypes,
-                                               NVShape input_shape,
-                                               NVShape reduce_axis,
-                                               const char* op,
-                                               const char* kernel)
+size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::string>& dtypes,
+                                                     NVShape input_shape,
+                                                     NVShape reduce_axis,
+                                                     const char* op,
+                                                     const char* kernel)
 {
+    size_t rank = input_shape.size();
+    size_t reduce_rank = reduce_axis.size();
+    size_t out_rank = rank - reduce_rank;
     // assumes NC{d1,...,dn} format
-    std::string kernel_name = "reduce_" + join(dtypes, "_") + "_ri_" +
-                              std::to_string(input_shape.size()) + "_rr_" +
-                              std::to_string(reduce_axis.size());
+    std::string kernel_name = "reduce_nd_" + join(dtypes, "_");
+    kernel_name +=
+        "_ri_" + std::to_string(input_shape.size()) + "_rr_" + std::to_string(reduce_axis.size());
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
 
     std::stringstream ss;
@@ -1345,9 +1348,6 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
         return primitive_index;
     }
 
-    size_t rank = input_shape.size();
-    size_t reduce_rank = reduce_axis.size();
-    size_t out_rank = rank - reduce_rank;
     NVShape reduce_flag(rank, 0);
     for (auto a : reduce_axis)
     {
@@ -1372,7 +1372,6 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
         }
     }
     NVShape output_strides = row_major_strides(output_shape);
-
     uint32_t nthreads = static_cast<uint32_t>(shape_size(output_shape));
     // TODO: currently we set it to 64, will add tuning method later
     uint32_t block_size_x = 64;
@@ -1398,7 +1397,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
             CudaKernelBuilder::get_device_helper(
                 writer, op, kernel, {{dtypes[0], dtypes[0], dtypes[1]}});
         }
-        runtime::gpu::CudaKernelBuilder::get_reduce_op(
+        runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
             writer, kernel_name, args, dtypes, op, out_rank, reduce_rank);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
@@ -1422,8 +1421,248 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
                                           0));
             debug_sync();
         }});
-
     primitive_index = this->m_primitive_emitter->insert(std::move(reduce));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
+
+size_t runtime::gpu::CUDAEmitter::build_reduce_to_scalar(const std::vector<std::string>& dtypes,
+                                                         const size_t data_bytes,
+                                                         NVShape input_shape,
+                                                         const char* op,
+                                                         const char* kernel)
+{
+    // assumes NC{d1,...,dn} format
+    std::string kernel_name = "reduce_scalar_" + join(dtypes, "_");
+    std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
+
+    std::stringstream ss;
+    ss << kernel_name << "_s_" << join(input_shape, "_");
+    auto hash = ss.str();
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
+    uint32_t n = nthreads;
+    uint32_t block_size_x = 1;
+    while (n > 1)
+    {
+        block_size_x <<= 1;
+        n >>= 1;
+    }
+    block_size_x = fmin(512, block_size_x);
+    uint32_t shared_data_bytes = block_size_x * static_cast<uint32_t>(data_bytes);
+    kernel_name += "_b_" + std::to_string(block_size_x);
+    auto args = m_primitive_emitter->add_kernel_args();
+    args.add_placeholder(dtypes[0], "in")
+        .add_placeholder(dtypes[1], "out")
+        .add("nthreads", nthreads);
+
+    // if the kernel has not been compiled, build it
+    auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name);
+    if (compiled_kernel == nullptr)
+    {
+        codegen::CodeWriter writer;
+        CudaKernelBuilder::add_pod_typedefs(writer);
+        writer << include_helpers();
+        if (kernel)
+        {
+            CudaKernelBuilder::get_device_helper(
+                writer, op, kernel, {{dtypes[0], dtypes[0], dtypes[1]}});
+        }
+        runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
+            writer, kernel_name, args, dtypes, op, block_size_x);
+        compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
+    }
+
+    std::unique_ptr<gpu::primitive> reduce(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void** args_list = args.resolve_placeholder(0, &inputs[0])
+                                   .resolve_placeholder(1, &outputs[0])
+                                   .get_argument_list();
+
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          1,
+                                          1,
+                                          1,
+                                          block_size_x,
+                                          1,
+                                          1,
+                                          shared_data_bytes,
+                                          NULL,
+                                          args_list,
+                                          0));
+            debug_sync();
+        }});
+    primitive_index = this->m_primitive_emitter->insert(std::move(reduce));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
+
+size_t runtime::gpu::CUDAEmitter::build_reduce_to_scalar_acc(const std::vector<std::string>& dtypes,
+                                                             NVShape input_shape,
+                                                             NVShape output_shape,
+                                                             uint32_t block_size_x,
+                                                             const char* op,
+                                                             const char* kernel)
+{
+    // assumes NC{d1,...,dn} format
+    std::string kernel_name = "reduce_acc_" + join(dtypes, "_");
+    std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
+
+    std::stringstream ss;
+    ss << kernel_name << "_s_" << join(input_shape, "_");
+    auto hash = ss.str();
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
+    auto args = m_primitive_emitter->add_kernel_args();
+    args.add_placeholder(dtypes[0], "in")
+        .add_placeholder(dtypes[1], "out")
+        .add("nthreads", nthreads);
+
+    uint32_t aligned_grid_size_x = static_cast<uint32_t>(shape_size(output_shape)) / block_size_x;
+
+    auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name);
+    // if the kernel has not been compiled, build it
+    if (compiled_kernel == nullptr)
+    {
+        codegen::CodeWriter writer;
+        CudaKernelBuilder::add_pod_typedefs(writer);
+        writer << include_helpers();
+        if (kernel)
+        {
+            CudaKernelBuilder::get_device_helper(
+                writer, op, kernel, {{dtypes[0], dtypes[0], dtypes[1]}});
+        }
+        runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
+            writer, kernel_name, args, dtypes, op);
+        compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
+    }
+
+    std::unique_ptr<gpu::primitive> reduce_acc(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void** args_list = args.resolve_placeholder(0, &inputs[0])
+                                   .resolve_placeholder(1, &outputs[0])
+                                   .get_argument_list();
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          aligned_grid_size_x,
+                                          1,
+                                          1,
+                                          block_size_x,
+                                          1,
+                                          1,
+                                          0,
+                                          NULL,
+                                          args_list,
+                                          0));
+        }});
+    primitive_index = this->m_primitive_emitter->insert(std::move(reduce_acc));
+
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
+
+size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& dtypes,
+                                               const size_t data_bytes,
+                                               NVShape input_shape,
+                                               NVShape reduce_axis,
+                                               const char* op,
+                                               const char* kernel)
+{
+    size_t rank = input_shape.size();
+    size_t reduce_rank = reduce_axis.size();
+    size_t out_rank = rank - reduce_rank;
+    // assumes NC{d1,...,dn} format
+    std::string kernel_name = "reduce_" + join(dtypes, "_");
+    if (out_rank != 0)
+    {
+        kernel_name += "_ri_" + std::to_string(input_shape.size()) + "_rr_" +
+                       std::to_string(reduce_axis.size());
+    }
+    std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
+
+    std::stringstream ss;
+    ss << kernel_name << "_s_" << join(input_shape, "_") << "_axis_" << join(reduce_axis, "_");
+    auto hash = ss.str();
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    int num_SMs;
+    CUDA_RT_SAFE_CALL(cudaDeviceGetAttribute(&num_SMs, cudaDevAttrMultiProcessorCount, 0));
+    uint32_t block_size_x_acc = 256;
+    uint32_t nthreads_acc = num_SMs * block_size_x_acc;
+    //call reduce_to_nd
+    if (out_rank != 0)
+    {
+        size_t reduce_idx = build_reduce_to_nd(dtypes, input_shape, reduce_axis, op, kernel);
+
+        std::unique_ptr<gpu::primitive> reduce(
+            new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+                gpu::invoke_primitive(m_ctx,
+                                      reduce_idx,
+                                      std::vector<void*>{inputs[0]}.data(),
+                                      std::vector<void*>{outputs[0]}.data());
+            }});
+        primitive_index = this->m_primitive_emitter->insert(std::move(reduce));
+    }
+    else
+    {
+        uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
+        //if the data size is large, call reduce_to_scalar_acc first and then reduce_to_scalar.
+        //other wise, call reduce to scalar directly.
+        const uint32_t unroll_size = 8;
+        if (nthreads > nthreads_acc * (unroll_size + 1))
+        {
+            NVShape acc_output_shape{nthreads_acc};
+            size_t reduce_scalar_acc_idx = build_reduce_to_scalar_acc(
+                dtypes, input_shape, acc_output_shape, block_size_x_acc, op, kernel);
+            size_t reduce_scalar_idx =
+                build_reduce_to_scalar(dtypes, data_bytes, acc_output_shape, op, kernel);
+            // get an allocator for transient per kernel gpu memory
+            GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+            size_t idx_workspace = allocator.reserve_workspace(nthreads_acc * data_bytes);
+            std::unique_ptr<gpu::primitive> reduce_scalar_acc(
+                new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+                    void* buffer = runtime::gpu::invoke_memory_primitive(m_ctx, idx_workspace);
+                    gpu::invoke_primitive(m_ctx,
+                                          reduce_scalar_acc_idx,
+                                          std::vector<void*>{inputs[0]}.data(),
+                                          std::vector<void*>{buffer}.data());
+                    gpu::invoke_primitive(m_ctx,
+                                          reduce_scalar_idx,
+                                          std::vector<void*>{buffer}.data(),
+                                          std::vector<void*>{outputs[0]}.data());
+                }});
+            primitive_index = this->m_primitive_emitter->insert(std::move(reduce_scalar_acc));
+        }
+        else
+        {
+            size_t reduce_scalar_idx =
+                build_reduce_to_scalar(dtypes, data_bytes, input_shape, op, kernel);
+            std::unique_ptr<gpu::primitive> reduce_scalar(
+                new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+                    gpu::invoke_primitive(m_ctx,
+                                          reduce_scalar_idx,
+                                          std::vector<void*>{inputs[0]}.data(),
+                                          std::vector<void*>{outputs[0]}.data());
+                }});
+            primitive_index = this->m_primitive_emitter->insert(std::move(reduce_scalar));
+        }
+    }
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }

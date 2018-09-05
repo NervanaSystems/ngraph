@@ -53,7 +53,6 @@
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/descriptor/tensor_view.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
