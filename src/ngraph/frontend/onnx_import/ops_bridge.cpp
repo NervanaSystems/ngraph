@@ -106,6 +106,8 @@ namespace ngraph
                                   std::bind(op::reduce_log_sum, std::placeholders::_1));
                     m_map.emplace("ReduceLogSumExp",
                                   std::bind(op::reduce_log_sum_exp, std::placeholders::_1));
+                    m_map.emplace("ReduceL1", std::bind(op::reduce_l1, std::placeholders::_1));
+                    m_map.emplace("ReduceL2", std::bind(op::reduce_l2, std::placeholders::_1));
                     m_map.emplace("ReduceMax", std::bind(op::reduce_max, std::placeholders::_1));
                     m_map.emplace("ReduceMean", std::bind(op::reduce_mean, std::placeholders::_1));
                     m_map.emplace("ReduceMin", std::bind(op::reduce_min, std::placeholders::_1));
