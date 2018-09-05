@@ -99,7 +99,6 @@
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
-#include "ngraph/runtime/gpu/op/lstm.hpp"
 #include "ngraph/runtime/gpu/type_info.hpp"
 #include "ngraph/util.hpp"
 
@@ -1540,31 +1539,6 @@ namespace ngraph
                     writer << ");\n";
                 }
                 writer.block_end();
-            }
-
-            template <>
-            void GPU_Emitter::EMITTER_DECL(ngraph::op::gpu::Lstm)
-            {
-                // auto lstm = static_cast<const ngraph::op::gpu::Lstm*>(node);
-
-                // auto& cudnn_emitter =
-                //     external_function->get_primitive_emitter()->get_cudnn_emitter();
-                // size_t lstm_index = cudnn_emitter->build_primitive(lstm);
-
-                // writer << "gpu::invoke_primitive(ctx, " << lstm_index << ", ";
-                // writer << "std::vector<void*>{" << args.front().get_name();
-                // for (size_t i = 1; i < args.size(); i++)
-                // {
-                //     writer << ", " << args[i].get_name();
-                // }
-                // writer << "}.data(), ";
-                // writer << "std::vector<void*>{" << out.front().get_name();
-                // for (size_t i = 1; i < out.size(); i++)
-                // {
-                //     writer << ", " << out[i].get_name();
-                // }
-                // writer << "}.data()";
-                // writer << ");\n";
             }
 
             template <>
