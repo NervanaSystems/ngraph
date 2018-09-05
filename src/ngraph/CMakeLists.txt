@@ -25,8 +25,8 @@ set (SRC
     coordinate_diff.cpp
     coordinate_transform.cpp
     descriptor/input.cpp
-    descriptor/layout/dense_tensor_view_layout.cpp
-    descriptor/layout/tensor_view_layout.cpp
+    descriptor/layout/dense_tensor_layout.cpp
+    descriptor/layout/tensor_layout.cpp
     descriptor/output.cpp
     descriptor/tensor.cpp
     file_util.cpp

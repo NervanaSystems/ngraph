@@ -166,10 +166,10 @@ namespace ngraph
         descriptor::Tensor& get_output_tensor() const;
 
         /// Returns the tensor view of output i
-        std::shared_ptr<descriptor::TensorView> get_output_tensor_view(size_t i) const;
+        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr(size_t i) const;
 
         /// Checks that there is exactly one output and returns its tensor view.
-        std::shared_ptr<descriptor::TensorView> get_output_tensor_view() const;
+        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr() const;
 
         /// Returns the set of inputs using output i
         const std::set<descriptor::Input*>& get_output_inputs(size_t i) const;

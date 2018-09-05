@@ -24,7 +24,7 @@ using namespace ngraph;
 
 runtime::intelgpu::IntelGPULayout::IntelGPULayout(const descriptor::TensorView& tv,
                                                   const cldnn::layout& layout)
-    : TensorViewLayout(tv)
+    : TensorLayout(tv)
     , cldnn_layout(layout)
 {
 }
@@ -44,7 +44,7 @@ size_t runtime::intelgpu::IntelGPULayout::get_index_offset(const vector<size_t>&
 }
 
 bool runtime::intelgpu::IntelGPULayout::
-    operator==(const descriptor::layout::TensorViewLayout& other) const
+    operator==(const descriptor::layout::TensorLayout& other) const
 {
     const IntelGPULayout* p_other = dynamic_cast<const IntelGPULayout*>(&other);
     if (!p_other)
