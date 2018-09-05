@@ -51,7 +51,14 @@ void op::TopK::validate_and_infer_types()
 
     Shape input_shape = input.get_shape();
     Shape output_shape(input_shape);
-    output_shape[m_top_k_axis] = m_k;
+    if(m_k != 0)
+    {
+        output_shape[m_top_k_axis] = m_k;
+    }
+    else
+    {
+        m_k = input_shape[m_top_k_axis];
+    }
 
     set_output_size(2);
     set_output_type(0, m_index_element_type, output_shape);
