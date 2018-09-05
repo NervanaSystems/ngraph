@@ -26,12 +26,12 @@ using namespace std;
 using namespace ngraph;
 
 op::TopK::TopK(const std::shared_ptr<Node>& arg,
-               size_t topk_axis,
+               size_t top_k_axis,
                const element::Type& index_element_type,
                size_t k,
                bool compute_max)
                : Op("TopK", check_single_output_args({arg})),
-                 m_topk_axis(topk_axis),
+                 m_top_k_axis(top_k_axis),
                  m_index_element_type(index_element_type),
                  m_k(k),
                  m_compute_max(compute_max)
@@ -44,26 +44,14 @@ void op::TopK::validate_and_infer_types()
     auto& input = get_inputs().at(0);
     auto rank = input.get_shape().size();
 
-    if( rank < 1 )
-    {
-        throw ngraph_error("Input Tensor's rank must be at least 1");
-    }
-    if( m_topk_axis >= rank )
-    {
-        throw ngraph_error("TopK axis is greater than rank");
-    }
-    if( !(m_index_element_type == element::i32 || m_index_element_type == element::i64) )
-    {
-        throw ngraph_error("Index element type must be i64 or i32");
-    }
-    if( m_k > input.get_shape()[m_topk_axis] )
-    {
-        throw ngraph_error("K is greater than TopK axis length");
-    }
+    NODE_VALIDATION_ASSERT(this, rank > 0) << "Input Tensor's rank must be greater than 0";
+    NODE_VALIDATION_ASSERT(this, m_top_k_axis < rank) << "TopK axis must be less than rank";
+    NODE_VALIDATION_ASSERT(this, m_index_element_type == element::i32 || m_index_element_type == element::i64) << "Index element type must be i64 or i32";
+    NODE_VALIDATION_ASSERT(this, m_k <= input.get_shape()[m_top_k_axis]) << "K should not exceed TopK axis length";
 
     Shape input_shape = input.get_shape();
     Shape output_shape(input_shape);
-    output_shape[m_topk_axis] = m_k;
+    output_shape[m_top_k_axis] = m_k;
 
     set_output_size(2);
     set_output_type(0, m_index_element_type, output_shape);
@@ -72,11 +60,8 @@ void op::TopK::validate_and_infer_types()
 
 shared_ptr<Node> op::TopK::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
-    return make_shared<TopK>(new_args.at(0), m_topk_axis, m_index_element_type, m_k, m_compute_max);
+    check_new_args_count(this, new_args);
+    return make_shared<TopK>(new_args.at(0), m_top_k_axis, m_index_element_type, m_k, m_compute_max);
 }
 
 void op::TopK::generate_adjoints(autodiff::Adjoints& adjoints,

@@ -2350,7 +2350,7 @@ namespace ngraph
                 writer << "                   " << out[1].get_name() << ",\n";
                 writer << "                   {" << join(args[0].get_shape()) << "},\n";
                 writer << "                   {" << join(out[0].get_shape()) << "},\n";
-                writer << "                   " << topk->get_topk_axis() << ",\n";
+                writer << "                   " << topk->get_top_k_axis() << ",\n";
                 writer << "                   " << topk->get_k() << ",\n";
                 writer << "                   " << topk->get_compute_max() << ");\n";
                 writer.block_end();

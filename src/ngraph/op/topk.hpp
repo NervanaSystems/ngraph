@@ -32,12 +32,12 @@ namespace ngraph
             /// \brief Constructs a TopK operation.
             ///
             /// \param arg The input tensor
-            /// \param topk_axis The axis along which to compute top k indices
+            /// \param top_k_axis The axis along which to compute top k indices
             /// \param index_element_type produce indices. Currently, only int64 or int32 are supported
             /// \param k Number of top indices to compute. Compute all indices if k = 0
             /// \param compute_max Compute top k max or top k min?
             TopK(const std::shared_ptr<Node>& arg,
-                 size_t topk_axis,
+                 size_t top_k_axis,
                  const element::Type& index_element_type,
                  size_t k = 0,
                  bool compute_max = true);
@@ -47,13 +47,13 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            size_t get_topk_axis() const { return m_topk_axis; }
+            size_t get_top_k_axis() const { return m_top_k_axis; }
             element::Type get_index_element_type() const { return m_index_element_type; }
             size_t get_k() const { return m_k; }
             bool get_compute_max() const { return m_compute_max; }
 
         protected:
-            size_t m_topk_axis;
+            size_t m_top_k_axis;
             element::Type m_index_element_type;
             size_t m_k;
             bool m_compute_max;
