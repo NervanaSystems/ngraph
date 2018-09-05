@@ -55,6 +55,7 @@ add_library(onnx_import STATIC
         op/mean.hpp
         op/min.hpp
         op/mul.hpp
+        op/reduce.hpp
         op/relu.hpp
         op/reshape.cpp
         op/reshape.hpp
@@ -71,6 +72,7 @@ add_library(onnx_import STATIC
         utils/broadcasting.hpp
         utils/convpool.cpp
         utils/convpool.hpp
+        utils/reduction.hpp
         utils/reshape.cpp
         utils/reshape.hpp
         utils/variadic.hpp)
