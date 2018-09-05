@@ -1640,7 +1640,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batch_norm_three_outputs)
         auto B = make_shared<op::Parameter>(element::f64, shape_mean);
         auto C = make_shared<op::Parameter>(element::f64, shape_mean);
 
-        auto BN = make_shared<op::BatchNorm>(1e-3, B, C, A);
+        auto BN = make_shared<op::BatchNormTraining>(1e-3, B, C, A);
         // make sure we create GOEs for mean and variance needed for bprop
         goes.push_back(make_shared<op::GetOutputElement>(BN, 1));
         goes.push_back(make_shared<op::GetOutputElement>(BN, 2));

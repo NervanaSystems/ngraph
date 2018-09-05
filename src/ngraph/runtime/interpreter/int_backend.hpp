@@ -293,9 +293,9 @@ private:
             size_t num_bytes = out[0]->get_element_count() * out[0]->get_element_type().size();
             std::memcpy(out[0]->get_data_ptr(), args[n]->get_data_ptr(), num_bytes);
         }
-        else if (node_op == "BatchNorm")
+        else if (node_op == "BatchNormTraining")
         {
-            ngraph::op::BatchNorm* bn = dynamic_cast<ngraph::op::BatchNorm*>(&node);
+            ngraph::op::BatchNormTraining* bn = dynamic_cast<ngraph::op::BatchNormTraining*>(&node);
             if (bn->get_output_size() == 3)
             {
                 reference::batch_norm_three_outputs<T>(
@@ -320,10 +320,23 @@ private:
                                                     args[2]->get_shape());
             }
         }
-        else if (node_op == "BatchNormBackprop")
+        else if (node_op == "BatchNormInference")
         {
-            ngraph::op::BatchNormBackprop* bn_bprop =
-                dynamic_cast<ngraph::op::BatchNormBackprop*>(&node);
+            ngraph::op::BatchNormInference* bn =
+                dynamic_cast<ngraph::op::BatchNormInference*>(&node);
+            reference::batch_norm_one_output<T>(bn->get_eps_value(),
+                                                reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                                reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                                reinterpret_cast<T*>(args[2]->get_data_ptr()),
+                                                reinterpret_cast<T*>(args[3]->get_data_ptr()),
+                                                reinterpret_cast<T*>(args[4]->get_data_ptr()),
+                                                reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                                args[2]->get_shape());
+        }
+        else if (node_op == "BatchNormTrainingBackprop")
+        {
+            ngraph::op::BatchNormTrainingBackprop* bn_bprop =
+                dynamic_cast<ngraph::op::BatchNormTrainingBackprop*>(&node);
             reference::batch_norm_backprop(bn_bprop->get_eps_value(),
                                            reinterpret_cast<T*>(args[0]->get_data_ptr()),
                                            reinterpret_cast<T*>(args[1]->get_data_ptr()),

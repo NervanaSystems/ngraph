@@ -443,29 +443,29 @@ static shared_ptr<ngraph::Function>
                                                         padding_above,
                                                         include_padding_in_avg_computation);
             }
-            else if (node_op == "BatchNorm")
+            else if (node_op == "BatchNormTraining")
             {
                 auto epsilon = node_js.at("eps").get<double>();
-                bool training = get_or_default<bool>(node_js, "training", true);
-                if (training && args.size() == 3)
+                if (args.size() == 3)
                 {
-                    node = make_shared<op::BatchNorm>(epsilon, args[0], args[1], args[2]);
-                }
-                else if (training && args.size() == 5)
-                {
-                    node = make_shared<op::BatchNorm>(
-                        epsilon, args[0], args[1], args[2], args[3], args[4], true);
+                    node = make_shared<op::BatchNormTraining>(epsilon, args[0], args[1], args[2]);
                 }
                 else
                 {
-                    node = make_shared<op::BatchNorm>(
+                    node = make_shared<op::BatchNormTraining>(
                         epsilon, args[0], args[1], args[2], args[3], args[4]);
                 }
             }
-            else if (node_op == "BatchNormBackprop")
+            else if (node_op == "BatchNormInference")
             {
                 auto epsilon = node_js.at("eps").get<double>();
-                node = make_shared<op::BatchNormBackprop>(
+                node = make_shared<op::BatchNormInference>(
+                    epsilon, args[0], args[1], args[2], args[3], args[4]);
+            }
+            else if (node_op == "BatchNormTrainingBackprop")
+            {
+                auto epsilon = node_js.at("eps").get<double>();
+                node = make_shared<op::BatchNormTrainingBackprop>(
                     epsilon, args[0], args[1], args[2], args[3], args[4], args[5]);
             }
             else if (node_op == "Broadcast")
@@ -1065,15 +1065,19 @@ static json write(const Node& n, bool binary_constant_data)
         node["padding_above"] = tmp->get_padding_above();
         node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
     }
-    else if (node_op == "BatchNorm")
+    else if (node_op == "BatchNormTraining")
     {
-        auto tmp = dynamic_cast<const op::BatchNorm*>(&n);
+        auto tmp = dynamic_cast<const op::BatchNormTraining*>(&n);
         node["eps"] = tmp->get_eps_value();
-        node["training"] = tmp->get_training_flag();
     }
-    else if (node_op == "BatchNormBackprop")
+    else if (node_op == "BatchNormInference")
     {
-        auto tmp = dynamic_cast<const op::BatchNormBackprop*>(&n);
+        auto tmp = dynamic_cast<const op::BatchNormInference*>(&n);
+        node["eps"] = tmp->get_eps_value();
+    }
+    else if (node_op == "BatchNormTrainingBackprop")
+    {
+        auto tmp = dynamic_cast<const op::BatchNormTrainingBackprop*>(&n);
         node["eps"] = tmp->get_eps_value();
     }
     else if (node_op == "Broadcast")

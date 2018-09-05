@@ -373,7 +373,7 @@ TEST(cpu_fusion, fuse_fprop_bn)
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
-    size_t ccg = count_ops_of_type<op::BatchNorm>(func);
+    size_t ccg = count_ops_of_type<op::BatchNormTraining>(func);
     ASSERT_EQ(ccg, 1);
 }
 
@@ -716,7 +716,7 @@ TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{1, 2, 2, 2};
-    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input);
+    auto bn = make_shared<op::BatchNormTraining>(eps, gamma, beta, input);
 
     auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
     // Note, op::Splice is used to break Relu(BatchNorm) fusion
@@ -730,7 +730,7 @@ TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
     auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
     auto variance_rt = std::make_shared<op::GetOutputElement>(bn, 2);
 
-    auto bn_relu = make_shared<op::BatchNormRelu>(eps, gamma, beta, input);
+    auto bn_relu = make_shared<op::BatchNormTrainingRelu>(eps, gamma, beta, input);
     auto output_rt_bnr = std::make_shared<op::GetOutputElement>(bn_relu, 0);
     auto mean_rt_bnr = std::make_shared<op::GetOutputElement>(bn_relu, 1);
     auto variance_rt_bnr = std::make_shared<op::GetOutputElement>(bn_relu, 2);
@@ -1517,7 +1517,7 @@ TEST(cpu_fusion, batch_norm_folding)
         auto mean = std::make_shared<op::Parameter>(element::f32, shape_norm);
         auto var = std::make_shared<op::Parameter>(element::f32, shape_norm);
         auto conv = std::make_shared<op::Convolution>(input, weights, Strides{1, 1}, Strides{1, 1});
-        auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, conv, mean, var);
+        auto bn = std::make_shared<op::BatchNormInference>(eps, gamma, beta, conv, mean, var);
         auto f = make_shared<Function>(NodeVector{bn},
                                        op::ParameterVector{input, weights, gamma, beta, mean, var});
         return f;

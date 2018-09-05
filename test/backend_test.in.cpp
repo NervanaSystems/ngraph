@@ -373,7 +373,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_one_output)
     auto Gamma =
         op::Constant::create(element::f64, shape_mean, {1.75437676, 0.37950502, 1.13727544});
 
-    auto BN = make_shared<op::BatchNorm>(1e-3, Gamma, Beta, A, Mean, Variance, false);
+    auto BN = make_shared<op::BatchNormInference>(1e-3, Gamma, Beta, A, Mean, Variance);
     auto f = make_shared<Function>(BN, op::ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -403,7 +403,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_three_outputs)
     auto Gamma =
         op::Constant::create(element::f64, shape_mean, {1.75437676, 0.37950502, 1.13727544});
 
-    auto BN = make_shared<op::BatchNorm>(1e-3, Gamma, Beta, A);
+    auto BN = make_shared<op::BatchNormTraining>(1e-3, Gamma, Beta, A);
 
     auto f0 =
         make_shared<Function>(make_shared<op::GetOutputElement>(BN, 0), op::ParameterVector{A});
@@ -8579,7 +8579,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_b1c2h2w2)
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{1, 2, 2, 2};
-    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input);
+    auto bn = make_shared<op::BatchNormTraining>(eps, gamma, beta, input);
 
     auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
     auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
@@ -8642,7 +8642,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_b2c2h2w1)
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{2, 2, 2, 1};
-    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input);
+    auto bn = make_shared<op::BatchNormTraining>(eps, gamma, beta, input);
 
     auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
     auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
@@ -8699,7 +8699,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_bprop_n4c3h2w2)
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{4, 3, 2, 2};
-    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input);
+    auto bn = make_shared<op::BatchNormTraining>(eps, gamma, beta, input);
     auto bn_dx = make_shared<op::GetOutputElement>(bn, 0);
     auto bn_dgamma = make_shared<op::GetOutputElement>(bn, 1);
     auto bn_dbeta = make_shared<op::GetOutputElement>(bn, 2);
@@ -8794,7 +8794,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_inference_b2c2h2w1)
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{2, 2, 2, 1};
-    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var);
+    auto bn = make_shared<op::BatchNormInference>(eps, gamma, beta, input, mean, var);
 
     auto f = make_shared<Function>(bn, op::ParameterVector{input, gamma, beta, mean, var});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -8843,7 +8843,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_globalstats_b2c2w2h1)
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{2, 2, 2, 1};
-    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var, true);
+    auto bn = make_shared<op::BatchNormTraining>(eps, gamma, beta, input, mean, var);
 
     auto f = make_shared<Function>(bn, op::ParameterVector{gamma, beta, input, mean, var});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
