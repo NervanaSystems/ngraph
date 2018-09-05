@@ -47,7 +47,6 @@ shared_ptr<Node> op::Result::copy_with_new_args(const NodeVector& new_args) cons
     auto res = make_shared<Result>(new_args.at(0));
     if (res)
     {
-        res->set_needs_copy(m_needs_copy);
         res->set_needs_default_layout(m_needs_default_layout);
     }
     return res;

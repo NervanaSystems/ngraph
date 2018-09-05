@@ -16,11 +16,11 @@
 
 #include <numeric>
 
-#include "unsqueeze.hpp"
-
 #include "ngraph/op/reshape.hpp"
+#include "utils/reshape.hpp"
 
 #include "exceptions.hpp"
+#include "unsqueeze.hpp"
 
 namespace ngraph
 {
@@ -41,9 +41,7 @@ namespace ngraph
                 }
                 std::sort(std::begin(axes), std::end(axes), std::greater<int64_t>());
 
-                // Generate an increasing sequence (0,1,2,3..) as input_order for Reshape
-                AxisVector input_order(data_shape.size());
-                std::iota(std::begin(input_order), std::end(input_order), 0);
+                AxisVector input_order{reshape::get_default_axis_vector(data_shape.size())};
 
                 for (auto axis : axes)
                 {
