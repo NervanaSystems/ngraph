@@ -150,6 +150,12 @@ static bool simplify_concat(std::shared_ptr<Node> n)
                 NGRAPH_DEBUG << carg->get_name() << " reshape also does transposes";
                 return false;
             }
+
+            if (rcarg->get_users().size() > 1)
+            {
+                NGRAPH_DEBUG << rcarg->get_name() << " has more than one user";
+                return false;
+            }
         }
     }
 
