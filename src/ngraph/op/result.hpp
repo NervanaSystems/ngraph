@@ -38,8 +38,6 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
             virtual bool is_output() const override { return true; }
-            void set_needs_copy(bool val) { m_needs_copy = val; }
-            bool needs_copy() const { return m_needs_copy; }
             void set_needs_default_layout(bool val) { m_needs_default_layout = val; }
             bool needs_default_layout() const { return m_needs_default_layout; }
         protected:
@@ -47,7 +45,6 @@ namespace ngraph
                                            const NodeVector& deltas) override;
 
         private:
-            bool m_needs_copy{true};
             bool m_needs_default_layout{false};
         };
     }
