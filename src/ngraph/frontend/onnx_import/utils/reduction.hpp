@@ -32,6 +32,7 @@
 
 #include "core/node.hpp"
 #include "exceptions.hpp"
+#include "utils/common.hpp"
 #include "utils/reshape.hpp"
 
 namespace ngraph
@@ -48,8 +49,8 @@ namespace ngraph
                         node.get_attribute_value<std::vector<std::size_t>>("axes", {});
                     if (reduction_axes.empty())
                     {
-                        reduction_axes.resize(node.get_ng_inputs().at(0)->get_shape().size());
-                        std::iota(std::begin(reduction_axes), std::end(reduction_axes), 0);
+                        reduction_axes = onnx_import::common::get_monotonic_range<std::size_t>(
+                            node.get_ng_inputs().at(0)->get_shape().size());
                     }
                     return AxisSet{reduction_axes};
                 }
@@ -65,9 +66,9 @@ namespace ngraph
             /// \return     nGraph node equivalent of the ONNX operation.
             ///
             template <class OnnxOperator,
-                      typename std::enable_if<
-                          std::is_base_of<ngraph::op::util::ArithmeticReduction, OnnxOperator>{},
-                          int>::type = 0>
+                      typename std::enable_if<std::is_base_of<ngraph::op::util::ArithmeticReduction,
+                                                              OnnxOperator>::value,
+                                              int>::type = 0>
             std::shared_ptr<ngraph::Node>
                 make_ng_reduction_op(const Node& node,
                                      const std::shared_ptr<ngraph::Node>& ng_input)
