@@ -2695,6 +2695,25 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_s2t)
     EXPECT_EQ((vector<float>{42}), read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, reshape_s2t1)
+{
+    Shape shape_a{};
+    auto A = make_shared<op::Parameter>(element::boolean, shape_a);
+    Shape shape_r{1};
+    auto r = make_shared<op::Reshape>(A, AxisVector{}, shape_r);
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::boolean, shape_a);
+    copy_data(a, vector<char>{42});
+    auto result = backend->create_tensor(element::boolean, shape_r);
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((vector<char>{42}), read_vector<char>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, reshape_v2m_col)
 {
     Shape shape_a{3};
