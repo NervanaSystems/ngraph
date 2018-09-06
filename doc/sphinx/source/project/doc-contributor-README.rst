@@ -83,18 +83,18 @@ line numbers, and add a caption:
 
 ::
 
-  .. literalinclude:: ../../../../src/ngraph/descriptor/primary_tensor_view.cpp
+  .. literalinclude:: ../../../examples/abc/abc.cpp
      :language: cpp
      :lines: 20-31
-     :caption: "primary_tensor_view.cpp"
+     :caption: "sample caption"
 
 
 and the generated output will show readers of your helpful documentation
 
-.. literalinclude:: ../../../../src/ngraph/descriptor/primary_tensor_view.cpp
+.. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 20-31
-   :caption: "primary_tensor_view.cpp"
+   :caption: "sample caption for a code block"
 
 Our documentation practices are designed around "write once, reuse" that we can 
 use to prevent code bloat.  See the :doc:`code-contributor-README` for our code 
