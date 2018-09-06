@@ -44,8 +44,8 @@ namespace ngraph
             }
         }
 
-        void BackendManager::get_registered_ids(::onnxBackendID* backend_ids,
-                                                std::size_t* count) const
+        void BackendManager::get_ids(::onnxBackendID* backend_ids,
+                                     std::size_t* count) const
         {
             if (count == nullptr)
             {
@@ -68,5 +68,62 @@ namespace ngraph
                                });
             }
         }
-    }
-}
+
+        void BackendManager::get_backend_info(::onnxBackendID backend_id,
+                                              onnxBackendInfo infoType,
+                                              void* infoValue,
+                                              std::size_t* infoValueSize)
+        {
+            const auto& backend = instance().get_backend(backend_id);
+            switch (infoType)
+            {
+            case ONNXIFI_BACKEND_ONNXIFI_VERSION:
+                backend.get_onnxifi_version(infoValue, infoValueSize);
+                break;
+            case ONNXIFI_BACKEND_NAME: backend.get_name(infoValue, infoValueSize); break;
+            case ONNXIFI_BACKEND_VENDOR: backend.get_vendor(infoValue, infoValueSize); break;
+            case ONNXIFI_BACKEND_VERSION: backend.get_version(infoValue, infoValueSize); break;
+            case ONNXIFI_BACKEND_EXTENSIONS:
+                backend.get_extensions(infoValue, infoValueSize);
+                break;
+            case ONNXIFI_BACKEND_DEVICE: backend.get_device(infoValue, infoValueSize); break;
+            case ONNXIFI_BACKEND_DEVICE_TYPE:
+                backend.get_device_type(infoValue, infoValueSize);
+                break;
+            case ONNXIFI_BACKEND_ONNX_IR_VERSION:
+                backend.get_onnx_ir_version(infoValue, infoValueSize);
+                break;
+            case ONNXIFI_BACKEND_OPSET_VERSION:
+                backend.get_opset_version(infoValue, infoValueSize);
+                break;
+            case ONNXIFI_BACKEND_CAPABILITIES:
+                backend.get_capabilities(infoValue, infoValueSize);
+                break;
+            case ONNXIFI_BACKEND_INIT_PROPERTIES:
+                backend.get_init_properties(infoValue, infoValueSize);
+                break;
+            case ONNXIFI_BACKEND_MEMORY_TYPES:
+                backend.get_memory_types(infoValue, infoValueSize);
+                break;
+            case ONNXIFI_BACKEND_GRAPH_INIT_PROPERTIES:
+                backend.get_graph_init_properties(infoValue, infoValueSize);
+                break;
+            case ONNXIFI_BACKEND_SYNCHRONIZATION_TYPES:
+                backend.get_synchronization_types(infoValue, infoValueSize);
+                break;
+            case ONNXIFI_BACKEND_MEMORY_SIZE:
+                backend.get_memory_size(infoValue, infoValueSize);
+                break;
+            case ONNXIFI_BACKEND_MAX_GRAPH_SIZE:
+                backend.get_max_graph_size(infoValue, infoValueSize);
+                break;
+            case ONNXIFI_BACKEND_MAX_GRAPH_COUNT:
+                backend.get_max_graph_count(infoValue, infoValueSize);
+                break;
+            default: throw std::range_error{"invalid info type"};
+            }
+        }
+
+    } // namespace onnxifi
+
+} // namespace ngraph
