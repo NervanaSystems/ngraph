@@ -1289,12 +1289,14 @@ namespace ngraph
                 auto& cudnn_emitter =
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
 
-                auto bn_index = cudnn_emitter->build_batchnorm(CUDNN_BATCHNORM_SPATIAL,
-                                                               out[0].get_type(),
-                                                               CUDNNEmitter::Prop::Forward,
-                                                               args[2].get_shape(),
-                                                               args[0].get_shape(),
-                                                               batchnorm->get_eps_value());
+                auto bn_index =
+                    cudnn_emitter->build_batchnorm(CUDNN_BATCHNORM_SPATIAL,
+                                                   out[0].get_type(),
+                                                   CUDNNEmitter::Prop::Forward,
+                                                   args[2].get_shape(),
+                                                   args[0].get_shape(),
+                                                   batchnorm->get_eps_value(),
+                                                   batchnorm->get_arguments().size() == 5);
 
                 writer.block_begin();
                 {
