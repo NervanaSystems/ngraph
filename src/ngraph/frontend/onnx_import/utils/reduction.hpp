@@ -25,6 +25,7 @@
 #include <type_traits> // std::enable_if, std::is_base_of
 #include <vector>
 
+#include "ngraph/axis_set.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/shape.hpp"
@@ -41,7 +42,7 @@ namespace ngraph
         {
             namespace detail
             {
-                inline std::vector<std::size_t> get_reduction_axes(const Node& node)
+                inline AxisSet get_reduction_axes(const Node& node)
                 {
                     auto reduction_axes =
                         node.get_attribute_value<std::vector<std::size_t>>("axes", {});
@@ -50,7 +51,7 @@ namespace ngraph
                         reduction_axes.resize(node.get_ng_inputs().at(0)->get_shape().size());
                         std::iota(std::begin(reduction_axes), std::end(reduction_axes), 0);
                     }
-                    return reduction_axes;
+                    return AxisSet{reduction_axes};
                 }
             } // namespace  detail
 
