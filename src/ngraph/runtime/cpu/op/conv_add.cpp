@@ -25,8 +25,7 @@
 using namespace std;
 using namespace ngraph;
 
-void op::util::validate_conv_shapes(const Shape& data_shape,
-                                    const Shape& filters_shape)
+void op::util::validate_conv_shapes(const Shape& data_shape, const Shape& filters_shape)
 {
     if (data_shape[1] != filters_shape[1])
     {
@@ -38,11 +37,10 @@ void op::util::validate_conv_shapes(const Shape& data_shape,
 }
 
 op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
-                                           const std::shared_ptr<Node>& sum_input,
-                                           bool with_relu)
-    : RequiresTensorViewArgs(
-          "ConvolutionAdd",
-          {conv->get_argument(0), conv->get_argument(1), sum_input})
+                                   const std::shared_ptr<Node>& sum_input,
+                                   bool with_relu)
+    : RequiresTensorViewArgs("ConvolutionAdd",
+                             {conv->get_argument(0), conv->get_argument(1), sum_input})
     , m_window_movement_strides(conv->get_window_movement_strides())
     , m_window_dilation_strides(conv->get_window_dilation_strides())
     , m_padding_below(conv->get_padding_below())
@@ -51,19 +49,19 @@ op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
     , m_with_relu(with_relu)
 {
     util::validate_conv_shapes(conv->get_argument(0)->get_shape(),
-                                   conv->get_argument(1)->get_shape());
+                               conv->get_argument(1)->get_shape());
     set_value_type_checked(conv->get_element_type(), conv->get_shape());
 }
 
 op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<Node>& data_batch,
-                                        const std::shared_ptr<Node>& filters,
-                                        const std::shared_ptr<Node>& sum_input,
-                                        const Strides& window_movement_strides,
-                                        const Strides& window_dilation_strides,
-                                        const CoordinateDiff& padding_below,
-                                        const CoordinateDiff& padding_above,
-                                        const Strides& data_dilation_strides,
-                                        bool with_relu)
+                                   const std::shared_ptr<Node>& filters,
+                                   const std::shared_ptr<Node>& sum_input,
+                                   const Strides& window_movement_strides,
+                                   const Strides& window_dilation_strides,
+                                   const CoordinateDiff& padding_below,
+                                   const CoordinateDiff& padding_above,
+                                   const Strides& data_dilation_strides,
+                                   bool with_relu)
     : RequiresTensorViewArgs("ConvolutionAdd", {data_batch, filters, sum_input})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)

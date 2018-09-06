@@ -218,9 +218,8 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index =
-                        mkldnn_emitter->build_convolution<ngraph::op::ConvolutionAdd>(
-                            node, args, out);
+                    auto conv_index = mkldnn_emitter->build_convolution<ngraph::op::ConvolutionAdd>(
+                        node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     auto functor = [&, conv_index](CPURuntimeContext* ctx) {

@@ -27,18 +27,18 @@ namespace ngraph
         {
         public:
             ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
-                               const std::shared_ptr<Node>& sum_input,
-                               bool with_relu);
+                           const std::shared_ptr<Node>& sum_input,
+                           bool with_relu);
 
             ConvolutionAdd(const std::shared_ptr<Node>& data_batch,
-                               const std::shared_ptr<Node>& filters,
-                               const std::shared_ptr<Node>& sum_input,
-                               const Strides& window_movement_strides,
-                               const Strides& window_dilation_strides,
-                               const CoordinateDiff& padding_below,
-                               const CoordinateDiff& padding_above,
-                               const Strides& data_dilation_strides,
-                               bool with_relu);
+                           const std::shared_ptr<Node>& filters,
+                           const std::shared_ptr<Node>& sum_input,
+                           const Strides& window_movement_strides,
+                           const Strides& window_dilation_strides,
+                           const CoordinateDiff& padding_below,
+                           const CoordinateDiff& padding_above,
+                           const Strides& data_dilation_strides,
+                           bool with_relu);
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
@@ -62,8 +62,7 @@ namespace ngraph
 
         namespace util
         {
-            void validate_conv_shapes(const Shape& data_shape,
-                                        const Shape& filters_shape);
+            void validate_conv_shapes(const Shape& data_shape, const Shape& filters_shape);
         }
     }
 }

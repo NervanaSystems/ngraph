@@ -1001,12 +1001,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add()
     auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
 
     auto pconv = std::make_shared<op::Convolution>(data_batch,
-                                                       filters,
-                                                       Strides{1, 1},
-                                                       Strides{1, 1},
-                                                       CoordinateDiff{0, 0},
-                                                       CoordinateDiff{0, 0},
-                                                       Strides{1, 1});
+                                                   filters,
+                                                   Strides{1, 1},
+                                                   Strides{1, 1},
+                                                   CoordinateDiff{0, 0},
+                                                   CoordinateDiff{0, 0},
+                                                   Strides{1, 1});
     auto add_input = std::make_shared<pattern::op::Label>(element::f32, pconv->get_shape());
     auto padd = std::make_shared<op::Add>(add_input, pconv);
 
@@ -1084,8 +1084,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add()
             }*/
         }
 
-        auto conv_add =
-            std::shared_ptr<Node>(new op::ConvolutionAdd(conv_m, inplace_input, false));
+        auto conv_add = std::shared_ptr<Node>(new op::ConvolutionAdd(conv_m, inplace_input, false));
         ngraph::replace_node(m.get_match_root(), conv_add);
         return true;
     };
@@ -1102,14 +1101,14 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add_relu()
     auto add_input = std::make_shared<pattern::op::Label>(element::f32, shape);
 
     auto pconv = std::make_shared<op::ConvolutionAdd>(data_batch,
-                                                          filters,
-                                                          add_input,
-                                                          Strides{1, 1},
-                                                          Strides{1, 1},
-                                                          CoordinateDiff{0, 0},
-                                                          CoordinateDiff{0, 0},
-                                                          Strides{1, 1},
-                                                          false);
+                                                      filters,
+                                                      add_input,
+                                                      Strides{1, 1},
+                                                      Strides{1, 1},
+                                                      CoordinateDiff{0, 0},
+                                                      CoordinateDiff{0, 0},
+                                                      Strides{1, 1},
+                                                      false);
     auto prelu = std::make_shared<op::Relu>(pconv);
 
     pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
@@ -1126,16 +1125,15 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add_relu()
 
         // ConvolutionAdd created only if it can run with MKLDNN.
         // No further checks needed.
-        auto conv_n =
-            std::make_shared<op::ConvolutionAdd>(conv_m->get_argument(0),
-                                                    conv_m->get_argument(1),
-                                                    conv_m->get_argument(2),
-                                                    conv_m->get_window_movement_strides(),
-                                                    conv_m->get_window_dilation_strides(),
-                                                    conv_m->get_padding_below(),
-                                                    conv_m->get_padding_above(),
-                                                    conv_m->get_data_dilation_strides(),
-                                                    true);
+        auto conv_n = std::make_shared<op::ConvolutionAdd>(conv_m->get_argument(0),
+                                                           conv_m->get_argument(1),
+                                                           conv_m->get_argument(2),
+                                                           conv_m->get_window_movement_strides(),
+                                                           conv_m->get_window_dilation_strides(),
+                                                           conv_m->get_padding_below(),
+                                                           conv_m->get_padding_above(),
+                                                           conv_m->get_data_dilation_strides(),
+                                                           true);
         ngraph::replace_node(m.get_match_root(), conv_n);
         return true;
     };

@@ -952,8 +952,7 @@ shared_ptr<Function> gen_conv_add(bool param_input, bool result_output)
     auto conv = make_shared<op::Convolution>(A, weights, Strides{1, 1}, Strides{1, 1});
     auto B = make_shared<op::Parameter>(element::f32, Shape{2, 1, 2, 2});
     auto abs_B = make_shared<op::Abs>(B);
-    auto add =
-        param_input ? make_shared<op::Add>(conv, B) : make_shared<op::Add>(conv, abs_B);
+    auto add = param_input ? make_shared<op::Add>(conv, B) : make_shared<op::Add>(conv, abs_B);
     auto abs = make_shared<op::Abs>(add);
 
     return result_output ? make_shared<Function>(add, op::ParameterVector{A, weights, B})
@@ -997,7 +996,6 @@ TEST(cpu_fusion, conv_add)
     int_results = execute(int_f, args, "INTERPRETER");
     cpu_results = execute(cpu_f, args, "CPU");
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
-
 }
 
 std::vector<shared_ptr<runtime::TensorView>>
