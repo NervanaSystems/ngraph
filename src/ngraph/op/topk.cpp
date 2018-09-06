@@ -28,11 +28,11 @@ op::TopK::TopK(const shared_ptr<Node>& arg,
                const element::Type& index_element_type,
                size_t k,
                bool compute_max)
-               : Op("TopK", check_single_output_args({arg})),
-                 m_top_k_axis(top_k_axis),
-                 m_index_element_type(index_element_type),
-                 m_k(k),
-                 m_compute_max(compute_max)
+    : Op("TopK", check_single_output_args({arg}))
+    , m_top_k_axis(top_k_axis)
+    , m_index_element_type(index_element_type)
+    , m_k(k)
+    , m_compute_max(compute_max)
 {
     constructor_validate_and_infer_types();
 }
@@ -44,12 +44,15 @@ void op::TopK::validate_and_infer_types()
 
     NODE_VALIDATION_ASSERT(this, rank > 0) << "Input Tensor's rank must be greater than 0";
     NODE_VALIDATION_ASSERT(this, m_top_k_axis < rank) << "TopK axis must be less than rank";
-    NODE_VALIDATION_ASSERT(this, m_index_element_type == element::i32 || m_index_element_type == element::i64) << "Index element type must be i64 or i32";
-    NODE_VALIDATION_ASSERT(this, m_k <= input.get_shape()[m_top_k_axis]) << "K should not exceed TopK axis length";
+    NODE_VALIDATION_ASSERT(
+        this, m_index_element_type == element::i32 || m_index_element_type == element::i64)
+        << "Index element type must be i64 or i32";
+    NODE_VALIDATION_ASSERT(this, m_k <= input.get_shape()[m_top_k_axis])
+        << "K should not exceed TopK axis length";
 
     Shape input_shape = input.get_shape();
     Shape output_shape(input_shape);
-    if(m_k != 0)
+    if (m_k != 0)
     {
         output_shape[m_top_k_axis] = m_k;
     }
@@ -66,11 +69,11 @@ void op::TopK::validate_and_infer_types()
 shared_ptr<Node> op::TopK::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<TopK>(new_args.at(0), m_top_k_axis, m_index_element_type, m_k, m_compute_max);
+    return make_shared<TopK>(
+        new_args.at(0), m_top_k_axis, m_index_element_type, m_k, m_compute_max);
 }
 
-void op::TopK::generate_adjoints(autodiff::Adjoints& adjoints,
-                                 const NodeVector& deltas)
+void op::TopK::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }

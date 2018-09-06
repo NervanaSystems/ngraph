@@ -1033,24 +1033,24 @@ private:
             if (out[0]->get_element_type() == element::i64)
             {
                 reference::topk<T, int64_t>(args[0]->get_data_ptr<T>(),
-                                              out[0]->get_data_ptr<int64_t>(),
-                                              out[1]->get_data_ptr<T>(),
-                                              args[0]->get_shape(),
-                                              out[0]->get_shape(),
-                                              topk->get_top_k_axis(),
-                                              topk->get_k(),
-                                              topk->get_compute_max());
+                                            out[0]->get_data_ptr<int64_t>(),
+                                            out[1]->get_data_ptr<T>(),
+                                            args[0]->get_shape(),
+                                            out[0]->get_shape(),
+                                            topk->get_top_k_axis(),
+                                            topk->get_k(),
+                                            topk->get_compute_max());
             }
             else if (out[0]->get_element_type() == element::i32)
             {
                 reference::topk<T, int32_t>(args[0]->get_data_ptr<T>(),
-                                              out[0]->get_data_ptr<int32_t>(),
-                                              out[1]->get_data_ptr<T>(),
-                                              args[0]->get_shape(),
-                                              out[0]->get_shape(),
-                                              topk->get_top_k_axis(),
-                                              topk->get_k(),
-                                              topk->get_compute_max());
+                                            out[0]->get_data_ptr<int32_t>(),
+                                            out[1]->get_data_ptr<T>(),
+                                            args[0]->get_shape(),
+                                            out[0]->get_shape(),
+                                            topk->get_top_k_axis(),
+                                            topk->get_k(),
+                                            topk->get_compute_max());
             }
             else
             {

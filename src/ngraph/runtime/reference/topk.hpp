@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include <cmath>
 #include <algorithm>
+#include <cmath>
 #include <numeric>
 
 #include "ngraph/coordinate_transform.hpp"
@@ -29,8 +29,14 @@ namespace ngraph
         namespace reference
         {
             template <typename T, typename U>
-            void topk(
-                const T* arg, U* out_indices, T* out_values, const Shape& in_shape, const Shape& out_shape, size_t axis, size_t k, bool compute_max)
+            void topk(const T* arg,
+                      U* out_indices,
+                      T* out_values,
+                      const Shape& in_shape,
+                      const Shape& out_shape,
+                      size_t axis,
+                      size_t k,
+                      bool compute_max)
             {
                 using namespace std;
                 // reorder source axis visit order and make "axis" inner most
@@ -44,29 +50,23 @@ namespace ngraph
                 axis_order.erase(axis_order.begin() + axis);
                 axis_order.push_back(axis);
                 // Create CoordinateTransforms that visits only the first element along "axis"
-                CoordinateTransform input_transform(in_shape,
-                        start_corner,
-                        end_corner,
-                        strides,
-                        axis_order);
-                CoordinateTransform output_transform(out_shape,
-                        start_corner,
-                        end_corner,
-                        strides,
-                        axis_order);
+                CoordinateTransform input_transform(
+                    in_shape, start_corner, end_corner, strides, axis_order);
+                CoordinateTransform output_transform(
+                    out_shape, start_corner, end_corner, strides, axis_order);
                 // Create temp vector for sorting.
                 vector<tuple<T, U>> workspace(in_shape[axis]);
                 vector<size_t> in_strides = ngraph::row_major_strides(in_shape);
                 vector<size_t> out_strides = ngraph::row_major_strides(out_shape);
                 auto in_axis_stride = in_strides[axis];
                 auto out_axis_stride = out_strides[axis];
-                for(const Coordinate& coord: input_transform)
+                for (const Coordinate& coord : input_transform)
                 {
                     auto arg_index = input_transform.index(coord);
                     auto out_index = output_transform.index(coord);
                     // Fill the temp vector
                     U i = 0;
-                    for(tuple<T, U> &entry : workspace)
+                    for (tuple<T, U>& entry : workspace)
                     {
                         get<0>(entry) = arg[arg_index];
                         get<1>(entry) = i;
@@ -74,17 +74,18 @@ namespace ngraph
                         i++;
                     }
                     // Sort the temp vector
-                    sort(workspace.begin(),
-                         workspace.end(),
-                         compute_max ?
-                             [] (const tuple<T, U>&  a, const tuple<T, U>& b) -> bool { return a > b; } :
-                             [] (const tuple<T, U>&  a, const tuple<T, U>& b) -> bool { return a < b; });
+                    sort(
+                        workspace.begin(),
+                        workspace.end(),
+                        compute_max
+                        ? [](const tuple<T, U>& a, const tuple<T, U>& b) -> bool { return a > b; }
+                        : [](const tuple<T, U>& a, const tuple<T, U>& b) -> bool { return a < b; });
                     // Write temp vector to output
-                    for(size_t j = 0; j < k ; j++)
+                    for (size_t j = 0; j < k; j++)
                     {
                         tuple<T, U> entry = workspace[j];
-                        out_values[out_index]=get<0>(entry);
-                        out_indices[out_index]=get<1>(entry);
+                        out_values[out_index] = get<0>(entry);
+                        out_indices[out_index] = get<1>(entry);
                         out_index += out_axis_stride;
                     }
                 }

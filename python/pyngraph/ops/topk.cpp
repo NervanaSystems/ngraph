@@ -24,10 +24,11 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_TopK(py::module m)
 {
-    py::class_<ngraph::op::TopK,
-               std::shared_ptr<ngraph::op::TopK>,
-               ngraph::op::Op>
-        add(m, "TopK");
+    py::class_<ngraph::op::TopK, std::shared_ptr<ngraph::op::TopK>, ngraph::op::Op> add(m, "TopK");
     add.doc() = "ngraph.impl.op.TopK wraps ngraph::op::TopK";
-    add.def(py::init<const std::shared_ptr<ngraph::Node>&, size_t, const ngraph::element::Type&, size_t, bool>());
+    add.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                     size_t,
+                     const ngraph::element::Type&,
+                     size_t,
+                     bool>());
 }
