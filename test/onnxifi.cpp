@@ -44,7 +44,7 @@ TEST(onnxifi, get_backend_ids_buffer_null)
 
 TEST(onnxifi, get_backend_ids_count_null)
 {
-    onnxBackendID backendIDs[g_default_backend_ids_count];
+    ::onnxBackendID backendIDs[g_default_backend_ids_count];
     ::onnxStatus status{::onnxGetBackendIDs(backendIDs, nullptr)};
     EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
 }
@@ -57,7 +57,7 @@ TEST(onnxifi, get_backend_ids_null)
 
 TEST(onnxifi, get_backend_ids_consistency_check)
 {
-    onnxBackendID first_ids[g_default_backend_ids_count];
+    ::onnxBackendID first_ids[g_default_backend_ids_count];
     std::size_t first_count{g_default_backend_ids_count};
     EXPECT_TRUE(::onnxGetBackendIDs(first_ids, &first_count) == ONNXIFI_STATUS_SUCCESS);
     EXPECT_TRUE(first_count == ngraph::runtime::BackendManager::get_registered_backends().size());
