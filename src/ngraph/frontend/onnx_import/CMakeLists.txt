@@ -70,6 +70,7 @@ add_library(onnx_import STATIC
         op/unsqueeze.cpp
         op/unsqueeze.hpp
         ops_bridge.cpp
+        ops_bridge.hpp
         utils/broadcasting.cpp
         utils/broadcasting.hpp
         utils/common.hpp
