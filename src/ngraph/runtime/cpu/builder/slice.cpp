@@ -48,52 +48,74 @@ namespace ngraph
                 auto lower_bounds = slice->get_lower_bounds();
                 auto upper_bounds = slice->get_upper_bounds();
 
-                bool strided = false;
-                for (auto stride : strides)
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    if (stride != 1)
-                    {
-                        strided = true;
-                        break;
-                    }
-                }
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                if (strided)
-                {
-                    std::function<decltype(runtime::cpu::kernel::strided_slice<float, 2>)> kernel;
+                    auto slice_index = mkldnn_emitter->build_slice(
+                        input_desc, result_desc, lower_bounds, upper_bounds, out_shape);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(slice_index);
 
-                    SELECT_KERNEL_BY_RANK(kernel,
-                                          args[0].get_element_type(),
-                                          arg_shape.size(),
-                                          runtime::cpu::kernel::strided_slice);
+                    auto functor = [&, slice_index](CPURuntimeContext* ctx) {
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, slice_index);
+                    };
 
-                    auto functor =
-                        [&, kernel, arg_shape, out_shape, lower_bounds, upper_bounds, strides](
-                            CPURuntimeContext* ctx) {
-                            kernel(arg_tensor,
-                                   out_tensor,
-                                   arg_shape,
-                                   out_shape,
-                                   lower_bounds,
-                                   upper_bounds,
-                                   strides);
-                        };
                     functors.emplace_back(functor);
                 }
                 else
                 {
-                    std::function<decltype(runtime::cpu::kernel::slice<float, 2>)> kernel;
+                    bool strided = false;
+                    for (auto stride : strides)
+                    {
+                        if (stride != 1)
+                        {
+                            strided = true;
+                            break;
+                        }
+                    }
 
-                    SELECT_KERNEL_BY_RANK(kernel,
-                                          args[0].get_element_type(),
-                                          arg_shape.size(),
-                                          runtime::cpu::kernel::slice);
+                    if (strided)
+                    {
+                        std::function<decltype(runtime::cpu::kernel::strided_slice<float, 2>)>
+                            kernel;
 
-                    auto functor =
-                        [&, kernel, arg_shape, out_shape, lower_bounds](CPURuntimeContext* ctx) {
+                        SELECT_KERNEL_BY_RANK(kernel,
+                                              args[0].get_element_type(),
+                                              arg_shape.size(),
+                                              runtime::cpu::kernel::strided_slice);
+
+                        auto functor =
+                            [&, kernel, arg_shape, out_shape, lower_bounds, upper_bounds, strides](
+                                CPURuntimeContext* ctx) {
+                                kernel(arg_tensor,
+                                       out_tensor,
+                                       arg_shape,
+                                       out_shape,
+                                       lower_bounds,
+                                       upper_bounds,
+                                       strides);
+                            };
+                        functors.emplace_back(functor);
+                    }
+                    else
+                    {
+                        std::function<decltype(runtime::cpu::kernel::slice<float, 2>)> kernel;
+
+                        SELECT_KERNEL_BY_RANK(kernel,
+                                              args[0].get_element_type(),
+                                              arg_shape.size(),
+                                              runtime::cpu::kernel::slice);
+
+                        auto functor = [&, kernel, arg_shape, out_shape, lower_bounds](
+                            CPURuntimeContext* ctx) {
                             kernel(arg_tensor, out_tensor, arg_shape, out_shape, lower_bounds);
                         };
-                    functors.emplace_back(functor);
+                        functors.emplace_back(functor);
+                    }
                 }
             }
 

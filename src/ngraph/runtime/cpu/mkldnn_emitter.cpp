@@ -981,6 +981,38 @@ size_t MKLDNNEmitter::build_concat(const std::vector<mkldnn::memory::desc>& inpu
     return concat_index;
 }
 
+size_t MKLDNNEmitter::build_slice(const mkldnn::memory::desc& input_desc,
+                                  const mkldnn::memory::desc& result_desc,
+                                  const ngraph::Coordinate& lower_bounds,
+                                  const ngraph::Coordinate& upper_bounds,
+                                  const ngraph::Shape& result_shape)
+{
+    std::vector<size_t> in_out_index;
+    mkldnn::memory::primitive_desc input_pd =
+        mkldnn::memory::primitive_desc(input_desc, runtime::cpu::mkldnn_utils::global_cpu_engine);
+    size_t input_index = build_memory_primitive(input_desc);
+
+    auto dims = mkldnn::memory::dims(result_shape.begin(), result_shape.end());
+    auto offsets = mkldnn::memory::dims(lower_bounds.begin(), lower_bounds.end());
+    auto view_pd = mkldnn::view::primitive_desc(input_pd, dims, offsets).dst_primitive_desc();
+
+    mkldnn::memory::primitive_desc result_pd =
+        mkldnn::memory::primitive_desc(result_desc, runtime::cpu::mkldnn_utils::global_cpu_engine);
+    size_t result_index = build_memory_primitive(result_desc);
+
+    // reorder primitive descriptor
+    mkldnn::reorder::primitive_desc reorder_pd =
+        mkldnn::reorder::primitive_desc(view_pd, result_pd);
+    // reorder primitive
+    size_t reorder_index = insert_primitive(new mkldnn::reorder(
+        reorder_pd, *m_mkldnn_primitives[input_index], *m_mkldnn_primitives[result_index]));
+
+    in_out_index.push_back(input_index);
+    in_out_index.push_back(result_index);
+    m_primitive_deps[reorder_index] = in_out_index;
+    return reorder_index;
+}
+
 size_t MKLDNNEmitter::build_softmax_forward(const mkldnn::memory::desc& input_desc,
                                             const mkldnn::memory::desc& result_desc,
                                             int softmax_axis)
