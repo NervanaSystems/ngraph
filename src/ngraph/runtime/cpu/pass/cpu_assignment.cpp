@@ -737,7 +737,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Lstm), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Lstm>},
     {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Rnn>},
     {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Softmax>},
-    {TI(ngraph::op::ReplaceSlice), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ReplaceSlice>},
+    {TI(ngraph::op::ReplaceSlice),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ReplaceSlice>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(

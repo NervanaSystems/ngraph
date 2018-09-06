@@ -2425,27 +2425,27 @@ namespace ngraph
                 if (args[0].get_name() != out[0].get_name())
                 {
                     kernel::emit_replace_slice(writer,
-                                           args[0].get_element_type().c_type_string(),
-                                           args[0].get_name(),
-                                           args[1].get_name(),
-                                           out[0].get_name(),
-                                           args[1].get_shape(),
-                                           out[0].get_shape(),
-                                           replace_slice->get_lower_bounds(),
-                                           replace_slice->get_upper_bounds(),
-                                           replace_slice->get_strides());
+                                               args[0].get_element_type().c_type_string(),
+                                               args[0].get_name(),
+                                               args[1].get_name(),
+                                               out[0].get_name(),
+                                               args[1].get_shape(),
+                                               out[0].get_shape(),
+                                               replace_slice->get_lower_bounds(),
+                                               replace_slice->get_upper_bounds(),
+                                               replace_slice->get_strides());
                 }
                 else
                 {
                     kernel::emit_replace_slice_inplace(writer,
-                                           args[0].get_element_type().c_type_string(),
-                                           args[0].get_name(),
-                                           args[1].get_name(),
-                                           args[1].get_shape(),
-                                           args[0].get_shape(),
-                                           replace_slice->get_lower_bounds(),
-                                           replace_slice->get_upper_bounds(),
-                                           replace_slice->get_strides());
+                                                       args[0].get_element_type().c_type_string(),
+                                                       args[0].get_name(),
+                                                       args[1].get_name(),
+                                                       args[1].get_shape(),
+                                                       args[0].get_shape(),
+                                                       replace_slice->get_lower_bounds(),
+                                                       replace_slice->get_upper_bounds(),
+                                                       replace_slice->get_strides());
                 }
 #endif
                 writer.block_end();

@@ -3928,7 +3928,6 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_matrix_inplace)
     backend->call_with_validate(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{1, 102, 103, 4, 5, 106, 107, 8, 9, 110, 111, 12, 13, 14, 15, 16}),
               read_vector<float>(result));
-
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, replace_slice_matrix)
