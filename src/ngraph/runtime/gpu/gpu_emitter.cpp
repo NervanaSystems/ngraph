@@ -788,6 +788,12 @@ namespace ngraph
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Result)
             {
+                if (args[0].get_name() == out[0].get_name())
+                {
+                    writer << "// Skipping generation for " << node->get_name() << "\n";
+                    return;
+                }
+
                 writer.block_begin();
                 kernel::emit_memcpyDtD(writer, out[0], args[0]);
                 writer.block_end();
