@@ -16,8 +16,27 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/power.hpp"
 
-namespace py = pybind11;
+#include "core/node.hpp"
+#include "utils/broadcasting.hpp"
 
-void regclass_pyngraph_op_util_UnaryElementwise(py::module m);
+namespace ngraph
+{
+    namespace onnx_import
+    {
+        namespace op
+        {
+            inline NodeVector pow(const Node& node)
+            {
+                NodeVector ng_inputs{
+                    numpy_style_broadcast_for_binary_operation(node.get_ng_inputs())};
+                return {std::make_shared<ngraph::op::Power>(ng_inputs.at(0), ng_inputs.at(1))};
+            }
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

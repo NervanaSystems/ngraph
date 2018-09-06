@@ -17,42 +17,36 @@
 #include <memory>
 #include <typeindex>
 #include <typeinfo>
-#include "ngraph/node.hpp"
 
+#include "ngraph/node.hpp"
 #include "ngraph/op/result.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 op::Result::Result(const shared_ptr<Node>& arg)
-    : RequiresTensorViewArgs("Result", {arg})
+    : Op("Result", check_single_output_args({arg}))
 {
-    if (arg->get_outputs().size() != 1)
-    {
-        throw ngraph_error("Expected a single-output argument");
-    }
+    constructor_validate_and_infer_types();
+}
+
+void op::Result::validate_and_infer_types()
+{
+    NODE_VALIDATION_ASSERT(this, get_input_size() == 1) << "Argument has " << get_input_size()
+                                                        << " outputs (1 expected).";
 
     // always borrow the placement conf even the default one
-    set_placement(arg->get_placement());
-    set_value_type_checked(arg->get_element_type(), arg->get_shape());
+    set_placement(get_argument(0)->get_placement());
+    set_output_type(0, get_input_element_type(0), get_input_shape(0));
 }
 
 shared_ptr<Node> op::Result::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
-
-    if (new_args.at(0)->get_outputs().size() != 1)
-    {
-        throw ngraph_error("Expected a single-output argument");
-    }
+    check_new_args_count(this, new_args);
 
     auto res = make_shared<Result>(new_args.at(0));
     if (res)
     {
-        res->set_needs_copy(m_needs_copy);
         res->set_needs_default_layout(m_needs_default_layout);
     }
     return res;

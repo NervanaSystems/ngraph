@@ -14,9 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/tan.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+#include "ngraph/op/tan.hpp"
 #include "pyngraph/ops/tan.hpp"
 
 namespace py = pybind11;

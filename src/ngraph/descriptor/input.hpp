@@ -19,7 +19,6 @@
 #include <memory>
 
 #include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/type/type.hpp"
 
 namespace ngraph
 {
@@ -64,9 +63,6 @@ namespace ngraph
 
             /// \return the tensor view for the connected output
             std::shared_ptr<TensorView> get_tensor_view();
-
-            /// \return the tensor view type for the connected output
-            std::shared_ptr<const TensorViewType> get_tensor_view_type() const;
 
         public:
             /// \return the shape of the connected output

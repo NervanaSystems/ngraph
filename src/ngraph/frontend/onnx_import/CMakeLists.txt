@@ -55,7 +55,10 @@ add_library(onnx_import STATIC
         op/mean.hpp
         op/min.hpp
         op/mul.hpp
+        op/pow.hpp
         op/relu.hpp
+        op/reshape.cpp
+        op/reshape.hpp
         op/softmax.cpp
         op/softmax.hpp
         op/split.cpp
@@ -65,6 +68,7 @@ add_library(onnx_import STATIC
         op/unsqueeze.cpp
         op/unsqueeze.hpp
         ops_bridge.cpp
+        ops_bridge.hpp
         utils/broadcasting.cpp
         utils/broadcasting.hpp
         utils/convpool.cpp
