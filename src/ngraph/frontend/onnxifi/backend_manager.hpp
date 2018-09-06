@@ -30,6 +30,7 @@ namespace ngraph
 {
     namespace onnxifi
     {
+        /// \brief ONNXIFI backend manager
         class BackendManager
         {
         public:
@@ -39,19 +40,19 @@ namespace ngraph
             BackendManager(BackendManager&&) = delete;
             BackendManager& operator=(BackendManager&&) = delete;
 
-            static void get_backend_ids(::onnxBackendID* backendIDs, std::size_t* count)
+            static void get_backend_ids(::onnxBackendID* backend_ids, std::size_t* count)
             {
-                instance().get_registered_ids(backendIDs, count);
+                instance().get_registered_ids(backend_ids, count);
             }
 
-            static void unregister(::onnxBackendID backendID)
+            static void unregister(::onnxBackendID backend_id)
             {
-                instance().unregister_backend(backendID);
+                instance().unregister_backend(backend_id);
             }
 
-            static const Backend& get(::onnxBackendID backendID)
+            static const Backend& get(::onnxBackendID backend_id)
             {
-                return instance().get_backend(backendID);
+                return instance().get_backend(backend_id);
             }
 
         private:
@@ -77,7 +78,7 @@ namespace ngraph
                 return unregister_backend(reinterpret_cast<std::uintptr_t>(id));
             }
 
-            void get_registered_ids(::onnxBackendID* backendIDs, std::size_t* count) const;
+            void get_registered_ids(::onnxBackendID* backend_ids, std::size_t* count) const;
 
             const Backend& get_backend(std::uintptr_t id) const
             {

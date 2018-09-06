@@ -29,6 +29,7 @@ namespace ngraph
 {
     namespace onnxifi
     {
+        /// \brief ONNXIFI extensions to nGraph backend
         class Backend
         {
         public:
@@ -40,8 +41,8 @@ namespace ngraph
 
             Backend() = delete;
 
-            explicit Backend(std::string type)
-                : m_type{std::move(type)}
+            explicit Backend(const std::string& type)
+                : m_type{type}
             {
             }
 

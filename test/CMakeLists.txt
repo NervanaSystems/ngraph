@@ -151,7 +151,7 @@ if (NGRAPH_GPU_ENABLE)
     target_link_libraries(unit-test gpu_backend)
 endif()
 
-if (NGRAPH_ONNX_IMPORT_ENABLE AND NGRAPH_ONNXIFI_ENABLE)
+if (NGRAPH_ONNXIFI_ENABLE)
     target_include_directories(unit-test SYSTEM PUBLIC ${ONNX_INCLUDE_DIR})
     target_link_libraries(unit-test onnxifi-ngraph)
 endif()

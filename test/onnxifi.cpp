@@ -25,9 +25,9 @@ const constexpr std::size_t g_backend_ids_count{10};
 
 TEST(onnxifi, get_backend_ids)
 {
-    onnxBackendID backendIDs[g_backend_ids_count];
+    ::onnxBackendID backendIDs[g_backend_ids_count];
     std::size_t count{g_backend_ids_count};
-    onnxStatus status{::onnxGetBackendIDs(backendIDs, &count)};
+    ::onnxStatus status{::onnxGetBackendIDs(backendIDs, &count)};
     EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
     EXPECT_TRUE(count == ngraph::runtime::BackendManager::get_registered_backends().size());
 }
@@ -35,31 +35,31 @@ TEST(onnxifi, get_backend_ids)
 TEST(onnxifi, get_backend_ids_buffer_null)
 {
     std::size_t count{0};
-    onnxStatus status{::onnxGetBackendIDs(nullptr, &count)};
+    ::onnxStatus status{::onnxGetBackendIDs(nullptr, &count)};
     EXPECT_TRUE(status == ONNXIFI_STATUS_FALLBACK);
     EXPECT_TRUE(count == ngraph::runtime::BackendManager::get_registered_backends().size());
 }
 
 TEST(onnxifi, get_backend_ids_count_null)
 {
-    onnxBackendID backendIDs[g_backend_ids_count];
-    onnxStatus status{::onnxGetBackendIDs(backendIDs, nullptr)};
+    ::onnxBackendID backendIDs[g_backend_ids_count];
+    ::onnxStatus status{::onnxGetBackendIDs(backendIDs, nullptr)};
     EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
 }
 
 TEST(onnxifi, get_backend_ids_null)
 {
-    onnxStatus status{::onnxGetBackendIDs(nullptr, nullptr)};
+    ::onnxStatus status{::onnxGetBackendIDs(nullptr, nullptr)};
     EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
 }
 
 TEST(onnxifi, get_backend_ids_consistency_check)
 {
-    onnxBackendID first_ids[g_backend_ids_count];
+    ::onnxBackendID first_ids[g_backend_ids_count];
     std::size_t first_count{g_backend_ids_count};
     EXPECT_TRUE(::onnxGetBackendIDs(first_ids, &first_count) == ONNXIFI_STATUS_SUCCESS);
     EXPECT_TRUE(first_count == ngraph::runtime::BackendManager::get_registered_backends().size());
-    onnxBackendID second_ids[g_backend_ids_count];
+    ::onnxBackendID second_ids[g_backend_ids_count];
     std::size_t second_count{g_backend_ids_count};
     EXPECT_TRUE(::onnxGetBackendIDs(second_ids, &second_count) == ONNXIFI_STATUS_SUCCESS);
     EXPECT_TRUE(second_count == ngraph::runtime::BackendManager::get_registered_backends().size());

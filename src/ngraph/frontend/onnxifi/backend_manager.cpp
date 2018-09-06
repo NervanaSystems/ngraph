@@ -30,6 +30,12 @@ namespace ngraph
     {
         BackendManager::BackendManager()
         {
+            // Create ONNXIFI backend for each registered nGraph backend.
+            // Use pointer to temporary to capture the unique handle. The handles
+            // must be consistent within the single session.
+            // In spec, backends are hot-pluggable. This means two calls to
+            // onnxGetBackendIDs() may result in different number of backends.
+            // For now, we don't do the re-discovery.
             auto registered_backends = runtime::BackendManager::get_registered_backends();
             for (const auto& type : registered_backends)
             {
@@ -38,7 +44,7 @@ namespace ngraph
             }
         }
 
-        void BackendManager::get_registered_ids(::onnxBackendID* backendIDs,
+        void BackendManager::get_registered_ids(::onnxBackendID* backend_ids,
                                                 std::size_t* count) const
         {
             if (count == nullptr)
@@ -47,16 +53,15 @@ namespace ngraph
             }
             std::size_t requested{*count};
             *count = m_registered_backends.size();
-            if (requested < *count)
+            if ((requested < *count) || (backend_ids == nullptr))
             {
                 throw std::length_error{"not enough space"};
             }
-            if (backendIDs != nullptr)
             {
                 std::lock_guard<decltype(m_mutex)> lock{m_mutex};
                 std::transform(std::begin(m_registered_backends),
                                std::end(m_registered_backends),
-                               backendIDs,
+                               backend_ids,
                                [](const std::map<std::uintptr_t, Backend>::value_type& pair)
                                    -> ::onnxBackendID {
                                    return reinterpret_cast<::onnxBackendID>(pair.first);
