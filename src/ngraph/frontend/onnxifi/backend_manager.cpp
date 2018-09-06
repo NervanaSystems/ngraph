@@ -123,6 +123,17 @@ namespace ngraph
             }
         }
 
+        void BackendManager::init_backend(::onnxBackendID backend_id,
+                                          ::onnxBackend* backend)
+        {
+            if (backend == nullptr)
+            {
+                throw std::invalid_argument{"null pointer"};
+            }
+            *backend = reinterpret_cast<::onnxBackend>(
+                const_cast<Backend*>(&instance().get_backend(backend_id)));
+        }
+
     } // namespace onnxifi
 
 } // namespace ngraph

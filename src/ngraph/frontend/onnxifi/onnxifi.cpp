@@ -22,6 +22,8 @@
 
 #include "backend_manager.hpp"
 
+using namespace ngraph;
+
 extern "C" {
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
@@ -29,7 +31,7 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
 {
     try
     {
-        ngraph::onnxifi::BackendManager::get_backend_ids(backendIDs, numBackends);
+        onnxifi::BackendManager::get_backend_ids(backendIDs, numBackends);
         return ONNXIFI_STATUS_SUCCESS;
     }
     catch (const std::invalid_argument&)
@@ -61,7 +63,7 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxGetBackendInfo(
 {
     try
     {
-        ngraph::onnxifi::BackendManager::get_backend_info(
+        onnxifi::BackendManager::get_backend_info(
             backendID, infoType, infoValue, infoValueSize);
         return ONNXIFI_STATUS_SUCCESS;
     }
@@ -98,9 +100,31 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxGetBackendCompati
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxInitBackend(
-    onnxBackendID backendID, const uint64_t* auxPropertiesList, onnxBackend* backend)
+    onnxBackendID backendID, const uint64_t* /* auxPropertiesList */, onnxBackend* backend)
 {
-    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
+    try
+    {
+        // Ignore auxPropertiesList, it is not supported in this version
+        // of the nGraph ONNXIFI backend
+        ngraph::onnxifi::BackendManager::init_backend(backendID, backend);
+        return ONNXIFI_STATUS_SUCCESS;
+    }
+    catch(const std::invalid_argument&)
+    {
+        return ONNXIFI_STATUS_INVALID_POINTER;
+    }
+    catch(const std::out_of_range&)
+    {
+        return ONNXIFI_STATUS_INVALID_ID;
+    }
+    catch(const std::bad_alloc&)
+    {
+        return ONNXIFI_STATUS_NO_SYSTEM_MEMORY;
+    }
+    catch(...)
+    {
+        return ONNXIFI_STATUS_INTERNAL_ERROR;
+    }
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxReleaseBackend(onnxBackend backend)
