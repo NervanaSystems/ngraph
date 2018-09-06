@@ -1246,27 +1246,52 @@ namespace ngraph
             }
 
             template <>
-            void GPU_Emitter::EMITTER_DECL(ngraph::op::BatchNorm)
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormInference)
             {
-                const ngraph::op::BatchNorm* batchnorm =
-                    static_cast<const ngraph::op::BatchNorm*>(node);
+                const ngraph::op::BatchNormInference* batchnorm =
+                    static_cast<const ngraph::op::BatchNormInference*>(node);
 
                 auto& cudnn_emitter =
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
 
-                CUDNNEmitter::Prop direction;
-                if (batchnorm->get_training_flag() && args.size() == 3)
+                auto bn_index = cudnn_emitter->build_batchnorm(CUDNN_BATCHNORM_SPATIAL,
+                                                               out[0].get_type(),
+                                                               CUDNNEmitter::Prop::Inference,
+                                                               args[2].get_shape(),
+                                                               args[0].get_shape(),
+                                                               batchnorm->get_eps_value());
+                writer.block_begin();
                 {
-                    direction = CUDNNEmitter::Prop::Forward;
+                    writer << "gpu::invoke_primitive(ctx, " << bn_index << ", ";
+                    writer << "std::vector<void*>{" << args.front().get_name();
+                    for (size_t i = 1; i < args.size(); i++)
+                    {
+                        writer << ", " << args[i].get_name();
+                    }
+                    writer << "}.data(), ";
+                    writer << "std::vector<void*>{" << out.front().get_name();
+                    for (size_t i = 1; i < out.size(); i++)
+                    {
+                        writer << ", " << out[i].get_name();
+                    }
+                    writer << "}.data()";
+                    writer << ");\n";
                 }
-                else
-                {
-                    direction = CUDNNEmitter::Prop::Inference;
-                }
+                writer.block_end();
+            }
+
+            template <>
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormTraining)
+            {
+                const ngraph::op::BatchNormTraining* batchnorm =
+                    static_cast<const ngraph::op::BatchNormTraining*>(node);
+
+                auto& cudnn_emitter =
+                    external_function->get_primitive_emitter()->get_cudnn_emitter();
 
                 auto bn_index = cudnn_emitter->build_batchnorm(CUDNN_BATCHNORM_SPATIAL,
                                                                out[0].get_type(),
-                                                               direction,
+                                                               CUDNNEmitter::Prop::Forward,
                                                                args[2].get_shape(),
                                                                args[0].get_shape(),
                                                                batchnorm->get_eps_value());
@@ -1292,10 +1317,10 @@ namespace ngraph
             }
 
             template <>
-            void GPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormBackprop)
+            void GPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormTrainingBackprop)
             {
-                const ngraph::op::BatchNormBackprop* batchnorm =
-                    static_cast<const ngraph::op::BatchNormBackprop*>(node);
+                const ngraph::op::BatchNormTrainingBackprop* batchnorm =
+                    static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
 
                 auto& cudnn_emitter =
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
