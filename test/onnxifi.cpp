@@ -106,7 +106,6 @@ TEST(onnxifi, get_backend_info_bad_info_type)
     EXPECT_TRUE(::onnxGetBackendIDs(backendIDs, &count) == ONNXIFI_STATUS_SUCCESS);
     size_t value_size = 50;
     char onnxifi_version[50];
-    onnxStatus status{
-        ::onnxGetBackendInfo(backendIDs[0], 9999999, onnxifi_version, &value_size)};
+    onnxStatus status{::onnxGetBackendInfo(backendIDs[0], 9999999, onnxifi_version, &value_size)};
     EXPECT_TRUE(status == ONNXIFI_STATUS_UNSUPPORTED_ATTRIBUTE);
 }
