@@ -1,8 +1,8 @@
-.. install.rst:
+.. buildlb.rst:
 
-########
-Install 
-########
+##################
+Build the Library 
+##################
 
 * :ref:`ubuntu`
 * :ref:`centos`
@@ -193,14 +193,14 @@ Test
 ====
 
 The |InG| library code base uses GoogleTest's\* `googletest framework`_ 
-for unit tests. The ``cmake`` command from the :doc:`install` guide 
+for unit tests. The ``cmake`` command from the :doc:`buildlb` guide 
 automatically downloaded a copy of the needed ``gtest`` files when 
 it configured the build directory.
 
 To perform unit tests on the install:
 
 #. Create and configure the build directory as described in our 
-   :doc:`install` guide.
+   :doc:`buildlb` guide.
 
 #. Enter the build directory and run ``make check``:
    
