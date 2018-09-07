@@ -33,6 +33,20 @@ namespace ngraph
             return result;
         }
 
+        const std::string Node::get_decription() const
+        {
+            if (!get_name().empty())
+            {
+                return get_name();
+            }
+
+            std::stringstream stream;
+            std::copy(m_output_names.begin(),
+                      m_output_names.end(),
+                      std::ostream_iterator<std::string>(stream, ", "));
+            return stream.str().substr(0, stream.str().size() - 2);
+        }
+
     } // namespace onnx_import
 
 } // namespace ngraph

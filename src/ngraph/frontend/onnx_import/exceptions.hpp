@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "ngraph/assertion.hpp"
 #include "ngraph/except.hpp"
 
 namespace ngraph
@@ -24,12 +25,10 @@ namespace ngraph
     {
         namespace error
         {
-            struct NotSupported : ngraph_error
+            struct NotSupported : AssertionFailure
             {
-                explicit NotSupported(const std::string& op_name,
-                                      const std::string& name,
-                                      const std::string& message)
-                    : ngraph_error{op_name + " node (" + name + "): " + message}
+                explicit NotSupported(const std::string& what_arg)
+                    : AssertionFailure(what_arg)
                 {
                 }
             };
@@ -52,3 +51,6 @@ namespace ngraph
     } // namespace  onnx_import
 
 } // namespace  ngraph
+
+#define ASSERT_NOT_SUPPORTED(node_, cond_)                                                         \
+    NGRAPH_ASSERT_STREAM(ngraph::onnx_import::error::NotSupported, cond_) << node << " "
