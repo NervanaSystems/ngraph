@@ -72,7 +72,7 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
     string type = config;
 
     // strip off attributes, IE:CPU becomes IE
-    auto colon = type.find(":");
+    auto colon = type.find("_");
     if (colon != type.npos)
     {
         type = type.substr(0, colon);
