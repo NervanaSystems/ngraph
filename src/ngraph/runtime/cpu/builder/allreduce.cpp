@@ -34,7 +34,7 @@ namespace ngraph
 
                 auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
                 auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
-                auto count = static_cast<int>(out[0].get_size());
+                auto count = static_cast<int>(args[0].get_size());
                 auto data_type = MPI_FLOAT;
 
                 int my_rank;
@@ -54,7 +54,7 @@ namespace ngraph
                 auto functor = [&, count, data_type, my_rank](CPURuntimeContext* ctx) {
                     std::cout<<"count == "<<my_rank<<"  "<<count<<std::endl;
                     MPI_Allreduce(
-                        arg_tensor, out_tensor, 1024, data_type, MPI_SUM, MPI_COMM_WORLD);
+                        arg_tensor, out_tensor, count, data_type, MPI_SUM, MPI_COMM_WORLD);
                 };
 
                 functors.emplace_back(functor);
