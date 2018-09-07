@@ -66,3 +66,47 @@ TEST(onnxifi, get_backend_ids_consistency_check)
     EXPECT_TRUE(first_count == second_count);
     EXPECT_TRUE(std::memcmp(first_ids, second_ids, first_count) == 0);
 }
+
+TEST(onnxifi, get_backend_info)
+{
+    onnxBackendID backendIDs[g_backend_ids_count];
+    std::size_t count{g_backend_ids_count};
+    EXPECT_TRUE(::onnxGetBackendIDs(backendIDs, &count) == ONNXIFI_STATUS_SUCCESS);
+    size_t value_size = 50;
+    char onnxifi_version[50];
+    onnxStatus status{
+        ::onnxGetBackendInfo(backendIDs[0], ONNXIFI_BACKEND_VERSION, onnxifi_version, &value_size)};
+    EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+}
+
+TEST(onnxifi, get_backend_info_nullptr)
+{
+    onnxBackendID backendIDs[g_backend_ids_count];
+    std::size_t count{g_backend_ids_count};
+    EXPECT_TRUE(::onnxGetBackendIDs(backendIDs, &count) == ONNXIFI_STATUS_SUCCESS);
+    size_t value_size = 50;
+    onnxStatus status{
+        ::onnxGetBackendInfo(backendIDs[0], ONNXIFI_BACKEND_VERSION, nullptr, &value_size)};
+    EXPECT_TRUE(status == ONNXIFI_STATUS_FALLBACK);
+}
+
+TEST(onnxifi, get_backend_info_bad_ID)
+{
+    size_t value_size = 50;
+    char onnxifi_version[50];
+    onnxStatus status{
+        ::onnxGetBackendInfo(nullptr, ONNXIFI_BACKEND_VERSION, onnxifi_version, &value_size)};
+    EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_ID);
+}
+
+TEST(onnxifi, get_backend_info_bad_info_type)
+{
+    onnxBackendID backendIDs[g_backend_ids_count];
+    std::size_t count{g_backend_ids_count};
+    EXPECT_TRUE(::onnxGetBackendIDs(backendIDs, &count) == ONNXIFI_STATUS_SUCCESS);
+    size_t value_size = 50;
+    char onnxifi_version[50];
+    onnxStatus status{
+        ::onnxGetBackendInfo(backendIDs[0], 9999999, onnxifi_version, &value_size)};
+    EXPECT_TRUE(status == ONNXIFI_STATUS_UNSUPPORTED_ATTRIBUTE);
+}
