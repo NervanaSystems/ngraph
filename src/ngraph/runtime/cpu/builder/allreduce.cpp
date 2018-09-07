@@ -48,6 +48,7 @@ namespace ngraph
                 }
 
                 auto functor = [&, count, data_type](CPURuntimeContext* ctx) {
+                    MPI_Barrier(MPI_COMM_WORLD);
                     MPI_Allreduce(
                         arg_tensor, out_tensor, count, data_type, MPI_SUM, MPI_COMM_WORLD);
                 };
