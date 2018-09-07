@@ -41,19 +41,6 @@ namespace ngraph
                 }
             };
 
-            namespace parameter
-            {
-                struct Value : ngraph_error
-                {
-                    Value(const std::string& op_name,
-                          const std::string& name,
-                          const std::string& message)
-                        : ngraph_error{op_name + " node (" + name + "): " + message}
-                    {
-                    }
-                };
-            } // namespace paramter
-
         } // namespace  error
 
     } // namespace  onnx_import
