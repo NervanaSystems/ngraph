@@ -89,6 +89,17 @@ namespace ngraph
             return std::make_shared<ngraph::op::Broadcast>(
                 node, new_shape, calculate_broadcast_axes(new_shape, node->get_shape()));
         }
+
+        inline std::shared_ptr<ngraph::Node>
+            make_broadcast_node(const std::shared_ptr<ngraph::Node>& node,
+                                ngraph::Shape new_shape,
+                                std::size_t start_match_axis)
+        {
+            return std::make_shared<ngraph::op::Broadcast>(
+                node,
+                new_shape,
+                calculate_broadcast_axes(new_shape, node->get_shape(), start_match_axis));
+        }
     } // namespace  onnx_import
 
 } // namespace  ngraph
