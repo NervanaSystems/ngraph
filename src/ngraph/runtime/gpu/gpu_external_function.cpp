@@ -754,7 +754,7 @@ string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
     auto handler = dispatcher.find(type_index(typeid(node)));
     if (handler == dispatcher.end())
     {
-        throw ngraph::unsupported_op(node->description());
+        throw ngraph::unsupported_op(node.description());
     }
     vector<GPU_TensorViewWrapper> in;
     size_t arg_index = 0;
