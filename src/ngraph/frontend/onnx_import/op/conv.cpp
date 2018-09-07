@@ -109,8 +109,8 @@ namespace ngraph
                 int64_t groups{node.get_attribute_value<int64_t>("group", 1)};
 
                 ASSERT_VALID_ARGUMENT(node,
-                                      groups >= 0 && groups <= data->get_shape().at(1) &&
-                                          groups <= filters->get_shape().at(0))
+                                      ((groups >= 0) && (groups <= data->get_shape().at(1)) &&
+                                       (groups <= filters->get_shape().at(0))))
                     << "incorrect value of 'group' attribute: " << groups;
 
                 auto strides = convpool::get_strides(node);

@@ -33,7 +33,7 @@ namespace ngraph
             return result;
         }
 
-        const std::string Node::get_description() const
+        std::string Node::get_description() const
         {
             if (!get_name().empty())
             {
@@ -41,10 +41,12 @@ namespace ngraph
             }
 
             std::stringstream stream;
-            std::copy(m_output_names.begin(),
-                      m_output_names.end(),
-                      std::ostream_iterator<std::string>(stream, ", "));
-            return stream.str().substr(0, stream.str().size() - 2);
+            for (std::size_t index = 0; index < m_output_names.size(); ++index)
+            {
+                stream << (index != 0 ? ", " : "");
+                stream << m_output_names.at(index).get();
+            }
+            return stream.str();
         }
 
     } // namespace onnx_import

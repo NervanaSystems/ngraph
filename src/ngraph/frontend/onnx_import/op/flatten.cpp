@@ -31,7 +31,7 @@ namespace ngraph
                 auto data = inputs.at(0);
                 auto axis = node.get_attribute_value<int64_t>("axis", 1);
 
-                ASSERT_VALID_ARGUMENT(node, axis >= 0 && axis <= data->get_shape().size())
+                ASSERT_VALID_ARGUMENT(node, (axis >= 0) && (axis <= data->get_shape().size()))
                     << "provided 'axis' attribute is not valid.";
 
                 return {reshape::flatten(data, axis)};

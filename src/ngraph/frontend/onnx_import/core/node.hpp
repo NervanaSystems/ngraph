@@ -75,7 +75,7 @@ namespace ngraph
             /// @brief Describe the ONNX Node to make debugging graphs easier
             /// Function will return the Node's name if it has one, or the names of its outputs.
             /// \return Description of Node
-            const std::string get_description() const;
+            std::string get_description() const;
 
             const std::vector<std::reference_wrapper<const std::string>>& get_output_names() const
             {
