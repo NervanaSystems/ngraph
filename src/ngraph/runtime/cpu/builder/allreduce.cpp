@@ -21,8 +21,6 @@
 
 using namespace std;
 using namespace ngraph;
-int my_rank;
-MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 namespace ngraph
 {
     namespace runtime
@@ -38,6 +36,9 @@ namespace ngraph
                 auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
                 auto count = static_cast<int>(out[0].get_size());
                 auto data_type = MPI_FLOAT;
+
+                int my_rank;
+                MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
                 if (args[0].get_element_type() == element::f32)
                 {
