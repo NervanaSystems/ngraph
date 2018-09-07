@@ -305,7 +305,7 @@ static json write(const Function& f, bool binary_constant_data)
 
     Function* pf = const_cast<Function*>(&f);
     json nodes;
-    for (shared_ptr<Node> node : pf->get_ordered_ops_with_control_dependencies())
+    for (shared_ptr<Node> node : pf->get_ordered_ops(true))
     {
         nodes.push_back(write(*node, binary_constant_data));
     }
