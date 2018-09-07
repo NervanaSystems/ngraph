@@ -70,5 +70,5 @@ TEST(quantize_cpu, dequantize_from_int8_smallrange)
 
 TEST(quantize_cpu, dequantize_from_int8)
 {
-    DequantizeTest<int8_t>(42, -1.0f, 300.0f, 99.212601);
+    DequantizeTest<int8_t>(42, -1.0f, 300.0f, static_cast<float>(99.212601));
 }

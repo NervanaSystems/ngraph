@@ -133,7 +133,8 @@ size_t MKLDNNEmitter::build_dequantization(const ngraph::Node* node,
 
     const float max_abs = std::max(std::abs(min_range), std::abs(max_range));
     bool is_signed = (dequantize->get_dequantize_et()).is_signed();
-    const float target_range = (is_signed ? std::pow(2, 7) : std::pow(2, 8)) - 1;
+    const float target_range =
+        static_cast<float>((is_signed ? std::pow(2, 7) : std::pow(2, 8)) - 1);
     const float scale_factor = max_abs / target_range;
     std::vector<float> scales;
     scales.push_back(scale_factor);
