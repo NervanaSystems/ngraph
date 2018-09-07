@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include "quantized_avg_pool.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -36,6 +37,22 @@ op::QuantizedAvgPool::QuantizedAvgPool(const shared_ptr<Node>& arg,
     , m_include_padding_in_avg_computation(include_padding_in_avg_computation)
 {
     constructor_validate_and_infer_types();
+
+    if (arg->get_element_type() != element::u8 && arg->get_element_type() != element::i8)
+    {
+        throw ngraph_error("Dequantization supported only for i8/u8!");
+    }
+
+    if (min->get_element_type() != min->get_element_type())
+    {
+        throw ngraph_error("Min's element type isn't equal to max's!");
+    }
+
+    if (!(std::dynamic_pointer_cast<op::Constant>(min) &&
+          std::dynamic_pointer_cast<op::Constant>(max)))
+    {
+        throw ngraph_error("Min and max have to be constants!");
+    }
 }
 
 void op::QuantizedAvgPool::validate_and_infer_types()
