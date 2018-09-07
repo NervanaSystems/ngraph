@@ -39,6 +39,7 @@ namespace ngraph
 
                 int my_rank;
                 MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+                MPI_Barrier(MPI_COMM_WORLD);
                 std::cout<<"my_rank == "<<my_rank<<"  "<<count<<std::endl;
                 std::cout<<"arg_tensor == "<<my_rank<<"  "<<static_cast<int>(args[0].get_size())<<std::endl;
 
