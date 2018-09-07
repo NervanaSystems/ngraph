@@ -16,23 +16,8 @@
 
 #pragma once
 
-#include "ngraph/pass/pass.hpp"
+#include <pybind11/pybind11.h>
 
-namespace ngraph
-{
-    namespace pass
-    {
-        class ResultCopyElimination;
-    }
-}
+namespace py = pybind11;
 
-class ngraph::pass::ResultCopyElimination : public ngraph::pass::FunctionPass
-{
-public:
-    ResultCopyElimination()
-        : FunctionPass()
-    {
-    }
-
-    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f) override;
-};
+void regclass_pyngraph_op_util_IndexReduction(py::module m);

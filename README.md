@@ -70,7 +70,7 @@ to improve the Library:
   modifications are necessary, may provide feedback to guide you. When
   accepted, your pull request will be merged to the repository.
 
-[install]: http://ngraph.nervanasys.com/docs/latest/install.html
+[install]: http://ngraph.nervanasys.com/docs/latest/buildlb.html
 [framework integration guides]: http://ngraph.nervanasys.com/docs/latest/framework-integration-guides.html
 [Github issues]: https://github.com/NervanaSystems/ngraph/issues
 [contrib guide]: http://ngraph.nervanasys.com/docs/latest/project/code-contributor-README.html

@@ -46,9 +46,11 @@
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select_and_scatter.hpp"
+#include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/topk.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
 #include "ngraph/runtime/interpreter/node_wrapper.hpp"
@@ -117,6 +119,7 @@
 #include "ngraph/runtime/reference/sum.hpp"
 #include "ngraph/runtime/reference/tan.hpp"
 #include "ngraph/runtime/reference/tanh.hpp"
+#include "ngraph/runtime/reference/topk.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED
@@ -133,6 +136,7 @@ namespace ngraph
         }
     }
 }
+
 class ngraph::runtime::interpreter::INTBackend : public Backend
 {
 public:
@@ -1115,7 +1119,37 @@ private:
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
+        case OP_TYPEID::TopK_TYPEID:
+        {
+            const op::TopK* topk = static_cast<const op::TopK*>(&node);
+            if (out[0]->get_element_type() == element::i64)
+            {
+                reference::topk<T, int64_t>(args[0]->get_data_ptr<T>(),
+                                            out[0]->get_data_ptr<int64_t>(),
+                                            out[1]->get_data_ptr<T>(),
+                                            args[0]->get_shape(),
+                                            out[0]->get_shape(),
+                                            topk->get_top_k_axis(),
+                                            topk->get_k(),
+                                            topk->get_compute_max());
+            }
+            else if (out[0]->get_element_type() == element::i32)
+            {
+                reference::topk<T, int32_t>(args[0]->get_data_ptr<T>(),
+                                            out[0]->get_data_ptr<int32_t>(),
+                                            out[1]->get_data_ptr<T>(),
+                                            args[0]->get_shape(),
+                                            out[0]->get_shape(),
+                                            topk->get_top_k_axis(),
+                                            topk->get_k(),
+                                            topk->get_compute_max());
+            }
+            else
+            {
+                throw ngraph_error("Unexpected type");
+            }
         }
 #pragma GCC diagnostic pop
+        }
     }
 };

@@ -123,9 +123,23 @@ cldnn::tensor runtime::intelgpu::IntelGPULayout::create_cldnn_offset(const Shape
 cldnn::layout runtime::intelgpu::IntelGPULayout::create_cldnn_layout(
     const ngraph::element::Type& element_type, const Shape& element_shape)
 {
-    const cldnn::data_types data_type = get_cldnn_type(element_type);
     const cldnn::format::type format = cldnn::format::bfyx;
-    const cldnn::tensor tensor = create_cldnn_tensor(element_shape);
+    cldnn::data_types data_type;
+    cldnn::tensor tensor;
+
+    // This is workaround for data types that are not supported by clDNN
+    // If the type is not supported, it treated as char*
+    // Example, "int64_t input[2, 3, 4]" will be "char input[192]"
+    if ((element_type == ngraph::element::i64) || (element_type == ngraph::element::i32))
+    {
+        data_type = cldnn::data_types::i8;
+        tensor = create_cldnn_tensor({shape_size(element_shape) * element_type.size()});
+    }
+    else
+    {
+        data_type = get_cldnn_type(element_type);
+        tensor = create_cldnn_tensor(element_shape);
+    }
 
     return cldnn::layout(data_type, format, tensor);
 }
