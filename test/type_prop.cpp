@@ -17,9 +17,6 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
-#include "ngraph/op/argmin.hpp"
-#include "ngraph/op/batch_norm.hpp"
-#include "ngraph/op/reverse_sequence.hpp"
 
 #include <memory>
 using namespace std;
@@ -6487,6 +6484,82 @@ TEST(type_prop, index_reduction_invalid_index_type)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Index element type must be");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, topk_invalid_rank)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{});
+
+    try
+    {
+        auto topk = make_shared<op::TopK>(a, 0, element::i32, 1, true);
+        FAIL() << "TopK c-tor should throw for scalar shapes";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Input Tensor's rank must be greater than 0");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, topk_invalid_top_k)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+
+    try
+    {
+        auto topk = make_shared<op::TopK>(a, 2, element::i32, 1, true);
+        FAIL() << "TopK c-tor should throw for invalid top k axis";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "TopK axis must be less than rank");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, topk_invalid_index_type)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+
+    try
+    {
+        auto topk = make_shared<op::TopK>(a, 0, element::f32, 1, true);
+        FAIL() << "TopK c-tor should throw for invalid index element type";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Index element type must be i64 or i32");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, topk_invalid_k)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+
+    try
+    {
+        auto topk = make_shared<op::TopK>(a, 0, element::i32, 3, true);
+        FAIL() << "TopK c-tor should throw for invalid K";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "K should not exceed TopK axis length");
     }
     catch (...)
     {
