@@ -66,23 +66,23 @@ namespace ngraph
                 return get().call_with_validate(function, outputs, inputs);
             }
 
-            void get_onnxifi_version(void* infoValue, std::size_t* infoValueSize) const;
-            void get_name(void* infoValue, std::size_t* infoValueSize) const;
-            void get_vendor(void* infoValue, std::size_t* infoValueSize) const;
-            void get_version(void* infoValue, std::size_t* infoValueSize) const;
-            void get_extensions(void* infoValue, std::size_t* infoValueSize) const;
-            void get_device(void* infoValue, std::size_t* infoValueSize) const;
-            void get_device_type(void* infoValue, std::size_t* infoValueSize) const;
-            void get_onnx_ir_version(void* infoValue, std::size_t* infoValueSize) const;
-            void get_opset_version(void* infoValue, std::size_t* infoValueSize) const;
-            void get_capabilities(void* infoValue, std::size_t* infoValueSize) const;
-            void get_init_properties(void* infoValue, std::size_t* infoValueSize) const;
-            void get_memory_types(void* infoValue, std::size_t* infoValueSize) const;
-            void get_graph_init_properties(void* infoValue, std::size_t* infoValueSize) const;
-            void get_synchronization_types(void* infoValue, std::size_t* infoValueSize) const;
-            void get_memory_size(void* infoValue, std::size_t* infoValueSize) const;
-            void get_max_graph_size(void* infoValue, std::size_t* infoValueSize) const;
-            void get_max_graph_count(void* infoValue, std::size_t* infoValueSize) const;
+            void get_onnxifi_version(void* info_value, std::size_t* info_value_size) const;
+            void get_name(void* info_value, std::size_t* info_value_size) const;
+            void get_vendor(void* info_value, std::size_t* info_value_size) const;
+            void get_version(void* info_value, std::size_t* info_value_size) const;
+            void get_extensions(void* info_value, std::size_t* info_value_size) const;
+            void get_device(void* info_value, std::size_t* info_value_size) const;
+            void get_device_type(void* info_value, std::size_t* info_value_size) const;
+            void get_onnx_ir_version(void* info_value, std::size_t* info_value_size) const;
+            void get_opset_version(void* info_value, std::size_t* info_value_size) const;
+            void get_capabilities(void* info_value, std::size_t* info_value_size) const;
+            void get_init_properties(void* info_value, std::size_t* info_value_size) const;
+            void get_memory_types(void* info_value, std::size_t* info_value_size) const;
+            void get_graph_init_properties(void* info_value, std::size_t* info_value_size) const;
+            void get_synchronization_types(void* info_value, std::size_t* info_value_size) const;
+            void get_memory_size(void* info_value, std::size_t* info_value_size) const;
+            void get_max_graph_size(void* info_value, std::size_t* info_value_size) const;
+            void get_max_graph_count(void* info_value, std::size_t* info_value_size) const;
 
         private:
             std::string m_type{};
