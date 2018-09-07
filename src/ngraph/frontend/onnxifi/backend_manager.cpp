@@ -134,6 +134,11 @@ namespace ngraph
                 const_cast<Backend*>(&instance().get_backend(backend_id)));
         }
 
+        void BackendManager::init_graph(::onnxBackend backend, ModelView model, WeightsView weights, ::onnxGraph* graph)
+        {
+
+        }
+
     } // namespace onnxifi
 
 } // namespace ngraph

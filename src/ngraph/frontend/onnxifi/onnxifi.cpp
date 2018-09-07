@@ -155,14 +155,38 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxReleaseEvent(onnx
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
     onnxInitGraph(onnxBackend backend,
-                  const uint64_t* auxPropertiesList,
+                  const uint64_t* /* auxPropertiesList */,
                   std::size_t onnxModelSize,
                   const void* onnxModel,
                   uint32_t weightsCount,
                   const onnxTensorDescriptorV1* weightDescriptors,
                   onnxGraph* graph)
 {
-    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
+    if ((onnxModel == nullptr) ||
+        (weightDescriptors == nullptr) ||
+        (graph == nullptr))
+    {
+        throw std::invalid_argument{"null pointer"};
+    }
+    try
+    {
+        // Ignore auxPropertiesList, it is not supported in this version
+        // of the nGraph ONNXIFI backend
+        onnxifi::BackendManager::init_graph(
+                backend,
+                onnxifi::ModelView{onnxModel, onnxModelSize},
+                onnxifi::WeightsView{weightDescriptors, weightsCount},
+                graph);
+        return ONNXIFI_STATUS_SUCCESS;
+    }
+
+
+
+
+    catch (...)
+    {
+        return ONNXIFI_STATUS_INTERNAL_ERROR;
+    }
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI

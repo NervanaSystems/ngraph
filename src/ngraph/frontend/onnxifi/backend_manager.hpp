@@ -20,6 +20,7 @@
 #include <map>     // std::map
 #include <mutex>   // std::mutex
 
+#include <gsl/gsl>
 #include <onnxifi.h>
 
 #include "ngraph/runtime/backend.hpp"
@@ -30,6 +31,9 @@ namespace ngraph
 {
     namespace onnxifi
     {
+        using ModelView = gsl::span<char>;
+        using WeightsView = gsl::span<::onnxTensorDescriptorV1>;
+
         /// \brief ONNXIFI backend manager
         class BackendManager
         {
@@ -57,6 +61,11 @@ namespace ngraph
 
             static void init_backend(::onnxBackendID backend_id,
                                     ::onnxBackend* backend);
+
+            static void init_graph(::onnxBackend backend,
+                                   ModelView model,
+                                   WeightsView weights,
+                                   ::onnxGraph* graph);
 
         private:
             mutable std::mutex m_mutex{};
