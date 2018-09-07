@@ -104,6 +104,7 @@ set (SRC
     op/sum.cpp
     op/tan.cpp
     op/tanh.cpp
+    op/topk.cpp
     op/util/arithmetic_reduction.cpp
     op/util/binary_elementwise_arithmetic.cpp
     op/util/binary_elementwise_comparison.cpp
