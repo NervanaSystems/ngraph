@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <fstream>
 #include <functional>
@@ -90,6 +90,7 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/op/topk.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
@@ -915,6 +916,14 @@ static shared_ptr<ngraph::Function>
             {
                 node = make_shared<op::Tanh>(args[0]);
             }
+            else if (node_op == "TopK")
+            {
+                auto top_k_axis = node_js.at("top_k_axis").get<size_t>();
+                auto k = node_js.at("k").get<size_t>();
+                auto compute_max = node_js.at("compute_max").get<bool>();
+                auto target_type = read_element_type(node_js.at("index_element_type"));
+                node = make_shared<op::TopK>(args[0], top_k_axis, target_type, k, compute_max);
+            }
             else if (node_op == "StopGradient")
             {
                 node = make_shared<op::StopGradient>(args[0]);
@@ -1364,6 +1373,14 @@ static json write(const Node& n, bool binary_constant_data)
     }
     else if (node_op == "Tanh")
     {
+    }
+    else if (node_op == "TopK")
+    {
+        auto tmp = dynamic_cast<const op::TopK*>(&n);
+        node["top_k_axis"] = tmp->get_top_k_axis();
+        node["index_element_type"] = write_element_type(tmp->get_index_element_type());
+        node["k"] = tmp->get_k();
+        node["compute_max"] = tmp->get_compute_max();
     }
 
     return node;

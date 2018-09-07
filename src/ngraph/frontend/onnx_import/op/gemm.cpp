@@ -1,18 +1,18 @@
-/*******************************************************************************
- * Copyright 2018 Intel Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "op/gemm.hpp"
 
@@ -47,11 +47,11 @@ namespace ngraph
 
                 if (trans_a != 0)
                 {
-                    input_a = transpose(input_a);
+                    input_a = reshape::transpose(input_a);
                 }
                 if (trans_b != 0)
                 {
-                    input_b = transpose(input_b);
+                    input_b = reshape::transpose(input_b);
                 }
 
                 // code from python not implemented in c++ yet.
@@ -68,7 +68,9 @@ namespace ngraph
                 std::shared_ptr<ngraph::Node> beta_node = std::make_shared<ngraph::op::Constant>(
                     input_c->get_element_type(), ngraph::Shape{}, std::vector<double>{beta});
                 beta_node = make_broadcast_node(beta_node, input_c->get_shape());
+
                 input_c = std::make_shared<ngraph::op::Multiply>(beta_node, input_c);
+                input_c = make_broadcast_node(input_c, a_dot_b->get_shape());
 
                 return {std::make_shared<ngraph::op::Add>(a_dot_b, input_c)};
             }

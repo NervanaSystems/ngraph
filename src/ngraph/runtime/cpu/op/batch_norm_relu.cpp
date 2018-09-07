@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/op/constant.hpp"
@@ -22,11 +22,13 @@ ngraph::op::BatchNormRelu::BatchNormRelu(double eps,
                                          std::shared_ptr<ngraph::Node> gamma,
                                          std::shared_ptr<ngraph::Node> beta,
                                          std::shared_ptr<ngraph::Node> input)
-    : RequiresTensorViewArgs("BatchNormRelu", {gamma, beta, input})
+    : Op("BatchNormRelu", check_single_output_args({gamma, beta, input}))
     , m_bn_input_shape(input->get_shape())
     , m_epsilon(eps)
     , m_training(true)
 {
+    constructor_validate_and_infer_types();
+
     if (m_bn_input_shape.size() != 4)
     {
         throw ngraph_error("input tensor to batchnorm must have rank 4");
@@ -71,9 +73,10 @@ ngraph::op::BatchNormRelu::BatchNormRelu(double eps,
         throw ngraph_error("gamma and beta element type does not match");
     }
 
-    add_output(input->get_element_type(), m_bn_input_shape);
-    add_output(input->get_element_type(), m_bn_mean_shape);
-    add_output(input->get_element_type(), m_bn_variance_shape);
+    set_output_size(3);
+    set_output_type(0, input->get_element_type(), m_bn_input_shape);
+    set_output_type(1, input->get_element_type(), m_bn_mean_shape);
+    set_output_type(2, input->get_element_type(), m_bn_variance_shape);
 }
 
 ngraph::op::BatchNormRelu::BatchNormRelu(double eps,
@@ -83,13 +86,15 @@ ngraph::op::BatchNormRelu::BatchNormRelu(double eps,
                                          std::shared_ptr<ngraph::Node> mean,
                                          std::shared_ptr<ngraph::Node> variance,
                                          bool training)
-    : RequiresTensorViewArgs("BatchNormRelu", {gamma, beta, input, mean, variance})
+    : Op("BatchNormRelu", check_single_output_args({gamma, beta, input, mean, variance}))
     , m_bn_input_shape(input->get_shape())
     , m_bn_variance_shape(variance->get_shape())
     , m_bn_mean_shape(mean->get_shape())
     , m_epsilon(eps)
     , m_training(training)
 {
+    constructor_validate_and_infer_types();
+
     if (m_bn_input_shape.size() != 4)
     {
         throw ngraph_error("input tensor to batchnorm must have rank 4");
@@ -134,7 +139,7 @@ ngraph::op::BatchNormRelu::BatchNormRelu(double eps,
         throw ngraph_error("gamma and beta element type does not match");
     }
 
-    add_output(input->get_element_type(), m_bn_input_shape);
+    set_output_type(0, input->get_element_type(), m_bn_input_shape);
 }
 
 std::shared_ptr<ngraph::Node>

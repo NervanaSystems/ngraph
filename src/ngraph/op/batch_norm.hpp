@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -20,14 +20,14 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 #include "ngraph/util.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class BatchNorm : public util::RequiresTensorViewArgs
+        class BatchNorm : public Op
         {
         public:
             // In this version of BatchNorm:
@@ -80,6 +80,8 @@ namespace ngraph
                       std::shared_ptr<ngraph::Node> variance,
                       bool training = false);
 
+            void validate_and_infer_types() override;
+
             const Shape& get_inputs_shape() const { return m_bn_input_shape; }
             const Shape& get_variance_shape() const { return m_bn_variance_shape; }
             const Shape& get_mean_shape() const { return m_bn_mean_shape; }
@@ -93,6 +95,16 @@ namespace ngraph
                                            const NodeVector& deltas) override;
 
         private:
+            enum
+            {
+                GAMMA,
+                BETA,
+                INPUT,
+                MEAN,
+                VARIANCE,
+                DELTA
+            };
+
             Shape m_bn_input_shape;
             Shape m_bn_variance_shape;
             Shape m_bn_mean_shape;
@@ -100,7 +112,7 @@ namespace ngraph
             bool m_training;
         };
 
-        class BatchNormBackprop : public util::RequiresTensorViewArgs
+        class BatchNormBackprop : public Op
         {
         public:
             BatchNormBackprop(double eps,
@@ -111,11 +123,23 @@ namespace ngraph
                               std::shared_ptr<Node> variance,
                               std::shared_ptr<Node> delta);
 
+            void validate_and_infer_types() override;
+
             double get_eps_value() const { return epsilon; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         private:
+            enum
+            {
+                GAMMA,
+                BETA,
+                INPUT,
+                MEAN,
+                VARIANCE,
+                DELTA
+            };
+
             double epsilon;
         };
     }

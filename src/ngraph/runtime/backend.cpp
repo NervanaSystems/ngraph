@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <sstream>
 
@@ -95,16 +95,14 @@ void runtime::Backend::validate_call(shared_ptr<const Function> function,
         {
             stringstream ss;
             ss << "Output " << i << " type '" << outputs[i]->get_tensor().get_element_type()
-               << "' does not match Parameter type '" << function->get_output_element_type(i)
-               << "'";
+               << "' does not match Result type '" << function->get_output_element_type(i) << "'";
             throw runtime_error(ss.str());
         }
         if (function->get_output_shape(i) != outputs[i]->get_shape())
         {
             stringstream ss;
             ss << "Output " << i << " shape {" << join(outputs[i]->get_shape())
-               << "} does not match Parameter shape {" << join(function->get_output_shape(i))
-               << "}";
+               << "} does not match Result shape {" << join(function->get_output_shape(i)) << "}";
             throw runtime_error(ss.str());
         }
     }
