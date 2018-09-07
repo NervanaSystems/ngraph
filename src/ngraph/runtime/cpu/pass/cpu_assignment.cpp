@@ -40,6 +40,7 @@
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
+#include "ngraph/runtime/cpu/op/dequantize.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
@@ -659,6 +660,20 @@ namespace ngraph
                         bounded_relu->set_op_annotations(op_annotations);
                     }
                 }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::Dequantize)
+                {
+                    if (node->get_input_element_type(0) == element::u8 ||
+                        node->get_input_element_type(0) == element::i8)
+                    {
+                        auto dequantize = static_cast<op::Dequantize*>(node);
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        dequantize->set_op_annotations(op_annotations);
+                    }
+                }
             }
         }
     }
@@ -712,6 +727,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Lstm), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Lstm>},
     {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Rnn>},
     {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Softmax>},
+    {TI(ngraph::op::Dequantize),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Dequantize>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(

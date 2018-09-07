@@ -109,15 +109,6 @@ static const element::Type& get_output_type(const shared_ptr<Node>& op, size_t n
     return op->get_outputs().at(num).get_tensor().get_element_type();
 }
 
-static void argument_type_check(const element::Type& type)
-{
-    if (type != element::f32 && type != element::boolean)
-    {
-        throw invalid_argument("Kernel data type \"" + type.c_type_string() +
-                               "\" is not supported.");
-    }
-}
-
 static void do_eltwise_operation(cldnn::topology& topology,
                                  const shared_ptr<Node>& op,
                                  cldnn::eltwise_mode mode)
@@ -168,16 +159,13 @@ static void do_logical_operation(cldnn::topology& topology,
                                  const string& operation)
 {
     arguments_check(op, 2, 1);
-    argument_type_check(get_input_type(op, 0));
-    argument_type_check(get_input_type(op, 1));
 
     runtime::intelgpu::do_logic_kernel(topology,
                                        get_input_name(op, 0),
                                        get_input_shape(op, 0),
-                                       get_input_type(op, 0).c_type_string(),
+                                       get_input_type(op, 0),
                                        get_input_name(op, 1),
                                        get_input_shape(op, 1),
-                                       get_input_type(op, 1).c_type_string(),
                                        get_output_name(op),
                                        get_output_shape(op),
                                        get_output_type(op),
@@ -548,6 +536,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                 do_bcast_sum_operation(topology,
                                        get_input_name(op),
                                        get_input_shape(op),
+                                       get_input_type(op),
                                        get_output_name(op),
                                        get_output_shape(op),
                                        get_output_type(op),
@@ -571,6 +560,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                 do_bcast_sum_operation(topology,
                                        get_input_name(op),
                                        get_input_shape(op),
+                                       get_input_type(op),
                                        get_output_name(op),
                                        get_output_shape(op),
                                        get_output_type(op),
