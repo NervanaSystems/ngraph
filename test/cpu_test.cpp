@@ -73,7 +73,7 @@ TEST(cpu_test, trivial_in_place_relu_fail)
 }
 
 #ifdef NGRAPH_TBB_ENABLE
-TEST(DISABLED_cpu_test, abc_tbb)
+TEST(cpu_test, abc_tbb)
 {
     // Force TBB flow graph generation in the CPU backend
     // This has no effect on other backends
