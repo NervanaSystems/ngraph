@@ -39,6 +39,8 @@ from _pyngraph.op import Acos
 from _pyngraph.op import Add
 from _pyngraph.op import AllReduce
 from _pyngraph.op import And
+from _pyngraph.op import ArgMax
+from _pyngraph.op import ArgMin
 from _pyngraph.op import Asin
 from _pyngraph.op import Atan
 from _pyngraph.op import AvgPool
@@ -112,3 +114,4 @@ from _pyngraph.op import Subtract
 from _pyngraph.op import Sum
 from _pyngraph.op import Tan
 from _pyngraph.op import Tanh
+from _pyngraph.op import TopK

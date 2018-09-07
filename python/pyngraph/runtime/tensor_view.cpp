@@ -14,10 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/tensor_view.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/runtime/tensor_view.hpp"
 #include "pyngraph/runtime/tensor_view.hpp"
 
 namespace py = pybind11;

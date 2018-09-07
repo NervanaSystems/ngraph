@@ -18,14 +18,14 @@
 
 #include <memory>
 
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Concatenation operation.
-        class Concat : public util::RequiresTensorViewArgs
+        class Concat : public Op
         {
         public:
             /// \brief Constructs a concatenation operation.
@@ -33,6 +33,8 @@ namespace ngraph
             /// \param args               The nodes producing the input tensors.
             /// \param concatenation_axis The axis along which to concatenate the input tensors.
             Concat(const NodeVector& args, size_t concatenation_axis);
+
+            void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

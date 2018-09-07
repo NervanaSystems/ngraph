@@ -17,7 +17,7 @@
 #pragma once
 
 #include "ngraph/graph_util.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
@@ -28,7 +28,7 @@ namespace ngraph
         // The second one contains the indices of the maximum numbers
         // for each window in input (arg)
         // These indices are used by MKLDNN for a back propagation pass
-        class MaxPoolWithIndices : public util::RequiresTensorViewArgs
+        class MaxPoolWithIndices : public Op
         {
         public:
             MaxPoolWithIndices(const std::shared_ptr<Node>& arg,
@@ -61,7 +61,7 @@ namespace ngraph
 
         // MaxPoolWithIndicesBackprop takes MaxPoolWithIndices' outputs and
         // pass the indices directly to MKLDNN to avoid max indices recomputation
-        class MaxPoolWithIndicesBackprop : public util::RequiresTensorViewArgs
+        class MaxPoolWithIndicesBackprop : public Op
         {
         public:
             MaxPoolWithIndicesBackprop(const std::shared_ptr<Node>& arg_forward,

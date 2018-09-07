@@ -50,6 +50,7 @@
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/dequantize.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
@@ -174,8 +175,8 @@ void runtime::cpu::pass::CPULayout::set_native_layouts(
     {
         const auto& output = input.get_output();
         auto tv = output.get_tensor_view();
-        auto et = tv->get_tensor_view_type()->get_element_type();
-        auto shape = tv->get_tensor_view_type()->get_shape();
+        auto et = tv->get_element_type();
+        auto shape = tv->get_shape();
         auto tvl = tv->get_tensor_view_layout();
         auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
 
@@ -243,8 +244,8 @@ void runtime::cpu::pass::CPULayout::set_native_layouts(
             continue;
         }
 
-        auto shape = tv->get_tensor_view_type()->get_shape();
-        auto et = tv->get_tensor_view_type()->get_element_type();
+        auto shape = tv->get_shape();
+        auto et = tv->get_element_type();
         auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
         if (mkldnn_utils::can_create_mkldnn_md(shape, layout->get_strides(), et))
         {
@@ -1559,6 +1560,20 @@ namespace ngraph
                         set_native_layouts(external_function, node);
                     }
                 }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Dequantize)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        //TODO : Propogate Layout
+                        set_native_layouts(external_function, node);
+                    }
+                    else
+                    {
+                        throw ngraph_error("Dequantized op is only supported in MKLDNN for now.");
+                    }
+                }
             }
         }
     }
@@ -1616,7 +1631,7 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::BoundedRelu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BoundedRelu>},
     {TI(ngraph::op::ConvolutionAdd),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionAdd>},
-
+    {TI(ngraph::op::Dequantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Dequantize>},
 };
 
 bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)

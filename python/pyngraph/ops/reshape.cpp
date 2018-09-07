@@ -16,7 +16,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-//#include <string>
+
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/shape.hpp"
 #include "pyngraph/ops/reshape.hpp"
@@ -25,10 +25,8 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Reshape(py::module m)
 {
-    py::class_<ngraph::op::Reshape,
-               std::shared_ptr<ngraph::op::Reshape>,
-               ngraph::op::util::RequiresTensorViewArgs>
-        reshape(m, "Reshape");
+    py::class_<ngraph::op::Reshape, std::shared_ptr<ngraph::op::Reshape>, ngraph::op::Op> reshape(
+        m, "Reshape");
     reshape.doc() = "ngraph.impl.op.Reshape wraps ngraph::op::Reshape";
     reshape.def(py::init<const std::shared_ptr<ngraph::Node>&,
                          const ngraph::AxisVector&,

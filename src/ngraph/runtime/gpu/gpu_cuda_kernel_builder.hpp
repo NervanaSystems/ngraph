@@ -59,13 +59,30 @@ namespace ngraph
                                            const std::array<std::string, 2>& data_types,
                                            size_t rank);
 
-                static void get_reduce_op(codegen::CodeWriter& writer,
-                                          const std::string& name,
-                                          runtime::gpu::GPUKernelArgs& args,
-                                          const std::vector<std::string>& data_types,
-                                          const std::string& reduce_op,
-                                          size_t out_rank,
-                                          size_t reduce_rank);
+                static void get_reduce_to_nd_op(codegen::CodeWriter& writer,
+                                                const std::string& name,
+                                                runtime::gpu::GPUKernelArgs& args,
+                                                const std::vector<std::string>& data_types,
+                                                const std::string& reduce_op,
+                                                size_t out_rank,
+                                                size_t reduce_rank);
+
+                //using one block with at most 512 threads to reduce to scalar.
+                static void get_reduce_to_scalar_op(codegen::CodeWriter& writer,
+                                                    const std::string& name,
+                                                    runtime::gpu::GPUKernelArgs& args,
+                                                    const std::vector<std::string>& data_types,
+                                                    const std::string& reduce_op,
+                                                    uint32_t block_size_x);
+
+                //This is the preprocess to reduce to scalar if the data size is large than a number.
+                //The number can be tuned based on hardware.
+                //This cuda kernel will accumulate reduction to a certain number of bins depends on hardware.
+                static void get_reduce_to_scalar_acc_op(codegen::CodeWriter& writer,
+                                                        const std::string& name,
+                                                        runtime::gpu::GPUKernelArgs& args,
+                                                        const std::vector<std::string>& data_types,
+                                                        const std::string& reduce_op);
 
                 static void get_slice_op(codegen::CodeWriter& writer,
                                          const std::string& name,

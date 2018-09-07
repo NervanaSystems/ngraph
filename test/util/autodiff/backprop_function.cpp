@@ -28,7 +28,6 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
-#include "ngraph/type/type.hpp"
 
 using namespace ngraph;
 

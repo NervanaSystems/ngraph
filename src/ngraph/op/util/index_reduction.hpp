@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
@@ -24,7 +24,7 @@ namespace ngraph
     {
         namespace util
         {
-            class IndexReduction : public util::RequiresTensorViewArgs
+            class IndexReduction : public Op
             {
             public:
                 size_t get_reduction_axis() const { return m_axis; }

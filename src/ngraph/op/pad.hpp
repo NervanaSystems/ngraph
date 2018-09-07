@@ -16,14 +16,14 @@
 
 #pragma once
 
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Generic constant-padding operation.
-        class Pad : public util::RequiresTensorViewArgs
+        class Pad : public Op
         {
         public:
             /// \brief Constructs a generic padding operation.

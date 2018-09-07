@@ -16,10 +16,9 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-//#include <string>
+
 #include "ngraph/function.hpp"     // ngraph::Function
 #include "ngraph/op/parameter.hpp" // ngraph::op::Parameter
-#include "ngraph/type/type.hpp"    // ngraph::TensorViewType
 #include "pyngraph/function.hpp"
 
 namespace py = pybind11;
@@ -41,6 +40,13 @@ void regclass_pyngraph_Function(py::module m)
     function.def("get_parameters", &ngraph::Function::get_parameters);
     function.def("get_results", &ngraph::Function::get_results);
     function.def("get_result", &ngraph::Function::get_result);
-    function.def("get_name", &ngraph::Function::get_name);
+    function.def("get_unique_name", &ngraph::Function::get_name);
+    function.def("get_name", &ngraph::Function::get_friendly_name);
     function.def("set_name", &ngraph::Function::set_name);
+    function.def("__repr__", [](const ngraph::Function& self) {
+        std::string class_name = py::cast(self).get_type().attr("__name__").cast<std::string>();
+        std::string shape =
+            py::cast(self.get_output_shape(0)).attr("__str__")().cast<std::string>();
+        return "<" + class_name + ": '" + self.get_friendly_name() + "' (" + shape + ")>";
+    });
 }
