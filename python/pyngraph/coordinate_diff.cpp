@@ -19,6 +19,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
 #include "ngraph/coordinate_diff.hpp" // ngraph::CoordinateDiff
 #include "pyngraph/coordinate_diff.hpp"
 

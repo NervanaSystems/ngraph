@@ -54,6 +54,7 @@
 #include "ngraph/op/sum.hpp"
 
 #include "ngraph/op/select_and_scatter.hpp"
+#include "ngraph/op/topk.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
@@ -119,6 +120,7 @@
 #include "ngraph/runtime/reference/sum.hpp"
 #include "ngraph/runtime/reference/tan.hpp"
 #include "ngraph/runtime/reference/tanh.hpp"
+#include "ngraph/runtime/reference/topk.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/runtime/reference/allreduce.hpp"
@@ -1024,6 +1026,36 @@ private:
         {
             reference::tanh<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+        }
+        else if (node_op == "TopK")
+        {
+            const op::TopK* topk = static_cast<const op::TopK*>(&node);
+            if (out[0]->get_element_type() == element::i64)
+            {
+                reference::topk<T, int64_t>(args[0]->get_data_ptr<T>(),
+                                            out[0]->get_data_ptr<int64_t>(),
+                                            out[1]->get_data_ptr<T>(),
+                                            args[0]->get_shape(),
+                                            out[0]->get_shape(),
+                                            topk->get_top_k_axis(),
+                                            topk->get_k(),
+                                            topk->get_compute_max());
+            }
+            else if (out[0]->get_element_type() == element::i32)
+            {
+                reference::topk<T, int32_t>(args[0]->get_data_ptr<T>(),
+                                            out[0]->get_data_ptr<int32_t>(),
+                                            out[1]->get_data_ptr<T>(),
+                                            args[0]->get_shape(),
+                                            out[0]->get_shape(),
+                                            topk->get_top_k_axis(),
+                                            topk->get_k(),
+                                            topk->get_compute_max());
+            }
+            else
+            {
+                throw ngraph_error("Unexpected type");
+            }
         }
         else
         {

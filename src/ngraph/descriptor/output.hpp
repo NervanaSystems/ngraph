@@ -20,7 +20,7 @@
 #include <set>
 
 #include "ngraph/descriptor/input.hpp"
-#include "ngraph/descriptor/tensor_view.hpp"
+#include "ngraph/descriptor/tensor.hpp"
 
 namespace ngraph
 {
@@ -39,26 +39,18 @@ namespace ngraph
         public:
             /// \param node Node that owns this output.
             /// \param index Position of the output tensor in all output tensors
-            /// \param tensor_view The view of this tensor; where the value will be written
-            Output(Node* node, size_t index, const std::shared_ptr<TensorView>& tensor_view);
+            /// \param tensor The view of this tensor; where the value will be written
+            Output(Node* node, size_t index, const std::shared_ptr<Tensor>& tensor);
 
             std::shared_ptr<Node> get_node() const;
             size_t get_index() const { return m_index; }
-            std::shared_ptr<TensorView> get_tensor_view() const { return m_tensor_view; }
-            void set_tensor_view(const std::shared_ptr<TensorView>& tensor_view)
-            {
-                m_tensor_view = tensor_view;
-            }
+            std::shared_ptr<Tensor> get_tensor_view() const { return m_tensor; }
+            void set_tensor_view(const std::shared_ptr<Tensor>& tensor) { m_tensor = tensor; }
             void add_input(Input* input);
             void remove_input(Input* input);
             const std::set<Input*>& get_inputs() const { return m_inputs; }
             Tensor& get_tensor() const;
 
-        protected:
-            /// \return the tensor view type for the output
-            std::shared_ptr<const TensorViewType> get_tensor_view_type() const;
-
-        public:
             /// \return the shape of the output
             const Shape& get_shape() const;
             /// \return the element type of the output
@@ -67,7 +59,7 @@ namespace ngraph
         protected:
             Node* m_node;
             size_t m_index;
-            std::shared_ptr<TensorView> m_tensor_view;
+            std::shared_ptr<Tensor> m_tensor;
             std::set<Input*> m_inputs;
 
         private:

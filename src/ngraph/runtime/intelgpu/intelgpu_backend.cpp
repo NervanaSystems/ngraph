@@ -764,7 +764,6 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             arguments_check(op, 2, 1);
 
             const shared_ptr<op::Pad> pad = static_pointer_cast<op::Pad>(op);
-            const Shape& pad_above = pad->get_padding_above();
             const Shape& pad_below = pad->get_padding_below();
             const Shape& pad_interior = pad->get_padding_interior();
 
@@ -888,16 +887,11 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             const CoordinateDiff& pad_below = conv_op->get_padding_below();
             const CoordinateDiff& pad_above = conv_op->get_padding_above();
 
-            // clDNN failed with filter size 1
-            const Shape filter_data(get_input_shape(op, 1).cbegin() + 2,
-                                    get_input_shape(op, 1).cend());
-            const size_t filter_size = shape_size(filter_data);
-
             // clDNN has quite limited support for Convolution operation
             // following are the checks to go with workaround
             if ((win_stride.size() > 2) || (pad_below.size() > 2 || pad_above.size() > 2) ||
                 (pad_below.at(0) != pad_above.at(0) || pad_below.at(1) != pad_above.at(1)) ||
-                (win_dilation.size() > 2) || (filter_size < 2) ||
+                (win_dilation.size() > 2) ||
                 (data_dilation.size() > 2 || data_dilation.at(0) != 1 || data_dilation.at(1) != 1))
             {
                 do_convolution_operation(topology,

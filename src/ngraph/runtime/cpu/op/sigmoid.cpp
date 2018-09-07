@@ -32,10 +32,12 @@ shared_ptr<Node> op::Sigmoid::copy_with_new_args(const NodeVector& new_args) con
 }
 
 op::Sigmoid::Sigmoid(shared_ptr<Node> input)
-    : RequiresTensorViewArgs("Sigmoid", {input})
+    : Op("Sigmoid", check_single_output_args({input}))
     , m_shape_input(input->get_shape())
 {
-    add_output(input->get_element_type(), m_shape_input);
+    constructor_validate_and_infer_types();
+
+    set_output_type(0, get_input_element_type(0), m_shape_input);
 }
 
 op::SigmoidBackprop::SigmoidBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
@@ -54,6 +56,8 @@ op::SigmoidBackprop::SigmoidBackprop(shared_ptr<Node> arg, shared_ptr<Node> delt
 
 shared_ptr<Node> op::SigmoidBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
+    constructor_validate_and_infer_types();
+
     if (new_args.size() != 2)
     {
         throw ngraph_error("Incorrect number of new arguments");

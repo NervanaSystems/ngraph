@@ -22,13 +22,11 @@ using namespace ngraph;
 op::Less::Less(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
     : BinaryElementwiseComparison("Less", arg0, arg1)
 {
+    constructor_validate_and_infer_types();
 }
 
 shared_ptr<Node> op::Less::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 2)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return make_shared<Less>(new_args.at(0), new_args.at(1));
 }

@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <sstream>
 #include <stdexcept>
 
 namespace ngraph
@@ -31,6 +32,11 @@ namespace ngraph
 
         explicit ngraph_error(const char* what_arg)
             : std::runtime_error(what_arg)
+        {
+        }
+
+        explicit ngraph_error(const std::stringstream& what_arg)
+            : std::runtime_error(what_arg.str())
         {
         }
     };
