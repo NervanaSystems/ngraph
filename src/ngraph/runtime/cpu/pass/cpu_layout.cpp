@@ -40,6 +40,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/sigmoid.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
@@ -1432,6 +1433,34 @@ namespace ngraph
                 }
 
                 template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Slice)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        // pass input format to output
+                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        NGRAPH_DEBUG << "input memory format: " << input_md.data.format << "\n";
+                        auto result_format =
+                            static_cast<mkldnn::memory::format>(input_md.data.format);
+                        if (result_format == mkldnn::memory::blocked)
+                        {
+                            //TODO get named blocked format for output?
+                            set_native_layouts(external_function, node);
+                            return;
+                        }
+                        auto result_desc = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 0, true, result_format);
+                        vector<memory::desc> o_mds;
+                        o_mds.push_back(result_desc);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        set_native_layouts(external_function, node);
+                    }
+                }
+
+                template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Concat)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
@@ -1609,6 +1638,7 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Softmax>},
     {TI(ngraph::op::BoundedRelu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BoundedRelu>},
     {TI(ngraph::op::Dequantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Dequantize>},
+    {TI(ngraph::op::Slice), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Slice>},
 };
 
 bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
