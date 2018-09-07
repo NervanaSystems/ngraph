@@ -24,6 +24,8 @@ void regmodule_pyngraph_op(py::module m_op)
 {
     regclass_pyngraph_op_Abs(m_op);
     regclass_pyngraph_op_Acos(m_op);
+    regclass_pyngraph_op_ArgMax(m_op);
+    regclass_pyngraph_op_ArgMin(m_op);
     regclass_pyngraph_op_Asin(m_op);
     regclass_pyngraph_op_Atan(m_op);
     regclass_pyngraph_op_AvgPool(m_op);
@@ -80,6 +82,7 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Sum(m_op);
     regclass_pyngraph_op_Tan(m_op);
     regclass_pyngraph_op_Tanh(m_op);
+    regclass_pyngraph_op_TopK(m_op);
     regclass_pyngraph_op_Relu(m_op);
     regclass_pyngraph_op_ReluBackprop(m_op);
     regclass_pyngraph_op_Max(m_op);
