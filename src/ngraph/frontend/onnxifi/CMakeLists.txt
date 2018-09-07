@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_library(onnxifi-ngraph SHARED onnxifi.cpp backend.hpp backend_manager.hpp backend_manager.cpp)
+add_library(onnxifi-ngraph SHARED onnxifi.cpp backend.hpp backend_manager.hpp backend_manager.cpp backend.cpp)
 target_link_libraries(onnxifi-ngraph PRIVATE ngraph gsl)
 
 add_dependencies(onnxifi-ngraph onnx::libonnx)
@@ -24,5 +24,6 @@ set(ONNXIFI_VERSION ${NGRAPH_VERSION})
 set(ONNXIFI_ABI_VERSION 1)
 
 set_target_properties(onnxifi-ngraph PROPERTIES VERSION ${ONNXIFI_VERSION} SOVERSION ${ONNXIFI_ABI_VERSION})
+target_compile_definitions(onnxifi-ngraph PRIVATE NGRAPH_VERSION="${NGRAPH_VERSION}" ONNX_VERSION="${ONNX_VERSION}")
 
 install(TARGETS onnxifi-ngraph DESTINATION ${NGRAPH_INSTALL_LIB})

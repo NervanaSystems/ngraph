@@ -59,7 +59,36 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxGetBackendInfo(
     onnxBackendID backendID, onnxBackendInfo infoType, void* infoValue, std::size_t* infoValueSize)
 {
-    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
+    try
+    {
+        ngraph::onnxifi::BackendManager::get_backend_info(
+            backendID, infoType, infoValue, infoValueSize);
+        return ONNXIFI_STATUS_SUCCESS;
+    }
+    catch (const std::invalid_argument&)
+    {
+        return ONNXIFI_STATUS_INVALID_POINTER;
+    }
+    catch (const std::bad_alloc&)
+    {
+        return ONNXIFI_STATUS_NO_SYSTEM_MEMORY;
+    }
+    catch (const std::out_of_range&)
+    {
+        return ONNXIFI_STATUS_INVALID_ID;
+    }
+    catch (const std::length_error&)
+    {
+        return ONNXIFI_STATUS_FALLBACK;
+    }
+    catch (const std::range_error&)
+    {
+        return ONNXIFI_STATUS_UNSUPPORTED_ATTRIBUTE;
+    }
+    catch (...)
+    {
+        return ONNXIFI_STATUS_INTERNAL_ERROR;
+    }
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxGetBackendCompatibility(
