@@ -57,7 +57,7 @@ public:
     UnhandledOp(const std::shared_ptr<Node>& arg)
         : Op("Unsupported_op", {})
     {
-        set_value_type_checked(arg->get_element_type(), arg->get_shape());
+        set_output_type(0, arg->get_element_type(), arg->get_shape());
     }
     shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override
     {
