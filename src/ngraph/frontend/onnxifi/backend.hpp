@@ -66,6 +66,11 @@ namespace ngraph
                 return get().call_with_validate(function, outputs, inputs);
             }
 
+            // Implementation of onnxGetBackendInfo() interface function.
+            // Refer to https://github.com/onnx/onnx/blob/master/onnx/onnxifi.h for details.
+            // Each function method is responsible for obtaining value of a single
+            // attribute. The function method names are reflecting the attribute names.
+
             void get_onnxifi_version(void* info_value, std::size_t* info_value_size) const;
             void get_name(void* info_value, std::size_t* info_value_size) const;
             void get_vendor(void* info_value, std::size_t* info_value_size) const;
