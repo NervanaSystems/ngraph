@@ -48,10 +48,9 @@ namespace ngraph
                                               T init_value,
                                               T step)
                     {
-                        while (first != last)
+                        for (; first != last; ++first, init_value += step)
                         {
-                            *first++ = init_value;
-                            init_value += step;
+                            *first = init_value;
                         }
                     }
 

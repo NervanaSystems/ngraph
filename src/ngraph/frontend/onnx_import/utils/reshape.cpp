@@ -60,8 +60,8 @@ namespace ngraph
 
             AxisVector get_default_axis_vector(std::size_t data_shape_size, std::size_t start_value)
             {
-                return AxisVector{onnx_import::common::get_monotonic_range<std::size_t>(
-                    data_shape_size, start_value)};
+                return AxisVector{
+                    common::get_monotonic_range<std::size_t>(data_shape_size, start_value)};
             }
 
             std::vector<std::size_t> infer_dimensions(const std::string& node_name,

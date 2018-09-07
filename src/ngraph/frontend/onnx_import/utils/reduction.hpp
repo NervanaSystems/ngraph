@@ -94,17 +94,15 @@ namespace ngraph
                 }
 
                 auto output_shape = data_shape;
-                // flatten reduced axes
+                // flatten reduced axes and preserve original dimensions count.
                 for (const auto& idx : reduction_axes)
                 {
                     output_shape.at(idx) = 1;
                 }
-                auto reshaped_op_node = std::make_shared<ngraph::op::Reshape>(
+                return std::make_shared<ngraph::op::Reshape>(
                     op_node,
                     reshape::get_default_axis_vector(op_node->get_shape().size()),
                     Shape{output_shape});
-
-                return reshaped_op_node;
             }
         } // namespace  reduction
     }     // namespace onnx_import
