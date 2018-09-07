@@ -15,15 +15,12 @@
 //*****************************************************************************
 
 #include <algorithm>
-#include <fstream>
 
-#include "ngraph/file_util.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
-#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
