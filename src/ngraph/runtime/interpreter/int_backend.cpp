@@ -173,15 +173,15 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         element::Type type;
         switch (type_id)
         {
-        case OP_TYPEID::Convert_TYPEID:
+        case OP_TYPEID::Convert:
             type = op->get_inputs().at(0).get_tensor().get_element_type();
             break;
-        case OP_TYPEID::Equal_TYPEID:
-        case OP_TYPEID::Greater_TYPEID:
-        case OP_TYPEID::GreaterEq_TYPEID:
-        case OP_TYPEID::Less_TYPEID:
-        case OP_TYPEID::LessEq_TYPEID:
-        case OP_TYPEID::NotEqual_TYPEID:
+        case OP_TYPEID::Equal:
+        case OP_TYPEID::Greater:
+        case OP_TYPEID::GreaterEq:
+        case OP_TYPEID::Less:
+        case OP_TYPEID::LessEq:
+        case OP_TYPEID::NotEqual:
             // Get the type of the second input, not the first
             // All BinaryElementwiseComparision ops have the same type for inputs
             // Select has bool for first input and the type we are interested in for the second

@@ -33,10 +33,10 @@ namespace ngraph
 }
 
 // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
-// Abs_TYPEID,
-// Acos_TYPEID,
+// Abs,
+// Acos,
 // ...
-#define NGRAPH_OP(a) a##_TYPEID,
+#define NGRAPH_OP(a) a,
 enum class ngraph::runtime::interpreter::OP_TYPEID
 {
 #include "ngraph/op/op_tbl.hpp"

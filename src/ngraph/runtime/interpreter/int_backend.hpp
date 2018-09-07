@@ -195,19 +195,19 @@ private:
 #pragma GCC diagnostic error "-Wcovered-switch-default"
         switch (node_wrapper.get_typeid())
         {
-        case OP_TYPEID::Abs_TYPEID:
+        case OP_TYPEID::Abs:
         {
             reference::abs<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Acos_TYPEID:
+        case OP_TYPEID::Acos:
         {
             reference::acos<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Add_TYPEID:
+        case OP_TYPEID::Add:
         {
             reference::add<T>(args[0]->get_data_ptr<T>(),
                               args[1]->get_data_ptr<T>(),
@@ -215,7 +215,7 @@ private:
                               out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::AllReduce_TYPEID: {
+        case OP_TYPEID::AllReduce: {
 #ifdef NGRAPH_DISTRIBUTED
             reference::allreduce<T>(args[0]->get_data_ptr<T>(),
                                     out[0]->get_data_ptr<T>(),
@@ -224,7 +224,7 @@ private:
 #endif
             break;
         }
-        case OP_TYPEID::And_TYPEID:
+        case OP_TYPEID::And:
         {
             reference::logical_and(args[0]->get_data_ptr<T>(),
                                    args[1]->get_data_ptr<T>(),
@@ -232,7 +232,7 @@ private:
                                    out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::ArgMin_TYPEID:
+        case OP_TYPEID::ArgMin:
         {
             const op::ArgMin* argmin = static_cast<const op::ArgMin*>(&node);
             if (out[0]->get_element_type() == element::i64)
@@ -257,7 +257,7 @@ private:
             }
             break;
         }
-        case OP_TYPEID::ArgMax_TYPEID:
+        case OP_TYPEID::ArgMax:
         {
             const op::ArgMax* argmax = static_cast<const op::ArgMax*>(&node);
             if (out[0]->get_element_type() == element::i64)
@@ -282,19 +282,19 @@ private:
             }
             break;
         }
-        case OP_TYPEID::Asin_TYPEID:
+        case OP_TYPEID::Asin:
         {
             reference::asin<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Atan_TYPEID:
+        case OP_TYPEID::Atan:
         {
             reference::atan<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::AvgPool_TYPEID:
+        case OP_TYPEID::AvgPool:
         {
             const op::AvgPool* avg_pool = static_cast<const op::AvgPool*>(&node);
 
@@ -309,7 +309,7 @@ private:
                                    avg_pool->get_include_padding_in_avg_computation());
             break;
         }
-        case OP_TYPEID::GetOutputElement_TYPEID:
+        case OP_TYPEID::GetOutputElement:
         {
             const op::GetOutputElement* get_output_element =
                 static_cast<const op::GetOutputElement*>(&node);
@@ -318,7 +318,7 @@ private:
             std::memcpy(out[0]->get_data_ptr(), args[n]->get_data_ptr(), num_bytes);
             break;
         }
-        case OP_TYPEID::BatchNorm_TYPEID:
+        case OP_TYPEID::BatchNorm:
         {
             const ngraph::op::BatchNorm* bn = static_cast<const ngraph::op::BatchNorm*>(&node);
             if (bn->get_output_size() == 3)
@@ -346,7 +346,7 @@ private:
             }
             break;
         }
-        case OP_TYPEID::BatchNormBackprop_TYPEID:
+        case OP_TYPEID::BatchNormBackprop:
         {
             const ngraph::op::BatchNormBackprop* bn_bprop =
                 static_cast<const ngraph::op::BatchNormBackprop*>(&node);
@@ -363,7 +363,7 @@ private:
                                            args[2]->get_shape());
             break;
         }
-        case OP_TYPEID::AvgPoolBackprop_TYPEID:
+        case OP_TYPEID::AvgPoolBackprop:
         {
             const op::AvgPoolBackprop* apb = static_cast<const op::AvgPoolBackprop*>(&node);
             reference::avg_pool_backprop<T>(args[0]->get_data_ptr<T>(),
@@ -377,7 +377,7 @@ private:
                                             apb->get_include_padding_in_avg_computation());
             break;
         }
-        case OP_TYPEID::Broadcast_TYPEID:
+        case OP_TYPEID::Broadcast:
         {
             const op::Broadcast* broadcast = static_cast<const op::Broadcast*>(&node);
             Shape in_shape = args[0]->get_shape();
@@ -390,13 +390,13 @@ private:
                                     broadcast_axes);
             break;
         }
-        case OP_TYPEID::Ceiling_TYPEID:
+        case OP_TYPEID::Ceiling:
         {
             reference::ceiling<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Concat_TYPEID:
+        case OP_TYPEID::Concat:
         {
             const op::Concat* concat = static_cast<const op::Concat*>(&node);
             std::vector<const T*> in_args;
@@ -413,14 +413,14 @@ private:
                                  concat->get_concatenation_axis());
             break;
         }
-        case OP_TYPEID::Constant_TYPEID:
+        case OP_TYPEID::Constant:
         {
             const op::Constant* c = static_cast<const op::Constant*>(&node);
             reference::constant<T>(
                 c->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Convert_TYPEID:
+        case OP_TYPEID::Convert:
         {
             // const op::Convert* c = static_cast<const op::Convert*>(&node);
             element::Type type = node.get_element_type();
@@ -498,7 +498,7 @@ private:
             }
             break;
         }
-        case OP_TYPEID::Convolution_TYPEID:
+        case OP_TYPEID::Convolution:
         {
             const op::Convolution* c = static_cast<const op::Convolution*>(&node);
             reference::convolution<T>(args[0]->get_data_ptr<T>(),
@@ -521,7 +521,7 @@ private:
                                       false);
             break;
         }
-        case OP_TYPEID::ConvolutionBackpropFilters_TYPEID:
+        case OP_TYPEID::ConvolutionBackpropFilters:
         {
             const op::ConvolutionBackpropFilters* c =
                 static_cast<const op::ConvolutionBackpropFilters*>(&node);
@@ -545,7 +545,7 @@ private:
                                       false);
             break;
         }
-        case OP_TYPEID::ConvolutionBackpropData_TYPEID:
+        case OP_TYPEID::ConvolutionBackpropData:
         {
             // Note that args[1] and args[0] are switched here from the usual order.
             const op::ConvolutionBackpropData* c =
@@ -570,19 +570,19 @@ private:
                                       true);
             break;
         }
-        case OP_TYPEID::Cos_TYPEID:
+        case OP_TYPEID::Cos:
         {
             reference::cos<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Cosh_TYPEID:
+        case OP_TYPEID::Cosh:
         {
             reference::cosh<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Divide_TYPEID:
+        case OP_TYPEID::Divide:
         {
             reference::divide<T>(args[0]->get_data_ptr<T>(),
                                  args[1]->get_data_ptr<T>(),
@@ -590,7 +590,7 @@ private:
                                  out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Dot_TYPEID:
+        case OP_TYPEID::Dot:
         {
             const op::Dot* dot = static_cast<const op::Dot*>(&node);
 
@@ -603,7 +603,7 @@ private:
                            dot->get_reduction_axes_count());
             break;
         }
-        case OP_TYPEID::Equal_TYPEID:
+        case OP_TYPEID::Equal:
         {
             reference::equal<T>(args[0]->get_data_ptr<T>(),
                                 args[1]->get_data_ptr<T>(),
@@ -611,19 +611,19 @@ private:
                                 out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Exp_TYPEID:
+        case OP_TYPEID::Exp:
         {
             reference::exp<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Floor_TYPEID:
+        case OP_TYPEID::Floor:
         {
             reference::floor<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::FunctionCall_TYPEID:
+        case OP_TYPEID::FunctionCall:
         {
             std::shared_ptr<Function> function = node.get_functions()[0];
 
@@ -642,7 +642,7 @@ private:
             call(function, outputs, inputs);
             break;
         }
-        case OP_TYPEID::Greater_TYPEID:
+        case OP_TYPEID::Greater:
         {
             reference::greater<T>(args[0]->get_data_ptr<T>(),
                                   args[1]->get_data_ptr<T>(),
@@ -650,7 +650,7 @@ private:
                                   out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::GreaterEq_TYPEID:
+        case OP_TYPEID::GreaterEq:
         {
             reference::greater_eq<T>(args[0]->get_data_ptr<T>(),
                                      args[1]->get_data_ptr<T>(),
@@ -658,7 +658,7 @@ private:
                                      out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Less_TYPEID:
+        case OP_TYPEID::Less:
         {
             reference::less<T>(args[0]->get_data_ptr<T>(),
                                args[1]->get_data_ptr<T>(),
@@ -666,7 +666,7 @@ private:
                                out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::LessEq_TYPEID:
+        case OP_TYPEID::LessEq:
         {
             reference::less_eq<T>(args[0]->get_data_ptr<T>(),
                                   args[1]->get_data_ptr<T>(),
@@ -674,13 +674,13 @@ private:
                                   out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Log_TYPEID:
+        case OP_TYPEID::Log:
         {
             reference::log<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::LRN_TYPEID:
+        case OP_TYPEID::LRN:
         {
             const op::LRN* lrn = static_cast<const op::LRN*>(&node);
             reference::lrn<T>(args[0]->get_data_ptr<T>(),
@@ -692,7 +692,7 @@ private:
                               lrn->get_nsize());
             break;
         }
-        case OP_TYPEID::Max_TYPEID:
+        case OP_TYPEID::Max:
         {
             const op::Max* max = static_cast<const op::Max*>(&node);
             reference::max<T>(args[0]->get_data_ptr<T>(),
@@ -702,7 +702,7 @@ private:
                               max->get_reduction_axes());
             break;
         }
-        case OP_TYPEID::Maximum_TYPEID:
+        case OP_TYPEID::Maximum:
         {
             reference::maximum<T>(args[0]->get_data_ptr<T>(),
                                   args[1]->get_data_ptr<T>(),
@@ -710,7 +710,7 @@ private:
                                   out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::MaxPool_TYPEID:
+        case OP_TYPEID::MaxPool:
         {
             const op::MaxPool* max_pool = static_cast<const op::MaxPool*>(&node);
 
@@ -724,7 +724,7 @@ private:
                                    max_pool->get_padding_above());
             break;
         }
-        case OP_TYPEID::MaxPoolBackprop_TYPEID:
+        case OP_TYPEID::MaxPoolBackprop:
         {
             const op::MaxPoolBackprop* max_pool_backprop =
                 static_cast<const op::MaxPoolBackprop*>(&node);
@@ -740,7 +740,7 @@ private:
                                             max_pool_backprop->get_padding_above());
             break;
         }
-        case OP_TYPEID::Min_TYPEID:
+        case OP_TYPEID::Min:
         {
             const op::Min* min = static_cast<const op::Min*>(&node);
             reference::min<T>(args[0]->get_data_ptr<T>(),
@@ -750,7 +750,7 @@ private:
                               min->get_reduction_axes());
             break;
         }
-        case OP_TYPEID::Minimum_TYPEID:
+        case OP_TYPEID::Minimum:
         {
             reference::minimum<T>(args[0]->get_data_ptr<T>(),
                                   args[1]->get_data_ptr<T>(),
@@ -758,7 +758,7 @@ private:
                                   out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Multiply_TYPEID:
+        case OP_TYPEID::Multiply:
         {
             reference::multiply<T>(args[0]->get_data_ptr<T>(),
                                    args[1]->get_data_ptr<T>(),
@@ -766,19 +766,19 @@ private:
                                    out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Negative_TYPEID:
+        case OP_TYPEID::Negative:
         {
             reference::negate<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Not_TYPEID:
+        case OP_TYPEID::Not:
         {
             reference::logical_not(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::NotEqual_TYPEID:
+        case OP_TYPEID::NotEqual:
         {
             reference::not_equal<T>(args[0]->get_data_ptr<T>(),
                                     args[1]->get_data_ptr<T>(),
@@ -786,7 +786,7 @@ private:
                                     out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::OneHot_TYPEID:
+        case OP_TYPEID::OneHot:
         {
             const op::OneHot* oh = static_cast<const op::OneHot*>(&node);
             reference::one_hot<T>(args[0]->get_data_ptr<T>(),
@@ -796,7 +796,7 @@ private:
                                   oh->get_one_hot_axis());
             break;
         }
-        case OP_TYPEID::Or_TYPEID:
+        case OP_TYPEID::Or:
         {
             reference::logical_or(args[0]->get_data_ptr<T>(),
                                   args[1]->get_data_ptr<T>(),
@@ -804,9 +804,8 @@ private:
                                   out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Parameter_TYPEID: { break;
-        }
-        case OP_TYPEID::Pad_TYPEID:
+        case OP_TYPEID::Parameter: break;
+        case OP_TYPEID::Pad:
         {
             const op::Pad* pad = static_cast<const op::Pad*>(&node);
 
@@ -820,7 +819,7 @@ private:
                            pad->get_padding_interior());
             break;
         }
-        case OP_TYPEID::Power_TYPEID:
+        case OP_TYPEID::Power:
         {
             reference::power<T>(args[0]->get_data_ptr<T>(),
                                 args[1]->get_data_ptr<T>(),
@@ -828,7 +827,7 @@ private:
                                 out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Product_TYPEID:
+        case OP_TYPEID::Product:
         {
             const op::Product* product = static_cast<const op::Product*>(&node);
             reference::product<T>(args[0]->get_data_ptr<T>(),
@@ -838,7 +837,7 @@ private:
                                   product->get_reduction_axes());
             break;
         }
-        case OP_TYPEID::Reduce_TYPEID:
+        case OP_TYPEID::Reduce:
         {
             const op::Reduce* reduce = static_cast<const op::Reduce*>(&node);
             std::shared_ptr<Function> reduction_function = reduce->get_functions()[0];
@@ -865,7 +864,7 @@ private:
                               f);
             break;
         }
-        case OP_TYPEID::ReduceWindow_TYPEID:
+        case OP_TYPEID::ReduceWindow:
         {
             const op::ReduceWindow* reduce_window = static_cast<const op::ReduceWindow*>(&node);
             std::shared_ptr<Function> reduction_function = reduce_window->get_functions()[0];
@@ -893,13 +892,13 @@ private:
                                      reduce_window->get_window_movement_strides());
             break;
         }
-        case OP_TYPEID::Relu_TYPEID:
+        case OP_TYPEID::Relu:
         {
             reference::relu<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::ReluBackprop_TYPEID:
+        case OP_TYPEID::ReluBackprop:
         {
             reference::relu_backprop<T>(args[0]->get_data_ptr<T>(),
                                         args[1]->get_data_ptr<T>(),
@@ -907,7 +906,7 @@ private:
                                         out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::ReplaceSlice_TYPEID:
+        case OP_TYPEID::ReplaceSlice:
         {
             const op::ReplaceSlice* slice = static_cast<const op::ReplaceSlice*>(&node);
             reference::replace_slice<T>(args[0]->get_data_ptr<T>(),
@@ -920,7 +919,7 @@ private:
                                         out[0]->get_shape());
             break;
         }
-        case OP_TYPEID::Reshape_TYPEID:
+        case OP_TYPEID::Reshape:
         {
             const op::Reshape* reshape = static_cast<const op::Reshape*>(&node);
             reference::reshape(args[0]->get_data_ptr<T>(),
@@ -930,7 +929,7 @@ private:
                                out[0]->get_shape());
             break;
         }
-        case OP_TYPEID::Result_TYPEID:
+        case OP_TYPEID::Result:
         {
             const op::Result* res = static_cast<const op::Result*>(&node);
             reference::result(args[0]->get_data_ptr<T>(),
@@ -938,7 +937,7 @@ private:
                               shape_size(res->get_shape()));
             break;
         }
-        case OP_TYPEID::Reverse_TYPEID:
+        case OP_TYPEID::Reverse:
         {
             const op::Reverse* reverse = static_cast<const op::Reverse*>(&node);
             reference::reverse(args[0]->get_data_ptr<T>(),
@@ -948,7 +947,7 @@ private:
                                reverse->get_reversed_axes());
             break;
         }
-        case OP_TYPEID::ReverseSequence_TYPEID:
+        case OP_TYPEID::ReverseSequence:
         {
             const op::ReverseSequence* reverse = static_cast<const op::ReverseSequence*>(&node);
 
@@ -967,7 +966,7 @@ private:
             }
             break;
         }
-        case OP_TYPEID::Select_TYPEID:
+        case OP_TYPEID::Select:
         {
             reference::select<T>(args[0]->get_data_ptr<char>(),
                                  args[1]->get_data_ptr<T>(),
@@ -976,7 +975,7 @@ private:
                                  out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::SelectAndScatter_TYPEID:
+        case OP_TYPEID::SelectAndScatter:
         {
             const ngraph::op::SelectAndScatter* select_and_scatter =
                 static_cast<const ngraph::op::SelectAndScatter*>(&node);
@@ -1025,13 +1024,13 @@ private:
                                              select_and_scatter->get_window_movement_strides());
             break;
         }
-        case OP_TYPEID::Sigmoid_TYPEID:
+        case OP_TYPEID::Sigmoid:
         {
             reference::sigmoid<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::SigmoidBackprop_TYPEID:
+        case OP_TYPEID::SigmoidBackprop:
         {
             reference::sigmoid_backprop<T>(args[0]->get_data_ptr<T>(),
                                            args[1]->get_data_ptr<T>(),
@@ -1039,25 +1038,25 @@ private:
                                            out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Sign_TYPEID:
+        case OP_TYPEID::Sign:
         {
             reference::sign<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Sin_TYPEID:
+        case OP_TYPEID::Sin:
         {
             reference::sin<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Sinh_TYPEID:
+        case OP_TYPEID::Sinh:
         {
             reference::sinh<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Slice_TYPEID:
+        case OP_TYPEID::Slice:
         {
             const op::Slice* slice = static_cast<const op::Slice*>(&node);
             reference::slice<T>(args[0]->get_data_ptr<T>(),
@@ -1069,7 +1068,7 @@ private:
                                 out[0]->get_shape());
             break;
         }
-        case OP_TYPEID::Softmax_TYPEID:
+        case OP_TYPEID::Softmax:
         {
             const op::Softmax* softmax = static_cast<const op::Softmax*>(&node);
             reference::softmax<T>(args[0]->get_data_ptr<T>(),
@@ -1078,18 +1077,18 @@ private:
                                   softmax->get_axes());
             break;
         }
-        case OP_TYPEID::Sqrt_TYPEID:
+        case OP_TYPEID::Sqrt:
         {
             reference::sqrt<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::StopGradient_TYPEID:
+        case OP_TYPEID::StopGradient:
         {
             // TODO: Throw a real unsupported_op when available
             throw std::runtime_error("Unsupported op 'StopGradient'");
         }
-        case OP_TYPEID::Subtract_TYPEID:
+        case OP_TYPEID::Subtract:
         {
             reference::subtract<T>(args[0]->get_data_ptr<T>(),
                                    args[1]->get_data_ptr<T>(),
@@ -1097,7 +1096,7 @@ private:
                                    out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Sum_TYPEID:
+        case OP_TYPEID::Sum:
         {
             const op::Sum* sum = static_cast<const op::Sum*>(&node);
             reference::sum<T>(args[0]->get_data_ptr<T>(),
@@ -1107,19 +1106,19 @@ private:
                               sum->get_reduction_axes());
             break;
         }
-        case OP_TYPEID::Tan_TYPEID:
+        case OP_TYPEID::Tan:
         {
             reference::tan<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::Tanh_TYPEID:
+        case OP_TYPEID::Tanh:
         {
             reference::tanh<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::TopK_TYPEID:
+        case OP_TYPEID::TopK:
         {
             const op::TopK* topk = static_cast<const op::TopK*>(&node);
             if (out[0]->get_element_type() == element::i64)

@@ -23,10 +23,10 @@ runtime::interpreter::NodeWrapper::NodeWrapper(const shared_ptr<const Node>& nod
     : m_node{node}
 {
 // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
-// {"Abs", runtime::interpreter::OP_TYPEID::Abs_TYPEID},
-// {"Acos", runtime::interpreter::OP_TYPEID::Acos_TYPEID},
+// {"Abs", runtime::interpreter::OP_TYPEID::Abs},
+// {"Acos", runtime::interpreter::OP_TYPEID::Acos},
 // ...
-#define NGRAPH_OP(a) {#a, runtime::interpreter::OP_TYPEID::a##_TYPEID},
+#define NGRAPH_OP(a) {#a, runtime::interpreter::OP_TYPEID::a},
     static unordered_map<string, runtime::interpreter::OP_TYPEID> typeid_map{
 #include "ngraph/op/op_tbl.hpp"
     };
