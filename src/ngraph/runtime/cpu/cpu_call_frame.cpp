@@ -74,47 +74,6 @@ void runtime::cpu::CPU_CallFrame::call(
         m_external_function->get_executor()(ctx, inputs, outputs);
     }
 
-    if ((std::getenv("NGRAPH_DEX_DEBUG") != nullptr) && (std::getenv("NGRAPH_DEX") != nullptr))
-    {
-        for (shared_ptr<Node> node : m_external_function->get_function()->get_ordered_ops())
-        {
-            codegen::CodeWriter writer;
-            std::stringstream strm;
-            std::vector<string> node_inputs;
-            std::vector<string> node_outputs;
-
-            if (node->is_parameter() || node->is_constant())
-            {
-                continue;
-            }
-            for (const descriptor::Input& input : node->get_inputs())
-            {
-                const descriptor::Output& output = input.get_output();
-                shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-                auto name = tv->get_tensor().get_name();
-                strm << m_external_function->get_tensor_data(name);
-                node_inputs.push_back(name + "(" + strm.str() + ")");
-            }
-
-            for (const descriptor::Output& output : node->get_outputs())
-            {
-                shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-                auto name = tv->get_tensor().get_name();
-                strm << m_external_function->get_tensor_data(name);
-                node_outputs.push_back(name + "(" + strm.str() + ")");
-            }
-            writer << "\n" << node->get_name() << "(";
-            vector<string> parameter_nodes = node_inputs;
-            parameter_nodes.insert(parameter_nodes.end(), node_outputs.begin(), node_outputs.end());
-            writer << join(parameter_nodes);
-            writer << ")\n";
-
-            string filename = file_util::path_join(
-                "debug", m_external_function->get_function_name() + "_debug.txt");
-            m_external_function->write_to_file(writer, "debug", filename);
-        }
-    }
-
     if (runtime::cpu::IsTracingEnabled())
     {
         GenerateTimeline(m_external_function->get_op_attrs(),

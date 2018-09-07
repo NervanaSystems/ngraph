@@ -62,11 +62,6 @@ namespace ngraph
             using OpMap = std::unordered_map<std::type_index, OpFunction>;
 #endif
 
-#define EMIT_DEBUG_MANIFEST(writer, tensor_name)                                                   \
-    {                                                                                              \
-        if (std::getenv("NGRAPH_DEX_DEBUG") != nullptr)                                            \
-            writer << tensor_name << "\n";                                                         \
-    }
             struct OpAttributes
             {
                 std::string Description;
@@ -136,7 +131,7 @@ namespace ngraph
                 bool is_direct_execution() const { return m_direct_execution; }
                 bool is_release_function() const { return m_release_function; }
                 void release_function() { m_function = nullptr; }
-                void write_to_file(ngraph::codegen::CodeWriter& writer,
+                void write_to_file(const std::string& code,
                                    const std::string& directory,
                                    const std::string& filename);
 

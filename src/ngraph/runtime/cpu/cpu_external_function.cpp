@@ -17,6 +17,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <tuple>
 #include <typeindex>
@@ -930,7 +931,7 @@ using namespace ngraph::runtime;
     // TODO: Cleanup and make this a utility function
     string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");
     string code = writer.get_code();
-    runtime::cpu::CPU_ExternalFunction::write_to_file(writer, s_output_dir, filename);
+    runtime::cpu::CPU_ExternalFunction::write_to_file(writer.get_code(), s_output_dir, filename);
 
     m_compiler.reset(new codegen::Compiler());
     m_execution_engine.reset(new codegen::ExecutionEngine());
@@ -1115,9 +1116,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
         return;
     }
     // stream writer to dump the debug manifest for the DEX
-    static const string s_debug_dir = "debug";
+    static const string s_debug_dir = "cpu_codegen";
     static StaticInitializers s_static_initializers(s_debug_dir);
-    codegen::CodeWriter writer;
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
     ngraph::pass::Manager pass_manager;
 
@@ -1184,7 +1184,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
 
     // Build executor
     // Intermediates
-    writer << "\n// Intermediates \n";
     if (m_function->get_temporary_pool_size())
     {
         m_memory_buffer_sizes.push_back(m_function->get_temporary_pool_size());
@@ -1196,13 +1195,11 @@ void runtime::cpu::CPU_ExternalFunction::build()
                 intermediates_offsets.emplace_back(tensor_data[tensor->get_name()],
                                                    tensor->get_pool_offset());
                 m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
-                EMIT_DEBUG_MANIFEST(writer, tensor->get_name());
             }
         }
     }
 
     // Constants
-    writer << "\n// Constants \n";
     for (auto& node : m_function->get_ordered_ops())
     {
         if (node->is_constant())
@@ -1211,13 +1208,11 @@ void runtime::cpu::CPU_ExternalFunction::build()
             tensor_data[tv->get_tensor().get_name()] =
                 const_cast<void*>(static_pointer_cast<ngraph::op::Constant>(node)->get_data_ptr());
             m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::CONSTANT;
-            EMIT_DEBUG_MANIFEST(writer, tv->get_tensor().get_name());
         }
     }
 
     // Inputs
     size_t arg_index = 0;
-    writer << "\n// Parameters \n";
     for (auto& param : m_function->get_parameters())
     {
         for (size_t i = 0; i < param->get_output_size(); ++i)
@@ -1227,7 +1222,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
                                               arg_index,
                                               tensor_stale[tv->get_tensor().get_name()]);
             m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::INPUT;
-            EMIT_DEBUG_MANIFEST(writer, tv->get_tensor().get_name());
             propagate_in_place_input(
                 &param->get_outputs().at(i), tv->get_tensor().get_name(), true);
             arg_index++;
@@ -1235,14 +1229,12 @@ void runtime::cpu::CPU_ExternalFunction::build()
     }
 
     // Outputs
-    writer << "\n// Outputs \n";
     for (size_t i = 0; i < m_function->get_output_size(); ++i)
     {
         shared_ptr<Node> op = m_function->get_output_op(i);
         shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
         function_output_index.emplace_back(tensor_data[tv->get_tensor().get_name()], i);
         m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::OUTPUT;
-        EMIT_DEBUG_MANIFEST(writer, tv->get_tensor().get_name());
         auto res = std::dynamic_pointer_cast<ngraph::op::Result>(op);
         if (!res->needs_copy())
         {
@@ -1349,6 +1341,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
 
     executor = [&](CPURuntimeContext* ctx, vector<void*>& inputs, vector<void*>& outputs) {
         cpu::Timestamp start_ts;
+        static std::once_flag execute_once;
         int profiler_count = 0;
 
         if (ctx->first_iteration)
@@ -1368,6 +1361,68 @@ void runtime::cpu::CPU_ExternalFunction::build()
         for (const auto& p : function_output_index)
         {
             p.first.get() = outputs[p.second];
+        }
+
+        if ((std::getenv("NGRAPH_DEX_DEBUG") != nullptr) && (std::getenv("NGRAPH_DEX") != nullptr))
+        {
+            string filename = file_util::path_join(s_debug_dir, m_function_name + "_debug.txt");
+            std::call_once(execute_once, [&]() {
+                std::stringstream strm;
+                auto find_role = [&](CPUTensorRole tensor_role) -> string {
+                    switch (tensor_role)
+                    {
+                    case CPUTensorRole::INPUT: return string("CPUTensorRole::INPUT");
+                    case CPUTensorRole::INTERMEDIATE: return string("CPUTensorRole::INTERMEDIATE");
+                    case CPUTensorRole::CONSTANT: return string("CPUTensorRole::CONSTANT");
+                    case CPUTensorRole::OUTPUT: return string("CPUTensorRole::OUTPUT");
+                    }
+                };
+
+                //dump the tensor roles to debug manifest
+                for (const auto& tensor_roles : m_tensor_roles)
+                {
+                    strm << tensor_roles.first << ", " << find_role(tensor_roles.second) << "\n";
+                }
+
+                write_to_file(strm.str(), s_debug_dir, filename);
+                strm.str("");
+
+                //dump the op's the order of execution along with their memory references
+                for (shared_ptr<Node> node : m_function->get_ordered_ops())
+                {
+                    std::vector<string> node_inputs;
+                    std::vector<string> node_outputs;
+                    std::stringstream temp;
+                    if (node->is_parameter() || node->is_constant())
+                    {
+                        continue;
+                    }
+                    for (const descriptor::Input& input : node->get_inputs())
+                    {
+                        const descriptor::Output& output = input.get_output();
+                        shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+                        auto name = tv->get_tensor().get_name();
+                        temp << tensor_data[name];
+                        node_inputs.push_back(name + "(" + temp.str() + ")");
+                    }
+
+                    for (const descriptor::Output& output : node->get_outputs())
+                    {
+                        shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+                        auto name = tv->get_tensor().get_name();
+                        temp << tensor_data[name];
+                        node_outputs.push_back(name + "(" + temp.str() + ")");
+                    }
+                    strm << "\n" << node->get_name() << "(";
+                    vector<string> parameter_nodes = node_inputs;
+                    parameter_nodes.insert(
+                        parameter_nodes.end(), node_outputs.begin(), node_outputs.end());
+                    strm << join(parameter_nodes);
+                    strm << ")\n";
+                    write_to_file(strm.str(), s_debug_dir, filename);
+                    strm.str("");
+                }
+            });
         }
 
         auto functor = functors.begin();
@@ -1452,11 +1507,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
                             }
                         }
                     });
-
-                if (m_release_function && !(std::getenv("NGRAPH_DEX_DEBUG") != nullptr))
-                {
-                    release_function();
-                }
             }
             // Execute the flow graph
             (static_cast<
@@ -1515,18 +1565,18 @@ void runtime::cpu::CPU_ExternalFunction::build()
         {
             assert(m_op_attrs.size() == profiler_count);
         }
+
+        if ((m_use_tbb || std::getenv("NGRAPH_DEX_DEBUG") != nullptr) && m_release_function)
+        {
+            release_function();
+        }
     };
 
     m_is_built = true;
 
-    if (m_release_function && !m_use_tbb && !(std::getenv("NGRAPH_DEX_DEBUG") != nullptr))
+    if (m_release_function && (!m_use_tbb && (std::getenv("NGRAPH_DEX_DEBUG") == nullptr)))
     {
         release_function();
-    }
-    else if (std::getenv("NGRAPH_DEX_DEBUG") != nullptr)
-    {
-        string filename = file_util::path_join(s_debug_dir, m_function_name + "_debug.txt");
-        runtime::cpu::CPU_ExternalFunction::write_to_file(writer, s_debug_dir, filename);
     }
 }
 
@@ -1573,7 +1623,7 @@ const runtime::cpu::LayoutDescriptorPtrs&
     return result_layout_descriptors;
 }
 
-void runtime::cpu::CPU_ExternalFunction::write_to_file(ngraph::codegen::CodeWriter& writer,
+void runtime::cpu::CPU_ExternalFunction::write_to_file(const std::string& code,
                                                        const std::string& directory,
                                                        const std::string& filename)
 {
@@ -1581,7 +1631,6 @@ void runtime::cpu::CPU_ExternalFunction::write_to_file(ngraph::codegen::CodeWrit
     file_util::make_directory(directory);
     bool is_exist = file_util::exists(filename);
     is_exist ? out.open(filename, std::ofstream::app) : out.open(filename);
-    string code = writer.get_code();
     out << code;
     out.close();
 }
