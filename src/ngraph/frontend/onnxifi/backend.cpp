@@ -71,11 +71,7 @@ namespace ngraph
             {
                 throw std::length_error{"not enough space"};
             }
-            if ((m_type == "CPU") || (m_type == "INTERPRETER"))
-            {
-                *reinterpret_cast<::onnxEnum*>(info_value) = ONNXIFI_DEVICE_TYPE_CPU;
-            }
-            else if ((m_type == "GPU") || (m_type == "INTELGPU"))
+            if ((m_type == "GPU") || (m_type == "INTELGPU"))
             {
                 *reinterpret_cast<::onnxEnum*>(info_value) = ONNXIFI_DEVICE_TYPE_GPU;
             }
@@ -89,7 +85,7 @@ namespace ngraph
             }
             else
             {
-                *reinterpret_cast<::onnxEnum*>(info_value) = ONNXIFI_DEVICE_TYPE_HETEROGENEOUS;
+                *reinterpret_cast<::onnxEnum*>(info_value) = ONNXIFI_DEVICE_TYPE_CPU;
             }
         }
 
@@ -206,17 +202,18 @@ namespace ngraph
 
         void Backend::get_opset_version(void* info_value, std::size_t* info_value_size) const
         {
+            constexpr char version[] = ONNX_OPSET_VERSION;
             if (info_value_size == nullptr)
             {
                 throw std::invalid_argument{"null pointer"};
             }
             std::size_t requested{*info_value_size};
-            *info_value_size = std::strlen(ONNX_OPSET_VERSION);
+            *info_value_size = std::strlen(version);
             if ((requested < *info_value_size) || (info_value == nullptr))
             {
                 throw std::length_error{"not enough space"};
             }
-            std::memcpy(info_value, ONNX_OPSET_VERSION, *info_value_size);
+            std::memcpy(info_value, version, *info_value_size);
         }
 
         void Backend::get_init_properties(void* info_value, std::size_t* info_value_size) const
