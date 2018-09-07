@@ -39,7 +39,6 @@ namespace ngraph
 
                 int my_rank;
                 MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-                std::cout<<"rank_id =="<<my_rank;
 
                 if (args[0].get_element_type() == element::f32)
                 {
@@ -49,7 +48,7 @@ namespace ngraph
                 {
                     data_type = MPI_DOUBLE;
                 }
-                auto functor = [&, count, data_type](CPURuntimeContext* ctx) {
+                auto functor = [&, count, data_type, my_rank](CPURuntimeContext* ctx) {
                     std::cout<<"count == "<<my_rank<<"  "<<count<<std::endl;
                     MPI_Allreduce(
                         arg_tensor, out_tensor, count, data_type, MPI_SUM, MPI_COMM_WORLD);
