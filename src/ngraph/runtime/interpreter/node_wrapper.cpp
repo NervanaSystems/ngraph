@@ -22,15 +22,15 @@ using namespace std;
 runtime::interpreter::NodeWrapper::NodeWrapper(const shared_ptr<const Node>& node)
     : m_node{node}
 {
-// This expands the op list in op.tbl into a list of enumerations that look like this:
+// This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
 // {"Abs", runtime::interpreter::OP_TYPEID::Abs_TYPEID},
 // {"Acos", runtime::interpreter::OP_TYPEID::Acos_TYPEID},
 // ...
-#define NGRAPH_OP_LIST(a) {#a, runtime::interpreter::OP_TYPEID::a##_TYPEID},
+#define NGRAPH_OP(a) {#a, runtime::interpreter::OP_TYPEID::a##_TYPEID},
     static unordered_map<string, runtime::interpreter::OP_TYPEID> typeid_map{
-#include "ngraph/op/op.tbl"
+#include "ngraph/op/op_tbl.hpp"
     };
-#undef NGRAPH_OP_LIST
+#undef NGRAPH_OP
 
     auto it = typeid_map.find(m_node->description());
     if (it != typeid_map.end())
