@@ -1941,9 +1941,6 @@ namespace ngraph
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                    auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
-
                     auto out_shape = out[0].get_shape();
 
                     auto lower_bounds = slice->get_lower_bounds();
