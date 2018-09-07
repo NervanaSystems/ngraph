@@ -341,12 +341,24 @@ OPTIONS
     }
     else if (iterations > 0)
     {
-        shared_ptr<Function> f = deserialize(model);
-        cout << "Benchmarking " << model << ", " << backend << " backend, " << iterations
-             << " iterations.\n";
-        auto perf_data = run_benchmark(f, backend, iterations, timing_detail, warmup_iterations);
-        auto perf_shape = to_perf_shape(f, perf_data);
-        print_results(perf_shape, timing_detail);
+        try
+        {
+            shared_ptr<Function> f = deserialize(model);
+            cout << "Benchmarking " << model << ", " << backend << " backend, " << iterations
+                 << " iterations.\n";
+            auto perf_data =
+                run_benchmark(f, backend, iterations, timing_detail, warmup_iterations);
+            auto perf_shape = to_perf_shape(f, perf_data);
+            print_results(perf_shape, timing_detail);
+        }
+        catch (ngraph::unsupported_op ue)
+        {
+            cout << "Unsupported op '" << ue.what() << endl;
+        }
+        catch (exception e)
+        {
+            cout << e.what() << endl;
+        }
     }
 
     return 0;
