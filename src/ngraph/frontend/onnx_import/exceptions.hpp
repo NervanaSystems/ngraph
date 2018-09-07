@@ -61,6 +61,6 @@ namespace ngraph
 } // namespace  ngraph
 
 #define ASSERT_NOT_SUPPORTED(node_, cond_)                                                         \
-    NGRAPH_ASSERT_STREAM(ngraph::onnx_import::error::NotSupported, cond_) << node << " "
+    NGRAPH_ASSERT_STREAM(ngraph::onnx_import::error::NotSupported, cond_) << (node_) << " "
 #define ASSERT_VALID_ARGUMENT(node_, cond_)                                                        \
-    NGRAPH_ASSERT_STREAM(ngraph::onnx_import::error::InvalidArgument, cond_) << node << " "
+    NGRAPH_ASSERT_STREAM(ngraph::onnx_import::error::InvalidArgument, cond_) << (node_) << " "

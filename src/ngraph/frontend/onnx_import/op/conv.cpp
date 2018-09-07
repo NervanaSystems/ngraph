@@ -111,7 +111,7 @@ namespace ngraph
                 ASSERT_VALID_ARGUMENT(node,
                                       groups >= 0 && groups <= data->get_shape().at(1) &&
                                           groups <= filters->get_shape().at(0))
-                    << "provided 'group' attribute value is not valid.";
+                    << "incorrect value of 'group' attribute: " << groups;
 
                 auto strides = convpool::get_strides(node);
                 auto dilations = convpool::get_dilations(node);
