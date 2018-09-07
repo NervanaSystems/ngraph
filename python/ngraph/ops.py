@@ -20,12 +20,12 @@ import numpy as np
 from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Function, Node, \
     NodeVector, Shape, Strides
 
-from ngraph.impl.op import Abs, Acos, Add, And, Asin, Atan, AvgPool, BatchNorm, Broadcast, \
-    Ceiling, Concat, Constant, Convert, Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, \
-    Dot, Equal, Exp, Floor, FunctionCall, GetOutputElement, Greater, GreaterEq, Less, LessEq, \
-    Log, LRN, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, \
-    Pad, Parameter, Product, Power, Reduce, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, \
-    Sin, Sinh, Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh
+from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, BatchNorm, \
+    Broadcast, Ceiling, Concat, Constant, Convert, Convolution, ConvolutionBackpropData, Cos, \
+    Cosh, Divide, Dot, Equal, Exp, Floor, FunctionCall, GetOutputElement, Greater, GreaterEq, \
+    Less, LessEq, Log, LRN, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, \
+    NotEqual, OneHot, Or, Pad, Parameter, Product, Power, Reduce, Relu, ReplaceSlice, Reshape, \
+    Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh, TopK
 
 from typing import Callable, Iterable, List, Union
 
@@ -949,6 +949,56 @@ def lrn(data,       # type: Node
     :return: The new node which performs LRN.
     """
     return LRN(data, alpha, beta, bias, size)
+
+
+@nameable_op
+def argmax(data,     # type: Node
+           axis=0,   # type: int
+           ):
+    # type: (...) -> Node
+    """Return a node which performs ArgMax index reduction operation.
+
+    :param data: Input data.
+    :param axis: Reduction Axis.
+    :return: The new node which performs ArgMax
+    """
+    return ArgMax(data, axis, get_element_type(np.int32))
+
+
+@nameable_op
+def argmin(data,    # type: Node
+           axis=0,  # type: int
+           ):
+    # type: (...) -> Node
+    """Return a node which performs ArgMin index reduction operation.
+
+    :param data: Input data.
+    :param axis: Reduction Axis.
+    :return: The new node which performs ArgMin
+    """
+    return ArgMin(data, axis, get_element_type(np.int32))
+
+
+@nameable_op
+def topk(data,       # type: Node
+         k,          # type: int
+         kaxis=-1,   # type: int
+         cmax=True,  # type: bool
+         ):
+    # type: (...) -> Node
+    """Return a node which performs TopK.
+
+    :param data: Input data.
+    :param kaxis: TopK Axis.
+    :param k: K.
+    :param cmax: Compute TopK largest (True) or smallest (False)
+    :return: The new node which performs TopK (both indices and values)
+    """
+    return TopK(data,
+                len(data.get_shape()) - 1 if kaxis == -1 else kaxis,
+                get_element_type(np.int32),
+                k,
+                cmax)
 
 
 @nameable_op

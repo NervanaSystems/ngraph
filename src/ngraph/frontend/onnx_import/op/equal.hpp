@@ -16,15 +16,27 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
-#include "pyngraph/ops/util/arithmetic_reduction.hpp"
-#include "pyngraph/ops/util/binary_elementwise_arithmetic.hpp"
-#include "pyngraph/ops/util/binary_elementwise_comparison.hpp"
-#include "pyngraph/ops/util/binary_elementwise_logical.hpp"
-#include "pyngraph/ops/util/index_reduction.hpp"
-#include "pyngraph/ops/util/op_annotations.hpp"
-#include "pyngraph/ops/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/equal.hpp"
 
-namespace py = pybind11;
+#include "core/node.hpp"
+#include "utils/broadcasting.hpp"
 
-void regmodule_pyngraph_op_util(py::module m);
+namespace ngraph
+{
+    namespace onnx_import
+    {
+        namespace op
+        {
+            inline NodeVector equal(const Node& node)
+            {
+                NodeVector ng_inputs{
+                    numpy_style_broadcast_for_binary_operation(node.get_ng_inputs())};
+                return {std::make_shared<ngraph::op::Equal>(ng_inputs.at(0), ng_inputs.at(1))};
+            }
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph
