@@ -35,8 +35,6 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto dequantize = static_cast<const ngraph::op::Dequantize*>(node);
-
                     auto& functors = external_function->get_functors();
                     auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
