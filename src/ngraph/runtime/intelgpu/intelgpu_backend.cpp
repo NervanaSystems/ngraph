@@ -109,15 +109,6 @@ static const element::Type& get_output_type(const shared_ptr<Node>& op, size_t n
     return op->get_outputs().at(num).get_tensor().get_element_type();
 }
 
-static void argument_type_check(const element::Type& type)
-{
-    if (type != element::f32 && type != element::boolean)
-    {
-        throw invalid_argument("Kernel data type \"" + type.c_type_string() +
-                               "\" is not supported.");
-    }
-}
-
 static void do_eltwise_operation(cldnn::topology& topology,
                                  const shared_ptr<Node>& op,
                                  cldnn::eltwise_mode mode)
@@ -168,16 +159,13 @@ static void do_logical_operation(cldnn::topology& topology,
                                  const string& operation)
 {
     arguments_check(op, 2, 1);
-    argument_type_check(get_input_type(op, 0));
-    argument_type_check(get_input_type(op, 1));
 
     runtime::intelgpu::do_logic_kernel(topology,
                                        get_input_name(op, 0),
                                        get_input_shape(op, 0),
-                                       get_input_type(op, 0).c_type_string(),
+                                       get_input_type(op, 0),
                                        get_input_name(op, 1),
                                        get_input_shape(op, 1),
-                                       get_input_type(op, 1).c_type_string(),
                                        get_output_name(op),
                                        get_output_shape(op),
                                        get_output_type(op),
@@ -548,6 +536,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                 do_bcast_sum_operation(topology,
                                        get_input_name(op),
                                        get_input_shape(op),
+                                       get_input_type(op),
                                        get_output_name(op),
                                        get_output_shape(op),
                                        get_output_type(op),
@@ -571,6 +560,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                 do_bcast_sum_operation(topology,
                                        get_input_name(op),
                                        get_input_shape(op),
+                                       get_input_type(op),
                                        get_output_name(op),
                                        get_output_shape(op),
                                        get_output_type(op),
@@ -604,27 +594,34 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             arguments_check(op, 1, 1);
 
-            const shared_ptr<op::Reshape> op_broadcast = static_pointer_cast<op::Reshape>(op);
-            const AxisVector& broadcast_axes = op_broadcast->get_input_order();
+            const shared_ptr<op::Reshape> op_reshape = static_pointer_cast<op::Reshape>(op);
 
-            vector<uint16_t> permute_order({0, 1, 2, 3}); // No action by default
-            const size_t max_dim = 4;
-            const size_t scale =
-                broadcast_axes.size() < max_dim ? max_dim - broadcast_axes.size() : 0;
-
-            // Need to scale indexes up according on array rank.
-            // For example, in 2D array, indexes are 0,1 but in 4D array it should be 2,3
-            // because cldnn::tensor is always 4D assuming cldnn::bfyx model
-            size_t rindex = max_dim;
-            for (auto i = broadcast_axes.crbegin(); i != broadcast_axes.crend() && rindex > 0;
-                 ++i, --rindex)
+            if (op_reshape->get_is_transpose())
             {
-                permute_order.at(rindex - 1) = *i + scale;
-            }
+                vector<uint16_t> permute_order({0, 1, 2, 3}); // No action by default
+                const AxisVector& reshape_axes = op_reshape->get_input_order();
+                const size_t max_dim = 4;
+                const size_t scale =
+                    reshape_axes.size() < max_dim ? max_dim - reshape_axes.size() : 0;
 
-            const cldnn::permute cldnn_permute(
-                get_output_name(op), get_input_name(op), permute_order);
-            topology.add(cldnn_permute);
+                // Need to scale indexes up according on array rank.
+                // For example, in 2D array, indexes are 0,1 but in 4D array it should be 2,3
+                // because cldnn::tensor is always 4D assuming cldnn::bfyx model
+                size_t rindex = max_dim;
+                for (auto i = reshape_axes.crbegin(); i != reshape_axes.crend() && rindex > 0;
+                     ++i, --rindex)
+                {
+                    permute_order.at(rindex - 1) = *i + scale;
+                }
+
+                const cldnn::permute cldnn_permute(
+                    get_output_name(op), get_input_name(op), permute_order);
+                topology.add(cldnn_permute);
+            }
+            else
+            {
+                do_equal_propagation(topology, get_input_name(op), get_output_name(op));
+            }
         }
         else if ("Negative" == op->description())
         {
