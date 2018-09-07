@@ -533,10 +533,12 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 ss << "((" << type << "*)(outputs[" << i << "]))";
                 m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
 
-                // it should be safe to assign both descriptors to one output*
-                // since needs_copy == false makes `op::Result` an nop
                 auto res = dynamic_pointer_cast<ngraph::op::Result>(op);
-                if (!res->needs_copy())
+                //keep assigning different outputs to a result descriptor
+                //op::Result emitter will check if in and out descriptors are the same
+                //and skip a copy
+                auto input_node = res->get_inputs().at(0).get_output().get_node();
+                if (!input_node->is_constant() && !input_node->is_parameter())
                 {
                     shared_ptr<descriptor::TensorView> itv =
                         res->get_inputs().at(0).get_output().get_tensor_view();
@@ -644,8 +646,6 @@ void runtime::gpu::GPU_ExternalFunction::compile()
         m_shared_context->m_primitive_emitter->get_memory_allocator());
 
     m_pass_manager.register_pass<ngraph::pass::LikeReplacement>();
-    m_pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
-
     m_pass_manager
         .register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
 
