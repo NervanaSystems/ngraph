@@ -33,7 +33,7 @@ namespace ngraph
             return result;
         }
 
-        const std::string Node::get_decription() const
+        const std::string Node::get_description() const
         {
             if (!get_name().empty())
             {
