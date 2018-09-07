@@ -491,7 +491,7 @@ namespace ngraph
                     }
                     else
                     {
-                        set_native_layouts(external_function, node);
+			throw ngraph_error("ConvolutionAdd only supported in MKLDNN for now");
                     }
                 }
 
