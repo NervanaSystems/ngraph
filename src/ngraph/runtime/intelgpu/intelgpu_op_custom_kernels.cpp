@@ -26,6 +26,22 @@
 using namespace std;
 using namespace ngraph;
 
+string runtime::intelgpu::get_opencl_type_name(const element::Type& ngraph_type)
+{
+    if (ngraph_type == ngraph::element::i64)
+    {
+        return "long";
+    }
+    else if (ngraph_type == ngraph::element::i32)
+    {
+        return "int";
+    }
+    else
+    {
+        return ngraph_type.c_type_string();
+    }
+}
+
 vector<cldnn_arg> runtime::intelgpu::get_kernel_args(size_t input, size_t output)
 {
     vector<cldnn_arg> result;
@@ -1094,10 +1110,9 @@ void runtime::intelgpu::do_select_operation(cldnn::topology& topology,
 void runtime::intelgpu::do_logic_kernel(cldnn::topology& topology,
                                         const string& input0_name,
                                         const Shape& input0_shape,
-                                        const string& input0_type,
+                                        const element::Type& input0_type,
                                         const string& input1_name,
                                         const Shape& input1_shape,
-                                        const string& input1_type,
                                         const string& output_name,
                                         const Shape& output_shape,
                                         const element::Type& output_type,
@@ -1110,9 +1125,9 @@ void runtime::intelgpu::do_logic_kernel(cldnn::topology& topology,
 
     gen_func_def(writer,
                  entry_point_name,
-                 {2, input0_type},
+                 {2, get_opencl_type_name(input0_type)},
                  {input0_shape, input1_shape},
-                 "char",
+                 get_opencl_type_name(output_type),
                  output_shape);
 
     writer.block_begin();
@@ -1228,9 +1243,9 @@ void runtime::intelgpu::do_one_hot_operation(cldnn::topology& topology,
 
     gen_func_def(writer,
                  entry_point_name,
-                 {input_type.c_type_string()},
+                 {get_opencl_type_name(input_type)},
                  {input_shape},
-                 output_type.c_type_string(),
+                 get_opencl_type_name(output_type),
                  output_shape);
 
     writer.block_begin();
@@ -1286,8 +1301,8 @@ void runtime::intelgpu::do_convert_operation(cldnn::topology& topology,
 {
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
     const string entry_point_name = "convert_" + output_name;
-    const string& input_type_name = input_type.c_type_string();
-    const string& output_type_name = output_type.c_type_string();
+    const string& input_type_name = get_opencl_type_name(input_type);
+    const string& output_type_name = get_opencl_type_name(output_type);
     codegen::CodeWriter writer;
     vector<size_t> gws;
 
