@@ -15,7 +15,7 @@
 # ******************************************************************************
 
 add_library(onnxifi-ngraph SHARED onnxifi.cpp backend.hpp backend_manager.hpp backend_manager.cpp)
-target_link_libraries(onnxifi-ngraph PRIVATE ngraph)
+target_link_libraries(onnxifi-ngraph PRIVATE ngraph gsl)
 
 add_dependencies(onnxifi-ngraph onnx::libonnx)
 target_include_directories(onnxifi-ngraph SYSTEM PRIVATE ${ONNX_INCLUDE_DIR})
