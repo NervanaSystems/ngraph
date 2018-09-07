@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <limits>
 
 #include <onnxifi.h>
 
@@ -26,268 +27,287 @@ namespace ngraph
 {
     namespace onnxifi
     {
-        void Backend::get_capabilities(void* infoValue, std::size_t* infoValueSize) const
+        void Backend::get_capabilities(void* info_value, std::size_t* info_value_size) const
         {
-            if (infoValueSize == nullptr)
+            if (info_value_size == nullptr)
             {
                 throw std::invalid_argument{"null pointer"};
             }
-            std::size_t requested{*infoValueSize};
-            *infoValueSize = sizeof(::onnxEnum);
-            if (requested < *infoValueSize)
+            std::size_t requested{*info_value_size};
+            *info_value_size = sizeof(::onnxEnum);
+            if ((requested < *info_value_size) || (info_value == nullptr))
             {
                 throw std::length_error{"not enough space"};
             }
-            if (infoValue != nullptr)
-            {
-                *reinterpret_cast<::onnxEnum*>(infoValue) = ONNXIFI_CAPABILITY_THREAD_SAFE;
-            }
+            *reinterpret_cast<::onnxEnum*>(info_value) = ONNXIFI_CAPABILITY_THREAD_SAFE;
         }
 
-        void Backend::get_device(void* infoValue, std::size_t* infoValueSize) const
+        void Backend::get_device(void* info_value, std::size_t* info_value_size) const
         {
-            constexpr char name[] = "nGraph ";
-            if (infoValueSize == nullptr)
+            constexpr char prefix[] = "nGraph ";
+            if (info_value_size == nullptr)
             {
                 throw std::invalid_argument{"null pointer"};
             }
-            std::size_t requested{*infoValueSize};
-            *infoValueSize = sizeof name + m_type.size();
-            if (requested < *infoValueSize)
+            std::string device{prefix + m_type};
+            std::size_t requested{*info_value_size};
+            *info_value_size = device.size();
+            if ((requested < *info_value_size) || (info_value == nullptr))
             {
                 throw std::length_error{"not enough space"};
             }
-            if (infoValue != nullptr)
-            {
-                std::memcpy(infoValue, name, sizeof name);
-                std::memcpy(
-                    reinterpret_cast<char*>(infoValue) + sizeof name, m_type.data(), m_type.size());
-            }
+            std::memcpy(info_value, device.data(), device.size());
         }
 
-        void Backend::get_device_type(void* infoValue, std::size_t* infoValueSize) const
+        void Backend::get_device_type(void* info_value, std::size_t* info_value_size) const
         {
-            if (infoValueSize == nullptr)
+            if (info_value_size == nullptr)
             {
                 throw std::invalid_argument{"null pointer"};
             }
-            std::size_t requested{*infoValueSize};
-            *infoValueSize = sizeof(::onnxEnum);
-            if (requested < *infoValueSize)
+            std::size_t requested{*info_value_size};
+            *info_value_size = sizeof(::onnxEnum);
+            if ((requested < *info_value_size) || (info_value == nullptr))
             {
                 throw std::length_error{"not enough space"};
             }
-            if (infoValue != nullptr)
+            if ((m_type == "CPU") || (m_type == "INTERPRETER"))
             {
-                if ((m_type == "CPU") || (m_type == "INTERPRETER"))
-                {
-                    *reinterpret_cast<::onnxEnum*>(infoValue) = ONNXIFI_DEVICE_TYPE_CPU;
-                }
-                else if ((m_type == "GPU") || (m_type == "INTELGPU"))
-                {
-                    *reinterpret_cast<::onnxEnum*>(infoValue) = ONNXIFI_DEVICE_TYPE_GPU;
-                }
-                else if (m_type == "FPGA")
-                {
-                    *reinterpret_cast<::onnxEnum*>(infoValue) = ONNXIFI_DEVICE_TYPE_FPGA;
-                }
-                else if (m_type == "NNP")
-                {
-                    *reinterpret_cast<::onnxEnum*>(infoValue) = ONNXIFI_DEVICE_TYPE_NPU;
-                }
-                else
-                {
-                    *reinterpret_cast<::onnxEnum*>(infoValue) = ONNXIFI_DEVICE_TYPE_HETEROGENEOUS;
-                }
+                *reinterpret_cast<::onnxEnum*>(info_value) = ONNXIFI_DEVICE_TYPE_CPU;
+            }
+            else if ((m_type == "GPU") || (m_type == "INTELGPU"))
+            {
+                *reinterpret_cast<::onnxEnum*>(info_value) = ONNXIFI_DEVICE_TYPE_GPU;
+            }
+            else if (m_type == "FPGA")
+            {
+                *reinterpret_cast<::onnxEnum*>(info_value) = ONNXIFI_DEVICE_TYPE_FPGA;
+            }
+            else if (m_type == "NNP")
+            {
+                *reinterpret_cast<::onnxEnum*>(info_value) = ONNXIFI_DEVICE_TYPE_NPU;
+            }
+            else
+            {
+                *reinterpret_cast<::onnxEnum*>(info_value) = ONNXIFI_DEVICE_TYPE_HETEROGENEOUS;
             }
         }
 
-        void Backend::get_extensions(void* infoValue, std::size_t* infoValueSize) const
+        void Backend::get_extensions(void* info_value, std::size_t* info_value_size) const
         {
-            if (infoValueSize == nullptr)
+            if (info_value_size == nullptr)
             {
                 throw std::invalid_argument{"null pointer"};
             }
-            *infoValueSize = 0;
-            if (infoValue != nullptr)
-            {
-                *reinterpret_cast<char*>(infoValue) = '\0';
-            }
-        }
-
-        void Backend::get_graph_init_properties(void* infoValue, std::size_t* infoValueSize) const
-        {
-            if (infoValueSize == nullptr)
-            {
-                throw std::invalid_argument{"null pointer"};
-            }
-            *infoValueSize = 0;
-            if (infoValue != nullptr)
-            {
-                *reinterpret_cast<char*>(infoValue) = '\0';
-            }
-        }
-
-        void Backend::get_onnxifi_version(void* infoValue, std::size_t* infoValueSize) const
-        {
-            if (infoValueSize == nullptr)
-            {
-                throw std::invalid_argument{"null pointer"};
-            }
-            std::size_t requested{*infoValueSize};
-            *infoValueSize = sizeof(uint64_t);
-            if (requested < *infoValueSize)
+            std::size_t requested{*info_value_size};
+            *info_value_size = sizeof(char);
+            if ((requested < *info_value_size) || (info_value == nullptr))
             {
                 throw std::length_error{"not enough space"};
             }
-            if (infoValue != nullptr)
-            {
-                *reinterpret_cast<uint64_t*>(infoValue) = 1;
-            }
+            *reinterpret_cast<char*>(info_value) = '\0';
         }
 
-        void Backend::get_name(void* infoValue, std::size_t* infoValueSize) const
+        void Backend::get_graph_init_properties(void* info_value,
+                                                std::size_t* info_value_size) const
         {
-            constexpr char name[] = "ngraph:";
-            if (infoValueSize == nullptr)
+            if (info_value_size == nullptr)
             {
                 throw std::invalid_argument{"null pointer"};
             }
-            std::size_t requested{*infoValueSize};
-            *infoValueSize = sizeof name + m_type.size();
-            if (requested < *infoValueSize)
+            std::size_t requested{*info_value_size};
+            *info_value_size = sizeof(char);
+            if ((requested < *info_value_size) || (info_value == nullptr))
             {
                 throw std::length_error{"not enough space"};
             }
-            if (infoValue != nullptr)
-            {
-                std::memcpy(infoValue, name, sizeof name);
-                std::memcpy(
-                    reinterpret_cast<char*>(infoValue) + sizeof name, m_type.data(), m_type.size());
-            }
+            *reinterpret_cast<char*>(info_value) = '\0';
         }
 
-        void Backend::get_vendor(void* infoValue, std::size_t* infoValueSize) const
+        void Backend::get_onnxifi_version(void* info_value, std::size_t* info_value_size) const
+        {
+            if (info_value_size == nullptr)
+            {
+                throw std::invalid_argument{"null pointer"};
+            }
+            std::size_t requested{*info_value_size};
+            *info_value_size = sizeof(uint64_t);
+            if ((requested < *info_value_size) || (info_value == nullptr))
+            {
+                throw std::length_error{"not enough space"};
+            }
+            *reinterpret_cast<uint64_t*>(info_value) = 1;
+        }
+
+        void Backend::get_name(void* info_value, std::size_t* info_value_size) const
+        {
+            constexpr char prefix[] = "ngraph:";
+            if (info_value_size == nullptr)
+            {
+                throw std::invalid_argument{"null pointer"};
+            }
+            std::string name{prefix + m_type};
+            std::size_t requested{*info_value_size};
+            *info_value_size = name.size();
+            if ((requested < *info_value_size) || (info_value == nullptr))
+            {
+                throw std::length_error{"not enough space"};
+            }
+            std::memcpy(info_value, name.data(), name.size());
+        }
+
+        void Backend::get_vendor(void* info_value, std::size_t* info_value_size) const
         {
             constexpr char vendor[] = "Intel Corporation";
-            if (infoValueSize == nullptr)
+            if (info_value_size == nullptr)
             {
                 throw std::invalid_argument{"null pointer"};
             }
-            std::size_t requested{*infoValueSize};
-            *infoValueSize = sizeof vendor;
-            if (requested < *infoValueSize)
+            std::size_t requested{*info_value_size};
+            *info_value_size = std::strlen(vendor);
+            if ((requested < *info_value_size) || (info_value == nullptr))
             {
                 throw std::length_error{"not enough space"};
             }
-            if (infoValue != nullptr)
-            {
-                std::memcpy(infoValue, vendor, sizeof vendor);
-            }
+            std::memcpy(info_value, vendor, *info_value_size);
         }
 
-        void Backend::get_version(void* infoValue, std::size_t* infoValueSize) const
+        void Backend::get_version(void* info_value, std::size_t* info_value_size) const
         {
-            if (infoValueSize == nullptr)
-            {
-                throw std::invalid_argument{"null pointer"};
-            }
             constexpr char version[] = NGRAPH_VERSION;
-            std::size_t requested{*infoValueSize};
-            *infoValueSize = sizeof version;
-            if (requested < *infoValueSize)
-            {
-                throw std::length_error{"not enough space"};
-            }
-            if (infoValue != nullptr)
-            {
-                std::memcpy(infoValue, version, sizeof version);
-            }
-        }
-
-        void Backend::get_onnx_ir_version(void* infoValue, std::size_t* infoValueSize) const
-        {
-            if (infoValueSize == nullptr)
+            if (info_value_size == nullptr)
             {
                 throw std::invalid_argument{"null pointer"};
             }
+            std::size_t requested{*info_value_size};
+            *info_value_size = std::strlen(version);
+            if ((requested < *info_value_size) || (info_value == nullptr))
+            {
+                throw std::length_error{"not enough space"};
+            }
+            std::memcpy(info_value, version, *info_value_size);
+        }
+
+        void Backend::get_onnx_ir_version(void* info_value, std::size_t* info_value_size) const
+        {
             constexpr char version[] = ONNX_VERSION;
-            std::size_t requested{*infoValueSize};
-            *infoValueSize = sizeof version;
-            if (requested < *infoValueSize)
+            if (info_value_size == nullptr)
+            {
+                throw std::invalid_argument{"null pointer"};
+            }
+            std::size_t requested{*info_value_size};
+            *info_value_size = std::strlen(version);
+            if ((requested < *info_value_size) || (info_value == nullptr))
             {
                 throw std::length_error{"not enough space"};
             }
-            if (infoValue != nullptr)
-            {
-                std::memcpy(infoValue, version, sizeof version);
-            }
+            std::memcpy(info_value, version, *info_value_size);
         }
 
-        void Backend::get_opset_version(void* infoValue, std::size_t* infoValueSize) const
+        void Backend::get_opset_version(void* info_value, std::size_t* info_value_size) const
         {
-            if (infoValueSize == nullptr)
+            if (info_value_size == nullptr)
             {
                 throw std::invalid_argument{"null pointer"};
             }
-            std::size_t requested{*infoValueSize};
-            *infoValueSize = 1;
-            if (requested < *infoValueSize)
+            std::size_t requested{*info_value_size};
+            *info_value_size = std::strlen(ONNX_OPSET_VERSION);
+            if ((requested < *info_value_size) || (info_value == nullptr))
             {
                 throw std::length_error{"not enough space"};
             }
-            if (infoValue != nullptr)
-            {
-                *reinterpret_cast<char*>(infoValue) = '8';
-            }
+            std::memcpy(info_value, ONNX_OPSET_VERSION, *info_value_size);
         }
 
-        void Backend::get_init_properties(void* infoValue, std::size_t* infoValueSize) const
+        void Backend::get_init_properties(void* info_value, std::size_t* info_value_size) const
         {
-            if (infoValueSize == nullptr)
+            if (info_value_size == nullptr)
             {
                 throw std::invalid_argument{"null pointer"};
             }
+            std::size_t requested{*info_value_size};
+            *info_value_size = sizeof(char);
+            if ((requested < *info_value_size) || (info_value == nullptr))
+            {
+                throw std::length_error{"not enough space"};
+            }
+            *reinterpret_cast<char*>(info_value) = '\0';
         }
 
-        void Backend::get_memory_types(void* infoValue, std::size_t* infoValueSize) const
+        void Backend::get_memory_types(void* info_value, std::size_t* info_value_size) const
         {
-            if (infoValueSize == nullptr)
+            if (info_value_size == nullptr)
             {
                 throw std::invalid_argument{"null pointer"};
             }
+            std::size_t requested{*info_value_size};
+            *info_value_size = sizeof(::onnxBitfield);
+            if ((requested < *info_value_size) || (info_value == nullptr))
+            {
+                throw std::length_error{"not enough space"};
+            }
+            *reinterpret_cast<::onnxBitfield*>(info_value) = ONNXIFI_MEMORY_TYPE_CPU;
         }
 
-        void Backend::get_synchronization_types(void* infoValue, std::size_t* infoValueSize) const
+        void Backend::get_synchronization_types(void* info_value,
+                                                std::size_t* info_value_size) const
         {
-            if (infoValueSize == nullptr)
+            if (info_value_size == nullptr)
             {
                 throw std::invalid_argument{"null pointer"};
             }
+            std::size_t requested{*info_value_size};
+            *info_value_size = sizeof(::onnxBitfield);
+            if ((requested < *info_value_size) || (info_value == nullptr))
+            {
+                throw std::length_error{"not enough space"};
+            }
+            *reinterpret_cast<::onnxBitfield*>(info_value) = ONNXIFI_SYNCHRONIZATION_EVENT;
         }
 
-        void Backend::get_memory_size(void* infoValue, std::size_t* infoValueSize) const
+        void Backend::get_memory_size(void* info_value, std::size_t* info_value_size) const
         {
-            if (infoValueSize == nullptr)
+            if (info_value_size == nullptr)
             {
                 throw std::invalid_argument{"null pointer"};
             }
+            std::size_t requested{*info_value_size};
+            *info_value_size = sizeof(uint64_t);
+            if ((requested < *info_value_size) || (info_value == nullptr))
+            {
+                throw std::length_error{"not enough space"};
+            }
+            *reinterpret_cast<uint64_t*>(info_value) = std::numeric_limits<uint64_t>::max();
         }
 
-        void Backend::get_max_graph_size(void* infoValue, std::size_t* infoValueSize) const
+        void Backend::get_max_graph_size(void* info_value, std::size_t* info_value_size) const
         {
-            if (infoValueSize == nullptr)
+            if (info_value_size == nullptr)
             {
                 throw std::invalid_argument{"null pointer"};
             }
+            std::size_t requested{*info_value_size};
+            *info_value_size = sizeof(uint64_t);
+            if ((requested < *info_value_size) || (info_value == nullptr))
+            {
+                throw std::length_error{"not enough space"};
+            }
+            *reinterpret_cast<uint64_t*>(info_value) = std::numeric_limits<uint64_t>::max();
         }
 
-        void Backend::get_max_graph_count(void* infoValue, std::size_t* infoValueSize) const
+        void Backend::get_max_graph_count(void* info_value, std::size_t* info_value_size) const
         {
-            if (infoValueSize == nullptr)
+            if (info_value_size == nullptr)
             {
                 throw std::invalid_argument{"null pointer"};
             }
+            std::size_t requested{*info_value_size};
+            *info_value_size = sizeof(uint64_t);
+            if ((requested < *info_value_size) || (info_value == nullptr))
+            {
+                throw std::length_error{"not enough space"};
+            }
+            *reinterpret_cast<uint64_t*>(info_value) = std::numeric_limits<uint64_t>::max();
         }
 
     } // namespace onnxifi

@@ -154,6 +154,9 @@ endif()
 if (NGRAPH_ONNXIFI_ENABLE)
     target_include_directories(unit-test SYSTEM PUBLIC ${ONNX_INCLUDE_DIR})
     target_link_libraries(unit-test onnxifi-ngraph)
+    target_compile_definitions(unit-test PRIVATE
+            ONNX_VERSION="${ONNX_VERSION}"
+            ONNX_OPSET_VERSION="${ONNX_OPSET_VERSION}")
 endif()
 
 add_custom_target(unit-test-check
