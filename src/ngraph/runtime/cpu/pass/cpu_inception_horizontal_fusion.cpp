@@ -57,16 +57,16 @@ void ngraph::runtime::cpu::pass::CPUInceptionHorizontalFusion::cpu_inception_hor
         NGRAPH_DEBUG << "In a callback for inception horizontal fusion for "
                      << m.get_match_root()->get_name();
 
-        auto conv_bias = std::dynamic_pointer_cast<op::ConvolutionBias>(m.get_match_root());
+        auto conv_bias_root = std::dynamic_pointer_cast<op::ConvolutionBias>(m.get_match_root());
 
         //check if the node has been replaced
-        if (conv_bias->get_users().empty())
+        if (conv_bias_root->get_users().empty())
         {
             return false;
         }
 
         //check if 1x1 filter
-        auto m_filters_shape = conv_bias->get_input_shape(1);
+        auto m_filters_shape = conv_bias_root->get_input_shape(1);
         if (m_filters_shape[2] != 1 && m_filters_shape[3] != 1)
         {
             NGRAPH_DEBUG << "inception: not 1x1 filter\n";
@@ -82,7 +82,7 @@ void ngraph::runtime::cpu::pass::CPUInceptionHorizontalFusion::cpu_inception_hor
         {
             if (!pattern::has_class<ngraph::op::ConvolutionBias>()(u))
             {
-            	continue;
+                continue;
             }
             auto u_filters_shape = u->get_input_shape(1);
             if (u_filters_shape[2] != 1 || u_filters_shape[3] != 1)
@@ -99,16 +99,16 @@ void ngraph::runtime::cpu::pass::CPUInceptionHorizontalFusion::cpu_inception_hor
         }
         auto concat_weights = std::make_shared<ngraph::op::Concat>(weights_nodes, 0);
         auto concat_bias = std::make_shared<ngraph::op::Concat>(bias_nodes, 0);
-        auto conv_bias_new =
-            std::make_shared<ngraph::op::ConvolutionBias>(conv_bias->get_argument(0),
-                                                          concat_weights,
-                                                          concat_bias,
-                                                          conv_bias->get_window_movement_strides(),
-                                                          conv_bias->get_window_dilation_strides(),
-                                                          conv_bias->get_padding_below(),
-                                                          conv_bias->get_padding_above(),
-                                                          conv_bias->get_data_dilation_strides(),
-                                                          conv_bias->with_relu());
+        auto conv_bias_new = std::make_shared<ngraph::op::ConvolutionBias>(
+            conv_bias_root->get_argument(0),
+            concat_weights,
+            concat_bias,
+            conv_bias_root->get_window_movement_strides(),
+            conv_bias_root->get_window_dilation_strides(),
+            conv_bias_root->get_padding_below(),
+            conv_bias_root->get_padding_above(),
+            conv_bias_root->get_data_dilation_strides(),
+            conv_bias_root->with_relu());
         NGRAPH_DEBUG << "inception: new cb shape " << conv_bias_new->get_output_shape(0) << "\n";
         //slice
         size_t index = 0;
