@@ -16,29 +16,25 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/not.hpp"
+
+#include "core/node.hpp"
+#include "utils/broadcasting.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace onnx_import
     {
-        class ConstantFolding;
-    }
-}
+        namespace op
+        {
+            inline NodeVector logical_not(const Node& node)
+            {
+                return {std::make_shared<ngraph::op::Not>(node.get_ng_inputs().at(0))};
+            }
 
-class ngraph::pass::ConstantFolding : public ngraph::pass::GraphRewrite
-{
-public:
-    ConstantFolding()
-        : GraphRewrite()
-    {
-        construct_constant_reshape();
-        construct_constant_broadcast();
-        construct_constant_pad();
-    }
+        } // namespace op
 
-private:
-    void construct_constant_reshape();
-    void construct_constant_broadcast();
-    void construct_constant_pad();
-};
+    } // namespace onnx_import
+
+} // namespace ngraph
