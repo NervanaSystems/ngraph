@@ -212,10 +212,14 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
         {
             for (size_t arg_index = 0; arg_index < args.size(); arg_index++)
             {
-                const shared_ptr<runtime::HostTensorView>& data = arg_data[arg_index];
                 const shared_ptr<runtime::TensorView>& arg = args[arg_index];
-                arg->write(
-                    data->get_data_ptr(), 0, data->get_size() * data->get_element_type().size());
+                if (arg->get_stale())
+                {
+                    const shared_ptr<runtime::HostTensorView>& data = arg_data[arg_index];
+                    arg->write(data->get_data_ptr(),
+                               0,
+                               data->get_size() * data->get_element_type().size());
+                }
             }
         }
         backend->call(f, results, args);
