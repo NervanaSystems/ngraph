@@ -46,8 +46,8 @@ namespace ngraph
                                  const std::vector<GPU_TensorViewWrapper>& args,
                                  const std::vector<GPU_TensorViewWrapper>& out)
                 {
-                    throw std::runtime_error("Unimplemented op '" + node->description() +
-                                             "' in GPU emitter");
+                    throw std::runtime_error("Unimplemented op in GPU emitter for " +
+                                             node->get_name());
                 }
 
                 static void nop(GPU_ExternalFunction* external_function,

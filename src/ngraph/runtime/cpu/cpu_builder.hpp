@@ -250,8 +250,7 @@ namespace ngraph
                                   const std::vector<TensorViewWrapper>& args,
                                   const std::vector<TensorViewWrapper>& out)
                 {
-                    throw unsupported_op("Unimplemented op '" + node->description() +
-                                         "' in CPU builder");
+                    throw std::runtime_error("Unimplemented op in CPU builder");
                 }
 
                 static void nop(CPU_ExternalFunction* external_function,

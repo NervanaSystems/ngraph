@@ -721,7 +721,7 @@ using namespace ngraph::runtime;
             auto handler = dispatcher.find(type_index(typeid(n)));
             if (handler == dispatcher.end())
             {
-                throw unsupported_op(node->description());
+                throw ngraph_error("Unhandled op during code generation : " + node->description());
             }
             vector<TensorViewWrapper> in;
             vector<string> node_input_names;
@@ -1269,7 +1269,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
         auto handler = build_dispatcher.find(type_index(typeid(n)));
         if (handler == build_dispatcher.end())
         {
-            throw unsupported_op(node->description());
+            throw ngraph_error("Unhandled op during executor construction : " +
+                               node->description());
         }
         vector<TensorViewWrapper> in;
         vector<string> in_names;
@@ -1613,7 +1614,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
     auto handler = dispatcher.find(type_index(typeid(node)));
     if (handler == dispatcher.end())
     {
-        throw unsupported_op(node.description());
+        throw ngraph_error("Unhandled op during function emit : " + node.description());
     }
     vector<TensorViewWrapper> in;
     size_t arg_index = 0;

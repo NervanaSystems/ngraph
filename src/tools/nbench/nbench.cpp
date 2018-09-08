@@ -150,6 +150,12 @@ void print_results(vector<PerfShape> perf_data, bool timing_detail)
     }
 }
 
+bool is_unsupported(const string& s)
+{
+    return s.find("Unhandled op") != s.npos || s.find("Unimplemented op") != s.npos ||
+           s.find("Unsupported op") != s.npos || s.find("unsupported op") != s.npos;
+}
+
 int main(int argc, char** argv)
 {
     string model;
@@ -328,12 +334,14 @@ OPTIONS
                 aggregate_perf_data.insert(
                     aggregate_perf_data.end(), perf_shape.begin(), perf_shape.end());
             }
-            catch (ngraph::unsupported_op ue)
-            {
-                cout << "Unsupported op '" << ue.what() << "' in model " << m << endl;
-            }
             catch (exception e)
             {
+                // if (is_unsupported(e.what())
+                // {
+                // }
+                // else
+                // {
+                // }
                 cout << "Exception caught on '" << m << "'\n" << e.what() << endl;
             }
         }
@@ -350,10 +358,6 @@ OPTIONS
                 run_benchmark(f, backend, iterations, timing_detail, warmup_iterations);
             auto perf_shape = to_perf_shape(f, perf_data);
             print_results(perf_shape, timing_detail);
-        }
-        catch (ngraph::unsupported_op ue)
-        {
-            cout << "Unsupported op '" << ue.what() << endl;
         }
         catch (exception e)
         {
