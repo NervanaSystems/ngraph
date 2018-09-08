@@ -219,6 +219,98 @@ static std::shared_ptr<Function> make_function(const std::string& file_name)
     return func;
 }
 
+TEST(gpu_fusion, lstm_result)
+{
+    auto input_xt = std::make_shared<op::Parameter>(element::f32, Shape{1, 1});
+    auto weights_i2h = std::make_shared<op::Parameter>(element::f32, Shape{4, 1});
+    auto weights_i2h_reshape =
+        std::make_shared<op::Reshape>(weights_i2h, AxisVector{1, 0}, Shape{1, 4});
+    auto dot_1 = std::make_shared<op::Dot>(input_xt, weights_i2h_reshape);
+
+    auto bias_i2h = std::make_shared<op::Parameter>(element::f32, Shape{4});
+    auto broadcast_bias_i2h = std::make_shared<op::Broadcast>(bias_i2h, Shape{1, 4}, AxisSet{0});
+    auto add_1 = std::make_shared<op::Add>(dot_1, broadcast_bias_i2h);
+
+    auto h_const = op::Constant::create(element::f32, Shape{}, {1.0});
+    auto hidden_ht = std::make_shared<op::Broadcast>(h_const, Shape{1, 1}, AxisSet{0, 1});
+    auto weights_h2h = std::make_shared<op::Parameter>(element::f32, Shape{4, 1});
+    auto param2_2_reshape =
+        std::make_shared<op::Reshape>(weights_h2h, AxisVector{1, 0}, Shape{1, 4});
+    auto dot_2 = std::make_shared<op::Dot>(hidden_ht, param2_2_reshape);
+
+    auto bias_h2h = std::make_shared<op::Parameter>(element::f32, Shape{4});
+    auto broadcast_bias_h2h = std::make_shared<op::Broadcast>(bias_h2h, Shape{1, 4}, AxisSet{0});
+    auto add_2 = std::make_shared<op::Add>(dot_2, broadcast_bias_h2h);
+
+    auto X = std::make_shared<op::Add>(add_2, add_1);
+    // construct forget gate
+    auto input_slice_0 = std::make_shared<op::Slice>(X, Coordinate{0, 0}, Coordinate{1, 1});
+    auto forget_gate = std::make_shared<op::Sigmoid>(input_slice_0);
+
+    //ct-1 -> cell state
+    auto c_const = op::Constant::create(element::f32, Shape{}, {1.0});
+    auto ct_1 = std::make_shared<op::Broadcast>(c_const, Shape{1, 1}, AxisSet{0, 1});
+    //auto ct_1 = std::make_shared<op::>(element::f32, Shape{10, 100});
+    auto multiply_forget_gate_ct_1 = std::make_shared<op::Multiply>(forget_gate, ct_1);
+
+    // construct input gate
+    auto input_slice_1 = std::make_shared<op::Slice>(X, Coordinate{0, 1}, Coordinate{1, 2});
+    auto input_gate = std::make_shared<op::Sigmoid>(input_slice_1);
+    auto input_slice_2 = std::make_shared<op::Slice>(X, Coordinate{0, 2}, Coordinate{1, 3});
+    auto tanh_1 = std::make_shared<op::Tanh>(input_slice_2);
+    auto multiply_input_gate_tanh_1 = std::make_shared<op::Multiply>(input_gate, tanh_1);
+
+    auto ct = std::make_shared<op::Add>(multiply_forget_gate_ct_1, multiply_input_gate_tanh_1);
+
+    // construct output gate
+    auto input_slice_3 = std::make_shared<op::Slice>(X, Coordinate{0, 3}, Coordinate{1, 4});
+    auto output_gate = std::make_shared<op::Sigmoid>(input_slice_3);
+    auto tanh_2 = std::make_shared<op::Tanh>(ct);
+    auto ht = std::make_shared<op::Multiply>(output_gate, tanh_2);
+
+    auto f = make_shared<Function>(
+        NodeVector{ht, ct},
+        op::ParameterVector{input_xt, weights_i2h, weights_h2h, bias_i2h, bias_h2h});
+
+    auto backend = runtime::Backend::create("GPU");
+
+    std::shared_ptr<runtime::TensorView> input_xt_t =
+        backend->create_tensor(element::f32, input_xt->get_shape());
+    copy_data(input_xt_t, std::vector<float>{1.0});
+
+    std::shared_ptr<runtime::TensorView> weights_i2h_t =
+        backend->create_tensor(element::f32, weights_i2h->get_shape());
+    copy_data(weights_i2h_t, std::vector<float>{1.0, 1.0, 1.0, 1.0});
+
+    std::shared_ptr<runtime::TensorView> weights_h2h_t =
+        backend->create_tensor(element::f32, weights_h2h->get_shape());
+    copy_data(weights_h2h_t, std::vector<float>{1.0, 1.0, 1.0, 1.0});
+
+    std::shared_ptr<runtime::TensorView> bias_i2h_t =
+        backend->create_tensor(element::f32, bias_i2h->get_shape());
+    copy_data(bias_i2h_t, std::vector<float>{1.0, 1.0, 1.0, 1.0});
+
+    std::shared_ptr<runtime::TensorView> bias_h2h_t =
+        backend->create_tensor(element::f32, bias_h2h->get_shape());
+    copy_data(bias_h2h_t, std::vector<float>{1.0, 1.0, 1.0, 1.0});
+
+    std::shared_ptr<runtime::TensorView> result_ht =
+        backend->create_tensor(element::f32, ht->get_shape());
+    std::shared_ptr<runtime::TensorView> result_ct =
+        backend->create_tensor(element::f32, ct->get_shape());
+
+    backend->call_with_validate(f,
+                                {result_ht, result_ct},
+                                {input_xt_t, weights_i2h_t, weights_h2h_t, bias_i2h_t, bias_h2h_t});
+
+    auto sig = [](float x) { return 1.0f / (1.0f + std::exp(-x)); };
+    float ct_val = sig(4) + sig(4) * std::tanh(4);
+    float ht_val = sig(4) * std::tanh(ct_val);
+
+    EXPECT_TRUE(test::all_close(std::vector<float>{ht_val}, read_vector<float>(result_ht)));
+    EXPECT_TRUE(test::all_close(std::vector<float>{ct_val}, read_vector<float>(result_ct)));
+}
+
 TEST(gpu_fusion, rnn_fusion_inter_vs_gpu_1lstm_cell)
 {
     const std::string file_name("mxnet/1_lstm_cell_forward.json");
