@@ -43,7 +43,15 @@ protected:
 
 #endif
 
-void func(void const* const* const inputs, void* const* const outputs)
+void func1(void const* const* const inputs, void* const* const outputs)
+{
+    string s1 = reinterpret_cast<const char*>(inputs[0]);
+    string s2 = reinterpret_cast<const char*>(inputs[1]);
+    string result = s1 + " " + s2;
+    strcpy(reinterpret_cast<char*>(outputs[0]), result.c_str());
+}
+
+void func2(void** inputs, void** outputs)
 {
     string s1 = reinterpret_cast<const char*>(inputs[0]);
     string s2 = reinterpret_cast<const char*>(inputs[1]);
@@ -53,14 +61,29 @@ void func(void const* const* const inputs, void* const* const outputs)
 
 int main(int argc, char** argv)
 {
-    char result[100];
-    void const* p1 = "hello";
-    void const* p2 = "world";
-    void* out = result;
-    initializer_list<void const*> inputs = {p1, p2};
-    initializer_list<void*> outputs = {out};
-    func(&*inputs.begin(), &*outputs.begin());
-    cout << "result = '" << string(result) << "'\n";
+    {
+        char result[100];
+        void const* p1 = "hello";
+        void const* p2 = "world";
+        void* out = result;
+        initializer_list<void const*> inputs = {p1, p2};
+        initializer_list<void*> outputs = {out};
+        func1(&*inputs.begin(), &*outputs.begin());
+        cout << "result1 = '" << string(result) << "'\n";
+    }
+
+    {
+        char result[100];
+        char p1_data[] = "hello";
+        char p2_data[] = "world";
+        void* p1 = p1_data;
+        void* p2 = p2_data;
+        void* out = result;
+        void* inputs[] = {p1, p2};
+        void* outputs[] = {out};
+        func2(inputs, outputs);
+        cout << "result2 = '" << string(result) << "'\n";
+    }
 
     const char* exclude = "--gtest_filter=-benchmark.*";
     vector<char*> argv_vector;
