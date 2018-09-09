@@ -105,6 +105,16 @@ using namespace std;
 
 #define TI(x) type_index(typeid(x))
 
+static string node_names(const std::vector<ngraph::runtime::gpu::GPU_TensorViewWrapper>& args)
+{
+    vector<string> names;
+    for (const ngraph::runtime::gpu::GPU_TensorViewWrapper& tv : args)
+    {
+        names.push_back(tv.get_name());
+    }
+    return ngraph::join(names);
+}
+
 namespace ngraph
 {
     namespace runtime
@@ -125,10 +135,10 @@ namespace ngraph
                     auto index = cudnn_emitter->build_tensor_op(
                         CUDNN_OP_TENSOR_ADD, out[0].get_type(), args[0].get_shape(), 1.0, 1.0, 0);
 
-                    writer << "void* input[] = {" << args[0].get_name() << ", "
-                           << args[1].get_name() << "};\n";
-                    writer << "void* output[] = {" << out[0].get_name() << "};\n";
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
+                    writer << "void* output[] = {" << node_names(out) << "};\n";
                     writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+                    cout << writer.get_code();
                 }
                 writer.block_end();
             }
