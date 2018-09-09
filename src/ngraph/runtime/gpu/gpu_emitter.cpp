@@ -125,11 +125,10 @@ namespace ngraph
                     auto index = cudnn_emitter->build_tensor_op(
                         CUDNN_OP_TENSOR_ADD, out[0].get_type(), args[0].get_shape(), 1.0, 1.0, 0);
 
-                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
-                    writer << "std::vector<void*>{" << args[0].get_name() << ","
-                           << args[1].get_name() << "}.data(), ";
-                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                    writer << ");\n";
+                    writer << "void* input[] = {" << args[0].get_name() << ", "
+                           << args[1].get_name() << "};\n";
+                    writer << "void* output[] = {" << out[0].get_name() << "};\n";
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
                 }
                 writer.block_end();
             }
