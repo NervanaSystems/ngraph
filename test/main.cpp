@@ -43,8 +43,26 @@ protected:
 
 #endif
 
+void func(void const* const* const inputs, void* const* const outputs)
+{
+    string s1 = reinterpret_cast<const char*>(inputs[0]);
+    string s2 = reinterpret_cast<const char*>(inputs[1]);
+    inputs[0] = nullptr;
+    string result = s1 + " " + s2;
+    strcpy(reinterpret_cast<char*>(outputs[0]), result.c_str());
+}
+
 int main(int argc, char** argv)
 {
+    char result[100];
+    void const* p1 = "hello";
+    void const* p2 = "world";
+    void* out = result;
+    initializer_list<void const*> inputs = {p1, p2};
+    initializer_list<void*> outputs = {out};
+    func(&*inputs.begin(), &*outputs.begin());
+    cout << "result = '" << string(result) << "'\n";
+
     const char* exclude = "--gtest_filter=-benchmark.*";
     vector<char*> argv_vector;
     argv_vector.push_back(argv[0]);
