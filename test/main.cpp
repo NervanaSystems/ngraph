@@ -47,7 +47,6 @@ void func(void const* const* const inputs, void* const* const outputs)
 {
     string s1 = reinterpret_cast<const char*>(inputs[0]);
     string s2 = reinterpret_cast<const char*>(inputs[1]);
-    inputs[0] = nullptr;
     string result = s1 + " " + s2;
     strcpy(reinterpret_cast<char*>(outputs[0]), result.c_str());
 }
