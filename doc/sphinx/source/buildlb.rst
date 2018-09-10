@@ -85,7 +85,7 @@ The process documented here will work on Ubuntu\* 16.04 (LTS) or on Ubuntu
       $ mkdir build && cd build
 
 #. Generate the GNU Makefiles in the customary manner (from within the 
-   ``build`` directory). This command also builds the Library with ONNX support 
+   ``build`` directory). This command enables ONNX support in the library  
    and sets the target build location at ``~/ngraph_dist``, where it can be 
    found easily.  
 
@@ -158,8 +158,8 @@ The process documented here will work on CentOS 7.4.
       $ make && make install     
 
 #. Clone the `NervanaSystems` ``ngraph`` repo via HTTPS and use Cmake 3.4.3 to 
-   build nGraph Libraries to ``~/ngraph_dist``. This command also builds the 
-   Library with ONNX support (optional). 
+   build nGraph Libraries to ``~/ngraph_dist``. This command enables ONNX 
+   support in the library (optional). 
 
    .. code-block:: console
 

@@ -1,0 +1,52 @@
+.. ngu/index:
+
+##########
+Languages
+##########
+
+A bit about languages that work, either indirectly or directly, with 
+components in the nGraph Library. 
+
+* :ref:`plaid`
+* :ref:`halide`
+
+
+.. _plaid:
+
+PlaidML
+========
+
+The framework of a :abbr:`Machine Learning (ML)` environment can make use of 
+some specific kinds of optimizations with the help of a language-based utility, 
+such as `plaidml`_.  PlaidML can provide a C API for some kinds of integrations or 
+optimizations very similar to what is documented in :doc:`../fusion/index`.  
+
+The `PlaidML` :doc:`../programmable/index` backend component is an alternative 
+way to use work done with the `tile` language. To get started with the interpreter 
+
+
+Recent work on new adaptations and use cases is coming in more detail soon; 
+see the documentation on `tile`_ in the meantime. 
+
+
+
+.. _halide:
+
+Halide
+=======
+
+The `halide-lang`_ language is "designed to make it easier to write high-performance 
+image processing code on modern machines. Its front end is embedded in C++. Compiler 
+targets include x86/SSE, ARM v7/NEON," and others. 
+
+
+
+
+
+
+
+.. _plaidml: https://vertexai-plaidml.readthedocs-hosted.com/en/latest/plaidml.html
+.. _tile: https://vertexai-plaidml.readthedocs-hosted.com/en/latest/life-of-a-tile-function.html
+.. _halide-lang: http://halide-lang.org/docs/
+
+

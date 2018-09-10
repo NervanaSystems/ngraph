@@ -18,8 +18,7 @@ There are several ways to describe what happens when we capture and translate
 the framework's output of ops into an nGraph graph. :term:`Fusion` is the term 
 we shall use in our documentation; the action also can be described as: 
 *combining*, *folding*, *squashing*, *collapsing*, or *merging* of graph 
-functions. The most common use case is to *fuse* a subgraph from the function 
-graph into :doc:`one of the nGraph Core ops <../ops/index>`.
+functions. 
 
 Optimization passes may include algebraic simplifications, domain-specific 
 simplifications, and fusion. Most passes share the same mode of operation (or 
@@ -36,11 +35,14 @@ graph. These steps may by cycled or recycled as needed:
 #. Measure and evaluate your performance improvements with ``NGRAPH_CPU_TRACING``, 
    which produces timelines compatible with ``chrome://tracing``.
 
+Optimizations can be experimented upon without using any backend by registering 
+a pass with pass manager (``Manager``), calling ``run_passes`` on a function, and 
+then inspecting the transformed graph. 
+
 Optimization passes can be programmed ahead of time if you know or can predict 
 what your graph will look like when it's ready to be executed (in other words: 
 which `ops` can be automatically translated into :doc:`nGraph Core ops <../ops/index>`). 
-Optimizations can also be experimented with manually via *Interpreter* mode.  
-
+ 
 
 Example
 -------
