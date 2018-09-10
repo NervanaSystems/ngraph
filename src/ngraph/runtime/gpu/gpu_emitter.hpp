@@ -89,7 +89,8 @@ namespace ngraph
                             cuda_emitter->build_elementwise<T>(dtypes, out[0].get_shape());
                         writer << "void* input[] = {" << node_names(args) << "};\n";
                         writer << "void* output[] = {" << node_names(out) << "};\n";
-                        writer << "gpu::invoke_primitive(ctx, " << ew_index << ", input, output);\n";
+                        writer << "gpu::invoke_primitive(ctx, " << ew_index
+                               << ", input, output);\n";
                     }
                     writer.block_end();
                 }

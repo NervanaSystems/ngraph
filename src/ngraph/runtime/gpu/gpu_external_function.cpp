@@ -458,10 +458,9 @@ void runtime::gpu::GPU_ExternalFunction::emit_temp_mem_pool_allocation(
     {
         m_writer << "// Allocate the memory pool\n";
         // TODO memory pool malloc.
-        m_writer << "char* pool_base_ptr = "
-                    "(char*)ngraph::runtime::gpu::invoke_memory_primitive("
-                    "ctx, "
-                 << m_tensor_memory_buffers->at(current_function->get_name()) << ");\n";
+        m_writer
+            << "char* pool_base_ptr = (char*)ngraph::runtime::gpu::invoke_memory_primitive(ctx, "
+            << m_tensor_memory_buffers->at(current_function->get_name()) << ");\n";
 
         // Add temporaries to the variable name map
         for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
