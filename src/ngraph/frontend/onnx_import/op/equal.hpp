@@ -16,29 +16,27 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/equal.hpp"
+
+#include "core/node.hpp"
+#include "utils/broadcasting.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace onnx_import
     {
-        class ConstantFolding;
-    }
-}
+        namespace op
+        {
+            inline NodeVector equal(const Node& node)
+            {
+                NodeVector ng_inputs{
+                    numpy_style_broadcast_for_binary_operation(node.get_ng_inputs())};
+                return {std::make_shared<ngraph::op::Equal>(ng_inputs.at(0), ng_inputs.at(1))};
+            }
 
-class ngraph::pass::ConstantFolding : public ngraph::pass::GraphRewrite
-{
-public:
-    ConstantFolding()
-        : GraphRewrite()
-    {
-        construct_constant_reshape();
-        construct_constant_broadcast();
-        construct_constant_pad();
-    }
+        } // namespace op
 
-private:
-    void construct_constant_reshape();
-    void construct_constant_broadcast();
-    void construct_constant_pad();
-};
+    } // namespace onnx_import
+
+} // namespace ngraph

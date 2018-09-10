@@ -19,21 +19,28 @@
 
 #include "core/attribute.hpp"
 #include "op/add.hpp"
+#include "op/and.hpp"
 #include "op/average_pool.hpp"
 #include "op/batch_norm.hpp"
 #include "op/concat.hpp"
 #include "op/constant.hpp"
 #include "op/conv.hpp"
 #include "op/div.hpp"
+#include "op/equal.hpp"
 #include "op/flatten.hpp"
 #include "op/gemm.hpp"
+#include "op/greater.hpp"
+#include "op/less.hpp"
 #include "op/matmul.hpp"
 #include "op/max.hpp"
 #include "op/max_pool.hpp"
 #include "op/mean.hpp"
 #include "op/min.hpp"
 #include "op/mul.hpp"
+#include "op/not.hpp"
+#include "op/or.hpp"
 #include "op/pow.hpp"
+#include "op/reduce.hpp"
 #include "op/relu.hpp"
 #include "op/reshape.hpp"
 #include "op/softmax.hpp"
@@ -41,6 +48,7 @@
 #include "op/sub.hpp"
 #include "op/sum.hpp"
 #include "op/unsqueeze.hpp"
+#include "op/xor.hpp"
 #include "ops_bridge.hpp"
 
 namespace ngraph
@@ -86,6 +94,7 @@ namespace ngraph
                 ops_bridge()
                 {
                     m_map.emplace("Add", std::bind(op::add, std::placeholders::_1));
+                    m_map.emplace("And", std::bind(op::logical_and, std::placeholders::_1));
                     m_map.emplace("AveragePool",
                                   std::bind(op::average_pool, std::placeholders::_1));
                     m_map.emplace("BatchNormalization",
@@ -94,15 +103,33 @@ namespace ngraph
                     m_map.emplace("Constant", std::bind(op::constant, std::placeholders::_1));
                     m_map.emplace("Conv", std::bind(op::conv, std::placeholders::_1));
                     m_map.emplace("Div", std::bind(op::div, std::placeholders::_1));
+                    m_map.emplace("Equal", std::bind(op::equal, std::placeholders::_1));
                     m_map.emplace("Flatten", std::bind(op::flatten, std::placeholders::_1));
                     m_map.emplace("Gemm", std::bind(op::gemm, std::placeholders::_1));
+                    m_map.emplace("Greater", std::bind(op::greater, std::placeholders::_1));
+                    m_map.emplace("Less", std::bind(op::less, std::placeholders::_1));
                     m_map.emplace("MatMul", std::bind(op::matmul, std::placeholders::_1));
                     m_map.emplace("MaxPool", std::bind(op::max_pool, std::placeholders::_1));
                     m_map.emplace("Max", std::bind(op::max, std::placeholders::_1));
                     m_map.emplace("Mean", std::bind(op::mean, std::placeholders::_1));
                     m_map.emplace("Min", std::bind(op::min, std::placeholders::_1));
                     m_map.emplace("Mul", std::bind(op::mul, std::placeholders::_1));
+                    m_map.emplace("Not", std::bind(op::logical_not, std::placeholders::_1));
+                    m_map.emplace("Or", std::bind(op::logical_or, std::placeholders::_1));
                     m_map.emplace("Pow", std::bind(op::pow, std::placeholders::_1));
+                    m_map.emplace("ReduceLogSum",
+                                  std::bind(op::reduce_log_sum, std::placeholders::_1));
+                    m_map.emplace("ReduceLogSumExp",
+                                  std::bind(op::reduce_log_sum_exp, std::placeholders::_1));
+                    m_map.emplace("ReduceL1", std::bind(op::reduce_l1, std::placeholders::_1));
+                    m_map.emplace("ReduceL2", std::bind(op::reduce_l2, std::placeholders::_1));
+                    m_map.emplace("ReduceMax", std::bind(op::reduce_max, std::placeholders::_1));
+                    m_map.emplace("ReduceMean", std::bind(op::reduce_mean, std::placeholders::_1));
+                    m_map.emplace("ReduceMin", std::bind(op::reduce_min, std::placeholders::_1));
+                    m_map.emplace("ReduceProd", std::bind(op::reduce_prod, std::placeholders::_1));
+                    m_map.emplace("ReduceSum", std::bind(op::reduce_sum, std::placeholders::_1));
+                    m_map.emplace("ReduceSumSquare",
+                                  std::bind(op::reduce_sum_square, std::placeholders::_1));
                     m_map.emplace("Relu", std::bind(op::relu, std::placeholders::_1));
                     m_map.emplace("Reshape", std::bind(op::reshape, std::placeholders::_1));
                     m_map.emplace("Softmax", std::bind(op::softmax, std::placeholders::_1));
@@ -110,6 +137,7 @@ namespace ngraph
                     m_map.emplace("Sub", std::bind(op::sub, std::placeholders::_1));
                     m_map.emplace("Sum", std::bind(op::sum, std::placeholders::_1));
                     m_map.emplace("Unsqueeze", std::bind(op::unsqueeze, std::placeholders::_1));
+                    m_map.emplace("Xor", std::bind(op::logical_xor, std::placeholders::_1));
                 }
 
                 NodeVector operator()(const Node& node) const
