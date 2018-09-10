@@ -25,16 +25,11 @@
 using namespace std;
 using namespace ngraph;
 
-void op::util::validate_conv_shapes(const Shape& data_shape, const Shape& filters_shape)
+void op::util::validate_conv_shapes(const Node* node,
+                                    const Shape& data_shape,
+                                    const Shape& filters_shape)
 {
-    /*if (data_shape[1] != filters_shape[1])
-    {
-        throw ngraph_error(
-            "Convolution data and filter have different number of channels: data_channel=" +
-            std::to_string(data_shape[1]) + ", filter_channel= " +
-            std::to_string(filters_shape[1]));
-    }*/
-    NODE_VALIDATION_ASSERT(this, data_shape[1] == filters_shape[1])
+    NODE_VALIDATION_ASSERT(node, data_shape[1] == filters_shape[1])
         << "Number of channels for data and filters do not match (data num channels: "
         << data_shape[1] << ", filters num channels: " << filters_shape[1] << ").";
 }
@@ -52,8 +47,8 @@ op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
     , m_with_relu(with_relu)
 {
     constructor_validate_and_infer_types();
-    util::validate_conv_shapes(conv->get_argument(0)->get_shape(),
-                               conv->get_argument(1)->get_shape());
+    util::validate_conv_shapes(
+        this, conv->get_argument(0)->get_shape(), conv->get_argument(1)->get_shape());
     set_output_type(0, conv->get_element_type(), conv->get_shape());
 }
 
@@ -88,7 +83,7 @@ op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<Node>& data_batch,
         << "Element types for data_batch and filters do not match (data batch element type: "
         << data_batch_et << ", filters element type: " << filters_et << ").";
 
-    util::validate_conv_shapes(data_batch_shape, filters_shape);
+    util::validate_conv_shapes(this, data_batch_shape, filters_shape);
     set_output_type(0,
                     data_batch_et,
                     util::infer_convolution_output_shape(this,

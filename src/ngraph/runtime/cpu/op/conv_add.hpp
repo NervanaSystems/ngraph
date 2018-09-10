@@ -62,7 +62,9 @@ namespace ngraph
 
         namespace util
         {
-            void validate_conv_shapes(const Shape& data_shape, const Shape& filters_shape);
+            void validate_conv_shapes(const Node* node,
+                                      const Shape& data_shape,
+                                      const Shape& filters_shape);
         }
     }
 }
