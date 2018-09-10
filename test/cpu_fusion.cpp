@@ -925,7 +925,7 @@ TEST(cpu_fusion, fuse_conv_bias_add)
     ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(func_nofuse1), 0);
 
     pass_manager.run_passes(func_nofuse2);
-    ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(func_nofuse2), 0);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(func_nofuse2), 1);
 }
 
 TEST(cpu_fusion, conv_bias_add)

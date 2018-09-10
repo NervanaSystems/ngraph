@@ -17,13 +17,13 @@
 #pragma once
 
 #include "ngraph/op/convolution.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class ConvolutionAdd : public util::RequiresTensorViewArgs
+        class ConvolutionAdd : public Op
         {
         public:
             ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
