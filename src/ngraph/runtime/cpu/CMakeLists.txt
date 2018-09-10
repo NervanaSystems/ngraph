@@ -160,5 +160,12 @@ if (NGRAPH_CPU_ENABLE)
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
     set_target_properties(cpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
+    if (APPLE)
+        set(CMAKE_BUILD_WITH_INSTALL_RPATH ON 
+            CACHE BOOL "Use Library Install RPath" FORCE)
+        set(CMAKE_INSTALL_NAME_DIR "@rpath" 
+            CACHE PATH "Library Install Name Directory" FORCE)
+    endif()
+
     install(TARGETS cpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

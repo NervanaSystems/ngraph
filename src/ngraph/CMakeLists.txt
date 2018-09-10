@@ -212,6 +212,13 @@ if (NOT APPLE)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--no-as-needed")
     endif()
+else()
+    if (APPLE)
+        set(CMAKE_BUILD_WITH_INSTALL_RPATH ON 
+            CACHE BOOL "Use Library Install RPath" FORCE)
+        set(CMAKE_INSTALL_NAME_DIR "@rpath" 
+            CACHE PATH "Library Install Name Directory" FORCE)
+    endif()
 endif()
 
 # Defines macro in C++ to load backend plugin
