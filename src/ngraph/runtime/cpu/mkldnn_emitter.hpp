@@ -504,6 +504,14 @@ namespace ngraph
                                           const mkldnn::memory::desc& result_desc,
                                           float alpha);
 
+                size_t build_quantize_reorder(const mkldnn::memory::desc& input_desc,
+                                              const mkldnn::memory::desc& result_desc,
+                                              const mkldnn::primitive_attr attr);
+
+                size_t build_dequantization(const ngraph::Node* node,
+                                            const mkldnn::memory::desc& input_desc,
+                                            const mkldnn::memory::desc& result_desc);
+
             private:
                 std::vector<mkldnn::primitive*> m_mkldnn_primitives;
                 std::vector<mkldnn::stream> m_mkldnn_streams;

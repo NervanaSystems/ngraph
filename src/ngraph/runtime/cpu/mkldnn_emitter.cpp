@@ -19,10 +19,12 @@
 
 #include "mkldnn_emitter.hpp"
 
+#include "ngraph/op/constant.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/dequantize.hpp"
 #include "ngraph/type/element_type.hpp"
 
 using namespace ngraph::runtime::cpu;
@@ -117,6 +119,32 @@ size_t MKLDNNEmitter::build_memory_primitive(const mkldnn::memory::desc& desc)
     size_t index =
         insert_primitive(new mkldnn::memory({desc, mkldnn_utils::global_cpu_engine}, nullptr));
     return index;
+}
+
+size_t MKLDNNEmitter::build_dequantization(const ngraph::Node* node,
+                                           const mkldnn::memory::desc& input_desc,
+                                           const mkldnn::memory::desc& result_desc)
+{
+    auto dequantize = static_cast<const ngraph::op::Dequantize*>(node);
+    auto min_const_op = std::static_pointer_cast<ngraph::op::Constant>(dequantize->get_argument(1));
+    auto max_const_op = std::static_pointer_cast<ngraph::op::Constant>(dequantize->get_argument(2));
+    float min_range = *(static_cast<float const*>(min_const_op->get_data_ptr()));
+    float max_range = *(static_cast<float const*>(max_const_op->get_data_ptr()));
+
+    const float max_abs = std::max(std::abs(min_range), std::abs(max_range));
+    bool is_signed = (dequantize->get_dequantize_et()).is_signed();
+    const float target_range =
+        static_cast<float>((is_signed ? std::pow(2, 7) : std::pow(2, 8)) - 1);
+    const float scale_factor = max_abs / target_range;
+    std::vector<float> scales;
+    scales.push_back(scale_factor);
+    mkldnn::primitive_attr attr;
+    attr.set_output_scales(0, scales);
+    attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
+
+    size_t dequantize_index = 0;
+    dequantize_index = this->build_quantize_reorder(input_desc, result_desc, attr);
+    return dequantize_index;
 }
 
 mkldnn::memory::format MKLDNNEmitter::query_convolution_forward_weight_format(
@@ -634,6 +662,23 @@ size_t MKLDNNEmitter::build_reorder(const mkldnn::memory::desc& input_desc,
     size_t primitive_index = insert_primitive(
         new mkldnn::reorder(*m_mkldnn_primitives[input_index], *m_mkldnn_primitives[result_index]));
 
+    m_primitive_deps[primitive_index] = {input_index, result_index};
+    return primitive_index;
+}
+
+size_t MKLDNNEmitter::build_quantize_reorder(const mkldnn::memory::desc& input_desc,
+                                             const mkldnn::memory::desc& result_desc,
+                                             const mkldnn::primitive_attr attr)
+{
+    size_t input_index = build_memory_primitive(input_desc);
+    size_t result_index = build_memory_primitive(result_desc);
+    auto reorder_desc =
+        mkldnn::reorder::primitive_desc({input_desc, mkldnn_utils::global_cpu_engine},
+                                        {result_desc, mkldnn_utils::global_cpu_engine},
+                                        attr);
+
+    size_t primitive_index = insert_primitive(new mkldnn::reorder(
+        reorder_desc, *m_mkldnn_primitives[input_index], *m_mkldnn_primitives[result_index]));
     m_primitive_deps[primitive_index] = {input_index, result_index};
     return primitive_index;
 }

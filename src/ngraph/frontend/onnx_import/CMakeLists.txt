@@ -32,6 +32,7 @@ add_library(onnx_import STATIC
         core/value_info.hpp
         exceptions.hpp
         op/add.hpp
+        op/and.hpp
         op/average_pool.cpp
         op/average_pool.hpp
         op/batch_norm.cpp
@@ -43,10 +44,13 @@ add_library(onnx_import STATIC
         op/conv.cpp
         op/conv.hpp
         op/div.hpp
+        op/equal.hpp
         op/flatten.cpp
         op/flatten.hpp
         op/gemm.cpp
         op/gemm.hpp
+        op/greater.hpp
+        op/less.hpp
         op/matmul.hpp
         op/max_pool.cpp
         op/max_pool.hpp
@@ -55,7 +59,11 @@ add_library(onnx_import STATIC
         op/mean.hpp
         op/min.hpp
         op/mul.hpp
+        op/not.hpp
+        op/or.hpp
         op/pow.hpp
+        op/reduce.cpp
+        op/reduce.hpp
         op/relu.hpp
         op/reshape.cpp
         op/reshape.hpp
@@ -67,11 +75,15 @@ add_library(onnx_import STATIC
         op/sum.hpp
         op/unsqueeze.cpp
         op/unsqueeze.hpp
+        op/xor.hpp
         ops_bridge.cpp
+        ops_bridge.hpp
         utils/broadcasting.cpp
         utils/broadcasting.hpp
+        utils/common.hpp
         utils/convpool.cpp
         utils/convpool.hpp
+        utils/reduction.hpp
         utils/reshape.cpp
         utils/reshape.hpp
         utils/variadic.hpp)

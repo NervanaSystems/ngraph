@@ -19,6 +19,8 @@ from ngraph.ops import absolute
 from ngraph.ops import absolute as abs
 from ngraph.ops import acos
 from ngraph.ops import add
+from ngraph.ops import argmax
+from ngraph.ops import argmin
 from ngraph.ops import asin
 from ngraph.ops import atan
 from ngraph.ops import avg_pool
@@ -79,5 +81,6 @@ from ngraph.ops import subtract
 from ngraph.ops import sum
 from ngraph.ops import tan
 from ngraph.ops import tanh
+from ngraph.ops import topk
 
 from ngraph.runtime import runtime
