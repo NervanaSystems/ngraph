@@ -83,10 +83,10 @@ static bool simplify_concat(std::shared_ptr<Node> n)
 
     auto ltip = std::make_shared<pattern::op::Label>(element::i32, Shape{2, 1});
 
-    auto slice =
+    auto pslice =
         std::make_shared<op::Slice>(ltip, Coordinate{0, 0}, Coordinate{2, 1}, Strides{1, 1});
 
-    auto lslice = std::make_shared<pattern::op::Label>(slice, nullptr, NodeVector{slice});
+    auto lslice = std::make_shared<pattern::op::Label>(pslice, nullptr, NodeVector{pslice});
 
     auto skip_reshape =
         std::make_shared<pattern::op::Skip>(lslice, pattern::has_class<op::Reshape>());
