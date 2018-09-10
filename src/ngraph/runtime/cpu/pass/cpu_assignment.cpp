@@ -648,17 +648,7 @@ namespace ngraph
                 {
                     auto slice = static_cast<op::Slice*>(node);
                     auto strides = slice->get_strides();
-                    bool strided = false;
-                    for (auto stride : strides)
-                    {
-                        if (stride != 1)
-                        {
-                            strided = true;
-                            break;
-                        }
-                    }
-
-                    if (!strided)
+                    if (!is_strided(strides) && node->get_input_element_type(0) == element::f32)
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();

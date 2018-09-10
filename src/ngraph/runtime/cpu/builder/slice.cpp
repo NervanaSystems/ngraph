@@ -68,17 +68,7 @@ namespace ngraph
                 }
                 else
                 {
-                    bool strided = false;
-                    for (auto stride : strides)
-                    {
-                        if (stride != 1)
-                        {
-                            strided = true;
-                            break;
-                        }
-                    }
-
-                    if (strided)
+                    if (is_strided(strides))
                     {
                         std::function<decltype(runtime::cpu::kernel::strided_slice<float, 2>)>
                             kernel;

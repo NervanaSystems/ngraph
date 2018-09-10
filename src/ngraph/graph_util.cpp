@@ -531,3 +531,8 @@ bool ngraph::possibly_overwritten(Node* node)
     }
     return false;
 }
+
+bool ngraph::is_strided(const Strides& strides)
+{
+    return std::any_of(strides.begin(), strides.end(), [](size_t stride) { return stride != 1; });
+}
