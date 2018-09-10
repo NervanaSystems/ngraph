@@ -128,7 +128,6 @@ namespace ngraph
                     writer << "void* input[] = {" << node_names(args) << "};\n";
                     writer << "void* output[] = {" << node_names(out) << "};\n";
                     writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
-                    cout << writer.get_code();
                 }
                 writer.block_end();
             }
