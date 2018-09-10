@@ -559,3 +559,78 @@ TEST(onnxifi, get_backend_info_max_graph_count)
     BACKEND_INFO_TEST_FALLBACK_NULL(ids, MAX_GRAPH_COUNT)
     BACKEND_INFO_TEST_INVALID_POINTER(ids, MAX_GRAPH_COUNT)
 }
+
+// =================================================[ onnxInitBackend ] =======
+
+namespace
+{
+    std::map<::onnxBackendID, ::onnxBackend> get_initialized_backends()
+    {
+        std::map<::onnxBackendID, ::onnxBackend> initialized_backends;
+        auto backend_ids = get_backend_ids();
+        std::vector<::onnxBackend> backends(backend_ids.size());
+        // first initialize all available backends
+        for (std::size_t i = 0; i < backend_ids.size(); ++i)
+        {
+            ::onnxStatus status{::onnxInitBackend(backend_ids.at(i), nullptr, &backends.at(i))};
+            if (status != ONNXIFI_STATUS_SUCCESS)
+            {
+                throw error::status{status};
+            }
+            initialized_backends.emplace(std::make_pair(backend_ids.at(i), backends.at(i)));
+        }
+        return initialized_backends;
+    }
+
+} // anonymous
+
+TEST(onnxifi, init_backend)
+{
+    auto backend_ids = get_backend_ids();
+    for (const auto& backend_id : backend_ids)
+    {
+        ::onnxBackend backend;
+        ::onnxStatus status{::onnxInitBackend(backend_id, nullptr, &backend)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+// ONNXIFI_STATUS_INVALID_ID The function call failed because backendID
+//                                   is not an ONNXIFI backend ID.
+TEST(onnxifi, init_backend_invalid_id)
+{
+    ::onnxBackend backend;
+    ::onnxStatus status{::onnxInitBackend(0, nullptr, &backend)};
+    EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_ID);
+    EXPECT_TRUE(backend == nullptr);
+}
+
+// ONNXIFI_STATUS_INVALID_POINTER The function call failed because
+//                                backend pointer is NULL.
+TEST(onnxifi, init_backend_invalid_pointer)
+{
+    auto backend_ids = get_backend_ids();
+    ::onnxStatus status{::onnxInitBackend(backend_ids.at(0), nullptr, nullptr)};
+    EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
+}
+
+// ONNXIFI_STATUS_BACKEND_UNAVAILABLE The function call failed because
+//                                    the backend was disconnected or
+//                                    uninstalled from the system.
+TEST(onnxifi, DISABLED_init_backend_backend_unavaiable)
+{
+    auto backends = get_initialized_backends();
+    // release all backends without releasing its ids
+    for (const auto& backend : backends)
+    {
+        ::onnxStatus status{::onnxReleaseBackend(backend.second)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+    // now check whether we may initialize them back.
+    for (auto& backend : backends)
+    {
+        ::onnxStatus status{::onnxInitBackend(backend.first, nullptr, &backend.second)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_BACKEND_UNAVAILABLE);
+        EXPECT_TRUE(backend.second == nullptr);
+    }
+}
