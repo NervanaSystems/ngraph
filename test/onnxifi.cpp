@@ -637,3 +637,59 @@ TEST(onnxifi, DISABLED_init_backend_backend_unavaiable)
         EXPECT_TRUE(backend.second == nullptr);
     }
 }
+
+// ===================================================[ onnxInitEvent ] =======
+TEST(onnxifi, init_event)
+{
+    auto backends = get_initialized_backends();
+    for (const auto& backend : backends)
+    {
+        ::onnxEvent event;
+        ::onnxStatus status{::onnxInitEvent(backend.second, &event)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+// ONNXIFI_STATUS_INVALID_BACKEND The function call failed because
+//                                backend is not an ONNXIFI backend
+//                                handle.
+TEST(onnxifi, init_event_invalid_backend)
+{
+    ::onnxEvent event;
+    ::onnxStatus status{::onnxInitEvent(0, &event)};
+    EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_BACKEND);
+    EXPECT_TRUE(event == nullptr);
+}
+
+// ONNXIFI_STATUS_INVALID_POINTER The function call failed because
+//                                event pointer is NULL.
+TEST(onnxifi, init_event_invalid_pointer)
+{
+    auto backends = get_initialized_backends();
+    for (const auto& backend : backends)
+    {
+        ::onnxStatus status{::onnxInitEvent(backend.second, nullptr)}
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
+    }
+}
+
+// ONNXIFI_STATUS_BACKEND_UNAVAILABLE The function call failed because
+//                                    the backend was disconnected or
+//                                    uninstalled from the system.
+TEST(onnxifi, init_event_backend_unavailable)
+{
+    auto backends = get_initialized_backends();
+    // simulate disconnecting all backends by releasing them
+    for (const auto& backend : backends)
+    {
+        ::onnxStatus status{::onnxReleaseBackend(backend.second)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+    for (const auto& backend : backends)
+    {
+        ::onnxEvent event;
+        ::onnxStatus status{::onnxInitEvent(backend.second, &event)}
+        EXPECT_TRUE(status == ONNXIFI_STATUS_BACKEND_UNAVAILABLE);
+        EXPECT_TRUE(event == nullptr);
+    }
+}
