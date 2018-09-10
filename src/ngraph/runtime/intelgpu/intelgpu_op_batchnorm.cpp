@@ -48,6 +48,11 @@ static Shape get_channel_shape(const Shape& shape, const string& function_name)
     return {shape.at(channel_axis)};
 }
 
+static size_t get_idx_size(const Shape& shape, size_t pos)
+{
+    return accumulate(shape.cbegin() + pos, shape.cend(), 1, multiplies<size_t>());
+}
+
 void runtime::intelgpu::do_create_mean(cldnn::topology& topology,
                                        const string& output_name,
                                        const element::Type& output_type,
@@ -195,11 +200,6 @@ void runtime::intelgpu::do_create_variance(cldnn::topology& topology,
                                                   layout,
                                                   {1});
     topology.add(op_variance);
-}
-
-static size_t get_idx_size(const Shape& shape, size_t pos)
-{
-    return accumulate(shape.cbegin() + pos, shape.cend(), 1, multiplies<size_t>());
 }
 
 void runtime::intelgpu::do_batch_norm_operation(cldnn::topology& topology,
