@@ -96,15 +96,8 @@ namespace ngraph
                 }
 
             private:
-                static std::string node_names(const std::vector<GPU_TensorViewWrapper>& args)
-                {
-                    std::vector<std::string> names;
-                    for (const GPU_TensorViewWrapper& tv : args)
-                    {
-                        names.push_back(tv.get_name());
-                    }
-                    return ngraph::join(names);
-                }
+                static std::string node_names(const std::vector<GPU_TensorViewWrapper>& args,
+                                              std::initializer_list<int> arg_indexes = {});
             };
             Shape get_padded_shape(const Shape& input_shape,
                                    const Shape& padding_below,

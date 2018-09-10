@@ -105,6 +105,23 @@ using namespace std;
 
 #define TI(x) type_index(typeid(x))
 
+string ngraph::runtime::gpu::GPU_Emitter::node_names(const vector<GPU_TensorViewWrapper>& args,
+                                                     initializer_list<int> arg_indexes)
+{
+    vector<string> names;
+    vector<int> indexes = arg_indexes;
+    if (indexes.empty())
+    {
+        indexes = vector<int>(args.size());
+        iota(indexes.begin(), indexes.end(), 0);
+    }
+    for (int i : indexes)
+    {
+        names.push_back(args[i].get_name());
+    }
+    return ngraph::join(names);
+}
+
 namespace ngraph
 {
     namespace runtime
