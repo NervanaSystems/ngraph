@@ -31,6 +31,8 @@ namespace ngraph
             void allreduce(const T* arg, T* out, const element::Type element_type, int count)
             {
                 auto data_type = MPI_FLOAT;
+                int my_rank;
+                MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
                 if (element_type == element::f32)
                 {
@@ -41,6 +43,7 @@ namespace ngraph
                     data_type = MPI_DOUBLE;
                 }
 
+                std::cout<<"count == "<<my_rank<<"  "<<count<<std::endl;
                 MPI_Allreduce(arg, out, count, data_type, MPI_SUM, MPI_COMM_WORLD);
             }
         }
