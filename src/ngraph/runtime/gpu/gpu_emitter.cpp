@@ -114,7 +114,6 @@ namespace ngraph
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Add)
             {
-                NGRAPH_INFO;
                 if (out[0].get_size() == 0)
                 {
                     return;
