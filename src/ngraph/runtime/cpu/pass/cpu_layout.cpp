@@ -1442,16 +1442,27 @@ namespace ngraph
                         NGRAPH_DEBUG << "input memory format: " << input_md.data.format << "\n";
                         auto result_format =
                             static_cast<mkldnn::memory::format>(input_md.data.format);
+
+                        vector<memory::desc> o_mds;
                         if (result_format == mkldnn::memory::blocked)
                         {
-                            //TODO get named blocked format for output?
-                            set_native_layouts(external_function, node);
-                            return;
+                            auto cpu_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
+                                node->get_inputs()[0]
+                                    .get_output()
+                                    .get_tensor_view()
+                                    ->get_tensor_view_layout());
+                            auto result_desc =
+                                mkldnn_utils::create_blocked_mkldnn_md(node->get_output_shape(0),
+                                                                       cpu_tvl->get_strides(),
+                                                                       node->get_element_type());
+                            o_mds.push_back(result_desc);
                         }
-                        auto result_desc = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 0, true, result_format);
-                        vector<memory::desc> o_mds;
-                        o_mds.push_back(result_desc);
+                        else
+                        {
+                            auto result_desc = mkldnn_utils::create_default_mkldnn_md(
+                                node.get(), 0, true, result_format);
+                            o_mds.push_back(result_desc);
+                        }
                         set_output_layouts(node, o_mds);
                     }
                     else
