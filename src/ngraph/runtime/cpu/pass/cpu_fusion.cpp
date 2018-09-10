@@ -26,12 +26,14 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -41,6 +43,7 @@
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sigmoid.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
@@ -1270,5 +1273,107 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
     };
 
     auto m = std::make_shared<pattern::Matcher>(min, callback);
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_horizontal_fusion()
+{
+    auto is_concat_or_maxpool = [](std::shared_ptr<Node> n) {
+        return std::dynamic_pointer_cast<ngraph::op::Concat>(n) ||
+               std::dynamic_pointer_cast<ngraph::op::MaxPool>(n);
+    };
+
+    auto data_conv = std::make_shared<pattern::op::Label>(
+        element::f32, Shape{1, 256, 35, 35}, is_concat_or_maxpool);
+    auto filters = std::make_shared<pattern::op::Label>(element::f32, Shape{64, 256, 1, 1});
+    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{64});
+
+    auto conv_bias = std::make_shared<ngraph::op::ConvolutionBias>(data_conv,
+                                                                   filters,
+                                                                   bias,
+                                                                   Strides{1, 1},
+                                                                   Strides{1, 1},
+                                                                   CoordinateDiff{0, 0},
+                                                                   CoordinateDiff{0, 0},
+                                                                   Strides{1, 1},
+                                                                   true);
+
+    pattern::graph_rewrite_callback callback = [data_conv](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for inception horizontal fusion for "
+                     << m.get_match_root()->get_name();
+
+        auto conv_bias_root = std::dynamic_pointer_cast<op::ConvolutionBias>(m.get_match_root());
+
+        //check if the node has been replaced
+        if (conv_bias_root->get_users().empty())
+        {
+            return false;
+        }
+
+        //check if 1x1 filter
+        auto m_filters_shape = conv_bias_root->get_input_shape(1);
+        if (m_filters_shape[2] != 1 && m_filters_shape[3] != 1)
+        {
+            NGRAPH_DEBUG << "not 1x1 filter\n";
+            return false;
+        }
+
+        // get weights and bias from each CBR 1x1 and create Concat nodes
+        std::vector<std::shared_ptr<Node>> weights_nodes;
+        std::vector<std::shared_ptr<Node>> bias_nodes;
+        std::vector<std::shared_ptr<Node>> conv_bias_nodes;
+
+        for (auto u : m.get_pattern_map()[data_conv]->get_users())
+        {
+            if (!pattern::has_class<ngraph::op::ConvolutionBias>()(u))
+            {
+                continue;
+            }
+            auto u_filters_shape = u->get_input_shape(1);
+            if (u_filters_shape[2] != 1 || u_filters_shape[3] != 1)
+            {
+                return false;
+            }
+            weights_nodes.push_back(u->get_argument(1));
+            bias_nodes.push_back(u->get_argument(2));
+            conv_bias_nodes.push_back(u);
+        }
+        if (conv_bias_nodes.size() == 1)
+        {
+            return false;
+        }
+        auto concat_weights = std::make_shared<ngraph::op::Concat>(weights_nodes, 0);
+        auto concat_bias = std::make_shared<ngraph::op::Concat>(bias_nodes, 0);
+        auto conv_bias_new = std::make_shared<ngraph::op::ConvolutionBias>(
+            conv_bias_root->get_argument(0),
+            concat_weights,
+            concat_bias,
+            conv_bias_root->get_window_movement_strides(),
+            conv_bias_root->get_window_dilation_strides(),
+            conv_bias_root->get_padding_below(),
+            conv_bias_root->get_padding_above(),
+            conv_bias_root->get_data_dilation_strides(),
+            conv_bias_root->with_relu());
+        NGRAPH_DEBUG << "new cb shape " << conv_bias_new->get_output_shape(0) << "\n";
+        //slice
+        size_t index = 0;
+        for (auto cb : conv_bias_nodes)
+        {
+            auto slice_shape = cb->get_output_shape(0);
+            NGRAPH_DEBUG << "slice shape " << slice_shape << "\n";
+            auto lower_bounds = Coordinate{0, index, 0, 0};
+            index += slice_shape[1];
+            auto upper_bounds = Coordinate{slice_shape[0], index, slice_shape[2], slice_shape[2]};
+            NGRAPH_DEBUG << "lower_bounds " << lower_bounds << "\n";
+            NGRAPH_DEBUG << "upper_bounds " << upper_bounds << "\n";
+            auto slice =
+                std::make_shared<ngraph::op::Slice>(conv_bias_new, lower_bounds, upper_bounds);
+            ngraph::replace_node(cb, slice);
+        }
+
+        return true;
+    };
+
+    auto m = std::make_shared<pattern::Matcher>(conv_bias, callback);
     this->add_matcher(m);
 }

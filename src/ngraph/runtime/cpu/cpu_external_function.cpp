@@ -155,7 +155,6 @@
 #include "ngraph/runtime/cpu/pass/cpu_collapse_dims.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_concat_inputs.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_inception_horizontal_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
@@ -388,7 +387,6 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUInceptionHorizontalFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
     pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
@@ -1143,7 +1141,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUInceptionHorizontalFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
     pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
