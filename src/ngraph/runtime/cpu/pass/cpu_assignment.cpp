@@ -489,23 +489,16 @@ namespace ngraph
                 {
                     auto replace_slice = static_cast<op::ReplaceSlice*>(node);
 
-                    //auto arg0_shape = node->get_input_shape(0);
-                    //auto arg0_rank = arg0_shape.size();
-                    //auto result_shape = node->get_output_shape(0);
-
-                    //TO confirm : not checking ranks as we support ranks 0/1/2/4
-                    if (node->get_input_element_type(0) == element::f32)
+                    // ReplaceSlice is independent of data type. Hence not checking type
+                    auto op_annotations =
+                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                    op_annotations->set_mkldnn_op(true);
+                    if (get_user_count(node->get_argument(0).get()) == 1)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        if (get_user_count(node->get_argument(0).get()) == 1)
-                        {
-                            // Safe to overwrite input
-                            op_annotations->add_in_place_oi_pair({0, 0, true});
-                        }
-                        replace_slice->set_op_annotations(op_annotations);
+                        // Safe to overwrite input
+                        op_annotations->add_in_place_oi_pair({0, 0, true});
                     }
+                    replace_slice->set_op_annotations(op_annotations);
                 }
 
                 template <>
