@@ -63,8 +63,7 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxGetBackendInfo(
 {
     try
     {
-        onnxifi::BackendManager::get_backend_info(
-            backendID, infoType, infoValue, infoValueSize);
+        onnxifi::BackendManager::get_backend_info(backendID, infoType, infoValue, infoValueSize);
         return ONNXIFI_STATUS_SUCCESS;
     }
     catch (const std::invalid_argument&)
@@ -109,19 +108,19 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxInitBackend(
         ngraph::onnxifi::BackendManager::init_backend(backendID, backend);
         return ONNXIFI_STATUS_SUCCESS;
     }
-    catch(const std::invalid_argument&)
+    catch (const std::invalid_argument&)
     {
         return ONNXIFI_STATUS_INVALID_POINTER;
     }
-    catch(const std::out_of_range&)
+    catch (const std::out_of_range&)
     {
         return ONNXIFI_STATUS_INVALID_ID;
     }
-    catch(const std::bad_alloc&)
+    catch (const std::bad_alloc&)
     {
         return ONNXIFI_STATUS_NO_SYSTEM_MEMORY;
     }
-    catch(...)
+    catch (...)
     {
         return ONNXIFI_STATUS_INTERNAL_ERROR;
     }

@@ -123,8 +123,7 @@ namespace ngraph
             }
         }
 
-        void BackendManager::init_backend(::onnxBackendID backend_id,
-                                          ::onnxBackend* backend)
+        void BackendManager::init_backend(::onnxBackendID backend_id, ::onnxBackend* backend)
         {
             if (backend == nullptr)
             {
