@@ -928,8 +928,10 @@ using namespace ngraph::runtime;
     }
 
     // TODO: Cleanup and make this a utility function
-    file_util::make_directory(s_output_dir);
-    string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");
+    int my_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    file_util::make_directory(s_output_dir+to_string(my_rank));
+    string filename = file_util::path_join(s_output_dir+to_string(my_rank), m_function_name + "_codegen.cpp");
     ofstream out(filename);
     string code = writer.get_code();
     out << code;
