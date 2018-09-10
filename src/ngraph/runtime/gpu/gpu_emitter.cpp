@@ -105,16 +105,6 @@ using namespace std;
 
 #define TI(x) type_index(typeid(x))
 
-static string node_names(const std::vector<ngraph::runtime::gpu::GPU_TensorViewWrapper>& args)
-{
-    vector<string> names;
-    for (const ngraph::runtime::gpu::GPU_TensorViewWrapper& tv : args)
-    {
-        names.push_back(tv.get_name());
-    }
-    return ngraph::join(names);
-}
-
 namespace ngraph
 {
     namespace runtime
@@ -124,6 +114,7 @@ namespace ngraph
             template <>
             void GPU_Emitter::EMITTER_DECL(ngraph::op::Add)
             {
+                NGRAPH_INFO;
                 if (out[0].get_size() == 0)
                 {
                     return;

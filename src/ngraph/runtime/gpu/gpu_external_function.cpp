@@ -459,9 +459,9 @@ void runtime::gpu::GPU_ExternalFunction::emit_temp_mem_pool_allocation(
         m_writer << "// Allocate the memory pool\n";
         // TODO memory pool malloc.
         m_writer << "char* pool_base_ptr = "
-                    "std::reinterpret_cast<char*>(ngraph::runtime::gpu::invoke_memory_primitive("
+                    "(char*)ngraph::runtime::gpu::invoke_memory_primitive("
                     "ctx, "
-                 << m_tensor_memory_buffers->at(current_function->get_name()) << "));\n";
+                 << m_tensor_memory_buffers->at(current_function->get_name()) << ");\n";
 
         // Add temporaries to the variable name map
         for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
@@ -550,8 +550,8 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
 
             for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
             {
-                auto& n =
-                    *node; // Work around a compiler warning (*node inside typeid may have effects
+                auto& n = *node;
+                // Work around a compiler warning (*node inside typeid may have effects
                 // with shared pointers, which is fine here but clang doesn't like it.)
                 auto handler = dispatcher.find(type_index(typeid(n)));
                 if (handler == dispatcher.end())

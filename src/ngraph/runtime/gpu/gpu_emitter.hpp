@@ -87,17 +87,22 @@ namespace ngraph
                         dtypes.push_back(out[0].get_type());
                         auto ew_index =
                             cuda_emitter->build_elementwise<T>(dtypes, out[0].get_shape());
-                        writer << "gpu::invoke_primitive(ctx, " << ew_index << ", ";
-                        writer << "std::vector<void*>{" << args.front().get_name();
-                        for (size_t i = 1; i < args.size(); i++)
-                        {
-                            writer << ", " << args[i].get_name();
-                        }
-                        writer << "}.data(), ";
-                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                        writer << ");\n";
+                        writer << "void* input[] = {" << node_names(args) << "};\n";
+                        writer << "void* output[] = {" << node_names(out) << "};\n";
+                        writer << "gpu::invoke_primitive(ctx, " << ew_index << ", input, output);\n";
                     }
                     writer.block_end();
+                }
+
+            private:
+                static std::string node_names(const std::vector<GPU_TensorViewWrapper>& args)
+                {
+                    std::vector<std::string> names;
+                    for (const GPU_TensorViewWrapper& tv : args)
+                    {
+                        names.push_back(tv.get_name());
+                    }
+                    return ngraph::join(names);
                 }
             };
             Shape get_padded_shape(const Shape& input_shape,
