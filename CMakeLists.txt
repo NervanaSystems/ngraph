@@ -244,6 +244,8 @@ if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
     set(EXTERNAL_PROJECTS_ROOT ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
+include(cmake/external_gsl-lite.cmake)
+
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     if (NOT NGRAPH_USE_SYSTEM_PROTOBUF)
         include(cmake/external_protobuf.cmake)
