@@ -16,6 +16,7 @@
 
 #include <cstdlib> // std::size_t, std::uintptr_t
 
+#include "onnx.hpp"
 #include <onnxifi.h>
 
 #include "ngraph/runtime/backend_manager.hpp"
@@ -65,6 +66,18 @@ namespace ngraph
                                    return pair.first;
                                });
             }
+        }
+
+        Backend& BackendManager::get_backend(::onnxBackend backend)
+        {
+            for (auto& pair : m_registered_backends)
+            {
+                if (pair.second.get_handle() == backend)
+                {
+                    return pair.second;
+                }
+            }
+            throw status::invalid_backend{};
         }
 
         void BackendManager::get_backend_info(::onnxBackendID backend_id,
@@ -129,6 +142,33 @@ namespace ngraph
                 throw status::null_pointer{};
             }
             *backend = instance().get_backend_by_id(backend_id).init_handle();
+        }
+        
+        void BackendManager::init_graph(::onnxBackend  backend,
+                                        const void* onnx_model,
+                                        std::size_t onnx_model_size,
+                                        const ::onnxTensorDescriptorV1* weights,
+                                        std::size_t weights_count,
+                                        ::onnxGraph* graph)
+        {
+            if (graph == nullptr)
+            {
+                throw status::null_pointer{};
+            }
+            *graph = nullptr;
+            if (weights_count != 0)
+            {
+                if (weights == nullptr)
+                {
+                    throw status::null_pointer{};
+                }
+                else
+                {
+                    // only weights embedded in a model are supported for the moment
+                    throw status::internal{};
+                }
+            }
+            *graph = instance().get_backend(backend).init_graph(onnx_model, onnx_model_size);
         }
 
     } // namespace onnxifi

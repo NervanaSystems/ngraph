@@ -137,6 +137,10 @@ namespace ngraph
                 return m_handle;
             }
 
+            // Implementation of onnxInitGraph() interface function
+
+            ::onnxGraph init_graph(const void* onnx_model, std::size_t onnx_model_size);
+
             // Helper function members
 
             ::onnxBackend get_handle() const

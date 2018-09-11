@@ -146,14 +146,35 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxReleaseEvent(onnx
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
     onnxInitGraph(onnxBackend backend,
-                  const uint64_t* auxPropertiesList,
+                  const uint64_t* /* auxPropertiesList */,
                   std::size_t onnxModelSize,
                   const void* onnxModel,
                   uint32_t weightsCount,
                   const onnxTensorDescriptorV1* weightDescriptors,
                   onnxGraph* graph)
 {
-    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
+    try
+    {
+        // Ignore auxPropertiesList, it is not supported in this version
+        // of the nGraph ONNXIFI backend
+        onnxifi::BackendManager::init_graph(
+            backend, onnxModel, onnxModelSize, weightDescriptors, weightsCount, graph);
+        return ONNXIFI_STATUS_SUCCESS;
+    }
+    catch (const onnxifi::status::runtime& e)
+    {
+        return e.get_status();
+    }
+    catch (const std::bad_alloc&)
+    {
+        *graph = nullptr;
+        return ONNXIFI_STATUS_NO_SYSTEM_MEMORY;
+    }
+    catch (...)
+    {
+        *graph = nullptr;
+        return ONNXIFI_STATUS_INTERNAL_ERROR;
+    }
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
