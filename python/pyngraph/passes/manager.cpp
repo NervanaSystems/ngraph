@@ -14,9 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/pass/manager.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+#include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "pyngraph/passes/manager.hpp"
 

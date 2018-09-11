@@ -17,16 +17,18 @@
 #pragma once
 
 #include <memory>
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class AllReduce : public util::RequiresTensorViewArgs
+        class AllReduce : public Op
         {
         public:
             AllReduce(const std::shared_ptr<Node>& arg);
+
+            void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

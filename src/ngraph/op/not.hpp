@@ -16,20 +16,22 @@
 
 #pragma once
 
-#include "ngraph/op/util/unary_elementwise.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Elementwise logical negation operation.
-        class Not : public util::UnaryElementwise
+        class Not : public Op
         {
         public:
             /// \brief Constructs a logical negation operation.
             ///
             /// \param arg Node that produces the input tensor.
             Not(const std::shared_ptr<Node>& arg);
+
+            void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

@@ -17,14 +17,14 @@
 #pragma once
 
 #include "ngraph/op/convolution.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Group Convolution
-        class GroupConvolution : public util::RequiresTensorViewArgs
+        class GroupConvolution : public Op
         {
         public:
             GroupConvolution(const std::shared_ptr<Node>& data_batch,
