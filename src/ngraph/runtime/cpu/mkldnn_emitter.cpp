@@ -300,6 +300,45 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
     return conv_index;
 }
 
+size_t MKLDNNEmitter::build_quantized_convolution(const mkldnn::memory::desc& input_data_desc,
+                                                  const mkldnn::memory::desc& weights_desc,
+                                                  const mkldnn::memory::desc& result_desc,
+                                                  const ngraph::Strides& strides,
+                                                  const ngraph::Strides& dilation_strides,
+                                                  const ngraph::CoordinateDiff& padding_below,
+                                                  const ngraph::CoordinateDiff& padding_above,
+                                                  const float scale)
+{
+    size_t input_data_index = build_memory_primitive(input_data_desc);
+    size_t weights_index = build_memory_primitive(weights_desc);
+    size_t result_index = build_memory_primitive(result_desc);
+    std::vector<float> output_scale;
+    output_scale.push_back(scale);
+    mkldnn::primitive_attr conv_attr;
+    /* Specify the rounding mode */
+    conv_attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
+    /* Specify the scales array and corresponding mask */
+    conv_attr.set_output_scales(0, output_scale);
+    size_t conv_index = insert_primitive(new mkldnn::convolution_forward(
+        {{mkldnn::prop_kind::forward,
+          mkldnn::algorithm::convolution_direct,
+          input_data_desc,
+          weights_desc,
+          result_desc,
+          mkldnn::memory::dims(strides.begin(), strides.end()),
+          mkldnn::memory::dims(dilation_strides.begin(), dilation_strides.end()),
+          mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+          mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
+          mkldnn::padding_kind::zero},
+         conv_attr,
+         mkldnn_utils::global_cpu_engine},
+        *m_mkldnn_primitives[input_data_index],
+        *m_mkldnn_primitives[weights_index],
+        *m_mkldnn_primitives[result_index]));
+    m_primitive_deps[conv_index] = {input_data_index, weights_index, result_index};
+    return conv_index;
+}
+
 size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& input_data_desc,
                                                 const mkldnn::memory::desc& weights_desc,
                                                 const mkldnn::memory::desc& bias_desc,

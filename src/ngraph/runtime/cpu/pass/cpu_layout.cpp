@@ -56,6 +56,7 @@
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
 #include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
+#include "ngraph/runtime/cpu/op/quantized_conv.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 
 using namespace std;
@@ -296,6 +297,11 @@ namespace ngraph
                     memory::data_type et =
                         mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0));
 
+                    memory::data_type et_weights = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
+                        node->get_input_element_type(1));
+                    memory::data_type et_result = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
+                        node->get_output_element_type(0));
+
                     engine cpu_engine(engine::cpu, 0);
                     memory::dims mkldnn_arg0_shape(arg0_shape.begin(), arg0_shape.end());
                     memory::dims mkldnn_arg1_shape(arg1_shape.begin(), arg1_shape.end());
@@ -307,8 +313,10 @@ namespace ngraph
                     memory::dims mkldnn_padding_below(padding_below.begin(), padding_below.end());
                     memory::dims mkldnn_padding_above(padding_above.begin(), padding_above.end());
                     const memory::desc input_data_desc(mkldnn_arg0_shape, et, memory::format::any);
-                    const memory::desc weights_desc(mkldnn_arg1_shape, et, memory::format::any);
-                    const memory::desc result_desc(mkldnn_result_shape, et, memory::format::any);
+                    const memory::desc weights_desc(
+                        mkldnn_arg1_shape, et_weights, memory::format::any);
+                    const memory::desc result_desc(
+                        mkldnn_result_shape, et_weights, memory::format::any);
                     std::unique_ptr<convolution_forward::desc> fwd_desc{nullptr};
                     if (use_bias)
                     {
@@ -381,6 +389,48 @@ namespace ngraph
                         i_mds.push_back(prim_desc.bias_primitive_desc().desc());
                     }
                     o_mds.push_back(prim_desc.dst_primitive_desc().desc());
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedConvolution)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::desc> i_mds;
+                        vector<memory::desc> o_mds;
+                        ConvolutionLayout<ngraph::op::QuantizedConvolution, false, false>(
+                            node, i_mds, o_mds);
+                        auto min_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 2, false, memory::format::x);
+                        auto max_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 3, false, memory::format::x);
+                        auto min_filter_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 4, false, memory::format::x);
+                        auto max_filter_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 5, false, memory::format::x);
+                        auto min_freezed_output_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 6, false, memory::format::x);
+                        auto max_freezed_output_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 7, false, memory::format::x);
+                        auto min_output_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 1, true, memory::format::x);
+                        auto max_output_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 2, true, memory::format::x);
+                        i_mds.push_back(min_input_md);
+                        i_mds.push_back(max_input_md);
+                        i_mds.push_back(min_filter_md);
+                        i_mds.push_back(max_filter_md);
+                        i_mds.push_back(min_freezed_output_md);
+                        i_mds.push_back(max_freezed_output_md);
+                        o_mds.push_back(min_output_md);
+                        o_mds.push_back(max_output_md);
+                        node = insert_input_conversions(external_function, node, i_mds);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        set_native_layouts(external_function, node);
+                    }
                 }
 
                 template <>
@@ -1658,6 +1708,8 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPool>},
     {TI(ngraph::op::AvgPoolBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPoolBackprop>},
+    {TI(ngraph::op::QuantizedConvolution),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolution>},
     {TI(ngraph::op::Convolution), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Convolution>},
     {TI(ngraph::op::GroupConvolution),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::GroupConvolution>},

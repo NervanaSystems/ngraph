@@ -24,6 +24,7 @@ set(SRC
     cpu_tensor_view_wrapper.cpp
     cpu_tensor_view.cpp
     cpu_tracing.cpp
+    quantization_util.cpp
     builder/add.cpp
     builder/allreduce.cpp
     builder/avg_pool.cpp
@@ -35,6 +36,7 @@ set(SRC
     builder/concat.cpp
     builder/convert.cpp
     builder/convert_layout.cpp
+    builder/quantized_conv.cpp
     builder/convolution.cpp
     builder/dequantize.cpp
     builder/dot.cpp
@@ -79,6 +81,7 @@ set(SRC
     op/group_conv.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
+    op/quantized_conv.cpp
     op/convert_layout.cpp
     op/dequantize.cpp
     op/loop_kernel.cpp
