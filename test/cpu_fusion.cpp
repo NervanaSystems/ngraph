@@ -50,6 +50,7 @@
 #include "ngraph/runtime/cpu/op/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
+#include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
@@ -924,7 +925,7 @@ TEST(cpu_fusion, fuse_conv_bias_add)
     ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(func_nofuse1), 0);
 
     pass_manager.run_passes(func_nofuse2);
-    ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(func_nofuse2), 0);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(func_nofuse2), 1);
 }
 
 TEST(cpu_fusion, conv_bias_add)
@@ -939,6 +940,61 @@ TEST(cpu_fusion, conv_bias_add)
 
     auto int_results = execute(int_f, args, "INTERPRETER");
     auto cpu_results = execute(cpu_f, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+}
+
+// ConvolutionAdd relies on an in-place fused MKLDNN kernel.
+// Need to ensure that it is fused only when in-place buffer allocation is feasible
+shared_ptr<Function> gen_conv_add(bool param_input, bool result_output)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{2, 1, 2, 2});
+    auto weights = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1, 1});
+    auto conv = make_shared<op::Convolution>(A, weights, Strides{1, 1}, Strides{1, 1});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{2, 1, 2, 2});
+    auto abs_B = make_shared<op::Abs>(B);
+    auto add = param_input ? make_shared<op::Add>(conv, B) : make_shared<op::Add>(conv, abs_B);
+    auto abs = make_shared<op::Abs>(add);
+
+    return result_output ? make_shared<Function>(add, op::ParameterVector{A, weights, B})
+                         : make_shared<Function>(abs, op::ParameterVector{A, weights, B});
+}
+
+TEST(cpu_fusion, fuse_conv_add)
+{
+    auto func_fuse = gen_conv_add(false, false);
+    auto func_nofuse1 = gen_conv_add(true, false);
+    auto func_nofuse2 = gen_conv_add(false, true);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.run_passes(func_fuse);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionAdd>(func_fuse), 1);
+
+    pass_manager.run_passes(func_nofuse1);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionAdd>(func_nofuse1), 0);
+
+    pass_manager.run_passes(func_nofuse2);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionAdd>(func_nofuse2), 1);
+}
+
+TEST(cpu_fusion, conv_add)
+{
+    auto int_f = gen_conv_add(false, false);
+    auto cpu_f = gen_conv_add(false, false);
+
+    vector<vector<float>> args{{1.25f, 2.25f, 5.25f, 6.25f, -1.25f, -1.25f, 3.25f, -4.25f},
+                               {-1.25f},
+                               {1.25f, 2.25f, -3.25f, 2.25f, 4.25f, 4.25f, 1.25f, 2.25f}};
+
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+
+    int_f = gen_conv_add(false, true);
+    cpu_f = gen_conv_add(false, true);
+
+    int_results = execute(int_f, args, "INTERPRETER");
+    cpu_results = execute(cpu_f, args, "CPU");
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
