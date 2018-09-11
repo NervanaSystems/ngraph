@@ -124,6 +124,19 @@ namespace ngraph
             void get_max_graph_size(void* info_value, std::size_t* info_value_size) const;
             void get_max_graph_count(void* info_value, std::size_t* info_value_size) const;
 
+            // Implementation of onnxInitBackend() interface function
+
+            ::onnxBackend init_handle()
+            {
+                std::lock_guard<std::mutex> lock{m_mutex};
+                if (m_backend == nullptr)
+                {
+                    m_handle = reinterpret_cast<::onnxBackend>(
+                        (m_backend = runtime::Backend::create(m_type)).get());
+                }
+                return m_handle;
+            }
+
             // Helper function members
 
             ::onnxBackend get_handle() const
