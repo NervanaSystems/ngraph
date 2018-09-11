@@ -42,7 +42,7 @@ op::QuantizedMaxPool::QuantizedMaxPool(const shared_ptr<Node>& arg,
         throw ngraph_error("Dequantization supported only for i8/u8!");
     }
 
-    if (min->get_element_type() != min->get_element_type())
+    if (min->get_element_type() != max->get_element_type())
     {
         throw ngraph_error("Min's element type isn't equal to max's!");
     }
