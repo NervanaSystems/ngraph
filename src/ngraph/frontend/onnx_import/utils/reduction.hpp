@@ -76,15 +76,11 @@ namespace ngraph
                 auto data_shape = ng_input->get_shape();
 
                 auto reduction_axes = detail::get_reduction_axes(node);
-                if (reduction_axes.size() > data_shape.size())
-                {
-                    throw error::parameter::Value(node.op_type(),
-                                                  node.get_name(),
-                                                  "provided reduction axes count (" +
-                                                      std::to_string(reduction_axes.size()) +
-                                                      ") is larger than input tensor rank (" +
-                                                      std::to_string(data_shape.size()) + ")");
-                }
+
+                ASSERT_VALID_ARGUMENT(node, reduction_axes.size() <= data_shape.size())
+                    << "provided reduction axes count (" << reduction_axes.size()
+                    << ") is larger than input tensor rank (" << data_shape.size() << ")";
+
                 auto op_node = std::make_shared<OnnxOperator>(ng_input, reduction_axes);
 
                 std::int64_t keepdims = node.get_attribute_value<std::int64_t>("keepdims", 1);
