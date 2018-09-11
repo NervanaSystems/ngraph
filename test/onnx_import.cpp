@@ -745,10 +745,163 @@ TEST(onnx, model_reshape_output_shape_as_input)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
+TEST(onnx, model_reduce_log_sum)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_log_sum.onnx"));
+
+    // input data shape (1, 1, 4, 4)
+    Inputs inputs{
+        test::NDArray<float, 4>({{{{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}}}})
+            .get_vector()};
+
+    // output data shape (1,)
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{2.77258872}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reduce_log_sum_exp)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_log_sum_exp.onnx"));
+
+    // input data shape (1, 1, 4, 4)
+    Inputs inputs{
+        test::NDArray<float, 4>({{{{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}}}})
+            .get_vector()};
+
+    // output data shape (1,)
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{3.77258872}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reduce_l1)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_l1.onnx"));
+
+    // input data shape (1, 1, 4, 4)
+    Inputs inputs{
+        test::NDArray<float, 4>({{{{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}}}})
+            .get_vector()};
+
+    // output data shape (1,)
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{16}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reduce_l2)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_l2.onnx"));
+
+    // input data shape (1, 1, 4, 4)
+    Inputs inputs{
+        test::NDArray<float, 4>({{{{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}}}})
+            .get_vector()};
+
+    // output data shape (1,)
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{4}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reduce_max)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_max.onnx"));
+
+    // input data shape (1, 1, 4, 4)
+    Inputs inputs{
+        test::NDArray<float, 4>({{{{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}, {13, 14, 15, 16}}}})
+            .get_vector()};
+
+    // output data shape (1,)
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{16}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reduce_mean)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_mean.onnx"));
+
+    // input data shape (1, 1, 4, 4)
+    Inputs inputs{
+        test::NDArray<float, 4>({{{{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}}}})
+            .get_vector()};
+
+    // output data shape (1,)
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{1}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reduce_min)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_min.onnx"));
+
+    // input data shape (1, 1, 4, 4)
+    Inputs inputs{
+        test::NDArray<float, 4>({{{{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}, {13, 14, 15, 16}}}})
+            .get_vector()};
+
+    // output data shape (1,)
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{1}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reduce_prod)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_prod.onnx"));
+
+    // input data shape (1, 1, 4, 4)
+    Inputs inputs{
+        test::NDArray<float, 4>({{{{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}}}})
+            .get_vector()};
+
+    // output data shape (1,)
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{1}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
 TEST(onnx, model_reduce_sum)
 {
     auto function = onnx_import::import_onnx_function(
         file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_sum.onnx"));
+
+    // input data shape (1, 1, 4, 4)
+    Inputs inputs{
+        test::NDArray<float, 4>({{{{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}}}})
+            .get_vector()};
+
+    // output data shape (1,)
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{16}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reduce_sum_square)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_sum_square.onnx"));
 
     // input data shape (1, 1, 4, 4)
     Inputs inputs{
