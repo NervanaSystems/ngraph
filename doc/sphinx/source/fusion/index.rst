@@ -24,7 +24,7 @@ Optimization passes may include algebraic simplifications, domain-specific
 simplifications, and fusion. Most passes share the same mode of operation (or 
 the same operational structure) and consist of various stages (each one a 
 :term:`step`) where a developer can experiment with the intercepted or dynamic 
-graph. These steps may by cycled or recycled as needed: 
+graph. These steps may be cycled or recycled as needed: 
 
 #. Locate a list of potentially-transformable subgraphs in the given graph.
 #. Transform the selected candidates into semantically-equivalent subgraphs 
@@ -42,6 +42,9 @@ then inspecting the transformed graph.
 Optimization passes can be programmed ahead of time if you know or can predict 
 what your graph will look like when it's ready to be executed (in other words: 
 which `ops` can be automatically translated into :doc:`nGraph Core ops <../ops/index>`). 
+
+The ``Interpreter`` is simply a backend providing reference implementations of 
+ngraph ops in C++, with the focus on simplicity over performance.
  
 
 Example
