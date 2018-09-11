@@ -55,8 +55,7 @@ namespace ngraph
                                          void* info_value,
                                          std::size_t* info_value_size);
 
-            static void init_backend(::onnxBackendID backend_id,
-                                    ::onnxBackend* backend);
+            static void init_backend(::onnxBackendID backend_id, ::onnxBackend* backend);
 
         private:
             mutable std::mutex m_mutex{};
