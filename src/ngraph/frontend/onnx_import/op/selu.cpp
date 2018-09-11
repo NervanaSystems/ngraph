@@ -15,8 +15,12 @@
 //*****************************************************************************
 
 #include <memory>
+#include <vector>
 
+#include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
+#include "ngraph/shape.hpp"
+
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
@@ -25,8 +29,6 @@
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/subtract.hpp"
-
-#include "exceptions.hpp"
 
 #include "core/node.hpp"
 #include "utils/broadcasting.hpp"

@@ -14,13 +14,17 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <algorithm>
+#include <iterator>
+#include <memory>
+
+#include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
+
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/reshape.hpp"
-
-#include "exceptions.hpp"
 
 #include "core/node.hpp"
 #include "utils/broadcasting.hpp"
@@ -43,7 +47,8 @@ namespace ngraph
 
                 if ((slope_shape.size() == 1) && (slope_shape.at(0) != 1))
                 {
-                    auto it = std::find(data_shape.begin(), data_shape.end(), slope_shape.at(0));
+                    auto it =
+                        std::find(std::begin(data_shape), std::end(data_shape), slope_shape.at(0));
                     auto index = std::distance(data_shape.begin(), it);
                     slope = make_broadcast_node(slope, data->get_shape(), index);
                 }

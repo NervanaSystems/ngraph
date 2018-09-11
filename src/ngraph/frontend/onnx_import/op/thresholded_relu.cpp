@@ -15,15 +15,15 @@
 //*****************************************************************************
 
 #include <memory>
+#include <vector>
 
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
+
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/multiply.hpp"
-
-#include "exceptions.hpp"
 
 #include "core/node.hpp"
 #include "utils/broadcasting.hpp"

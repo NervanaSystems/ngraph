@@ -15,6 +15,9 @@
 //*****************************************************************************
 
 #include <memory>
+#include <vector>
+
+#include "ngraph/node.hpp"
 
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"

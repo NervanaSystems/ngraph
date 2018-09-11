@@ -16,11 +16,12 @@
 
 #pragma once
 
+#include <memory>
+
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/tanh.hpp"
 
 #include "core/node.hpp"
-#include "utils/broadcasting.hpp"
 
 namespace ngraph
 {

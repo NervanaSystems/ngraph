@@ -14,7 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <memory>
+
+#include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
+#include "ngraph/shape.hpp"
+
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/maximum.hpp"
@@ -45,7 +50,7 @@ namespace ngraph
                 }
 
                 std::shared_ptr<ngraph::Node> alpha_node = std::make_shared<ngraph::op::Constant>(
-                    data->get_element_type(), ngraph::Shape{}, std::vector<double>{alpha});
+                    data->get_element_type(), Shape{}, std::vector<double>{alpha});
                 alpha_node = make_broadcast_node(alpha_node, data->get_shape());
                 return {std::make_shared<ngraph::op::Maximum>(data * alpha_node, data)};
             }
