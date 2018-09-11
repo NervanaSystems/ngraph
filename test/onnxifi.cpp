@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <cstring>
+#include <fstream>
 
 #include <gtest/gtest.h>
 #include <onnxifi.h>
@@ -362,27 +363,27 @@ TEST(onnxifi, get_backend_info_unsupported_attribute)
 }
 
 #define BACKEND_INFO_TEST_SUCCESS(type__, ids__, attribute__)                                      \
-    backend_info_test_success<type__>(ids__, ONNXIFI_BACKEND_##attribute__);
+    backend_info_test_success<type__>(ids__, ONNXIFI_BACKEND_##attribute__)
 
 #define BACKEND_INFO_TEST_FALLBACK(type__, ids__, attribute__)                                     \
-    backend_info_test_fallback<type__>(ids__, ONNXIFI_BACKEND_##attribute__);
+    backend_info_test_fallback<type__>(ids__, ONNXIFI_BACKEND_##attribute__)
 
 #define BACKEND_INFO_TEST_FALLBACK_NULL(ids__, attribute__)                                        \
-    backend_info_test_fallback_nullptr(ids__, ONNXIFI_BACKEND_##attribute__);
+    backend_info_test_fallback_nullptr(ids__, ONNXIFI_BACKEND_##attribute__)
 
 #define BACKEND_INFO_TEST_INVALID_POINTER(ids__, attribute_)                                       \
-    backend_info_test_invalid_pointer(ids__, ONNXIFI_BACKEND_##attribute_);
+    backend_info_test_invalid_pointer(ids__, ONNXIFI_BACKEND_##attribute_)
 
 #define BACKEND_INFO_TEST_RESULT(type__, ids__, attribute__, function__)                           \
-    backend_info_test_result<type__>(ids__, ONNXIFI_BACKEND_##attribute__, function__);
+    backend_info_test_result<type__>(ids__, ONNXIFI_BACKEND_##attribute__, function__)
 
 TEST(onnxifi, get_backend_info_onnxifi_version)
 {
     auto ids = get_backend_ids();
-    BACKEND_INFO_TEST_SUCCESS(uint64_t, ids, ONNXIFI_VERSION)
-    BACKEND_INFO_TEST_FALLBACK(uint64_t, ids, ONNXIFI_VERSION)
-    BACKEND_INFO_TEST_FALLBACK_NULL(ids, ONNXIFI_VERSION)
-    BACKEND_INFO_TEST_INVALID_POINTER(ids, ONNXIFI_VERSION)
+    BACKEND_INFO_TEST_SUCCESS(uint64_t, ids, ONNXIFI_VERSION);
+    BACKEND_INFO_TEST_FALLBACK(uint64_t, ids, ONNXIFI_VERSION);
+    BACKEND_INFO_TEST_FALLBACK_NULL(ids, ONNXIFI_VERSION);
+    BACKEND_INFO_TEST_INVALID_POINTER(ids, ONNXIFI_VERSION);
     BACKEND_INFO_TEST_RESULT(
         uint64_t, ids, ONNXIFI_VERSION, [](uint64_t info_value, std::size_t info_value_size) {
             return (info_value == 1) && (info_value_size == sizeof(uint64_t));
@@ -392,36 +393,36 @@ TEST(onnxifi, get_backend_info_onnxifi_version)
 TEST(onnxifi, get_backend_info_name)
 {
     auto ids = get_backend_ids();
-    BACKEND_INFO_TEST_SUCCESS(char[], ids, NAME)
-    BACKEND_INFO_TEST_FALLBACK(char[], ids, NAME)
-    BACKEND_INFO_TEST_FALLBACK_NULL(ids, NAME)
-    BACKEND_INFO_TEST_INVALID_POINTER(ids, NAME)
+    BACKEND_INFO_TEST_SUCCESS(char[], ids, NAME);
+    BACKEND_INFO_TEST_FALLBACK(char[], ids, NAME);
+    BACKEND_INFO_TEST_FALLBACK_NULL(ids, NAME);
+    BACKEND_INFO_TEST_INVALID_POINTER(ids, NAME);
     BACKEND_INFO_TEST_RESULT(
         char[], ids, NAME, [](const char* info_value, std::size_t info_value_size) {
             return /* TODO */ true;
-        })
+        });
 }
 
 TEST(onnxifi, get_backend_info_vendor)
 {
     auto ids = get_backend_ids();
-    BACKEND_INFO_TEST_SUCCESS(char[], ids, VENDOR)
-    BACKEND_INFO_TEST_FALLBACK(char[], ids, VENDOR)
-    BACKEND_INFO_TEST_FALLBACK_NULL(ids, VENDOR)
-    BACKEND_INFO_TEST_INVALID_POINTER(ids, VENDOR)
+    BACKEND_INFO_TEST_SUCCESS(char[], ids, VENDOR);
+    BACKEND_INFO_TEST_FALLBACK(char[], ids, VENDOR);
+    BACKEND_INFO_TEST_FALLBACK_NULL(ids, VENDOR);
+    BACKEND_INFO_TEST_INVALID_POINTER(ids, VENDOR);
     BACKEND_INFO_TEST_RESULT(
         char[], ids, VENDOR, [](const char* info_value, std::size_t info_value_size) {
             return /* TODO */ true;
-        })
+        });
 }
 
 TEST(onnxifi, get_backend_info_version)
 {
     auto ids = get_backend_ids();
-    BACKEND_INFO_TEST_SUCCESS(char[], ids, VERSION)
-    BACKEND_INFO_TEST_FALLBACK(char[], ids, VERSION)
-    BACKEND_INFO_TEST_FALLBACK_NULL(ids, VERSION)
-    BACKEND_INFO_TEST_INVALID_POINTER(ids, VERSION)
+    BACKEND_INFO_TEST_SUCCESS(char[], ids, VERSION);
+    BACKEND_INFO_TEST_FALLBACK(char[], ids, VERSION);
+    BACKEND_INFO_TEST_FALLBACK_NULL(ids, VERSION);
+    BACKEND_INFO_TEST_INVALID_POINTER(ids, VERSION);
     BACKEND_INFO_TEST_RESULT(
         char[], ids, VERSION, [](const char* info_value, std::size_t info_value_size) {
             return std::memcmp(info_value, NGRAPH_VERSION, info_value_size) == 0;
@@ -431,38 +432,38 @@ TEST(onnxifi, get_backend_info_version)
 TEST(onnxifi, get_backend_info_extensions)
 {
     auto ids = get_backend_ids();
-    BACKEND_INFO_TEST_SUCCESS(char[], ids, EXTENSIONS)
-    BACKEND_INFO_TEST_FALLBACK(char[], ids, EXTENSIONS)
-    BACKEND_INFO_TEST_FALLBACK_NULL(ids, EXTENSIONS)
-    BACKEND_INFO_TEST_INVALID_POINTER(ids, EXTENSIONS)
+    BACKEND_INFO_TEST_SUCCESS(char[], ids, EXTENSIONS);
+    BACKEND_INFO_TEST_FALLBACK(char[], ids, EXTENSIONS);
+    BACKEND_INFO_TEST_FALLBACK_NULL(ids, EXTENSIONS);
+    BACKEND_INFO_TEST_INVALID_POINTER(ids, EXTENSIONS);
     BACKEND_INFO_TEST_RESULT(
         char[], ids, EXTENSIONS, [](const char* info_value, std::size_t info_value_size) {
             return /* TODO */ true;
-        })
+        });
 }
 
 TEST(onnxifi, get_backend_info_device)
 {
     auto ids = get_backend_ids();
-    BACKEND_INFO_TEST_SUCCESS(char[], ids, DEVICE)
-    BACKEND_INFO_TEST_FALLBACK(char[], ids, DEVICE)
-    BACKEND_INFO_TEST_FALLBACK_NULL(ids, DEVICE)
-    BACKEND_INFO_TEST_INVALID_POINTER(ids, DEVICE)
+    BACKEND_INFO_TEST_SUCCESS(char[], ids, DEVICE);
+    BACKEND_INFO_TEST_FALLBACK(char[], ids, DEVICE);
+    BACKEND_INFO_TEST_FALLBACK_NULL(ids, DEVICE);
+    BACKEND_INFO_TEST_INVALID_POINTER(ids, DEVICE);
     BACKEND_INFO_TEST_RESULT(
         char[], ids, DEVICE, [](const char* info_value, std::size_t info_value_size) {
             std::cout << "device: '" << std::string(info_value, info_value + info_value_size)
                       << "'\n";
             return true;
-        })
+        });
 }
 
 TEST(onnxifi, get_backend_info_device_type)
 {
     auto ids = get_backend_ids();
-    BACKEND_INFO_TEST_SUCCESS(::onnxEnum, ids, DEVICE_TYPE)
-    BACKEND_INFO_TEST_FALLBACK(::onnxEnum, ids, DEVICE_TYPE)
-    BACKEND_INFO_TEST_FALLBACK_NULL(ids, DEVICE_TYPE)
-    BACKEND_INFO_TEST_INVALID_POINTER(ids, DEVICE_TYPE)
+    BACKEND_INFO_TEST_SUCCESS(::onnxEnum, ids, DEVICE_TYPE);
+    BACKEND_INFO_TEST_FALLBACK(::onnxEnum, ids, DEVICE_TYPE);
+    BACKEND_INFO_TEST_FALLBACK_NULL(ids, DEVICE_TYPE);
+    BACKEND_INFO_TEST_INVALID_POINTER(ids, DEVICE_TYPE);
     BACKEND_INFO_TEST_RESULT(::onnxEnum,
                              ids,
                              DEVICE_TYPE,
@@ -470,94 +471,94 @@ TEST(onnxifi, get_backend_info_device_type)
                                  std::cout << "type: '" << device_type::to_string(info_value)
                                            << "'\n";
                                  return true;
-                             })
+                             });
 }
 
 TEST(onnxifi, get_backend_info_onnx_ir_version)
 {
     auto ids = get_backend_ids();
-    BACKEND_INFO_TEST_SUCCESS(char[], ids, ONNX_IR_VERSION)
-    BACKEND_INFO_TEST_FALLBACK(char[], ids, ONNX_IR_VERSION)
-    BACKEND_INFO_TEST_FALLBACK_NULL(ids, ONNX_IR_VERSION)
-    BACKEND_INFO_TEST_INVALID_POINTER(ids, ONNX_IR_VERSION)
+    BACKEND_INFO_TEST_SUCCESS(char[], ids, ONNX_IR_VERSION);
+    BACKEND_INFO_TEST_FALLBACK(char[], ids, ONNX_IR_VERSION);
+    BACKEND_INFO_TEST_FALLBACK_NULL(ids, ONNX_IR_VERSION);
+    BACKEND_INFO_TEST_INVALID_POINTER(ids, ONNX_IR_VERSION);
     BACKEND_INFO_TEST_RESULT(
         char[], ids, ONNX_IR_VERSION, [](const char* info_value, std::size_t info_value_size) {
             return std::memcmp(info_value, ONNX_VERSION, info_value_size) == 0;
-        })
+        });
 }
 
 TEST(onnxifi, get_backend_info_opset_version)
 {
     auto ids = get_backend_ids();
-    BACKEND_INFO_TEST_SUCCESS(char[], ids, OPSET_VERSION)
-    BACKEND_INFO_TEST_FALLBACK(char[], ids, OPSET_VERSION)
-    BACKEND_INFO_TEST_FALLBACK_NULL(ids, OPSET_VERSION)
-    BACKEND_INFO_TEST_INVALID_POINTER(ids, OPSET_VERSION)
+    BACKEND_INFO_TEST_SUCCESS(char[], ids, OPSET_VERSION);
+    BACKEND_INFO_TEST_FALLBACK(char[], ids, OPSET_VERSION);
+    BACKEND_INFO_TEST_FALLBACK_NULL(ids, OPSET_VERSION);
+    BACKEND_INFO_TEST_INVALID_POINTER(ids, OPSET_VERSION);
     BACKEND_INFO_TEST_RESULT(
         char[], ids, OPSET_VERSION, [](const char* info_value, std::size_t info_value_size) {
             return std::memcmp(info_value, ONNX_OPSET_VERSION, info_value_size) == 0;
-        })
+        });
 }
 
 TEST(onnxifi, get_backend_info_capabilities)
 {
     auto ids = get_backend_ids();
-    BACKEND_INFO_TEST_SUCCESS(::onnxBitfield, ids, CAPABILITIES)
-    BACKEND_INFO_TEST_FALLBACK(::onnxBitfield, ids, CAPABILITIES)
-    BACKEND_INFO_TEST_FALLBACK_NULL(ids, CAPABILITIES)
-    BACKEND_INFO_TEST_INVALID_POINTER(ids, CAPABILITIES)
+    BACKEND_INFO_TEST_SUCCESS(::onnxBitfield, ids, CAPABILITIES);
+    BACKEND_INFO_TEST_FALLBACK(::onnxBitfield, ids, CAPABILITIES);
+    BACKEND_INFO_TEST_FALLBACK_NULL(ids, CAPABILITIES);
+    BACKEND_INFO_TEST_INVALID_POINTER(ids, CAPABILITIES);
     BACKEND_INFO_TEST_RESULT(::onnxBitfield,
                              ids,
                              CAPABILITIES,
                              [](::onnxBitfield info_value, std::size_t info_value_size) {
                                  return (info_value == ONNXIFI_CAPABILITY_THREAD_SAFE) &&
                                         (info_value_size == sizeof(::onnxBitfield));
-                             })
+                             });
 }
 
 TEST(onnxifi, get_backend_info_graph_init_properties)
 {
     auto ids = get_backend_ids();
-    BACKEND_INFO_TEST_SUCCESS(::onnxBitfield, ids, GRAPH_INIT_PROPERTIES)
-    BACKEND_INFO_TEST_FALLBACK(::onnxBitfield, ids, GRAPH_INIT_PROPERTIES)
-    BACKEND_INFO_TEST_FALLBACK_NULL(ids, GRAPH_INIT_PROPERTIES)
-    BACKEND_INFO_TEST_INVALID_POINTER(ids, GRAPH_INIT_PROPERTIES)
+    BACKEND_INFO_TEST_SUCCESS(::onnxBitfield, ids, GRAPH_INIT_PROPERTIES);
+    BACKEND_INFO_TEST_FALLBACK(::onnxBitfield, ids, GRAPH_INIT_PROPERTIES);
+    BACKEND_INFO_TEST_FALLBACK_NULL(ids, GRAPH_INIT_PROPERTIES);
+    BACKEND_INFO_TEST_INVALID_POINTER(ids, GRAPH_INIT_PROPERTIES);
 }
 
 TEST(onnxifi, get_backend_info_synchronization_types)
 {
     auto ids = get_backend_ids();
-    BACKEND_INFO_TEST_SUCCESS(::onnxBitfield, ids, SYNCHRONIZATION_TYPES)
-    BACKEND_INFO_TEST_FALLBACK(::onnxBitfield, ids, SYNCHRONIZATION_TYPES)
-    BACKEND_INFO_TEST_FALLBACK_NULL(ids, SYNCHRONIZATION_TYPES)
-    BACKEND_INFO_TEST_INVALID_POINTER(ids, SYNCHRONIZATION_TYPES)
+    BACKEND_INFO_TEST_SUCCESS(::onnxBitfield, ids, SYNCHRONIZATION_TYPES);
+    BACKEND_INFO_TEST_FALLBACK(::onnxBitfield, ids, SYNCHRONIZATION_TYPES);
+    BACKEND_INFO_TEST_FALLBACK_NULL(ids, SYNCHRONIZATION_TYPES);
+    BACKEND_INFO_TEST_INVALID_POINTER(ids, SYNCHRONIZATION_TYPES);
 }
 
 TEST(onnxifi, get_backend_info_memory_size)
 {
     auto ids = get_backend_ids();
-    BACKEND_INFO_TEST_SUCCESS(uint64_t, ids, MEMORY_SIZE)
-    BACKEND_INFO_TEST_FALLBACK(uint64_t, ids, MEMORY_SIZE)
-    BACKEND_INFO_TEST_FALLBACK_NULL(ids, MEMORY_SIZE)
-    BACKEND_INFO_TEST_INVALID_POINTER(ids, MEMORY_SIZE)
+    BACKEND_INFO_TEST_SUCCESS(uint64_t, ids, MEMORY_SIZE);
+    BACKEND_INFO_TEST_FALLBACK(uint64_t, ids, MEMORY_SIZE);
+    BACKEND_INFO_TEST_FALLBACK_NULL(ids, MEMORY_SIZE);
+    BACKEND_INFO_TEST_INVALID_POINTER(ids, MEMORY_SIZE);
 }
 
 TEST(onnxifi, get_backend_info_max_graph_size)
 {
     auto ids = get_backend_ids();
-    BACKEND_INFO_TEST_SUCCESS(uint64_t, ids, MAX_GRAPH_SIZE)
-    BACKEND_INFO_TEST_FALLBACK(uint64_t, ids, MAX_GRAPH_SIZE)
-    BACKEND_INFO_TEST_FALLBACK_NULL(ids, MAX_GRAPH_SIZE)
-    BACKEND_INFO_TEST_INVALID_POINTER(ids, MAX_GRAPH_SIZE)
+    BACKEND_INFO_TEST_SUCCESS(uint64_t, ids, MAX_GRAPH_SIZE);
+    BACKEND_INFO_TEST_FALLBACK(uint64_t, ids, MAX_GRAPH_SIZE);
+    BACKEND_INFO_TEST_FALLBACK_NULL(ids, MAX_GRAPH_SIZE);
+    BACKEND_INFO_TEST_INVALID_POINTER(ids, MAX_GRAPH_SIZE);
 }
 
 TEST(onnxifi, get_backend_info_max_graph_count)
 {
     auto ids = get_backend_ids();
-    BACKEND_INFO_TEST_SUCCESS(uint64_t, ids, MAX_GRAPH_COUNT)
-    BACKEND_INFO_TEST_FALLBACK(uint64_t, ids, MAX_GRAPH_COUNT)
-    BACKEND_INFO_TEST_FALLBACK_NULL(ids, MAX_GRAPH_COUNT)
-    BACKEND_INFO_TEST_INVALID_POINTER(ids, MAX_GRAPH_COUNT)
+    BACKEND_INFO_TEST_SUCCESS(uint64_t, ids, MAX_GRAPH_COUNT);
+    BACKEND_INFO_TEST_FALLBACK(uint64_t, ids, MAX_GRAPH_COUNT);
+    BACKEND_INFO_TEST_FALLBACK_NULL(ids, MAX_GRAPH_COUNT);
+    BACKEND_INFO_TEST_INVALID_POINTER(ids, MAX_GRAPH_COUNT);
 }
 
 // ==================================================[ onnxInitBackend ]=======
@@ -610,5 +611,133 @@ TEST(onnxifi, init_backend_invalid_pointer)
     {
         ::onnxStatus status{::onnxInitBackend(id, nullptr, nullptr)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
+    }
+}
+
+// ====================================================[ onnxInitGraph ]=======
+
+namespace
+{
+    std::vector<::onnxBackend> get_initialized_backends()
+    {
+        auto backend_ids = get_backend_ids();
+        std::vector<::onnxBackend> result{};
+        for (const auto& backend_id : backend_ids)
+        {
+            ::onnxBackend backend;
+            ::onnxStatus status{::onnxInitBackend(backend_id, nullptr, &backend)};
+            if (status != ONNXIFI_STATUS_SUCCESS)
+            {
+                throw error::status{status};
+            }
+            result.push_back(backend);
+        }
+        return result;
+    }
+
+    std::vector<char> load_model()
+    {
+        std::ifstream sin{SERIALIZED_ZOO "/onnx/add_abc.onnx", std::ios::ate | std::ios::binary};
+        if (!sin.is_open())
+        {
+            throw std::runtime_error{"unable to load the model"};
+        }
+        std::ifstream::pos_type size{sin.tellg()};
+        std::vector<char> model(size);
+        sin.seekg(0, std::ios::beg);
+        sin.read(model.data(), size);
+        return model;
+    }
+
+} // namespace <anonymous>
+
+TEST(onnxifi, init_graph)
+{
+    auto model = load_model();
+    auto backends = get_initialized_backends();
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        EXPECT_TRUE(
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph) ==
+            ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+// ONNXIFI_STATUS_INVALID_BACKEND
+// The function call failed because backend is not an ONNXIFI backend handle.
+
+TEST(onnxifi, init_graph_invalid_backend)
+{
+    auto model = load_model();
+    ::onnxGraph graph;
+    ::onnxStatus status{
+        ::onnxInitGraph(nullptr, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+    EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_BACKEND);
+    EXPECT_TRUE(graph == nullptr);
+}
+
+// ONNXIFI_STATUS_INVALID_POINTER
+// The function call failed because onnxModel or graph pointer is NULL,
+// or weightDescriptors pointer is NULL while weightsCount is non-zero.
+
+TEST(onnxifi, init_graph_invalid_pointer)
+{
+    auto model = load_model();
+    auto backends = get_initialized_backends();
+
+    ::onnxGraph graph;
+    for (const auto& backend : backends)
+    {
+        // onnxModel = nullptr
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), nullptr, 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
+        EXPECT_TRUE(graph == nullptr);
+
+        // graph = nullptr
+        status = ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, nullptr);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
+
+        // weightDescriptors == nullptr && weightsCount != 0
+        status = ::onnxInitGraph(backend, nullptr, model.size(), nullptr, 100, nullptr, &graph);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
+        EXPECT_TRUE(graph == nullptr);
+    }
+}
+
+// ONNXIFI_STATUS_INVALID_SIZE
+// The function call failed because onnxModelSize is 0.
+
+TEST(onnxifi, init_graph_invalid_size)
+{
+    auto model = load_model();
+    auto backends = get_initialized_backends();
+
+    ::onnxGraph graph;
+    for (const auto& backend : backends)
+    {
+        ::onnxStatus status{::onnxInitGraph(backend, nullptr, 0, model.data(), 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_SIZE);
+        EXPECT_TRUE(graph == nullptr);
+    }
+}
+
+// ONNXIFI_STATUS_INVALID_PROTOBUF
+// The function call failed because it couldn't parse the serialized protobuf
+// as an ONNX ModelProto message.
+
+TEST(onnxifi, init_graph_invalid_protobuf)
+{
+    auto backends = get_initialized_backends();
+    std::string model{"invalid protobuf data"};
+
+    ::onnxGraph graph;
+    for (const auto& backend : backends)
+    {
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_PROTOBUF);
+        EXPECT_TRUE(graph == nullptr);
     }
 }
