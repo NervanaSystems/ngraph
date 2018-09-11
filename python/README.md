@@ -72,7 +72,7 @@ deleting the `.tox` directory:
     $ rm -rf .tox
     $ tox
 
-[build instructions](http://ngraph.nervanasys.com/docs/latest/buildlb.html)
+[build instructions]:http://ngraph.nervanasys.com/docs/latest/buildlb.html
 [Tox]:https://tox.readthedocs.io/
 [virtualenv]:https://virtualenv.pypa.io/
 [pytest]:https://docs.pytest.org/
