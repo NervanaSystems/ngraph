@@ -175,28 +175,7 @@ map<string, string> runtime::BackendManager::get_registered_device_map()
         string backend_name;
         if (is_backend_name(name, backend_name))
         {
-            DL_HANDLE handle;
-#ifdef WIN32
-            handle = LoadLibrary(file.c_str());
-#else
-            handle = dlopen(file.c_str(), RTLD_LAZY | RTLD_LOCAL);
-#endif
-            if (handle)
-            {
-                if (DLSYM(handle, "new_backend") && DLSYM(handle, "delete_backend"))
-                {
-                    function<const char*()> get_ngraph_version_string =
-                        reinterpret_cast<const char* (*)()>(
-                            DLSYM(handle, "get_ngraph_version_string"));
-                    if (get_ngraph_version_string &&
-                        get_ngraph_version_string() == string(NGRAPH_VERSION))
-                    {
-                        rc.insert({to_upper(backend_name), file});
-                    }
-                }
-
-                CLOSE_LIBRARY(handle);
-            }
+            rc.insert({to_upper(backend_name), file});
         }
     };
     file_util::iterate_files(my_directory, f, false, true);
