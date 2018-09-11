@@ -37,6 +37,11 @@ add_library(onnx_import STATIC
         op/average_pool.hpp
         op/batch_norm.cpp
         op/batch_norm.hpp
+        op/cast.cpp
+        op/cast.hpp
+        op/ceil.hpp
+        op/clip.cpp
+        op/clip.hpp
         op/concat.cpp
         op/concat.hpp
         op/constant.cpp
@@ -45,12 +50,19 @@ add_library(onnx_import STATIC
         op/conv.hpp
         op/div.hpp
         op/equal.hpp
+        op/exp.hpp
         op/flatten.cpp
         op/flatten.hpp
+        op/floor.hpp
         op/gemm.cpp
         op/gemm.hpp
         op/greater.hpp
+        op/hard_sigmoid.cpp
+        op/hard_sigmoid.hpp
+        op/identity.hpp
         op/less.hpp
+        op/log.hpp
+        op/log_softmax.hpp
         op/matmul.hpp
         op/max_pool.cpp
         op/max_pool.hpp
@@ -59,9 +71,12 @@ add_library(onnx_import STATIC
         op/mean.hpp
         op/min.hpp
         op/mul.hpp
+        op/neg.hpp
         op/not.hpp
         op/or.hpp
         op/pow.hpp
+        op/reciprocal.cpp
+        op/reciprocal.hpp
         op/reduce.cpp
         op/reduce.hpp
         op/relu.hpp
@@ -71,8 +86,13 @@ add_library(onnx_import STATIC
         op/shape.hpp
         op/softmax.cpp
         op/softmax.hpp
+        op/softplus.cpp
+        op/softplus.hpp
+        op/softsign.cpp
+        op/softsign.hpp
         op/split.cpp
         op/split.hpp
+        op/sqrt.hpp
         op/sub.hpp
         op/sum.hpp
         op/unsqueeze.cpp
