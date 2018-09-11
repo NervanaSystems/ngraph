@@ -15,11 +15,17 @@
 //*****************************************************************************
 
 #include <cstring>
+#include <map>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include <gtest/gtest.h>
 #include <onnxifi.h>
 
+#include "ngraph/file_util.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
+#include "util/ndarray.hpp"
 
 // ===============================================[ onnxGetBackendIDs ] =======
 
@@ -558,4 +564,346 @@ TEST(onnxifi, get_backend_info_max_graph_count)
     BACKEND_INFO_TEST_FALLBACK(uint64_t, ids, MAX_GRAPH_COUNT)
     BACKEND_INFO_TEST_FALLBACK_NULL(ids, MAX_GRAPH_COUNT)
     BACKEND_INFO_TEST_INVALID_POINTER(ids, MAX_GRAPH_COUNT)
+}
+
+// =================================================[ onnxInitBackend ] =======
+
+namespace
+{
+    std::map<::onnxBackendID, ::onnxBackend> get_initialized_backends()
+    {
+        std::map<::onnxBackendID, ::onnxBackend> initialized_backends;
+        auto backend_ids = get_backend_ids();
+        std::vector<::onnxBackend> backends(backend_ids.size());
+        // first initialize all available backends
+        for (std::size_t i = 0; i < backend_ids.size(); ++i)
+        {
+            ::onnxStatus status{::onnxInitBackend(backend_ids.at(i), nullptr, &backends.at(i))};
+            if (status != ONNXIFI_STATUS_SUCCESS)
+            {
+                throw error::status{status};
+            }
+            initialized_backends.emplace(std::make_pair(backend_ids.at(i), backends.at(i)));
+        }
+        return initialized_backends;
+    }
+
+} // anonymous
+
+TEST(onnxifi, init_backend)
+{
+    auto backend_ids = get_backend_ids();
+    for (const auto& backend_id : backend_ids)
+    {
+        ::onnxBackend backend;
+        ::onnxStatus status{::onnxInitBackend(backend_id, nullptr, &backend)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+// ONNXIFI_STATUS_INVALID_ID The function call failed because backendID
+//                                   is not an ONNXIFI backend ID.
+TEST(onnxifi, init_backend_invalid_id)
+{
+    ::onnxBackend backend;
+    ::onnxStatus status{::onnxInitBackend(0, nullptr, &backend)};
+    EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_ID);
+    EXPECT_TRUE(backend == nullptr);
+}
+
+// ONNXIFI_STATUS_INVALID_POINTER The function call failed because
+//                                backend pointer is NULL.
+TEST(onnxifi, init_backend_invalid_pointer)
+{
+    auto backend_ids = get_backend_ids();
+    ::onnxStatus status{::onnxInitBackend(backend_ids.at(0), nullptr, nullptr)};
+    EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
+}
+
+// ONNXIFI_STATUS_BACKEND_UNAVAILABLE The function call failed because
+//                                    the backend was disconnected or
+//                                    uninstalled from the system.
+TEST(onnxifi, DISABLED_init_backend_backend_unavaiable)
+{
+    auto backends = get_initialized_backends();
+    // release all backends without releasing its ids
+    for (const auto& backend : backends)
+    {
+        ::onnxStatus status{::onnxReleaseBackend(backend.second)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+    // now check whether we may initialize them back.
+    for (auto& backend : backends)
+    {
+        ::onnxStatus status{::onnxInitBackend(backend.first, nullptr, &backend.second)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_BACKEND_UNAVAILABLE);
+        EXPECT_TRUE(backend.second == nullptr);
+    }
+}
+// ===================================================[ onnxInitGraph ] =======
+
+TEST(onnxifi, init_graph)
+{
+    auto backends = get_initialized_backends();
+    std::string serialized_model =
+        file_util::read_file_to_string(file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc.onnx"));
+
+    uint32_t weights_count{0};
+    ::onnxGraph graph;
+
+    for (const auto& backend : backends)
+    {
+        ::onnxStatus status{::onnxInitGraph(backend.second,
+                                            nullptr,
+                                            serialized_model.size(),
+                                            serialized_model.data(),
+                                            weights_count,
+                                            nullptr,
+                                            &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+// ONNXIFI_STATUS_INVALID_BACKEND The function call failed because
+//                                backend is not an ONNXIFI backend
+//                                handle.
+TEST(onnxifi, init_graph_invalid_backend)
+{
+    std::string serialized_model =
+        file_util::read_file_to_string(file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc.onnx"));
+
+    uint32_t weights_count{0};
+    ::onnxGraph graph;
+    ::onnxStatus status{::onnxInitGraph(0,
+                                        nullptr,
+                                        serialized_model.size(),
+                                        serialized_model.data(),
+                                        weights_count,
+                                        nullptr,
+                                        &graph)};
+    EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_BACKEND);
+    EXPECT_TRUE(graph == nullptr);
+}
+
+// ONNXIFI_STATUS_INVALID_POINTER The function call failed because
+//                                onnxModel or graph pointer is NULL, or
+//                                weightDescriptors pointer is NULL
+//                                while weightsCount is non-zero.
+TEST(onnxifi, init_graph_invalid_pointer)
+{
+    auto backends = get_initialized_backends();
+    std::string serialized_model =
+        file_util::read_file_to_string(file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc.onnx"));
+
+    uint32_t weights_count{0};
+    ::onnxGraph graph;
+    for (const auto& backend : backends)
+    {
+        weights_count = 0;
+        // onnxModel = nullptr
+        ::onnxStatus status{::onnxInitGraph(backend.second,
+                                            nullptr,
+                                            serialized_model.size(),
+                                            nullptr /*onnxModel*/,
+                                            weights_count,
+                                            nullptr,
+                                            &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
+        EXPECT_TRUE(graph == nullptr);
+
+        // graph = nullptr
+        ::onnxStatus status{::onnxInitGraph(backend.second,
+                                            nullptr,
+                                            serialized_model.size(),
+                                            serialized_model.data(),
+                                            weights_count,
+                                            nullptr,
+                                            nullptr /*graph*/)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
+
+        // weightDescriptors == nullptr && weightsCount != 0
+        weights_count = 100;
+        ::onnxStatus status{::onnxInitGraph(backend.second,
+                                            nullptr,
+                                            serialized_model.size(),
+                                            nullptr,
+                                            weights_count,
+                                            nullptr /*weightDescriptors*/,
+                                            &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
+        EXPECT_TRUE(graph == nullptr);
+    }
+}
+
+// ONNXIFI_STATUS_INVALID_SIZE The function call failed because
+//                             onnxModelSize is 0.
+TEST(onnxifi, init_graph_invalid_size)
+{
+    auto backends = get_initialized_backends();
+    std::string serialized_model =
+        file_util::read_file_to_string(file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc.onnx"));
+
+    uint32_t weights_count{0};
+    ::onnxGraph graph;
+    for (const auto& backend : backends)
+    {
+        ::onnxStatus status{::onnxInitGraph(backend.second,
+                                            nullptr,
+                                            0 /*onnxModelSize*/,
+                                            serialized_model.data(),
+                                            weights_count,
+                                            nullptr,
+                                            &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_SIZE);
+        EXPECT_TRUE(graph == nullptr);
+    }
+}
+
+// ONNXIFI_STATUS_INVALID_PROTOBUF The function call failed because it
+//                                 couldn't parse the serialized
+//                                 protobuf as an ONNX ModelProto
+//                                 message.
+TEST(onnxifi, init_graph_invalid_protobuf)
+{
+    auto backends = get_initialized_backends();
+    std::string serialized_model{"invalid protobuf string"};
+
+    uint32_t weights_count{0};
+    ::onnxGraph graph;
+    for (const auto& backend : backends)
+    {
+        ::onnxStatus status{::onnxInitGraph(backend.second,
+                                            nullptr,
+                                            serialized_model.size(),
+                                            serialized_model.data(),
+                                            weights_count,
+                                            nullptr,
+                                            &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_PROTOBUF);
+        EXPECT_TRUE(graph == nullptr);
+    }
+}
+
+namespace
+{
+    using ModelWithTensors =
+        std::tuple<std::string, std::vector<::onnxTensorDescriptorV1>, uint32_t>;
+
+    ModelWithTensors get_default_model_with_tensor_descriptors()
+    {
+        std::string serialized_model = file_util::read_file_to_string(
+            file_util::path_join(SERIALIZED_ZOO, "onnx/conv_with_strides_padding_bias.onnx"));
+
+        // ---- input ----
+        // uint32_t weights_count{35};
+        std::vector<uint64_t> input_data_shape{1, 1, 7, 5};
+        auto input_data{test::NDArray<float, 4>({{{{0, 1, 2, 3, 4},
+                                                   {5, 6, 7, 8, 9},
+                                                   {10, 11, 12, 13, 14},
+                                                   {15, 16, 17, 18, 19},
+                                                   {20, 21, 22, 23, 24},
+                                                   {25, 26, 27, 28, 29},
+                                                   {30, 31, 32, 33, 34}}}})
+                            .get_vector()};
+        ::onnxTensorDescriptorV1 input_tensor_descriptor{
+            ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1, // tag
+            "A",                              // name - correspond to ValueInfoProto.name in one of
+                                              // ModelProto.graph.input or ModelProto.graph.output
+            ONNXIFI_DATATYPE_FLOAT32,         // dataType
+            ONNXIFI_MEMORY_TYPE_CPU,          // memoryType
+            4,                                // dimensions
+            input_data_shape.data(),          // shape
+            reinterpret_cast<::onnxPointer>(input_data.data()) // buffer
+        };
+
+        // ---- weights ----
+        // uint32_t weights_count{9};
+        std::vector<uint64_t> weights_data_shape{1, 1, 3, 3};
+        auto weights_data{
+            test::NDArray<float, 4>({{{1, 1, 1}, {1, 1, 1}, {1, 1, 1}}}).get_vector()};
+        ::onnxTensorDescriptorV1 weights_tensor_descriptor{
+            ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1, // tag
+            "B",                              // name - correspond to ValueInfoProto.name in one of
+                                              // ModelProto.graph.input or ModelProto.graph.output
+            ONNXIFI_DATATYPE_FLOAT32,         // dataType
+            ONNXIFI_MEMORY_TYPE_CPU,          // memoryType
+            4,                                // dimensions
+            weights_data_shape.data(),        // shape
+            reinterpret_cast<::onnxPointer>(weights_data.data()) // buffer
+        };
+
+        // ---- bias ----
+        // uint32_t weights_count{1};
+        std::vector<uint64_t> bias_data_shape{1};
+        std::vector<float> bias_data{2};
+        ::onnxTensorDescriptorV1 bias_tensor_descriptor{
+            ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1, // tag
+            "C",                              // name - correspond to ValueInfoProto.name in one of
+                                              // ModelProto.graph.input or ModelProto.graph.output
+            ONNXIFI_DATATYPE_FLOAT32,         // dataType
+            ONNXIFI_MEMORY_TYPE_CPU,          // memoryType
+            0,                                // dimensions
+            bias_data_shape.data(),           // shape
+            reinterpret_cast<::onnxPointer>(bias_data.data()) // buffer
+        };
+
+        std::vector<::onnxTensorDescriptorV1> tensor_descriptors{
+            input_tensor_descriptor, weights_tensor_descriptor, bias_tensor_descriptor};
+        uint32_t weights_count{input_data.size() + weights_data.size() + bias_data.size()};
+        return std::make_tuple(serialized_model, tensor_descriptors, weights_count);
+    }
+} // namespace  anonymous
+
+TEST(onnxifi, init_graph_model_with_tensor_descriptors)
+{
+    auto backends = get_initialized_backends();
+    auto model_with_tensors = get_default_model_with_tensor_descriptors();
+
+    auto serialized_model = std::get<0>(model_with_tensors);
+    auto tensor_descriptors = std::get<1>(model_with_tensors);
+    uint32_t weights_count{std::get<2>(model_with_tensors)};
+
+    ::onnxGraph graph;
+    for (const auto& backend : backends)
+    {
+        ::onnxStatus status{::onnxInitGraph(backend.second,
+                                            nullptr,
+                                            serialized_model.size(),
+                                            serialized_model.data(),
+                                            weights_count,
+                                            tensor_descriptors.data(),
+                                            &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+// ONNXIFI_STATUS_BACKEND_UNAVAILABLE The function call failed because
+//                                    the backend was disconnected or
+//                                    uninstalled from the system.
+TEST(onnxifi, DISABLED_init_graph_backend_unavailable)
+{
+    auto backends = get_initialized_backends();
+    // simulate disconnected backend
+    for (const auto& backend : backends)
+    {
+        ::onnxStatus status{::onnxReleaseBackend(backend.second)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+    std::string serialized_model =
+        file_util::read_file_to_string(file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc.onnx"));
+
+    uint32_t weights_count{0};
+    ::onnxGraph graph;
+    for (const auto& backend : backends)
+    {
+        ::onnxStatus status{::onnxInitGraph(backend.second,
+                                            nullptr,
+                                            serialized_model.size(),
+                                            serialized_model.data(),
+                                            weights_count,
+                                            nullptr,
+                                            &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_BACKEND_UNAVAILABLE);
+        EXPECT_TRUE(graph == nullptr);
+    }
 }
