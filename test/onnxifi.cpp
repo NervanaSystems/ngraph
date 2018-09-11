@@ -559,3 +559,56 @@ TEST(onnxifi, get_backend_info_max_graph_count)
     BACKEND_INFO_TEST_FALLBACK_NULL(ids, MAX_GRAPH_COUNT)
     BACKEND_INFO_TEST_INVALID_POINTER(ids, MAX_GRAPH_COUNT)
 }
+
+// ==================================================[ onnxInitBackend ]=======
+
+TEST(onnxifi, init_backend)
+{
+    auto backend_ids = get_backend_ids();
+    ::onnxBackend backend;
+    for (const auto& backend_id : backend_ids)
+    {
+        ::onnxStatus status{::onnxInitBackend(backend_id, nullptr, &backend)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+TEST(onnxifi, init_backend_double_init)
+{
+    auto backend_ids = get_backend_ids();
+    ::onnxStatus status;
+    for (const auto& backend_id : backend_ids)
+    {
+        ::onnxBackend backend_a;
+        status = ::onnxInitBackend(backend_id, nullptr, &backend_a);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+        ::onnxBackend backend_b;
+        status = ::onnxInitBackend(backend_id, nullptr, &backend_b);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+        EXPECT_TRUE(backend_a == backend_b);
+    }
+}
+
+// ONNXIFI_STATUS_INVALID_ID
+// The function call failed because backendID is not an ONNXIFI backend ID.
+
+TEST(onnxifi, init_backend_invalid_id)
+{
+    ::onnxBackend backend;
+    ::onnxStatus status{::onnxInitBackend(nullptr, nullptr, &backend)};
+    EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_ID);
+    EXPECT_TRUE(backend == nullptr);
+}
+
+// ONNXIFI_STATUS_INVALID_POINTER
+// The function call failed because backend pointer is NULL.
+
+TEST(onnxifi, init_backend_invalid_pointer)
+{
+    auto backend_ids = get_backend_ids();
+    for (const auto& id : backend_ids)
+    {
+        ::onnxStatus status{::onnxInitBackend(id, nullptr, nullptr)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
+    }
+}
