@@ -21,6 +21,9 @@
 #include <onnxifi.h>
 
 #include "backend_manager.hpp"
+#include "exceptions.hpp"
+
+using namespace ngraph;
 
 extern "C" {
 
@@ -29,20 +32,16 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
 {
     try
     {
-        ngraph::onnxifi::BackendManager::get_backend_ids(backendIDs, numBackends);
+        onnxifi::BackendManager::get_backend_ids(backendIDs, numBackends);
         return ONNXIFI_STATUS_SUCCESS;
     }
-    catch (const std::invalid_argument&)
+    catch (const onnxifi::status::runtime& e)
     {
-        return ONNXIFI_STATUS_INVALID_POINTER;
+        return e.get_status();
     }
     catch (const std::bad_alloc&)
     {
         return ONNXIFI_STATUS_NO_SYSTEM_MEMORY;
-    }
-    catch (const std::length_error&)
-    {
-        return ONNXIFI_STATUS_FALLBACK;
     }
     catch (...)
     {
@@ -59,7 +58,27 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxGetBackendInfo(
     onnxBackendID backendID, onnxBackendInfo infoType, void* infoValue, std::size_t* infoValueSize)
 {
-    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
+    try
+    {
+        onnxifi::BackendManager::get_backend_info(backendID, infoType, infoValue, infoValueSize);
+        return ONNXIFI_STATUS_SUCCESS;
+    }
+    catch (const onnxifi::status::runtime& e)
+    {
+        return e.get_status();
+    }
+    catch (const std::bad_alloc&)
+    {
+        return ONNXIFI_STATUS_NO_SYSTEM_MEMORY;
+    }
+    catch (const std::out_of_range&)
+    {
+        return ONNXIFI_STATUS_INVALID_ID;
+    }
+    catch (...)
+    {
+        return ONNXIFI_STATUS_INTERNAL_ERROR;
+    }
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxGetBackendCompatibility(

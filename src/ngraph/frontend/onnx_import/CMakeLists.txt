@@ -14,6 +14,8 @@
 # limitations under the License.
 # ******************************************************************************
 
+set(ONNX_OPSET_VERSION 7 CACHE INTERNAL "")
+
 add_library(onnx_import_interface OBJECT
         onnx.cpp
         onnx.hpp)
@@ -88,6 +90,8 @@ add_library(onnx_import STATIC
         utils/reshape.hpp
         utils/variadic.hpp)
 
+set(ONNX_IMPORT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
+
 add_dependencies(onnx_import onnx_import_interface)
 
 if (NOT NGRAPH_USE_SYSTEM_PROTOBUF)
@@ -96,7 +100,7 @@ if (NOT NGRAPH_USE_SYSTEM_PROTOBUF)
 endif()
 
 set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_include_directories(onnx_import PUBLIC ${CMAKE_CURRENT_BINARY_DIR} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${NGRAPH_INCLUDE_PATH} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
+target_include_directories(onnx_import PUBLIC ${CMAKE_CURRENT_BINARY_DIR} PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
 target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES} ${ONNX_PROTO_LIBRARY})
 
 set_property(TARGET onnx_import_interface PROPERTY POSITION_INDEPENDENT_CODE ON)

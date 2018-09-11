@@ -14,8 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cstdlib>   // std::size_t, std::uintptr_t
-#include <stdexcept> // std::invalid_agrument, std::out_of_rage
+#include <cstdlib> // std::size_t, std::uintptr_t
 
 #include <onnxifi.h>
 
@@ -23,6 +22,7 @@
 
 #include "backend.hpp"
 #include "backend_manager.hpp"
+#include "exceptions.hpp"
 
 namespace ngraph
 {
@@ -37,36 +37,91 @@ namespace ngraph
             // onnxGetBackendIDs() may result in different number of backends.
             // For now, we don't do the re-discovery.
             auto registered_backends = runtime::BackendManager::get_registered_backends();
-            for (const auto& type : registered_backends)
+            for (auto& type : registered_backends)
             {
-                m_registered_backends.emplace(reinterpret_cast<std::uintptr_t>(&type),
+                m_registered_backends.emplace(reinterpret_cast<::onnxBackendID>(&type),
                                               Backend{type});
             }
         }
 
-        void BackendManager::get_registered_ids(::onnxBackendID* backend_ids,
-                                                std::size_t* count) const
+        void BackendManager::get_ids(::onnxBackendID* backend_ids, std::size_t* count) const
         {
             if (count == nullptr)
             {
-                throw std::invalid_argument{"null pointer"};
+                throw status::null_pointer{};
             }
             std::size_t requested{*count};
             *count = m_registered_backends.size();
             if ((requested < *count) || (backend_ids == nullptr))
             {
-                throw std::length_error{"not enough space"};
+                throw status::fallback{};
             }
             {
                 std::lock_guard<decltype(m_mutex)> lock{m_mutex};
                 std::transform(std::begin(m_registered_backends),
                                std::end(m_registered_backends),
                                backend_ids,
-                               [](const std::map<std::uintptr_t, Backend>::value_type& pair)
-                                   -> ::onnxBackendID {
-                                   return reinterpret_cast<::onnxBackendID>(pair.first);
+                               [](const std::map<::onnxBackendID, Backend>::value_type& pair) {
+                                   return pair.first;
                                });
             }
         }
-    }
-}
+
+        void BackendManager::get_backend_info(::onnxBackendID backend_id,
+                                              ::onnxBackendInfo info_type,
+                                              void* info_value,
+                                              std::size_t* info_value_size)
+        {
+            const auto& backend = instance().get_backend_by_id(backend_id);
+            switch (info_type)
+            {
+            case ONNXIFI_BACKEND_ONNXIFI_VERSION:
+                backend.get_onnxifi_version(info_value, info_value_size);
+                break;
+            case ONNXIFI_BACKEND_NAME: backend.get_name(info_value, info_value_size); break;
+            case ONNXIFI_BACKEND_VENDOR: backend.get_vendor(info_value, info_value_size); break;
+            case ONNXIFI_BACKEND_VERSION: backend.get_version(info_value, info_value_size); break;
+            case ONNXIFI_BACKEND_EXTENSIONS:
+                backend.get_extensions(info_value, info_value_size);
+                break;
+            case ONNXIFI_BACKEND_DEVICE: backend.get_device(info_value, info_value_size); break;
+            case ONNXIFI_BACKEND_DEVICE_TYPE:
+                backend.get_device_type(info_value, info_value_size);
+                break;
+            case ONNXIFI_BACKEND_ONNX_IR_VERSION:
+                backend.get_onnx_ir_version(info_value, info_value_size);
+                break;
+            case ONNXIFI_BACKEND_OPSET_VERSION:
+                backend.get_opset_version(info_value, info_value_size);
+                break;
+            case ONNXIFI_BACKEND_CAPABILITIES:
+                backend.get_capabilities(info_value, info_value_size);
+                break;
+            case ONNXIFI_BACKEND_INIT_PROPERTIES:
+                backend.get_init_properties(info_value, info_value_size);
+                break;
+            case ONNXIFI_BACKEND_MEMORY_TYPES:
+                backend.get_memory_types(info_value, info_value_size);
+                break;
+            case ONNXIFI_BACKEND_GRAPH_INIT_PROPERTIES:
+                backend.get_graph_init_properties(info_value, info_value_size);
+                break;
+            case ONNXIFI_BACKEND_SYNCHRONIZATION_TYPES:
+                backend.get_synchronization_types(info_value, info_value_size);
+                break;
+            case ONNXIFI_BACKEND_MEMORY_SIZE:
+                backend.get_memory_size(info_value, info_value_size);
+                break;
+            case ONNXIFI_BACKEND_MAX_GRAPH_SIZE:
+                backend.get_max_graph_size(info_value, info_value_size);
+                break;
+            case ONNXIFI_BACKEND_MAX_GRAPH_COUNT:
+                backend.get_max_graph_count(info_value, info_value_size);
+                break;
+            default: throw status::unsupported_attribute{};
+            }
+        }
+
+    } // namespace onnxifi
+
+} // namespace ngraph
