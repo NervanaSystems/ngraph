@@ -19,6 +19,7 @@
 #include "ngraph/runtime/cpu/kernel/convolution.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
@@ -202,6 +203,36 @@ namespace ngraph
                 else
                 {
                     throw ngraph_error("ConvolutionBiasAdd is only supported with MKLDNN kernel.");
+                }
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::ConvolutionAdd)
+            {
+                auto& functors = external_function->get_functors();
+
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto conv_index = mkldnn_emitter->build_convolution<ngraph::op::ConvolutionAdd>(
+                        node, args, out);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+
+                    auto functor = [&, conv_index](CPURuntimeContext* ctx) {
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                    };
+                    functors.emplace_back(functor);
+                }
+                else
+                {
+                    throw ngraph_error("ConvolutionAdd is only supported with MKLDNN kernel.");
                 }
             }
 
@@ -516,6 +547,7 @@ namespace ngraph
             REGISTER_OP_BUILDER(ConvolutionBackpropFilters);
             REGISTER_OP_BUILDER(ConvolutionBiasBackpropFiltersBias);
             REGISTER_OP_BUILDER(GroupConvolution);
+            REGISTER_OP_BUILDER(ConvolutionAdd);
         }
     }
 }
