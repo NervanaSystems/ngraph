@@ -40,6 +40,7 @@
 #include "op/not.hpp"
 #include "op/or.hpp"
 #include "op/pow.hpp"
+#include "op/reduce.hpp"
 #include "op/relu.hpp"
 #include "op/reshape.hpp"
 #include "op/softmax.hpp"
@@ -116,6 +117,19 @@ namespace ngraph
                     m_map.emplace("Not", std::bind(op::logical_not, std::placeholders::_1));
                     m_map.emplace("Or", std::bind(op::logical_or, std::placeholders::_1));
                     m_map.emplace("Pow", std::bind(op::pow, std::placeholders::_1));
+                    m_map.emplace("ReduceLogSum",
+                                  std::bind(op::reduce_log_sum, std::placeholders::_1));
+                    m_map.emplace("ReduceLogSumExp",
+                                  std::bind(op::reduce_log_sum_exp, std::placeholders::_1));
+                    m_map.emplace("ReduceL1", std::bind(op::reduce_l1, std::placeholders::_1));
+                    m_map.emplace("ReduceL2", std::bind(op::reduce_l2, std::placeholders::_1));
+                    m_map.emplace("ReduceMax", std::bind(op::reduce_max, std::placeholders::_1));
+                    m_map.emplace("ReduceMean", std::bind(op::reduce_mean, std::placeholders::_1));
+                    m_map.emplace("ReduceMin", std::bind(op::reduce_min, std::placeholders::_1));
+                    m_map.emplace("ReduceProd", std::bind(op::reduce_prod, std::placeholders::_1));
+                    m_map.emplace("ReduceSum", std::bind(op::reduce_sum, std::placeholders::_1));
+                    m_map.emplace("ReduceSumSquare",
+                                  std::bind(op::reduce_sum_square, std::placeholders::_1));
                     m_map.emplace("Relu", std::bind(op::relu, std::placeholders::_1));
                     m_map.emplace("Reshape", std::bind(op::reshape, std::placeholders::_1));
                     m_map.emplace("Softmax", std::bind(op::softmax, std::placeholders::_1));
