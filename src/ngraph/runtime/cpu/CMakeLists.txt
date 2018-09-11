@@ -89,6 +89,7 @@ set(SRC
     op/quantized_avg_pool.cpp
     op/rnn.cpp
     op/sigmoid_mul.cpp
+    op/conv_add.cpp
     pass/cpu_assignment.cpp
     pass/cpu_collapse_dims.cpp
     pass/cpu_concat_inputs.cpp

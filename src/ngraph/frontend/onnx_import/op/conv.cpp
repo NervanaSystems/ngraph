@@ -108,15 +108,10 @@ namespace ngraph
 
                 int64_t groups{node.get_attribute_value<int64_t>("group", 1)};
 
-                // TODO: update to ASSERTION CHECK
-                if (groups < 0 || groups > data->get_shape().at(1) ||
-                    groups > filters->get_shape().at(0))
-                {
-                    throw error::parameter::Value{"Conv",
-                                                  node.get_name(),
-                                                  "incorrect value of 'group' attribute: " +
-                                                      std::to_string(groups)};
-                }
+                ASSERT_VALID_ARGUMENT(node,
+                                      ((groups >= 0) && (groups <= data->get_shape().at(1)) &&
+                                       (groups <= filters->get_shape().at(0))))
+                    << "incorrect value of 'group' attribute: " << groups;
 
                 auto strides = convpool::get_strides(node);
                 auto dilations = convpool::get_dilations(node);
