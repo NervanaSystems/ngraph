@@ -49,7 +49,7 @@ namespace ngraph
                 {
                     auto it =
                         std::find(std::begin(data_shape), std::end(data_shape), slope_shape.at(0));
-                    auto index = std::distance(data_shape.begin(), it);
+                    auto index = std::distance(std::begin(data_shape), it);
                     slope = make_broadcast_node(slope, data->get_shape(), index);
                 }
                 else
