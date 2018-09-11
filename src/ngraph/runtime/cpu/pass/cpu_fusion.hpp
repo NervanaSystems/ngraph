@@ -49,6 +49,12 @@ public:
     CPUFusion(int fusions = ALL)
         : GraphRewrite()
     {
+        if (fusions & DIFFERENTIABLE_FUSIONS)
+        {
+            construct_conv_bias();
+            construct_sigmoid_multiply();
+        }
+
         if (fusions & REGULAR_FUSIONS)
         {
             construct_matmul();
@@ -72,6 +78,9 @@ public:
         {
             construct_conv_bias();
             construct_sigmoid_multiply();
+            // construct_conv_add() should always be after construct_conv_bias()
+            construct_conv_add();
+            construct_conv_add_relu();
         }
     }
 
@@ -91,6 +100,8 @@ private:
     void construct_conv_bias_relu();
     void construct_conv_bias_add();
     void construct_conv_bias_add_relu();
+    void construct_conv_add();
+    void construct_conv_add_relu();
     void construct_bounded_relu();
     void construct_horizontal_fusion();
 };
