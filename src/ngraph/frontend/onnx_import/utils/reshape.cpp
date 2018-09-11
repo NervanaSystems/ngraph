@@ -26,6 +26,7 @@
 #include "ngraph/shape.hpp"
 
 #include "exceptions.hpp"
+#include "utils/common.hpp"
 #include "utils/reshape.hpp"
 
 namespace ngraph
@@ -59,9 +60,8 @@ namespace ngraph
 
             AxisVector get_default_axis_vector(std::size_t data_shape_size, std::size_t start_value)
             {
-                AxisVector axis_vector(data_shape_size);
-                std::iota(std::begin(axis_vector), std::end(axis_vector), start_value);
-                return axis_vector;
+                return AxisVector{
+                    common::get_monotonic_range<std::size_t>(data_shape_size, start_value)};
             }
 
             std::vector<std::size_t> infer_dimensions(const std::string& node_name,

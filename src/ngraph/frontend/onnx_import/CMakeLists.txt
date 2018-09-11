@@ -62,6 +62,8 @@ add_library(onnx_import STATIC
         op/not.hpp
         op/or.hpp
         op/pow.hpp
+        op/reduce.cpp
+        op/reduce.hpp
         op/relu.hpp
         op/reshape.cpp
         op/reshape.hpp
@@ -78,8 +80,10 @@ add_library(onnx_import STATIC
         ops_bridge.hpp
         utils/broadcasting.cpp
         utils/broadcasting.hpp
+        utils/common.hpp
         utils/convpool.cpp
         utils/convpool.hpp
+        utils/reduction.hpp
         utils/reshape.cpp
         utils/reshape.hpp
         utils/variadic.hpp)

@@ -38,6 +38,7 @@
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
+#include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/dequantize.hpp"
@@ -214,6 +215,33 @@ namespace ngraph
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
                         const int ADD_INPUT = 3;
+                        // Accumulates conv into the second input of the unfused add
+                        op_annotations->add_in_place_oi_pair({0, ADD_INPUT, true});
+                        convolution->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::ConvolutionAdd)
+                {
+                    auto convolution = static_cast<op::ConvolutionAdd*>(node);
+
+                    auto arg0_rank = node->get_input_shape(0).size();
+                    auto arg1_rank = node->get_input_shape(1).size();
+
+                    bool data_dilated = false;
+                    for (size_t s : convolution->get_data_dilation_strides())
+                    {
+                        data_dilated = data_dilated || (s != 1);
+                    }
+
+                    if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
+                        node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        const int ADD_INPUT = 2;
                         // Accumulates conv into the second input of the unfused add
                         op_annotations->add_in_place_oi_pair({0, ADD_INPUT, true});
                         convolution->set_op_annotations(op_annotations);
@@ -727,6 +755,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Lstm), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Lstm>},
     {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Rnn>},
     {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Softmax>},
+    {TI(ngraph::op::ConvolutionAdd),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionAdd>},
     {TI(ngraph::op::Dequantize),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Dequantize>},
 };
