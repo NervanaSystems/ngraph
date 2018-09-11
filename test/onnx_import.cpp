@@ -744,3 +744,20 @@ TEST(onnx, model_reshape_output_shape_as_input)
     Outputs outputs{execute(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
+
+TEST(onnx, model_reduce_sum)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_sum.onnx"));
+
+    // input data shape (1, 1, 4, 4)
+    Inputs inputs{
+        test::NDArray<float, 4>({{{{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}}}})
+            .get_vector()};
+
+    // output data shape (1,)
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{16}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
