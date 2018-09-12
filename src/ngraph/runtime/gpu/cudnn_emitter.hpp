@@ -121,7 +121,8 @@ namespace ngraph
                                        const Prop& direction,
                                        const Shape& tensor_shape,
                                        const Shape& param_shape,
-                                       double epsilon);
+                                       double epsilon,
+                                       bool global_stats = false);
 
                 size_t build_softmax(const cudnnSoftmaxAlgorithm_t& algorithm,
                                      const cudnnSoftmaxMode_t& mode,

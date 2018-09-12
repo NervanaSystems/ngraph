@@ -8819,8 +8819,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_inference_b2c2h2w1)
     auto _var = backend->create_tensor(element::f32, var_shape);
     copy_data(_var, vector<float>{0.0119972f, 0.0282681f});
     auto bn_output = backend->create_tensor(element::f32, shape_r);
-    auto result_mean = backend->create_tensor(element::f32, mean_shape);
-    auto result_variance = backend->create_tensor(element::f32, var_shape);
+
     vector<float> expected_result{
         -0.30327f, 1.1561f, -0.0963782f, -0.434702f, -1.4011f, 0.548275f, -1.06187f, 1.59295f};
     backend->call_with_validate(f, {bn_output}, {_input, _gamma, _beta, _mean, _var});
@@ -8868,8 +8867,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_globalstats_b2c2w2h1)
     auto _var = backend->create_tensor(element::f32, var_shape);
     copy_data(_var, vector<float>{0.0119972f, 0.0282681f});
     auto bn_output = backend->create_tensor(element::f32, shape_r);
-    auto result_mean = backend->create_tensor(element::f32, mean_shape);
-    auto result_variance = backend->create_tensor(element::f32, var_shape);
+
     vector<float> expected_result{
         -0.30327f, 1.1561f, -0.0963782f, -0.434702f, -1.4011f, 0.548275f, -1.06187f, 1.59295f};
     backend->call_with_validate(f, {bn_output}, {_gamma, _beta, _input, _mean, _var});
