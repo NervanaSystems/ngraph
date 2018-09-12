@@ -109,6 +109,8 @@
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
+#include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
@@ -3069,6 +3071,54 @@ namespace ngraph
                     writer << "                 {" << join(max_pool->get_padding_below()) << "},\n";
                     writer << "                 {" << join(max_pool->get_padding_above())
                            << "});\n";
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedMaxPool)
+            {
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    vector<float> quant_util;
+                    mkldnn_emitter->build_quantized_max_pool(node, quant_util);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(quant_util[2]);
+
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+                    writer << "*(" << out[1].get_name() << ") = " << quant_util[0] << ";\n";
+                    writer << "*(" << out[2].get_name() << ") = " << quant_util[1] << ";\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(quant_util[2]) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("unsupported parameters for QuantizedMaxPool");
+                }
+            }
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedAvgPool)
+            {
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    vector<float> quant_util;
+                    mkldnn_emitter->build_quantized_avg_pool(node, quant_util);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(quant_util[2]);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+                    writer << "*(" << out[1].get_name() << ") = " << quant_util[0] << ";\n";
+                    writer << "*(" << out[2].get_name() << ") = " << quant_util[1] << ";\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(quant_util[2]) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("unsupported parameters for QuantizedAvgPool");
                 }
             }
 
