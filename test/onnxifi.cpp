@@ -741,3 +741,28 @@ TEST(onnxifi, init_graph_invalid_protobuf)
         EXPECT_TRUE(graph == nullptr);
     }
 }
+
+// ==================================================[ onnxReleaseGraph ]=======
+
+
+TEST(onnxifi, release_graph)
+{
+    auto model = load_model();
+    auto backends = get_initialized_backends();
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        EXPECT_TRUE(
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph) ==
+                ONNXIFI_STATUS_SUCCESS);
+        EXPECT_TRUE(::onnxReleaseGraph(graph) == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+// ONNXIFI_STATUS_INVALID_GRAPH
+// The function call failed because graph is not an ONNXIFI graph handle.
+
+TEST(onnxifi, release_graph_invalid_graph)
+{
+    EXPECT_TRUE(::onnxReleaseGraph(nullptr) == ONNXIFI_STATUS_INVALID_GRAPH);
+}
