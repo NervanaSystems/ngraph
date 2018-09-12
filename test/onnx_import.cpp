@@ -914,6 +914,7 @@ TEST(onnx, model_reduce_sum_square)
 
     Outputs outputs{execute(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
 
 TEST(onnx, model_shape)
 {
