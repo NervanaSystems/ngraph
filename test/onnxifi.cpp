@@ -741,3 +741,41 @@ TEST(onnxifi, init_graph_invalid_protobuf)
         EXPECT_TRUE(graph == nullptr);
     }
 }
+
+// ================================================[ onnxReleaseBackend ]=======
+
+TEST(onnxifi, release_backend)
+{
+    auto backends = get_initialized_backends();
+    for (auto& backend : backends)
+    {
+        EXPECT_TRUE(::onnxReleaseBackend(backend) == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+// ONNXIFI_STATUS_INVALID_BACKEND
+// The function call failed because backend is not an ONNXIFI backend handle.
+
+TEST(onnxifi, release_backend_invalid_backend)
+{
+    EXPECT_TRUE(::onnxReleaseBackend(nullptr) == ONNXIFI_STATUS_INVALID_BACKEND);
+}
+
+// ==============================================[ onnxReleaseBackendID ]=======
+
+TEST(onnxifi, release_backend_id)
+{
+    auto backend_ids = get_backend_ids();
+    for (auto& backend_id : backend_ids)
+    {
+        EXPECT_TRUE(::onnxReleaseBackendID(backend_id) == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+// ONNXIFI_STATUS_INVALID_ID
+// The function call failed because backendID is not an ONNXIFI backend ID.
+
+TEST(onnxifi, release_backend_id_invalid_backend)
+{
+    EXPECT_TRUE(::onnxReleaseBackendID(nullptr) == ONNXIFI_STATUS_INVALID_ID);
+}
