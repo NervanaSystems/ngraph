@@ -58,7 +58,6 @@ runtime::gpu::GPUMemoryManager::~GPUMemoryManager()
     {
         runtime::gpu::free_gpu_buffer(alloc.ptr);
     }
-    delete m_workspace_manager;
 }
 
 void runtime::gpu::GPUMemoryManager::allocate()
@@ -90,8 +89,8 @@ void runtime::gpu::GPUMemoryManager::allocate()
         m_workspace_mem.back().ptr = runtime::gpu::create_gpu_buffer(workspace_size);
         m_workspace_mem.back().size = workspace_size;
         m_workspace_mem.push_back({nullptr, 0});
-        delete m_workspace_manager;
-        m_workspace_manager = new pass::MemoryManager(runtime::gpu::GPUMemoryManager::alignment);
+        m_workspace_manager.reset(
+            new pass::MemoryManager(runtime::gpu::GPUMemoryManager::alignment));
     }
 }
 
