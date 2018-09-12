@@ -33,6 +33,7 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
+                    auto quantize = static_cast<const ngraph::op::Quantize*>(node);
                     auto& functors = external_function->get_functors();
                     auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
@@ -43,15 +44,15 @@ namespace ngraph
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     vector<float> quant_util; // min_range, max_range & scale.
-                    quantization_util::get_min_max_range(node, quant_util);
+                    quantization_util::get_min_max_range(quantize->get_input_min(),
+                                                         quantize->get_input_max(),
+                                                         (quantize->get_quantize_et()).is_signed(),
+                                                         quant_util);
                     std::vector<float> scales;
                     scales.push_back(quant_util[2]);
-                    mkldnn::primitive_attr attr;
-                    attr.set_output_scales(0, scales);
-                    attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
 
                     size_t quantize_index =
-                        mkldnn_emitter->build_quantize_reorder(input_desc, result_desc, attr);
+                        mkldnn_emitter->build_quantize_reorder(input_desc, result_desc, scales);
                     auto& deps = mkldnn_emitter->get_primitive_deps(quantize_index);
                     auto functor = [&, quantize_index, quant_util](CPURuntimeContext* ctx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);

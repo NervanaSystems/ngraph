@@ -38,18 +38,11 @@ namespace ngraph
         {
             namespace quantization_util
             {
-                static inline void get_min_max_range(const ngraph::Node* node,
+                static inline void get_min_max_range(float input_min_range,
+                                                     float input_max_range,
+                                                     bool is_signed,
                                                      std::vector<float>& quant_util)
                 {
-                    auto quantize = static_cast<const ngraph::op::Quantize*>(node);
-                    auto min_const_op =
-                        std::dynamic_pointer_cast<ngraph::op::Constant>(quantize->get_argument(1));
-                    auto max_const_op =
-                        std::dynamic_pointer_cast<ngraph::op::Constant>(quantize->get_argument(2));
-                    float input_min_range =
-                        *(static_cast<float const*>(min_const_op->get_data_ptr()));
-                    float input_max_range =
-                        *(static_cast<float const*>(max_const_op->get_data_ptr()));
                     // begin code copied and pasted from
                     // github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/quantize_op.cc
                     float min_range;
@@ -65,7 +58,6 @@ namespace ngraph
                     // end code copied and pasted from
                     // github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/quantize_op.cc
                     const float max_abs = std::max(std::abs(min_range), std::abs(max_range));
-                    bool is_signed = (quantize->get_quantize_et()).is_signed();
                     const float target_range =
                         static_cast<float>((is_signed ? std::pow(2, 7) : std::pow(2, 8)) - 1);
                     max_range = max_abs;

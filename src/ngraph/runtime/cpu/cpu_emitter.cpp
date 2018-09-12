@@ -2778,23 +2778,24 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Quantize)
             {
+                auto quantize = static_cast<const ngraph::op::Quantize*>(node);
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    vector<float> quant_util; // min_range, max_range & scale.
-                    quantization_util::get_min_max_range(node, quant_util);
+                    std::vector<float> quant_util; // min_range, max_range & scale.
+                    quantization_util::get_min_max_range(quantize->get_input_min(),
+                                                         quantize->get_input_max(),
+                                                         (quantize->get_quantize_et()).is_signed(),
+                                                         quant_util);
                     std::vector<float> scales;
                     scales.push_back(quant_util[2]);
-                    mkldnn::primitive_attr attr;
-                    attr.set_output_scales(0, scales);
-                    attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
 
                     size_t quantize_index = 0;
-                    quantize_index =
-                        mkldnn_emitter->build_quantize_reorder(input_data_desc, result_desc, attr);
+                    quantize_index = mkldnn_emitter->build_quantize_reorder(
+                        input_data_desc, result_desc, scales);
                     auto& deps = mkldnn_emitter->get_primitive_deps(quantize_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
