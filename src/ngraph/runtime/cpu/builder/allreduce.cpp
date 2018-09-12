@@ -52,7 +52,7 @@ namespace ngraph
                     data_type = MPI_DOUBLE;
                 }
                 auto functor = [&, count, data_type, my_rank](CPURuntimeContext* ctx) {
-                    std::cout<<"count == "<<my_rank<<"  "<<count<<std::endl;
+                    std::cout<<"count == "<<my_rank<<" "<<count<<" "<<arg_tensor<<" "<<out_tensor<<std::endl;
                     MPI_Allreduce(
                         arg_tensor, out_tensor, count, data_type, MPI_SUM, MPI_COMM_WORLD);
                 };
