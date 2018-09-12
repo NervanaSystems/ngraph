@@ -756,7 +756,7 @@ TEST(onnx, model_reduce_log_sum)
             .get_vector()};
 
     // output data shape (1,)
-    Outputs expected_outputs{test::NDArray<float, 4>({{{{2.77258872}}}}).get_vector()};
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{2.77258872f}}}}).get_vector()};
 
     Outputs outputs{execute(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
@@ -773,7 +773,7 @@ TEST(onnx, model_reduce_log_sum_exp)
             .get_vector()};
 
     // output data shape (1,)
-    Outputs expected_outputs{test::NDArray<float, 4>({{{{3.77258872}}}}).get_vector()};
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{3.77258872f}}}}).get_vector()};
 
     Outputs outputs{execute(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
