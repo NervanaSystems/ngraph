@@ -16,6 +16,7 @@
 
 #include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
+#include "ngraph/except.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/util/binary_elementwise_comparison.hpp"
@@ -68,6 +69,11 @@ bool runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
         pass_manager.register_pass<pass::AssignLayout<DenseTensorViewLayout>>();
         pass_manager.register_pass<pass::Liveness>();
         pass_manager.run_passes(function);
+
+        for (const shared_ptr<Node>& node : function->get_ordered_ops())
+        {
+            instance.m_wrapped_nodes.emplace_back(node);
+        }
     }
 
     return true;
@@ -125,13 +131,14 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     }
 
     // for each ordered op in the graph
-    for (shared_ptr<Node> op : function->get_ordered_ops())
+    for (const NodeWrapper& wrapped : instance.m_wrapped_nodes)
     {
+        const Node* op = &wrapped.get_node();
+        auto type_id = wrapped.get_typeid();
         if (op->description() == "Parameter")
         {
             continue;
         }
-
         // get op inputs from map
         vector<shared_ptr<runtime::HostTensorView>> op_inputs;
         for (const descriptor::Input& input : op->get_inputs())
@@ -164,35 +171,37 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
 
         // get op type
         element::Type type;
-        if (dynamic_pointer_cast<op::util::BinaryElementwiseComparison>(op) ||
-            dynamic_pointer_cast<op::Select>(op))
+        switch (type_id)
         {
+        case OP_TYPEID::Convert:
+            type = op->get_inputs().at(0).get_tensor().get_element_type();
+            break;
+        case OP_TYPEID::Equal:
+        case OP_TYPEID::Greater:
+        case OP_TYPEID::GreaterEq:
+        case OP_TYPEID::Less:
+        case OP_TYPEID::LessEq:
+        case OP_TYPEID::NotEqual:
             // Get the type of the second input, not the first
             // All BinaryElementwiseComparision ops have the same type for inputs
             // Select has bool for first input and the type we are interested in for the second
             type = op->get_inputs().at(1).get_tensor().get_element_type();
-        }
-        else if (dynamic_pointer_cast<op::Convert>(op))
-        {
-            type = op->get_inputs().at(0).get_tensor().get_element_type();
-        }
-        else
-        {
-            type = op->get_outputs().at(0).get_element_type();
+            break;
+        default: type = op->get_outputs().at(0).get_element_type(); break;
         }
 
         if (instance.m_performance_counters_enabled)
         {
-            instance.m_timer_map[op.get()].start();
+            instance.m_timer_map[op].start();
         }
-        generate_calls(type, *op, op_outputs, op_inputs);
+        generate_calls(type, wrapped, op_outputs, op_inputs);
         if (instance.m_performance_counters_enabled)
         {
-            instance.m_timer_map[op.get()].stop();
+            instance.m_timer_map[op].stop();
         }
         if (instance.m_nan_check_enabled)
         {
-            perform_nan_check(op_outputs, op.get());
+            perform_nan_check(op_outputs, op);
         }
 
         // delete any obsolete tensors
@@ -214,7 +223,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
 
 void runtime::interpreter::INTBackend::generate_calls(
     const element::Type& type,
-    Node& op,
+    const NodeWrapper& op,
     const vector<shared_ptr<HostTensorView>>& outputs,
     const vector<shared_ptr<HostTensorView>>& inputs)
 {
@@ -265,7 +274,7 @@ void runtime::interpreter::INTBackend::generate_calls(
     else
     {
         stringstream ss;
-        ss << "unsupported element type " << type << " op " << op.get_name();
+        ss << "unsupported element type " << type << " op " << op.get_node().get_name();
         throw ngraph_error(ss.str());
     }
 }
