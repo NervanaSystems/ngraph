@@ -741,3 +741,39 @@ TEST(onnxifi, init_graph_invalid_protobuf)
         EXPECT_TRUE(graph == nullptr);
     }
 }
+
+// ===================================================[ onnxSignalEvent ]=======
+
+TEST(onnxifi, signal_event)
+{
+    auto backends = get_initialized_backends();
+    for (const auto& backend : backends)
+    {
+        ::onnxEvent event;
+        EXPECT_TRUE(::onnxInitEvent(backend, &event) == ONNXIFI_STATUS_SUCCESS);
+        EXPECT_TRUE(::onnxSignalEvent(event) == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+// ONNXIFI_STATUS_INVALID_EVENT
+// The function call failed because event is not an ONNXIFI event handle.
+
+TEST(onnxifi, signal_event_invalid_event)
+{
+    EXPECT_TRUE(::onnxSignalEvent(nullptr) == ONNXIFI_STATUS_INVALID_EVENT);
+}
+
+// ONNXIFI_STATUS_INVALID_STATE
+// The function call failed because event is already in the signalled state.
+
+TEST(onnxifi, signal_event_invalid_state)
+{
+    auto backends = get_initialized_backends();
+    for (const auto& backend : backends)
+    {
+        ::onnxEvent event;
+        EXPECT_TRUE(::onnxInitEvent(backend, &event) == ONNXIFI_STATUS_SUCCESS);
+        EXPECT_TRUE(::onnxSignalEvent(event) == ONNXIFI_STATUS_SUCCESS);
+        EXPECT_TRUE(::onnxSignalEvent(event) == ONNXIFI_STATUS_INVALID_STATE);
+    }
+}
