@@ -154,6 +154,10 @@ namespace ngraph
                                      NVShape input_shape,
                                      NVShape input_order);
 
+                size_t build_reshape_3d(const std::array<std::string, 2>& dtypes,
+                                        NVShape input_shape,
+                                        NVShape input_order);
+
                 size_t build_convolution(const std::array<std::string, 3>& dtypes,
                                          NVShape input_shape,
                                          NVShape filter_shape,

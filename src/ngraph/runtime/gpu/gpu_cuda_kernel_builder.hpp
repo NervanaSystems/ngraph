@@ -60,6 +60,10 @@ namespace ngraph
                                            const std::array<std::string, 2>& data_types,
                                            size_t rank);
 
+                static void get_reshape_op_3d(codegen::CodeWriter& writer,
+                                              const std::string& name,
+                                              runtime::gpu::GPUKernelArgs& args);
+
                 static void get_reduce_to_nd_op(codegen::CodeWriter& writer,
                                                 const std::string& name,
                                                 runtime::gpu::GPUKernelArgs& args,

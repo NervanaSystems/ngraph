@@ -481,6 +481,33 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op(codegen::CodeWriter& writer
     writer.block_end();
 }
 
+void runtime::gpu::CudaKernelBuilder::get_reshape_op_3d(codegen::CodeWriter& writer,
+                                                        const std::string& name,
+                                                        runtime::gpu::GPUKernelArgs& args)
+{
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
+    writer.block_begin();
+    {
+        writer << "uint32_t tid0 = blockIdx.x * blockDim.x + threadIdx.x;\n";
+        writer << "uint32_t tid1 = blockIdx.y * blockDim.y + threadIdx.y;\n";
+        writer << "uint32_t tid2 = blockIdx.z * blockDim.z + threadIdx.z;\n";
+        writer << "if (tid0 < nx && tid1 < ny && tid2 < nz)\n";
+        writer.block_begin();
+        {
+            writer << "uint32_t input_idx = 0;\n";
+            writer << "uint32_t output_idx = 0;\n";
+            for (int i = 0; i < 3; i++)
+            {
+                writer << "output_idx += trans_strides" << i << "* tid" << i << ";\n";
+                writer << "input_idx += input_strides" << i << "* tid" << i << ";\n";
+            }
+            writer << "out[output_idx] = in[input_idx];\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+}
+
 void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
                                                     const std::string& name,
                                                     const std::vector<std::string>& data_types,
