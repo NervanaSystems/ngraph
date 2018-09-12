@@ -924,3 +924,33 @@ TEST(onnxifi, run_graph_unsupported_fence_type)
                     ONNXIFI_STATUS_UNSUPPORTED_FENCE_TYPE);
     }
 }
+
+// ====================================================[ onnxWaitEvent ]========
+
+TEST(onnxifi, run_graph)
+{
+    auto model = load_model();
+    auto backends = get_initialized_backends();
+
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        EXPECT_TRUE(
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph) ==
+            ONNXIFI_STATUS_SUCCESS);
+
+        ::onnxMemoryFenceV1 input_fence{get_default_memory_fence(backend)};
+        ::onnxMemoryFenceV1 output_fence;
+
+        EXPECT_TRUE(::onnxRunGraph(backend, &input_fence, &output_fence) == ONNXIFI_STATUS_SUCCESS);
+        EXPECT_TRUE(::onnxWaitEvent(output_fence.event) == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+// ONNXIFI_STATUS_INVALID_EVENT
+// The function call failed because event is not an ONNXIFI event handle.
+
+TEST(onnxifi, run_graph_invalid_event)
+{
+    EXPECT_TRUE(::onnxWaitEvent(nullptr) == ONNXIFI_STATUS_INVALID_EVENT);
+}
