@@ -46,8 +46,7 @@ namespace ngraph
             virtual ~TensorView() {}
             TensorView& operator=(const TensorView&) = default;
 
-            std::shared_ptr<const ngraph::descriptor::Tensor>
-                get_tensor_view_descriptor() const;
+            std::shared_ptr<const ngraph::descriptor::Tensor> get_tensor_view_descriptor() const;
 
             virtual std::shared_ptr<descriptor::TensorView> get_descriptor() const;
 
