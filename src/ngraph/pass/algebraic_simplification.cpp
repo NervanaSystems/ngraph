@@ -214,9 +214,10 @@ static bool simplify_concat(std::shared_ptr<Node> n)
         {
             // axis reordering required
             auto transposed_shape = n->get_shape();
-            AxisVector order = ngraph::get_default_order(transposed_shape);
+
             if (btip_shape.size() >= transposed_shape.size())
             {
+                AxisVector order = ngraph::get_default_order(btip_shape);
                 auto ax = order[slice_axis];
                 order[slice_axis] = order[concat_axis];
                 order[concat_axis] = ax;
@@ -225,6 +226,7 @@ static bool simplify_concat(std::shared_ptr<Node> n)
             else if (btip_shape.size() < transposed_shape.size())
             {
                 // intermediate logical reshape
+                AxisVector order = ngraph::get_default_order(transposed_shape);
                 auto ax = order[slice_axis];
                 order[slice_axis] = order[concat_axis];
                 order[concat_axis] = ax;
