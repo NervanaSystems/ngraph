@@ -742,7 +742,7 @@ TEST(onnxifi, init_graph_invalid_protobuf)
     }
 }
 
-// ====================================================[ onnxInitGraph ]=======
+// ====================================================[ onnxRunGraph ]========
 
 TEST(onnxifi, run_graph)
 {
