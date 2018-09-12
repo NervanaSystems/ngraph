@@ -25,6 +25,7 @@
 #include "ngraph/runtime/host_tensor_view.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
+#include "ngraph/op/activate.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -33,7 +34,9 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/deactivate.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/generate_mask.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
@@ -79,6 +82,7 @@
 #include "ngraph/runtime/reference/equal.hpp"
 #include "ngraph/runtime/reference/exp.hpp"
 #include "ngraph/runtime/reference/floor.hpp"
+#include "ngraph/runtime/reference/generate_mask.hpp"
 #include "ngraph/runtime/reference/greater.hpp"
 #include "ngraph/runtime/reference/greater_eq.hpp"
 #include "ngraph/runtime/reference/less.hpp"
@@ -214,6 +218,13 @@ private:
                                    args[1]->get_data_ptr<T>(),
                                    out[0]->get_data_ptr<T>(),
                                    out[0]->get_element_count());
+        }
+        else if (node_op == "Activate")
+        {
+            const op::Activate* activate = static_cast<const op::Activate*>(&node);
+            auto state = activate->get_state();
+            state->activate();
+            //activate
         }
         else if (node_op == "ArgMin")
         {
@@ -544,6 +555,12 @@ private:
             reference::cosh<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
         }
+        else if (node_op == "Deactivate")
+        {
+            const op::Deactivate* deactivate = static_cast<const op::Deactivate*>(&node);
+            auto state = deactivate->get_state();
+            state->deactivate();
+        }
         else if (node_op == "Divide")
         {
             reference::divide<T>(args[0]->get_data_ptr<T>(),
@@ -598,6 +615,21 @@ private:
             }
 
             call(function, outputs, inputs);
+        }
+        else if (node_op == "GenerateMask")
+        {
+            const op::GenerateMask* gm = static_cast<const op::GenerateMask*>(&node);
+            if (!gm->get_state()->is_active())
+            {
+                throw ngraph_error("RNGState needs to be activated first");
+            }
+            unsigned int seed = gm->get_state()->get_seed();
+            bool training = static_cast<bool>(args[0]->get_data_ptr<T>()[0]);
+            reference::generate_mask(out[0]->get_data_ptr<T>(),
+                                     out[0]->get_element_count(),
+                                     seed,
+                                     gm->get_probability(),
+                                     training);
         }
         else if (node_op == "Greater")
         {
