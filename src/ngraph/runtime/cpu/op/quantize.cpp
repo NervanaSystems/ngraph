@@ -53,7 +53,7 @@ ngraph::op::Quantize::Quantize(std::shared_ptr<Node> input,
     }
 
     auto min_const_op = std::static_pointer_cast<ngraph::op::Constant>(min);
-    auto max_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(max);
+    auto max_const_op = std::static_pointer_cast<ngraph::op::Constant>(max);
     float input_min_range = *(static_cast<float const*>(min_const_op->get_data_ptr()));
     float input_max_range = *(static_cast<float const*>(max_const_op->get_data_ptr()));
     this->m_input_min = input_min_range;

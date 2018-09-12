@@ -33,8 +33,8 @@ namespace ngraph
                      std::shared_ptr<Node> max,
                      const element::Type& type);
             const element::Type& get_quantize_et() const { return m_element_type; }
-            const float get_input_min() const { return m_input_min; };
-            const float get_input_max() const { return m_input_max; };
+            float get_input_min() const { return m_input_min; }
+            float get_input_max() const { return m_input_max; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
