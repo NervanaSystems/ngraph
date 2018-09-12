@@ -21,6 +21,7 @@
 #include "gtest/gtest.h"
 #include "ngraph/frontend/onnx_import/onnx.hpp"
 #include "ngraph/ngraph.hpp"
+#include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
 #include "util/test_tools.hpp"
@@ -743,4 +744,23 @@ TEST(onnx, model_reshape_output_shape_as_input)
 
     Outputs outputs{execute(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_shape)
+{
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/shape.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(test::NDArray<float, 3>(
+                            {{{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
+                             {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
+                             {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}}})
+                            .get_vector());
+
+    std::vector<std::vector<int64_t>> expected_output{{3, 4, 5}};
+
+    std::vector<std::vector<int64_t>> outputs =
+        execute<float, int64_t>(function, inputs, "INTERPRETER");
+    EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
 }
