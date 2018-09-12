@@ -67,6 +67,7 @@ add_library(onnx_import STATIC
         op/relu.hpp
         op/reshape.cpp
         op/reshape.hpp
+        op/shape.cpp
         op/shape.hpp
         op/softmax.cpp
         op/softmax.hpp

@@ -95,8 +95,8 @@ size_t count_ops_of_type(std::shared_ptr<ngraph::Function> f)
     return count;
 }
 
-template <typename T>
-std::vector<std::vector<T>> execute(const std::shared_ptr<ngraph::Function>& function,
+template <typename T, typename T1 = T>
+std::vector<std::vector<T1>> execute(const std::shared_ptr<ngraph::Function>& function,
                                     std::vector<std::vector<T>> args,
                                     const std::string& backend_id)
 {
@@ -128,10 +128,10 @@ std::vector<std::vector<T>> execute(const std::shared_ptr<ngraph::Function>& fun
 
     backend->call_with_validate(function, result_tensors, arg_tensors);
 
-    std::vector<std::vector<T>> result_vectors;
+    std::vector<std::vector<T1>> result_vectors;
     for (auto rt : result_tensors)
     {
-        result_vectors.push_back(read_vector<T>(rt));
+        result_vectors.push_back(read_vector<T1>(rt));
     }
     return result_vectors;
 }
