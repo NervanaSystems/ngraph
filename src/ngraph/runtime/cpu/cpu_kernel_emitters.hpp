@@ -54,6 +54,15 @@ namespace ngraph
                                         const Coordinate& lower_bounds,
                                         const Coordinate& upper_bounds,
                                         const Strides& strides);
+                void emit_replace_slice_inplace(codegen::CodeWriter& writer,
+                                                const std::string& element_type,
+                                                const std::string& arg0, // replacement context
+                                                const std::string& arg1, // replacement value
+                                                const Shape& arg1_shape,
+                                                const Shape& out_shape,
+                                                const Coordinate& lower_bounds,
+                                                const Coordinate& upper_bounds,
+                                                const Strides& strides);
                 void emit_slice(codegen::CodeWriter& writer,
                                 const std::string& element_type,
                                 const std::string& arg0, // replacement context
