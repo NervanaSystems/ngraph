@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
 #include <algorithm>
@@ -33,16 +33,21 @@
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
+#include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
+#include "ngraph/runtime/cpu/op/dequantize.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
+#include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 
@@ -213,6 +218,33 @@ namespace ngraph
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
                         const int ADD_INPUT = 3;
+                        // Accumulates conv into the second input of the unfused add
+                        op_annotations->add_in_place_oi_pair({0, ADD_INPUT, true});
+                        convolution->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::ConvolutionAdd)
+                {
+                    auto convolution = static_cast<op::ConvolutionAdd*>(node);
+
+                    auto arg0_rank = node->get_input_shape(0).size();
+                    auto arg1_rank = node->get_input_shape(1).size();
+
+                    bool data_dilated = false;
+                    for (size_t s : convolution->get_data_dilation_strides())
+                    {
+                        data_dilated = data_dilated || (s != 1);
+                    }
+
+                    if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
+                        node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        const int ADD_INPUT = 2;
                         // Accumulates conv into the second input of the unfused add
                         op_annotations->add_in_place_oi_pair({0, ADD_INPUT, true});
                         convolution->set_op_annotations(op_annotations);
@@ -484,6 +516,22 @@ namespace ngraph
                 }
 
                 template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::ReplaceSlice)
+                {
+                    auto replace_slice = static_cast<op::ReplaceSlice*>(node);
+
+                    // ReplaceSlice is independent of data type. Hence not checking type
+                    auto op_annotations =
+                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                    if (get_user_count(node->get_argument(0).get()) == 1)
+                    {
+                        // Safe to overwrite input
+                        op_annotations->add_in_place_oi_pair({0, 0, true});
+                    }
+                    replace_slice->set_op_annotations(op_annotations);
+                }
+
+                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::LRN)
                 {
                     auto lrn = static_cast<op::LRN*>(node);
@@ -642,6 +690,33 @@ namespace ngraph
                 }
 
                 template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedMaxPool)
+                {
+                    if (node->get_input_element_type(0) == element::u8 ||
+                        node->get_input_element_type(0) == element::i8)
+                    {
+                        auto quantized_mp = static_cast<op::QuantizedMaxPool*>(node);
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        quantized_mp->set_op_annotations(op_annotations);
+                    }
+                }
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedAvgPool)
+                {
+                    if (node->get_input_element_type(0) == element::u8 ||
+                        node->get_input_element_type(0) == element::i8)
+                    {
+                        auto quantized_ap = static_cast<op::QuantizedAvgPool*>(node);
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        quantized_ap->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BoundedRelu)
                 {
                     auto bounded_relu = static_cast<op::BoundedRelu*>(node);
@@ -657,6 +732,20 @@ namespace ngraph
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
                         bounded_relu->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::Dequantize)
+                {
+                    if (node->get_input_element_type(0) == element::u8 ||
+                        node->get_input_element_type(0) == element::i8)
+                    {
+                        auto dequantize = static_cast<op::Dequantize*>(node);
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        dequantize->set_op_annotations(op_annotations);
                     }
                 }
             }
@@ -711,7 +800,17 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::SigmoidBackprop>},
     {TI(ngraph::op::Lstm), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Lstm>},
     {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Rnn>},
+    {TI(ngraph::op::QuantizedMaxPool),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedMaxPool>},
+    {TI(ngraph::op::QuantizedAvgPool),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedAvgPool>},
     {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Softmax>},
+    {TI(ngraph::op::ReplaceSlice),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ReplaceSlice>},
+    {TI(ngraph::op::ConvolutionAdd),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionAdd>},
+    {TI(ngraph::op::Dequantize),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Dequantize>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(

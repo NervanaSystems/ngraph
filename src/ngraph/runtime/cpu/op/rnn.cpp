@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/log.hpp"
@@ -55,7 +55,7 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
              const int num_cell_states,
              const int direction,
              const int num_fused_layers)
-    : RequiresTensorViewArgs("Rnn", {src_layer, src_iter, weights_layer, weights_iter, bias})
+    : Op("Rnn", check_single_output_args({src_layer, src_iter, weights_layer, weights_iter, bias}))
     , m_num_timesteps(num_timesteps)
     , m_num_gates_per_cell(num_gates_per_cell)
     , m_src_sequence_length(src_sequence_length)
@@ -65,6 +65,8 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
     , m_direction(direction)
     , m_num_fused_layers(num_fused_layers)
 {
+    constructor_validate_and_infer_types();
+
     if (src_layer->get_shape().size() != weights_layer->get_shape().size())
     {
         throw ngraph_error("src_layer and i2h weights size dont match");
@@ -105,11 +107,14 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
         }
     }
 
-    add_output(src_layer->get_element_type(),
-               Shape{static_cast<unsigned long>(m_direction * m_num_timesteps * m_batch_size),
-                     static_cast<unsigned long>(m_src_iter_feature_size)});
-    add_output(src_layer->get_element_type(),
-               Shape{static_cast<unsigned long>(m_num_cell_states * m_direction *
-                                                m_num_fused_layers * m_batch_size),
-                     static_cast<unsigned long>(m_src_iter_feature_size)});
+    set_output_size(2);
+    set_output_type(0,
+                    src_layer->get_element_type(),
+                    Shape{static_cast<unsigned long>(m_direction * m_num_timesteps * m_batch_size),
+                          static_cast<unsigned long>(m_src_iter_feature_size)});
+    set_output_type(1,
+                    src_layer->get_element_type(),
+                    Shape{static_cast<unsigned long>(m_num_cell_states * m_direction *
+                                                     m_num_fused_layers * m_batch_size),
+                          static_cast<unsigned long>(m_src_iter_feature_size)});
 }

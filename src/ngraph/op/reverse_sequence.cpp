@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <algorithm>
 #include <memory>
@@ -29,40 +29,39 @@ op::ReverseSequence::ReverseSequence(const std::shared_ptr<Node> arg,
                                      const std::shared_ptr<Node> seq_indices,
                                      size_t batch_axis,
                                      size_t seq_axis)
-    : RequiresTensorViewArgs("ReverseSequence", {arg, seq_indices})
+    : Op("ReverseSequence", check_single_output_args({arg, seq_indices}))
     , m_batch_axis(batch_axis)
     , m_seq_axis(seq_axis)
 {
-    if (seq_indices->get_shape().size() != 1)
-    {
-        throw ngraph_error("indices should be a 1-dimensional array");
-    }
+    constructor_validate_and_infer_types();
+}
 
-    if (batch_axis >= arg->get_shape().size())
-    {
-        throw ngraph_error("batch axis index is out of bounds");
-    }
+void op::ReverseSequence::validate_and_infer_types()
+{
+    NODE_VALIDATION_ASSERT(this, get_input_shape(1).size() == 1)
+        << "Sequence indices must be a 1-dimensional tensor (sequence indices shape: "
+        << get_input_shape(1) << ").";
 
-    if (seq_axis >= arg->get_shape().size())
-    {
-        throw ngraph_error("sequence axis index is out of bounds");
-    }
+    NODE_VALIDATION_ASSERT(this, m_batch_axis < get_input_shape(0).size())
+        << "Batch axis index (" << m_batch_axis
+        << ") is out of bounds (argument shape: " << get_input_shape(0) << ").";
 
-    if (arg->get_shape().at(batch_axis) != seq_indices->get_shape().at(0))
-    {
-        throw ngraph_error("Sequence length size should be equal to batch axis dimension");
-    }
+    NODE_VALIDATION_ASSERT(this, m_seq_axis < get_input_shape(0).size())
+        << "Sequence axis index (" << m_seq_axis
+        << ") is out of bounds (argument shape: " << get_input_shape(0) << ").";
 
-    set_value_type_checked(arg->get_element_type(), arg->get_shape());
+    NODE_VALIDATION_ASSERT(this, get_input_shape(0)[m_batch_axis] == get_input_shape(1)[0])
+        << "Sequence length (" << get_input_shape(1)[0] << ") is not equal to batch axis "
+        << "dimension (" << get_input_shape(0)[m_batch_axis]
+        << ") (argument shape: " << get_input_shape(0)
+        << ", sequence indices shape: " << get_input_shape(1) << ").";
+
+    set_output_type(0, get_input_element_type(0), get_input_shape(0));
 }
 
 shared_ptr<Node> op::ReverseSequence::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 2)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
-
+    check_new_args_count(this, new_args);
     auto res =
         make_shared<ReverseSequence>(new_args.at(0), new_args.at(1), m_batch_axis, m_seq_axis);
     return res;

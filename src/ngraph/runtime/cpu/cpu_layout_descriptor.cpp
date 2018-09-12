@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "cpu_layout_descriptor.hpp"
 #include <algorithm>
@@ -33,7 +33,7 @@ namespace ngraph
             LayoutDescriptor::LayoutDescriptor(const ngraph::descriptor::TensorView& tv)
                 : TensorViewLayout(tv)
                 , m_offset(0)
-                , m_size(ngraph::shape_size(tv.get_tensor_view_type()->get_shape()))
+                , m_size(ngraph::shape_size(tv.get_shape()))
                 , m_mkldnn_md(LayoutDescriptor::DummyDesc)
             {
                 auto shape = get_shape();
@@ -45,9 +45,7 @@ namespace ngraph
                     s *= shape[shape.size() - (i + 1)];
                 }
                 std::reverse(m_strides.begin(), m_strides.end());
-                auto tvt = tv.get_tensor_view_type();
-                m_mkldnn_memory_size =
-                    shape_size(tvt->get_shape()) * tvt->get_element_type().size();
+                m_mkldnn_memory_size = shape_size(tv.get_shape()) * tv.get_element_type().size();
             }
 
             size_t LayoutDescriptor::get_index_offset(const std::vector<size_t>& indices)

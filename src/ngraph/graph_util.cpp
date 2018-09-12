@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <cassert>
 #include <deque>
@@ -149,45 +149,6 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
             input->replace_output(replacement->get_outputs().at(i));
         }
     }
-}
-
-std::list<std::shared_ptr<ngraph::Node>>
-    ngraph::topological_sort(const std::list<std::shared_ptr<Node>>& nodes)
-{
-    deque<ngraph::Node*> independent_nodes;
-    unordered_map<const ngraph::Node*, size_t> node_dependency_count;
-    unordered_map<ngraph::Node*, shared_ptr<ngraph::Node>> node_map;
-
-    for (auto node : nodes)
-    {
-        node_map[node.get()] = node;
-        node_dependency_count[node.get()] = node->get_arguments().size();
-        if (node->get_arguments().size() == 0)
-        {
-            independent_nodes.push_back(node.get());
-        }
-    }
-
-    list<shared_ptr<ngraph::Node>> result_list;
-    while (independent_nodes.size() > 0)
-    {
-        auto independent_node = independent_nodes.front();
-        result_list.push_back(node_map[independent_node]);
-        independent_nodes.pop_front();
-
-        for (auto user_sp : independent_node->get_users())
-        {
-            Node* user = user_sp.get();
-            node_dependency_count[user] -= 1;
-            size_t count = node_dependency_count[user];
-            if (count == 0)
-            {
-                independent_nodes.push_back(user);
-            }
-        }
-    }
-
-    return result_list;
 }
 
 // Check if all paths from X to a result go through Y

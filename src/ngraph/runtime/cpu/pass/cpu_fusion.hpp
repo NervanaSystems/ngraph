@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -49,6 +49,12 @@ public:
     CPUFusion(int fusions = ALL)
         : GraphRewrite()
     {
+        if (fusions & DIFFERENTIABLE_FUSIONS)
+        {
+            construct_conv_bias();
+            construct_sigmoid_multiply();
+        }
+
         if (fusions & REGULAR_FUSIONS)
         {
             construct_matmul();
@@ -65,12 +71,9 @@ public:
             construct_conv_bias_add();
             construct_conv_bias_add_relu();
             construct_bounded_relu();
-        }
-
-        if (fusions & DIFFERENTIABLE_FUSIONS)
-        {
-            construct_conv_bias();
-            construct_sigmoid_multiply();
+            // construct_conv_add() should always be after construct_conv_bias()
+            construct_conv_add();
+            construct_conv_add_relu();
         }
     }
 
@@ -90,5 +93,7 @@ private:
     void construct_conv_bias_relu();
     void construct_conv_bias_add();
     void construct_conv_bias_add_relu();
+    void construct_conv_add();
+    void construct_conv_add_relu();
     void construct_bounded_relu();
 };
