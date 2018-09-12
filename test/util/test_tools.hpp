@@ -97,8 +97,8 @@ size_t count_ops_of_type(std::shared_ptr<ngraph::Function> f)
 
 template <typename T, typename T1 = T>
 std::vector<std::vector<T1>> execute(const std::shared_ptr<ngraph::Function>& function,
-                                    std::vector<std::vector<T>> args,
-                                    const std::string& backend_id)
+                                     std::vector<std::vector<T>> args,
+                                     const std::string& backend_id)
 {
     auto backend = ngraph::runtime::Backend::create(backend_id);
 
