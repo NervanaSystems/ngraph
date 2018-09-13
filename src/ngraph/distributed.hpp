@@ -38,14 +38,14 @@ namespace ngraph
         }
 
         ~Distributed() { MPI_Finalize(); }
-        int get_size()
+        int get_size() const
         {
             int size;
             MPI_Comm_size(MPI_COMM_WORLD, &size);
             return size;
         }
 
-        int get_rank()
+        int get_rank() const
         {
             int rank;
             MPI_Comm_rank(MPI_COMM_WORLD, &rank);
