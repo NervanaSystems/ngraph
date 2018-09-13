@@ -100,6 +100,17 @@ using namespace std;
 using json = nlohmann::json;
 using const_data_callback_t = shared_ptr<Node>(const string&, const element::Type&, const Shape&);
 
+// This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
+// Abs,
+// Acos,
+// ...
+#define NGRAPH_OP(a) a,
+enum class OP_TYPEID
+{
+#include "ngraph/op/op_tbl.hpp"
+};
+#undef NGRAPH_OP
+
 template <typename T>
 T get_or_default(nlohmann::json& j, const std::string& key, const T& default_value)
 {
@@ -320,6 +331,15 @@ static shared_ptr<ngraph::Function>
                   unordered_map<string, shared_ptr<Function>>& function_map,
                   function<const_data_callback_t> const_data_callback)
 {
+// This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
+// {"Abs", OP_TYPEID::Abs},
+// {"Acos", OP_TYPEID::Acos},
+// ...
+#define NGRAPH_OP(a) {#a, OP_TYPEID::a},
+    static unordered_map<string, OP_TYPEID> typeid_map{
+#include "ngraph/op/op_tbl.hpp"
+    };
+#undef NGRAPH_OP
     shared_ptr<ngraph::Function> rc;
 
     string func_name = func_js.at("name").get<string>();
