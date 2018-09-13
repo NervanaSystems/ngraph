@@ -937,8 +937,8 @@ TEST(onnx, model_shape)
 
 TEST(onnx, model_elu)
 {
-    auto function = onnx_import::import_onnx_function(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/elu.onnx"));
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/elu.onnx"));
 
     Inputs inputs;
     inputs.emplace_back(
@@ -984,8 +984,8 @@ TEST(onnx, model_elu)
 
 TEST(onnx, model_leaky_relu)
 {
-    auto function =
-        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/leaky_relu.onnx"));
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/leaky_relu.onnx"));
 
     Inputs inputs;
     inputs.emplace_back(
@@ -1015,8 +1015,8 @@ TEST(onnx, model_leaky_relu)
 
 TEST(onnx, prelu)
 {
-    auto function = onnx_import::import_onnx_function(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/prelu.onnx"));
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/prelu.onnx"));
 
     Inputs inputs;
     inputs.emplace_back(
@@ -1045,8 +1045,8 @@ TEST(onnx, prelu)
 
 TEST(onnx, model_selu)
 {
-    auto function = onnx_import::import_onnx_function(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/selu.onnx"));
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/selu.onnx"));
 
     Inputs inputs;
     inputs.emplace_back(
@@ -1086,8 +1086,8 @@ TEST(onnx, model_selu)
 
 TEST(onnx, model_sigmoid)
 {
-    auto function =
-        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/sigmoid.onnx"));
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/sigmoid.onnx"));
 
     Inputs inputs;
     inputs.emplace_back(
@@ -1161,8 +1161,8 @@ TEST(onnx, model_sigmoid)
 
 TEST(onnx, model_tanh)
 {
-    auto function = onnx_import::import_onnx_function(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/tanh.onnx"));
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/tanh.onnx"));
 
     Inputs inputs;
     inputs.emplace_back(
