@@ -38,7 +38,7 @@ const Shape& runtime::gpu::GPU_TensorViewWrapper::get_shape() const
     return m_tensor->get_tensor_layout()->get_shape();
 }
 
-const Strides& runtime::gpu::GPU_TensorViewWrapper::get_strides() const
+Strides runtime::gpu::GPU_TensorViewWrapper::get_strides() const
 {
     return m_tensor->get_tensor_layout()->get_strides();
 }
