@@ -25,6 +25,8 @@ descriptor::Output::Output(Node* node, size_t index, const shared_ptr<Tensor>& t
     : m_node(node)
     , m_index(index)
     , m_tensor(tensor)
+    , m_has_static_value(false)
+    , m_static_value()
 {
 }
 
@@ -57,4 +59,13 @@ const Shape& descriptor::Output::get_shape() const
 const element::Type& descriptor::Output::get_element_type() const
 {
     return m_tensor->get_element_type();
+}
+
+const StaticValue& descriptor::Output::get_static_value() const
+{
+    if(!m_has_static_value)
+    {
+        throw ngraph_error("get_static_value() called on an output with no static value set");
+    }
+    return m_static_value;
 }

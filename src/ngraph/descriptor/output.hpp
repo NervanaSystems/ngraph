@@ -21,6 +21,7 @@
 
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/static_value.hpp"
 
 namespace ngraph
 {
@@ -51,6 +52,23 @@ namespace ngraph
             const std::set<Input*>& get_inputs() const { return m_inputs; }
             Tensor& get_tensor() const;
 
+            /// \return true if and only if the output has a static value
+            bool has_static_value() const { return m_has_static_value; }
+            /// \return the static value of the output
+            const StaticValue& get_static_value() const;
+
+            void set_static_value(const StaticValue& static_value)
+            {
+                m_static_value = static_value;
+                m_has_static_value = true;
+            }
+
+            void clear_static_value()
+            {
+                m_static_value = StaticValue();
+                m_has_static_value = false;
+            }
+
             /// \return the shape of the output
             const Shape& get_shape() const;
             /// \return the element type of the output
@@ -61,6 +79,8 @@ namespace ngraph
             size_t m_index;
             std::shared_ptr<Tensor> m_tensor;
             std::set<Input*> m_inputs;
+            bool m_has_static_value{false};
+            StaticValue m_static_value;
 
         private:
             Output(const Output&) = delete;

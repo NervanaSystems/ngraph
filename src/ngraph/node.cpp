@@ -411,3 +411,46 @@ void Node::validate_and_infer_elementwise_logical()
         << get_input_element_type(0) << ".";
     validate_and_infer_elementwise(get_input_element_type(0));
 }
+
+const StaticValue& Node::get_output_static_value(size_t i) const
+{
+    return m_outputs.at(i).get_static_value();
+}
+
+const StaticValue& Node::get_static_value() const
+{
+    if (get_output_size() != 1)
+    {
+        throw ngraph_error("get_static_value() must be called on a node with exactly one output.");
+    }
+    return get_output_static_value(0);
+}
+
+void Node::set_output_static_value(size_t i, const StaticValue& static_value)
+{
+    m_outputs.at(i).set_static_value(static_value);
+}
+
+void Node::set_static_value(const StaticValue& static_value)
+{
+    if (get_output_size() != 1)
+    {
+        throw ngraph_error("set_static_value() must be called on a node with exactly one output.");
+    }
+    set_output_static_value(0, static_value);
+}
+
+void Node::clear_output_static_value(size_t i)
+{
+    m_outputs.at(i).clear_static_value();
+}
+
+void Node::clear_static_value()
+{
+    if (get_output_size() != 1)
+    {
+        throw ngraph_error(
+            "clear_static_value() must be called on a node with exactly one output.");
+    }
+    return clear_output_static_value(0);
+}

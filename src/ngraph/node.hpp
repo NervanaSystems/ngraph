@@ -159,6 +159,12 @@ namespace ngraph
         /// Checks that there is exactly one output and returns its shape
         const Shape& get_shape() const;
 
+        /// Returns the static value for output i
+        const StaticValue& get_output_static_value(size_t i) const;
+
+        /// Checks that there is exactly one output and returns its static value
+        const Shape& get_static_value() const;
+
         /// Returns the tensor for output i
         descriptor::Tensor& get_output_tensor(size_t i) const;
 
@@ -215,6 +221,10 @@ namespace ngraph
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
     protected:
         void set_output_size(size_t n);
+        void set_output_static_value(size_t n, const StaticValue& static_value);
+        void set_static_value(const StaticValue& static_value);
+        void clear_output_static_value(size_t n);
+        void clear_static_value();
 
         std::string m_node_type;
         size_t m_instance_id;
