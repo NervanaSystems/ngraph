@@ -56,6 +56,7 @@ set (SRC
     op/cosh.cpp
     op/divide.cpp
     op/dot.cpp
+    op/dyn_reshape.cpp
     op/equal.cpp
     op/exp.cpp
     op/floor.cpp
