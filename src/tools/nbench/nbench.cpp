@@ -151,12 +151,6 @@ void print_results(vector<PerfShape> perf_data, bool timing_detail)
     }
 }
 
-bool is_unsupported(const string& s)
-{
-    return s.find("Unhandled op") != s.npos || s.find("Unimplemented op") != s.npos ||
-           s.find("Unsupported op") != s.npos || s.find("unsupported op") != s.npos;
-}
-
 int main(int argc, char** argv)
 {
     string model;
@@ -358,12 +352,6 @@ OPTIONS
             }
             catch (exception e)
             {
-                // if (is_unsupported(e.what())
-                // {
-                // }
-                // else
-                // {
-                // }
                 cout << "Exception caught on '" << m << "'\n" << e.what() << endl;
             }
         }
