@@ -680,13 +680,15 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         NGRAPH_DEBUG << "batch_size: " << batch_size;
         NGRAPH_DEBUG << "feature_size: " << feature_size;
 
-        NGRAPH_ASSERT(src_layer->get_arguments().size() == rnn_nodes[0]->get_num_timesteps() ||
-                      std::dynamic_pointer_cast<op::Parameter>(src_layer))
-            << " input symbols for the layer fused RNN op, should be captured only for the first "
-               "layer";
+        if (auto src_rnn = std::dynamic_pointer_cast<op::gpu::Rnn>(src_layer))
+        {
+            NGRAPH_ASSERT(src_rnn->get_num_timesteps() == num_time_steps)
+                << "input symbols for the layer fused RNN op, should be captured only for the first layer";
+        }
+
         NGRAPH_ASSERT(!std::dynamic_pointer_cast<op::Parameter>(src_layer) ||
                       rnn_nodes[0]->get_num_timesteps() == 1)
-            << " input symbols for the layer fused RNN op, should be captured only for the first "
+            << "input symbols for the layer fused RNN op, should be captured only for the first "
                "layer";
         NGRAPH_ASSERT((src_iter->get_arguments().size()) == num_fused_rnn_layers)
             << "number of hidden states for RNN op in the layer fusion is not equal to num of "
