@@ -46,6 +46,7 @@
 #include "op/reduce.hpp"
 #include "op/relu.hpp"
 #include "op/reshape.hpp"
+#include "op/shape.hpp"
 #include "op/selu.hpp"
 #include "op/sigmoid.hpp"
 #include "op/softmax.hpp"
@@ -142,6 +143,7 @@ namespace ngraph
                                   std::bind(op::reduce_sum_square, std::placeholders::_1));
                     m_map.emplace("Relu", std::bind(op::relu, std::placeholders::_1));
                     m_map.emplace("Reshape", std::bind(op::reshape, std::placeholders::_1));
+                    m_map.emplace("Shape", std::bind(op::shape, std::placeholders::_1));
                     m_map.emplace("Selu", std::bind(op::selu, std::placeholders::_1));
                     m_map.emplace("Sigmoid", std::bind(op::sigmoid, std::placeholders::_1));
                     m_map.emplace("Softmax", std::bind(op::softmax, std::placeholders::_1));

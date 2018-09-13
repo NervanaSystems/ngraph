@@ -85,12 +85,13 @@ The process documented here will work on Ubuntu\* 16.04 (LTS) or on Ubuntu
       $ mkdir build && cd build
 
 #. Generate the GNU Makefiles in the customary manner (from within the 
-   ``build`` directory). This command sets the target build location to
-   be ``~/ngraph_dist``, where it can be easily located.  
+   ``build`` directory). This command enables ONNX support in the library  
+   and sets the target build location at ``~/ngraph_dist``, where it can be 
+   found easily.  
 
    .. code-block:: console
 
-      $ cmake ../ -DCMAKE_INSTALL_PREFIX=~/ngraph_dist  
+      $ cmake .. -DNGRAPH_ONNX_IMPORT_ENABLE=ON  -DCMAKE_INSTALL_PREFIX=~/ngraph_dist
 
    **Other optional build flags** -- If running ``gcc-5.4.0`` or ``clang-3.9``, 
    remember that you can also append ``cmake`` with the prebuilt LLVM option 
@@ -157,14 +158,15 @@ The process documented here will work on CentOS 7.4.
       $ make && make install     
 
 #. Clone the `NervanaSystems` ``ngraph`` repo via HTTPS and use Cmake 3.4.3 to 
-   build nGraph Libraries to ``~/ngraph_dist``. 
+   build nGraph Libraries to ``~/ngraph_dist``. This command enables ONNX 
+   support in the library (optional). 
 
    .. code-block:: console
 
       $ cd /opt/libraries 
       $ git clone https://github.com/NervanaSystems/ngraph.git
       $ cd ngraph && mkdir build && cd build
-      $ ~/cmake/bin/cmake .. -DCMAKE_INSTALL_PREFIX=~/ngraph_dist  
+      $ ~/cmake/bin/cmake .. -DCMAKE_INSTALL_PREFIX=~/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=ON 
       $ make && sudo make install 
 
 
@@ -189,8 +191,8 @@ according to those conventions. These scripts require the command
    $ echo 'export PATH=$HOME/bin:$PATH' >> $HOME/.bash_profile
 
 
-Test 
-====
+Testing the build 
+=================
 
 The |InG| library code base uses GoogleTest's\* `googletest framework`_ 
 for unit tests. The ``cmake`` command from the :doc:`buildlb` guide 

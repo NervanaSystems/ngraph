@@ -73,6 +73,8 @@ add_library(onnx_import STATIC
         op/relu.hpp
         op/reshape.cpp
         op/reshape.hpp
+        op/shape.cpp
+        op/shape.hpp
         op/selu.cpp
         op/selu.hpp
         op/sigmoid.hpp
