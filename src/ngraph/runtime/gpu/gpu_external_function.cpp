@@ -857,7 +857,7 @@ string runtime::gpu::GPU_ExternalFunction::strip_comments(const string& s) const
 }
 
 void runtime::gpu::GPU_ExternalFunction::propagate_in_place_input(
-    ngraph::descriptor::Output* output, std::string input_name, bool dex)
+    ngraph::descriptor::Output* output, std::string input_name)
 {
     std::deque<ngraph::descriptor::Output*> stack;
     stack.push_front(output);
@@ -883,14 +883,7 @@ void runtime::gpu::GPU_ExternalFunction::propagate_in_place_input(
                         size_t output_index = oi_pair.output;
                         auto& output_tensor = c_op->get_outputs().at(output_index).get_tensor();
 
-                        if (dex)
-                        {
-                            // tensor_alias[output_tensor.get_name()] = input_name;
-                        }
-                        else
-                        {
-                            m_variable_name_map[output_tensor.get_name()] = input_name;
-                        }
+                        m_variable_name_map[output_tensor.get_name()] = input_name;
 
                         NGRAPH_DEBUG << "GPU codegen: Forwarding " << input_name << " through "
                                      << output_tensor.get_name();
@@ -903,7 +896,7 @@ void runtime::gpu::GPU_ExternalFunction::propagate_in_place_input(
 }
 
 void runtime::gpu::GPU_ExternalFunction::propagate_in_place_output(
-    ngraph::descriptor::Output* res_src_output, std::string output_name, bool dex)
+    ngraph::descriptor::Output* res_src_output, std::string output_name)
 {
     // we start with a particular output
     // which is an argument to a given op::Result
@@ -934,14 +927,7 @@ void runtime::gpu::GPU_ExternalFunction::propagate_in_place_output(
                         NGRAPH_DEBUG << "Reusing " << output_name << " for "
                                      << input_tensor.get_name();
 
-                        if (dex)
-                        {
-                            // tensor_alias[input_tensor.get_name()] = output_name;
-                        }
-                        else
-                        {
-                            m_variable_name_map[input_tensor.get_name()] = output_name;
-                        }
+                        m_variable_name_map[input_tensor.get_name()] = output_name;
 
                         it = &arg->get_inputs().at(input_index).get_output();
                         propagate_further = true;
