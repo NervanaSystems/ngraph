@@ -63,7 +63,7 @@ const element::Type& descriptor::Output::get_element_type() const
 
 const StaticValue& descriptor::Output::get_static_value() const
 {
-    if(!m_has_static_value)
+    if (!m_has_static_value)
     {
         throw ngraph_error("get_static_value() called on an output with no static value set");
     }

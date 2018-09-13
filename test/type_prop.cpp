@@ -6566,3 +6566,23 @@ TEST(type_prop, topk_invalid_k)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, shape)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto sh = make_shared<op::Shape>(param);
+
+    ASSERT_EQ(sh->get_element_type(), element::u64);
+    ASSERT_EQ(sh->get_shape(), (Shape{4}));
+    ASSERT_EQ(sh->get_static_value(), (StaticValue{2, 4, 6, 8}));
+}
+
+TEST(type_prop, shape_scalar)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{});
+    auto sh = make_shared<op::Shape>(param);
+
+    ASSERT_EQ(sh->get_element_type(), element::u64);
+    ASSERT_EQ(sh->get_shape(), Shape{0});
+    ASSERT_EQ(sh->get_static_value(), StaticValue{});
+}

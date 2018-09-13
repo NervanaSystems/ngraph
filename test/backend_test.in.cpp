@@ -9532,3 +9532,47 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_one)
     backend->call_with_validate(f1, {result1}, {a});
     EXPECT_EQ((vector<float>{3, 1, 4}), read_vector<float>(result1));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, shape)
+{
+    Shape shape{2, 3, 4, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Shape>(A), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::f32, shape);
+    vector<float> some_arbitrary_values(shape_size(shape));
+    for (size_t i = 0; i < shape_size(shape); i++)
+    {
+        some_arbitrary_values[i] = float(i) / 2.0f;
+    }
+    copy_data(a, some_arbitrary_values);
+
+    auto result = backend->create_tensor(element::u64, Shape{shape.size()});
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((vector<uint64_t>{2, 3, 4, 5}), read_vector<uint64_t>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, shape_scalar)
+{
+    Shape shape{};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Shape>(A), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::f32, shape);
+    vector<float> some_arbitrary_values(shape_size(shape));
+    for (size_t i = 0; i < shape_size(shape); i++)
+    {
+        some_arbitrary_values[i] = float(i) / 2.0f;
+    }
+    copy_data(a, some_arbitrary_values);
+
+    auto result = backend->create_tensor(element::u64, Shape{shape.size()});
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((vector<uint64_t>{}), read_vector<uint64_t>(result));
+}

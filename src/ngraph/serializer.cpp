@@ -78,6 +78,7 @@
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/select_and_scatter.hpp"
+#include "ngraph/op/shape.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
@@ -863,6 +864,10 @@ static shared_ptr<ngraph::Function>
                                                          window_shape,
                                                          window_movement_strides);
             }
+            else if (node_op == "Shape")
+            {
+                node = make_shared<op::Shape>(args[0]);
+            }
             else if (node_op == "Sigmoid")
             {
                 node = make_shared<op::Sigmoid>(args[0]);
@@ -1329,6 +1334,9 @@ static json write(const Node& n, bool binary_constant_data)
         node["scatter_function"] = tmp->get_functions()[1]->get_name();
         node["window_shape"] = tmp->get_window_shape();
         node["window_movement_strides"] = tmp->get_window_movement_strides();
+    }
+    else if (node_op == "Shape")
+    {
     }
     else if (node_op == "Sigmoid")
     {
