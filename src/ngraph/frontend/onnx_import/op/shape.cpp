@@ -14,40 +14,32 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "node.hpp"
-#include "graph.hpp"
-#include "ops_bridge.hpp"
+#include <memory>
+
+#include "ngraph/node.hpp"
+#include "ngraph/shape.hpp"
+#include "ngraph/type/element_type.hpp"
+
+#include "ngraph/op/constant.hpp"
+
+#include "shape.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        NodeVector Node::get_ng_nodes() const { return ops_bridge::make_ng_nodes(*this); }
-        NodeVector Node::get_ng_inputs() const
+        namespace op
         {
-            NodeVector result;
-            for (const auto& name : m_node_proto->input())
+            NodeVector shape(const Node& node)
             {
-                result.push_back(m_graph->get_ng_node_from_cache(name));
-            }
-            return result;
-        }
+                auto data = node.get_ng_inputs().at(0);
+                auto data_shape = data->get_shape();
 
-        std::string Node::get_description() const
-        {
-            if (!get_name().empty())
-            {
-                return get_name();
+                return {std::make_shared<ngraph::op::Constant>(
+                    ngraph::element::i64, Shape{data_shape.size()}, data_shape)};
             }
 
-            std::stringstream stream;
-            for (std::size_t index = 0; index < m_output_names.size(); ++index)
-            {
-                stream << (index != 0 ? ", " : "");
-                stream << m_output_names.at(index).get();
-            }
-            return stream.str();
-        }
+        } // namespace op
 
     } // namespace onnx_import
 

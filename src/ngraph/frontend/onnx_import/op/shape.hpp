@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2018 Intel Corporation
+// Copyright 2017-2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,10 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "flatten.hpp"
+#pragma once
 
-#include "exceptions.hpp"
-#include "utils/reshape.hpp"
+#include "ngraph/node_vector.hpp"
+
+#include "core/node.hpp"
 
 namespace ngraph
 {
@@ -25,20 +26,9 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector flatten(const Node& node)
-            {
-                NodeVector inputs{node.get_ng_inputs()};
-                auto data = inputs.at(0);
-                auto axis = node.get_attribute_value<int64_t>("axis", 1);
+            NodeVector shape(const Node& node);
+        } // namespace op
 
-                ASSERT_VALID_ARGUMENT(node, (axis >= 0) && (axis <= data->get_shape().size()))
-                    << "provided 'axis' attribute is not valid.";
+    } // namespace onnx_import
 
-                return {reshape::flatten(data, axis)};
-            }
-
-        } // namespace  op
-
-    } // namespace  onnx_import
-
-} // namespace  ngraph
+} // namespace ngraph
