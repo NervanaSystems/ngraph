@@ -173,9 +173,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         element::Type type;
         switch (type_id)
         {
-        case OP_TYPEID::Convert:
-            type = op->get_input_element_type(0);
-            break;
+        case OP_TYPEID::Convert: type = op->get_input_element_type(0); break;
         case OP_TYPEID::Equal:
         case OP_TYPEID::Greater:
         case OP_TYPEID::GreaterEq:
@@ -186,6 +184,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
             // All BinaryElementwiseComparision ops have the same type for inputs
             // Select has bool for first input and the type we are interested in for the second
             type = op->get_input_element_type(1);
+            break;
         default: type = op->get_outputs().at(0).get_element_type(); break;
         }
 
