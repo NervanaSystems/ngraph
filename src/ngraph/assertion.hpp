@@ -166,12 +166,12 @@ namespace ngraph
 
 /// Asserts condition "cond" with an exception class of "T", at location "loc".
 #define NGRAPH_ASSERT_STREAM_WITH_LOC(T, cond, loc)                                                \
-    (cond ? ::ngraph::DummyAssertionHelper().get_stream()                                          \
-          : ::ngraph::AssertionHelper<T>(__FILE__, __LINE__, #cond, loc).get_stream())
+    ((cond) ? ::ngraph::DummyAssertionHelper().get_stream()                                        \
+            : ::ngraph::AssertionHelper<T>(__FILE__, __LINE__, #cond, loc).get_stream())
 /// Asserts condition "cond" with an exception class of "T", and no location specified.
 #define NGRAPH_ASSERT_STREAM(T, cond)                                                              \
-    (cond ? ::ngraph::DummyAssertionHelper().get_stream()                                          \
-          : ::ngraph::AssertionHelper<T>(__FILE__, __LINE__, #cond).get_stream())
+    ((cond) ? ::ngraph::DummyAssertionHelper().get_stream()                                        \
+            : ::ngraph::AssertionHelper<T>(__FILE__, __LINE__, #cond).get_stream())
 /// Fails unconditionally with an exception class of "T", at location "loc".
 #define NGRAPH_FAIL_STREAM_WITH_LOC(T, loc)                                                        \
     ::ngraph::AssertionHelper<T>(__FILE__, __LINE__, "", loc).get_stream()
