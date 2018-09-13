@@ -497,7 +497,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
 
         m_writer << "extern \"C\" void " << current_function->get_name();
         m_writer << "(void** inputs, void** outputs, "
-                 << "gpu::GPURuntimeContext* ctx)\n";
+                 << "gpu::GPURuntimeContext* ctx) __attribute__ ((optnone))\n";
         m_writer.block_begin();
         {
             m_writer << "m_runtime_context = ctx;\n";

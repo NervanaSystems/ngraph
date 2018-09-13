@@ -144,6 +144,16 @@ namespace ngraph
         // TODO: Remove from unit tests.
         const std::deque<descriptor::Output>& get_outputs() const;
 
+        /// Get control dependencies registered on the node
+        const std::set<std::shared_ptr<Node>>& get_control_dependencies() const;
+
+        void add_control_dependency(std::shared_ptr<Node> node);
+
+        void remove_control_dependency(std::shared_ptr<Node> node)
+        {
+            m_control_dependencies.erase(node);
+        }
+
         /// Returns the number of outputs on the for the node.
         size_t get_output_size() const;
 
@@ -216,6 +226,7 @@ namespace ngraph
         /// Use instance ids for comparison instead of memory addresses to improve determinism
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
     protected:
+        std::set<std::shared_ptr<Node>> m_control_dependencies;
         void set_output_size(size_t n);
 
         std::string m_node_type;
