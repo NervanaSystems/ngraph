@@ -14,6 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
+#ifdef NGRAPH_DISTRIBUTED
 #pragma once
 
 #ifdef IN_NGRAPH_LIBRARY
@@ -53,3 +54,4 @@ namespace ngraph
         }
     };
 }
+#endif
