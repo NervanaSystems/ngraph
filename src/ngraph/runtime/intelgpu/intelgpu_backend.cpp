@@ -1030,7 +1030,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         }
         else
         {
-            throw invalid_argument("IntelGPU: Unsupported operation \"" + op->description() + "\"");
+            throw unsupported_op(op->description());
         }
     }
 
