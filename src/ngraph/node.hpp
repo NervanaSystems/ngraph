@@ -132,6 +132,8 @@ namespace ngraph
         virtual bool is_commutative() { return false; }
         size_t get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
+        virtual std::ostream& write_short_description(std::ostream&) const;
+        virtual std::ostream& write_long_description(std::ostream&) const;
 
         // TODO: Deprecate
         std::deque<descriptor::Input>& get_inputs() { return m_inputs; }
@@ -251,6 +253,25 @@ namespace ngraph
             : AssertionFailure(what)
         {
         }
+    };
+
+    class NodeDescription
+    {
+    public:
+        NodeDescription(const Node& node, bool is_short)
+            : m_node(node)
+            , m_is_short(is_short)
+        {
+        }
+
+        friend std::ostream& operator<<(std::ostream& out, const NodeDescription node_description)
+        {
+            return node_description.m_is_short
+                       ? node_description.m_node.write_short_description(out)
+                       : node_description.m_node.write_long_description(out);
+        }
+        const Node& m_node;
+        bool m_is_short;
     };
 
     void check_new_args_count(const Node* node, const NodeVector& new_args);

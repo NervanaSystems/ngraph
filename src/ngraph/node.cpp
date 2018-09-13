@@ -201,16 +201,27 @@ namespace ngraph
 {
     ostream& operator<<(ostream& out, const Node& node)
     {
-        out << node.description() << '[' << node.get_name() << "](";
-        string sep = "";
-        for (auto arg : node.get_arguments())
-        {
-            out << sep << arg->get_name();
-            sep = ", ";
-        }
-        out << ")";
-        return out;
+        return out << NodeDescription(node, false);
     }
+}
+
+std::ostream& Node::write_short_description(std::ostream& out) const
+{
+    return out << get_name();
+}
+
+std::ostream& Node::write_long_description(std::ostream& out) const
+{
+    out << description() << '[' << get_name() << "](";
+    string sep = "";
+    for (auto arg : get_arguments())
+    {
+        out << sep << NodeDescription(*arg, true);
+        sep = ", ";
+    }
+    out << ")";
+
+    return out;
 }
 
 size_t Node::get_output_size() const
