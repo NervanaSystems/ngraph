@@ -82,13 +82,11 @@ namespace ngraph
                     // symmetric padding and no dilation
                     if (arg0_shape.size() == 4 && padding_below == padding_above &&
                         window_dilation_strides == Strides{1, 1} &&
-                        data_dilation_strides == Strides{1, 1})
+                        data_dilation_strides == Strides{1, 1} && CHECK_BUILD_TVM_FUNCTOR)
                     {
-                        if (CHECK_BUILD_TVM_FUNCTOR)
-                        {
-                            return;
-                        }
+                        return;
                     }
+
 #endif
 
                     auto functor = [&,

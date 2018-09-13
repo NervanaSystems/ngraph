@@ -345,6 +345,12 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Tanh)
             {
+#ifdef NGRAPH_USE_TVM
+                if (CHECK_BUILD_TVM_FUNCTOR)
+                {
+                    return;
+                }
+#endif
                 BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::tanh);
             }
 

@@ -30,10 +30,12 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/exp.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/tanh.hpp"
 
 #include "tvm_kernels.hpp"
 
@@ -87,6 +89,20 @@ using tvm_func = std::function<void(CPURuntimeContext* ctx)>;
         auto R = OP(A, B, "tensor", topi::kBroadcast);                                             \
         return tvm_binary_func({A, B, R}, tvm_instance, node, args, out, tensor_data);             \
     }
+#define TVM_UNARY_FUNC(OP)                                                                         \
+    [](const std::unique_ptr<TVMInstance>& tvm_instance,                                           \
+       const ngraph::Node* node,                                                                   \
+       const std::vector<TensorViewWrapper>& args,                                                 \
+       const std::vector<TensorViewWrapper>& out,                                                  \
+       std::unordered_map<std::string, void*>& tensor_data) {                                      \
+        tvm::Array<tvm::Expr> ae;                                                                  \
+        for (auto& v : args[0].get_shape())                                                        \
+            ae.push_back(tvm::make_const(tvm::Int(32), v));                                        \
+        auto A = tvm::placeholder(ae, tvm::Float(32), "a");                                        \
+        auto R = OP(A, "tensor", topi::kElementWise);                                              \
+        return tvm_unary_func({A, R}, tvm_instance, node, args, out, tensor_data);                 \
+    }
+
 tvm_func tvm_binary_func(const tvm::Array<tvm::Tensor>& G,
                          const std::unique_ptr<TVMInstance>& tvm_instance,
                          const ngraph::Node* node,
@@ -111,6 +127,7 @@ tvm_func tvm_binary_func(const tvm::Array<tvm::Tensor>& G,
         func(&a, &b, &r);
     };
 }
+
 tvm_func tvm_unary_func(const tvm::Array<tvm::Tensor>& G,
                         const std::unique_ptr<TVMInstance>& tvm_instance,
                         const ngraph::Node* node,
@@ -263,6 +280,7 @@ tvm_func convolution(const std::unique_ptr<TVMInstance>& tvm_instance,
         func(&i, &w, &r);
     };
 }
+
 tvm_func pool_max(const std::unique_ptr<TVMInstance>& tvm_instance,
                   const ngraph::Node* node,
                   const std::vector<TensorViewWrapper>& args,
@@ -291,6 +309,7 @@ tvm_func pool_max(const std::unique_ptr<TVMInstance>& tvm_instance,
     auto R = topi::nn::pool(I, ke, se, pe, topi::nn::kMaxPool, false);
     return tvm_unary_func({I, R}, tvm_instance, node, args, out, tensor_data);
 }
+
 tvm_func pool_avg(const std::unique_ptr<TVMInstance>& tvm_instance,
                   const ngraph::Node* node,
                   const std::vector<TensorViewWrapper>& args,
@@ -320,6 +339,7 @@ tvm_func pool_avg(const std::unique_ptr<TVMInstance>& tvm_instance,
     auto R = topi::nn::pool(I, ke, se, pe, topi::nn::kAvgPool, false, "NCHW", count_include_pad);
     return tvm_unary_func({I, R}, tvm_instance, node, args, out, tensor_data);
 }
+
 tvm_func relu(const std::unique_ptr<TVMInstance>& tvm_instance,
               const ngraph::Node* node,
               const std::vector<TensorViewWrapper>& args,
@@ -333,6 +353,7 @@ tvm_func relu(const std::unique_ptr<TVMInstance>& tvm_instance,
     auto R = topi::relu<float>(A);
     return tvm_unary_func({A, R}, tvm_instance, node, args, out, tensor_data);
 }
+
 tvm_func matmul(const std::unique_ptr<TVMInstance>& tvm_instance,
                 const ngraph::Node* node,
                 const std::vector<TensorViewWrapper>& args,
@@ -349,6 +370,7 @@ tvm_func matmul(const std::unique_ptr<TVMInstance>& tvm_instance,
     auto R = topi::matmul(A, B, false, false, "tensor", topi::kMatMul);
     return tvm_binary_func({A, B, R}, tvm_instance, node, args, out, tensor_data);
 }
+
 std::unordered_map<std::type_index,
                    std::function<tvm_func(const std::unique_ptr<TVMInstance>&,
                                           const ngraph::Node*,
@@ -356,6 +378,8 @@ std::unordered_map<std::type_index,
                                           const std::vector<TensorViewWrapper>&,
                                           std::unordered_map<std::string, void*>&)>>
     tvm_funcs = {{TI(ngraph::op::Divide), TVM_BINARY_FUNC(topi::divide)},
+                 {TI(ngraph::op::Exp), TVM_UNARY_FUNC(topi::exp)},
+                 {TI(ngraph::op::Tanh), TVM_UNARY_FUNC(topi::tanh)},
                  {TI(ngraph::op::Add), TVM_BINARY_FUNC(topi::add)},
                  {TI(ngraph::op::BatchNorm), batch_norm},
                  {TI(ngraph::op::Convolution), convolution},

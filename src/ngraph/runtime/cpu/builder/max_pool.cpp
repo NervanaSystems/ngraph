@@ -39,12 +39,9 @@ namespace ngraph
                 auto max_pool = static_cast<const ngraph::op::MaxPool*>(node);
 
 #ifdef NGRAPH_USE_TVM
-                if (args[0].get_shape().size() == 4)
+                if (args[0].get_shape().size() == 4 && CHECK_BUILD_TVM_FUNCTOR)
                 {
-                    if (CHECK_BUILD_TVM_FUNCTOR)
-                    {
-                        return;
-                    }
+                    return;
                 }
 #endif
                 auto& functors = external_function->get_functors();

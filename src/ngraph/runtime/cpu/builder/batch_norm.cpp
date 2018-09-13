@@ -169,12 +169,9 @@ namespace ngraph
                     static_cast<const ngraph::op::BatchNorm*>(node);
 
                 if (!batchnorm->get_training_flag() && args.size() == 5 &&
-                    args[2].get_shape().size() == 4)
+                    args[2].get_shape().size() == 4 && CHECK_BUILD_TVM_FUNCTOR)
                 {
-                    if (CHECK_BUILD_TVM_FUNCTOR)
-                    {
-                        return;
-                    }
+                    return;
                 }
 
                 if (!mkldnn_utils::use_mkldnn_kernel(node))

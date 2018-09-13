@@ -93,12 +93,10 @@ namespace ngraph
                 if ((arg0_shape.size() == 2) &&
                     std::find(arg0_shape.begin(), arg0_shape.end(), 0) == arg0_shape.end() &&
                     (arg1_shape.size() == 2) &&
-                    std::find(arg1_shape.begin(), arg1_shape.end(), 0) == arg1_shape.end())
+                    std::find(arg1_shape.begin(), arg1_shape.end(), 0) == arg1_shape.end() &&
+                    CHECK_BUILD_TVM_FUNCTOR)
                 {
-                    if (CHECK_BUILD_TVM_FUNCTOR)
-                    {
-                        return;
-                    }
+                    return;
                 }
 #endif
                 if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1) &&
