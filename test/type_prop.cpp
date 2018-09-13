@@ -6586,3 +6586,74 @@ TEST(type_prop, shape_scalar)
     ASSERT_EQ(sh->get_shape(), Shape{0});
     ASSERT_EQ(sh->get_static_value(), StaticValue{});
 }
+
+TEST(type_prop, dyn_reshape_of_shape)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{8, 6, 4, 2});
+    auto sh = make_shared<op::Shape>(param1);
+    auto dr = make_shared<op::DynReshape>(param0, sh);
+
+    ASSERT_EQ(dr->get_element_type(), element::f32);
+    ASSERT_EQ(dr->get_shape(), (Shape{8, 6, 4, 2}));
+}
+
+TEST(type_prop, dyn_reshape_wrong_shape_type)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{4});
+    try
+    {
+        auto dr = make_shared<op::DynReshape>(param0, param1);
+        FAIL() << "Did not detect incorrect element type for shape parameter";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Shape argument must have type u64");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dyn_reshape_invalid_shape)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto param1 = make_shared<op::Parameter>(element::u64, Shape{2, 4, 4, 8});
+    try
+    {
+        auto sh = make_shared<op::Shape>(param1);
+        auto dr = make_shared<op::DynReshape>(param0, sh);
+        FAIL() << "Did not detect invalid output shape";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Number of elements in output shape does not match number of elements "
+                             "in argument shape");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dyn_reshape_no_static_value)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto param1 = make_shared<op::Parameter>(element::u64, Shape{5});
+    try
+    {
+        auto dr = make_shared<op::DynReshape>(param0, param1);
+        FAIL() << "Did not detect absence of static value for shape parameter";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Shape argument has no static value");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}

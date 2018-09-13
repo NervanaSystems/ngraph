@@ -31,21 +31,26 @@ op::DynReshape::DynReshape(const shared_ptr<Node>& arg, const shared_ptr<Node>& 
 
 void op::DynReshape::validate_and_infer_types()
 {
-    /*Shape input_shape = get_input_shape(0);
+    Shape input_shape = get_input_shape(0);
 
-    NODE_VALIDATION_ASSERT(this, get_inputs()[0].has_static_value())
-        << "Shape argument to DynReshape has no static value";
+    NODE_VALIDATION_ASSERT(this, get_input_element_type(1) == element::u64)
+        << "Shape argument must have type u64 (actual element type: " << get_input_element_type(1)
+        << ").";
 
-    Shape output_shape = get_input_static_value(0);
+    // Temporary limitation until we add wildcard support.
+    NODE_VALIDATION_ASSERT(this, get_inputs()[1].get_output().has_static_value())
+        << "Shape argument has no static value.";
 
-    NODE_VALIDATION_ASSERT(this, output_shape.size() == 1)
-        << "Output shape must have a rank of 1 (output shape: " << output_shape << ").";
+    Shape output_shape = get_inputs()[1].get_output().get_static_value();
 
+    // Once we have wildcard support we'll need to skip this check if input_shape or output_shape is not fully determined.
     NODE_VALIDATION_ASSERT(this, shape_size(input_shape) == shape_size(output_shape))
         << "Number of elements in output shape does not match number of elements in argument shape "
         << "(output shape: " << output_shape << ", argument shape: " << input_shape << ").";
 
-    set_output_type(0, get_input_element_type(0), output_shape);*/
+    set_output_type(0, get_input_element_type(0), output_shape);
+
+    // TODO(amprocte): if arg0 and arg1 have a static value, output 0 can have a static value too.
 }
 
 shared_ptr<Node> op::DynReshape::copy_with_new_args(const NodeVector& new_args) const

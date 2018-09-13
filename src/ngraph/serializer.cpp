@@ -41,6 +41,7 @@
 #include "ngraph/op/cosh.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/dyn_reshape.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/floor.hpp"
@@ -614,6 +615,10 @@ static shared_ptr<ngraph::Function>
                     node = make_shared<op::Dot>(args[0], args[1], reduction_axes_count);
                 }
             }
+            else if (node_op == "DynReshpae")
+            {
+                node = make_shared<op::DynReshape>(args[0], args[1]);
+            }
             else if (node_op == "Equal")
             {
                 node = make_shared<op::Equal>(args[0], args[1]);
@@ -1161,6 +1166,9 @@ static json write(const Node& n, bool binary_constant_data)
     {
         auto tmp = dynamic_cast<const op::Dot*>(&n);
         node["reduction_axes_count"] = tmp->get_reduction_axes_count();
+    }
+    else if (node_op == "DynReshape")
+    {
     }
     else if (node_op == "Equal")
     {

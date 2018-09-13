@@ -9576,3 +9576,30 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_scalar)
     backend->call_with_validate(f, {result}, {a});
     EXPECT_EQ((vector<uint64_t>{}), read_vector<uint64_t>(result));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, dyn_reshape)
+{
+    Shape shape_a{2, 4, 6, 8};
+    Shape shape_b{2, 6, 8, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto f = make_shared<Function>(make_shared<op::DynReshape>(A, make_shared<op::Shape>(B)),
+                                   op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::f32, shape_a);
+    auto b = backend->create_tensor(element::f32, shape_b);
+    vector<float> some_arbitrary_values(shape_size(shape_a));
+    for (size_t i = 0; i < shape_size(shape_a); i++)
+    {
+        some_arbitrary_values[i] = float(i) / 2.0f;
+    }
+    copy_data(a, some_arbitrary_values);
+    copy_data(b, some_arbitrary_values);
+
+    auto result = backend->create_tensor(element::f32, shape_b);
+
+    backend->call_with_validate(f, {result}, {a, b});
+    EXPECT_EQ(some_arbitrary_values, read_vector<float>(result));
+}
