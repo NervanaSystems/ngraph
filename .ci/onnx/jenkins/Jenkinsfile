@@ -130,9 +130,12 @@ def Notify() {
     ])
     String notifyPeople = "$ghprbPullAuthorEmail, $ghprbActualCommitAuthorEmail"
     Closure notifyMethod = { configMap ->
+        if(currentBuild.result != "FAILURE") {
+            currentBuild.result = "SUCCESS"
+        }
         if(currentBuild.result == "FAILURE" || WARNING != "") {
             emailext (
-                subject: "NGraph-Onnx CI: NGraph PR $ghprbPullId FAILED!",
+                subject: "NGraph-Onnx CI: NGraph PR $ghprbPullId $currentBuild.result!",
                 body: """
                     <table style="width:100%">
                         <tr><td>${WARNING}</td></tr>
