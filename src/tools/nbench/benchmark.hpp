@@ -28,14 +28,9 @@
 std::multimap<size_t, std::string>
     aggregate_timing(const std::vector<ngraph::runtime::PerformanceCounter>& perf_data);
 
-void run_benchmark(std::shared_ptr<ngraph::Function> f,
-                   const std::string& backend_name,
-                   size_t iterations,
-                   bool timing_detail,
-                   int warmup_iterations);
-
-void run_benchmark(const std::string& json_path,
-                   const std::string& backend_name,
-                   size_t iterations,
-                   bool timing_detail = false,
-                   int warmup_iterations = 1);
+std::vector<ngraph::runtime::PerformanceCounter> run_benchmark(std::shared_ptr<ngraph::Function> f,
+                                                               const std::string& backend_name,
+                                                               size_t iterations,
+                                                               bool timing_detail,
+                                                               int warmup_iterations,
+                                                               bool copy_data);

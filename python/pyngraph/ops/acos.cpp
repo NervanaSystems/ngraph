@@ -14,9 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/acos.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+#include "ngraph/op/acos.hpp" // ngraph::op::Acos
 #include "pyngraph/ops/acos.hpp"
 
 namespace py = pybind11;

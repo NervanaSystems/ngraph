@@ -14,8 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "pyngraph/util.hpp"
 #include <pybind11/numpy.h>
+
+#include "pyngraph/util.hpp"
 
 namespace py = pybind11;
 

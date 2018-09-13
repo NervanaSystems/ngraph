@@ -21,6 +21,8 @@
 #include "pyngraph/ops/acos.hpp"
 #include "pyngraph/ops/add.hpp"
 #include "pyngraph/ops/and.hpp"
+#include "pyngraph/ops/argmax.hpp"
+#include "pyngraph/ops/argmin.hpp"
 #include "pyngraph/ops/asin.hpp"
 #include "pyngraph/ops/atan.hpp"
 #include "pyngraph/ops/avg_pool.hpp"
@@ -80,6 +82,7 @@
 #include "pyngraph/ops/sum.hpp"
 #include "pyngraph/ops/tan.hpp"
 #include "pyngraph/ops/tanh.hpp"
+#include "pyngraph/ops/topk.hpp"
 
 namespace py = pybind11;
 

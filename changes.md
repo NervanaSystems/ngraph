@@ -1,10 +1,14 @@
 # API Changes
 
+## Passes
+* `LikeReplacement` pass must be run by all transformers.
+
 ## Nodes, Parameters
 
 * `Nodes` is now `NodeVector`
 * `Parameters` is now `ParameterVector`
 * `NodeVector`, `ParameterVector`, `AxisVector`, `AxisSet`, `Shape`, `Stride`, `Coordinate`, and `CoordinateDiff` are now classes, not type aliases.
+* `PrimaryTensorView` is now `TensorView` (and will merge into `Tensor`)
 
 ## Changes to ops
 

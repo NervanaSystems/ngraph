@@ -25,14 +25,12 @@ using namespace ngraph;
 op::Power::Power(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
     : BinaryElementwiseArithmetic("Power", arg0, arg1)
 {
+    constructor_validate_and_infer_types();
 }
 
 shared_ptr<Node> op::Power::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 2)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return make_shared<Power>(new_args.at(0), new_args.at(1));
 }
 

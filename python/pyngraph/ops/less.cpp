@@ -16,7 +16,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-//#include <string>
+
 #include "ngraph/op/less.hpp"
 #include "pyngraph/ops/less.hpp"
 

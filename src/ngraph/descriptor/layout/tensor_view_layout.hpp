@@ -19,7 +19,7 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/descriptor/tensor_view.hpp"
+#include "ngraph/descriptor/tensor.hpp"
 
 namespace ngraph
 {
@@ -30,8 +30,6 @@ namespace ngraph
 
     namespace descriptor
     {
-        class TensorView;
-
         namespace layout
         {
             /// \brief Interface for describing implementations of tensor views.
