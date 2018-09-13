@@ -105,7 +105,7 @@ op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<Node>& data_batch,
 
 std::shared_ptr<Node> op::ConvolutionAdd::copy_with_new_args(const NodeVector& new_args) const
 {
-    NODE_VALIDATION_ASSERT(this, new_args.size() != 3)
+    NODE_VALIDATION_ASSERT(this, new_args.size() == 3)
         << "New arg size is not 3 (new args size: " << new_args.size() << ").";
 
     return std::shared_ptr<Node>(new ConvolutionAdd(new_args.at(0),
