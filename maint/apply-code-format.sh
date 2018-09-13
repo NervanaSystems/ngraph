@@ -55,6 +55,7 @@ for ROOT_SUBDIR in src doc/examples test ${PYBIND_WRAPPER}; do
         # creates dangling symlinks with .cpp/.hpp suffixes as a sort of locking
         # mechanism, and this confuses clang-format.
         find "${ROOT_SUBDIR}" -type f -and \( -name '*.cpp' -or -name '*.hpp' \) | xargs "${CLANG_FORMAT_PROG}" -i -style=file
+        find "${ROOT_SUBDIR}" -type f -and \( -name '*.cpp' -or -name '*.hpp' -or -name 'CMakeLists.txt' \) | xargs chmod 0644 
 
         bash_lib_status "Done."
     fi

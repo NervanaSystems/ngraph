@@ -497,7 +497,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
 
         m_writer << "extern \"C\" void " << current_function->get_name();
         m_writer << "(void** inputs, void** outputs, "
-                 << "gpu::GPURuntimeContext* ctx)\n";
+                 << "gpu::GPURuntimeContext* ctx) __attribute__ ((optnone))\n";
         m_writer.block_begin();
         {
             m_writer << "m_runtime_context = ctx;\n";
@@ -534,10 +534,12 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 ss << "((" << type << "*)(outputs[" << i << "]))";
                 m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
 
-                // it should be safe to assign both descriptors to one output*
-                // since needs_copy == false makes `op::Result` an nop
                 auto res = dynamic_pointer_cast<ngraph::op::Result>(op);
-                if (!res->needs_copy())
+                //keep assigning different outputs to a result descriptor
+                //op::Result emitter will check if in and out descriptors are the same
+                //and skip a copy
+                auto input_node = res->get_inputs().at(0).get_output().get_node();
+                if (!input_node->is_constant() && !input_node->is_parameter())
                 {
                     shared_ptr<descriptor::TensorView> itv =
                         res->get_inputs().at(0).get_output().get_tensor_view();
@@ -550,14 +552,13 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
 
             for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
             {
-                auto& n =
-                    *node; // Work around a compiler warning (*node inside typeid may have effects
+                auto& n = *node;
+                // Work around a compiler warning (*node inside typeid may have effects
                 // with shared pointers, which is fine here but clang doesn't like it.)
                 auto handler = dispatcher.find(type_index(typeid(n)));
                 if (handler == dispatcher.end())
                 {
-                    throw ngraph_error("Unhandled op during code generation : " +
-                                       node->description());
+                    throw ngraph::unsupported_op(node->description());
                 }
                 vector<GPU_TensorViewWrapper> in;
                 vector<string> node_input_names;
@@ -648,8 +649,6 @@ void runtime::gpu::GPU_ExternalFunction::compile()
         m_shared_context->m_primitive_emitter->get_memory_allocator());
 
     m_pass_manager.register_pass<ngraph::pass::LikeReplacement>();
-    m_pass_manager.register_pass<ngraph::pass::ResultCopyElimination>();
-
     m_pass_manager
         .register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
 
@@ -757,6 +756,10 @@ string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
     // Work around a compiler warning (*node inside typeid may have effects
     // with shared pointers, which is fine here but clang doesn't like it.)
     auto handler = dispatcher.find(type_index(typeid(node)));
+    if (handler == dispatcher.end())
+    {
+        throw ngraph::unsupported_op(node.description());
+    }
     vector<GPU_TensorViewWrapper> in;
     size_t arg_index = 0;
     set<string> arg_names;

@@ -37,10 +37,9 @@ op::Softmax::Softmax(const shared_ptr<Node>& arg, const AxisSet& axes)
 
     for (auto axis : m_axes)
     {
-        if (axis >= get_shape().size())
-        {
-            throw ngraph_error("Axis for softmax reduction operator is out of bounds");
-        }
+        NODE_VALIDATION_ASSERT(this, axis < get_shape().size())
+            << "Reduction axis (" << axis << ") is out of bounds (argument shape: " << get_shape()
+            << ").";
     }
 
     // empty axes == all axes
@@ -55,10 +54,7 @@ op::Softmax::Softmax(const shared_ptr<Node>& arg, const AxisSet& axes)
 
 shared_ptr<Node> op::Softmax::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return make_shared<Softmax>(new_args.at(0), m_axes);
 }
 

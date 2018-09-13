@@ -27,19 +27,17 @@ op::AllReduce::AllReduce(const shared_ptr<Node>& arg)
 
 void op::AllReduce::validate_and_infer_types()
 {
-    set_output_type(0, get_input_element_type(0), get_input_shape(0));
+    NODE_VALIDATION_ASSERT(this,
+                           get_input_element_type(0) == element::f32 ||
+                               get_input_element_type(0) == element::f64)
+        << "Only element types f32 and f64 are supported (argument element type: "
+        << get_input_element_type(0) << ").";
 
-    if ((get_input_element_type(0) != element::f32) && (get_input_element_type(0) != element::f64))
-    {
-        throw ngraph_error("Unsupported data type for AllReduce");
-    }
+    set_output_type(0, get_input_element_type(0), get_input_shape(0));
 }
 
 shared_ptr<Node> op::AllReduce::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return make_shared<AllReduce>(new_args.at(0));
 }
