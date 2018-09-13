@@ -43,7 +43,6 @@ function build_ngraph() {
     cd "${ngraph_directory}/ngraph"
     mkdir -p ./build
     cd ./build
-    rm $(find -name 'CMakeCache.txt')
     cmake ../ -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="${ngraph_directory}/ngraph_dist"
     make -j $(lscpu --parse=CORE | grep -v '#' | sort | uniq | wc -l)
     make install
@@ -70,6 +69,10 @@ cp -R /home/ngraph/build /root/ngraph/
 cp -R /home/ngraph_dist /root/
 # Change directory to ngraph cloned initially by CI, which is already on relevant branch
 cd /root/ngraph
+for f in $(find build/ -name 'CMakeCache.txt'); 
+do 
+    sed -i 's/home/root/g' $f
+done
 build_ngraph "/root"
 
 # Copy Onnx models
