@@ -43,7 +43,7 @@ function build_ngraph() {
     cd "${ngraph_directory}/ngraph"
     mkdir -p ./build
     cd ./build
-    rm $(find build/ -name 'CMakeCache.txt')
+    rm $(find -name 'CMakeCache.txt')
     cmake ../ -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="${ngraph_directory}/ngraph_dist"
     make -j $(lscpu --parse=CORE | grep -v '#' | sort | uniq | wc -l)
     make install
