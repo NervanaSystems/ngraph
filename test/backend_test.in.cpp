@@ -9532,3 +9532,29 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_one)
     backend->call_with_validate(f1, {result1}, {a});
     EXPECT_EQ((vector<float>{3, 1, 4}), read_vector<float>(result1));
 }
+
+class UnhandledOp : public ngraph::op::Op
+{
+public:
+    UnhandledOp(const std::shared_ptr<Node>& arg)
+        : Op("Unsupported_op", {})
+    {
+        set_output_type(0, arg->get_element_type(), arg->get_shape());
+    }
+    shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override
+    {
+        return make_shared<UnhandledOp>(new_args[0]);
+    }
+};
+
+NGRAPH_TEST(${BACKEND_NAME}, unhandled_op)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto unhandled = make_shared<UnhandledOp>(A);
+    auto f = make_shared<Function>(unhandled, op::ParameterVector{A});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    shared_ptr<runtime::TensorView> a = backend->create_tensor<float>(shape);
+    shared_ptr<runtime::TensorView> result = backend->create_tensor<float>(shape);
+    ASSERT_THROW(backend->call_with_validate(f, {result}, {a}), unsupported_op);
+}
