@@ -44,18 +44,8 @@ namespace ngraph
                 // float momentum{node.get_attribute_value<float>("momentum", 0.9f)};
                 bool training = false;
 
-                if (!is_test)
-                {
-                    throw error::NotSupported("BatchNormalization",
-                                              node.get_name(),
-                                              "only 'is_test' mode is currently supported.");
-                }
-                if (!spatial)
-                {
-                    throw error::NotSupported("BatchNormalization",
-                                              node.get_name(),
-                                              "only 'spatial' mode is currently supported.");
-                }
+                ASSERT_IS_SUPPORTED(node, is_test) << "only 'is_test' mode is supported.";
+                ASSERT_IS_SUPPORTED(node, spatial) << "only 'spatial' mode is supported.";
 
                 if (inputs.size() >= 5)
                 {

@@ -26,7 +26,7 @@ using namespace ngraph;
 vector<float> read_float_vector(shared_ptr<runtime::TensorView> tv)
 {
     vector<float> float_vec;
-    element::Type element_type = tv->get_tensor_view_layout()->get_element_type();
+    element::Type element_type = tv->get_tensor_layout()->get_element_type();
 
     if (element_type == element::boolean)
     {

@@ -20,7 +20,7 @@
 #include <typeinfo>
 
 #include "ngraph/autodiff/adjoints.hpp"
-#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
@@ -74,9 +74,9 @@ void Node::set_output_size(size_t n)
     m_outputs.clear();
     for (size_t i = m_outputs.size(); i < n; ++i)
     {
-        auto tensor_view_descriptor = make_shared<descriptor::TensorView>(
+        auto tensor_descriptor = make_shared<descriptor::Tensor>(
             element::unspecified, Shape(), get_name() + "_" + to_string(i));
-        m_outputs.emplace_back(this, i, tensor_view_descriptor);
+        m_outputs.emplace_back(this, i, tensor_descriptor);
     }
 }
 
@@ -86,7 +86,7 @@ void Node::validate_and_infer_types()
 
 void Node::set_output_type(size_t i, const element::Type& element_type, const Shape& shape)
 {
-    m_outputs.at(i).get_tensor_view()->set_tensor_view_type(element_type, shape);
+    m_outputs.at(i).get_tensor_ptr()->set_tensor_view_type(element_type, shape);
 }
 
 std::deque<descriptor::Output>& Node::get_outputs()
@@ -239,19 +239,19 @@ const Shape& Node::get_shape() const
     return get_output_shape(0);
 }
 
-shared_ptr<descriptor::TensorView> Node::get_output_tensor_view(size_t i) const
+shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr(size_t i) const
 {
-    return m_outputs.at(i).get_tensor_view();
+    return m_outputs.at(i).get_tensor_ptr();
 }
 
-shared_ptr<descriptor::TensorView> Node::get_output_tensor_view() const
+shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr() const
 {
     if (get_output_size() != 1)
     {
         throw ngraph_error(
-            "get_output_tensor_view() must be called on a node with exactly one output.");
+            "get_output_tensor_ptr() must be called on a node with exactly one output.");
     }
-    return get_output_tensor_view(0);
+    return get_output_tensor_ptr(0);
 }
 
 const std::set<descriptor::Input*>& Node::get_output_inputs(size_t i) const

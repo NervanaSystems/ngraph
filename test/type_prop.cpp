@@ -17,9 +17,6 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
-#include "ngraph/op/argmin.hpp"
-#include "ngraph/op/batch_norm.hpp"
-#include "ngraph/op/reverse_sequence.hpp"
 
 #include <memory>
 using namespace std;
@@ -49,10 +46,10 @@ TEST(type_prop, batchnorm_rank_less_than_2)
         auto bc = make_shared<op::BatchNorm>(0.001, dummy, dummy, dummy);
         FAIL() << "BatchNorm c-tor should throw for tensors whose rank is less than 2";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("input tensor to batchnorm must have tensor of at least rank 2"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input argument must have rank of at least 2"));
     }
     catch (...)
     {
@@ -68,11 +65,11 @@ TEST(type_prop, batchnorm_zero_channel_check)
         auto bc = make_shared<op::BatchNorm>(0.001, dummy, dummy, dummy);
         FAIL() << "BatchNorm c-tor should throw for tensors w/ zero-dimension channels";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("input tensor must have at least one channel for batch normalization"));
+            std::string("Input argument's channel dimension must have size of at least 1"));
     }
     catch (...)
     {
@@ -91,11 +88,11 @@ TEST(type_prop, batchnorm_et_check)
         auto bc = make_shared<op::BatchNorm>(0.001, dummy_f32, dummy_f64, param);
         FAIL() << "BatchNorm c-tor should throw for different element types";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("The element type element::Type{64, 1, 1,double} of input beta isn't "
-                              "equal to the input data's type element::Type{32, 1, 1,float}"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Element type of beta"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("is not equal to the element type of input"));
     }
     catch (...)
     {
@@ -114,11 +111,11 @@ TEST(type_prop, batchnorm_shape_check)
         auto bc = make_shared<op::BatchNorm>(0.001, dummy_4, dummy_3, param);
         FAIL() << "BatchNorm c-tor should throw if gamma and beta shapes don't match";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string(
-                      "The shape Shape{4} of gamma isn't equal to input channel's shape Shape{3}"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Shape of gamma must match the channel dimension of the input data"));
     }
     catch (...)
     {
@@ -137,9 +134,9 @@ TEST(type_prop, batchnorm_backprop_4d_check)
             make_shared<op::BatchNormBackprop>(0.001, dummy, dummy, param, dummy, dummy, dummy);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Input expected to be a 4D tensor"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input data shape is not a 4D tensor"));
     }
     catch (...)
     {
@@ -159,10 +156,11 @@ TEST(type_prop, batchnorm_backprop_et_check)
             0.001, dummy_f32, dummy_f64, param, dummy_f32, dummy_f32, dummy_f32);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("The element type of beta isn't equal to input data's type"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Element type of beta"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("is not equal to the element type of input"));
     }
     catch (...)
     {
@@ -182,10 +180,11 @@ TEST(type_prop, batchnorm_backprop_shape_check)
             make_shared<op::BatchNormBackprop>(0.001, dummy, dummy2, param, dummy2, dummy2, dummy2);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("The shape of beta isn't equal to input channel's shape"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Shape of beta must match the channel dimension of the input data"));
     }
     catch (...)
     {
@@ -206,9 +205,10 @@ TEST(type_prop, batchnorm_backprop_delta_check)
             make_shared<op::BatchNormBackprop>(0.001, dummy, dummy, param, dummy, dummy, delta);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("delta shape is expected to be equal to input shape"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Shape of delta must match the shape of the input data"));
     }
     catch (...)
     {
@@ -2887,10 +2887,10 @@ TEST(type_prop, conv_invalid_element_type_mismatch)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with element type mismatch not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution data batch and filter element types do not match"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Element types for data batch and filters do not match"));
     }
     catch (...)
     {
@@ -2910,12 +2910,10 @@ TEST(type_prop, conv_invalid_0d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 0D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution data batch input must have rank of at "
-                              "least 3 (one batch axis, one input-channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data batch input must have rank of at least 3"));
     }
     catch (...)
     {
@@ -2935,12 +2933,10 @@ TEST(type_prop, conv_invalid_1d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 1D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution data batch input must have rank of at "
-                              "least 3 (one batch axis, one input-channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data batch input must have rank of at least 3"));
     }
     catch (...)
     {
@@ -2960,12 +2956,10 @@ TEST(type_prop, conv_invalid_2d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 2D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution data batch input must have rank of at "
-                              "least 3 (one batch axis, one input-channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data batch input must have rank of at least 3"));
     }
     catch (...)
     {
@@ -2985,9 +2979,9 @@ TEST(type_prop, conv_invalid_0_batch_size)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 batch size not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Convolution data batch size is zero."));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch size is zero"));
     }
     catch (...)
     {
@@ -3007,9 +3001,9 @@ TEST(type_prop, conv_invalid_0_input_channels)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 input channels not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Convolution requires at least one input channel."));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input channel count is zero"));
     }
     catch (...)
     {
@@ -3029,11 +3023,10 @@ TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_many)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too many filter dimensions not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string("Convolution filter input must have rank of 2 + n_spatial_dimensions."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Filter input must have rank equal to the data batch"));
     }
     catch (...)
     {
@@ -3053,11 +3046,10 @@ TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_few)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too few filter dimensions not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string("Convolution filter input must have rank of 2 + n_spatial_dimensions."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Filter input must have rank equal to the data batch"));
     }
     catch (...)
     {
@@ -3077,9 +3069,9 @@ TEST(type_prop, conv_invalid_0_output_channels)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 output channels not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Convolution requires at least one output channel."));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Output channel count for filters is zero"));
     }
     catch (...)
     {
@@ -3099,11 +3091,11 @@ TEST(type_prop, conv_invalid_input_channel_mismatch)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with channel count mismatch not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string("Convolution data batch and filter input channel counts do not match."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input channel count for filters (3) does not match the "
+                                         "number of channels in the data batch (2)"));
     }
     catch (...)
     {
@@ -3123,11 +3115,12 @@ TEST(type_prop, conv_invalid_movement_stride_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong movement stride rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution window movement stride rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Rank of window movement strides does not match the number of spatial dimensions"));
     }
     catch (...)
     {
@@ -3147,11 +3140,12 @@ TEST(type_prop, conv_invalid_window_dilation_stride_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong window dilation stride rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution window dilation stride rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Rank of window dilation strides does not match the number of spatial dimensions"));
     }
     catch (...)
     {
@@ -3177,11 +3171,12 @@ TEST(type_prop, conv_invalid_data_dilation_stride_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong data dilation stride rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution data dilation stride rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Rank of data dilation strides does not match the number of spatial dimensions"));
     }
     catch (...)
     {
@@ -3206,11 +3201,12 @@ TEST(type_prop, conv_invalid_padding_below_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong padding-below rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution padding-below rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Rank of the padding below does not match the number of spatial dimensions"));
     }
     catch (...)
     {
@@ -3235,11 +3231,12 @@ TEST(type_prop, conv_invalid_padding_above_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong padding-above rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution padding-above rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Rank of the padding above does not match the number of spatial dimensions"));
     }
     catch (...)
     {
@@ -3264,12 +3261,11 @@ TEST(type_prop, conv_invalid_input_spatial_size_negative_after_padding)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with negative-length post-padding spatial axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string(
-                "Convolution input spatial dimension after padding and dilation is negative."));
+            std::string("Input dimension after padding and dilation is non-positive"));
     }
     catch (...)
     {
@@ -3294,11 +3290,11 @@ TEST(type_prop, conv_invalid_input_spatial_size_zero_after_padding)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length post-padding spatial axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution input spatial dimension after "
-                              "dilation is zero even with padding."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Input dimension after padding and dilation is non-positive"));
     }
     catch (...)
     {
@@ -3318,11 +3314,11 @@ TEST(type_prop, conv_invalid_input_spatial_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length spatial axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution input spatial dimension after "
-                              "dilation is zero even with padding."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Input dimension after padding and dilation is non-positive"));
     }
     catch (...)
     {
@@ -3342,9 +3338,10 @@ TEST(type_prop, conv_invalid_window_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length window axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Convolution window shape has a zero-length axis."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Filters shape at spatial dimension 1 is zero"));
     }
     catch (...)
     {
@@ -3364,9 +3361,10 @@ TEST(type_prop, conv_invalid_window_dilation_stride_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong 0-length window dilation stride axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Convolution window axis dilation stride is zero."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Window dilation stride at spatial dimension 1 is zero"));
     }
     catch (...)
     {
@@ -3392,9 +3390,10 @@ TEST(type_prop, conv_invalid_data_dilation_stride_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong 0-length data dilation stride axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Convolution data dilation stride is zero."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data dilation stride at spatial dimension 1 is zero"));
     }
     catch (...)
     {
@@ -3414,11 +3413,11 @@ TEST(type_prop, conv_invalid_dilated_window_too_large)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with oversized dilated window not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution window after dilation is larger than the "
-                              "spatial dimensions even with padding."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Post-dilation window shape is smaller than the "
+                                         "post-padding/dilation input item shape"));
     }
     catch (...)
     {
@@ -3438,9 +3437,10 @@ TEST(type_prop, conv_invalid_movement_stride_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong 0-length movement stride axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Convolution window axis movement stride is zero."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Window movement stride at spatial dimension 0 is zero"));
     }
     catch (...)
     {
@@ -3563,12 +3563,10 @@ TEST(type_prop, max_pool_invalid_0d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 0D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Max-pool data batch input must have rank of at "
-                              "least 3 (one batch axis, one channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data input shape does not have rank of at least 3"));
     }
     catch (...)
     {
@@ -3588,12 +3586,10 @@ TEST(type_prop, max_pool_invalid_1d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 1D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Max-pool data batch input must have rank of at "
-                              "least 3 (one batch axis, one channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data input shape does not have rank of at least 3"));
     }
     catch (...)
     {
@@ -3613,12 +3609,10 @@ TEST(type_prop, max_pool_invalid_2d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 2D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Max-pool data batch input must have rank of at "
-                              "least 3 (one batch axis, one channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data input shape does not have rank of at least 3"));
     }
     catch (...)
     {
@@ -3638,9 +3632,9 @@ TEST(type_prop, max_pool_invalid_0_batch_size)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 batch size not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Max-pool data batch size is zero."));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch size is zero"));
     }
     catch (...)
     {
@@ -3660,9 +3654,9 @@ TEST(type_prop, max_pool_invalid_0_channels)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 channels not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Max-pool requires at least one feature channel."));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Channel count is zero"));
     }
     catch (...)
     {
@@ -3682,11 +3676,11 @@ TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_many)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too many window dimensions not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Max-pool window shape rank does not match number of spatial dimensions."));
+            std::string("Window shape rank does not match number of spatial dimensions"));
     }
     catch (...)
     {
@@ -3706,11 +3700,11 @@ TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_few)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too few window dimensions not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Max-pool window shape rank does not match number of spatial dimensions."));
+            std::string("Window shape rank does not match number of spatial dimensions"));
     }
     catch (...)
     {
@@ -3731,11 +3725,11 @@ TEST(type_prop, max_pool_invalid_movement_stride_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong movement stride rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Max-pool window movement stride rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Window movement stride rank does not match number of spatial dimensions"));
     }
     catch (...)
     {
@@ -3755,10 +3749,11 @@ TEST(type_prop, max_pool_invalid_input_data_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length spatial axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Max-pool input spatial dimension is zero even after padding."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Data input spatial dimension 0 has zero length even after padding"));
     }
     catch (...)
     {
@@ -3778,9 +3773,9 @@ TEST(type_prop, max_pool_invalid_window_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length window axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Max-pool window shape has a zero-length axis."));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Window shape dimension 1 has zero length"));
     }
     catch (...)
     {
@@ -3800,11 +3795,11 @@ TEST(type_prop, max_pool_invalid_dilated_too_large)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with oversized window not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Max-pool window shape is larger than the spatial "
-                              "dimensions even after padding."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Window shape after padding is larger than the spatial dimensions"));
     }
     catch (...)
     {
@@ -3825,9 +3820,10 @@ TEST(type_prop, max_pool_invalid_movement_stride_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0-length movement stride axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Max-pool window axis movement stride is zero."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Window movement strides dimension 0 has zero length"));
     }
     catch (...)
     {
@@ -6488,6 +6484,82 @@ TEST(type_prop, index_reduction_invalid_index_type)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Index element type must be");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, topk_invalid_rank)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{});
+
+    try
+    {
+        auto topk = make_shared<op::TopK>(a, 0, element::i32, 1, true);
+        FAIL() << "TopK c-tor should throw for scalar shapes";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Input Tensor's rank must be greater than 0");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, topk_invalid_top_k)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+
+    try
+    {
+        auto topk = make_shared<op::TopK>(a, 2, element::i32, 1, true);
+        FAIL() << "TopK c-tor should throw for invalid top k axis";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "TopK axis must be less than rank");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, topk_invalid_index_type)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+
+    try
+    {
+        auto topk = make_shared<op::TopK>(a, 0, element::f32, 1, true);
+        FAIL() << "TopK c-tor should throw for invalid index element type";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Index element type must be i64 or i32");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, topk_invalid_k)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+
+    try
+    {
+        auto topk = make_shared<op::TopK>(a, 0, element::i32, 3, true);
+        FAIL() << "TopK c-tor should throw for invalid K";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "K should not exceed TopK axis length");
     }
     catch (...)
     {

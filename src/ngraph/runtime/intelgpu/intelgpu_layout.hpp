@@ -20,7 +20,7 @@
 #include <CPP/layout.hpp>
 #include <CPP/tensor.hpp>
 
-#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/tensor_layout.hpp"
 
 namespace ngraph
 {
@@ -33,8 +33,7 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::intelgpu::IntelGPULayout
-    : public ngraph::descriptor::layout::TensorViewLayout
+class ngraph::runtime::intelgpu::IntelGPULayout : public ngraph::descriptor::layout::TensorLayout
 {
 public:
     IntelGPULayout(const ngraph::descriptor::TensorView& tv, const cldnn::layout& layout);
@@ -43,7 +42,7 @@ public:
     size_t get_index_offset(const std::vector<size_t>& indices) override;
 
     const Strides& get_strides() const override { return strides; }
-    bool operator==(const TensorViewLayout& other) const override;
+    bool operator==(const TensorLayout& other) const override;
 
     void set_cldnn_layout(const cldnn::layout& layout) { cldnn_layout = layout; }
     cldnn::layout get_cldnn_layout() const { return cldnn_layout; }
