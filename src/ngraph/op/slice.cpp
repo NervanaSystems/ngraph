@@ -51,42 +51,35 @@ void op::Slice::validate_and_infer_types()
     auto& input = get_inputs().at(0);
     auto& input_shape = input.get_shape();
 
-    if (m_lower_bounds.size() != input_shape.size())
-    {
-        throw ngraph_error(
-            "Number of lower bounds provided for slice does not match number of input axes");
-    }
+    NODE_VALIDATION_ASSERT(this, m_lower_bounds.size() == input_shape.size())
+        << "Rank of lower bounds (" << m_lower_bounds.size() << ") does not match rank "
+        << "of argument (" << input_shape.size() << ") (lower bounds: " << m_lower_bounds
+        << ", argument shape: " << input_shape << ").";
 
-    if (m_upper_bounds.size() != input_shape.size())
-    {
-        throw ngraph_error(
-            "Number of upper bounds provided for slice does not match number of input axes");
-    }
+    NODE_VALIDATION_ASSERT(this, m_upper_bounds.size() == input_shape.size())
+        << "Rank of upper bounds (" << m_upper_bounds.size() << ") does not match rank "
+        << "of argument (" << input_shape.size() << ") (upper bounds: " << m_upper_bounds
+        << ", argument shape: " << input_shape << ").";
 
-    if (m_strides.size() != input_shape.size())
-    {
-        throw ngraph_error(
-            "Number of strides provided for slice does not match number of input axes");
-    }
+    NODE_VALIDATION_ASSERT(this, m_strides.size() == input_shape.size())
+        << "Rank of strides (" << m_strides.size() << ") does not match rank "
+        << "of argument (" << input_shape.size() << ") (strides: " << m_strides
+        << ", argument shape: " << input_shape << ").";
 
     Shape result_shape;
 
     for (size_t i = 0; i < input_shape.size(); i++)
     {
-        if (m_upper_bounds[i] > input_shape[i])
-        {
-            throw ngraph_error("Upper bound for slice is out of range");
-        }
+        NODE_VALIDATION_ASSERT(this, m_upper_bounds[i] <= input_shape[i])
+            << "Upper bound for slice at axis " << i << " is out of range "
+            << "(upper bounds: " << m_upper_bounds << ", argument shape: " << input_shape << ").";
 
-        if (m_lower_bounds[i] > m_upper_bounds[i])
-        {
-            throw ngraph_error("Lower bound for slice is greater than upper bound");
-        }
+        NODE_VALIDATION_ASSERT(this, m_lower_bounds[i] <= m_upper_bounds[i])
+            << "Lower bound for slice is greater than upper bound at axis " << i
+            << " (lower bounds: " << m_lower_bounds << ", upper bounds: " << m_upper_bounds << ").";
 
-        if (0 == m_strides[i])
-        {
-            throw ngraph_error("Strides distance for slice is zero");
-        }
+        NODE_VALIDATION_ASSERT(this, m_strides[i] != 0) << "Stride for slice is zero at axis " << i
+                                                        << " (strides: " << m_strides << ").";
 
         size_t result_axis_size = m_upper_bounds[i] - m_lower_bounds[i];
         result_axis_size =
@@ -99,10 +92,7 @@ void op::Slice::validate_and_infer_types()
 
 shared_ptr<Node> op::Slice::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return make_shared<Slice>(new_args.at(0), m_lower_bounds, m_upper_bounds, m_strides);
 }
 

@@ -31,7 +31,6 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
-#include "ngraph/pass/result_copy_elimination.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"

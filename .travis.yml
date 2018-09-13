@@ -8,10 +8,12 @@ matrix:
   - os: linux
     sudo: required
     services: docker
+    language: python
     env: TASK=python2_test OS=ubuntu
   - os: linux
     sudo: required
     services: docker
+    language: python
     env: TASK=python3_test OS=ubuntu
   - os: linux
     sudo: required
@@ -37,17 +39,11 @@ install:
              -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE \
              -DCMAKE_INSTALL_PREFIX="~/ngraph_dist"
     make -j 2
+    cd -
   fi
 
 script:
-- |
-  if [ "$TRAVIS_OS_NAME" == "linux" ]; then
-    .ci/travis/run_test.sh
-  fi
-  if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-    cd $TRAVIS_BUILD_DIR/build
-    make unit-test-check
-  fi
+- .ci/travis/run_test.sh
 
 branches:
   only:

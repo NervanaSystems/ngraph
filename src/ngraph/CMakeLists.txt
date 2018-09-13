@@ -29,7 +29,6 @@ set (SRC
     descriptor/layout/tensor_view_layout.cpp
     descriptor/output.cpp
     descriptor/tensor.cpp
-    descriptor/tensor_view.cpp
     file_util.cpp
     function.cpp
     log.cpp
@@ -105,6 +104,7 @@ set (SRC
     op/sum.cpp
     op/tan.cpp
     op/tanh.cpp
+    op/topk.cpp
     op/util/arithmetic_reduction.cpp
     op/util/binary_elementwise_arithmetic.cpp
     op/util/binary_elementwise_comparison.cpp
@@ -129,7 +129,6 @@ set (SRC
     pass/nop_elimination.cpp
     pass/pass.cpp
     pass/reshape_elimination.cpp
-    pass/result_copy_elimination.cpp
     pass/zero_dim_tensor_elimination.cpp
     pass/validate_graph.cpp
     pass/visualize_tree.cpp

@@ -121,7 +121,7 @@ resources available for the breadth of ML/DL tasks.  We welcome ideas and
 
 
 Further project details can be found on our :doc:`project/about` page, or see 
-our :doc:`install` guide for how to get started.   
+our :doc:`buildlb` guide for how to get started.   
 
 
 .. note:: The library code is under active development as we're continually 
@@ -139,7 +139,7 @@ Contents
    :name: tocmaster
    :caption: Documentation
 
-   install.rst
+   buildlb.rst
    graph-basics.rst
    howto/index.rst
    ops/index.rst
