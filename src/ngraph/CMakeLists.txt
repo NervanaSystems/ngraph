@@ -95,6 +95,7 @@ set (SRC
     op/reverse_sequence.cpp
     op/select_and_scatter.cpp
     op/select.cpp
+    op/shape.cpp
     op/sigmoid.cpp
     op/sign.cpp
     op/sin.cpp

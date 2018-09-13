@@ -32,6 +32,10 @@ op::DynReshape::DynReshape(const shared_ptr<Node>& arg, const shared_ptr<Node>& 
 void op::DynReshape::validate_and_infer_types()
 {
     /*Shape input_shape = get_input_shape(0);
+
+    NODE_VALIDATION_ASSERT(this, get_inputs()[0].has_static_value())
+        << "Shape argument to DynReshape has no static value";
+
     Shape output_shape = get_input_static_value(0);
 
     NODE_VALIDATION_ASSERT(this, output_shape.size() == 1)
