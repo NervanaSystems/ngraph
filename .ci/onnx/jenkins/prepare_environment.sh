@@ -44,7 +44,7 @@ function build_ngraph() {
     mkdir -p ./build
     cd ./build
     cmake ../ -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="${ngraph_directory}/ngraph_dist"
-    rm "${ngraph_directory}/ngraph/python/dist/ngraph*.whl"
+    rm "${ngraph_directory}"/ngraph/python/dist/ngraph*.whl
     make -j $(lscpu --parse=CORE | grep -v '#' | sort | uniq | wc -l)
     make install
     cd "${ngraph_directory}/ngraph/python"
