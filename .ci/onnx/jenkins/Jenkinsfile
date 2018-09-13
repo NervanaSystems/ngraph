@@ -19,7 +19,7 @@
 try{ if(LABEL.trim() == "") {throw new Exception();} }catch(Exception e){LABEL="onnx && ci"}; echo "${LABEL}"
 // CI settings and constants
 PROJECT_NAME = "ngraph-onnx"            
-CI_ROOT = "ngraph/.ci/jenkins"
+CI_ROOT = "ngraph/.ci/onnx/jenkins"
 DOCKER_CONTAINER_NAME = "jenkins_${PROJECT_NAME}_ci"
 NGRAPH_GIT_ADDRESS = "https://www.github.com/NervanaSystems/ngraph.git"
 ONNX_GIT_ADDRESS = "https://www.github.com/NervanaSystems/ngraph-onnx.git"
