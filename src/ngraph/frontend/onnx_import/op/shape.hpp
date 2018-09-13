@@ -16,37 +16,19 @@
 
 #pragma once
 
-#include <sstream>
-#include <stdexcept>
+#include "ngraph/node_vector.hpp"
+
+#include "core/node.hpp"
 
 namespace ngraph
 {
-    /// Base error for ngraph runtime errors.
-    class ngraph_error : public std::runtime_error
+    namespace onnx_import
     {
-    public:
-        explicit ngraph_error(const std::string& what_arg)
-            : std::runtime_error(what_arg)
+        namespace op
         {
-        }
+            NodeVector shape(const Node& node);
+        } // namespace op
 
-        explicit ngraph_error(const char* what_arg)
-            : std::runtime_error(what_arg)
-        {
-        }
+    } // namespace onnx_import
 
-        explicit ngraph_error(const std::stringstream& what_arg)
-            : std::runtime_error(what_arg.str())
-        {
-        }
-    };
-
-    class unsupported_op : public std::runtime_error
-    {
-    public:
-        unsupported_op(const std::string& what_arg)
-            : std::runtime_error(what_arg)
-        {
-        }
-    };
-}
+} // namespace ngraph

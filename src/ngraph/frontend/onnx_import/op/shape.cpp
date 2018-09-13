@@ -14,39 +14,33 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include <memory>
 
-#include <sstream>
-#include <stdexcept>
+#include "ngraph/node.hpp"
+#include "ngraph/shape.hpp"
+#include "ngraph/type/element_type.hpp"
+
+#include "ngraph/op/constant.hpp"
+
+#include "shape.hpp"
 
 namespace ngraph
 {
-    /// Base error for ngraph runtime errors.
-    class ngraph_error : public std::runtime_error
+    namespace onnx_import
     {
-    public:
-        explicit ngraph_error(const std::string& what_arg)
-            : std::runtime_error(what_arg)
+        namespace op
         {
-        }
+            NodeVector shape(const Node& node)
+            {
+                auto data = node.get_ng_inputs().at(0);
+                auto data_shape = data->get_shape();
 
-        explicit ngraph_error(const char* what_arg)
-            : std::runtime_error(what_arg)
-        {
-        }
+                return {std::make_shared<ngraph::op::Constant>(
+                    ngraph::element::i64, Shape{data_shape.size()}, data_shape)};
+            }
 
-        explicit ngraph_error(const std::stringstream& what_arg)
-            : std::runtime_error(what_arg.str())
-        {
-        }
-    };
+        } // namespace op
 
-    class unsupported_op : public std::runtime_error
-    {
-    public:
-        unsupported_op(const std::string& what_arg)
-            : std::runtime_error(what_arg)
-        {
-        }
-    };
-}
+    } // namespace onnx_import
+
+} // namespace ngraph

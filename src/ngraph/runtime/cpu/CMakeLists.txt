@@ -52,6 +52,8 @@ set(SRC
     builder/reduce_function.cpp
     builder/reduce_function_window.cpp
     builder/replace_slice.cpp
+    builder/quantized_max_pool.cpp
+    builder/quantized_avg_pool.cpp
     builder/reshape.cpp
     builder/reverse.cpp
     builder/reverse_sequence.cpp
@@ -83,6 +85,8 @@ set(SRC
     op/lstm.cpp
     op/matmul_bias.cpp
     op/max_pool_with_indices.cpp
+    op/quantized_max_pool.cpp
+    op/quantized_avg_pool.cpp
     op/rnn.cpp
     op/sigmoid_mul.cpp
     op/conv_add.cpp
