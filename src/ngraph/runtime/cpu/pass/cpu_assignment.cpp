@@ -33,6 +33,7 @@
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -493,6 +494,22 @@ namespace ngraph
                 }
 
                 template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::ReplaceSlice)
+                {
+                    auto replace_slice = static_cast<op::ReplaceSlice*>(node);
+
+                    // ReplaceSlice is independent of data type. Hence not checking type
+                    auto op_annotations =
+                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                    if (get_user_count(node->get_argument(0).get()) == 1)
+                    {
+                        // Safe to overwrite input
+                        op_annotations->add_in_place_oi_pair({0, 0, true});
+                    }
+                    replace_slice->set_op_annotations(op_annotations);
+                }
+
+                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::LRN)
                 {
                     auto lrn = static_cast<op::LRN*>(node);
@@ -766,6 +783,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::QuantizedAvgPool),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedAvgPool>},
     {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Softmax>},
+    {TI(ngraph::op::ReplaceSlice),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ReplaceSlice>},
     {TI(ngraph::op::ConvolutionAdd),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionAdd>},
     {TI(ngraph::op::Dequantize),
