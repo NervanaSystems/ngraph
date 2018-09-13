@@ -75,6 +75,8 @@ add_library(onnx_import STATIC
         op/split.hpp
         op/sub.hpp
         op/sum.hpp
+        op/transpose.cpp
+        op/transpose.hpp
         op/unsqueeze.cpp
         op/unsqueeze.hpp
         op/xor.hpp
