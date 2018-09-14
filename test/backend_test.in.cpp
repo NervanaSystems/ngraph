@@ -51,6 +51,33 @@ static const vector<element::Type> s_known_element_types = {element::from<float>
                                                             element::from<uint32_t>(),
                                                             element::from<uint64_t>()};
 
+class UnhandledOp : public ngraph::op::Op
+{
+public:
+    UnhandledOp(const std::shared_ptr<Node>& arg)
+        : Op("Unsupported_op", {})
+    {
+        set_output_type(0, arg->get_element_type(), arg->get_shape());
+    }
+    shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override
+    {
+        return make_shared<UnhandledOp>(new_args[0]);
+    }
+};
+
+NGRAPH_TEST(${BACKEND_NAME}, unhandled_op)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto unhandled = make_shared<UnhandledOp>(A);
+    auto f = make_shared<Function>(unhandled, op::ParameterVector{A});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    shared_ptr<runtime::TensorView> a = backend->create_tensor<float>(shape);
+    shared_ptr<runtime::TensorView> result = backend->create_tensor<float>(shape);
+    ASSERT_THROW(backend->call_with_validate(f, {result}, {a}), unsupported_op);
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, function_name)
 {
     Shape shape{2, 2};
@@ -3989,6 +4016,33 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_scalar)
 
     backend->call_with_validate(f, {result}, {a, b});
     EXPECT_EQ((vector<float>{808}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, replace_slice_matrix_inplace)
+{
+    Shape shape_a{4, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto abs_A = make_shared<op::Abs>(A);
+
+    Shape shape_b{3, 2};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{4, 4};
+    auto r = make_shared<op::ReplaceSlice>(abs_A, B, Coordinate{0, 1}, Coordinate{3, 3});
+    auto abs_r = make_shared<op::Abs>(r);
+    auto f = make_shared<Function>(abs_r, op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, vector<float>{102, 103, 106, 107, 110, 111});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call_with_validate(f, {result}, {a, b});
+    EXPECT_EQ((vector<float>{1, 102, 103, 4, 5, 106, 107, 8, 9, 110, 111, 12, 13, 14, 15, 16}),
+              read_vector<float>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, replace_slice_matrix)
