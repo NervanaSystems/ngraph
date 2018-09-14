@@ -1341,15 +1341,6 @@ namespace ngraph
                     auto padding_below = avg_pool->get_padding_below();
                     auto padding_above = avg_pool->get_padding_above();
 
-                    int num_nontrivial_dims = 0;
-                    for (int64_t i = input_shape.size() - 1; i > 1; i--)
-                    {
-                        if (input_shape[i] > 1)
-                        {
-                            num_nontrivial_dims++;
-                        }
-                    }
-
                     size_t index = 0;
 
                     // if 1d or has asymmetric padding, must handle pooling manually
