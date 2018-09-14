@@ -24,12 +24,6 @@
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
 
-#define EMITTER_DECL(op_name)                                                                      \
-    emit<op_name>(GPU_ExternalFunction * external_function,                                        \
-                  codegen::CodeWriter & writer,                                                    \
-                  const ngraph::Node* node,                                                        \
-                  const std::vector<GPU_TensorViewWrapper>& args,                                  \
-                  const std::vector<GPU_TensorViewWrapper>& out)
 namespace ngraph
 {
     namespace runtime
