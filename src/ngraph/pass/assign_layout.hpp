@@ -36,11 +36,11 @@ namespace ngraph
                 {
                     for (size_t i = 0; i < node->get_output_size(); ++i)
                     {
-                        auto tv = node->get_output_tensor_view(i);
-                        if (nullptr == tv->get_tensor_view_layout())
+                        auto tv = node->get_output_tensor_ptr(i);
+                        if (nullptr == tv->get_tensor_layout())
                         {
                             auto layout = std::make_shared<LT>(*tv);
-                            tv->set_tensor_view_layout(layout);
+                            tv->set_tensor_layout(layout);
                         }
                     }
                 }
