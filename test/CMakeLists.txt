@@ -44,17 +44,14 @@ set(SRC
     util.cpp
     uuid.cpp
     zero_dim_tensor_elimination.cpp
+    control_dependencies.cpp
+
 )
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
-    if (APPLE OR WIN32)
-        list(APPEND SRC onnx_import.cpp)
-    else()
-        # ONNX unit tests temporarly disabled if CentOS detected
-        # (Protobuf issue with interpreting messages)
-        if (NOT ${DISTRIB_ID} STREQUAL "CentOS Linux")
-            list(APPEND SRC onnx_import.cpp)
-        endif()
+    list(APPEND SRC onnx_import.cpp)
+    if (NGRAPH_ONNXIFI_ENABLE)
+        list(APPEND SRC onnxifi.cpp)
     endif()
 endif()
 
@@ -63,7 +60,7 @@ if (NGRAPH_INTERPRETER_ENABLE)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
-    set(SRC ${SRC} core_fusion.cpp)
+    set(SRC ${SRC} core_fusion.cpp quantize_cpu.cpp)
 endif()
 
 add_subdirectory(models)
@@ -154,6 +151,11 @@ endif()
 
 if (NGRAPH_GPU_ENABLE)
     target_link_libraries(unit-test gpu_backend)
+endif()
+
+if (NGRAPH_ONNXIFI_ENABLE)
+    target_include_directories(unit-test SYSTEM PUBLIC ${ONNX_INCLUDE_DIR})
+    target_link_libraries(unit-test onnxifi-ngraph)
 endif()
 
 add_custom_target(unit-test-check

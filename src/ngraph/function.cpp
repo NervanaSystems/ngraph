@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <algorithm>
 #include <list>
@@ -70,28 +70,38 @@ Function::Function(const std::shared_ptr<Node>& result,
                    const std::string& name)
     : Function(NodeVector{result}, parameters, name)
 {
+    // TODO this does not do anything while infer happens in the constructors
+    // and it will go away after we add shape during a clone; it is here now
+    // to assist development between those two stages.
+    validate_nodes_and_infer_types();
+}
+
+void Function::validate_nodes_and_infer_types()
+{
+    ngraph::validate_nodes_and_infer_types(get_ops());
 }
 
 void Function::init()
 {
-    traverse_nodes(this, [&](shared_ptr<Node> node) {
-        std::shared_ptr<op::Parameter> p = std::dynamic_pointer_cast<op::Parameter>(node);
-        if (nullptr != p)
-        {
-            auto it = std::find_if(m_parameters.begin(),
-                                   m_parameters.end(),
-                                   [p](std::shared_ptr<op::Parameter> q) { return (p == q); });
-            if (it == m_parameters.end())
-            {
-                throw ngraph_error("Function references undeclared parameter");
-            }
-        }
-    });
+    validate_nodes_and_infer_types();
+
+    traverse_nodes(this,
+                   [&](shared_ptr<Node> node) {
+                       if (node->is_parameter())
+                       {
+                           auto it = std::find(m_parameters.begin(), m_parameters.end(), node);
+                           if (it == m_parameters.end())
+                           {
+                               throw ngraph_error("Function references undeclared parameter");
+                           }
+                       }
+                   },
+                   true /*include control dependencies*/);
 }
 
-std::list<shared_ptr<Node>> Function::get_ordered_ops()
+std::list<shared_ptr<Node>> Function::get_ordered_ops(bool include_control_deps) const
 {
-    return topological_sort(get_ops());
+    return topological_sort(get_ops(include_control_deps), include_control_deps);
 }
 
 const std::string& Function::get_friendly_name() const
@@ -165,10 +175,10 @@ shared_ptr<Node> Function::get_result() const
     return m_results.at(0);
 }
 
-std::list<shared_ptr<Node>> Function::get_ops() const
+std::list<shared_ptr<Node>> Function::get_ops(bool include_control_deps) const
 {
     std::list<std::shared_ptr<Node>> ops;
-    traverse_nodes(this, [&](shared_ptr<Node> node) { ops.push_back(node); });
+    traverse_nodes(this, [&](shared_ptr<Node> node) { ops.push_back(node); }, include_control_deps);
     return ops;
 }
 

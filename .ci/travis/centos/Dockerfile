@@ -26,7 +26,7 @@ COPY . /root/ngraph
 RUN mkdir /root/ngraph/build
 WORKDIR /root/ngraph/build
 
-RUN cmake .. -L -DNGRAPH_CPU_ENABLE=FALSE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="~/ngraph_dist"
+RUN cmake .. -L -DNGRAPH_CPU_ENABLE=FALSE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE
 
 RUN make -j"$(nproc)"
 RUN make install

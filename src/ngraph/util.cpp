@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <algorithm>
 #include <cassert>
@@ -205,15 +205,17 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
 
     // Traverse bprop to find all of the nodes in the bprop graph
     std::unordered_set<std::shared_ptr<Node>> in_bprop;
-    ngraph::traverse_nodes(bprop, [&in_bprop](std::shared_ptr<Node> node) {
-        if (node->get_outputs().size() == 1)
-        {
-            if (in_bprop.count(node) == 0)
-            {
-                in_bprop.insert(node);
-            }
-        }
-    });
+    ngraph::traverse_nodes(bprop,
+                           [&in_bprop](std::shared_ptr<Node> node) {
+                               if (node->get_output_size() == 1)
+                               {
+                                   if (in_bprop.count(node) == 0)
+                                   {
+                                       in_bprop.insert(node);
+                                   }
+                               }
+                           },
+                           false /* no control dependencies */);
 
     // Traverse fprop to make a map that stores parameters with the same
     // shape and element type as the nodes in fprop iff they are in bprop
@@ -290,7 +292,8 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
             {
                 fprop_cache.fprop_output_nodes.push_back(inverted_node_map.at(node));
             }
-        });
+        },
+        false /* no control dependencies */);
 
     // create the new outputs for fprop and the new fprop function
     ResultVector fprop_outputs = fprop->get_results();

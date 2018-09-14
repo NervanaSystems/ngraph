@@ -1,24 +1,24 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief Batched convolution operation, with optional window dilation and stride.
         ///
-        class Convolution : public util::RequiresTensorViewArgs
+        class Convolution : public Op
         {
         public:
             /// \brief Constructs a batched convolution operation.
@@ -125,6 +125,8 @@ namespace ngraph
             Convolution(const std::shared_ptr<Node>& data_batch,
                         const std::shared_ptr<Node>& filters);
 
+            void validate_and_infer_types() override;
+
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
             void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
@@ -153,12 +155,12 @@ namespace ngraph
             Strides m_data_dilation_strides;
 
         private:
-            static Strides default_strides(const std::shared_ptr<Node>& data_batch);
-            static CoordinateDiff default_padding(const std::shared_ptr<Node>& data_batch);
+            static Strides default_strides(const Node* node, const Shape& data_batch_shape);
+            static CoordinateDiff default_padding(const Node* node, const Shape& data_batch_shape);
         };
 
         /// \brief Data batch backprop for batched convolution operation.
-        class ConvolutionBackpropData : public util::RequiresTensorViewArgs
+        class ConvolutionBackpropData : public Op
         {
         public:
             /// \brief Constructs a batched-convolution data batch-backprop operation.
@@ -179,6 +181,8 @@ namespace ngraph
                                     const CoordinateDiff& padding_below_forward,
                                     const CoordinateDiff& padding_above_forward,
                                     const Strides& data_dilation_strides_forward);
+
+            void validate_and_infer_types() override;
 
             void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
             virtual std::shared_ptr<Node>
@@ -254,7 +258,7 @@ namespace ngraph
         };
 
         /// \brief Filters backprop for batched convolution operation.
-        class ConvolutionBackpropFilters : public util::RequiresTensorViewArgs
+        class ConvolutionBackpropFilters : public Op
         {
         public:
             /// \brief Constructs a batched-convolution filter-backprop operation.
@@ -275,6 +279,8 @@ namespace ngraph
                                        const CoordinateDiff& padding_below_forward,
                                        const CoordinateDiff& padding_above_forward,
                                        const Strides& data_dilation_strides_forward);
+
+            void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -350,7 +356,8 @@ namespace ngraph
 
         namespace util
         {
-            Shape infer_convolution_output_shape(const Shape& data_batch_shape,
+            Shape infer_convolution_output_shape(const Node* node,
+                                                 const Shape& data_batch_shape,
                                                  const Shape& filters_shape,
                                                  const Strides& window_movement_strides,
                                                  const Strides& window_dilation_strides,
@@ -362,8 +369,7 @@ namespace ngraph
                                                  size_t input_channel_axis_filters,
                                                  size_t output_channel_axis_filters,
                                                  size_t batch_axis_result,
-                                                 size_t output_channel_axis_result,
-                                                 const std::string& error_prefix);
+                                                 size_t output_channel_axis_result);
         }
     }
 }

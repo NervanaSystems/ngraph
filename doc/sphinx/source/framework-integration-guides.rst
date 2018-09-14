@@ -56,7 +56,7 @@ system that already has an ``ngraph_dist`` installed.
 
 .. important:: As of version |version|, these instructions presume that your 
    system already has the library installed to the default location, as outlined 
-   in our :doc:`install` documentation. 
+   in our :doc:`buildlb` documentation. 
 
 
 #. Set the ``NGRAPH_CPP_BUILD_PATH`` and the ``LD_LIBRARY_PATH``. You can use 
@@ -80,7 +80,7 @@ system that already has an ``ngraph_dist`` installed.
       (neon_venv) ~/frameworks$ 
 
 #. Go to the "python" subdirectory of the ``ngraph`` repo we cloned during the 
-   previous :doc:`install`, and complete these actions: 
+   previous :doc:`buildlb`, and complete these actions: 
 
    .. code-block:: console
 

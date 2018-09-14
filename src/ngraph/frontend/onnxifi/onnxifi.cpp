@@ -1,32 +1,53 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
+#include <cstddef>
 #include <cstdint>
+#include <stdexcept>
+
 #include <onnxifi.h>
+
+#include "backend_manager.hpp"
 
 extern "C" {
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
     onnxGetBackendIDs(onnxBackendID* backendIDs, std::size_t* numBackends)
 {
-    if ((backendIDs == nullptr) || (numBackends == nullptr))
+    try
+    {
+        ngraph::onnxifi::BackendManager::get_backend_ids(backendIDs, numBackends);
+        return ONNXIFI_STATUS_SUCCESS;
+    }
+    catch (const std::invalid_argument&)
     {
         return ONNXIFI_STATUS_INVALID_POINTER;
     }
-    return ONNXIFI_STATUS_INTERNAL_ERROR;
+    catch (const std::bad_alloc&)
+    {
+        return ONNXIFI_STATUS_NO_SYSTEM_MEMORY;
+    }
+    catch (const std::length_error&)
+    {
+        return ONNXIFI_STATUS_FALLBACK;
+    }
+    catch (...)
+    {
+        return ONNXIFI_STATUS_INTERNAL_ERROR;
+    }
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI

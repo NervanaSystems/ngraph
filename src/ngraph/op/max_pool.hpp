@@ -1,30 +1,30 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
 #include "ngraph/graph_util.hpp"
-#include "ngraph/op/util/requires_tensor_view_args.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Batched max pooling operation, with optional padding and window stride.
-        class MaxPool : public util::RequiresTensorViewArgs
+        class MaxPool : public Op
         {
         public:
             /// \brief Constructs a batched max pooling operation.
@@ -39,6 +39,8 @@ namespace ngraph
                     const Strides& window_movement_strides,
                     const Shape& padding_below,
                     const Shape& padding_above);
+
+            void validate_and_infer_types() override;
 
             /// \brief Constructs a batched, unpadded max pooling operation (i.e., all padding shapes are set to 0).
             ///
@@ -82,7 +84,7 @@ namespace ngraph
             Shape m_padding_above;
         };
 
-        class MaxPoolBackprop : public util::RequiresTensorViewArgs
+        class MaxPoolBackprop : public Op
         {
         public:
             MaxPoolBackprop(const std::shared_ptr<Node>& arg_forward,
@@ -95,6 +97,8 @@ namespace ngraph
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+
+            void validate_and_infer_types() override;
 
             const Shape& get_window_shape() const { return m_window_shape; }
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }

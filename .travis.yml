@@ -1,32 +1,50 @@
-sudo: required
-
 language: cpp
-
-services:
-  - docker
 
 git:
   depth: false
 
-env:
-  - TASK=cpp_test OS=ubuntu
-  - TASK=cpp_test OS=centos
-  - TASK=python2_test OS=ubuntu
-  - TASK=python3_test OS=ubuntu
+matrix:
+  include:
+  - os: linux
+    sudo: required
+    services: docker
+    language: python
+    env: TASK=python2_test OS=ubuntu
+  - os: linux
+    sudo: required
+    services: docker
+    language: python
+    env: TASK=python3_test OS=ubuntu
+  - os: linux
+    sudo: required
+    services: docker
+    env: TASK=cpp_test OS=ubuntu
+  - os: linux
+    sudo: required
+    services: docker
+    env: TASK=cpp_test OS=centos
+  - os: osx
+    env: TASK=cpp_test OS=osx
 
-before_install:
-  - |
-    if [ "TASK" == "cpp_test" ]; then
-      docker build -t test_ngraph -f .ci/travis/$OS/Dockerfile .
-    else
-      docker build -t test_ngraph -f .ci/travis/$OS/Dockerfile --build-arg buildtype=interpreter .
-    fi
-
-install: true
+install:
+- |
+  if [ "$TRAVIS_OS_NAME" == "linux" ]; then
+    docker build -t test_ngraph -f .ci/travis/$OS/Dockerfile .
+  fi
+  if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+    mkdir $TRAVIS_BUILD_DIR/build
+    cd $TRAVIS_BUILD_DIR/build
+    cmake .. -DNGRAPH_CPU_ENABLE=FALSE \
+             -DNGRAPH_USE_PREBUILT_LLVM=TRUE \
+             -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE \
+             -DCMAKE_INSTALL_PREFIX="~/ngraph_dist"
+    make -j 2
+    cd -
+  fi
 
 script:
-  - .ci/travis/run_test.sh
+- .ci/travis/run_test.sh
 
 branches:
   only:
-    - "master"
+  - "master"
