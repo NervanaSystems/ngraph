@@ -6657,3 +6657,18 @@ TEST(type_prop, dyn_reshape_no_static_value)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, concat_sv)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto param1 = make_shared<op::Parameter>(element::boolean, Shape{8, 6, 4, 2});
+    auto param2 = make_shared<op::Parameter>(element::i64, Shape{5, 5, 3});
+    auto sh0 = make_shared<op::Shape>(param0);
+    auto sh1 = make_shared<op::Shape>(param1);
+    auto sh2 = make_shared<op::Shape>(param2);
+    auto concat = make_shared<op::Concat>(NodeVector{sh0, sh1, sh2}, 0);
+
+    ASSERT_EQ(concat->get_element_type(), element::u64);
+    ASSERT_EQ(concat->get_shape(), (Shape{11}));
+    ASSERT_EQ(concat->get_static_value(), (StaticValue{2, 4, 6, 8, 8, 6, 4, 2, 5, 5, 3}));
+}

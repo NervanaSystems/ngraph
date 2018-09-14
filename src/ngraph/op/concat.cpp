@@ -79,6 +79,29 @@ void op::Concat::validate_and_infer_types()
     concatenated_shape[m_concatenation_axis] = concatenation_axis_output_length;
 
     set_output_type(0, expected_et, concatenated_shape);
+
+    // Static value propagation. We will propagate if the concatenation axis
+    // is 0, and all inputs are vectors with static values supplied.
+    auto& inputs = get_inputs();
+    if (concatenated_shape.size() == 1 && m_concatenation_axis == 0 &&
+        std::all_of(inputs.begin(), inputs.end(), [](const descriptor::Input& inp) {
+            return inp.get_output().has_static_value();
+        }))
+    {
+        StaticValue sv_out;
+
+        for (auto& inp : inputs)
+        {
+            const StaticValue& sv = inp.get_output().get_static_value();
+
+            for (auto l : sv)
+            {
+                sv_out.push_back(l);
+            }
+        }
+
+        set_output_static_value(0, sv_out);
+    }
 }
 
 shared_ptr<Node> op::Concat::copy_with_new_args(const NodeVector& new_args) const
