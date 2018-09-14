@@ -105,6 +105,23 @@ using namespace std;
 
 #define TI(x) type_index(typeid(x))
 
+string ngraph::runtime::gpu::GPU_Emitter::node_names(const vector<GPU_TensorViewWrapper>& args,
+                                                     initializer_list<int> arg_indexes)
+{
+    vector<string> names;
+    vector<int> indexes = arg_indexes;
+    if (indexes.empty())
+    {
+        indexes = vector<int>(args.size());
+        iota(indexes.begin(), indexes.end(), 0);
+    }
+    for (int i : indexes)
+    {
+        names.push_back(args[i].get_name());
+    }
+    return ngraph::join(names);
+}
+
 namespace ngraph
 {
     namespace runtime
@@ -118,18 +135,16 @@ namespace ngraph
                 {
                     return;
                 }
+                auto& cudnn_emitter =
+                    external_function->get_primitive_emitter()->get_cudnn_emitter();
+                auto index = cudnn_emitter->build_tensor_op(
+                    CUDNN_OP_TENSOR_ADD, out[0].get_type(), args[0].get_shape(), 1.0, 1.0, 0);
+
                 writer.block_begin();
                 {
-                    auto& cudnn_emitter =
-                        external_function->get_primitive_emitter()->get_cudnn_emitter();
-                    auto index = cudnn_emitter->build_tensor_op(
-                        CUDNN_OP_TENSOR_ADD, out[0].get_type(), args[0].get_shape(), 1.0, 1.0, 0);
-
-                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
-                    writer << "std::vector<void*>{" << args[0].get_name() << ","
-                           << args[1].get_name() << "}.data(), ";
-                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                    writer << ");\n";
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
+                    writer << "void* output[] = {" << node_names(out) << "};\n";
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
                 }
                 writer.block_end();
             }
@@ -158,12 +173,13 @@ namespace ngraph
                     conv_index = cudnn_emitter->build_primitive(convolution);
                 }
 
-                writer << "gpu::invoke_primitive(ctx, " << conv_index << ", ";
-                writer << "std::vector<void*>{";
-                writer << args[0].get_name() << ", ";
-                writer << args[1].get_name() << ", ";
-                writer << "}.data(), ";
-                writer << "std::vector<void*>{" << out[0].get_name() << "}.data());\n";
+                writer.block_begin();
+                {
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
+                    writer << "void* output[] = {" << node_names(out) << "};\n";
+                    writer << "gpu::invoke_primitive(ctx, " << conv_index << ", input, output);\n";
+                }
+                writer.block_end();
             }
 
             template <>
@@ -186,12 +202,13 @@ namespace ngraph
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
                 size_t conv_index = cudnn_emitter->build_primitive(convolution);
 
-                writer << "gpu::invoke_primitive(ctx, " << conv_index << ", ";
-                writer << "std::vector<void*>{";
-                writer << args[0].get_name() << ", ";
-                writer << args[1].get_name() << ", ";
-                writer << "}.data(), ";
-                writer << "std::vector<void*>{" << out[0].get_name() << "}.data());\n";
+                writer.block_begin();
+                {
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
+                    writer << "void* output[] = {" << node_names(out) << "};\n";
+                    writer << "gpu::invoke_primitive(ctx, " << conv_index << ", input, output);\n";
+                }
+                writer.block_end();
             }
 
             template <>
@@ -214,12 +231,13 @@ namespace ngraph
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
                 size_t conv_index = cudnn_emitter->build_primitive(convolution);
 
-                writer << "gpu::invoke_primitive(ctx, " << conv_index << ", ";
-                writer << "std::vector<void*>{";
-                writer << args[0].get_name() << ", ";
-                writer << args[1].get_name() << ", ";
-                writer << "}.data(), ";
-                writer << "std::vector<void*>{" << out[0].get_name() << "}.data());\n";
+                writer.block_begin();
+                {
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
+                    writer << "void* output[] = {" << node_names(out) << "};\n";
+                    writer << "gpu::invoke_primitive(ctx, " << conv_index << ", input, output);\n";
+                }
+                writer.block_end();
             }
 
             template <>
@@ -394,18 +412,16 @@ namespace ngraph
                 {
                     return;
                 }
+                auto& cudnn_emitter =
+                    external_function->get_primitive_emitter()->get_cudnn_emitter();
+                auto index = cudnn_emitter->build_tensor_op(
+                    CUDNN_OP_TENSOR_MAX, out[0].get_type(), args[0].get_shape(), 1.0, 1.0, 0);
+
                 writer.block_begin();
                 {
-                    auto& cudnn_emitter =
-                        external_function->get_primitive_emitter()->get_cudnn_emitter();
-                    auto index = cudnn_emitter->build_tensor_op(
-                        CUDNN_OP_TENSOR_MAX, out[0].get_type(), args[0].get_shape(), 1.0, 1.0, 0);
-
-                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
-                    writer << "std::vector<void*>{" << args[0].get_name() << ","
-                           << args[1].get_name() << "}.data(), ";
-                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                    writer << ");\n";
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
+                    writer << "void* output[] = {" << node_names(out) << "};\n";
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
                 }
                 writer.block_end();
             }
@@ -417,18 +433,16 @@ namespace ngraph
                 {
                     return;
                 }
+                auto& cudnn_emitter =
+                    external_function->get_primitive_emitter()->get_cudnn_emitter();
+                auto index = cudnn_emitter->build_tensor_op(
+                    CUDNN_OP_TENSOR_MIN, out[0].get_type(), args[0].get_shape(), 1.0, 1.0, 0);
+
                 writer.block_begin();
                 {
-                    auto& cudnn_emitter =
-                        external_function->get_primitive_emitter()->get_cudnn_emitter();
-                    auto index = cudnn_emitter->build_tensor_op(
-                        CUDNN_OP_TENSOR_MIN, out[0].get_type(), args[0].get_shape(), 1.0, 1.0, 0);
-
-                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
-                    writer << "std::vector<void*>{" << args[0].get_name() << ","
-                           << args[1].get_name() << "}.data(), ";
-                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                    writer << ");\n";
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
+                    writer << "void* output[] = {" << node_names(out) << "};\n";
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
                 }
                 writer.block_end();
             }
@@ -458,10 +472,13 @@ namespace ngraph
 
                 auto bcast_index = cuda_emitter->build_broadcast(
                     {{args[0].get_type(), out[0].get_type()}}, result_shape, axes);
-                writer << "gpu::invoke_primitive(ctx, " << bcast_index << ", ";
-                writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                writer << ");\n";
+                writer.block_begin();
+                {
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
+                    writer << "void* output[] = {" << node_names(out) << "};\n";
+                    writer << "gpu::invoke_primitive(ctx, " << bcast_index << ", input, output);\n";
+                }
+                writer.block_end();
             }
 
             template <>
@@ -483,22 +500,15 @@ namespace ngraph
                 }
                 dtypes.push_back(out[0].get_type());
 
+                auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
+                auto index =
+                    cuda_emitter->build_concat(dtypes, input_shapes, axis, out[0].get_shape());
+
                 writer.block_begin();
                 {
-                    auto& cuda_emitter =
-                        external_function->get_primitive_emitter()->get_cuda_emitter();
-                    auto index =
-                        cuda_emitter->build_concat(dtypes, input_shapes, axis, out[0].get_shape());
-
-                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
-                    writer << "std::vector<void*>{" << args[0].get_name();
-                    for (size_t i = 1; i < args.size(); i++)
-                    {
-                        writer << ", " << args[i].get_name();
-                    }
-                    writer << "}.data(), ";
-                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                    writer << ");\n";
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
+                    writer << "void* output[] = {" << node_names(out) << "};\n";
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
                 }
                 writer.block_end();
             }
@@ -564,10 +574,9 @@ namespace ngraph
                     auto index = cuda_emitter->build_reshape(
                         {{args[0].get_type(), out[0].get_type()}}, arg_shape, input_order);
 
-                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
-                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                    writer << ");\n";
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
+                    writer << "void* output[] = {" << node_names(out) << "};\n";
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
                 }
                 writer.block_end();
             }
@@ -580,33 +589,9 @@ namespace ngraph
 
                 writer.block_begin();
                 {
-                    std::vector<string> input_names;
-                    std::vector<string> output_names;
-
-                    for (const runtime::gpu::GPU_TensorViewWrapper& input : args)
-                    {
-                        input_names.push_back(input.get_name());
-                    }
-
-                    for (const runtime::gpu::GPU_TensorViewWrapper& output : out)
-                    {
-                        output_names.push_back(output.get_name());
-                    }
-
-                    writer << "void* args[] =\n";
-                    writer.block_begin();
-                    writer << "\n" << join(input_names, ",\n");
-                    writer.block_end();
-                    writer << ";\n";
-
-                    writer << "void* out[] =\n";
-                    writer.block_begin();
-                    writer << "\n" << join(output_names, ",\n");
-                    writer.block_end();
-                    writer << ";\n";
-
-                    writer << "\n";
-                    writer << function->get_name() << "(args, out, ctx);\n";
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
+                    writer << "void* output[] = {" << node_names(out) << "};\n";
+                    writer << function->get_name() << "(input, output, ctx);\n";
                 }
                 writer.block_end();
             }
@@ -641,10 +626,9 @@ namespace ngraph
                                                   slice_strides,
                                                   result_shape);
 
-                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
-                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                    writer << ");\n";
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
+                    writer << "void* output[] = {" << node_names(out) << "};\n";
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
                 }
                 writer.block_end();
             }
@@ -679,10 +663,9 @@ namespace ngraph
                     auto index = cuda_emitter->build_reverse(
                         {{args[0].get_type(), out[0].get_type()}}, arg_shape, reverse_axes_flag);
 
-                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
-                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                    writer << ");\n";
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
+                    writer << "void* output[] = {" << node_names(out) << "};\n";
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
                 }
                 writer.block_end();
             }
@@ -711,11 +694,11 @@ namespace ngraph
                     out_shape,
                     bi,
                     si);
-                writer << "gpu::invoke_primitive(ctx, " << rs_index << ", ";
-                writer << "std::vector<void*>{" << args[0].get_name() << ", " << args[1].get_name()
-                       << "}.data(), ";
-                writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                writer << ");\n";
+                writer.block_begin();
+                writer << "void* input[] = {" << node_names(args) << "};\n";
+                writer << "void* output[] = {" << node_names(out) << "};\n";
+                writer << "gpu::invoke_primitive(ctx, " << rs_index << ", input, output);\n";
+                writer.block_end();
             }
 
             template <>
@@ -732,11 +715,11 @@ namespace ngraph
                     auto index = cudnn_emitter->build_tensor_op(
                         CUDNN_OP_TENSOR_MUL, out[0].get_type(), args[0].get_shape(), 1.0, 1.0, 0);
 
-                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
-                    writer << "std::vector<void*>{" << args[0].get_name() << ","
-                           << args[1].get_name() << "}.data(), ";
-                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                    writer << ");\n";
+                    writer.block_begin();
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
+                    writer << "void* output[] = {" << node_names(out) << "};\n";
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+                    writer.block_end();
                 }
                 writer.block_end();
             }
@@ -760,10 +743,11 @@ namespace ngraph
                     auto index = cuda_emitter->build_onehot(
                         {{args[0].get_type(), out[0].get_type()}}, arg_shape, result_shape, idx);
 
-                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
-                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                    writer << ");\n";
+                    writer.block_begin();
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
+                    writer << "void* output[] = {" << node_names(out) << "};\n";
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+                    writer.block_end();
                 }
                 writer.block_end();
             }
@@ -819,9 +803,11 @@ namespace ngraph
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
                 auto index = cudnn_emitter->build_primitive(max);
 
-                writer << "gpu::invoke_primitive(ctx, " << index << ", ";
-                writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                writer << "std::vector<void*>{" << out[0].get_name() << "}.data());\n";
+                writer.block_begin();
+                writer << "void* input[] = {" << node_names(args) << "};\n";
+                writer << "void* output[] = {" << node_names(out) << "};\n";
+                writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+                writer.block_end();
 
                 return;
             }
@@ -839,9 +825,11 @@ namespace ngraph
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
                 auto index = cudnn_emitter->build_primitive(min);
 
-                writer << "gpu::invoke_primitive(ctx, " << index << ", ";
-                writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                writer << "std::vector<void*>{" << out[0].get_name() << "}.data());\n";
+                writer.block_begin();
+                writer << "void* input[] = {" << node_names(args) << "};\n";
+                writer << "void* output[] = {" << node_names(out) << "};\n";
+                writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+                writer.block_end();
 
                 return;
             }
@@ -882,10 +870,10 @@ namespace ngraph
                                 args[0].get_shape(),
                                 axes_vec);
 
-                            writer << "gpu::invoke_primitive(ctx, " << sum_index << ", ";
-                            writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                            writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                            writer << ");\n";
+                            writer << "void* input[] = {" << node_names(args) << "};\n";
+                            writer << "void* output[] = {" << node_names(out) << "};\n";
+                            writer << "gpu::invoke_primitive(ctx, " << sum_index
+                                   << ", input, output);\n";
                         }
                     }
                 }
@@ -926,10 +914,10 @@ namespace ngraph
                                                                     args[0].get_shape(),
                                                                     product->get_reduction_axes());
 
-                            writer << "gpu::invoke_primitive(ctx, " << index << ", ";
-                            writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                            writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                            writer << ");\n";
+                            writer << "void* input[] = {" << node_names(args) << "};\n";
+                            writer << "void* output[] = {" << node_names(out) << "};\n";
+                            writer << "gpu::invoke_primitive(ctx, " << index
+                                   << ", input, output);\n";
                         }
                     }
                 }
@@ -1023,10 +1011,10 @@ namespace ngraph
                                 args[0].get_shape(),
                                 reduce_op->get_reduction_axes());
 
-                            writer << "gpu::invoke_primitive(ctx, " << reduce_index << ", ";
-                            writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                            writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                            writer << ");\n";
+                            writer << "void* input[] = {" << node_names(args) << "};\n";
+                            writer << "void* output[] = {" << node_names(out) << "};\n";
+                            writer << "gpu::invoke_primitive(ctx, " << reduce_index
+                                   << ", input, output);\n";
                         }
                     }
                 }
@@ -1129,10 +1117,10 @@ namespace ngraph
                                 reduce_window_op->get_window_shape(),
                                 reduce_window_op->get_window_movement_strides());
 
-                            writer << "gpu::invoke_primitive(ctx, " << reduce_index << ", ";
-                            writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                            writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                            writer << ");\n";
+                            writer << "void* input[] = {" << node_names(args) << "};\n";
+                            writer << "void* output[] = {" << node_names(out) << "};\n";
+                            writer << "gpu::invoke_primitive(ctx, " << reduce_index
+                                   << ", input, output);\n";
                         }
                     }
                 }
@@ -1162,11 +1150,9 @@ namespace ngraph
                                                 padding_below,
                                                 padding_above,
                                                 padding_interior);
-                    writer << "gpu::invoke_primitive(ctx, " << pad_index << ", ";
-                    writer << "std::vector<void*>{" << args[0].get_name() << ", "
-                           << args[1].get_name() << "}.data(), ";
-                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data() ";
-                    writer << ");\n";
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
+                    writer << "void* output[] = {" << node_names(out) << "};\n";
+                    writer << "gpu::invoke_primitive(ctx, " << pad_index << ", input, output);\n";
                 }
                 writer.block_end();
             }
@@ -1210,10 +1196,11 @@ namespace ngraph
 
                     max_pool_index = cudnn_emitter->build_primitive(max_pool);
                 }
-                writer << "gpu::invoke_primitive(ctx, " << max_pool_index << ", ";
-                writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                writer << ");\n";
+                writer.block_begin();
+                writer << "void* input[] = {" << node_names(args) << "};\n";
+                writer << "void* output[] = {" << node_names(out) << "};\n";
+                writer << "gpu::invoke_primitive(ctx, " << max_pool_index << ", input, output);\n";
+                writer.block_end();
             }
 
             template <>
@@ -1230,7 +1217,7 @@ namespace ngraph
 
                     if (fp_input_shape.size() >= 4)
                     {
-                        auto max_pool_bp_index =
+                        auto index =
                             cudnn_emitter->build_pooling(CUDNN_POOLING_MAX,
                                                          out[0].get_type(),
                                                          CUDNNEmitter::Prop::Backward,
@@ -1241,11 +1228,9 @@ namespace ngraph
                                                          mpb->get_padding_below(),
                                                          mpb->get_padding_above());
 
-                        writer << "gpu::invoke_primitive(ctx, " << max_pool_bp_index << ", ";
-                        writer << "std::vector<void*>{" << args[0].get_name() << ", "
-                               << args[1].get_name() << "}.data(), ";
-                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                        writer << ");\n";
+                        writer << "void* input[] = {" << node_names(args) << "};\n";
+                        writer << "void* output[] = {" << node_names(out) << "};\n";
+                        writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
                     }
                 }
                 writer.block_end();
@@ -1270,29 +1255,18 @@ namespace ngraph
                     direction = CUDNNEmitter::Prop::Inference;
                 }
 
-                auto bn_index = cudnn_emitter->build_batchnorm(CUDNN_BATCHNORM_SPATIAL,
-                                                               out[0].get_type(),
-                                                               direction,
-                                                               args[2].get_shape(),
-                                                               args[0].get_shape(),
-                                                               batchnorm->get_eps_value());
+                auto index = cudnn_emitter->build_batchnorm(CUDNN_BATCHNORM_SPATIAL,
+                                                            out[0].get_type(),
+                                                            direction,
+                                                            args[2].get_shape(),
+                                                            args[0].get_shape(),
+                                                            batchnorm->get_eps_value());
 
                 writer.block_begin();
                 {
-                    writer << "gpu::invoke_primitive(ctx, " << bn_index << ", ";
-                    writer << "std::vector<void*>{" << args.front().get_name();
-                    for (size_t i = 1; i < args.size(); i++)
-                    {
-                        writer << ", " << args[i].get_name();
-                    }
-                    writer << "}.data(), ";
-                    writer << "std::vector<void*>{" << out.front().get_name();
-                    for (size_t i = 1; i < out.size(); i++)
-                    {
-                        writer << ", " << out[i].get_name();
-                    }
-                    writer << "}.data()";
-                    writer << ");\n";
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
+                    writer << "void* output[] = {" << node_names(out) << "};\n";
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
                 }
                 writer.block_end();
             }
@@ -1306,29 +1280,18 @@ namespace ngraph
                 auto& cudnn_emitter =
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
 
-                auto bn_index = cudnn_emitter->build_batchnorm(CUDNN_BATCHNORM_SPATIAL,
-                                                               out[0].get_type(),
-                                                               CUDNNEmitter::Prop::Backward,
-                                                               args[2].get_shape(),
-                                                               args[0].get_shape(),
-                                                               batchnorm->get_eps_value());
+                auto index = cudnn_emitter->build_batchnorm(CUDNN_BATCHNORM_SPATIAL,
+                                                            out[0].get_type(),
+                                                            CUDNNEmitter::Prop::Backward,
+                                                            args[2].get_shape(),
+                                                            args[0].get_shape(),
+                                                            batchnorm->get_eps_value());
 
                 writer.block_begin();
                 {
-                    writer << "gpu::invoke_primitive(ctx, " << bn_index << ", ";
-                    writer << "std::vector<void*>{" << args.front().get_name();
-                    for (size_t i = 1; i < args.size(); i++)
-                    {
-                        writer << ", " << args[i].get_name();
-                    }
-                    writer << "}.data(), ";
-                    writer << "std::vector<void*>{" << out.front().get_name();
-                    for (size_t i = 1; i < out.size(); i++)
-                    {
-                        writer << ", " << out[i].get_name();
-                    }
-                    writer << "}.data()";
-                    writer << ");\n";
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
+                    writer << "void* output[] = {" << node_names(out) << "};\n";
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
                 }
                 writer.block_end();
             }
@@ -1384,16 +1347,7 @@ namespace ngraph
                     auto padding_below = avg_pool->get_padding_below();
                     auto padding_above = avg_pool->get_padding_above();
 
-                    int num_nontrivial_dims = 0;
-                    for (int64_t i = input_shape.size() - 1; i > 1; i--)
-                    {
-                        if (input_shape[i] > 1)
-                        {
-                            num_nontrivial_dims++;
-                        }
-                    }
-
-                    size_t avg_pool_index = 0;
+                    size_t index = 0;
 
                     // if 1d or has asymmetric padding, must handle pooling manually
                     if (input_shape.size() == 3 || padding_below != padding_above)
@@ -1401,7 +1355,7 @@ namespace ngraph
                         auto& cuda_emitter =
                             external_function->get_primitive_emitter()->get_cuda_emitter();
 
-                        avg_pool_index =
+                        index =
                             cuda_emitter->build_avg_pool({{args[0].get_type(), out[0].get_type()}},
                                                          input_shape,
                                                          result_shape,
@@ -1421,7 +1375,7 @@ namespace ngraph
                                                       ? CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING
                                                       : CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
 
-                            avg_pool_index = cudnn_emitter->build_pooling(
+                            index = cudnn_emitter->build_pooling(
                                 cudnn_avg_type,
                                 out[0].get_type(),
                                 CUDNNEmitter::Prop::Forward,
@@ -1439,10 +1393,9 @@ namespace ngraph
                             "Pooling currently only supports up to 3 spatial dimensions.");
                     }
 
-                    writer << "gpu::invoke_primitive(ctx, " << avg_pool_index << ", ";
-                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                    writer << ");\n";
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
+                    writer << "void* output[] = {" << node_names(out) << "};\n";
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
                 }
                 writer.block_end();
             }
@@ -1465,7 +1418,7 @@ namespace ngraph
                                                   ? CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING
                                                   : CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
 
-                        auto avg_pool_bp_index =
+                        auto index =
                             cudnn_emitter->build_pooling(cudnn_avg_type,
                                                          out[0].get_type(),
                                                          CUDNNEmitter::Prop::Backward,
@@ -1476,15 +1429,13 @@ namespace ngraph
                                                          apb->get_padding_below(),
                                                          apb->get_padding_above());
 
-                        writer << "gpu::invoke_primitive(ctx, " << avg_pool_bp_index << ", ";
                         // cuDNN backwards pooling requests input and output tensors from
                         // the forward pass but does not use them. It also behaves differently
                         // for max pool vs avg pool. The repetition of args below is to address
                         // this interface in a way that supports both max and avg pooling
-                        writer << "std::vector<void*>{" << args[0].get_name() << ", "
-                               << args[0].get_name() << "}.data(), ";
-                        writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                        writer << ");\n";
+                        writer << "void* input[] = {" << node_names(args, {0, 0}) << "};\n";
+                        writer << "void* output[] = {" << node_names(out) << "};\n";
+                        writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
                     }
                 }
                 writer.block_end();
@@ -1503,11 +1454,9 @@ namespace ngraph
 
                     auto index = cuda_emitter->build_primitive(rep_slice, in_place_op);
 
-                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
-                    writer << "std::vector<void*>{" << args[0].get_name() << ", "
-                           << args[1].get_name() << "}.data(), ";
-                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                    writer << ");\n";
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
+                    writer << "void* output[] = {" << node_names(out) << "};\n";
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
                 }
                 writer.block_end();
             }
@@ -1518,30 +1467,29 @@ namespace ngraph
                 auto softmax = static_cast<const ngraph::op::Softmax*>(node);
                 writer.block_begin();
                 {
-                    size_t softmax_index;
+                    size_t index;
                     if (softmax->get_axes().size() != args[0].get_shape().size())
                     {
                         auto& cuda_emitter =
                             external_function->get_primitive_emitter()->get_cuda_emitter();
 
-                        softmax_index = cuda_emitter->build_primitive(softmax);
+                        index = cuda_emitter->build_primitive(softmax);
                     }
                     else
                     {
                         auto& cudnn_emitter =
                             external_function->get_primitive_emitter()->get_cudnn_emitter();
 
-                        softmax_index = cudnn_emitter->build_softmax(CUDNN_SOFTMAX_FAST,
-                                                                     CUDNN_SOFTMAX_MODE_INSTANCE,
-                                                                     out[0].get_type(),
-                                                                     CUDNNEmitter::Prop::Forward,
-                                                                     args[0].get_shape());
+                        index = cudnn_emitter->build_softmax(CUDNN_SOFTMAX_FAST,
+                                                             CUDNN_SOFTMAX_MODE_INSTANCE,
+                                                             out[0].get_type(),
+                                                             CUDNNEmitter::Prop::Forward,
+                                                             args[0].get_shape());
                     }
 
-                    writer << "gpu::invoke_primitive(ctx, " << softmax_index << ", ";
-                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                    writer << ");\n";
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
+                    writer << "void* output[] = {" << node_names(out) << "};\n";
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
                 }
                 writer.block_end();
             }
