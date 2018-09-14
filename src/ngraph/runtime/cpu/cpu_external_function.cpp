@@ -1207,6 +1207,10 @@ void runtime::cpu::CPU_ExternalFunction::build()
         {
             for (auto tensor : node->liveness_new_list)
             {
+
+                int my_rank;
+                MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+                std::cout<<"rank, tensor name: "<<my_rank<<", "<<tensor->get_name()<<std::endl;
                 intermediates_offsets.emplace_back(tensor_data[tensor->get_name()],
                                                    tensor->get_pool_offset());
                 m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
