@@ -46,17 +46,16 @@ namespace ngraph
             virtual ~TensorView() {}
             TensorView& operator=(const TensorView&) = default;
 
-            std::shared_ptr<const ngraph::descriptor::Tensor> get_tensor_view_descriptor() const;
+            virtual std::shared_ptr<const ngraph::descriptor::Tensor> get_descriptor() const;
 
-            virtual std::shared_ptr<descriptor::TensorView> get_descriptor() const;
+            virtual std::shared_ptr<descriptor::Tensor> get_descriptor();
 
             const ngraph::Shape& get_shape() const;
-            const ngraph::Strides& get_strides() const;
+            ngraph::Strides get_strides() const;
             size_t get_element_count() const;
             const ngraph::descriptor::Tensor& get_tensor() const;
 
-            std::shared_ptr<ngraph::descriptor::layout::TensorViewLayout>
-                get_tensor_view_layout() const;
+            std::shared_ptr<ngraph::descriptor::layout::TensorLayout> get_tensor_layout() const;
 
             bool get_stale() { return m_stale; }
             void set_stale(bool val) { m_stale = val; }

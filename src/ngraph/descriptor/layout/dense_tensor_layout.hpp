@@ -19,7 +19,7 @@
 #include <cstddef>
 #include <vector>
 
-#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/tensor_layout.hpp"
 
 namespace ngraph
 {
@@ -32,23 +32,19 @@ namespace ngraph
             /// \brief The standard strided layout, used for row-major and column-major, their permutations and slices.
             ///
             /// The linearized offset of an index I is dot(I, strides) + offset.
-            class DenseTensorViewLayout : public TensorViewLayout
+            class DenseTensorLayout : public TensorLayout
             {
             public:
-                ~DenseTensorViewLayout() override {}
-                DenseTensorViewLayout(const Tensor& tensor);
+                ~DenseTensorLayout() override {}
+                DenseTensorLayout(const Tensor& tensor);
 
-                virtual size_t get_size() override { return m_size; }
                 size_t get_offset() const { return m_offset; }
                 virtual size_t get_index_offset(const std::vector<size_t>& indices) override;
-
-                const Strides& get_strides() const override { return m_strides; }
-                virtual bool operator==(const TensorViewLayout& other) const override;
+                Strides get_strides() const override;
+                virtual bool operator==(const TensorLayout& other) const override;
 
             protected:
-                Strides m_strides;
                 size_t m_offset{0};
-                size_t m_size;
             };
         }
     }
