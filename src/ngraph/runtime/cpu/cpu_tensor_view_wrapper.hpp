@@ -35,18 +35,17 @@ namespace ngraph
 class ngraph::runtime::cpu::TensorViewWrapper
 {
 public:
-    TensorViewWrapper(const std::shared_ptr<descriptor::TensorView>&,
-                      const std::string& alias = "");
+    TensorViewWrapper(const std::shared_ptr<descriptor::Tensor>&, const std::string& alias = "");
 
     size_t get_size() const;
     const Shape& get_shape() const;
-    const Strides& get_strides() const;
+    Strides get_strides() const;
     const element::Type& get_element_type() const;
     const std::string& get_name() const;
     const std::string& get_type() const;
-    const std::shared_ptr<descriptor::TensorView> get_tensor_view() const;
+    const std::shared_ptr<descriptor::Tensor> get_tensor() const;
 
 private:
-    std::shared_ptr<descriptor::TensorView> m_tensor_view;
+    std::shared_ptr<descriptor::Tensor> m_tensor;
     std::string m_alias;
 };

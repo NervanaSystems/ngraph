@@ -18,7 +18,7 @@
 #include <memory>
 
 #include "cpu_tensor_view.hpp"
-#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -43,7 +43,7 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
     // TODO(jmenon): A fallback layout should not be needed but is required
     // because of how some unit test functionality is written (ex. 'backprop_derivative')
     // This needs to be removed
-    m_descriptor->set_tensor_view_layout(
+    m_descriptor->set_tensor_layout(
         std::make_shared<runtime::cpu::LayoutDescriptor>(*m_descriptor));
 
     buffer_size = shape_size(shape) * element_type.size();
@@ -114,7 +114,7 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
         throw out_of_range("read access past end of tensor");
     }
 
-    auto tvl = this->get_tensor_view_layout();
+    auto tvl = this->get_tensor_layout();
     auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
 
     auto needs_conversion = [&]() {

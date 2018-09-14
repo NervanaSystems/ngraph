@@ -15,44 +15,44 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
-#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-runtime::cpu::TensorViewWrapper::TensorViewWrapper(const shared_ptr<descriptor::TensorView>& tv,
+runtime::cpu::TensorViewWrapper::TensorViewWrapper(const shared_ptr<descriptor::Tensor>& tv,
                                                    const string& alias)
-    : m_tensor_view(tv)
+    : m_tensor(tv)
     , m_alias(alias)
 {
 }
 
 size_t runtime::cpu::TensorViewWrapper::get_size() const
 {
-    return m_tensor_view->get_tensor_view_layout()->get_size();
+    return m_tensor->get_tensor_layout()->get_size();
 }
 
 const Shape& runtime::cpu::TensorViewWrapper::get_shape() const
 {
-    return m_tensor_view->get_tensor_view_layout()->get_shape();
+    return m_tensor->get_tensor_layout()->get_shape();
 }
 
-const Strides& runtime::cpu::TensorViewWrapper::get_strides() const
+Strides runtime::cpu::TensorViewWrapper::get_strides() const
 {
-    return m_tensor_view->get_tensor_view_layout()->get_strides();
+    return m_tensor->get_tensor_layout()->get_strides();
 }
 
 const element::Type& runtime::cpu::TensorViewWrapper::get_element_type() const
 {
-    return m_tensor_view->get_tensor_view_layout()->get_element_type();
+    return m_tensor->get_tensor_layout()->get_element_type();
 }
 
 const std::string& runtime::cpu::TensorViewWrapper::get_name() const
 {
     if (m_alias.empty())
     {
-        return m_tensor_view->get_tensor().get_name();
+        return m_tensor->get_name();
     }
     else
     {
@@ -65,8 +65,7 @@ const std::string& runtime::cpu::TensorViewWrapper::get_type() const
     return get_element_type().c_type_string();
 }
 
-const std::shared_ptr<descriptor::TensorView>
-    runtime::cpu::TensorViewWrapper::get_tensor_view() const
+const std::shared_ptr<descriptor::Tensor> runtime::cpu::TensorViewWrapper::get_tensor() const
 {
-    return m_tensor_view;
+    return m_tensor;
 }
