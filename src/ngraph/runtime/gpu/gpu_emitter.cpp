@@ -526,17 +526,23 @@ namespace ngraph
                     return;
                 }
                 auto reshape = static_cast<const op::Reshape*>(node);
+
+                if (out[0].get_name() == args[0].get_name())
+                {
+                    writer << "// Logical reshape eliminated\n";
+                    return;
+                }
+
                 writer.block_begin();
                 auto arg_shape = args[0].get_shape();
                 auto arg_rank = arg_shape.size();
                 auto result_shape = out[0].get_shape();
                 auto input_order = reshape->get_input_order();
-                bool same_layout = is_sorted(input_order.begin(), input_order.end());
                 size_t result_shape_product = shape_size(result_shape);
 
                 // If there is no layout change or we are just going from 1^n to 1^m or a zero-size tensor,
                 // we can just copy.
-                if (same_layout || result_shape_product < 2)
+                if (!reshape->get_is_transpose() || result_shape_product < 2)
                 {
                     kernel::emit_memcpyDtD(writer, out[0], args[0]);
                 }
