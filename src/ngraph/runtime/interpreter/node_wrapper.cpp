@@ -39,7 +39,6 @@ runtime::interpreter::NodeWrapper::NodeWrapper(const shared_ptr<const Node>& nod
     }
     else
     {
-        // TODO: use unsupported_op when that is merged to master
-        throw runtime_error(m_node->description());
+        throw unsupported_op("Unsupported op '" + m_node->description() + "'");
     }
 }
