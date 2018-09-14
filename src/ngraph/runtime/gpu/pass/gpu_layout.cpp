@@ -59,11 +59,8 @@ namespace ngraph
                 void GPULayout::LAYOUT_DECL(ngraph::op::Reshape)
                 {
                     auto reshape = static_cast<ngraph::op::Reshape*>(node.get());
-                    if (reshape->get_is_transpose() &&
-                        reshape->get_output_shape().size() ==
-                            reshape->get_argument(0)->get_shape().size())
+                    if (reshape->get_is_transpose())
                     {
-                        // if transpose is required and input/output shape identical
                         return;
                     }
                     // Shape change only, tensor in native layout can be

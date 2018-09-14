@@ -517,7 +517,7 @@ namespace ngraph
                 }
                 auto reshape = static_cast<const op::Reshape*>(node);
 
-                if (out[0].get_name() == args[0].get_name() && !reshape->get_is_transpose())
+                if (out[0].get_name() == args[0].get_name())
                 {
                     writer << "// Logical reshape eliminated\n";
                     return;
