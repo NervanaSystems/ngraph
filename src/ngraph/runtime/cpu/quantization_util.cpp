@@ -30,7 +30,7 @@ namespace ngraph
                     auto qconvolution = static_cast<const ngraph::op::QuantizedConvolution*>(node);
                     float min_out_value;
                     float max_out_value;
-                    QuantizationRangeForMultiplication<uint8_t, int8_t, int32_t>(
+                    quantization_range_for_multiplication<uint8_t, int8_t, int32_t>(
                         qconvolution->get_input_min(),
                         qconvolution->get_input_max(),
                         qconvolution->get_filter_min(),

@@ -28,7 +28,7 @@ namespace ngraph
             namespace quantization_util
             {
                 template <class T1, class T2, class T3>
-                void QuantizationRangeForMultiplication(
+                void quantization_range_for_multiplication(
                     float min_a, float max_a, float min_b, float max_b, float* min_c, float* max_c)
                 {
                     float a_one_quant_level = (max_a - min_a) / (std::numeric_limits<T1>::max() -

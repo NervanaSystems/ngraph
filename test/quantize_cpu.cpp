@@ -246,7 +246,7 @@ TEST(quantize_cpu, quantizedConv2D_small)
     auto result = backend->create_tensor(element::i8, shape_r);
     auto result_min = backend->create_tensor(element::f32, Shape{1});
     auto result_max = backend->create_tensor(element::f32, Shape{1});
-    backend->call(f, {result, result_min, result_max}, {a, b});
+    backend->call_with_validate(f, {result, result_min, result_max}, {a, b});
     EXPECT_EQ((vector<int8_t>{31, 48, 42, 45, 54, 102, 127, 61, 47, 74, 61, 55}),
               read_vector<int8_t>(result));
     EXPECT_EQ((vector<float>{22.0}), read_vector<float>(result_min));
