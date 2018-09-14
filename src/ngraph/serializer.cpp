@@ -368,7 +368,7 @@ static shared_ptr<ngraph::Function>
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
             // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
-            switch (typeid_map.at(node_name))
+            switch (typeid_map.at(node_op))
             {
             case OP_TYPEID::Abs:
             {
