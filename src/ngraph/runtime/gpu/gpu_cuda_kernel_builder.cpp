@@ -498,6 +498,7 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op_2d(codegen::CodeWriter& wri
         writer << "uint32_t tid0 = threadIdx.y;\n";
         writer << "uint32_t idx1 = base1 + tid1;\n";
         writer << "uint32_t idx0 = base0 + tid0;\n";
+
         writer << "if (idx1 < nx && idx0 < ny)\n";
         writer.block_begin();
         {
@@ -509,6 +510,7 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op_2d(codegen::CodeWriter& wri
             writer << "tile[tid0][tid1] = in[input_idx];\n";
         }
         writer.block_end();
+
         writer << "idx1 = base1 + tid0;\n";
         writer << "idx0 = base0 + tid1;\n";
         writer << "__syncthreads();\n";
@@ -552,6 +554,7 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op_3d(codegen::CodeWriter& wri
         writer << "uint32_t idx2 = base2 + tid2;\n";
         writer << "uint32_t idx1 = base1 + tid1;\n";
         writer << "uint32_t idx0 = base0 + tid0;\n";
+
         writer << "if (idx2 < nx && idx1 < ny && idx0 < nz)\n";
         writer.block_begin();
         {
@@ -563,6 +566,7 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op_3d(codegen::CodeWriter& wri
             writer << "tile[tid0][tid1][tid2] = in[input_idx];\n";
         }
         writer.block_end();
+
         if (order[2] == 1)
         {
             writer << "otid2 = tid1;\n";
@@ -587,7 +591,6 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op_3d(codegen::CodeWriter& wri
                 writer << "output_idx += trans_strides" << i << "* idx" << i << ";\n";
             }
             writer << "out[output_idx] = tile[otid0][otid1][otid2];\n";
-            //            writer << "out[output_idx] = 1;\n";
         }
         writer.block_end();
     }
