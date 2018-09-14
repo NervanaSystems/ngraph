@@ -1351,67 +1351,63 @@ void runtime::cpu::CPU_ExternalFunction::build()
 
     if ((std::getenv("NGRAPH_DEX_DEBUG") != nullptr))
     {
-        static std::once_flag execute_once;
         string filename = file_util::path_join(s_debug_dir, m_function_name + "_debug.txt");
-        std::call_once(execute_once, [&]() {
-            std::stringstream strm;
-            auto find_role = [&](CPUTensorRole tensor_role) -> string {
-                switch (tensor_role)
-                {
-                case CPUTensorRole::INPUT: return string("CPUTensorRole::INPUT");
-                case CPUTensorRole::INTERMEDIATE: return string("CPUTensorRole::INTERMEDIATE");
-                case CPUTensorRole::CONSTANT: return string("CPUTensorRole::CONSTANT");
-                case CPUTensorRole::OUTPUT: return string("CPUTensorRole::OUTPUT");
-                }
-            };
-
-            //dump the tensor roles to debug manifest
-            for (const auto& tensor_roles : m_tensor_roles)
+        std::stringstream strm;
+        auto find_role = [&](CPUTensorRole tensor_role) -> string {
+            switch (tensor_role)
             {
-                strm << tensor_roles.first << ", " << find_role(tensor_roles.second) << "\n";
+            case CPUTensorRole::INPUT: return string("CPUTensorRole::INPUT");
+            case CPUTensorRole::INTERMEDIATE: return string("CPUTensorRole::INTERMEDIATE");
+            case CPUTensorRole::CONSTANT: return string("CPUTensorRole::CONSTANT");
+            case CPUTensorRole::OUTPUT: return string("CPUTensorRole::OUTPUT");
+            }
+        };
+
+        //dump the tensor roles to debug manifest
+        for (const auto& tensor_roles : m_tensor_roles)
+        {
+            strm << tensor_roles.first << ", " << find_role(tensor_roles.second) << "\n";
+        }
+
+        write_to_file(strm.str(), s_debug_dir, filename);
+        strm.str("");
+
+        //dump the op's the order of execution along with their memory references
+        for (shared_ptr<Node> node : m_function->get_ordered_ops())
+        {
+            std::vector<string> node_inputs;
+            std::vector<string> node_outputs;
+            std::stringstream temp;
+            if (node->is_parameter() || node->is_constant())
+            {
+                continue;
+            }
+            for (const descriptor::Input& input : node->get_inputs())
+            {
+                const descriptor::Output& output = input.get_output();
+                shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+                auto name = tv->get_tensor().get_name();
+                temp << &tensor_data[name];
+                node_inputs.push_back(name + "(" + temp.str() + ")");
+                temp.str("");
             }
 
+            for (const descriptor::Output& output : node->get_outputs())
+            {
+                shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+                auto name = tv->get_tensor().get_name();
+                temp << &tensor_data[name];
+                node_outputs.push_back(name + "(" + temp.str() + ")");
+                temp.str("");
+            }
+            strm << "\n" << node->get_name() << "(";
+            vector<string> parameter_nodes = node_inputs;
+            parameter_nodes.insert(parameter_nodes.end(), node_outputs.begin(), node_outputs.end());
+            strm << join(parameter_nodes);
+            strm << ")\n";
             write_to_file(strm.str(), s_debug_dir, filename);
             strm.str("");
-
-            //dump the op's the order of execution along with their memory references
-            for (shared_ptr<Node> node : m_function->get_ordered_ops())
-            {
-                std::vector<string> node_inputs;
-                std::vector<string> node_outputs;
-                std::stringstream temp;
-                if (node->is_parameter() || node->is_constant())
-                {
-                    continue;
-                }
-                for (const descriptor::Input& input : node->get_inputs())
-                {
-                    const descriptor::Output& output = input.get_output();
-                    shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-                    auto name = tv->get_tensor().get_name();
-                    temp << &tensor_data[name];
-                    node_inputs.push_back(name + "(" + temp.str() + ")");
-                    temp.str("");
-                }
-
-                for (const descriptor::Output& output : node->get_outputs())
-                {
-                    shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-                    auto name = tv->get_tensor().get_name();
-                    temp << &tensor_data[name];
-                    node_outputs.push_back(name + "(" + temp.str() + ")");
-                    temp.str("");
-                }
-                strm << "\n" << node->get_name() << "(";
-                vector<string> parameter_nodes = node_inputs;
-                parameter_nodes.insert(
-                    parameter_nodes.end(), node_outputs.begin(), node_outputs.end());
-                strm << join(parameter_nodes);
-                strm << ")\n";
-                write_to_file(strm.str(), s_debug_dir, filename);
-                strm.str("");
-            }
-        });
+        }
     }
 
     executor = [&](CPURuntimeContext* ctx, vector<void*>& inputs, vector<void*>& outputs) {
