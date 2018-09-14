@@ -70,7 +70,6 @@
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/relu.hpp"
-#include "ngraph/op/remainder.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
@@ -111,15 +110,19 @@ enum class OP_TYPEID
 };
 #undef NGRAPH_OP
 
+static OP_TYPEID get_typeid(const string& s)
+{
 // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
 // {"Abs", OP_TYPEID::Abs},
 // {"Acos", OP_TYPEID::Acos},
 // ...
 #define NGRAPH_OP(a) {#a, OP_TYPEID::a},
-static unordered_map<string, OP_TYPEID> typeid_map{
+    static const unordered_map<string, OP_TYPEID> typeid_map{
 #include "ngraph/op/op_tbl.hpp"
-};
+    };
 #undef NGRAPH_OP
+    return typeid_map.at(s);
+}
 
 template <typename T>
 T get_or_default(nlohmann::json& j, const std::string& key, const T& default_value)
@@ -368,7 +371,7 @@ static shared_ptr<ngraph::Function>
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
             // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
-            switch (typeid_map.at(node_op))
+            switch (get_typeid(node_op))
             {
             case OP_TYPEID::Abs:
             {
@@ -852,11 +855,6 @@ static shared_ptr<ngraph::Function>
                     args[0], args[1], f_ptr, window_shape, window_movement_strides);
                 break;
             }
-            // case OP_TYPEID::Remainder:
-            // {
-            //     node = make_shared<op::Remainder>(args[0], args[1]);
-            //     break;
-            // }
             case OP_TYPEID::Relu:
             {
                 node = make_shared<op::Relu>(args[0]);
@@ -1121,7 +1119,7 @@ static json write(const Node& n, bool binary_constant_data)
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
     // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
-    switch (typeid_map.at(node_op))
+    switch (get_typeid(node_op))
     {
     case OP_TYPEID::Abs: { break;
     }
@@ -1391,8 +1389,6 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::ReluBackprop: { break;
     }
-    // case OP_TYPEID::Remainder: { break;
-    // }
     case OP_TYPEID::ReplaceSlice:
     {
         auto tmp = dynamic_cast<const op::ReplaceSlice*>(&n);
