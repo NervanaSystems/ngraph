@@ -1494,7 +1494,11 @@ void runtime::cpu::CPU_ExternalFunction::build()
                             start_ts = cpu::Clock::now();
                         }
                         (*functor)(ctx);
-                        if (runtime::cpu::IsTracingEnabled())
+                        // we will only update the profile_counter for the first functor within
+                        // the same kernel. ex: MaxPoolBackProp has two functor, one for the
+                        // fprop and another one for the bprop. we will start the clock @ the
+                        // begining of the first functor of the respective kernel
+                        if (runtime::cpu::IsTracingEnabled() && j == 0)
                         {
                             ctx->op_durations[profiler_count++] =
                                 (std::chrono::duration_cast<cpu::Timescale>(cpu::Clock::now() -
