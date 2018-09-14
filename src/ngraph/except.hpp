@@ -22,8 +22,9 @@
 namespace ngraph
 {
     /// Base error for ngraph runtime errors.
-    struct ngraph_error : std::runtime_error
+    class ngraph_error : public std::runtime_error
     {
+    public:
         explicit ngraph_error(const std::string& what_arg)
             : std::runtime_error(what_arg)
         {
@@ -36,6 +37,15 @@ namespace ngraph
 
         explicit ngraph_error(const std::stringstream& what_arg)
             : std::runtime_error(what_arg.str())
+        {
+        }
+    };
+
+    class unsupported_op : public std::runtime_error
+    {
+    public:
+        unsupported_op(const std::string& what_arg)
+            : std::runtime_error(what_arg)
         {
         }
     };

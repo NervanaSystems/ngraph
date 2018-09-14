@@ -135,7 +135,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     {
         const Node* op = &wrapped.get_node();
         auto type_id = wrapped.get_typeid();
-        if (op->description() == "Parameter")
+        if (type_id == OP_TYPEID::Parameter)
         {
             continue;
         }

@@ -43,10 +43,15 @@ namespace ngraph
     }
 
     void traverse_nodes(const std::shared_ptr<const Function> p,
-                        std::function<void(std::shared_ptr<Node>)> f);
-    void traverse_nodes(const Function* p, std::function<void(std::shared_ptr<Node>)> f);
+                        std::function<void(std::shared_ptr<Node>)> f,
+                        bool include_control_deps = false);
+    void traverse_nodes(const Function* p,
+                        std::function<void(std::shared_ptr<Node>)> f,
+                        bool include_control_deps);
 
-    void traverse_nodes(const NodeVector& io_nodes, std::function<void(std::shared_ptr<Node>)> f);
+    void traverse_nodes(const NodeVector& io_nodes,
+                        std::function<void(std::shared_ptr<Node>)> f,
+                        bool include_control_deps);
 
     void traverse_functions(std::shared_ptr<Function> p,
                             std::function<void(std::shared_ptr<Function>)> f);
@@ -54,17 +59,31 @@ namespace ngraph
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
     template <typename T>
-    std::list<std::shared_ptr<Node>> topological_sort(const T& nodes)
+    std::list<std::shared_ptr<Node>> topological_sort(const T& nodes,
+                                                      bool include_control_deps = false)
     {
         std::deque<ngraph::Node*> independent_nodes;
         std::unordered_map<const ngraph::Node*, size_t> node_dependency_count;
         std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>> node_map;
+        std::unordered_map<ngraph::Node*, std::set<Node*>> control_deps_users;
 
         for (auto node : nodes)
         {
+            //build an equivalent of node->get_users() but for control dependencies
+            size_t control_deps_count = 0;
+            if (include_control_deps)
+            {
+                for (auto cd : node->get_control_dependencies())
+                {
+                    control_deps_users[cd.get()].insert(node.get());
+                }
+                control_deps_count = node->get_control_dependencies().size();
+            }
+
             node_map[node.get()] = node;
-            node_dependency_count[node.get()] = node->get_arguments().size();
-            if (node->get_arguments().size() == 0)
+            size_t deps_count = node->get_arguments().size() + control_deps_count;
+            node_dependency_count[node.get()] = deps_count;
+            if (deps_count == 0)
             {
                 independent_nodes.push_back(node.get());
             }
@@ -86,6 +105,21 @@ namespace ngraph
                 {
                     independent_nodes.push_back(user);
                 }
+            }
+
+            if (include_control_deps)
+            {
+                auto cdit = control_deps_users.find(independent_node);
+                if (cdit != control_deps_users.end())
+                    for (auto cd_user : cdit->second)
+                    {
+                        node_dependency_count[cd_user] -= 1;
+                        size_t count = node_dependency_count[cd_user];
+                        if (count == 0)
+                        {
+                            independent_nodes.push_back(cd_user);
+                        }
+                    }
             }
         }
 

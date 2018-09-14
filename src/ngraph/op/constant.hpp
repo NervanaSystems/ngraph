@@ -108,7 +108,6 @@ namespace ngraph
 
             void validate_and_infer_types() override
             {
-                Node::validate_and_infer_types();
                 infer_element_type();
                 set_output_type(0, m_element_type, m_shape);
             }
