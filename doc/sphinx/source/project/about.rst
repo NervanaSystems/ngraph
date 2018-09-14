@@ -4,7 +4,7 @@ Overview
 ========
 
 
-Welcome to the documentation site for nGraph™, an open-source C++ Compiler, 
+Welcome to the documentation site for |InG|, an open-source C++ Compiler, 
 Library, and runtime suite for running training and inference on 
 :abbr:`Deep Neural Network (DNN)` models. nGraph is framework-neutral and can be 
 targeted for programming and deploying :abbr:`Deep Learning (DL)` applications 
@@ -26,17 +26,13 @@ Develop without lock-in
    :width: 650px
   
 
-Indeed, capabilities to increase training performance or to reduce inference 
-latency by simply adding another device of *any* specialized form factor -- 
-whether it be more compute (CPU), GPU or VPU processing power, custom ASIC or 
-FPGA, or a yet-to-be invented generation of NNP or accelerator -- are the key 
-benefits for frameworks developers working with nGraph. Our commitment to bake 
-flexibility into our ecosystem ensures developers' freedom to design user-facing 
-APIs for various hardware deployments directly into the framework. 
-Developers working on things like edge-devices augmented by machine learning, or 
-large distributed training clusters, or those who simply want a framework 
-without restrictive lock-in to let users switch or upgrade backends quickly and 
-easily.  
+Being able to increase training performance or reduce inference latency by simply 
+adding another device of *any* specialized form factor -- whether it be more 
+compute (CPU), GPU or VPU processing power, custom ASIC or FPGA, or a yet-to-be 
+invented generation of NNP or accelerator -- is a key benefit for frameworks 
+developers working with nGraph. Our commitment to bake flexibility into our 
+ecosystem ensures developers' freedom to design user-facing APIs for various 
+hardware deployments directly into their frameworks. 
 
 
 .. figure:: ../graphics/ngraph-ecosystem.png
@@ -50,12 +46,14 @@ we've created a :doc:`How to Guide <../howto/index>` so you can learn how to
 create custom bridge code that can be used to 
 :doc:`compile and run <../howto/execute>` a training model.  
 
-Additionally We've recently added initial support for the `ONNX`_ format. Developers who 
-already have a "trained" model can use nGraph to bypass a lot of the 
+Additionally, nGraph Library supports the `ONNX`_ format. Developers who 
+already have a "trained" model can use nGraph to bypass much of the 
 framework-based complexity and :doc:`../howto/import` to test or run it 
 on targeted and efficient backends with our user-friendly ``ngraph_api``. 
 With nGraph, data scientists can focus on data science rather than worrying 
-about how to adapt models to train and run efficiently on different devices.
+about how to adapt models to train and run efficiently on different devices. 
+Be sure to add the ``-DNGRAPH_ONNX_IMPORT_ENABLE=ON`` option when running `cmake`
+to build the Library. 
 
 
 Supported platforms
@@ -66,8 +64,15 @@ Supported platforms
 * Intel® Nervana™ Neural Network Processor™ (NNPs), and 
 * NVIDIA\* CUDA (GPUs). 
 
-
-
+We built the first-generation of the Intel Nervana™ NNP family of processors 
+last year to show that the nGraph Library can be used to train a
+:abbr:`Neural Network (NN)` more quickly. The more advanced the silicon, the 
+more powerful a lightweight a library can be. So while we do currently support 
+traditional GPUs, they are not advanced silicon, and trying to scale workloads 
+using traditional GPU libraries is clunky and brittle with bottlenecks. Iteration 
+from an already-trained NN model to one that can also perform inference 
+computations is immensely simplified. Read more about these compute-friendly 
+options on the documentation for :doc:`../fusion/index`.  
 
 
 .. note:: The library code is under active development as we're continually 
@@ -82,7 +87,7 @@ When Deep Learning (DL) frameworks first emerged as the vehicle for training
 models, they were designed around kernels optimized for a particular platform. 
 As a result, many backend details were being exposed in the model definitions, 
 making the adaptability and portability of DL models to other, or more advanced 
-backends inherently complex and expensive.
+backends complex and expensive.
 
 The traditional approach means that an algorithm developer cannot easily adapt 
 his or her model to different backends. Making a model run on a different 

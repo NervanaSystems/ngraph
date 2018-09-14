@@ -95,7 +95,7 @@ void runtime::cpu::CPU_CallFrame::propagate_layouts(
             throw ngraph_error(
                 "Error propagating layouts - layout information missing from tensor view");
         }
-        tvs[i]->get_descriptor()->set_tensor_view_layout(layouts[i]);
+        tvs[i]->get_descriptor()->set_tensor_layout(layouts[i]);
     }
 }
 
