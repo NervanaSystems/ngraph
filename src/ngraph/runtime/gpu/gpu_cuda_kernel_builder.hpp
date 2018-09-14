@@ -62,6 +62,13 @@ namespace ngraph
 
                 static void get_reshape_op_3d(codegen::CodeWriter& writer,
                                               const std::string& name,
+                                              runtime::gpu::GPUKernelArgs& args,
+                                              const std::string& data_type,
+                                                const std::vector<uint32_t>& order,
+                                                const std::vector<uint32_t>& block_size);
+
+                static void get_reshape_op_2d(codegen::CodeWriter& writer,
+                                              const std::string& name,
                                               runtime::gpu::GPUKernelArgs& args);
 
                 static void get_reduce_to_nd_op(codegen::CodeWriter& writer,

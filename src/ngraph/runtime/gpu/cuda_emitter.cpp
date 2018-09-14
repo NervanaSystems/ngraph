@@ -677,12 +677,14 @@ size_t runtime::gpu::CUDAEmitter::build_reshape_3d(const std::array<std::string,
 
     uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
     // TODO: currently we set it to 64, will add tuning method later
-    uint32_t block_size_x = 4;
-    uint32_t block_size_y = 4;
-    uint32_t block_size_z = 4;
-    uint32_t aligned_grid_size_x = align_to_block_size(input_shape[0], block_size_x);
-    uint32_t aligned_grid_size_y = align_to_block_size(input_shape[1], block_size_y);
-    uint32_t aligned_grid_size_z = align_to_block_size(input_shape[2], block_size_z);
+    std::vector<uint32_t> block_size(3,0);
+    uint32_t block_size_x = 16;
+    block_size[0] = block_size_x;                                                //x
+    block_size[2] = (input_order[2] == 0) ? block_size_x : 4;                    //z
+    block_size[1] = (block_size[2] == block_size_x) ? 4 : block_size_x;                     //y
+    uint32_t aligned_grid_size_x = align_to_block_size(input_shape[2], block_size[0]);
+    uint32_t aligned_grid_size_y = align_to_block_size(input_shape[1], block_size[1]);
+    uint32_t aligned_grid_size_z = align_to_block_size(input_shape[0], block_size[2]);
     NVShape input_strides = row_major_strides(input_shape);
     NVShape output_strides(rank);
     NVShape trans_strides(rank);
@@ -696,6 +698,13 @@ size_t runtime::gpu::CUDAEmitter::build_reshape_3d(const std::array<std::string,
     {
         trans_strides[input_order[i]] = output_strides[i];
     }
+    NGRAPH_INFO << join(input_shape);
+    NGRAPH_INFO << join(input_order);
+    NGRAPH_INFO << join(block_size);
+    NGRAPH_INFO << join(trans_strides);
+    NGRAPH_INFO << aligned_grid_size_x;
+    NGRAPH_INFO << aligned_grid_size_y;
+    NGRAPH_INFO << aligned_grid_size_z;
 
     // get an allocator for transient per kernel gpu memory
     auto args = m_primitive_emitter->add_kernel_args();
@@ -703,9 +712,9 @@ size_t runtime::gpu::CUDAEmitter::build_reshape_3d(const std::array<std::string,
         .add_placeholder(dtypes[1], "out")
         .add("input_strides", input_strides)
         .add("trans_strides", trans_strides)
-        .add("nx", input_shape[0])
+        .add("nx", input_shape[2])
         .add("ny", input_shape[1])
-        .add("nz", input_shape[2]);
+        .add("nz", input_shape[0]);
 
     // check if the kernel has already been compiled. if so, create
     // a launch primitive for it based on the input tensor shape
@@ -716,7 +725,7 @@ size_t runtime::gpu::CUDAEmitter::build_reshape_3d(const std::array<std::string,
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
-        CudaKernelBuilder::get_reshape_op_3d(writer, kernel_name.str(), args);
+        CudaKernelBuilder::get_reshape_op_3d(writer, kernel_name.str(), args, dtypes[1], input_order, block_size);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
 
@@ -731,9 +740,9 @@ size_t runtime::gpu::CUDAEmitter::build_reshape_3d(const std::array<std::string,
                                           aligned_grid_size_x,
                                           aligned_grid_size_y,
                                           aligned_grid_size_z, // grid dim
-                                          block_size_x,
-                                          block_size_y,
-                                          block_size_z, // block dim
+                                          block_size[0],
+                                          block_size[1],
+                                          block_size[2], // block dim
                                           0,
                                           NULL, // shared mem and stream
                                           args_list,

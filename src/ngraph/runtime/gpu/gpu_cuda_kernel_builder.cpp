@@ -483,6 +483,71 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op(codegen::CodeWriter& writer
 
 void runtime::gpu::CudaKernelBuilder::get_reshape_op_3d(codegen::CodeWriter& writer,
                                                         const std::string& name,
+                                                        runtime::gpu::GPUKernelArgs& args,
+                                                        const std::string& data_type,
+                                                const std::vector<uint32_t>& order,
+                                                const std::vector<uint32_t>& block_size)
+{
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
+    writer.block_begin();
+    {
+        writer << "__shared__ " << data_type << " tile[" << block_size[2] << "]["<< block_size[1] << "]["<< block_size[0] << "];\n";
+        writer << "uint32_t base2 = blockIdx.x * blockDim.x;\n";
+        writer << "uint32_t base1 = blockIdx.y * blockDim.y;\n";
+        writer << "uint32_t base0 = blockIdx.z * blockDim.z;\n";
+        writer << "uint32_t tid2 = threadIdx.x;\n";
+        writer << "uint32_t tid1 = threadIdx.y;\n";
+        writer << "uint32_t tid0 = threadIdx.z;\n";
+        writer << "uint32_t otid2 = tid2;\n";
+        writer << "uint32_t otid1 = tid1;\n";
+        writer << "uint32_t otid0 = tid0;\n";
+        writer << "uint32_t idx2 = base2 + tid2;\n";
+        writer << "uint32_t idx1 = base1 + tid1;\n";
+        writer << "uint32_t idx0 = base0 + tid0;\n";
+        writer << "if (idx2 < nx && idx1 < ny && idx0 < nz)\n";
+        writer.block_begin();
+        {
+            writer << "uint32_t input_idx = 0;\n";
+            for (int i = 0; i < 3; i++)
+            {
+                writer << "input_idx += input_strides" << i << "* idx" << i << ";\n";
+            }
+            writer << "tile[tid0][tid1][tid2] = in[input_idx];\n";
+        }
+        writer.block_end();
+            if(order[2] == 1)
+            {
+                writer << "otid2 = tid1;\n"; 
+                writer << "otid1 = tid2;\n"; 
+            }
+            else if(order[2] == 0)
+            {
+                writer << "otid2 = tid0;\n"; 
+                writer << "otid0 = tid2;\n"; 
+            }
+        writer << "idx2 = base2 + otid2;\n";
+        writer << "idx1 = base1 + otid1;\n";
+        writer << "idx0 = base0 + otid0;\n";
+        writer << "__syncthreads();\n";
+
+        writer << "if (idx2 < nx && idx1 < ny && idx0 < nz)\n";
+        writer.block_begin();
+        {
+            writer << "uint32_t output_idx = 0;\n";
+            for (int i = 0; i < 3; i++)
+            {
+                writer << "output_idx += trans_strides" << i << "* idx" << i << ";\n";
+            }
+            writer << "out[output_idx] = tile[otid0][otid1][otid2];\n";
+//            writer << "out[output_idx] = 1;\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+}
+
+void runtime::gpu::CudaKernelBuilder::get_reshape_op_2d(codegen::CodeWriter& writer,
+                                                        const std::string& name,
                                                         runtime::gpu::GPUKernelArgs& args)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
@@ -490,7 +555,6 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op_3d(codegen::CodeWriter& wri
     {
         writer << "uint32_t tid0 = blockIdx.x * blockDim.x + threadIdx.x;\n";
         writer << "uint32_t tid1 = blockIdx.y * blockDim.y + threadIdx.y;\n";
-        writer << "uint32_t tid2 = blockIdx.z * blockDim.z + threadIdx.z;\n";
         writer << "if (tid0 < nx && tid1 < ny && tid2 < nz)\n";
         writer.block_begin();
         {
@@ -507,7 +571,6 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op_3d(codegen::CodeWriter& wri
     }
     writer.block_end();
 }
-
 void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
                                                     const std::string& name,
                                                     const std::vector<std::string>& data_types,
