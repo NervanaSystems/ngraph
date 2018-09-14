@@ -123,6 +123,7 @@ namespace ngraph
             }
         }
 
+        NGRAPH_ASSERT(nodes.size() == result_list.size());
         return result_list;
     }
 
