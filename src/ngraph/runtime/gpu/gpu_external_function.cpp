@@ -36,6 +36,8 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/argmax.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -60,6 +62,7 @@
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
+#include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
@@ -94,10 +97,12 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/op/topk.hpp"
 #include "ngraph/pass/common_function_collection.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
@@ -105,6 +110,7 @@
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_layout.hpp"
 #include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
 
@@ -158,91 +164,456 @@ static string emit_string_array(const vector<string>& s, size_t max_line_length)
 
 static GPUStaticInitializers s_static_initializers;
 
-#define TI(x) type_index(typeid(x))
+// This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
+// Abs,
+// Acos,
+// ...
+#define NGRAPH_OP(a) a,
+enum class OP_TYPEID
+{
+#include "ngraph/op/op_tbl.hpp"
+};
+#undef NGRAPH_OP
 
-static const runtime::gpu::OpMap dispatcher{
-    {TI(ngraph::op::Abs), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Abs>},
-    {TI(ngraph::op::Acos), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Acos>},
-    {TI(ngraph::op::Add), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Add>},
-    {TI(ngraph::op::And), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::And>},
-    {TI(ngraph::op::Asin), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Asin>},
-    {TI(ngraph::op::Atan), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Atan>},
-    {TI(ngraph::op::AvgPool), &runtime::gpu::GPU_Emitter::emit<ngraph::op::AvgPool>},
-    {TI(ngraph::op::AvgPoolBackprop),
-     &runtime::gpu::GPU_Emitter::emit<ngraph::op::AvgPoolBackprop>},
-    {TI(ngraph::op::BatchNorm), &runtime::gpu::GPU_Emitter::emit<ngraph::op::BatchNorm>},
-    {TI(ngraph::op::BatchNormBackprop),
-     &runtime::gpu::GPU_Emitter::emit<ngraph::op::BatchNormBackprop>},
-    {TI(ngraph::op::Broadcast), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Broadcast>},
-    {TI(ngraph::op::Ceiling), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Ceiling>},
-    {TI(ngraph::op::Concat), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Concat>},
-    {TI(ngraph::op::Constant), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Constant>},
-    {TI(ngraph::op::Convert), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Convert>},
-    {TI(ngraph::op::Convolution), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Convolution>},
-    {TI(ngraph::op::ConvolutionBackpropData),
-     &runtime::gpu::GPU_Emitter::emit<ngraph::op::ConvolutionBackpropData>},
-    {TI(ngraph::op::ConvolutionBackpropFilters),
-     &runtime::gpu::GPU_Emitter::emit<ngraph::op::ConvolutionBackpropFilters>},
-    {TI(ngraph::op::Cos), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Cos>},
-    {TI(ngraph::op::Cosh), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Cosh>},
-    {TI(ngraph::op::Divide), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Divide>},
-    {TI(ngraph::op::Dot), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Dot>},
-    {TI(ngraph::op::Equal), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Equal>},
-    {TI(ngraph::op::Exp), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Exp>},
-    {TI(ngraph::op::Floor), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Floor>},
-    {TI(ngraph::op::FunctionCall), &runtime::gpu::GPU_Emitter::emit<ngraph::op::FunctionCall>},
-    {TI(ngraph::op::GetOutputElement),
-     &runtime::gpu::GPU_Emitter::emit<ngraph::op::GetOutputElement>},
-    {TI(ngraph::op::Greater), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Greater>},
-    {TI(ngraph::op::GreaterEq),
-     &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::GreaterEq>},
-    {TI(ngraph::op::Less), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Less>},
-    {TI(ngraph::op::LessEq), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::LessEq>},
-    {TI(ngraph::op::Log), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Log>},
-    {TI(ngraph::op::Max), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Max>},
-    {TI(ngraph::op::Maximum), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Maximum>},
-    {TI(ngraph::op::MaxPool), &runtime::gpu::GPU_Emitter::emit<ngraph::op::MaxPool>},
-    {TI(ngraph::op::MaxPoolBackprop),
-     &runtime::gpu::GPU_Emitter::emit<ngraph::op::MaxPoolBackprop>},
-    {TI(ngraph::op::Min), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Min>},
-    {TI(ngraph::op::Minimum), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Minimum>},
-    {TI(ngraph::op::Multiply), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Multiply>},
-    {TI(ngraph::op::Negative), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Negative>},
-    {TI(ngraph::op::Not), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Not>},
-    {TI(ngraph::op::NotEqual), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::NotEqual>},
-    {TI(ngraph::op::OneHot), &runtime::gpu::GPU_Emitter::emit<ngraph::op::OneHot>},
-    {TI(ngraph::op::Or), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Or>},
-    {TI(ngraph::op::Pad), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Pad>},
-    {TI(ngraph::op::Parameter), &runtime::gpu::GPU_Emitter::nop},
-    {TI(ngraph::op::Power), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Power>},
-    {TI(ngraph::op::Product), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Product>},
-    {TI(ngraph::op::Reduce), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Reduce>},
-    {TI(ngraph::op::ReduceWindow), &runtime::gpu::GPU_Emitter::emit<ngraph::op::ReduceWindow>},
-    {TI(ngraph::op::Relu), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Relu>},
-    {TI(ngraph::op::ReluBackprop),
-     &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::ReluBackprop>},
-    {TI(ngraph::op::ReplaceSlice), &runtime::gpu::GPU_Emitter::emit<ngraph::op::ReplaceSlice>},
-    {TI(ngraph::op::Reshape), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Reshape>},
-    {TI(ngraph::op::Result), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Result>},
-    {TI(ngraph::op::Reverse), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Reverse>},
-    {TI(ngraph::op::ReverseSequence),
-     &runtime::gpu::GPU_Emitter::emit<ngraph::op::ReverseSequence>},
-    {TI(ngraph::op::Select), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Select>},
-    {TI(ngraph::op::SelectAndScatter),
-     &runtime::gpu::GPU_Emitter::emit<ngraph::op::SelectAndScatter>},
-    {TI(ngraph::op::Sigmoid), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sigmoid>},
-    {TI(ngraph::op::SigmoidBackprop),
-     &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::SigmoidBackprop>},
-    {TI(ngraph::op::Sign), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sign>},
-    {TI(ngraph::op::Sin), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sin>},
-    {TI(ngraph::op::Sinh), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sinh>},
-    {TI(ngraph::op::Slice), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Slice>},
-    {TI(ngraph::op::Softmax), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Softmax>},
-    {TI(ngraph::op::Sqrt), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sqrt>},
-    {TI(ngraph::op::Subtract), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Subtract>},
-    {TI(ngraph::op::Sum), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Sum>},
-    {TI(ngraph::op::Tan), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Tan>},
-    {TI(ngraph::op::Tanh), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Tanh>},
+static OP_TYPEID get_typeid(const Node& node)
+{
+// This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
+// {<Abs typeid>, OP_TYPEID::Abs},
+// {<Acos typeid>, OP_TYPEID::Acos},
+// ...
+#define NGRAPH_OP(a) {type_index(typeid(ngraph::op::a)), OP_TYPEID::a},
+    static const unordered_map<type_index, OP_TYPEID> typeid_map{
+#include "ngraph/op/op_tbl.hpp"
+    };
+#undef NGRAPH_OP
+    return typeid_map.at(type_index(typeid(node)));
+}
+
+void runtime::gpu::GPU_ExternalFunction::emit_op(GPU_ExternalFunction* external_function,
+                                                 codegen::CodeWriter& writer,
+                                                 const ngraph::Node* node,
+                                                 const std::vector<GPU_TensorViewWrapper>& args,
+                                                 const std::vector<GPU_TensorViewWrapper>& out)
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+    switch (get_typeid(*node))
+    {
+    case OP_TYPEID::Abs:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Abs>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Acos:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Acos>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Add:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Add>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::AllReduce:
+    {
+        throw unsupported_op("Unsupported op '" + node->description() + "'");
+    }
+    case OP_TYPEID::And:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::And>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::ArgMax: { throw unsupported_op("Unsupported op '" + node->description() + "'");
+    }
+    case OP_TYPEID::ArgMin: { throw unsupported_op("Unsupported op '" + node->description() + "'");
+    }
+    case OP_TYPEID::Asin:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Asin>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Atan:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Atan>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::AvgPool:
+    {
+        runtime::gpu::GPU_Emitter::emit_AvgPool(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::AvgPoolBackprop:
+    {
+        runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::BatchNorm:
+    {
+        runtime::gpu::GPU_Emitter::emit_BatchNorm(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::BatchNormBackprop:
+    {
+        runtime::gpu::GPU_Emitter::emit_BatchNormBackprop(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Broadcast:
+    {
+        runtime::gpu::GPU_Emitter::emit_Broadcast(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Ceiling:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Ceiling>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Concat:
+    {
+        runtime::gpu::GPU_Emitter::emit_Concat(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Constant:
+    {
+        runtime::gpu::GPU_Emitter::emit_Constant(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Convert:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Convert>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Convolution:
+    {
+        runtime::gpu::GPU_Emitter::emit_Convolution(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::ConvolutionBackpropData:
+    {
+        runtime::gpu::GPU_Emitter::emit_ConvolutionBackpropData(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::ConvolutionBackpropFilters:
+    {
+        runtime::gpu::GPU_Emitter::emit_ConvolutionBackpropFilters(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Cos:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Cos>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Cosh:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Cosh>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Divide:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Divide>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Dot:
+    {
+        runtime::gpu::GPU_Emitter::emit_Dot(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Equal:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Equal>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Exp:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Exp>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Floor:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Floor>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::FunctionCall:
+    {
+        runtime::gpu::GPU_Emitter::emit_FunctionCall(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::GetOutputElement:
+    {
+        runtime::gpu::GPU_Emitter::emit_GetOutputElement(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Greater:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Greater>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::GreaterEq:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::GreaterEq>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Less:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Less>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::LessEq:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::LessEq>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Log:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Log>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::LRN: { throw unsupported_op("Unsupported op '" + node->description() + "'");
+    }
+    case OP_TYPEID::Max:
+    {
+        runtime::gpu::GPU_Emitter::emit_Max(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Maximum:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Maximum>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::MaxPool:
+    {
+        runtime::gpu::GPU_Emitter::emit_MaxPool(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::MaxPoolBackprop:
+    {
+        runtime::gpu::GPU_Emitter::emit_MaxPoolBackprop(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Min:
+    {
+        runtime::gpu::GPU_Emitter::emit_Min(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Minimum:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Minimum>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Multiply:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Multiply>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Negative:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Negative>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Not:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Not>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::NotEqual:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::NotEqual>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::OneHot:
+    {
+        runtime::gpu::GPU_Emitter::emit_OneHot(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Or:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Or>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Pad:
+    {
+        runtime::gpu::GPU_Emitter::emit_Pad(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Parameter: { break;
+    }
+    case OP_TYPEID::Power:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Power>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Product:
+    {
+        runtime::gpu::GPU_Emitter::emit_Product(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Reduce:
+    {
+        runtime::gpu::GPU_Emitter::emit_Reduce(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::ReduceWindow:
+    {
+        runtime::gpu::GPU_Emitter::emit_ReduceWindow(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Relu:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Relu>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::ReluBackprop:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::ReluBackprop>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::ReplaceSlice:
+    {
+        runtime::gpu::GPU_Emitter::emit_ReplaceSlice(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Reshape:
+    {
+        runtime::gpu::GPU_Emitter::emit_Reshape(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Result:
+    {
+        runtime::gpu::GPU_Emitter::emit_Result(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Reverse:
+    {
+        runtime::gpu::GPU_Emitter::emit_Reverse(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::ReverseSequence:
+    {
+        runtime::gpu::GPU_Emitter::emit_ReverseSequence(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Select:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Select>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::SelectAndScatter:
+    {
+        runtime::gpu::GPU_Emitter::emit_SelectAndScatter(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Sigmoid:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sigmoid>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::SigmoidBackprop:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::SigmoidBackprop>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Sign:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sign>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Sin:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sin>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Sinh:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sinh>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Slice:
+    {
+        runtime::gpu::GPU_Emitter::emit_Slice(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Softmax:
+    {
+        runtime::gpu::GPU_Emitter::emit_Softmax(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Sqrt:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sqrt>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::StopGradient:
+    {
+        throw unsupported_op("Unsupported op '" + node->description() + "'");
+    }
+    case OP_TYPEID::Subtract:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Subtract>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Sum:
+    {
+        runtime::gpu::GPU_Emitter::emit_Sum(external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Tan:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Tan>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::Tanh:
+    {
+        runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Tanh>(
+            external_function, writer, node, args, out);
+        break;
+    }
+    case OP_TYPEID::TopK: { throw unsupported_op("Unsupported op '" + node->description() + "'");
+    }
+    }
+#pragma GCC diagnostic pop
 };
 
 const size_t runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction::s_memory_pool_alignment = 64;
