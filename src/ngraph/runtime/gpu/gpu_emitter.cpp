@@ -524,7 +524,7 @@ namespace ngraph
                 size_t result_shape_product = shape_size(result_shape);
 
                 //for a zero-size tensor, or change from 1^m shape to 1^n shape, just do a copy
-                if (result_shape_product < 2)
+                if (!reshape->get_is_transpose() || result_shape_product < 2)
                 {
                     kernel::emit_memcpyDtD(writer, out[0], args[0]);
                     writer.block_end();
@@ -605,6 +605,7 @@ namespace ngraph
                 // If there *is* a layout change in the 2D case, we transpose the input.
                 else if (new_rank == 2)
                 {
+                    /*
                     writer << "const float alpha = 1.0;\n";
                     writer << "const float beta = 0;\n";
                     writer << "CUBLAS_SAFE_CALL(cublasSetPointerMode(*ctx->cublas_handle, "
@@ -620,6 +621,16 @@ namespace ngraph
                            << out[0].get_name() << "," << new_arg_shape[0] << "));\n";
                     writer << "CUBLAS_SAFE_CALL(cublasSetPointerMode(*ctx->cublas_handle, "
                               "CUBLAS_POINTER_MODE_DEVICE));\n";
+*/
+                    auto& cuda_emitter =
+                        external_function->get_primitive_emitter()->get_cuda_emitter();
+                    auto index = cuda_emitter->build_reshape_2d(
+                        {{args[0].get_type(), out[0].get_type()}}, new_arg_shape, new_input_order);
+
+                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
+                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                    writer << ");\n";
                 }
                 // If there *is* a layout change in the 3D case, we do 3D tiled reshape.
                 else if (new_rank == 3)
