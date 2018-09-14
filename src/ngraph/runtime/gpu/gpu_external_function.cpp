@@ -186,7 +186,13 @@ static OP_TYPEID get_typeid(const Node& node)
 #include "ngraph/op/op_tbl.hpp"
     };
 #undef NGRAPH_OP
-    return typeid_map.at(type_index(typeid(node)));
+    auto it = typeid_map.find(type_index(typeid(node)));
+    if (it == typeid_map.end())
+    {
+        throw unsupported_op("Unsupported op '" + node.description() + "'");
+    }
+
+    return it->second;
 }
 
 void runtime::gpu::GPU_ExternalFunction::emit_op(GPU_ExternalFunction* external_function,
