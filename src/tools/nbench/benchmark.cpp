@@ -19,6 +19,7 @@
 #include "benchmark.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/host_tensor_view.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/serializer.hpp"
@@ -151,7 +152,8 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
                                                   const string& backend_name,
                                                   size_t iterations,
                                                   bool timing_detail,
-                                                  int warmup_iterations)
+                                                  int warmup_iterations,
+                                                  bool copy_data)
 {
     stopwatch timer;
     timer.start();
@@ -162,20 +164,28 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     cout.imbue(locale(""));
     cout << "compile time: " << timer.get_milliseconds() << "ms" << endl;
 
+    vector<shared_ptr<runtime::HostTensorView>> arg_data;
     vector<shared_ptr<runtime::TensorView>> args;
     vector<bool> args_cacheable;
     for (shared_ptr<op::Parameter> param : f->get_parameters())
     {
         auto tensor = backend->create_tensor(param->get_element_type(), param->get_shape());
+        auto tensor_data =
+            make_shared<runtime::HostTensorView>(param->get_element_type(), param->get_shape());
         random_init(tensor);
         args.push_back(tensor);
+        arg_data.push_back(tensor_data);
         args_cacheable.push_back(param->get_cacheable());
     }
+    vector<shared_ptr<runtime::HostTensorView>> result_data;
     vector<shared_ptr<runtime::TensorView>> results;
     for (shared_ptr<Node> out : f->get_results())
     {
         auto result = backend->create_tensor(out->get_element_type(), out->get_shape());
+        auto tensor_data =
+            make_shared<runtime::HostTensorView>(out->get_element_type(), out->get_shape());
         results.push_back(result);
+        result_data.push_back(tensor_data);
     }
 
     for (size_t i = 0; i < args.size(); i++)
@@ -196,9 +206,33 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
 
     stopwatch t1;
     t1.start();
-    for (size_t i = 0; i < static_cast<size_t>(iterations); i++)
+    for (size_t i = 0; i < iterations; i++)
     {
+        if (copy_data)
+        {
+            for (size_t arg_index = 0; arg_index < args.size(); arg_index++)
+            {
+                const shared_ptr<runtime::TensorView>& arg = args[arg_index];
+                if (arg->get_stale())
+                {
+                    const shared_ptr<runtime::HostTensorView>& data = arg_data[arg_index];
+                    arg->write(data->get_data_ptr(),
+                               0,
+                               data->get_size() * data->get_element_type().size());
+                }
+            }
+        }
         backend->call(f, results, args);
+        if (copy_data)
+        {
+            for (size_t result_index = 0; result_index < results.size(); result_index++)
+            {
+                const shared_ptr<runtime::HostTensorView>& data = result_data[result_index];
+                const shared_ptr<runtime::TensorView>& result = results[result_index];
+                result->read(
+                    data->get_data_ptr(), 0, data->get_size() * data->get_element_type().size());
+            }
+        }
     }
     t1.stop();
     float time = t1.get_milliseconds();

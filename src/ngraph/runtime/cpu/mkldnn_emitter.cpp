@@ -25,6 +25,8 @@
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/dequantize.hpp"
+#include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
+#include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/type/element_type.hpp"
 
 using namespace ngraph::runtime::cpu;
@@ -145,6 +147,53 @@ size_t MKLDNNEmitter::build_dequantization(const ngraph::Node* node,
     size_t dequantize_index = 0;
     dequantize_index = this->build_quantize_reorder(input_desc, result_desc, attr);
     return dequantize_index;
+}
+
+void MKLDNNEmitter::build_quantized_max_pool(const ngraph::Node* node,
+                                             std::vector<float>& quant_util)
+{
+    auto qmax_pool = static_cast<const ngraph::op::QuantizedMaxPool*>(node);
+    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+    size_t qmax_pool_index = this->build_pooling_forward(mkldnn::algorithm::pooling_max,
+                                                         input_desc,
+                                                         result_desc,
+                                                         qmax_pool->get_window_movement_strides(),
+                                                         qmax_pool->get_window_shape(),
+                                                         qmax_pool->get_padding_below(),
+                                                         qmax_pool->get_padding_above());
+    auto min_const_op = std::static_pointer_cast<ngraph::op::Constant>(qmax_pool->get_argument(1));
+    auto max_const_op = std::static_pointer_cast<ngraph::op::Constant>(qmax_pool->get_argument(2));
+    float min = *(static_cast<float const*>(min_const_op->get_data_ptr()));
+    float max = *(static_cast<float const*>(max_const_op->get_data_ptr()));
+    quant_util.push_back(min);
+    quant_util.push_back(max);
+    quant_util.push_back(qmax_pool_index);
+}
+
+void MKLDNNEmitter::build_quantized_avg_pool(const ngraph::Node* node,
+                                             std::vector<float>& quant_util)
+{
+    auto qavg_pool = static_cast<const ngraph::op::QuantizedAvgPool*>(node);
+    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+    size_t qavg_pool_index =
+        this->build_pooling_forward((qavg_pool->get_include_padding_in_avg_computation()
+                                         ? mkldnn::algorithm::pooling_avg_include_padding
+                                         : mkldnn::algorithm::pooling_avg_exclude_padding),
+                                    input_desc,
+                                    result_desc,
+                                    qavg_pool->get_window_movement_strides(),
+                                    qavg_pool->get_window_shape(),
+                                    qavg_pool->get_padding_below(),
+                                    qavg_pool->get_padding_above());
+    auto min_const_op = std::static_pointer_cast<ngraph::op::Constant>(qavg_pool->get_argument(1));
+    auto max_const_op = std::static_pointer_cast<ngraph::op::Constant>(qavg_pool->get_argument(2));
+    float min = *(static_cast<float const*>(min_const_op->get_data_ptr()));
+    float max = *(static_cast<float const*>(max_const_op->get_data_ptr()));
+    quant_util.push_back(min);
+    quant_util.push_back(max);
+    quant_util.push_back(qavg_pool_index);
 }
 
 mkldnn::memory::format MKLDNNEmitter::query_convolution_forward_weight_format(
