@@ -135,6 +135,7 @@
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
+#include "ngraph/runtime/cpu/cpu_visualize_tree.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
@@ -377,7 +378,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
 
     ngraph::pass::Manager pass_manager;
-
+    pass_manager.set_ops_to_details(runtime::cpu::get_visualize_tree_ops_map());
     // nv_cwi is required only by some frontends
     // in which case they should run this pass(CPUWorkspaceInsertion) explicitly
     NodeVector nv_cwi;
@@ -1138,6 +1139,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
     // in which case they should run this pass(CPUWorkspaceInsertion) explicitly
     NodeVector nv_cwi;
     pass_manager.register_pass<ngraph::pass::NopElimination>();
+    pass_manager.set_ops_to_details(runtime::cpu::get_visualize_tree_ops_map());
     // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
     // failing mxnet unit tests.
     // pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();

@@ -54,6 +54,14 @@ public:
         }
     }
 
+    void set_ops_to_details(
+        std::unordered_map<std::type_index,
+                           std::function<void(std::shared_ptr<Node>, std::stringstream& ss)>>*
+            ops_to_details)
+    {
+        m_ops_to_details = ops_to_details;
+    }
+
     void run_passes(std::shared_ptr<Function>, bool transitive = true);
 
     ManagerState& get_state();
@@ -65,4 +73,7 @@ private:
     ManagerState m_state;
     bool m_visualize = false;
     bool m_serialize = false;
+    std::unordered_map<std::type_index,
+                       std::function<void(std::shared_ptr<Node>, std::stringstream& ss)>>*
+        m_ops_to_details = nullptr;
 };
