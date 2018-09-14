@@ -151,6 +151,15 @@ set (SRC
     cpio.cpp
     )
 
+if(NGRAPH_DISTRIBUTED_ENABLE)
+    find_package(MPI REQUIRED)
+    add_definitions(-DNGRAPH_DISTRIBUTED)
+    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    link_libraries(${MPI_CXX_LIBRARIES})
+    set (SRC distributed.cpp ${SRC})
+endif()
+
 add_subdirectory(frontend)
 
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/op)

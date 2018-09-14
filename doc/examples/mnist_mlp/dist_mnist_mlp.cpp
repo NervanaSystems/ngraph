@@ -20,13 +20,13 @@
 #include <list>
 #include <math.h>
 #include <memory>
-#include <mpi.h>
 #include <random>
 #include <set>
 #include <stdexcept>
 #include <string>
 
 #include <ngraph/autodiff/adjoints.hpp>
+#include <ngraph/distributed.hpp>
 #include <ngraph/graph_util.hpp>
 #include <ngraph/ngraph.hpp>
 
@@ -109,7 +109,7 @@ float test_accuracy(MNistDataLoader& loader,
 
 int main(int argc, const char* argv[])
 {
-    MPI::Init();
+    distributed_init();
 
     size_t epochs = 5;
     size_t batch_size = 128;
@@ -291,7 +291,7 @@ int main(int argc, const char* argv[])
         }
     }
 
-    MPI::Finalize();
+    distributed_finalize();
 
     return 0;
 }
