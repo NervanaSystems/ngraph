@@ -1490,7 +1490,7 @@ namespace ngraph
                                                              args[0].get_shape());
                     }
 
-                    writer << "void* input[] = {" << node_names(args, {0, 0}) << "};\n";
+                    writer << "void* input[] = {" << node_names(args) << "};\n";
                     writer << "void* output[] = {" << node_names(out) << "};\n";
                     writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
                 }
