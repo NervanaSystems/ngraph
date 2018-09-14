@@ -1356,6 +1356,9 @@ void runtime::cpu::CPU_ExternalFunction::build()
         enable_nodename_list.emplace_back(make_pair(enable, node->get_name()));
     }
 
+    //This check ensures we have exactly one functor for Op.
+    assert(m_op_attrs.size() == functors.size());
+
     executor = [&](CPURuntimeContext* ctx, vector<void*>& inputs, vector<void*>& outputs) {
         cpu::Timestamp start_ts;
         int profiler_count = 0;
@@ -1487,38 +1490,30 @@ void runtime::cpu::CPU_ExternalFunction::build()
             {
                 if (p.first(ctx) || ctx->first_iteration)
                 {
-                    for (size_t j = 0; j < p.second; j++)
+                    // Each Op will have exactly one functor, start the clock before the exceution of functor
+                    // and collect the profiler_count once the execution complets
+                    if (runtime::cpu::IsTracingEnabled())
                     {
-                        // we will only update the profile_counter for the first functor within
-                        // the same kernel. ex: MaxPoolBackProp has two functor, one for the
-                        // fprop and another one for the bprop. we will start the clock @ the
-                        // begining of the first functor of the respective kernel
-                        if (runtime::cpu::IsTracingEnabled() && j == 0)
-                        {
-                            start_ts = cpu::Clock::now();
-                        }
-                        (*functor)(ctx);
-                        if (runtime::cpu::IsTracingEnabled() && (j == p.second - 1))
-                        {
-                            ctx->op_durations[profiler_count++] =
-                                (std::chrono::duration_cast<cpu::Timescale>(cpu::Clock::now() -
-                                                                            start_ts))
-                                    .count();
-                        }
-
-                        std::advance(functor, 1);
+                        start_ts = cpu::Clock::now();
                     }
+                    (*functor)(ctx);
+                    if (runtime::cpu::IsTracingEnabled())
+                    {
+                        ctx->op_durations[profiler_count++] =
+                            (std::chrono::duration_cast<cpu::Timescale>(cpu::Clock::now() -
+                                                                        start_ts))
+                                .count();
+                    }
+
+                    std::advance(functor, 1);
                 }
                 else
                 {
                     if (runtime::cpu::IsTracingEnabled())
                     {
-                        for (size_t j = 0; j < p.second; j++)
-                        {
-                            ctx->op_durations[profiler_count++] = 0;
-                        }
+                        ctx->op_durations[profiler_count++] = 0;
                     }
-                    std::advance(functor, p.second);
+                    std::advance(functor, 1);
                 }
             }
         }
