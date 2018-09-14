@@ -129,8 +129,6 @@ namespace ngraph
                     return callees;
                 }
                 bool is_direct_execution() const { return m_direct_execution; }
-                bool is_release_function() const { return m_release_function; }
-                void release_function() { m_function = nullptr; }
                 void write_to_file(const std::string& code,
                                    const std::string& directory,
                                    const std::string& filename);
@@ -179,6 +177,7 @@ namespace ngraph
                 std::string strip_comments(const std::string&);
 
 #endif
+                void release_function() { m_function = nullptr; }
                 std::shared_ptr<ngraph::Function> m_function;
                 bool m_release_function;
 
