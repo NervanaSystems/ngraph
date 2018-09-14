@@ -14,7 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/runtime/cpu/pass/cpu_conv_horizontal_fusion.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_horizontal_fusion.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -30,7 +30,7 @@
 using namespace ngraph;
 using namespace std;
 
-void ngraph::runtime::cpu::pass::CPUConvHorizontalFusion::cpu_conv_horizontal_fusion()
+void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion()
 {
     auto has_multiple_users = [](std::shared_ptr<Node> n) {
         auto inputs = n->get_output_inputs(0);

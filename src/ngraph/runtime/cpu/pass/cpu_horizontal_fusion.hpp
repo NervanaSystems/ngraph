@@ -26,16 +26,16 @@ namespace ngraph
         {
             namespace pass
             {
-                class CPUConvHorizontalFusion;
+                class CPUHorizontalFusion;
             }
         }
     }
 }
 
-class ngraph::runtime::cpu::pass::CPUConvHorizontalFusion : public ngraph::pass::GraphRewrite
+class ngraph::runtime::cpu::pass::CPUHorizontalFusion : public ngraph::pass::GraphRewrite
 {
 public:
-    CPUConvHorizontalFusion()
+    CPUHorizontalFusion()
         : GraphRewrite()
     {
         cpu_conv_horizontal_fusion();
