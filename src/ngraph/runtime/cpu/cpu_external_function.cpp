@@ -149,6 +149,8 @@
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
+#include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
@@ -310,6 +312,8 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<runtime::cpu::op::ConvertLayout>},
     {TI(ngraph::op::Not), &runtime::cpu::CPU_Emitter::emit<op::Not>},
     {TI(ngraph::op::MaxPool), &runtime::cpu::CPU_Emitter::emit<op::MaxPool>},
+    {TI(ngraph::op::QuantizedMaxPool), &runtime::cpu::CPU_Emitter::emit<op::QuantizedMaxPool>},
+    {TI(ngraph::op::QuantizedAvgPool), &runtime::cpu::CPU_Emitter::emit<op::QuantizedAvgPool>},
     {TI(ngraph::op::MaxPoolWithIndices), &runtime::cpu::CPU_Emitter::emit<op::MaxPoolWithIndices>},
     {TI(ngraph::op::Reverse), &runtime::cpu::CPU_Emitter::emit<op::Reverse>},
     {TI(ngraph::op::ReverseSequence), &runtime::cpu::CPU_Emitter::emit<op::ReverseSequence>},
@@ -548,12 +552,12 @@ using namespace ngraph::runtime;
             if (c)
             {
                 m_active_constants.push_back(node);
-                shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
-                string type = tv->get_tensor().get_element_type().c_type_string();
-                writer << "static " << type << "* " << tv->get_tensor().get_name() << " = (("
-                       << type << "*)(" << c->get_data_ptr() << "));\n";
-                m_variable_name_map[tv->get_tensor().get_name()] = tv->get_tensor().get_name();
-                m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::CONSTANT;
+                shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_ptr();
+                string type = tv->get_element_type().c_type_string();
+                writer << "static " << type << "* " << tv->get_name() << " = ((" << type << "*)("
+                       << c->get_data_ptr() << "));\n";
+                m_variable_name_map[tv->get_name()] = tv->get_name();
+                m_tensor_roles[tv->get_name()] = CPUTensorRole::CONSTANT;
             }
         }
     }
@@ -574,15 +578,15 @@ using namespace ngraph::runtime;
         set<string> output_names;
         for (shared_ptr<Node> op : current_function->get_results())
         {
-            shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
-            output_names.insert(tv->get_tensor().get_name());
+            shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_ptr();
+            output_names.insert(tv->get_name());
         }
         set<descriptor::TensorView*> constants;
         for (shared_ptr<Node> node : ordered_ops)
         {
             if (dynamic_cast<ngraph::op::Constant*>(node.get()))
             {
-                shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
+                shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_ptr();
                 constants.insert(tv.get());
             }
         }
@@ -616,8 +620,8 @@ using namespace ngraph::runtime;
                 for (const descriptor::Input& input : node->get_inputs())
                 {
                     const descriptor::Output& output = input.get_output();
-                    shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-                    tensor_index_map.insert({tv->get_tensor().get_name(), tensor_index++});
+                    shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
+                    tensor_index_map.insert({tv->get_name(), tensor_index++});
                 }
             }
         }
@@ -676,14 +680,14 @@ using namespace ngraph::runtime;
         {
             for (size_t i = 0; i < param->get_output_size(); ++i)
             {
-                shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_view(i);
+                shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_ptr(i);
                 const element::Type& et = tv->get_element_type();
                 string type = et.c_type_string();
                 stringstream ss;
                 ss << "((" << type << "*)(inputs[" << arg_index << "]))";
-                m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
-                m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::INPUT;
-                param_index_map[tv->get_tensor().get_name()] = arg_index;
+                m_variable_name_map[tv->get_name()] = ss.str();
+                m_tensor_roles[tv->get_name()] = CPUTensorRole::INPUT;
+                param_index_map[tv->get_name()] = arg_index;
                 propagate_in_place_input(&param->get_outputs().at(i), ss.str(), false);
                 arg_index++;
             }
@@ -693,12 +697,12 @@ using namespace ngraph::runtime;
         for (size_t i = 0; i < current_function->get_output_size(); ++i)
         {
             shared_ptr<Node> op = current_function->get_output_op(i);
-            shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
+            shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_ptr();
             string type = tv->get_element_type().c_type_string();
             stringstream ss;
             ss << "((" << type << "*)(outputs[" << i << "]))";
-            m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
-            m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::OUTPUT;
+            m_variable_name_map[tv->get_name()] = ss.str();
+            m_tensor_roles[tv->get_name()] = CPUTensorRole::OUTPUT;
 
             //keep assigning different outputs to a result descriptor
             //op::Result emitter will check if in and out descriptors are the same
@@ -708,10 +712,10 @@ using namespace ngraph::runtime;
             if (!input_node->is_constant() && !input_node->is_parameter())
             {
                 shared_ptr<descriptor::TensorView> itv =
-                    res->get_inputs().at(0).get_output().get_tensor_view();
+                    res->get_inputs().at(0).get_output().get_tensor_ptr();
                 auto output_name = ss.str();
-                m_variable_name_map[itv->get_tensor().get_name()] = ss.str();
-                m_tensor_roles[itv->get_tensor().get_name()] = CPUTensorRole::OUTPUT;
+                m_variable_name_map[itv->get_name()] = ss.str();
+                m_tensor_roles[itv->get_name()] = CPUTensorRole::OUTPUT;
                 propagate_in_place_output(
                     &(res->get_inputs().at(0).get_output()), output_name, false);
             }
@@ -724,7 +728,7 @@ using namespace ngraph::runtime;
             auto handler = dispatcher.find(type_index(typeid(n)));
             if (handler == dispatcher.end())
             {
-                throw ngraph_error("Unhandled op during code generation : " + node->description());
+                throw unsupported_op(node->description());
             }
             vector<TensorViewWrapper> in;
             vector<string> node_input_names;
@@ -732,18 +736,16 @@ using namespace ngraph::runtime;
             for (const descriptor::Input& input : node->get_inputs())
             {
                 const descriptor::Output& output = input.get_output();
-                shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-                in.push_back(
-                    TensorViewWrapper(tv, m_variable_name_map[tv->get_tensor().get_name()]));
-                node_input_names.emplace_back(tv->get_tensor().get_name());
+                shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
+                in.push_back(TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
+                node_input_names.emplace_back(tv->get_name());
             }
             vector<TensorViewWrapper> out;
             for (const descriptor::Output& output : node->get_outputs())
             {
-                shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-                out.push_back(
-                    TensorViewWrapper(tv, m_variable_name_map[tv->get_tensor().get_name()]));
-                node_output_names.emplace_back(tv->get_tensor().get_name());
+                shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
+                out.push_back(TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
+                node_output_names.emplace_back(tv->get_name());
             }
 
             // Emit operation prologue
@@ -795,8 +797,8 @@ using namespace ngraph::runtime;
                 for (const descriptor::Input& input : node->get_inputs())
                 {
                     const descriptor::Output& output = input.get_output();
-                    shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-                    auto input_name = tv->get_tensor().get_name();
+                    shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
+                    auto input_name = tv->get_name();
 
                     if (output.get_node()->is_parameter())
                     {
@@ -968,14 +970,14 @@ using namespace ngraph::runtime;
     {
         for (size_t i = 0; i < parameter->get_output_size(); ++i)
         {
-            auto tv = parameter->get_output_tensor_view(i);
-            if (tv->get_tensor_view_layout() == nullptr)
+            auto tv = parameter->get_output_tensor_ptr(i);
+            if (tv->get_tensor_layout() == nullptr)
             {
                 throw ngraph_error("layout missing on function parameter's tensor view: " +
                                    tv->get_name());
             }
             parameter_layout_descriptors.emplace_back(
-                static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout()));
+                static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_layout()));
         }
     }
 
@@ -989,13 +991,13 @@ using namespace ngraph::runtime;
         const auto& output = m_function->get_output_op(i);
         for (size_t j = 0; j < output->get_output_size(); ++j)
         {
-            auto tv = output->get_output_tensor_view(j);
-            if (tv->get_tensor_view_layout() == nullptr)
+            auto tv = output->get_output_tensor_ptr(j);
+            if (tv->get_tensor_layout() == nullptr)
             {
                 throw ngraph_error("layout missing on function output tensor: " + tv->get_name());
             }
             result_layout_descriptors.emplace_back(
-                static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout()));
+                static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_layout()));
         }
     }
 
@@ -1159,14 +1161,14 @@ void runtime::cpu::CPU_ExternalFunction::build()
     {
         for (size_t i = 0; i < parameter->get_output_size(); ++i)
         {
-            auto tv = parameter->get_output_tensor_view(i);
-            if (tv->get_tensor_view_layout() == nullptr)
+            auto tv = parameter->get_output_tensor_ptr(i);
+            if (tv->get_tensor_layout() == nullptr)
             {
                 throw ngraph_error("layout missing on function parameter's tensor view: " +
                                    tv->get_name());
             }
             parameter_layout_descriptors.emplace_back(
-                static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout()));
+                static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_layout()));
         }
     }
 
@@ -1180,13 +1182,13 @@ void runtime::cpu::CPU_ExternalFunction::build()
         const auto& output = m_function->get_output_op(i);
         for (size_t j = 0; j < output->get_output_size(); ++j)
         {
-            auto tv = output->get_output_tensor_view(j);
-            if (tv->get_tensor_view_layout() == nullptr)
+            auto tv = output->get_output_tensor_ptr(j);
+            if (tv->get_tensor_layout() == nullptr)
             {
                 throw ngraph_error("layout missing on function output tensor: " + tv->get_name());
             }
             result_layout_descriptors.emplace_back(
-                static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout()));
+                static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_layout()));
         }
     }
 
@@ -1212,10 +1214,10 @@ void runtime::cpu::CPU_ExternalFunction::build()
     {
         if (node->is_constant())
         {
-            auto tv = node->get_outputs()[0].get_tensor_view();
-            tensor_data[tv->get_tensor().get_name()] =
+            auto tv = node->get_outputs()[0].get_tensor_ptr();
+            tensor_data[tv->get_name()] =
                 const_cast<void*>(static_pointer_cast<ngraph::op::Constant>(node)->get_data_ptr());
-            m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::CONSTANT;
+            m_tensor_roles[tv->get_name()] = CPUTensorRole::CONSTANT;
         }
     }
 
@@ -1225,13 +1227,11 @@ void runtime::cpu::CPU_ExternalFunction::build()
     {
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
-            shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_view(i);
-            function_input_index.emplace_back(tensor_data[tv->get_tensor().get_name()],
-                                              arg_index,
-                                              tensor_stale[tv->get_tensor().get_name()]);
-            m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::INPUT;
-            propagate_in_place_input(
-                &param->get_outputs().at(i), tv->get_tensor().get_name(), true);
+            shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_ptr(i);
+            function_input_index.emplace_back(
+                tensor_data[tv->get_name()], arg_index, tensor_stale[tv->get_name()]);
+            m_tensor_roles[tv->get_name()] = CPUTensorRole::INPUT;
+            propagate_in_place_input(&param->get_outputs().at(i), tv->get_name(), true);
             arg_index++;
         }
     }
@@ -1240,9 +1240,9 @@ void runtime::cpu::CPU_ExternalFunction::build()
     for (size_t i = 0; i < m_function->get_output_size(); ++i)
     {
         shared_ptr<Node> op = m_function->get_output_op(i);
-        shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
-        function_output_index.emplace_back(tensor_data[tv->get_tensor().get_name()], i);
-        m_tensor_roles[tv->get_tensor().get_name()] = CPUTensorRole::OUTPUT;
+        shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_ptr();
+        function_output_index.emplace_back(tensor_data[tv->get_name()], i);
+        m_tensor_roles[tv->get_name()] = CPUTensorRole::OUTPUT;
 
         //keep assigning different outputs to a result descriptor
         //op::Result emitter will check if in and out descriptors are the same
@@ -1252,12 +1252,12 @@ void runtime::cpu::CPU_ExternalFunction::build()
         if (!input_node->is_constant() && !input_node->is_parameter())
         {
             shared_ptr<descriptor::TensorView> itv =
-                res->get_inputs().at(0).get_output().get_tensor_view();
-            function_output_index.emplace_back(tensor_data[itv->get_tensor().get_name()], i);
-            m_tensor_roles[itv->get_tensor().get_name()] = CPUTensorRole::OUTPUT;
-            tensor_alias[itv->get_tensor().get_name()] = tv->get_tensor().get_name();
+                res->get_inputs().at(0).get_output().get_tensor_ptr();
+            function_output_index.emplace_back(tensor_data[itv->get_name()], i);
+            m_tensor_roles[itv->get_name()] = CPUTensorRole::OUTPUT;
+            tensor_alias[itv->get_name()] = tv->get_name();
             propagate_in_place_output(
-                &(res->get_inputs().at(0).get_output()), tv->get_tensor().get_name(), true);
+                &(res->get_inputs().at(0).get_output()), tv->get_name(), true);
         }
     }
 
@@ -1272,26 +1272,25 @@ void runtime::cpu::CPU_ExternalFunction::build()
         auto handler = build_dispatcher.find(type_index(typeid(n)));
         if (handler == build_dispatcher.end())
         {
-            throw ngraph_error("Unhandled op during executor construction : " +
-                               node->description());
+            throw unsupported_op(node->description());
         }
         vector<TensorViewWrapper> in;
         vector<string> in_names;
         for (const descriptor::Input& input : node->get_inputs())
         {
             const descriptor::Output& output = input.get_output();
-            shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-            in.push_back(TensorViewWrapper(tv, tv->get_tensor().get_name()));
-            in_names.push_back(tv->get_tensor().get_name());
+            shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
+            in.push_back(TensorViewWrapper(tv, tv->get_name()));
+            in_names.push_back(tv->get_name());
         }
         vector<TensorViewWrapper> out;
         vector<string> out_names;
 
         for (const descriptor::Output& output : node->get_outputs())
         {
-            shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-            out.push_back(TensorViewWrapper(tv, tv->get_tensor().get_name()));
-            out_names.push_back(tv->get_tensor().get_name());
+            shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
+            out.push_back(TensorViewWrapper(tv, tv->get_name()));
+            out_names.push_back(tv->get_name());
         }
 
         m_op_attrs.emplace_back(node->description(), out_names, in_names);
@@ -1617,7 +1616,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
     auto handler = dispatcher.find(type_index(typeid(node)));
     if (handler == dispatcher.end())
     {
-        throw ngraph_error("Unhandled op during function emit : " + node.description());
+        throw unsupported_op(node.description());
     }
     vector<TensorViewWrapper> in;
     size_t arg_index = 0;
@@ -1625,7 +1624,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
     for (const descriptor::Input& input : node.get_inputs())
     {
         const descriptor::Output& output = input.get_output();
-        shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+        shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
         TensorViewWrapper tvw{tv, "_arg" + to_string(arg_index)};
         if (!contains(arg_names, tvw.get_name()))
         {
@@ -1642,7 +1641,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
     vector<TensorViewWrapper> out;
     for (const descriptor::Output& output : node.get_outputs())
     {
-        shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+        shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
         TensorViewWrapper tvw{tv, "_out" + to_string(arg_index)};
         if (arg_index++ > 0)
         {
