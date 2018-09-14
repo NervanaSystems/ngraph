@@ -1381,10 +1381,10 @@ void runtime::gpu::GPU_Emitter::emit_GetOutputElement(
 }
 
 // assumes NC{d1,d2,d3,...} format
-Shape get_padded_shape(const Shape& input_shape,
-                       const Shape& padding_below,
-                       const Shape& padding_above,
-                       const Shape& padding_interior)
+Shape runtime::gpu::get_padded_shape(const Shape& input_shape,
+                                     const Shape& padding_below,
+                                     const Shape& padding_above,
+                                     const Shape& padding_interior)
 {
     Shape padded_shape = input_shape;
     int64_t i = input_shape.size() - 1;
