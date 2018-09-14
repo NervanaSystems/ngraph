@@ -542,8 +542,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                         res->get_inputs().at(0).get_output().get_tensor_ptr();
                     auto output_name = ss.str();
                     m_variable_name_map[itv->get_name()] = output_name;
-                    propagate_in_place_output(
-                        &(res->get_inputs().at(0).get_output()), output_name);
+                    propagate_in_place_output(&(res->get_inputs().at(0).get_output()), output_name);
                 }
             }
 
