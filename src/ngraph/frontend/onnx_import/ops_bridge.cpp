@@ -26,10 +26,12 @@
 #include "op/constant.hpp"
 #include "op/conv.hpp"
 #include "op/div.hpp"
+#include "op/elu.hpp"
 #include "op/equal.hpp"
 #include "op/flatten.hpp"
 #include "op/gemm.hpp"
 #include "op/greater.hpp"
+#include "op/leaky_relu.hpp"
 #include "op/less.hpp"
 #include "op/matmul.hpp"
 #include "op/max.hpp"
@@ -40,13 +42,19 @@
 #include "op/not.hpp"
 #include "op/or.hpp"
 #include "op/pow.hpp"
+#include "op/prelu.hpp"
 #include "op/reduce.hpp"
 #include "op/relu.hpp"
 #include "op/reshape.hpp"
+#include "op/selu.hpp"
+#include "op/shape.hpp"
+#include "op/sigmoid.hpp"
 #include "op/softmax.hpp"
 #include "op/split.hpp"
 #include "op/sub.hpp"
 #include "op/sum.hpp"
+#include "op/tanh.hpp"
+#include "op/thresholded_relu.hpp"
 #include "op/unsqueeze.hpp"
 #include "op/xor.hpp"
 #include "ops_bridge.hpp"
@@ -103,10 +111,12 @@ namespace ngraph
                     m_map.emplace("Constant", std::bind(op::constant, std::placeholders::_1));
                     m_map.emplace("Conv", std::bind(op::conv, std::placeholders::_1));
                     m_map.emplace("Div", std::bind(op::div, std::placeholders::_1));
+                    m_map.emplace("Elu", std::bind(op::elu, std::placeholders::_1));
                     m_map.emplace("Equal", std::bind(op::equal, std::placeholders::_1));
                     m_map.emplace("Flatten", std::bind(op::flatten, std::placeholders::_1));
                     m_map.emplace("Gemm", std::bind(op::gemm, std::placeholders::_1));
                     m_map.emplace("Greater", std::bind(op::greater, std::placeholders::_1));
+                    m_map.emplace("LeakyRelu", std::bind(op::leaky_relu, std::placeholders::_1));
                     m_map.emplace("Less", std::bind(op::less, std::placeholders::_1));
                     m_map.emplace("MatMul", std::bind(op::matmul, std::placeholders::_1));
                     m_map.emplace("MaxPool", std::bind(op::max_pool, std::placeholders::_1));
@@ -117,6 +127,7 @@ namespace ngraph
                     m_map.emplace("Not", std::bind(op::logical_not, std::placeholders::_1));
                     m_map.emplace("Or", std::bind(op::logical_or, std::placeholders::_1));
                     m_map.emplace("Pow", std::bind(op::pow, std::placeholders::_1));
+                    m_map.emplace("PRelu", std::bind(op::prelu, std::placeholders::_1));
                     m_map.emplace("ReduceLogSum",
                                   std::bind(op::reduce_log_sum, std::placeholders::_1));
                     m_map.emplace("ReduceLogSumExp",
@@ -132,10 +143,16 @@ namespace ngraph
                                   std::bind(op::reduce_sum_square, std::placeholders::_1));
                     m_map.emplace("Relu", std::bind(op::relu, std::placeholders::_1));
                     m_map.emplace("Reshape", std::bind(op::reshape, std::placeholders::_1));
+                    m_map.emplace("Shape", std::bind(op::shape, std::placeholders::_1));
+                    m_map.emplace("Selu", std::bind(op::selu, std::placeholders::_1));
+                    m_map.emplace("Sigmoid", std::bind(op::sigmoid, std::placeholders::_1));
                     m_map.emplace("Softmax", std::bind(op::softmax, std::placeholders::_1));
                     m_map.emplace("Split", std::bind(op::split, std::placeholders::_1));
                     m_map.emplace("Sub", std::bind(op::sub, std::placeholders::_1));
                     m_map.emplace("Sum", std::bind(op::sum, std::placeholders::_1));
+                    m_map.emplace("Tanh", std::bind(op::tanh, std::placeholders::_1));
+                    m_map.emplace("ThresholdedRelu",
+                                  std::bind(op::thresholded_relu, std::placeholders::_1));
                     m_map.emplace("Unsqueeze", std::bind(op::unsqueeze, std::placeholders::_1));
                     m_map.emplace("Xor", std::bind(op::logical_xor, std::placeholders::_1));
                 }

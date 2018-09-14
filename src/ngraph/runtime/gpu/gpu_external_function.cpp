@@ -498,7 +498,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
 
         m_writer << "extern \"C\" void " << current_function->get_name();
         m_writer << "(void** inputs, void** outputs, "
-                 << "gpu::GPURuntimeContext* ctx)\n";
+                 << "gpu::GPURuntimeContext* ctx) __attribute__ ((optnone))\n";
         m_writer.block_begin();
         {
             m_writer << "m_runtime_context = ctx;\n";
@@ -555,8 +555,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 auto handler = dispatcher.find(type_index(typeid(n)));
                 if (handler == dispatcher.end())
                 {
-                    throw ngraph_error("Unhandled op during code generation : " +
-                                       node->description());
+                    throw ngraph::unsupported_op(node->description());
                 }
                 vector<GPU_TensorViewWrapper> in;
                 vector<string> node_input_names;
@@ -754,6 +753,10 @@ string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
     // Work around a compiler warning (*node inside typeid may have effects
     // with shared pointers, which is fine here but clang doesn't like it.)
     auto handler = dispatcher.find(type_index(typeid(node)));
+    if (handler == dispatcher.end())
+    {
+        throw ngraph::unsupported_op(node.description());
+    }
     vector<GPU_TensorViewWrapper> in;
     size_t arg_index = 0;
     set<string> arg_names;

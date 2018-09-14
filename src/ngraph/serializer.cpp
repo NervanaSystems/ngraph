@@ -167,14 +167,17 @@ void ngraph::serialize(ostream& out, shared_ptr<ngraph::Function> func, size_t i
     writer.write(func->get_name(), j.c_str(), static_cast<uint32_t>(j.size()));
 
     traverse_functions(func, [&](shared_ptr<ngraph::Function> f) {
-        traverse_nodes(const_cast<Function*>(f.get()), [&](shared_ptr<Node> node) {
-            if (auto c = dynamic_pointer_cast<op::Constant>(node))
-            {
-                uint32_t size = static_cast<uint32_t>(shape_size(c->get_output_shape(0)) *
-                                                      c->get_output_element_type(0).size());
-                writer.write(c->get_name(), c->get_data_ptr(), size);
-            }
-        });
+        traverse_nodes(const_cast<Function*>(f.get()),
+                       [&](shared_ptr<Node> node) {
+                           if (auto c = dynamic_pointer_cast<op::Constant>(node))
+                           {
+                               uint32_t size =
+                                   static_cast<uint32_t>(shape_size(c->get_output_shape(0)) *
+                                                         c->get_output_element_type(0).size());
+                               writer.write(c->get_name(), c->get_data_ptr(), size);
+                           }
+                       },
+                       true);
     });
 
     writer.close();
@@ -301,45 +304,13 @@ static json write(const Function& f, bool binary_constant_data)
         function["result"].push_back(f.get_output_op(i)->get_name());
     }
 
-    list<shared_ptr<Node>> result_list;
-    {
-        deque<Node*> independent_nodes;
-        unordered_map<const Node*, size_t> node_depencency_count;
-        unordered_map<Node*, shared_ptr<Node>> node_map;
-
-        traverse_nodes(const_cast<Function*>(&f), [&](shared_ptr<Node> node) {
-            node_map[node.get()] = node;
-            node_depencency_count[node.get()] = node->get_arguments().size();
-            if (node->get_arguments().size() == 0)
-            {
-                independent_nodes.push_back(node.get());
-            }
-        });
-
-        while (independent_nodes.size() > 0)
-        {
-            auto independent_node = independent_nodes.front();
-            result_list.push_back(node_map[independent_node]);
-            independent_nodes.pop_front();
-
-            for (auto sp_user : independent_node->get_users())
-            {
-                Node* user = sp_user.get();
-                node_depencency_count[user] -= 1;
-                size_t count = node_depencency_count[user];
-                if (count == 0)
-                {
-                    independent_nodes.push_back(user);
-                }
-            }
-        }
-    }
-
+    Function* pf = const_cast<Function*>(&f);
     json nodes;
-    for (shared_ptr<Node> node : result_list)
+    for (shared_ptr<Node> node : pf->get_ordered_ops(true))
     {
         nodes.push_back(write(*node, binary_constant_data));
     }
+
     function["ops"] = nodes;
     return function;
 }
@@ -362,9 +333,12 @@ static shared_ptr<ngraph::Function>
             string node_name = node_js.at("name").get<string>();
             string node_op = node_js.at("op").get<string>();
             vector<string> node_inputs = node_js.at("inputs").get<vector<string>>();
+            vector<string> control_deps_inputs =
+                get_or_default<vector<string>>(node_js, "control_deps", vector<string>{});
             vector<string> node_outputs = node_js.at("outputs").get<vector<string>>();
             shared_ptr<Node> node;
             vector<shared_ptr<Node>> args;
+            vector<shared_ptr<Node>> control_deps;
             for (const string& name : node_inputs)
             {
                 args.push_back(node_map.at(name));
@@ -934,6 +908,12 @@ static shared_ptr<ngraph::Function>
                 ss << "unsupported op " << node_op;
                 throw runtime_error(ss.str());
             }
+
+            for (const string& name : control_deps_inputs)
+            {
+                node->add_control_dependency(node_map.at(name));
+            }
+
             node_map[node_name] = node;
 
             // Typically, it could be unsafe to change the name of a node since it may break nameing
@@ -1000,11 +980,16 @@ static json write(const Node& n, bool binary_constant_data)
     node["op"] = n.description();
     // TODO Multiple outputs
     json inputs = json::array();
+    json control_deps = json::array();
     json outputs = json::array();
 
     for (const descriptor::Input& input : n.get_inputs())
     {
         inputs.push_back(input.get_output().get_node()->get_name());
+    }
+    for (auto cdep : n.get_control_dependencies())
+    {
+        control_deps.push_back(cdep->get_name());
     }
     for (size_t i = 0; i < n.get_output_size(); ++i)
     {
@@ -1012,6 +997,7 @@ static json write(const Node& n, bool binary_constant_data)
     }
 
     node["inputs"] = inputs;
+    node["control_deps"] = control_deps;
     node["outputs"] = outputs;
 
     if (std::getenv("NGRAPH_SERIALIZER_OUTPUT_SHAPES") != nullptr)
