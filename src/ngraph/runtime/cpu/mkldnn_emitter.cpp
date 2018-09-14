@@ -230,29 +230,6 @@ mkldnn::memory::format MKLDNNEmitter::query_convolution_forward_weight_format(
         prim_desc.weights_primitive_desc().desc().data.format);
 }
 
-std::pair<size_t, size_t> MKLDNNEmitter::build_group_convolution_forward(
-    const mkldnn::memory::desc& input_reorder_desc,
-    const mkldnn::memory::desc& input_conv_desc,
-    const mkldnn::memory::desc& weights_desc,
-    const mkldnn::memory::desc& result_reorder_desc,
-    const mkldnn::memory::desc& result_desc,
-    const ngraph::Strides& filter_strides,
-    const ngraph::Strides& window_dilation_strides_adjusted,
-    const ngraph::CoordinateDiff& padding_below,
-    const ngraph::CoordinateDiff& padding_above)
-{
-    size_t reorder_index = this->build_reorder(input_reorder_desc, result_reorder_desc);
-    size_t conv_index = this->build_convolution_forward(input_conv_desc,
-                                                        weights_desc,
-                                                        result_desc,
-                                                        filter_strides,
-                                                        window_dilation_strides_adjusted,
-                                                        padding_below,
-                                                        padding_above);
-
-    return std::make_pair(reorder_index, conv_index);
-}
-
 size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& input_data_desc,
                                                 const mkldnn::memory::desc& weights_desc,
                                                 const mkldnn::memory::desc& result_desc,
