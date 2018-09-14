@@ -17,10 +17,9 @@
 #include <fstream>
 #include <sstream>
 
-#include <mpi.h>
-
 #include "gtest/gtest.h"
 
+#include "ngraph/distributed.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
@@ -38,9 +37,7 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     auto v = vector<float>{1, 2, 3, 4};
-    int comm_size;
-
-    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    int comm_size = ngraph::distributed_get_size();
 
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 2, 3, 4});
