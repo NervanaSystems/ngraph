@@ -14,6 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
+// XXX: THIS CLASS IS NOT IN USE YET AND THE ENTIRE DESIGN IS SUBJECT TO CHANGE.
+
 #pragma once
 
 #include <stddef.h>
