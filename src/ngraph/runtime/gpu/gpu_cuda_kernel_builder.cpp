@@ -452,12 +452,11 @@ void runtime::gpu::CudaKernelBuilder::get_onehot_op(codegen::CodeWriter& writer,
 
 void runtime::gpu::CudaKernelBuilder::get_reshape_op(codegen::CodeWriter& writer,
                                                      const std::string& name,
+                                                     runtime::gpu::GPUKernelArgs& args,
                                                      const std::array<std::string, 2>& data_types,
                                                      size_t rank)
 {
-    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
-           << data_types[1]
-           << "* out, uint32_t* input_strides, uint32_t* trans_strides, uint32_t n)\n";
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
         writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
@@ -469,12 +468,12 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op(codegen::CodeWriter& writer
             size_t i = 0;
             for (; i < rank - 1; i++)
             {
-                writer << "output_idx += (input_idx / input_strides[" << i << "]) * trans_strides["
-                       << i << "];\n";
-                writer << "input_idx %= input_strides[" << i << "];\n";
+                writer << "output_idx += (input_idx / input_strides" << i << ") * trans_strides"
+                       << i << ";\n";
+                writer << "input_idx %= input_strides" << i << ";\n";
             }
-            writer << "output_idx += (input_idx / input_strides[" << i << "]) * trans_strides[" << i
-                   << "];\n";
+            writer << "output_idx += (input_idx / input_strides" << i << ") * trans_strides" << i
+                   << ";\n";
             writer << "out[output_idx] = in[tid];\n";
         }
         writer.block_end();
