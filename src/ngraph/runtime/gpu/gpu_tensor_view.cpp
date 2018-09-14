@@ -18,7 +18,7 @@
 
 #include <cuda_runtime.h>
 
-#include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
@@ -33,8 +33,8 @@ runtime::gpu::GPU_TensorView::GPU_TensorView(const ngraph::element::Type& elemen
           std::make_shared<ngraph::descriptor::TensorView>(element_type, shape, "external"))
     , m_custom_memory(false)
 {
-    m_descriptor->set_tensor_view_layout(
-        std::make_shared<ngraph::descriptor::layout::DenseTensorViewLayout>(*m_descriptor));
+    m_descriptor->set_tensor_layout(
+        std::make_shared<ngraph::descriptor::layout::DenseTensorLayout>(*m_descriptor));
 
     m_buffer_size = shape_size(shape) * element_type.size();
     if (memory_pointer != nullptr)

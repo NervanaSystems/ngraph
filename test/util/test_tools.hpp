@@ -20,7 +20,7 @@
 #include <list>
 #include <memory>
 
-#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/backend.hpp"
@@ -46,7 +46,7 @@ void copy_data(std::shared_ptr<ngraph::runtime::TensorView> tv, const std::vecto
 template <typename T>
 std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::TensorView> tv)
 {
-    if (ngraph::element::from<T>() != tv->get_tensor_view_layout()->get_element_type())
+    if (ngraph::element::from<T>() != tv->get_tensor_layout()->get_element_type())
     {
         throw std::invalid_argument("read_vector type must match TensorView type");
     }
@@ -95,10 +95,10 @@ size_t count_ops_of_type(std::shared_ptr<ngraph::Function> f)
     return count;
 }
 
-template <typename T>
-std::vector<std::vector<T>> execute(const std::shared_ptr<ngraph::Function>& function,
-                                    std::vector<std::vector<T>> args,
-                                    const std::string& backend_id)
+template <typename T, typename T1 = T>
+std::vector<std::vector<T1>> execute(const std::shared_ptr<ngraph::Function>& function,
+                                     std::vector<std::vector<T>> args,
+                                     const std::string& backend_id)
 {
     auto backend = ngraph::runtime::Backend::create(backend_id);
 
@@ -128,10 +128,10 @@ std::vector<std::vector<T>> execute(const std::shared_ptr<ngraph::Function>& fun
 
     backend->call_with_validate(function, result_tensors, arg_tensors);
 
-    std::vector<std::vector<T>> result_vectors;
+    std::vector<std::vector<T1>> result_vectors;
     for (auto rt : result_tensors)
     {
-        result_vectors.push_back(read_vector<T>(rt));
+        result_vectors.push_back(read_vector<T1>(rt));
     }
     return result_vectors;
 }

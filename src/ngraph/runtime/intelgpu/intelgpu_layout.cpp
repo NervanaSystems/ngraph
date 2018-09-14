@@ -24,7 +24,7 @@ using namespace ngraph;
 
 runtime::intelgpu::IntelGPULayout::IntelGPULayout(const descriptor::TensorView& tv,
                                                   const cldnn::layout& layout)
-    : TensorViewLayout(tv)
+    : TensorLayout(tv)
     , cldnn_layout(layout)
 {
 }
@@ -35,16 +35,12 @@ size_t runtime::intelgpu::IntelGPULayout::get_index_offset(const vector<size_t>&
     {
         throw ngraph_error("Indices have incorrect rank");
     }
-    size_t result = 0;
-    for (int i = 0; i < indices.size(); i++)
-    {
-        result += strides[i] + indices[i];
-    }
-    return result;
+
+    return inner_product(indices.cbegin(), indices.cend(), strides.cbegin(), 0);
 }
 
 bool runtime::intelgpu::IntelGPULayout::
-    operator==(const descriptor::layout::TensorViewLayout& other) const
+    operator==(const descriptor::layout::TensorLayout& other) const
 {
     const IntelGPULayout* p_other = dynamic_cast<const IntelGPULayout*>(&other);
     if (!p_other)

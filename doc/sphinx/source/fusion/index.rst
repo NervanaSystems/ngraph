@@ -5,38 +5,52 @@ Optimize Graphs
 ===============
 
 with nGraph Compiler fusions
------------------------------
+----------------------------
 
-The nGraph Compiler is an optimizing compiler. As such, it performs a series 
-of optimization passes over a given function graph to translate it into a 
-semantically-equivalent and inherently-optimized graph with superior runtime 
-characteristics for any of nGraph's current or future backends. Indeed, a  
-framework's capability to increase training performance or to reduce inference 
-latency by simply adding another device of *any* specialized form factor (CPU, 
-GPU, VPU, or FPGA) is one of the :doc:`key benefits <../project/about>` of 
-developing upon a framework that uses the nGraph Compiler.   
+The nGraph Compiler is an optimizing compiler. As such, it provides a way to 
+capture a given :term:`function graph` and perform a series of optimization 
+passes over that graph. The result is a semantically-equivalent graph that, when 
+executed using any |InG| :doc:`backend <../programmable/index>`, has optimizations 
+inherent at the hardware level: superior runtime characteristics to increase 
+training performance or reduce inference latency.   
 
-In handling a :term:`function graph`, there are many ways to describe what 
-happens when we translate the framework's output of ops into an nGraph 
-graph. :term:`Fusion` is the term we shall use in our documentation, but the the 
-action also can be described as: *combining*, *folding*, *collapsing*, or 
-*merging* of graph functions. The most common use case is to *fuse* a subgraph 
-from the function graph into :doc:`one of the nGraph Core ops <../ops/index>`. 
+There are several ways to describe what happens when we capture and translate 
+the framework's output of ops into an nGraph graph. :term:`Fusion` is the term 
+we shall use in our documentation; the action also can be described as: 
+*combining*, *folding*, *squashing*, *collapsing*, or *merging* of graph 
+functions. 
 
 Optimization passes may include algebraic simplifications, domain-specific 
 simplifications, and fusion. Most passes share the same mode of operation (or 
-the same operational structure) and consist of two stages:
+the same operational structure) and consist of various stages (each one a 
+:term:`step`) where a developer can experiment with the intercepted or dynamic 
+graph. These steps may be cycled or recycled as needed: 
 
-#. Locating a list of potential transformation candidates (usually, subgraphs) 
-   in the given graph.
-#. Transforming the selected candidates into semantically-equivalent subgraphs 
-   that run faster and/or with less memory.
+#. Locate a list of potentially-transformable subgraphs in the given graph.
+#. Transform the selected candidates into semantically-equivalent subgraphs 
+   that execute faster, or with less memory (or both). 
+#. Verify that the optimization pass performs correctly, with any or all expected 
+   transformations, with the ``NGRAPH_SERIALIZE_TRACING`` option, which 
+   serializes a graph in the `json` format after a pass.
+#. Measure and evaluate your performance improvements with ``NGRAPH_CPU_TRACING``, 
+   which produces timelines compatible with ``chrome://tracing``.
 
-Optimization passes can be programmed ahead of time if you know what your graph 
-will look like when it's ready to be executed, or the optimization passes can 
-be figured out manually with *Interpreter* mode on a stateless graph. 
+Optimizations can be experimented upon without using any backend by registering 
+a pass with pass manager (``Manager``), calling ``run_passes`` on a function, and 
+then inspecting the transformed graph. 
 
-Let us first consider an example. A user would like to execute a simple graph 
+Optimization passes can be programmed ahead of time if you know or can predict 
+what your graph will look like when it's ready to be executed (in other words: 
+which `ops` can be automatically translated into :doc:`nGraph Core ops <../ops/index>`). 
+
+The ``Interpreter`` is simply a backend providing reference implementations of 
+ngraph ops in C++, with the focus on simplicity over performance.
+ 
+
+Example
+-------
+
+Let us first consider a simple example. A user would like to execute a graph 
 that describes the following arithmetic expression:
 
 :math:`a + b * 1` or :math:`Add(a, Mul(b, 1))` 
@@ -52,14 +66,13 @@ multiplicands are multiplied by `1` (for stage 1) and to then ``transform``,
 ``simplify``, or ``replace`` those expressions with just their multiplicands 
 (for stage 2).  
 
-To make the work of an optimization pass writer easier, the nGraph library 
+To make the work of an optimization pass writer easier, the nGraph Library 
 includes facilities that enable the *finding* of relevant candidates using 
 pattern matching (via ``pattern/matcher.hpp``), and the *transforming* of the 
 original graph into a condensed version (via ``pass/graph_rewrite.hpp``).
 
-Let's consider each of the two in more detail and many ways they can help the 
-work of the optimization pass writer.
-
+Let's consider each in more detail and many ways they can help the graph 
+optimizer. 
 
 
 .. toctree::
@@ -67,7 +80,4 @@ work of the optimization pass writer.
 
    graph-rewrite.rst
    passes-that-use-matcher.rst
-
-
-
-
+   
