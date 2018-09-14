@@ -605,23 +605,6 @@ namespace ngraph
                 // If there *is* a layout change in the 2D case, we transpose the input.
                 else if (new_rank == 2)
                 {
-                    /*
-                    writer << "const float alpha = 1.0;\n";
-                    writer << "const float beta = 0;\n";
-                    writer << "CUBLAS_SAFE_CALL(cublasSetPointerMode(*ctx->cublas_handle, "
-                              "CUBLAS_POINTER_MODE_HOST));\n";
-                    writer << "CUBLAS_SAFE_CALL(cublasSgeam("
-                           << "*ctx->cublas_handle,"
-                           << "CUBLAS_OP_T,"
-                           << "CUBLAS_OP_T," << new_arg_shape[0] << "," << new_arg_shape[1] << ","
-                           << "&alpha," // Alpha
-                           << args[0].get_name() << "," << new_arg_shape[1] << ","
-                           << "&beta," // beta
-                           << args[0].get_name() << "," << new_arg_shape[1] << ","
-                           << out[0].get_name() << "," << new_arg_shape[0] << "));\n";
-                    writer << "CUBLAS_SAFE_CALL(cublasSetPointerMode(*ctx->cublas_handle, "
-                              "CUBLAS_POINTER_MODE_DEVICE));\n";
-*/
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
                     auto index = cuda_emitter->build_reshape_2d(

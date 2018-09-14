@@ -527,6 +527,7 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op_2d(codegen::CodeWriter& wri
     }
     writer.block_end();
 }
+
 void runtime::gpu::CudaKernelBuilder::get_reshape_op_3d(codegen::CodeWriter& writer,
                                                         const std::string& name,
                                                         runtime::gpu::GPUKernelArgs& args,
