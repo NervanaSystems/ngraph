@@ -16,10 +16,9 @@
 
 #include <algorithm>
 #include <memory>
+#include <vector>
 
-#include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/shape.hpp"
 
 #include "ngraph/op/slice.hpp"
 
@@ -27,7 +26,7 @@
 
 #include "slice.hpp"
 
-inline int64_t get_valid_array_idx(int64_t idx, int64_t last_idx)
+static inline int64_t get_valid_array_idx(int64_t idx, int64_t last_idx)
 {
     return (idx >= 0) ? std::min(idx, last_idx) : std::max<int64_t>(0, last_idx + idx);
 }
