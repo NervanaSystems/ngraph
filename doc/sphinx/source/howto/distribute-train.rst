@@ -22,9 +22,8 @@ To deploy data-parallel training on backends supported by nGraph API, the
    :lines: 180-196
    :emphasize-lines: 9-12
 
-Also since we are using OpenMPI in this example, we need to initialize and 
-finalize MPI with ``MPI::Init();`` and ``MPI::Finalize();`` at the beginning
-and the end of the code used to deploy to devices; see the `full raw code`_. 
+We need to include <ngraph/distributed.hpp> and declare an object of type Distributed
+to automatically initialize and finalize MPI; see the `full raw code`_.
 
 Finally, to run the training using two nGraph devices, invoke :command:`mpirun`. 
 This will launch two nGraph CPU backends.
@@ -36,4 +35,4 @@ This will launch two nGraph CPU backends.
 
 
 .. _OpenMPI: https://www.open-mpi.org/software/ompi/v3.1
-.. _full raw code: https://github.com/NervanaSystems/ngraph/blob/master/doc/examples/mnist_mlp/dist_mnist_mlp.cpp 
+.. _full raw code: https://github.com/NervanaSystems/ngraph/blob/master/doc/examples/mnist_mlp/dist_mnist_mlp.cpp
