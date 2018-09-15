@@ -1274,6 +1274,9 @@ void runtime::cpu::CPU_ExternalFunction::build()
 
     for (shared_ptr<Node> node : m_function->get_ordered_ops())
     {
+       int my_rank;
+       MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+       std::cout<<"process_ID, node name: "<<my_rank<<", "<<node->get_name()<<std::endl;
         if (node->is_parameter() || node->is_constant())
         {
             continue;
