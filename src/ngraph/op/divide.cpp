@@ -44,6 +44,35 @@ void op::Divide::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVecto
     adjoints.add_delta(y, -delta * shared_from_this() / y);
 }
 
+void op::Divide::validate_and_infer_types()
+{
+    validate_and_infer_elementwise_arithmetic();
+
+    // Static value propagation.
+    if (get_inputs().at(0).get_output().has_static_value() &&
+        get_inputs().at(1).get_output().has_static_value())
+    {
+        const StaticValue& sv0 = get_inputs().at(0).get_output().get_static_value();
+        const StaticValue& sv1 = get_inputs().at(1).get_output().get_static_value();
+
+        // If validation succeeded we should be safe to assume that both args'
+        // static values have the same length, but we will check anyway.
+        NODE_VALIDATION_ASSERT(this, sv0.size() == sv1.size())
+            << "Internal nGraph error: size of input static values does not match "
+            << "(static value 0: " << sv0 << ", static value 1: " << sv1 << ").";
+
+        StaticValue result;
+
+        // TODO(amprocte): Would be reasonable to do a div-by-zero check here.
+        for (size_t i = 0; i < sv0.size(); i++)
+        {
+            result.push_back(sv0[i] / sv1[i]);
+        }
+
+        get_outputs().at(0).set_static_value(result);
+    }
+}
+
 shared_ptr<Node> ngraph::operator/(const shared_ptr<Node> arg0, const shared_ptr<Node> arg1)
 {
     return make_shared<op::Divide>(arg0, arg1);

@@ -37,6 +37,8 @@ namespace ngraph
 
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
+
+            void validate_and_infer_types() override;
         };
     }
 

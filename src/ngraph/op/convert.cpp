@@ -31,6 +31,13 @@ op::Convert::Convert(const shared_ptr<Node>& arg, const element::Type& element_t
 void op::Convert::validate_and_infer_types()
 {
     set_output_type(0, m_element_type, get_input_shape(0));
+
+    // Static value propagation.
+    // Even if the output type is not uint64, we will keep the Shape, so this is simple.
+    if (get_inputs().at(0).get_output().has_static_value())
+    {
+        get_outputs().at(0).set_static_value(get_inputs().at(0).get_output().get_static_value());
+    }
 }
 
 shared_ptr<Node> op::Convert::copy_with_new_args(const NodeVector& new_args) const

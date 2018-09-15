@@ -6672,3 +6672,41 @@ TEST(type_prop, concat_sv)
     ASSERT_EQ(concat->get_shape(), (Shape{11}));
     ASSERT_EQ(concat->get_static_value(), (StaticValue{2, 4, 6, 8, 8, 6, 4, 2, 5, 5, 3}));
 }
+
+TEST(type_prop, convert_sv)
+{
+    auto param = make_shared<op::Parameter>(element::boolean, Shape{8, 6, 4, 2});
+    auto sh = make_shared<op::Shape>(param);
+    auto convert = make_shared<op::Convert>(sh, element::u16);
+    ;
+
+    ASSERT_EQ(convert->get_element_type(), element::u16);
+    ASSERT_EQ(convert->get_shape(), (Shape{4}));
+    ASSERT_EQ(convert->get_static_value(), (StaticValue{8, 6, 4, 2}));
+}
+
+TEST(type_prop, divide_sv)
+{
+    auto param0 = make_shared<op::Parameter>(element::boolean, Shape{8, 6, 4, 2});
+    auto param1 = make_shared<op::Parameter>(element::i8, Shape{2, 3, 4, 1});
+    auto sh0 = make_shared<op::Shape>(param0);
+    auto sh1 = make_shared<op::Shape>(param1);
+    auto divide = make_shared<op::Divide>(sh0, sh1);
+
+    ASSERT_EQ(divide->get_element_type(), element::u64);
+    ASSERT_EQ(divide->get_shape(), (Shape{4}));
+    ASSERT_EQ(divide->get_static_value(), (StaticValue{4, 2, 1, 2}));
+}
+
+TEST(type_prop, multiply_sv)
+{
+    auto param0 = make_shared<op::Parameter>(element::boolean, Shape{8, 6, 4, 2});
+    auto param1 = make_shared<op::Parameter>(element::i8, Shape{2, 3, 4, 1});
+    auto sh0 = make_shared<op::Shape>(param0);
+    auto sh1 = make_shared<op::Shape>(param1);
+    auto multiply = make_shared<op::Multiply>(sh0, sh1);
+
+    ASSERT_EQ(multiply->get_element_type(), element::u64);
+    ASSERT_EQ(multiply->get_shape(), (Shape{4}));
+    ASSERT_EQ(multiply->get_static_value(), (StaticValue{16, 18, 16, 2}));
+}
