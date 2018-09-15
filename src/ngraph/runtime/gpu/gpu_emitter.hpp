@@ -467,4 +467,8 @@ public:
         }
         writer.block_end();
     }
+
+private:
+    static std::string node_names(const std::vector<GPU_TensorViewWrapper>& args,
+                                  std::initializer_list<int> arg_indexes = {});
 };

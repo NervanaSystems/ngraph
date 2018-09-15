@@ -81,6 +81,14 @@ namespace ngraph
                 EntryPoint m_compiled_function;
 
             private:
+                // For non-destructive passthrough kernels, propagate function
+                // input buffers to internal ops
+                void propagate_in_place_input(ngraph::descriptor::Output* output,
+                                              std::string input_name);
+                // For in-place kernels, propagate function output buffers to
+                // internal ops
+                void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
+                                               std::string output_name);
                 void emit_header();
                 void emit_timer_functions();
                 void emit_constant_declarations();
