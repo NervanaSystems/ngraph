@@ -29,17 +29,17 @@ using namespace ngraph;
 
 struct CollapsedDims
 {
-    std::vector<size_t> output_shape;
+    Shape output_shape;
     std::vector<bool> is_operated_axis;
     std::vector<size_t> axis_set;
-    std::vector<size_t> input_shape;
+    Shape input_shape;
 };
 
 // Fold and collapse axes of output_shape.
 // Contiguous axes that are not being operated on can be collapsed.
 // Contiguous axes that are being operated on are collapsed optionally.
 // Skip size 1 dimensions.
-static void collapse_dims(std::vector<size_t>& output_shape,
+static void collapse_dims(Shape& output_shape,
                           std::set<size_t> operated_axes,
                           struct CollapsedDims& cdims,
                           bool collapse_operated_axes)

@@ -66,7 +66,7 @@ namespace ngraph
                 {
                     for (const auto& dim : value_info_proto.type().tensor_type().shape().dim())
                     {
-                        m_shape.emplace_back(static_cast<Shape::value_type>(dim.dim_value()));
+                        m_shape.push_back(static_cast<Shape::value_type>(dim.dim_value()));
                     }
                 }
             }

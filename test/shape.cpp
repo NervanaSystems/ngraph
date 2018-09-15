@@ -36,3 +36,13 @@ TEST(shape, test_shape_strides)
     ASSERT_EQ((Strides{7, 1}), row_major_strides(Shape{2, 7}));
     ASSERT_EQ((Strides{84, 12, 1}), row_major_strides(Shape{5, 7, 12}));
 }
+
+// This is just a "does it compile" test
+TEST(shape, insert)
+{
+    size_t N = 4;
+    Shape new_shape{N};
+    Shape s1{N};
+    const Shape& other_shape = s1;
+    new_shape.insert(new_shape.end(), other_shape.begin() + 2, other_shape.end());
+}

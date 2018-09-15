@@ -25,46 +25,79 @@
 namespace ngraph
 {
     /// \brief Shape for a tensor.
-    class Shape : public std::vector<size_t>
+    class Shape
     {
     public:
+        using value_type = size_t;
         Shape(const std::initializer_list<size_t>& axis_lengths)
-            : std::vector<size_t>(axis_lengths)
+            : m_data(axis_lengths)
         {
         }
 
         Shape(const std::vector<size_t>& axis_lengths)
-            : std::vector<size_t>(axis_lengths)
+            : m_data(axis_lengths)
         {
         }
 
         Shape(const Shape& axis_lengths)
-            : std::vector<size_t>(axis_lengths)
+            : m_data(axis_lengths.m_data)
         {
         }
 
         explicit Shape(size_t n, size_t initial_value = 0)
-            : std::vector<size_t>(n, initial_value)
+            : m_data(n, initial_value)
         {
         }
 
         template <class InputIterator>
         Shape(InputIterator first, InputIterator last)
-            : std::vector<size_t>(first, last)
+            : m_data(first, last)
         {
         }
 
         Shape() {}
         Shape& operator=(const Shape& v)
         {
-            static_cast<std::vector<size_t>*>(this)->operator=(v);
+            m_data = v.m_data;
             return *this;
         }
-        Shape& operator=(Shape&& v)
+
+        size_t size() const { return m_data.size(); }
+        operator std::vector<size_t>() const { return m_data; }
+        bool operator==(const Shape& other) const { return m_data == other.m_data; }
+        bool operator!=(const Shape& other) const { return m_data != other.m_data; }
+        std::vector<size_t>::iterator begin() { return m_data.begin(); }
+        std::vector<size_t>::reference back() { return m_data.back(); }
+        std::vector<size_t>::iterator end() { return m_data.end(); }
+        std::vector<size_t>::const_iterator begin() const { return m_data.begin(); }
+        std::vector<size_t>::const_reference back() const { return m_data.back(); }
+        std::vector<size_t>::const_iterator end() const { return m_data.end(); }
+        std::vector<size_t>::reverse_iterator rbegin() { return m_data.rbegin(); }
+        std::vector<size_t>::reverse_iterator rend() { return m_data.rend(); }
+        std::vector<size_t>::const_reverse_iterator rbegin() const { return m_data.rbegin(); }
+        std::vector<size_t>::const_reverse_iterator rend() const { return m_data.rend(); }
+        const size_t& operator[](size_t index) const { return m_data[index]; }
+        size_t& operator[](size_t index) { return m_data[index]; }
+        const size_t& at(size_t index) const { return m_data.at(index); }
+        size_t& at(size_t index) { return m_data.at(index); }
+        std::vector<size_t>::iterator insert(std::vector<size_t>::iterator pos, size_t value)
         {
-            static_cast<std::vector<size_t>*>(this)->operator=(v);
-            return *this;
+            return m_data.insert(pos, value);
         }
+        template <class InputIterator>
+        void insert(std::vector<size_t>::iterator pos, InputIterator first, InputIterator last)
+        {
+            m_data.insert(pos, first, last);
+        }
+        void push_back(size_t value) { m_data.push_back(value); }
+        std::vector<size_t>::iterator erase(std::vector<size_t>::iterator pos)
+        {
+            return m_data.erase(pos);
+        }
+        bool empty() const { return m_data.empty(); }
+        const std::vector<size_t>& get_value() const { return m_data; }
+    private:
+        std::vector<size_t> m_data;
     };
 
     /// Number of elements in spanned by a shape
