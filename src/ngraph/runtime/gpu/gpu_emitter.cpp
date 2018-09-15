@@ -1464,7 +1464,7 @@ void runtime::gpu::GPU_Emitter::emit_Tan(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Tanh(EMIT_ARGS)
 {
-    emit_elementwise<ngraph::op::Tan>(external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Tanh>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_TopK(EMIT_ARGS)
