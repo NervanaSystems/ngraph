@@ -112,20 +112,17 @@ using namespace ngraph;
 
 void runtime::gpu::GPU_Emitter::emit_Abs(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Abs>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Abs>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Acos(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Acos>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Acos>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Add(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Add>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Add>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_AllReduce(EMIT_ARGS)
@@ -135,8 +132,7 @@ void runtime::gpu::GPU_Emitter::emit_AllReduce(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_And(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::And>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::And>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_ArgMax(EMIT_ARGS)
@@ -151,14 +147,12 @@ void runtime::gpu::GPU_Emitter::emit_ArgMin(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Asin(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Asin>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Asin>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Atan(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Atan>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Atan>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_AvgPool(EMIT_ARGS)
@@ -349,8 +343,7 @@ void runtime::gpu::GPU_Emitter::emit_Broadcast(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Ceiling(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Ceiling>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Ceiling>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Concat(EMIT_ARGS)
@@ -389,8 +382,7 @@ void runtime::gpu::GPU_Emitter::emit_Constant(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Convert(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Convert>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Convert>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Convolution(EMIT_ARGS)
@@ -477,20 +469,17 @@ void runtime::gpu::GPU_Emitter::emit_ConvolutionBackpropFilters(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Cos(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Cos>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Cos>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Cosh(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Cosh>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Cosh>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Divide(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Divide>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Divide>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
@@ -651,20 +640,17 @@ void runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Equal(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Equal>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Equal>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Exp(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Exp>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Exp>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Floor(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Floor>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Floor>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_FunctionCall(EMIT_ARGS)
@@ -694,32 +680,27 @@ void runtime::gpu::GPU_Emitter::emit_GetOutputElement(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Greater(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Greater>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Greater>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_GreaterEq(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::GreaterEq>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::GreaterEq>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Less(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Less>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Less>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_LessEq(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::LessEq>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::LessEq>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Log(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Log>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Log>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_LRN(EMIT_ARGS)
@@ -746,8 +727,7 @@ void runtime::gpu::GPU_Emitter::emit_Max(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Maximum(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Maximum>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Maximum>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_MaxPool(EMIT_ARGS)
@@ -842,32 +822,27 @@ void runtime::gpu::GPU_Emitter::emit_Min(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Minimum(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Minimum>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Minimum>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Multiply(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Multiply>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Multiply>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Negative(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Negative>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Negative>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Not(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Not>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Not>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_NotEqual(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::NotEqual>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::NotEqual>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_OneHot(EMIT_ARGS)
@@ -898,8 +873,7 @@ void runtime::gpu::GPU_Emitter::emit_OneHot(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Or(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Or>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Or>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Pad(EMIT_ARGS)
@@ -934,8 +908,7 @@ void runtime::gpu::GPU_Emitter::emit_Parameter(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Power(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Power>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Power>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Product(EMIT_ARGS)
@@ -1165,14 +1138,12 @@ void runtime::gpu::GPU_Emitter::emit_ReduceWindow(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Relu(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Relu>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Relu>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_ReluBackprop(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::ReluBackprop>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::ReluBackprop>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_ReplaceSlice(EMIT_ARGS)
@@ -1334,8 +1305,7 @@ void runtime::gpu::GPU_Emitter::emit_ReverseSequence(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Select(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Select>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Select>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_SelectAndScatter(EMIT_ARGS)
@@ -1345,32 +1315,27 @@ void runtime::gpu::GPU_Emitter::emit_SelectAndScatter(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Sigmoid(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sigmoid>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Sigmoid>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_SigmoidBackprop(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::SigmoidBackprop>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::SigmoidBackprop>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Sign(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sign>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Sign>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Sin(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sin>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Sin>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Sinh(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sinh>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Sinh>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Slice(EMIT_ARGS)
@@ -1439,8 +1404,7 @@ void runtime::gpu::GPU_Emitter::emit_Softmax(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Sqrt(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sqrt>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Sqrt>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_StopGradient(EMIT_ARGS)
@@ -1450,8 +1414,7 @@ void runtime::gpu::GPU_Emitter::emit_StopGradient(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Subtract(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Subtract>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Subtract>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Sum(EMIT_ARGS)
@@ -1496,14 +1459,12 @@ void runtime::gpu::GPU_Emitter::emit_Sum(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Tan(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Tan>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Tan>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Tanh(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Tan>(
-        external_function, writer, node, args, out);
+    emit_elementwise<ngraph::op::Tan>(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_TopK(EMIT_ARGS)
