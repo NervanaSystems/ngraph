@@ -742,6 +742,219 @@ TEST(onnxifi, init_graph_invalid_protobuf)
     }
 }
 
+// ====================================================[ onnxRunGraph ]========
+
+TEST(onnxifi, run_graph)
+{
+    auto model = load_model();
+    auto backends = get_initialized_backends();
+
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        EXPECT_TRUE(
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph) ==
+            ONNXIFI_STATUS_SUCCESS);
+
+        ::onnxMemoryFenceV1 input_fence;
+        ::onnxMemoryFenceV1 output_fence;
+        EXPECT_TRUE(::onnxRunGraph(backend, &input_fence, &output_fence) == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+// ONNXIFI_STATUS_INVALID_POINTER
+// The function call failed because inputFence or outputFence pointer is NULL.
+
+TEST(onnxifi, run_graph_invalid_pointer)
+{
+    auto model = load_model();
+    auto backends = get_initialized_backends();
+
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        EXPECT_TRUE(
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph) ==
+            ONNXIFI_STATUS_SUCCESS);
+
+        ::onnxMemoryFenceV1 input_fence;
+        ::onnxMemoryFenceV1 output_fence;
+        EXPECT_TRUE(::onnxRunGraph(graph, &input_fence, nullptr) == ONNXIFI_STATUS_INVALID_POINTER);
+        EXPECT_TRUE(::onnxRunGraph(graph, nullptr, &output_fence) ==
+                    ONNXIFI_STATUS_INVALID_POINTER);
+    }
+}
+
+// ONNXIFI_STATUS_INVALID_GRAPH
+// The function call failed because graph is not an ONNXIFI graph handle.
+
+TEST(onnxifi, run_graph_invalid_graph)
+{
+    auto model = load_model();
+    auto backends = get_initialized_backends();
+
+    for (const auto& backend : backends)
+    {
+        ::onnxMemoryFenceV1 input_fence;
+        ::onnxMemoryFenceV1 output_fence;
+        EXPECT_TRUE(::onnxRunGraph(nullptr, &input_fence, &output_fence) ==
+                    ONNXIFI_STATUS_INVALID_GRAPH);
+    }
+}
+
+namespace
+{
+    onnxMemoryFenceV1 get_default_memory_fence(::onnxBackend backend)
+    {
+        ::onnxEvent event;
+        EXPECT_TRUE(::onnxInitEvent(backend, &event) == ONNXIFI_STATUS_SUCCESS);
+        return {ONNXIFI_TAG_MEMORY_FENCE_V1, ONNXIFI_SYNCHRONIZATION_EVENT, event};
+    }
+
+} // namespace  anonymous
+
+// ONNXIFI_STATUS_INVALID_FENCE_TYPE
+// The function call failed because the type of synchronization primitive specified in inputFence
+// or outputFence is unknown to the backend.
+
+TEST(onnxifi, run_graph_invalid_fence)
+{
+    auto model = load_model();
+    auto backends = get_initialized_backends();
+
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        EXPECT_TRUE(
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph) ==
+            ONNXIFI_STATUS_SUCCESS);
+
+        auto invalid_mem_fence = get_default_memory_fence(backend);
+        // According to specification type of memory synchronization primitive
+        // can accept two values:
+        //  ONNXIFI_SYNCHRONIZATION_EVENT 0
+        //  ONNXIFI_SYNCHRONIZATION_IMPLICIT 2
+        invalid_mem_fence.type = 0xFFFFFFFFFFFFFFFF;
+        ::onnxMemoryFenceV1 input_fence;
+        ::onnxMemoryFenceV1 output_fence;
+        EXPECT_TRUE(::onnxRunGraph(graph, &invalid_mem_fence, &output_fence) ==
+                    ONNXIFI_STATUS_INVALID_FENCE_TYPE);
+        EXPECT_TRUE(::onnxRunGraph(graph, &input_fence, &invalid_mem_fence) ==
+                    ONNXIFI_STATUS_INVALID_FENCE_TYPE);
+    }
+}
+
+// ONNXIFI_STATUS_INVALID_EVENT
+// The function call failed because the memory synchronization primitive specified in inputFence or
+// outputFence is not valid (e.g. NULL onnxEvent).
+
+TEST(onnxifi, run_graph_invalid_event)
+{
+    auto model = load_model();
+    auto backends = get_initialized_backends();
+
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        EXPECT_TRUE(
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph) ==
+            ONNXIFI_STATUS_SUCCESS);
+
+        auto invalid_event = get_default_memory_fence(backend);
+        invalid_event.event = nullptr;
+        ::onnxMemoryFenceV1 input_fence;
+        ::onnxMemoryFenceV1 output_fence;
+        EXPECT_TRUE(::onnxRunGraph(graph, &invalid_event, &output_fence) ==
+                    ONNXIFI_STATUS_INVALID_EVENT);
+        EXPECT_TRUE(::onnxRunGraph(graph, &input_fence, &invalid_event) ==
+                    ONNXIFI_STATUS_INVALID_EVENT);
+    }
+}
+
+// ONNXIFI_STATUS_UNSUPPORTED_TAG
+// The function call failed because a tag in inputFence or outputFence is unknown to the backend
+// (tag does not match ONNXIFI_TAG_MEMORY_FENCE_V1).
+
+TEST(onnxifi, run_graph_invalid_mem_fence_tag)
+{
+    auto model = load_model();
+    auto backends = get_initialized_backends();
+
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        EXPECT_TRUE(
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph) ==
+            ONNXIFI_STATUS_SUCCESS);
+
+        auto invalid_event = get_default_memory_fence(backend);
+        invalid_event.tag = 0;
+        ::onnxMemoryFenceV1 input_fence;
+        ::onnxMemoryFenceV1 output_fence;
+        EXPECT_TRUE(::onnxRunGraph(graph, &invalid_event, &output_fence) ==
+                    ONNXIFI_STATUS_UNSUPPORTED_TAG);
+        EXPECT_TRUE(::onnxRunGraph(graph, &input_fence, &invalid_event) ==
+                    ONNXIFI_STATUS_UNSUPPORTED_TAG);
+    }
+}
+
+// ONNXIFI_STATUS_UNSUPPORTED_FENCE_TYPE
+// The function call failed because the backend does not support the type of synchronization
+// primitive specified in inputFence or outputFence.
+
+TEST(onnxifi, run_graph_unsupported_fence_type)
+{
+    auto model = load_model();
+    auto backends = get_initialized_backends();
+
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        EXPECT_TRUE(
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph) ==
+            ONNXIFI_STATUS_SUCCESS);
+
+        auto unsupported_fence_type = get_default_memory_fence(backend);
+        unsupported_fence_type.type = ONNXIFI_SYNCHRONIZATION_IMPLICIT;
+        ::onnxMemoryFenceV1 input_fence;
+        ::onnxMemoryFenceV1 output_fence;
+        EXPECT_TRUE(::onnxRunGraph(graph, &unsupported_fence_type, &output_fence) ==
+                    ONNXIFI_STATUS_UNSUPPORTED_FENCE_TYPE);
+        EXPECT_TRUE(::onnxRunGraph(graph, &input_fence, &unsupported_fence_type) ==
+                    ONNXIFI_STATUS_UNSUPPORTED_FENCE_TYPE);
+    }
+}
+
+// ====================================================[ onnxWaitEvent ]========
+
+TEST(onnxifi, run_graph)
+{
+    auto model = load_model();
+    auto backends = get_initialized_backends();
+
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        EXPECT_TRUE(
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph) ==
+            ONNXIFI_STATUS_SUCCESS);
+
+        ::onnxMemoryFenceV1 input_fence{get_default_memory_fence(backend)};
+        ::onnxMemoryFenceV1 output_fence;
+
+        EXPECT_TRUE(::onnxRunGraph(backend, &input_fence, &output_fence) == ONNXIFI_STATUS_SUCCESS);
+        EXPECT_TRUE(::onnxWaitEvent(output_fence.event) == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+// ONNXIFI_STATUS_INVALID_EVENT
+// The function call failed because event is not an ONNXIFI event handle.
+
+TEST(onnxifi, run_graph_invalid_event)
+{
+    EXPECT_TRUE(::onnxWaitEvent(nullptr) == ONNXIFI_STATUS_INVALID_EVENT);
+}
+
 // ===================================================[ onnxSignalEvent ]=======
 
 TEST(onnxifi, signal_event)
