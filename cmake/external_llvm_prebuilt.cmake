@@ -16,8 +16,6 @@
 
 include(ExternalProject)
 
-message(STATUS "Fetching LLVM from llvm.org")
-
 find_package(ZLIB REQUIRED)
 
 # Override default LLVM binaries

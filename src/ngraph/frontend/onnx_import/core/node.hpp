@@ -72,6 +72,11 @@ namespace ngraph
 
             const std::string& op_type() const { return m_node_proto->op_type(); }
             const std::string& get_name() const { return m_node_proto->name(); }
+            /// @brief Describe the ONNX Node to make debugging graphs easier
+            /// Function will return the Node's name if it has one, or the names of its outputs.
+            /// \return Description of Node
+            std::string get_description() const;
+
             const std::vector<std::reference_wrapper<const std::string>>& get_output_names() const
             {
                 return m_output_names;
@@ -114,7 +119,7 @@ namespace ngraph
 
         inline std::ostream& operator<<(std::ostream& outs, const Node& node)
         {
-            return (outs << "<Node(" << node.op_type() << "): " << node.get_name() << ">");
+            return (outs << "<Node(" << node.op_type() << "): " << node.get_description() << ">");
         }
 
     } // namespace onnx_import

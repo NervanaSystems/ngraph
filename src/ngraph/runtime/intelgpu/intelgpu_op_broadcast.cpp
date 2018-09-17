@@ -31,6 +31,7 @@ using namespace ngraph;
 void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
                                                const string& input_name,
                                                const Shape& input_shape,
+                                               const element::Type& input_type,
                                                const string& output_name,
                                                const Shape& output_shape,
                                                const element::Type& output_type,
@@ -42,8 +43,12 @@ void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
     codegen::CodeWriter writer;
     vector<size_t> gws;
 
-    runtime::intelgpu::gen_func_def(
-        writer, function_name, {"float"}, {input_shape}, "float", output_shape);
+    runtime::intelgpu::gen_func_def(writer,
+                                    function_name,
+                                    {get_opencl_type_name(input_type)},
+                                    {input_shape},
+                                    get_opencl_type_name(output_type),
+                                    output_shape);
     writer.block_begin();
     {
         if (is_bcast)
@@ -63,7 +68,11 @@ void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
                 "output" + access_dims(input_shape, "i", axis) + " = result;\n";
 
             // Generate loops related to input order with GWS
-            gws = generate_loops_w_axes(writer, input_shape, true, axis, "float result = 0.0f;\n");
+            gws = generate_loops_w_axes(writer,
+                                        input_shape,
+                                        true,
+                                        axis,
+                                        get_opencl_type_name(output_type) + " result = 0.0f;\n");
 
             writer << "result += input0" << access_dims(input_shape) << ";\n";
 

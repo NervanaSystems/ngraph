@@ -24,6 +24,7 @@
 #include <iomanip>
 
 #include "benchmark.hpp"
+#include "ngraph/except.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -153,7 +154,7 @@ void print_results(vector<PerfShape> perf_data, bool timing_detail)
 int main(int argc, char** argv)
 {
     string model;
-    string backend = "CPU";
+    string backend;
     string directory;
     int iterations = 10;
     bool failed = false;
@@ -161,6 +162,7 @@ int main(int argc, char** argv)
     bool timing_detail = false;
     bool visualize = false;
     int warmup_iterations = 1;
+    bool copy_data = true;
 
     for (size_t i = 1; i < argc; i++)
     {
@@ -192,6 +194,10 @@ int main(int argc, char** argv)
         else if (arg == "--timing_detail" || arg == "--timing-detail")
         {
             timing_detail = true;
+        }
+        else if (arg == "--no_copy_data")
+        {
+            copy_data = false;
         }
         else if (arg == "-v" || arg == "--visualize")
         {
@@ -234,6 +240,11 @@ int main(int argc, char** argv)
         cout << "Either file or directory must be specified\n";
         failed = true;
     }
+    else if (backend.empty())
+    {
+        cout << "Backend missing\n";
+        failed = true;
+    }
 
     if (failed)
     {
@@ -251,8 +262,9 @@ OPTIONS
         -i|--iterations           Iterations (default: 10)
         -s|--statistics           Display op stastics
         -v|--visualize            Visualize a model (WARNING: requires GraphViz installed)
-        --timing-detail           Gather detailed timing
+        --timing_detail           Gather detailed timing
         -w|--warmup_iterations    Number of warm-up iterations
+        --no_copy_data            Disable copy of input/result data every iteration
 )###";
         return 1;
     }
@@ -317,18 +329,26 @@ OPTIONS
                                  },
                                  true);
         unordered_map<string, Shape> shape_info;
+        cout << "Benchmarking " << endl;
+        cout << "    Backend: " << backend << endl;
+        cout << "    Iterations: " << iterations << endl;
+        cout << "    Warmup: " << warmup_iterations << endl;
+        cout << "    Copy Data: " << (copy_data ? "true" : "false") << endl;
         for (const string& m : models)
         {
+            cout << "Benchmarking " << m << endl;
             try
             {
                 shared_ptr<Function> f = deserialize(m);
-                // cout << "Benchmarking " << m << ", " << backend << " backend, " << iterations
-                //      << " iterations.\n";
-                auto perf_data =
-                    run_benchmark(f, backend, iterations, timing_detail, warmup_iterations);
+                auto perf_data = run_benchmark(
+                    f, backend, iterations, timing_detail, warmup_iterations, copy_data);
                 auto perf_shape = to_perf_shape(f, perf_data);
                 aggregate_perf_data.insert(
                     aggregate_perf_data.end(), perf_shape.begin(), perf_shape.end());
+            }
+            catch (ngraph::unsupported_op ue)
+            {
+                cout << "Unsupported op '" << ue.what() << "' in model " << m << endl;
             }
             catch (exception e)
             {
@@ -339,12 +359,27 @@ OPTIONS
     }
     else if (iterations > 0)
     {
-        shared_ptr<Function> f = deserialize(model);
-        cout << "Benchmarking " << model << ", " << backend << " backend, " << iterations
-             << " iterations.\n";
-        auto perf_data = run_benchmark(f, backend, iterations, timing_detail, warmup_iterations);
-        auto perf_shape = to_perf_shape(f, perf_data);
-        print_results(perf_shape, timing_detail);
+        try
+        {
+            shared_ptr<Function> f = deserialize(model);
+            cout << "Benchmarking " << model << endl;
+            cout << "    Backend: " << backend << endl;
+            cout << "    Iterations: " << iterations << endl;
+            cout << "    Warmup: " << warmup_iterations << endl;
+            cout << "    Copy Data: " << (copy_data ? "true" : "false") << endl;
+            auto perf_data =
+                run_benchmark(f, backend, iterations, timing_detail, warmup_iterations, copy_data);
+            auto perf_shape = to_perf_shape(f, perf_data);
+            print_results(perf_shape, timing_detail);
+        }
+        catch (ngraph::unsupported_op ue)
+        {
+            cout << "Unsupported op '" << ue.what() << endl;
+        }
+        catch (exception e)
+        {
+            cout << e.what() << endl;
+        }
     }
 
     return 0;

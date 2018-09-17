@@ -34,9 +34,11 @@ public:
     {
         construct_constant_reshape();
         construct_constant_broadcast();
+        construct_constant_pad();
     }
 
 private:
     void construct_constant_reshape();
     void construct_constant_broadcast();
+    void construct_constant_pad();
 };

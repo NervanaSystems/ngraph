@@ -14,36 +14,34 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/type/element_type.hpp"
 
 using namespace ngraph;
 
-descriptor::layout::TensorViewLayout::TensorViewLayout(const descriptor::TensorView& tensor_view)
-    : m_element_type(tensor_view.get_element_type())
-    , m_shape(tensor_view.get_shape())
+descriptor::layout::TensorLayout::TensorLayout(const descriptor::Tensor& tensor)
+    : m_element_type(tensor.get_element_type())
+    , m_shape(tensor.get_shape())
 {
 }
 
-const element::Type& descriptor::layout::TensorViewLayout::get_element_type() const
+const element::Type& descriptor::layout::TensorLayout::get_element_type() const
 {
     return m_element_type;
 }
 
-const Shape& descriptor::layout::TensorViewLayout::get_shape() const
+const Shape& descriptor::layout::TensorLayout::get_shape() const
 {
     return m_shape;
 }
 
-void descriptor::layout::TensorViewLayout::set_tensor_view_type(const element::Type& element_type,
-                                                                const Shape& shape)
+size_t descriptor::layout::TensorLayout::get_size() const
 {
-    m_element_type = element_type;
-    m_shape = shape;
+    return ngraph::shape_size(get_shape());
 }
 
-size_t descriptor::layout::TensorViewLayout::get_allocated_size()
+size_t descriptor::layout::TensorLayout::get_allocated_size()
 {
     return get_size() * get_element_type().size();
 }

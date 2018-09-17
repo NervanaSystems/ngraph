@@ -15,18 +15,18 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/tensor_view.hpp"
-#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/type/element_type.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-shared_ptr<const descriptor::TensorView> runtime::TensorView::get_tensor_view_descriptor() const
+shared_ptr<const descriptor::TensorView> runtime::TensorView::get_descriptor() const
 {
     return m_descriptor;
 }
 
-shared_ptr<descriptor::TensorView> runtime::TensorView::get_descriptor() const
+shared_ptr<descriptor::TensorView> runtime::TensorView::get_descriptor()
 {
     return m_descriptor;
 }
@@ -36,14 +36,14 @@ const Shape& runtime::TensorView::get_shape() const
     return m_descriptor->get_shape();
 }
 
-const Strides& runtime::TensorView::get_strides() const
+Strides runtime::TensorView::get_strides() const
 {
-    return m_descriptor->get_tensor_view_layout()->get_strides();
+    return m_descriptor->get_tensor_layout()->get_strides();
 }
 
-shared_ptr<descriptor::layout::TensorViewLayout> runtime::TensorView::get_tensor_view_layout() const
+shared_ptr<descriptor::layout::TensorLayout> runtime::TensorView::get_tensor_layout() const
 {
-    return m_descriptor->get_tensor_view_layout();
+    return m_descriptor->get_tensor_layout();
 }
 
 size_t runtime::TensorView::get_element_count() const
@@ -58,5 +58,5 @@ size_t runtime::TensorView::get_element_count() const
 
 const descriptor::Tensor& runtime::TensorView::get_tensor() const
 {
-    return get_tensor_view_descriptor()->get_tensor();
+    return *get_descriptor();
 }
