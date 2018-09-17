@@ -109,7 +109,7 @@ float test_accuracy(MNistDataLoader& loader,
 
 int main(int argc, const char* argv[])
 {
-    distributed_init();
+    ngraph::Distributed dist;
 
     size_t epochs = 5;
     size_t batch_size = 128;
@@ -290,8 +290,6 @@ int main(int argc, const char* argv[])
                       << std::endl;
         }
     }
-
-    distributed_finalize();
 
     return 0;
 }

@@ -18,21 +18,21 @@
 #include <iostream>
 
 #include "gtest/gtest.h"
-#include "ngraph/distributed.hpp"
 #include "ngraph/log.hpp"
 
 using namespace std;
 
 #ifdef NGRAPH_DISTRIBUTED
-
+#include "ngraph/distributed.hpp"
 class MpiEnvironment : public ::testing::Environment
 {
 protected:
-    virtual void SetUp() { ngraph::distributed_init(); }
-    virtual void TearDown() { ngraph::distributed_finalize(); }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
     virtual ~MpiEnvironment() {}
+private:
+    ngraph::Distributed dist;
 };
-
 #endif
 
 int main(int argc, char** argv)

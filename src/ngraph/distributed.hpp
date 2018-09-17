@@ -18,8 +18,12 @@
 
 namespace ngraph
 {
-    void distributed_init();
-    void distributed_finalize();
-    int distributed_get_size();
-    int distributed_get_rank();
+    class Distributed
+    {
+    public:
+        Distributed();
+        ~Distributed();
+        int get_size() const;
+        int get_rank() const;
+    };
 }

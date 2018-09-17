@@ -21,7 +21,7 @@
 
 using namespace ngraph;
 
-void ngraph::distributed_init()
+ngraph::Distributed::Distributed()
 {
     int flag = 0;
     MPI_Initialized(&flag);
@@ -31,19 +31,19 @@ void ngraph::distributed_init()
     }
 }
 
-void ngraph::distributed_finalize()
+ngraph::Distributed::~Distributed()
 {
     MPI_Finalize();
 }
 
-int ngraph::distributed_get_size()
+int ngraph::Distributed::get_size() const
 {
     int size;
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     return size;
 }
 
-int ngraph::distributed_get_rank()
+int ngraph::Distributed::get_rank() const
 {
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
