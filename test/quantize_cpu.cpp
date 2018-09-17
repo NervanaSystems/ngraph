@@ -180,7 +180,7 @@ void DequantizeTest(int input, float min, float max, float expected_output)
     auto a = backend->create_tensor(element::from<T>(), Shape{});
     copy_data(a, a_data);
     auto result = backend->create_tensor(element::f32, Shape{});
-    backend->call(f, {result}, {a});
+    backend->call_with_validate(f, {result}, {a});
     EXPECT_EQ((vector<float>{expected_output}), read_vector<float>(result));
 }
 
@@ -224,7 +224,7 @@ TEST(quantize_cpu, quantize_to_uint8_small)
     auto result = backend->create_tensor(element::u8, shape_a);
     auto result_min = backend->create_tensor(element::f32, Shape{});
     auto result_max = backend->create_tensor(element::f32, Shape{});
-    backend->call(f, {result, result_min, result_max}, {a});
+    backend->call_with_validate(f, {result, result_min, result_max}, {a});
     EXPECT_EQ((vector<uint8_t>{0, 0, 6, 30, 45}), read_vector<uint8_t>(result));
     EXPECT_EQ((vector<float>{0.0}), read_vector<float>(result_min));
     EXPECT_EQ((vector<float>{85.0}), read_vector<float>(result_max));
@@ -250,7 +250,7 @@ TEST(quantize_cpu, quantize_to_uint8)
     auto result = backend->create_tensor(element::u8, shape_a);
     auto result_min = backend->create_tensor(element::f32, Shape{});
     auto result_max = backend->create_tensor(element::f32, Shape{});
-    backend->call(f, {result, result_min, result_max}, {a});
+    backend->call_with_validate(f, {result, result_min, result_max}, {a});
     EXPECT_EQ((vector<uint8_t>{0, 0, 1, 1, 2, 64, 127, 255}), read_vector<uint8_t>(result));
     EXPECT_EQ((vector<float>{0.0}), read_vector<float>(result_min));
     EXPECT_EQ((vector<float>{255.0}), read_vector<float>(result_max));
@@ -276,7 +276,7 @@ TEST(quantize_cpu, quantize_to_int8)
     auto result = backend->create_tensor(element::i8, shape_a);
     auto result_min = backend->create_tensor(element::f32, Shape{});
     auto result_max = backend->create_tensor(element::f32, Shape{});
-    backend->call(f, {result, result_min, result_max}, {a});
+    backend->call_with_validate(f, {result, result_min, result_max}, {a});
     EXPECT_EQ((vector<int8_t>{-127, 0, 1, 3, 5, 64, 127, 127}), read_vector<int8_t>(result));
     EXPECT_EQ((vector<float>{-127}), read_vector<float>(result_min));
     EXPECT_EQ((vector<float>{127}), read_vector<float>(result_max));
