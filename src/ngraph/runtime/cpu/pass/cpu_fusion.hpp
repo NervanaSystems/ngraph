@@ -71,12 +71,6 @@ public:
             construct_conv_bias_add();
             construct_conv_bias_add_relu();
             construct_bounded_relu();
-        }
-
-        if (fusions & DIFFERENTIABLE_FUSIONS)
-        {
-            construct_conv_bias();
-            construct_sigmoid_multiply();
             // construct_conv_add() should always be after construct_conv_bias()
             construct_conv_add();
             construct_conv_add_relu();
