@@ -49,6 +49,8 @@ add_library(onnx_import STATIC
         op/conv.cpp
         op/conv.hpp
         op/div.hpp
+        op/elu.cpp
+        op/elu.hpp
         op/equal.hpp
         op/exp.hpp
         op/flatten.cpp
@@ -60,6 +62,8 @@ add_library(onnx_import STATIC
         op/hard_sigmoid.cpp
         op/hard_sigmoid.hpp
         op/identity.hpp
+        op/leaky_relu.cpp
+        op/leaky_relu.hpp
         op/less.hpp
         op/log.hpp
         op/log_softmax.hpp
@@ -75,6 +79,8 @@ add_library(onnx_import STATIC
         op/not.hpp
         op/or.hpp
         op/pow.hpp
+        op/prelu.cpp
+        op/prelu.hpp
         op/reciprocal.cpp
         op/reciprocal.hpp
         op/reduce.cpp
@@ -84,6 +90,9 @@ add_library(onnx_import STATIC
         op/reshape.hpp
         op/shape.cpp
         op/shape.hpp
+        op/selu.cpp
+        op/selu.hpp
+        op/sigmoid.hpp
         op/softmax.cpp
         op/softmax.hpp
         op/softplus.cpp
@@ -95,6 +104,9 @@ add_library(onnx_import STATIC
         op/sqrt.hpp
         op/sub.hpp
         op/sum.hpp
+        op/tanh.hpp
+        op/thresholded_relu.cpp
+        op/thresholded_relu.hpp
         op/unsqueeze.cpp
         op/unsqueeze.hpp
         op/xor.hpp

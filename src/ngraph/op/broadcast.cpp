@@ -85,7 +85,8 @@ void op::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVe
 op::BroadcastLike::BroadcastLike(const std::shared_ptr<Node>& arg,
                                  const std::shared_ptr<Node>& like_arg,
                                  const AxisSet& broadcast_axes)
-    : Broadcast("BroadcastLike", {arg, like_arg}, {}, broadcast_axes)
+    : Broadcast("BroadcastLike", {arg, like_arg}, {}, {})
+    , m_initial_broadcast_axes(broadcast_axes)
 {
     constructor_validate_and_infer_types();
 }
@@ -96,18 +97,29 @@ shared_ptr<Node> op::BroadcastLike::copy_with_new_args(const NodeVector& new_arg
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<BroadcastLike>(new_args.at(0), new_args.at(1), m_broadcast_axes);
+    return make_shared<BroadcastLike>(new_args.at(0), new_args.at(1), m_initial_broadcast_axes);
 }
 
 void op::BroadcastLike::infer_shape()
 {
     const Shape& in_shape = get_input_shape(0);
     m_shape = get_input_shape(1);
+    m_broadcast_axes = m_initial_broadcast_axes;
     if (m_broadcast_axes.size() == 0)
     {
-        for (size_t i = in_shape.size(); i < m_shape.size(); ++i)
+        for (size_t i = 0; i < m_shape.size(); ++i)
         {
-            m_broadcast_axes.insert(i);
+            if (i < in_shape.size())
+            {
+                if (in_shape.at(i) == 1 && m_shape.at(i) > 1)
+                {
+                    m_broadcast_axes.insert(i);
+                }
+            }
+            else
+            {
+                m_broadcast_axes.insert(i);
+            }
         }
     }
 }

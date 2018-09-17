@@ -588,19 +588,6 @@ size_t runtime::gpu::CUDAEmitter::build_reshape(const std::array<std::string, 2>
         return primitive_index;
     }
 
-    // check if the kernel has already been compiled. if so, create
-    // a launch primitive for it based on the input tensor shape
-    // but do not recompile the kernel. otherwise, do it all:
-    // recompile the kernel and then create the primitive
-    auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
-    if (compiled_kernel == nullptr)
-    {
-        codegen::CodeWriter writer;
-        CudaKernelBuilder::add_pod_typedefs(writer);
-        CudaKernelBuilder::get_reshape_op(writer, kernel_name.str(), dtypes, rank);
-        compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
-    }
-
     uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
     // TODO: currently we set it to 64, will add tuning method later
     uint32_t block_size_x = 64;
@@ -620,33 +607,46 @@ size_t runtime::gpu::CUDAEmitter::build_reshape(const std::array<std::string, 2>
     }
 
     // get an allocator for transient per kernel gpu memory
-    GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
-    size_t idx_input_strides =
-        allocator.reserve_argspace(input_strides.data(), input_strides.size() * sizeof(uint32_t));
-    size_t idx_trans_strides =
-        allocator.reserve_argspace(trans_strides.data(), trans_strides.size() * sizeof(uint32_t));
+    auto args = m_primitive_emitter->add_kernel_args();
+    args.add_placeholder(dtypes[0], "in")
+        .add_placeholder(dtypes[1], "out")
+        .add("input_strides", input_strides)
+        .add("trans_strides", trans_strides)
+        .add("n", nthreads);
+
+    // check if the kernel has already been compiled. if so, create
+    // a launch primitive for it based on the input tensor shape
+    // but do not recompile the kernel. otherwise, do it all:
+    // recompile the kernel and then create the primitive
+    auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
+    if (compiled_kernel == nullptr)
+    {
+        codegen::CodeWriter writer;
+        CudaKernelBuilder::add_pod_typedefs(writer);
+        CudaKernelBuilder::get_reshape_op(writer, kernel_name.str(), args, dtypes, rank);
+        compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
+    }
 
     // create the launch primitive
-    std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](void** inputs,
-                                                                         void** outputs) mutable {
-        void* param_input_strides = runtime::gpu::invoke_memory_primitive(m_ctx, idx_input_strides);
-        void* param_trans_strides = runtime::gpu::invoke_memory_primitive(m_ctx, idx_trans_strides);
-        std::vector<void*> args_list{
-            &inputs[0], &outputs[0], &param_input_strides, &param_trans_strides, &nthreads};
+    std::unique_ptr<gpu::primitive> kernel_launch(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void** args_list = args.resolve_placeholder(0, &inputs[0])
+                                   .resolve_placeholder(1, &outputs[0])
+                                   .get_argument_list();
 
-        CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                      aligned_grid_size_x,
-                                      1,
-                                      1, // grid dim
-                                      block_size_x,
-                                      1,
-                                      1, // block dim
-                                      0,
-                                      NULL, // shared mem and stream
-                                      args_list.data(),
-                                      0)); // arguments
-        debug_sync();
-    }});
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          aligned_grid_size_x,
+                                          1,
+                                          1, // grid dim
+                                          block_size_x,
+                                          1,
+                                          1, // block dim
+                                          0,
+                                          NULL, // shared mem and stream
+                                          args_list,
+                                          0)); // arguments
+            debug_sync();
+        }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
     m_primitive_emitter->cache(hash, primitive_index);
