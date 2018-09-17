@@ -177,9 +177,9 @@ void DequantizeTest(int input, float min, float max, float expected_output)
     auto f = make_shared<Function>(r, op::ParameterVector{A});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
-    auto a = backend->create_tensor(element::from<T>(), Shape{});
+    auto a = backend->create_tensor(element::from<T>(), Shape{1});
     copy_data(a, a_data);
-    auto result = backend->create_tensor(element::f32, Shape{});
+    auto result = backend->create_tensor(element::f32, Shape{1});
     backend->call_with_validate(f, {result}, {a});
     EXPECT_EQ((vector<float>{expected_output}), read_vector<float>(result));
 }

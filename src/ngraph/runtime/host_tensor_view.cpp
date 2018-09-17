@@ -17,7 +17,7 @@
 #include <cstring>
 #include <memory>
 
-#include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
 
 using namespace ngraph;
@@ -33,10 +33,10 @@ runtime::HostTensorView::HostTensorView(const ngraph::element::Type& element_typ
     , m_aligned_buffer_pool(nullptr)
 
 {
-    m_descriptor->set_tensor_view_layout(
-        std::make_shared<ngraph::descriptor::layout::DenseTensorViewLayout>(*m_descriptor));
+    m_descriptor->set_tensor_layout(
+        std::make_shared<ngraph::descriptor::layout::DenseTensorLayout>(*m_descriptor));
 
-    m_buffer_size = m_descriptor->get_tensor_view_layout()->get_size() * element_type.size();
+    m_buffer_size = m_descriptor->get_tensor_layout()->get_size() * element_type.size();
 
     if (memory_pointer != nullptr)
     {
@@ -102,10 +102,10 @@ void runtime::HostTensorView::read(void* target, size_t tensor_offset, size_t n)
 
 size_t runtime::HostTensorView::get_size() const
 {
-    return get_tensor_view_layout()->get_size();
+    return get_tensor_layout()->get_size();
 }
 
 const element::Type& runtime::HostTensorView::get_element_type() const
 {
-    return get_tensor_view_layout()->get_element_type();
+    return get_tensor_layout()->get_element_type();
 }

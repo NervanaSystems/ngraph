@@ -60,7 +60,7 @@ TEST(cpu_test, unhandled_op)
     auto unhandled = make_shared<UnhandledOp>(A);
     auto f = make_shared<Function>(unhandled, op::ParameterVector{A});
     auto backend = runtime::Backend::create("CPU");
-    ASSERT_THROW(backend->compile(f), ngraph_error);
+    ASSERT_THROW(backend->compile(f), unsupported_op);
 }
 
 TEST(cpu_test, trivial_in_place_relu)

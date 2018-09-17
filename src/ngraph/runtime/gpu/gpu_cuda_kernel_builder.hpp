@@ -56,6 +56,7 @@ namespace ngraph
 
                 static void get_reshape_op(codegen::CodeWriter& writer,
                                            const std::string& name,
+                                           runtime::gpu::GPUKernelArgs& args,
                                            const std::array<std::string, 2>& data_types,
                                            size_t rank);
 
