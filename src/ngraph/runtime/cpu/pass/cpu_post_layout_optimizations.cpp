@@ -135,9 +135,9 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
 
         auto m_cvt_lt = m.get_match_root();
         auto m_slice = m_cvt_lt->get_argument(0);
-        auto slice = static_cast<const ngraph::op::Slice*>(m_slice.get());
+        auto slice_ptr = static_cast<const ngraph::op::Slice*>(m_slice.get());
         // do the fusion if slice has 1 user and uses mkldnn kernel.
-        if (!runtime::cpu::mkldnn_utils::use_mkldnn_kernel(slice) ||
+        if (!runtime::cpu::mkldnn_utils::use_mkldnn_kernel(slice_ptr) ||
             m_slice->get_users().size() != 1)
         {
             return false;
@@ -151,9 +151,9 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
             }
 
             auto new_slice = std::make_shared<ngraph::op::Slice>(m_slice->get_argument(0),
-                                                                 slice->get_lower_bounds(),
-                                                                 slice->get_upper_bounds(),
-                                                                 slice->get_strides());
+                                                                 slice_ptr->get_lower_bounds(),
+                                                                 slice_ptr->get_upper_bounds(),
+                                                                 slice_ptr->get_strides());
             auto op_annotations = std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
             op_annotations->set_mkldnn_op(true);
             new_slice->set_op_annotations(op_annotations);
