@@ -744,6 +744,17 @@ TEST(onnxifi, init_graph_invalid_protobuf)
 
 // ====================================================[ onnxRunGraph ]========
 
+namespace
+{
+    onnxMemoryFenceV1 get_default_memory_fence(::onnxBackend backend)
+    {
+        ::onnxEvent event;
+        EXPECT_TRUE(::onnxInitEvent(backend, &event) == ONNXIFI_STATUS_SUCCESS);
+        return {ONNXIFI_TAG_MEMORY_FENCE_V1, ONNXIFI_SYNCHRONIZATION_EVENT, event};
+    }
+
+} // namespace  anonymous
+
 TEST(onnxifi, run_graph)
 {
     auto model = load_model();
@@ -756,9 +767,31 @@ TEST(onnxifi, run_graph)
             ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph) ==
             ONNXIFI_STATUS_SUCCESS);
 
-        ::onnxMemoryFenceV1 input_fence;
+        ::onnxMemoryFenceV1 input_fence{get_default_memory_fence(backend)};
         ::onnxMemoryFenceV1 output_fence;
+
         EXPECT_TRUE(::onnxRunGraph(backend, &input_fence, &output_fence) == ONNXIFI_STATUS_SUCCESS);
+        EXPECT_TRUE(::onnxWaitEvent(output_fence.event) == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+TEST(onnxifi, run_graph)
+{
+    auto model = load_model();
+    auto backends = get_initialized_backends();
+
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        EXPECT_TRUE(
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph) ==
+            ONNXIFI_STATUS_SUCCESS);
+
+        ::onnxMemoryFenceV1 input_fence{get_default_memory_fence(backend)};
+        ::onnxMemoryFenceV1 output_fence;
+      
+        EXPECT_TRUE(::onnxRunGraph(backend, &input_fence, &output_fence) == ONNXIFI_STATUS_SUCCESS);
+        EXPECT_TRUE(::onnxWaitEvent(output_fence.event) == ONNXIFI_STATUS_SUCCESS);      
     }
 }
 
@@ -777,7 +810,7 @@ TEST(onnxifi, run_graph_invalid_pointer)
             ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph) ==
             ONNXIFI_STATUS_SUCCESS);
 
-        ::onnxMemoryFenceV1 input_fence;
+        ::onnxMemoryFenceV1 input_fence{get_default_memory_fence(backend)};
         ::onnxMemoryFenceV1 output_fence;
         EXPECT_TRUE(::onnxRunGraph(graph, &input_fence, nullptr) == ONNXIFI_STATUS_INVALID_POINTER);
         EXPECT_TRUE(::onnxRunGraph(graph, nullptr, &output_fence) ==
@@ -795,23 +828,12 @@ TEST(onnxifi, run_graph_invalid_graph)
 
     for (const auto& backend : backends)
     {
-        ::onnxMemoryFenceV1 input_fence;
+        ::onnxMemoryFenceV1 input_fence{get_default_memory_fence(backend)};
         ::onnxMemoryFenceV1 output_fence;
         EXPECT_TRUE(::onnxRunGraph(nullptr, &input_fence, &output_fence) ==
                     ONNXIFI_STATUS_INVALID_GRAPH);
     }
 }
-
-namespace
-{
-    onnxMemoryFenceV1 get_default_memory_fence(::onnxBackend backend)
-    {
-        ::onnxEvent event;
-        EXPECT_TRUE(::onnxInitEvent(backend, &event) == ONNXIFI_STATUS_SUCCESS);
-        return {ONNXIFI_TAG_MEMORY_FENCE_V1, ONNXIFI_SYNCHRONIZATION_EVENT, event};
-    }
-
-} // namespace  anonymous
 
 // ONNXIFI_STATUS_INVALID_FENCE_TYPE
 // The function call failed because the type of synchronization primitive specified in inputFence
@@ -835,7 +857,7 @@ TEST(onnxifi, run_graph_invalid_fence)
         //  ONNXIFI_SYNCHRONIZATION_EVENT 0
         //  ONNXIFI_SYNCHRONIZATION_IMPLICIT 2
         invalid_mem_fence.type = 0xFFFFFFFFFFFFFFFF;
-        ::onnxMemoryFenceV1 input_fence;
+        ::onnxMemoryFenceV1 input_fence{get_default_memory_fence(backend)};
         ::onnxMemoryFenceV1 output_fence;
         EXPECT_TRUE(::onnxRunGraph(graph, &invalid_mem_fence, &output_fence) ==
                     ONNXIFI_STATUS_INVALID_FENCE_TYPE);
@@ -862,7 +884,7 @@ TEST(onnxifi, run_graph_invalid_event)
 
         auto invalid_event = get_default_memory_fence(backend);
         invalid_event.event = nullptr;
-        ::onnxMemoryFenceV1 input_fence;
+        ::onnxMemoryFenceV1 input_fence{get_default_memory_fence(backend)};
         ::onnxMemoryFenceV1 output_fence;
         EXPECT_TRUE(::onnxRunGraph(graph, &invalid_event, &output_fence) ==
                     ONNXIFI_STATUS_INVALID_EVENT);
@@ -889,7 +911,7 @@ TEST(onnxifi, run_graph_invalid_mem_fence_tag)
 
         auto invalid_event = get_default_memory_fence(backend);
         invalid_event.tag = 0;
-        ::onnxMemoryFenceV1 input_fence;
+        ::onnxMemoryFenceV1 input_fence{get_default_memory_fence(backend)};
         ::onnxMemoryFenceV1 output_fence;
         EXPECT_TRUE(::onnxRunGraph(graph, &invalid_event, &output_fence) ==
                     ONNXIFI_STATUS_UNSUPPORTED_TAG);
@@ -916,7 +938,7 @@ TEST(onnxifi, run_graph_unsupported_fence_type)
 
         auto unsupported_fence_type = get_default_memory_fence(backend);
         unsupported_fence_type.type = ONNXIFI_SYNCHRONIZATION_IMPLICIT;
-        ::onnxMemoryFenceV1 input_fence;
+        ::onnxMemoryFenceV1 input_fence{get_default_memory_fence(backend)};
         ::onnxMemoryFenceV1 output_fence;
         EXPECT_TRUE(::onnxRunGraph(graph, &unsupported_fence_type, &output_fence) ==
                     ONNXIFI_STATUS_UNSUPPORTED_FENCE_TYPE);
@@ -927,30 +949,10 @@ TEST(onnxifi, run_graph_unsupported_fence_type)
 
 // ====================================================[ onnxWaitEvent ]========
 
-TEST(onnxifi, run_graph)
-{
-    auto model = load_model();
-    auto backends = get_initialized_backends();
-
-    for (const auto& backend : backends)
-    {
-        ::onnxGraph graph;
-        EXPECT_TRUE(
-            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph) ==
-            ONNXIFI_STATUS_SUCCESS);
-
-        ::onnxMemoryFenceV1 input_fence{get_default_memory_fence(backend)};
-        ::onnxMemoryFenceV1 output_fence;
-
-        EXPECT_TRUE(::onnxRunGraph(backend, &input_fence, &output_fence) == ONNXIFI_STATUS_SUCCESS);
-        EXPECT_TRUE(::onnxWaitEvent(output_fence.event) == ONNXIFI_STATUS_SUCCESS);
-    }
-}
-
 // ONNXIFI_STATUS_INVALID_EVENT
 // The function call failed because event is not an ONNXIFI event handle.
 
-TEST(onnxifi, run_graph_invalid_event)
+TEST(onnxifi, wait_event_invalid_event)
 {
     EXPECT_TRUE(::onnxWaitEvent(nullptr) == ONNXIFI_STATUS_INVALID_EVENT);
 }
