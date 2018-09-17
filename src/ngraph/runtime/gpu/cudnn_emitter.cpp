@@ -1136,7 +1136,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
         *m_ctx->cudnn_handle, rnn_desc, seq_length, seq_descriptors.data(), &workspace_size));
     size_t workspace_idx = allocator.reserve_workspace(workspace_size);
 
-    auto wx_size = args[1].get_element_type().size() * shape_size(args[1].get_shape());
+    auto wx_size = args[2].get_element_type().size() * shape_size(args[2].get_shape());
     auto wh_size = args[3].get_element_type().size() * shape_size(args[3].get_shape());
     auto bx_size = args[4].get_element_type().size() * shape_size(args[4].get_shape());
     auto bh_size = args[5].get_element_type().size() * shape_size(args[5].get_shape());
@@ -1148,13 +1148,13 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
         void* workspace_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
 
         // pack the weight and bias parameter data
-        cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + weight_offsets[0].first, inputs[1], wx_size);
+        cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + weight_offsets[0].first, inputs[2], wx_size);
         cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + weight_offsets[recurrent_index].first,
                        inputs[3],
                        wh_size);
         cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + bias_offsets[0].first, inputs[4], bx_size);
         cuda_memcpyDtD(
-            static_cast<uint8_t*>(w_ptr) + bias_offsets[recurrent_index].first, inputs[4], bh_size);
+            static_cast<uint8_t*>(w_ptr) + bias_offsets[recurrent_index].first, inputs[5], bh_size);
 
         CUDNN_SAFE_CALL(cudnnRNNForwardInferenceEx(*m_ctx->cudnn_handle,
                                                    rnn_desc,
