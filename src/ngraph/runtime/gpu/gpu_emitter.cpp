@@ -1302,7 +1302,7 @@ namespace ngraph
                 auto get_tuple_element = static_cast<const ngraph::op::GetOutputElement*>(node);
 
                 writer.block_begin();
-                writer << "runtime::gpu::cuda_memcpyDtH(" << out[0].get_name() << ", "
+                writer << "runtime::gpu::cuda_memcpyDtD(" << out[0].get_name() << ", "
                        << args[get_tuple_element->get_n()].get_name() << ", "
                        << out[0].get_size() * out[0].get_element_type().size() << ");\n";
                 writer.block_end();
