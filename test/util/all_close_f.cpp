@@ -85,7 +85,7 @@ bool test::all_close_f(const std::shared_ptr<runtime::TensorView>& a,
                        int tolerance_bits)
 {
     // Check that the layouts are compatible
-    if (*a->get_tensor_view_layout() != *b->get_tensor_view_layout())
+    if (*a->get_tensor_layout() != *b->get_tensor_layout())
     {
         throw ngraph_error("Cannot compare tensors with different layouts");
     }

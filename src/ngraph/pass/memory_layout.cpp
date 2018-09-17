@@ -70,7 +70,6 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
             size_t offset = in_place_outputs.count(tensor)
                                 ? in_place_outputs.at(tensor)->get_pool_offset()
                                 : mm.allocate(tensor->size());
-
             tensor->set_pool_offset(offset);
         }
 
