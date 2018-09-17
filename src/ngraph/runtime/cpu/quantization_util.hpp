@@ -40,7 +40,7 @@ namespace ngraph
                     *max_c = c_one_quant_level * std::numeric_limits<T3>::max();
                 }
 
-                const float get_scale(const ngraph::Node* node);
+                float get_scale(const ngraph::Node* node);
             }
         }
     }
