@@ -19,12 +19,10 @@
 #include <vector>
 
 #include "ngraph/node.hpp"
-
 #include "ngraph/op/slice.hpp"
 
-#include "utils/common.hpp"
-
 #include "slice.hpp"
+#include "utils/common.hpp"
 
 static inline int64_t get_valid_array_idx(int64_t idx, int64_t last_idx)
 {
