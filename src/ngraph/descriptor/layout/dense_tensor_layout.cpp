@@ -14,49 +14,51 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 
 using namespace ngraph;
 
-descriptor::layout::DenseTensorViewLayout::DenseTensorViewLayout(const TensorView& tensor_view)
-    : TensorViewLayout(tensor_view)
+descriptor::layout::DenseTensorLayout::DenseTensorLayout(const Tensor& tensor)
+    : TensorLayout(tensor)
 {
-    const Shape& shape = tensor_view.get_shape();
-    m_size = ngraph::shape_size(shape);
-    m_strides = ngraph::row_major_strides(shape);
 }
 
-size_t
-    descriptor::layout::DenseTensorViewLayout::get_index_offset(const std::vector<size_t>& indices)
+size_t descriptor::layout::DenseTensorLayout::get_index_offset(const std::vector<size_t>& indices)
 {
-    if (indices.size() != m_strides.size())
+    auto strides = get_strides();
+    if (indices.size() != strides.size())
     {
         throw ngraph_error("Indices have the incorrect rank.");
     }
     size_t result = 0;
     for (int i = 0; i < indices.size(); i++)
     {
-        result += m_strides[i] + indices[i];
+        result += strides[i] * indices[i];
     }
     return result;
 }
 
-bool descriptor::layout::DenseTensorViewLayout::operator==(const TensorViewLayout& other) const
+Strides descriptor::layout::DenseTensorLayout::get_strides() const
 {
-    const DenseTensorViewLayout* p_other = dynamic_cast<const DenseTensorViewLayout*>(&other);
+    return ngraph::row_major_strides(get_shape());
+}
+
+bool descriptor::layout::DenseTensorLayout::operator==(const TensorLayout& other) const
+{
+    const DenseTensorLayout* p_other = dynamic_cast<const DenseTensorLayout*>(&other);
     if (nullptr == p_other)
         return false;
 
     if (get_element_type() != p_other->get_element_type())
         return false;
 
-    if (m_strides != p_other->m_strides)
+    if (get_strides() != p_other->get_strides())
         return false;
 
-    if (m_offset != p_other->m_offset)
+    if (get_offset() != p_other->get_offset())
         return false;
 
     return true;
