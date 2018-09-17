@@ -1155,7 +1155,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
     pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
-    pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
+    //pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
