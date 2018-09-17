@@ -1146,10 +1146,10 @@ void runtime::cpu::CPU_ExternalFunction::build()
     // pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     // pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
     // pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
-    ////pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    ////pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-    ////pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
-    ////pass_manager.register_pass<ngraph::pass::CoreFusion>();
+    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+    pass_manager.register_pass<ngraph::pass::CoreFusion>();
     ////pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     ////pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
     ////pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
