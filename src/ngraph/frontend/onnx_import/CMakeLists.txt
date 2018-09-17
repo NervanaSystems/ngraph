@@ -102,6 +102,8 @@ add_library(onnx_import STATIC
         op/split.cpp
         op/split.hpp
         op/sqrt.hpp
+        op/squeeze.cpp
+        op/squeeze.hpp
         op/sub.hpp
         op/sum.hpp
         op/tanh.hpp
