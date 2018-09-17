@@ -19,9 +19,8 @@
 
 #include "ngraph/node.hpp"
 
-#include "utils/reshape.hpp"
-
 #include "transpose.hpp"
+#include "utils/reshape.hpp"
 
 namespace ngraph
 {
