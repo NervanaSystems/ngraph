@@ -1299,7 +1299,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
 
         m_op_attrs.emplace_back(node->description(), out_names, in_names);
 
-        size_t functor_count = functors.size();
         handler->second(this, node.get(), in, out);
 
         bool disable_caching = computes_result(node.get()) || possibly_overwritten(node.get());
@@ -1352,7 +1351,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
             };
         }
 
-        enables.emplace_back(make_pair(enable, functors.size() - functor_count));
+        enables.emplace_back(make_pair(enable, 1));
         enable_nodename_list.emplace_back(make_pair(enable, node->get_name()));
     }
 
