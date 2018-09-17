@@ -533,7 +533,6 @@ namespace ngraph
                     return;
                 }
 
-                writer.block_begin();
                 auto arg_shape = args[0].get_shape();
                 auto arg_rank = arg_shape.size();
                 auto result_shape = out[0].get_shape();
@@ -543,7 +542,10 @@ namespace ngraph
                 //for a zero-size tensor, or change from 1^m shape to 1^n shape, just do a copy
                 if (!reshape->get_is_transpose() || result_shape_product < 2)
                 {
-                    kernel::emit_memcpyDtD(writer, out[0], args[0]);
+                    writer.block_begin();
+                    {
+                        kernel::emit_memcpyDtD(writer, out[0], args[0]);
+                    }
                     writer.block_end();
                     return;
                 }
@@ -614,48 +616,46 @@ namespace ngraph
                 }
 
                 // If there is no layout change, we can just copy.
-                bool same_layout = is_sorted(new_input_order.begin(), new_input_order.end());
-                if (same_layout)
+                writer.block_begin();
                 {
-                    kernel::emit_memcpyDtD(writer, out[0], args[0]);
-                }
-                // If there *is* a layout change in the 2D case, we transpose the input.
-                else if (new_rank == 2)
-                {
-                    auto& cuda_emitter =
-                        external_function->get_primitive_emitter()->get_cuda_emitter();
-                    auto index = cuda_emitter->build_reshape_2d(
-                        {{args[0].get_type(), out[0].get_type()}}, new_arg_shape, new_input_order);
-
-                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
-                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                    writer << ");\n";
-                }
-                // If there *is* a layout change in the 3D case, we do 3D tiled reshape.
-                else if (new_rank == 3)
-                {
-                    auto& cuda_emitter =
-                        external_function->get_primitive_emitter()->get_cuda_emitter();
-                    auto index = cuda_emitter->build_reshape_3d(
-                        {{args[0].get_type(), out[0].get_type()}}, new_arg_shape, new_input_order);
-
-                    writer << "gpu::invoke_primitive(ctx, " << index << ", ";
-                    writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                    writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                    writer << ");\n";
-                }
-                // Other cases (reordering of axes for tensors with rank>3).
-                else
-                {
-                    auto& cuda_emitter =
-                        external_function->get_primitive_emitter()->get_cuda_emitter();
-                    auto index = cuda_emitter->build_reshape(
-                        {{args[0].get_type(), out[0].get_type()}}, new_arg_shape, new_input_order);
-
-                    writer << "void* input[] = {" << node_names(args) << "};\n";
-                    writer << "void* output[] = {" << node_names(out) << "};\n";
-                    writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+                    bool same_layout = is_sorted(new_input_order.begin(), new_input_order.end());
+                    if (same_layout)
+                    {
+                        kernel::emit_memcpyDtD(writer, out[0], args[0]);
+                    }
+                    // If there *is* a layout change in the 2D case, we transpose the input.
+                    else
+                    {
+                        writer << "void* input[] = {" << node_names(args) << "};\n";
+                        writer << "void* output[] = {" << node_names(out) << "};\n";
+                        auto& cuda_emitter =
+                            external_function->get_primitive_emitter()->get_cuda_emitter();
+                        size_t index;
+                        if (new_rank == 2)
+                        {
+                            index = cuda_emitter->build_reshape_2d(
+                                {{args[0].get_type(), out[0].get_type()}},
+                                new_arg_shape,
+                                new_input_order);
+                        }
+                        // If there *is* a layout change in the 3D case, we do 3D tiled reshape.
+                        else if (new_rank == 3)
+                        {
+                            index = cuda_emitter->build_reshape_3d(
+                                {{args[0].get_type(), out[0].get_type()}},
+                                new_arg_shape,
+                                new_input_order);
+                        }
+                        // Other cases (reordering of axes for tensors with rank>3).
+                        else
+                        {
+                            index = cuda_emitter->build_reshape(
+                                {{args[0].get_type(), out[0].get_type()}},
+                                new_arg_shape,
+                                new_input_order);
+                        }
+                        writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+                    }
                 }
                 writer.block_end();
             }

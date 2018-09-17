@@ -541,7 +541,7 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op_3d(codegen::CodeWriter& wri
     writer.block_begin();
     {
         writer << "__shared__ " << data_type << " tile[" << block_size[2] << "][" << block_size[1]
-               << "][33];\n";
+               << "][" << block_size[0] + 1 << "];\n";
         writer << "uint32_t base2 = blockIdx.x * blockDim.x;\n";
         writer << "uint32_t base1 = blockIdx.y * blockDim.y;\n";
         writer << "uint32_t base0 = blockIdx.z * blockDim.z;\n";

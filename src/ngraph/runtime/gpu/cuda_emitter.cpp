@@ -675,7 +675,7 @@ size_t runtime::gpu::CUDAEmitter::build_reshape_2d(const std::array<std::string,
         return primitive_index;
     }
 
-    // TODO: currently we set it to 64, will add tuning method later
+    // TODO: currently we set it to 16, will add tuning method later
     uint32_t block_size = 16;
     uint32_t aligned_grid_size_x = align_to_block_size(input_shape[1], block_size);
     uint32_t aligned_grid_size_y = align_to_block_size(input_shape[0], block_size);
@@ -761,8 +761,8 @@ size_t runtime::gpu::CUDAEmitter::build_reshape_3d(const std::array<std::string,
         return primitive_index;
     }
 
-    // TODO: currently we set it to 64, will add tuning method later
     std::vector<uint32_t> block_size(3, 0);
+    // TODO: currently we set it to 16, will add tuning method later
     uint32_t block_size_x = 16;
     block_size[0] = block_size_x;                                       //x
     block_size[2] = (input_order[2] == 0) ? block_size_x : 1;           //z
