@@ -89,7 +89,12 @@ static OP_TYPEID get_typeid(const string& s)
 #include "ngraph/op/op_tbl.hpp"
     };
 #undef NGRAPH_OP
-    return typeid_map.at(s);
+    auto it = typeid_map.find(s);
+    if (it == typeid_map.end())
+    {
+        throw unsupported_op("Unsupported op '" + s + "' in IntelGPU back end.");
+    }
+    return it->second;
 }
 
 static void arguments_check(const shared_ptr<Node>& op, size_t input, size_t output)
@@ -1115,7 +1120,11 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                  one_hot_axis);
             break;
         }
-        default: throw unsupported_op("Unsupported op '" + op->description() + "'");
+        default:
+        {
+            throw unsupported_op("Unsupported op '" + op->description() +
+                                 "' in IntelGPU back end.");
+        }
         }
     }
 
