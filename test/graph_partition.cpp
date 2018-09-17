@@ -73,7 +73,7 @@ public:
 
     bool compile(const shared_ptr<Function>& func)
     {
-        if (!contains_key(m_function_map, func))
+        if (m_function_map.find(func) == m_function_map.end())
         {
             // Clone function
             FunctionInstance instance;
