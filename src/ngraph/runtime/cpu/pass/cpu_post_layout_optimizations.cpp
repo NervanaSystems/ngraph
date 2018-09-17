@@ -125,7 +125,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
     auto param = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 576, 17, 17});
     auto slice = std::make_shared<ngraph::op::Slice>(
         param, Coordinate{0, 0, 0, 0}, Coordinate{1, 192, 17, 17});
-    auto tvt = slice->get_outputs().at(0).get_tensor_view().get();
+    auto tvt = slice->get_outputs().at(0).get_tensor_ptr().get();
     auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt);
     auto cvt_lt = std::make_shared<runtime::cpu::op::ConvertLayout>(slice, lt_desc);
 
@@ -157,10 +157,10 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
             auto op_annotations = std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
             op_annotations->set_mkldnn_op(true);
             new_slice->set_op_annotations(op_annotations);
-            auto tv = new_slice->get_output_tensor_view(0);
+            auto tv = new_slice->get_output_tensor_ptr(0);
             auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
             layout->set_mkldnn_md(mkldnn_utils::get_output_mkldnn_md(m_cvt_lt.get(), 0));
-            tv->set_tensor_view_layout(layout);
+            tv->set_tensor_layout(layout);
             ngraph::replace_node(m_cvt_lt, new_slice);
         }
 

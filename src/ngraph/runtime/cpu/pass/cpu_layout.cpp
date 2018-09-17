@@ -1541,8 +1541,8 @@ namespace ngraph
                             auto cpu_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
                                 node->get_inputs()[0]
                                     .get_output()
-                                    .get_tensor_view()
-                                    ->get_tensor_view_layout());
+                                    .get_tensor_ptr()
+                                    ->get_tensor_layout());
                             auto result_desc =
                                 mkldnn_utils::create_blocked_mkldnn_md(node->get_output_shape(0),
                                                                        cpu_tvl->get_strides(),

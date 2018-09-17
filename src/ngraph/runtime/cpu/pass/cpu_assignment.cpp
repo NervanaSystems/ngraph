@@ -703,7 +703,8 @@ namespace ngraph
                         slice->set_op_annotations(op_annotations);
                     }
                 }
-  
+
+                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedMaxPool)
                 {
                     if (node->get_input_element_type(0) == element::u8 ||
@@ -716,7 +717,7 @@ namespace ngraph
                         quantized_mp->set_op_annotations(op_annotations);
                     }
                 }
-              
+
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedAvgPool)
                 {
