@@ -951,8 +951,13 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
     auto& out = node->get_outputs();
     auto dtype = out[0].get_element_type().c_type_string();
 
+    auto wx_size = shape_size(args[2].get_shape());
+    auto wh_size = shape_size(args[3].get_shape());
+    auto bx_size = shape_size(args[4].get_shape());
+    auto bh_size = shape_size(args[5].get_shape());
+
     std::stringstream ss;
-    ss << "rnn_";
+    ss << "rnn_wx" << wx_size << "_wh" << wh_size << "_bx" << bx_size << "_bh" << bh_size;
     std::string hash = ss.str();
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash);
@@ -1136,10 +1141,10 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
         *m_ctx->cudnn_handle, rnn_desc, seq_length, seq_descriptors.data(), &workspace_size));
     size_t workspace_idx = allocator.reserve_workspace(workspace_size);
 
-    auto wx_size = args[2].get_element_type().size() * shape_size(args[2].get_shape());
-    auto wh_size = args[3].get_element_type().size() * shape_size(args[3].get_shape());
-    auto bx_size = args[4].get_element_type().size() * shape_size(args[4].get_shape());
-    auto bh_size = args[5].get_element_type().size() * shape_size(args[5].get_shape());
+    wx_size *= args[2].get_element_type().size();
+    wh_size *= args[3].get_element_type().size();
+    bx_size *= args[4].get_element_type().size();
+    bh_size *= args[5].get_element_type().size();
     auto recurrent_index = num_tensors_per_layer / 2;
 
     std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](void** inputs,
