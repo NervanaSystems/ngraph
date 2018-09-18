@@ -219,7 +219,7 @@ static std::shared_ptr<Function> make_function(const std::string& file_name)
     return func;
 }
 
-TEST(gpu_fusion, lstm_result)
+TEST(gpu_fusion, lstm_analytic)
 {
     auto input_xt = std::make_shared<op::Parameter>(element::f32, Shape{1, 1});
     auto weights_i2h = std::make_shared<op::Parameter>(element::f32, Shape{4, 1});
@@ -248,7 +248,7 @@ TEST(gpu_fusion, lstm_result)
     auto forget_gate = std::make_shared<op::Sigmoid>(input_slice_0);
 
     //ct-1 -> cell state
-    auto c_const = op::Constant::create(element::f32, Shape{}, {1.0});
+    auto c_const = op::Constant::create(element::f32, Shape{}, {-1.0});
     auto ct_1 = std::make_shared<op::Broadcast>(c_const, Shape{1, 1}, AxisSet{0, 1});
     //auto ct_1 = std::make_shared<op::>(element::f32, Shape{10, 100});
     auto multiply_forget_gate_ct_1 = std::make_shared<op::Multiply>(forget_gate, ct_1);
@@ -280,19 +280,19 @@ TEST(gpu_fusion, lstm_result)
 
     std::shared_ptr<runtime::TensorView> weights_i2h_t =
         backend->create_tensor(element::f32, weights_i2h->get_shape());
-    copy_data(weights_i2h_t, std::vector<float>{1.0, 1.0, 1.0, 1.0});
+    copy_data(weights_i2h_t, std::vector<float>{-1.0, -1.0, -1.0, -1.0});
 
     std::shared_ptr<runtime::TensorView> weights_h2h_t =
         backend->create_tensor(element::f32, weights_h2h->get_shape());
-    copy_data(weights_h2h_t, std::vector<float>{1.0, 1.0, 1.0, 1.0});
+    copy_data(weights_h2h_t, std::vector<float>{-1.0, -1.0, -1.0, -1.0});
 
     std::shared_ptr<runtime::TensorView> bias_i2h_t =
         backend->create_tensor(element::f32, bias_i2h->get_shape());
-    copy_data(bias_i2h_t, std::vector<float>{1.0, 1.0, 1.0, 1.0});
+    copy_data(bias_i2h_t, std::vector<float>{-1.0, -1.0, -1.0, -1.0});
 
     std::shared_ptr<runtime::TensorView> bias_h2h_t =
         backend->create_tensor(element::f32, bias_h2h->get_shape());
-    copy_data(bias_h2h_t, std::vector<float>{1.0, 1.0, 1.0, 1.0});
+    copy_data(bias_h2h_t, std::vector<float>{-1.0, -1.0, -1.0, -1.0});
 
     std::shared_ptr<runtime::TensorView> result_ht =
         backend->create_tensor(element::f32, ht->get_shape());
@@ -304,8 +304,8 @@ TEST(gpu_fusion, lstm_result)
                                 {input_xt_t, weights_i2h_t, weights_h2h_t, bias_i2h_t, bias_h2h_t});
 
     auto sig = [](float x) { return 1.0f / (1.0f + std::exp(-x)); };
-    float ct_val = sig(4) + sig(4) * std::tanh(4);
-    float ht_val = sig(4) * std::tanh(ct_val);
+    float ct_val = -sig(-4) + sig(-4) * std::tanh(-4);
+    float ht_val = sig(-4) * std::tanh(ct_val);
 
     EXPECT_TRUE(test::all_close(std::vector<float>{ht_val}, read_vector<float>(result_ht)));
     EXPECT_TRUE(test::all_close(std::vector<float>{ct_val}, read_vector<float>(result_ct)));
@@ -316,7 +316,7 @@ TEST(gpu_fusion, rnn_fusion_inter_vs_gpu_1lstm_cell)
     const std::string file_name("mxnet/1_lstm_cell_forward.json");
     auto gpu_f = make_function(file_name);
     auto int_f = make_function(file_name);
-    test::Uniform<float> rng(0.0f, 1.0f);
+    test::Uniform<float> rng(-10.0f, 10.0f);
     vector<vector<float>> args;
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
@@ -338,7 +338,7 @@ TEST(gpu_fusion, rnn_fusion_inter_vs_gpu_1rnn_layer_3lstm_cell)
     const std::string file_name("mxnet/1rnn_layer_3lstm_cell.json");
     auto gpu_f = make_function(file_name);
     auto int_f = make_function(file_name);
-    test::Uniform<float> rng(0.0f, 1.0f);
+    test::Uniform<float> rng(-10.0f, 10.0f);
     vector<vector<float>> args;
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
@@ -360,7 +360,7 @@ TEST(gpu_fusion, rnn_fusion_inter_vs_gpu_2rnn_layer_3lstm_cell)
     const std::string file_name("mxnet/2rnn_layer_3lstm_cell.json");
     auto gpu_f = make_function(file_name);
     auto int_f = make_function(file_name);
-    test::Uniform<float> rng(0.0f, 1.0f);
+    test::Uniform<float> rng(-10.0f, 10.0f);
     vector<vector<float>> args;
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
@@ -400,7 +400,7 @@ TEST(gpu_fusion, fuse_rnn_across_2layer_1timestep)
     const std::string file_name("mxnet/2rnn_layer_1timestep.json");
     auto gpu_f = make_function(file_name);
     auto int_f = make_function(file_name);
-    test::Uniform<float> rng(0.0f, 1.0f);
+    test::Uniform<float> rng(-10.0f, 10.0f);
     vector<vector<float>> args;
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
