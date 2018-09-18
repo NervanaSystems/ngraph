@@ -448,7 +448,7 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             std::vector<std::shared_ptr<op::Slice>> ht_slice_per_timestep(num_of_lstm_matched,
                                                                           nullptr);
             auto rnn_ht_out = std::make_shared<op::GetOutputElement>(rnn, 0);
-            auto rnn_ct_out = std::make_shared<op::GetOutputElement>(rnn, 1);
+            auto rnn_ct_out = std::make_shared<op::GetOutputElement>(rnn, 2);
 
             //slice the rnn ht's
             size_t start_index = 0;
@@ -598,6 +598,7 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
     auto rnn_ht_out = std::make_shared<op::GetOutputElement>(ref_rnn_node, 0);
     auto rnn_ht_label =
         std::make_shared<pattern::op::Label>(rnn_ht_out, nullptr, NodeVector{rnn_ht_out});
+
 
     pattern::recurrent_graph_rewrite_callback callback = [src_layer_label,
                                                           src_iter_label,
@@ -771,7 +772,7 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                             ngraph::replace_node(rnn_goes, layer_rnn_ht);
                         }
                     }
-                    if (rnn_goe_node->get_n() == 1)
+                    if (rnn_goe_node->get_n() == 2)
                     {
                         replace_rnn_output_cellstate(rnn_goes, num_fused_rnn_layers - index);
                     }
