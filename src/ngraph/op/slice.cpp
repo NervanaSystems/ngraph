@@ -88,6 +88,30 @@ void op::Slice::validate_and_infer_types()
     }
 
     set_output_type(0, input.get_element_type(), result_shape);
+
+    // Static value propagation.
+    // Only two cases are handled: scalar (which is the identity) and vector.
+    if (get_inputs()[0].get_output().has_static_value() && input_shape.size() == 0)
+    {
+        set_output_static_value(0, get_inputs()[0].get_output().get_static_value());
+    }
+    else if (get_inputs()[0].get_output().has_static_value() && input_shape.size() == 1)
+    {
+        auto& sv = get_inputs()[0].get_output().get_static_value();
+
+        StaticValue sv_out;
+
+        for (size_t i = m_lower_bounds[0]; i < m_upper_bounds[0]; i += m_strides[0])
+        {
+            sv_out.push_back(sv[i]);
+        }
+
+        set_output_static_value(0, sv_out);
+    }
+    else
+    {
+        clear_output_static_value(0);
+    }
 }
 
 shared_ptr<Node> op::Slice::copy_with_new_args(const NodeVector& new_args) const

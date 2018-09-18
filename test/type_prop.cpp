@@ -6792,3 +6792,16 @@ TEST(type_prop, dyn_reshape_sv_vector_to_vector)
     ASSERT_EQ(rs->get_shape(), (Shape{4}));
     ASSERT_FALSE(rs->get_outputs()[0].has_static_value());
 }
+
+TEST(type_prop, slice_sv)
+{
+    auto param =
+        make_shared<op::Parameter>(element::boolean, Shape{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
+    auto sh = make_shared<op::Shape>(param);
+    // Start at 2, end before 9, stride of 3
+    auto sl = make_shared<op::Slice>(sh, Shape{2}, Shape{9}, Strides{3});
+
+    ASSERT_EQ(sl->get_element_type(), element::u64);
+    ASSERT_EQ(sl->get_shape(), (Shape{3}));
+    ASSERT_EQ(sl->get_static_value(), (StaticValue{2, 5, 8}));
+}
