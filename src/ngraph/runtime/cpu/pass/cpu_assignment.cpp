@@ -46,6 +46,7 @@
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
 #include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -726,6 +727,19 @@ namespace ngraph
                         dequantize->set_op_annotations(op_annotations);
                     }
                 }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::Quantize)
+                {
+                    if (node->get_input_element_type(0) == element::f32)
+                    {
+                        auto quantize = static_cast<op::Quantize*>(node);
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        quantize->set_op_annotations(op_annotations);
+                    }
+                }
             }
         }
     }
@@ -783,6 +797,7 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::QuantizedAvgPool),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedAvgPool>},
     {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Softmax>},
+    {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Quantize>},
     {TI(ngraph::op::ReplaceSlice),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ReplaceSlice>},
     {TI(ngraph::op::ConvolutionAdd),
