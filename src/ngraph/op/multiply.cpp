@@ -68,6 +68,10 @@ void op::Multiply::validate_and_infer_types()
 
         get_outputs().at(0).set_static_value(result);
     }
+    else
+    {
+        clear_output_static_value(0);
+    }
 }
 
 shared_ptr<Node> ngraph::operator*(const shared_ptr<Node> arg0, const shared_ptr<Node> arg1)

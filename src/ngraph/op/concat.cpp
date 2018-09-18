@@ -102,6 +102,10 @@ void op::Concat::validate_and_infer_types()
 
         set_output_static_value(0, sv_out);
     }
+    else
+    {
+        clear_output_static_value(0);
+    }
 }
 
 shared_ptr<Node> op::Concat::copy_with_new_args(const NodeVector& new_args) const

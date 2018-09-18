@@ -38,6 +38,10 @@ void op::Convert::validate_and_infer_types()
     {
         get_outputs().at(0).set_static_value(get_inputs().at(0).get_output().get_static_value());
     }
+    else
+    {
+        clear_output_static_value(0);
+    }
 }
 
 shared_ptr<Node> op::Convert::copy_with_new_args(const NodeVector& new_args) const
