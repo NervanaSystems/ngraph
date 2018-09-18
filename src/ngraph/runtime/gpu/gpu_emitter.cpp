@@ -655,12 +655,15 @@ void runtime::gpu::GPU_Emitter::emit_Floor(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_FunctionCall(EMIT_ARGS)
 {
-    auto get_tuple_element = static_cast<const ngraph::op::GetOutputElement*>(node);
+    auto function_call = static_cast<const ngraph::op::FunctionCall*>(node);
+    shared_ptr<Function> function = function_call->get_functions()[0];
 
     writer.block_begin();
-    writer << "runtime::gpu::cuda_memcpyDtD(" << out[0].get_name() << ", "
-           << args[get_tuple_element->get_n()].get_name() << ", "
-           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+    {
+        writer << "void* input[] = {" << node_names(args) << "};\n";
+        writer << "void* output[] = {" << node_names(out) << "};\n";
+        writer << function->get_name() << "(input, output, ctx);\n";
+    }
     writer.block_end();
 }
 
@@ -669,7 +672,7 @@ void runtime::gpu::GPU_Emitter::emit_GetOutputElement(EMIT_ARGS)
     auto get_tuple_element = static_cast<const ngraph::op::GetOutputElement*>(node);
 
     writer.block_begin();
-    writer << "runtime::gpu::cuda_memcpyDtH(" << out[0].get_name() << ", "
+    writer << "runtime::gpu::cuda_memcpyDtD(" << out[0].get_name() << ", "
            << args[get_tuple_element->get_n()].get_name() << ", "
            << out[0].get_size() * out[0].get_element_type().size() << ");\n";
     writer.block_end();
