@@ -79,7 +79,6 @@
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/relu.hpp"
-#include "ngraph/op/remainder.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
@@ -517,6 +516,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                     stringstream ss;
                     ss << "((" << type << "*)(inputs[" << arg_index << "]))";
                     m_variable_name_map[tv->get_name()] = ss.str();
+                    propagate_in_place_input(&param->get_outputs().at(i), ss.str());
                     arg_index++;
                 }
             }
@@ -540,7 +540,9 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 {
                     shared_ptr<descriptor::Tensor> itv =
                         res->get_inputs().at(0).get_output().get_tensor_ptr();
-                    m_variable_name_map[itv->get_name()] = ss.str();
+                    auto output_name = ss.str();
+                    m_variable_name_map[itv->get_name()] = output_name;
+                    propagate_in_place_output(&(res->get_inputs().at(0).get_output()), output_name);
                 }
             }
 
@@ -849,4 +851,86 @@ string runtime::gpu::GPU_ExternalFunction::strip_comments(const string& s) const
         }
     }
     return out.str();
+}
+
+void runtime::gpu::GPU_ExternalFunction::propagate_in_place_input(
+    ngraph::descriptor::Output* output, std::string input_name)
+{
+    std::deque<ngraph::descriptor::Output*> stack;
+    stack.push_front(output);
+
+    while (stack.size() > 0)
+    {
+        ngraph::descriptor::Output* it = stack.front();
+        stack.pop_front();
+        for (auto input : it->get_inputs())
+        {
+            auto c_op = std::dynamic_pointer_cast<ngraph::op::Op>(input->get_node());
+            if (!c_op || c_op->is_output())
+            {
+                continue;
+            }
+
+            if (auto op_annotations = c_op->get_op_annotations())
+            {
+                for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
+                {
+                    if (oi_pair.input == input->get_index() && !oi_pair.destructive)
+                    {
+                        size_t output_index = oi_pair.output;
+                        auto& output_tensor = c_op->get_outputs().at(output_index).get_tensor();
+
+                        m_variable_name_map[output_tensor.get_name()] = input_name;
+
+                        NGRAPH_DEBUG << "GPU codegen: Forwarding " << input_name << " through "
+                                     << output_tensor.get_name();
+                        stack.push_back(&c_op->get_outputs().at(output_index));
+                    }
+                }
+            }
+        }
+    }
+}
+
+void runtime::gpu::GPU_ExternalFunction::propagate_in_place_output(
+    ngraph::descriptor::Output* res_src_output, std::string output_name)
+{
+    // we start with a particular output
+    // which is an argument to a given op::Result
+    size_t offset = res_src_output->get_tensor().get_pool_offset();
+    auto it = res_src_output;
+
+    bool propagate_further = false;
+    do
+    {
+        propagate_further = false;
+        auto arg = std::dynamic_pointer_cast<ngraph::op::Op>(it->get_node());
+        if (!arg)
+        {
+            break;
+        }
+        if (auto op_annotations = arg->get_op_annotations())
+        {
+            for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
+            {
+                if (oi_pair.output == it->get_index())
+                {
+                    size_t input_index = oi_pair.input;
+                    auto& input_tensor = arg->get_inputs().at(input_index).get_tensor();
+                    auto tmp_node = arg->get_inputs().at(input_index).get_output().get_node();
+                    if (input_tensor.get_pool_offset() == offset && !tmp_node->is_parameter() &&
+                        !tmp_node->is_constant())
+                    {
+                        NGRAPH_DEBUG << "Reusing " << output_name << " for "
+                                     << input_tensor.get_name();
+
+                        m_variable_name_map[input_tensor.get_name()] = output_name;
+
+                        it = &arg->get_inputs().at(input_index).get_output();
+                        propagate_further = true;
+                    }
+                }
+            }
+        }
+    } while (propagate_further);
 }
