@@ -6711,11 +6711,6 @@ TEST(type_prop, multiply_sv)
     ASSERT_EQ(multiply->get_static_value(), (StaticValue{16, 18, 16, 2}));
 }
 
-// TODO(amprocte): need to test scalar->vector broadcast but no way to construct that yet!
-TEST(type_prop, broadcast_sv_scalar_to_vector)
-{
-}
-
 TEST(type_prop, broadcast_sv_vector_to_vector)
 {
     // Note: this is a trivial broadcast with no broadcast axes.
