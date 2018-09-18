@@ -54,6 +54,7 @@
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
 #include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -1654,6 +1655,20 @@ namespace ngraph
                         throw ngraph_error("Dequantized op is only supported in MKLDNN for now.");
                     }
                 }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Quantize)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        //TODO : Propogate Layout
+                        set_native_layouts(external_function, node);
+                    }
+                    else
+                    {
+                        throw ngraph_error("Quantized op is only supported in MKLDNN for now.");
+                    }
+                }
             }
         }
     }
@@ -1716,6 +1731,7 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::ConvolutionAdd),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionAdd>},
     {TI(ngraph::op::Dequantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Dequantize>},
+    {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Quantize>},
 };
 
 bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
