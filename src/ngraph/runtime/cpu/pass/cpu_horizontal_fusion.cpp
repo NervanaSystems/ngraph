@@ -65,8 +65,8 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
         }
 
         auto m_filters_shape = conv_bias_root->get_input_shape(1);
-        auto f1 = m_filters_shape[2];
-        auto f2 = m_filters_shape[3];
+        auto f_h = m_filters_shape[2];
+        auto f_w = m_filters_shape[3];
 
         // get weights and bias from each CBR and create Concat nodes
         std::vector<std::shared_ptr<Node>> weights_nodes;
@@ -86,8 +86,10 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
                 continue;
             }
             auto u_filters_shape = u->get_input_shape(1);
-            if (u_filters_shape[2] != f1 || u_filters_shape[3] != f2)
+            if (u_filters_shape[2] != f_h || u_filters_shape[3] != f_w)
             {
+                NGRAPH_DEBUG
+                    << "conv_horizontal_fusion: skip conv node with different filter shape\n";
                 continue;
             }
             weights_nodes.push_back(u->get_argument(1));
@@ -96,6 +98,7 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
         }
         if (conv_bias_nodes.size() <= 1)
         {
+            NGRAPH_DEBUG << "conv_horizontal_fusion: need more than one nodes to do fusion\n";
             return false;
         }
 
