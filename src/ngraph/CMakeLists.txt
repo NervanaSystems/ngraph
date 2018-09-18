@@ -153,22 +153,6 @@ set (SRC
 
 add_subdirectory(frontend)
 
-message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/op)
-file(GLOB OPS "${CMAKE_CURRENT_SOURCE_DIR}/op/" "${CMAKE_CURRENT_SOURCE_DIR}/op/*.hpp")
-foreach(OP ${OPS})
-    file(STRINGS ${OP} OP_CLASS REGEX "class [A-Za-z0-9_]+ :")
-    foreach(LINE ${OP_CLASS})
-        string(REGEX REPLACE ".*class ([A-Za-z0-9_]+) : public ([A-Za-z0-9_]+).*" "\\1" CLASS_FOUND ${LINE})
-        string(REGEX REPLACE ".*class ([A-Za-z0-9_]+) : public ([A-Za-z0-9_]+).*" "\\2" BASE_FOUND ${LINE})
-        if (NOT ${BASE_FOUND} STREQUAL "std" AND NOT ${CLASS_FOUND} STREQUAL "Op")
-            set(OP_CLASS_LIST ${OP_CLASS_LIST} ${CLASS_FOUND})
-        endif()
-    endforeach(LINE ${OP_CLASS})
-endforeach()
-message(STATUS "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt")
-string(REPLACE ";" "\n" OP_CLASS_LINES "${OP_CLASS_LIST}")
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt" "${OP_CLASS_LINES}")
-
 find_package(Graphviz QUIET)
 if (GRAPHVIZ_FOUND)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGRAPHVIZ_FOUND")
