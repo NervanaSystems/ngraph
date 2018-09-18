@@ -6710,3 +6710,85 @@ TEST(type_prop, multiply_sv)
     ASSERT_EQ(multiply->get_shape(), (Shape{4}));
     ASSERT_EQ(multiply->get_static_value(), (StaticValue{16, 18, 16, 2}));
 }
+
+// TODO(amprocte): need to test scalar->vector broadcast but no way to construct that yet!
+TEST(type_prop, broadcast_sv_scalar_to_vector)
+{
+}
+
+TEST(type_prop, broadcast_sv_vector_to_vector)
+{
+    // Note: this is a trivial broadcast with no broadcast axes.
+    auto param = make_shared<op::Parameter>(element::boolean, Shape{8, 6, 4, 2});
+    auto sh = make_shared<op::Shape>(param);
+    auto bc = make_shared<op::Broadcast>(sh, Shape{4}, AxisSet{});
+
+    ASSERT_EQ(bc->get_element_type(), element::u64);
+    ASSERT_EQ(bc->get_shape(), (Shape{4}));
+    ASSERT_EQ(bc->get_static_value(), (StaticValue{8, 6, 4, 2}));
+}
+
+TEST(type_prop, reshape_sv_vector_to_vector)
+{
+    auto param = make_shared<op::Parameter>(element::boolean, Shape{8, 6, 4, 2});
+    auto sh = make_shared<op::Shape>(param);
+    auto rs = make_shared<op::Reshape>(sh, AxisVector{0}, Shape{4});
+
+    ASSERT_EQ(rs->get_element_type(), element::u64);
+    ASSERT_EQ(rs->get_shape(), (Shape{4}));
+    ASSERT_EQ(rs->get_static_value(), (StaticValue{8, 6, 4, 2}));
+}
+
+TEST(type_prop, reshape_sv_vector_to_scalar)
+{
+    auto param = make_shared<op::Parameter>(element::boolean, Shape{8});
+    auto sh = make_shared<op::Shape>(param);
+    auto rs = make_shared<op::Reshape>(sh, AxisVector{0}, Shape{});
+
+    ASSERT_EQ(rs->get_element_type(), element::u64);
+    ASSERT_EQ(rs->get_shape(), (Shape{}));
+    ASSERT_EQ(rs->get_static_value(), (StaticValue{8}));
+}
+
+TEST(type_prop, reshape_sv_scalar_to_vector)
+{
+    auto param = make_shared<op::Parameter>(element::boolean, Shape{8});
+    auto sh = make_shared<op::Shape>(param);
+    auto rs0 = make_shared<op::Reshape>(sh, AxisVector{0}, Shape{});
+    auto rs1 = make_shared<op::Reshape>(rs0, AxisVector{}, Shape{1});
+
+    ASSERT_EQ(rs1->get_element_type(), element::u64);
+    ASSERT_EQ(rs1->get_shape(), (Shape{1}));
+    ASSERT_EQ(rs1->get_static_value(), (StaticValue{8}));
+}
+
+TEST(type_prop, reshape_sv_scalar_to_scalar)
+{
+    auto param = make_shared<op::Parameter>(element::boolean, Shape{8});
+    auto sh = make_shared<op::Shape>(param);
+    auto rs0 = make_shared<op::Reshape>(sh, AxisVector{0}, Shape{});
+    auto rs1 = make_shared<op::Reshape>(rs0, AxisVector{}, Shape{});
+
+    ASSERT_EQ(rs1->get_element_type(), element::u64);
+    ASSERT_EQ(rs1->get_shape(), (Shape{}));
+    ASSERT_EQ(rs1->get_static_value(), (StaticValue{8}));
+}
+
+TEST(type_prop, dyn_reshape_sv_vector_to_vector)
+{
+    auto param0 = make_shared<op::Parameter>(element::boolean, Shape{4});
+    auto param1 = make_shared<op::Parameter>(element::i64, Shape{8});
+    auto param2 = make_shared<op::Parameter>(element::i64, Shape{2});
+    auto sh1 = make_shared<op::Shape>(param1);
+    auto sh2 = make_shared<op::Shape>(param2);
+    auto rs = make_shared<op::DynReshape>(param0, sh1 / sh2);
+
+    // Shape(param0) = [4]
+    // Shape(param1) = [8]
+    // Shape(param2) = [2]
+    // Shape(DynReshape(param0,shape(param1) / shape(param2))) = [4]
+
+    ASSERT_EQ(rs->get_element_type(), element::boolean);
+    ASSERT_EQ(rs->get_shape(), (Shape{4}));
+    ASSERT_FALSE(rs->get_outputs()[0].has_static_value());
+}

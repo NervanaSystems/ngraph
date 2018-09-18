@@ -72,6 +72,26 @@ void op::Reshape::validate_and_infer_types()
         m_is_transpose = true;
     }
     set_output_type(0, input.get_element_type(), m_output_shape);
+
+    // Static value propagation.
+    // We will only propagate when reshaping to/from scalars/vectors, and when
+    // this op is not a transpose. This has the very useful property of being
+    // the identity. :/
+    if (!m_is_transpose && input_shape.size() < 2 && m_output_shape.size() < 2 &&
+        get_inputs()[0].get_output().has_static_value())
+    {
+        auto& sv = get_inputs()[0].get_output().get_static_value();
+
+        // This check should be redundant but you never know.
+        NODE_VALIDATION_ASSERT(this, m_output_shape.size() == 1 || sv.size() == 1)
+            << "Reshaping to a scalar but static value has more than one element "
+            << "(input 0 static value: " << sv << ")";
+        set_output_static_value(0, sv);
+    }
+    else
+    {
+        clear_output_static_value(0);
+    }
 }
 
 shared_ptr<Node> op::Reshape::copy_with_new_args(const NodeVector& new_args) const

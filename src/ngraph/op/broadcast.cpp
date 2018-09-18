@@ -65,6 +65,32 @@ void op::Broadcast::validate_and_infer_types()
         << ", broadcast axes: " << m_broadcast_axes << ").";
 
     set_output_type(0, get_input_element_type(0), m_shape);
+
+    // Static value propagation.
+    // For now we are only concerned with two cases, which makes life easier:
+    // 1. trivial (no-axis) broadcast from scalar to scalar or vector to vector.
+    // 2. one-axis broadcast from scalar to vector.
+    if (get_inputs()[0].get_output().has_static_value())
+    {
+        if (m_broadcast_axes.empty() && get_input_shape(0).size() < 2)
+        {
+            set_output_static_value(0, get_inputs()[0].get_output().get_static_value());
+            return;
+        }
+        else if (m_broadcast_axes == AxisSet{0} && get_input_shape(0).size() == 0)
+        {
+            auto& sv = get_inputs()[0].get_output().get_static_value();
+            StaticValue sv_out(shape_size(m_shape));
+
+            for (size_t i = 0; i < shape_size(m_shape); i++)
+            {
+                sv_out[i] = sv[0];
+            }
+            return;
+        }
+    }
+
+    get_inputs()[0].get_output().clear_static_value();
 }
 
 shared_ptr<Node> op::Broadcast::copy_with_new_args(const NodeVector& new_args) const
