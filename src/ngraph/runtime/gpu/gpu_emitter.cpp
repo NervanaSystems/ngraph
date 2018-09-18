@@ -533,50 +533,129 @@ namespace ngraph
                     return;
                 }
 
-                writer.block_begin();
                 auto arg_shape = args[0].get_shape();
                 auto arg_rank = arg_shape.size();
                 auto result_shape = out[0].get_shape();
                 auto input_order = reshape->get_input_order();
                 size_t result_shape_product = shape_size(result_shape);
 
-                // If there is no layout change or we are just going from 1^n to 1^m or a zero-size tensor,
-                // we can just copy.
+                //for a zero-size tensor, or change from 1^m shape to 1^n shape, just do a copy
                 if (!reshape->get_is_transpose() || result_shape_product < 2)
                 {
-                    kernel::emit_memcpyDtD(writer, out[0], args[0]);
+                    writer.block_begin();
+                    {
+                        kernel::emit_memcpyDtD(writer, out[0], args[0]);
+                    }
+                    writer.block_end();
+                    return;
                 }
-                // If there *is* a layout change in the 2D case, we transpose the input.
-                else if (arg_rank == 2)
-                {
-                    // TODO Assert arg0_shape[0] == arg1_shape[0]?
-                    writer << "const float alpha = 1.0;\n";
-                    writer << "const float beta = 0;\n";
-                    writer << "CUBLAS_SAFE_CALL(cublasSetPointerMode(*ctx->cublas_handle, "
-                              "CUBLAS_POINTER_MODE_HOST));\n";
-                    writer << "CUBLAS_SAFE_CALL(cublasSgeam("
-                           << "*ctx->cublas_handle,"
-                           << "CUBLAS_OP_T,"
-                           << "CUBLAS_OP_T," << arg_shape[0] << "," << arg_shape[1] << ","
-                           << "&alpha," // Alpha
-                           << args[0].get_name() << "," << arg_shape[1] << ","
-                           << "&beta," // beta
-                           << args[0].get_name() << "," << arg_shape[1] << "," << out[0].get_name()
-                           << "," << result_shape[1] << "));\n";
-                    writer << "CUBLAS_SAFE_CALL(cublasSetPointerMode(*ctx->cublas_handle, "
-                              "CUBLAS_POINTER_MODE_DEVICE));\n";
-                }
-                // Other cases (reordering of axes for tensors with rank>2).
-                else
-                {
-                    auto& cuda_emitter =
-                        external_function->get_primitive_emitter()->get_cuda_emitter();
-                    auto index = cuda_emitter->build_reshape(
-                        {{args[0].get_type(), out[0].get_type()}}, arg_shape, input_order);
 
-                    writer << "void* input[] = {" << node_names(args) << "};\n";
-                    writer << "void* output[] = {" << node_names(out) << "};\n";
-                    writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+                //combine inordered dimensons after reorder in shape, update output shape and input order
+                Shape in_order_map(arg_rank, 0);
+                for (int i = 0; i < arg_rank - 1; i++)
+                {
+                    if (static_cast<int64_t>(input_order[i + 1]) -
+                            static_cast<int64_t>(input_order[i]) ==
+                        1)
+                    {
+                        in_order_map[input_order[i]] = 1;
+                    }
+                }
+
+                Shape combine_arg_shape;
+                Shape combine_idx_map(arg_rank, 0);
+                Shape combine_input_order;
+                size_t shape_i = 1;
+                size_t combine_rank = 0;
+                for (int i = 0; i < arg_rank; i++)
+                {
+                    if (in_order_map[i] == 1)
+                    {
+                        shape_i *= arg_shape[i];
+                    }
+                    else
+                    {
+                        combine_arg_shape.push_back(shape_i * arg_shape[i]);
+                        shape_i = 1;
+                        combine_idx_map[i] = combine_rank++;
+                    }
+                }
+
+                for (int i = 0; i < arg_rank; i++)
+                {
+                    if (in_order_map[input_order[i]] == 0)
+                    {
+                        combine_input_order.push_back(combine_idx_map[input_order[i]]);
+                    }
+                }
+
+                //eleminate dimenson size = 1, update input order and output shape
+                Shape new_arg_shape;
+                Shape new_result_shape;
+                Shape new_idx_map(combine_rank, 0);
+                Shape new_input_order;
+                size_t new_rank = 0;
+                for (int i = 0; i < combine_rank; i++)
+                {
+                    if (combine_arg_shape[i] != 1)
+                    {
+                        new_arg_shape.push_back(combine_arg_shape[i]);
+                        new_idx_map[i] = new_rank++;
+                    }
+                }
+                for (int i = 0; i < combine_rank; i++)
+                {
+                    if (combine_arg_shape[combine_input_order[i]] != 1)
+                    {
+                        new_input_order.push_back(new_idx_map[combine_input_order[i]]);
+                    }
+                }
+                for (int i = 0; i < new_rank; i++)
+                {
+                    new_result_shape.push_back(new_arg_shape[new_input_order[i]]);
+                }
+
+                // If there is no layout change, we can just copy.
+                writer.block_begin();
+                {
+                    bool same_layout = is_sorted(new_input_order.begin(), new_input_order.end());
+                    if (same_layout)
+                    {
+                        kernel::emit_memcpyDtD(writer, out[0], args[0]);
+                    }
+                    // If there *is* a layout change in the 2D case, we transpose the input.
+                    else
+                    {
+                        writer << "void* input[] = {" << node_names(args) << "};\n";
+                        writer << "void* output[] = {" << node_names(out) << "};\n";
+                        auto& cuda_emitter =
+                            external_function->get_primitive_emitter()->get_cuda_emitter();
+                        size_t index;
+                        if (new_rank == 2)
+                        {
+                            index = cuda_emitter->build_reshape_2d(
+                                {{args[0].get_type(), out[0].get_type()}},
+                                new_arg_shape,
+                                new_input_order);
+                        }
+                        // If there *is* a layout change in the 3D case, we do 3D tiled reshape.
+                        else if (new_rank == 3)
+                        {
+                            index = cuda_emitter->build_reshape_3d(
+                                {{args[0].get_type(), out[0].get_type()}},
+                                new_arg_shape,
+                                new_input_order);
+                        }
+                        // Other cases (reordering of axes for tensors with rank>3).
+                        else
+                        {
+                            index = cuda_emitter->build_reshape(
+                                {{args[0].get_type(), out[0].get_type()}},
+                                new_arg_shape,
+                                new_input_order);
+                        }
+                        writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+                    }
                 }
                 writer.block_end();
             }
@@ -1302,7 +1381,7 @@ namespace ngraph
                 auto get_tuple_element = static_cast<const ngraph::op::GetOutputElement*>(node);
 
                 writer.block_begin();
-                writer << "runtime::gpu::cuda_memcpyDtH(" << out[0].get_name() << ", "
+                writer << "runtime::gpu::cuda_memcpyDtD(" << out[0].get_name() << ", "
                        << args[get_tuple_element->get_n()].get_name() << ", "
                        << out[0].get_size() * out[0].get_element_type().size() << ");\n";
                 writer.block_end();
