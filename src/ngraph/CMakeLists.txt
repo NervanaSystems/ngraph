@@ -84,7 +84,6 @@ set (SRC
     op/reduce.cpp
     op/reduce_window.cpp
     op/relu.cpp
-    op/remainder.cpp
     op/replace_slice.cpp
     op/reshape.cpp
     op/result.cpp
