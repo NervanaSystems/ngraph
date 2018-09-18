@@ -34,7 +34,7 @@ namespace ngraph
     {
         namespace cpu
         {
-            const visualize_tree_ops_init_list_t& get_visualize_tree_ops_list();
+            const visualize_tree_ops_map_t& get_visualize_tree_ops_map();
         }
     }
 }
