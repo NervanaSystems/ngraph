@@ -19,6 +19,7 @@
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/quantized_conv_relu.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -67,7 +68,49 @@ namespace ngraph
                     throw ngraph_error("unsupported parameters for QuantizedConvolution via DEX");
                 }
             }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::QuantizedConvolutionRelu)
+            {
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto qconvolution_relu =
+                        static_cast<const ngraph::op::QuantizedConvolutionRelu*>(node);
+                    auto& functors = external_function->get_functors();
+                    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                    auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                    auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                    auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
+                    auto& out2_tensor = external_function->get_tensor_data(out[2].get_name());
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+
+                    auto conv_index =
+                        mkldnn_emitter->build_convolution<ngraph::op::QuantizedConvolutionRelu>(
+                            node, args, out);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    float min_freezed_output = qconvolution_relu->get_freezed_output_min();
+                    float max_freezed_output = qconvolution_relu->get_freezed_output_max();
+
+                    auto functor = [&, conv_index, min_freezed_output, max_freezed_output](
+                        CPURuntimeContext* ctx) {
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
+                        *(static_cast<float*>(out1_tensor)) = min_freezed_output;
+                        *(static_cast<float*>(out2_tensor)) = max_freezed_output;
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                    };
+                    functors.emplace_back(functor);
+                }
+                else
+                {
+                    throw ngraph_error(
+                        "unsupported parameters for QuantizedConvolutionRelu via DEX");
+                }
+            }
             REGISTER_OP_BUILDER(QuantizedConvolution);
+            REGISTER_OP_BUILDER(QuantizedConvolutionRelu);
         }
     }
 }
