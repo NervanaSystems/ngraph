@@ -9559,3 +9559,22 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_one)
     backend->call_with_validate(f1, {result1}, {a});
     EXPECT_EQ((vector<float>{3, 1, 4}), read_vector<float>(result1));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, quantize)
+{
+    Shape shape{4, 3};
+    auto X = make_shared<op::Parameter>(element::f32, shape);
+    auto Scale = op::Constant::create(element::f32, Shape{1}, {2.0});
+    auto Offset = op::Constant::create(element::u8, Shape{1}, {1});
+    auto f = make_shared<Function>(make_shared<op::Quantize>(X, Scale, Offset, element::u8, AxisSet{}), op::ParameterVector{X});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto x = backend->create_tensor(element::f32, shape);
+    copy_data(x, vector<float>{12, 2, 10, 9, 8, 4, 6, 1, 5, 3, 11, 7});
+
+    auto result = backend->create_tensor(element::u8, shape);
+
+    backend->call_with_validate(f, {result}, {x});
+    EXPECT_EQ((vector<uint8_t>{7, 2, 6, 6, 5, 3, 4, 2, 4, 3, 7, 5 }), read_vector<uint8_t>(result));
+}

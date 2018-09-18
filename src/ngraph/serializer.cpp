@@ -836,6 +836,13 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Product>(args[0], reduction_axes);
                 break;
             }
+            case OP_TYPEID::Quantize:
+            {
+                //TODO:
+                //auto reduction_axes = node_js.at("axes").get<set<size_t>>();
+                //node = make_shared<op::Quantize>(args[0], args[1], args[2], reduction_axes);
+                break;
+            }
             case OP_TYPEID::Reduce:
             {
                 auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
@@ -1369,6 +1376,8 @@ static json write(const Node& n, bool binary_constant_data)
         break;
     }
     case OP_TYPEID::Power: { break;
+    }
+    case OP_TYPEID::Quantize: { break;
     }
     case OP_TYPEID::Reduce:
     {
