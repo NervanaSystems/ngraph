@@ -48,7 +48,7 @@ string ngraph::prepend_disabled(const string& test_case_name,
             }
         }
     }
-    if (contains(blacklist, test_name))
+    if (blacklist.find(test_name) != blacklist.end())
     {
         rc = "DISABLED_" + test_name;
     }
