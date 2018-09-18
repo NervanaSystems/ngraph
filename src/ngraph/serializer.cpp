@@ -47,6 +47,7 @@
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/function_call.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/get_shape.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
 #include "ngraph/op/less.hpp"
@@ -78,7 +79,6 @@
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/select_and_scatter.hpp"
-#include "ngraph/op/shape.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
@@ -675,6 +675,11 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::GetOutputElement>(args[0], node_js.at("n").get<size_t>());
                 break;
             }
+            case OP_TYPEID::GetShape:
+            {
+                node = make_shared<op::GetShape>(args[0]);
+                break;
+            }
             case OP_TYPEID::Greater:
             {
                 node = make_shared<op::Greater>(args[0], args[1]);
@@ -930,11 +935,6 @@ static shared_ptr<ngraph::Function>
                                                          scatter_f_ptr,
                                                          window_shape,
                                                          window_movement_strides);
-                break;
-            }
-            case OP_TYPEID::Shape:
-            {
-                node = make_shared<op::Shape>(args[0]);
                 break;
             }
             case OP_TYPEID::Sigmoid:
@@ -1284,6 +1284,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["function"] = n.get_functions()[0]->get_name();
         break;
     }
+    case OP_TYPEID::GetShape: { break;
+    }
     case OP_TYPEID::GetOutputElement:
     {
         auto tmp = dynamic_cast<const op::GetOutputElement*>(&n);
@@ -1443,8 +1445,6 @@ static json write(const Node& n, bool binary_constant_data)
         node["window_shape"] = tmp->get_window_shape();
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         break;
-    }
-    case OP_TYPEID::Shape: { break;
     }
     case OP_TYPEID::Sigmoid: { break;
     }

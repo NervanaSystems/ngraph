@@ -16,23 +16,25 @@
 
 #pragma once
 
-#include <cmath>
-
-#include "ngraph/coordinate_transform.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace op
     {
-        namespace reference
+        /// \brief Returns the shape of its input as a tensor of type uint64.
+        class GetShape : public Op
         {
-            static inline void shape(uint64_t* out, const Shape& arg_shape)
-            {
-                for (size_t i = 0; i < arg_shape.size(); i++)
-                {
-                    out[i] = arg_shape[i];
-                }
-            }
-        }
+        public:
+            /// \brief Constructs a get-shape operation.
+            ///
+            /// \param arg Node whose output shape will be returned.
+            GetShape(const std::shared_ptr<Node>& arg);
+
+            void validate_and_infer_types() override;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+        };
     }
 }

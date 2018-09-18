@@ -32,6 +32,7 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/dyn_reshape.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/get_shape.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -47,7 +48,6 @@
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select_and_scatter.hpp"
-#include "ngraph/op/shape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
@@ -80,6 +80,7 @@
 #include "ngraph/runtime/reference/equal.hpp"
 #include "ngraph/runtime/reference/exp.hpp"
 #include "ngraph/runtime/reference/floor.hpp"
+#include "ngraph/runtime/reference/get_shape.hpp"
 #include "ngraph/runtime/reference/greater.hpp"
 #include "ngraph/runtime/reference/greater_eq.hpp"
 #include "ngraph/runtime/reference/less.hpp"
@@ -110,7 +111,6 @@
 #include "ngraph/runtime/reference/reverse_sequence.hpp"
 #include "ngraph/runtime/reference/select.hpp"
 #include "ngraph/runtime/reference/select_and_scatter.hpp"
-#include "ngraph/runtime/reference/shape.hpp"
 #include "ngraph/runtime/reference/sigmoid.hpp"
 #include "ngraph/runtime/reference/sign.hpp"
 #include "ngraph/runtime/reference/sin.hpp"
@@ -651,6 +651,11 @@ private:
             call(function, outputs, inputs);
             break;
         }
+        case OP_TYPEID::GetShape:
+        {
+            reference::get_shape(out[0]->get_data_ptr<uint64_t>(), args[0]->get_shape());
+            break;
+        }
         case OP_TYPEID::Greater:
         {
             reference::greater<T>(args[0]->get_data_ptr<T>(),
@@ -1031,11 +1036,6 @@ private:
                                              f_scatter,
                                              select_and_scatter->get_window_shape(),
                                              select_and_scatter->get_window_movement_strides());
-            break;
-        }
-        case OP_TYPEID::Shape:
-        {
-            reference::shape(out[0]->get_data_ptr<uint64_t>(), args[0]->get_shape());
             break;
         }
         case OP_TYPEID::Sigmoid:

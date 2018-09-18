@@ -9687,11 +9687,11 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_one)
     EXPECT_EQ((vector<float>{3, 1, 4}), read_vector<float>(result1));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, shape)
+NGRAPH_TEST(${BACKEND_NAME}, get_shape)
 {
     Shape shape{2, 3, 4, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Shape>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::GetShape>(A), op::ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -9709,11 +9709,11 @@ NGRAPH_TEST(${BACKEND_NAME}, shape)
     EXPECT_EQ((vector<uint64_t>{2, 3, 4, 5}), read_vector<uint64_t>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, shape_scalar)
+NGRAPH_TEST(${BACKEND_NAME}, get_shape_scalar)
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Shape>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::GetShape>(A), op::ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -9737,7 +9737,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_reshape)
     Shape shape_b{2, 6, 8, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    auto f = make_shared<Function>(make_shared<op::DynReshape>(A, make_shared<op::Shape>(B)),
+    auto f = make_shared<Function>(make_shared<op::DynReshape>(A, make_shared<op::GetShape>(B)),
                                    op::ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");

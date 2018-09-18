@@ -112,6 +112,6 @@ zero_sized_sqrt
 zero_sized_subtract
 zero_sized_tan
 zero_sized_tanh
-shape
-shape_scalar
+get_shape
+get_shape_scalar
 dyn_reshape

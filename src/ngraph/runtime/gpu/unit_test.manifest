@@ -52,6 +52,6 @@ topk_3d_max_one
 topk_3d_min_all
 topk_3d_min_partial
 topk_3d_min_one
-shape
-shape_scalar
+get_shape
+get_shape_scalar
 dyn_reshape
