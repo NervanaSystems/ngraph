@@ -92,7 +92,7 @@ static OP_TYPEID get_typeid(const string& s)
     auto it = typeid_map.find(s);
     if (it == typeid_map.end())
     {
-        throw unsupported_op("Unsupported op '" + s + "' in IntelGPU back end.");
+        throw unsupported_op("Unsupported op '" + s + "'");
     }
     return it->second;
 }
@@ -260,6 +260,12 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
     for (shared_ptr<Node> op : func->get_ops())
     {
+// We want to check that every OP_TYPEID enumeration is included in the list.
+// These GCC flags enable compile-time checking so that if an enumeration
+// is not in the list an error is generated.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
         switch (get_typeid(op->description()))
         {
         case OP_TYPEID::Parameter:
@@ -1120,11 +1126,28 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                  one_hot_axis);
             break;
         }
-        default:
+        case OP_TYPEID::AllReduce:
+        case OP_TYPEID::ArgMax:
+        case OP_TYPEID::ArgMin:
+        case OP_TYPEID::Atan:
+        case OP_TYPEID::Ceiling:
+        case OP_TYPEID::Floor:
+        case OP_TYPEID::FunctionCall:
+        case OP_TYPEID::LRN:
+        case OP_TYPEID::Reduce:
+        case OP_TYPEID::ReduceWindow:
+        case OP_TYPEID::ReplaceSlice:
+        case OP_TYPEID::ReverseSequence:
+        case OP_TYPEID::SelectAndScatter:
+        case OP_TYPEID::Sign:
+        case OP_TYPEID::StopGradient:
+        case OP_TYPEID::Tan:
+        case OP_TYPEID::TopK:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
                                  "' in IntelGPU back end.");
         }
+#pragma GCC diagnostic pop
         }
     }
 
