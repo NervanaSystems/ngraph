@@ -112,14 +112,11 @@ std::string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
                                                       : vector_to_string(node->get_shape()));
     }
 
-    if (m_ops_to_details)
+    const Node& n = *node;
+    auto eh = m_ops_to_details.find(TI(n));
+    if (eh != m_ops_to_details.end())
     {
-        const Node& n = *node;
-        auto eh = m_ops_to_details->find(TI(n));
-        if (eh != m_ops_to_details->end())
-        {
-            eh->second(node, ss);
-        }
+        eh->second(n, ss);
     }
 
     ss << " \"]\n";

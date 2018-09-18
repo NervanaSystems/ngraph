@@ -378,7 +378,8 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.set_ops_to_details(runtime::cpu::get_visualize_tree_ops_map());
+    pass_manager.get_state().set_visualize_tree_ops_list(
+        runtime::cpu::get_visualize_tree_ops_list());
     // nv_cwi is required only by some frontends
     // in which case they should run this pass(CPUWorkspaceInsertion) explicitly
     NodeVector nv_cwi;
@@ -1139,7 +1140,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
     // in which case they should run this pass(CPUWorkspaceInsertion) explicitly
     NodeVector nv_cwi;
     pass_manager.register_pass<ngraph::pass::NopElimination>();
-    pass_manager.set_ops_to_details(runtime::cpu::get_visualize_tree_ops_map());
+    pass_manager.get_state().set_visualize_tree_ops_list(
+        runtime::cpu::get_visualize_tree_ops_list());
     // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
     // failing mxnet unit tests.
     // pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
