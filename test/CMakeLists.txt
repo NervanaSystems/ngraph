@@ -16,29 +16,31 @@
 
 set(SRC
     algebraic_simplification.cpp
+    all_close_f.cpp
     assertion.cpp
-    builder_autobroadcast.cpp
     build_graph.cpp
+    builder_autobroadcast.cpp
     constant_folding.cpp
+    control_dependencies.cpp
+    coordinate.cpp
     copy.cpp
     cpio.cpp
     cse.cpp
     element_type.cpp
     file_util.cpp
-    all_close_f.cpp
+    graph_partition.cpp
     inliner.cpp
     input_output_assign.cpp
     main.cpp
-    op.cpp
-    graph_partition.cpp
     nop_elimination.cpp
+    op.cpp
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
-    serialize.cpp
     pattern.cpp
-    shape.cpp
     reshape_elimination.cpp
+    serialize.cpp
+    shape.cpp
     tensor.cpp
     type_prop.cpp
     util.cpp

@@ -182,6 +182,16 @@ NodeVector Node::get_arguments() const
     return result;
 }
 
+const std::set<std::shared_ptr<Node>>& Node::get_control_dependencies() const
+{
+    return m_control_dependencies;
+}
+
+void Node::add_control_dependency(std::shared_ptr<Node> node)
+{
+    m_control_dependencies.insert(node);
+}
+
 std::vector<std::shared_ptr<Function>> Node::get_functions() const
 {
     return std::vector<std::shared_ptr<Function>>{};
@@ -191,16 +201,27 @@ namespace ngraph
 {
     ostream& operator<<(ostream& out, const Node& node)
     {
-        out << node.description() << '[' << node.get_name() << "](";
-        string sep = "";
-        for (auto arg : node.get_arguments())
-        {
-            out << sep << arg->get_name();
-            sep = ", ";
-        }
-        out << ")";
-        return out;
+        return out << NodeDescription(node, false);
     }
+}
+
+std::ostream& Node::write_short_description(std::ostream& out) const
+{
+    return out << get_name();
+}
+
+std::ostream& Node::write_long_description(std::ostream& out) const
+{
+    out << description() << '[' << get_name() << "](";
+    string sep = "";
+    for (auto arg : get_arguments())
+    {
+        out << sep << NodeDescription(*arg, true);
+        sep = ", ";
+    }
+    out << ")";
+
+    return out;
 }
 
 size_t Node::get_output_size() const

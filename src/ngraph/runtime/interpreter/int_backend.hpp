@@ -1097,10 +1097,7 @@ private:
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
-        case OP_TYPEID::StopGradient:
-        {
-            // TODO: Throw a real unsupported_op when available
-            throw std::runtime_error("Unsupported op 'StopGradient'");
+        case OP_TYPEID::StopGradient: { throw unsupported_op("Unsupported op 'StopGradient'");
         }
         case OP_TYPEID::Subtract:
         {
@@ -1161,7 +1158,9 @@ private:
             {
                 throw ngraph_error("Unexpected type");
             }
+            break;
         }
+        default: throw unsupported_op("Unsupported op '" + node.description() + "'");
 #pragma GCC diagnostic pop
         }
     }

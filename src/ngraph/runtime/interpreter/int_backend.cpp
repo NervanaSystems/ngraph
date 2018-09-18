@@ -135,7 +135,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     {
         const Node* op = &wrapped.get_node();
         auto type_id = wrapped.get_typeid();
-        if (op->description() == "Parameter")
+        if (type_id == OP_TYPEID::Parameter)
         {
             continue;
         }
@@ -153,7 +153,8 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         {
             descriptor::TensorView* tv = op->get_output_tensor_ptr(i).get();
             shared_ptr<runtime::HostTensorView> htv;
-            if (!contains_key(tensor_map, tv))
+            auto it = tensor_map.find(tv);
+            if (it == tensor_map.end())
             {
                 // the output tensor is not in the tensor map so create a new tensor
                 const Shape& shape = op->get_output_shape(i);
@@ -164,7 +165,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
             }
             else
             {
-                htv = tensor_map.at(tv);
+                htv = it->second;
             }
             op_outputs.push_back(htv);
         }

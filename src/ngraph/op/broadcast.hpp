@@ -80,6 +80,9 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
             void infer_shape() override;
+
+        protected:
+            AxisSet m_initial_broadcast_axes;
         };
     }
 }

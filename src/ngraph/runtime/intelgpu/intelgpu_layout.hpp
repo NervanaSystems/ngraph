@@ -38,14 +38,11 @@ class ngraph::runtime::intelgpu::IntelGPULayout : public ngraph::descriptor::lay
 public:
     IntelGPULayout(const ngraph::descriptor::TensorView& tv, const cldnn::layout& layout);
     ~IntelGPULayout() override {}
-    size_t get_size() override { return cldnn_layout.get_linear_size(); }
     size_t get_index_offset(const std::vector<size_t>& indices) override;
 
-    const Strides& get_strides() const override { return strides; }
+    Strides get_strides() const override { return strides; }
     bool operator==(const TensorLayout& other) const override;
 
-    void set_cldnn_layout(const cldnn::layout& layout) { cldnn_layout = layout; }
-    cldnn::layout get_cldnn_layout() const { return cldnn_layout; }
     static cldnn::data_types get_cldnn_type(const ngraph::element::Type& element_type);
     static cldnn::layout create_cldnn_layout(const ngraph::element::Type& element_type,
                                              const Shape& element_shape);

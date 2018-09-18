@@ -149,6 +149,7 @@
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
 #include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -296,6 +297,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Ceiling), &runtime::cpu::CPU_Emitter::emit<op::Ceiling>},
     {TI(ngraph::op::Sqrt), &runtime::cpu::CPU_Emitter::emit<op::Sqrt>},
     {TI(ngraph::op::Convolution), &runtime::cpu::CPU_Emitter::emit<op::Convolution>},
+    {TI(ngraph::op::Quantize), &runtime::cpu::CPU_Emitter::emit<op::Quantize>},
     {TI(ngraph::op::Dequantize), &runtime::cpu::CPU_Emitter::emit<op::Dequantize>},
     {TI(ngraph::op::ConvolutionBackpropFilters),
      &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropFilters>},
@@ -728,7 +730,7 @@ using namespace ngraph::runtime;
             auto handler = dispatcher.find(type_index(typeid(n)));
             if (handler == dispatcher.end())
             {
-                throw ngraph_error("Unhandled op during code generation : " + node->description());
+                throw unsupported_op(node->description());
             }
             vector<TensorViewWrapper> in;
             vector<string> node_input_names;
@@ -1272,8 +1274,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         auto handler = build_dispatcher.find(type_index(typeid(n)));
         if (handler == build_dispatcher.end())
         {
-            throw ngraph_error("Unhandled op during executor construction : " +
-                               node->description());
+            throw unsupported_op(node->description());
         }
         vector<TensorViewWrapper> in;
         vector<string> in_names;
@@ -1617,7 +1618,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
     auto handler = dispatcher.find(type_index(typeid(node)));
     if (handler == dispatcher.end())
     {
-        throw ngraph_error("Unhandled op during function emit : " + node.description());
+        throw unsupported_op(node.description());
     }
     vector<TensorViewWrapper> in;
     size_t arg_index = 0;
