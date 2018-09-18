@@ -368,7 +368,7 @@ NodeVector Node::get_users() const
 std::string ngraph::node_validation_assertion_string(const Node* node)
 {
     std::stringstream ss;
-    ss << "While validating node '" << *node;
+    ss << "While validating node " << *node;
     return ss.str();
 }
 
