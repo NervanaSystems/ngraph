@@ -1004,11 +1004,7 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::StopGradient>(args[0]);
                 break;
             }
-            default:
-            {
-                stringstream ss;
-                ss << "unsupported op " << node_op;
-                throw runtime_error(ss.str());
+            default: {
             }
             }
 #pragma GCC diagnostic pop
@@ -1478,6 +1474,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["k"] = tmp->get_k();
         node["compute_max"] = tmp->get_compute_max();
         break;
+    }
+    default: {
     }
     }
 #pragma GCC diagnostic pop
