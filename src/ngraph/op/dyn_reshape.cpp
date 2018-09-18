@@ -19,6 +19,7 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/op/dyn_reshape.hpp"
+#include "ngraph/op/shape.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -31,7 +32,9 @@ op::DynReshape::DynReshape(const shared_ptr<Node>& arg, const shared_ptr<Node>& 
 
 void op::DynReshape::validate_and_infer_types()
 {
-    Shape input_shape = get_input_shape(0);
+    // Note the need to use ngraph::Shape everywhere because of the namespace collision with
+    // op::Shape... maybe we should go for ShapeOf instead. :)
+    ngraph::Shape input_shape = get_input_shape(0);
 
     NODE_VALIDATION_ASSERT(this, get_input_element_type(1) == element::u64)
         << "Shape argument must have type u64 (actual element type: " << get_input_element_type(1)
@@ -41,7 +44,7 @@ void op::DynReshape::validate_and_infer_types()
     NODE_VALIDATION_ASSERT(this, get_inputs()[1].get_output().has_static_value())
         << "Shape argument has no static value.";
 
-    Shape output_shape = get_inputs()[1].get_output().get_static_value();
+    ngraph::Shape output_shape = get_inputs()[1].get_output().get_static_value();
 
     // Once we have wildcard support we'll need to skip this check if input_shape or output_shape is not fully determined.
     NODE_VALIDATION_ASSERT(this, shape_size(input_shape) == shape_size(output_shape))
@@ -76,8 +79,12 @@ shared_ptr<Node> op::DynReshape::copy_with_new_args(const NodeVector& new_args) 
     return make_shared<DynReshape>(new_args.at(0), new_args.at(1));
 }
 
+// TODO(amprocte): This is untested.
 void op::DynReshape::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
-    // TODO(amprocte): This will be DynReshape(delta,Shape(arg)).
-    NGRAPH_FAIL() << "generate_adjoints for DynReshape not yet implemented";
+    auto delta = deltas.at(0);
+
+    auto x = get_argument(0);
+
+    adjoints.add_delta(x, make_shared<op::DynReshape>(delta, make_shared<op::Shape>(x)));
 }
