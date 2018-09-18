@@ -2851,16 +2851,16 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
     EXPECT_EQ((vector<float>{1, 3, 5, 2, 4, 6}), read_vector<float>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, reshape_3d_transpose)
+NGRAPH_TEST(${BACKEND_NAME}, reshape_3d_transpose_021)
 {
-    vector<float> a_data(2 * 2 * 5);
-    for (int i = 0; i < 2 * 2 * 5; i++)
+    vector<float> a_data(2 * 3 * 4);
+    for (int i = 0; i < 2 * 3 * 4; i++)
     {
         a_data[i] = float(i + 1);
     }
 
-    Shape shape_a{2, 2, 5};
-    Shape shape_r{2, 5, 2};
+    Shape shape_a{2, 3, 4};
+    Shape shape_r{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto r = make_shared<op::Reshape>(A, AxisVector{0, 2, 1}, shape_r);
     auto f = make_shared<Function>(r, op::ParameterVector{A});
@@ -2873,8 +2873,116 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_3d_transpose)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     backend->call_with_validate(f, {result}, {a});
-    EXPECT_EQ((vector<float>{1.,  6.,  2.,  7.,  3.,  8.,  4.,  9.,  5.,  10.,
-                             11., 16., 12., 17., 13., 18., 14., 19., 15., 20.}),
+    EXPECT_EQ((vector<float>{1,  5,  9,  2,  6,  10, 3,  7,  11, 4,  8,  12,
+                             13, 17, 21, 14, 18, 22, 15, 19, 23, 16, 20, 24}),
+              read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, reshape_3d_transpose_210)
+{
+    vector<float> a_data(2 * 3 * 4);
+    for (int i = 0; i < 2 * 3 * 4; i++)
+    {
+        a_data[i] = float(i + 1);
+    }
+
+    Shape shape_a{2, 3, 4};
+    Shape shape_r{4, 3, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto r = make_shared<op::Reshape>(A, AxisVector{2, 1, 0}, shape_r);
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, a_data);
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((vector<float>{1, 13, 5, 17, 9,  21, 2, 14, 6, 18, 10, 22,
+                             3, 15, 7, 19, 11, 23, 4, 16, 8, 20, 12, 24}),
+              read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, reshape_3d_transpose_201)
+{
+    vector<float> a_data(2 * 3 * 4);
+    for (int i = 0; i < 2 * 3 * 4; i++)
+    {
+        a_data[i] = float(i + 1);
+    }
+
+    Shape shape_a{2, 3, 4};
+    Shape shape_r{4, 2, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto r = make_shared<op::Reshape>(A, AxisVector{2, 0, 1}, shape_r);
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, a_data);
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((vector<float>{1, 5, 9,  13, 17, 21, 2, 6, 10, 14, 18, 22,
+                             3, 7, 11, 15, 19, 23, 4, 8, 12, 16, 20, 24}),
+              read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, reshape_3d_transpose_102)
+{
+    vector<float> a_data(2 * 3 * 4);
+    for (int i = 0; i < 2 * 3 * 4; i++)
+    {
+        a_data[i] = float(i + 1);
+    }
+
+    Shape shape_a{2, 3, 4};
+    Shape shape_r{3, 2, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto r = make_shared<op::Reshape>(A, AxisVector{1, 0, 2}, shape_r);
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, a_data);
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((vector<float>{1,  2,  3,  4,  13, 14, 15, 16, 5,  6,  7,  8,
+                             17, 18, 19, 20, 9,  10, 11, 12, 21, 22, 23, 24}),
+              read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, reshape_3d_transpose_120)
+{
+    vector<float> a_data(2 * 3 * 4);
+    for (int i = 0; i < 2 * 3 * 4; i++)
+    {
+        a_data[i] = float(i + 1);
+    }
+
+    Shape shape_a{2, 3, 4};
+    Shape shape_r{3, 4, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto r = make_shared<op::Reshape>(A, AxisVector{1, 2, 0}, shape_r);
+    auto f = make_shared<Function>(r, op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, a_data);
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((vector<float>{1, 13, 2, 14, 3, 15, 4,  16, 5,  17, 6,  18,
+                             7, 19, 8, 20, 9, 21, 10, 22, 11, 23, 12, 24}),
               read_vector<float>(result));
 }
 
