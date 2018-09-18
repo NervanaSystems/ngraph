@@ -537,7 +537,7 @@ namespace ngraph
 
                 size_t build_quantize_reorder(const mkldnn::memory::desc& input_desc,
                                               const mkldnn::memory::desc& result_desc,
-                                              const mkldnn::primitive_attr attr);
+                                              const std::vector<float>& scales);
 
                 size_t build_dequantization(const ngraph::Node* node,
                                             const mkldnn::memory::desc& input_desc,

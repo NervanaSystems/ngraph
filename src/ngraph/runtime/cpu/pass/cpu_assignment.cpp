@@ -46,6 +46,7 @@
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv.hpp"
 #include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
@@ -119,26 +120,47 @@ namespace ngraph
                     }
                 }
 
+                template <typename T>
+                bool can_use_mkldnn_conv(ngraph::Node* node)
+                {
+                    auto convolution = static_cast<const T*>(node);
+                    auto arg0_rank = node->get_input_shape(0).size();
+
+                    for (size_t s : convolution->get_data_dilation_strides())
+                    {
+                        if (s != 1)
+                            return false;
+                    }
+                    if (arg0_rank != 4 && arg0_rank != 5)
+                    {
+                        return false;
+                    }
+                    if (node->get_input_element_type(0) != element::f32)
+                    {
+                        return false;
+                    }
+                    // Temporarily disable MKLDNN for large paddings due to
+                    // a bug in v0.16 - MKFDNN-982
+                    for (auto s : convolution->get_padding_below())
+                    {
+                        if (s >= 7)
+                            return false;
+                    }
+                    for (auto s : convolution->get_padding_above())
+                    {
+                        if (s >= 7)
+                            return false;
+                    }
+
+                    return true;
+                }
+
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Convolution)
                 {
                     auto convolution = static_cast<op::Convolution*>(node);
 
-                    auto arg0_shape = node->get_input_shape(0);
-                    auto arg1_shape = node->get_input_shape(1);
-                    auto result_shape = node->get_output_shape(0);
-                    auto arg0_rank = arg0_shape.size();
-                    auto arg1_rank = arg1_shape.size();
-
-                    bool data_dilated = false;
-                    for (size_t s : convolution->get_data_dilation_strides())
-                    {
-                        data_dilated = data_dilated || (s != 1);
-                    }
-
-                    if (!data_dilated && ((arg0_rank == 4 && arg1_rank == 4) ||
-                                          (arg0_rank == 5 && arg1_rank == 5)) &&
-                        node->get_input_element_type(0) == element::f32)
+                    if (can_use_mkldnn_conv<ngraph::op::Convolution>(node))
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -152,20 +174,7 @@ namespace ngraph
                 {
                     auto convolution = static_cast<op::GroupConvolution*>(node);
 
-                    auto arg0_shape = node->get_input_shape(0);
-                    auto arg1_shape = node->get_input_shape(1);
-                    auto result_shape = node->get_output_shape(0);
-                    auto arg0_rank = arg0_shape.size();
-                    auto arg1_rank = arg1_shape.size();
-
-                    bool data_dilated = false;
-                    for (size_t s : convolution->get_data_dilation_strides())
-                    {
-                        data_dilated = data_dilated || (s != 1);
-                    }
-
-                    if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
-                        node->get_input_element_type(0) == element::f32)
+                    if (can_use_mkldnn_conv<ngraph::op::GroupConvolution>(node))
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -179,17 +188,7 @@ namespace ngraph
                 {
                     auto convolution = static_cast<op::ConvolutionRelu*>(node);
 
-                    auto arg0_rank = node->get_input_shape(0).size();
-                    auto arg1_rank = node->get_input_shape(1).size();
-
-                    bool data_dilated = false;
-                    for (size_t s : convolution->get_data_dilation_strides())
-                    {
-                        data_dilated = data_dilated || (s != 1);
-                    }
-
-                    if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
-                        node->get_input_element_type(0) == element::f32)
+                    if (can_use_mkldnn_conv<ngraph::op::ConvolutionRelu>(node))
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -203,17 +202,7 @@ namespace ngraph
                 {
                     auto convolution = static_cast<op::ConvolutionBiasAdd*>(node);
 
-                    auto arg0_rank = node->get_input_shape(0).size();
-                    auto arg1_rank = node->get_input_shape(1).size();
-
-                    bool data_dilated = false;
-                    for (size_t s : convolution->get_data_dilation_strides())
-                    {
-                        data_dilated = data_dilated || (s != 1);
-                    }
-
-                    if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
-                        node->get_input_element_type(0) == element::f32)
+                    if (can_use_mkldnn_conv<ngraph::op::ConvolutionBiasAdd>(node))
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -230,17 +219,7 @@ namespace ngraph
                 {
                     auto convolution = static_cast<op::ConvolutionAdd*>(node);
 
-                    auto arg0_rank = node->get_input_shape(0).size();
-                    auto arg1_rank = node->get_input_shape(1).size();
-
-                    bool data_dilated = false;
-                    for (size_t s : convolution->get_data_dilation_strides())
-                    {
-                        data_dilated = data_dilated || (s != 1);
-                    }
-
-                    if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
-                        node->get_input_element_type(0) == element::f32)
+                    if (can_use_mkldnn_conv<ngraph::op::ConvolutionAdd>(node))
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -763,6 +742,19 @@ namespace ngraph
                         quantized_conv->set_op_annotations(op_annotations);
                     }
                 }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::Quantize)
+                {
+                    if (node->get_input_element_type(0) == element::f32)
+                    {
+                        auto quantize = static_cast<op::Quantize*>(node);
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        quantize->set_op_annotations(op_annotations);
+                    }
+                }
             }
         }
     }
@@ -822,6 +814,7 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::QuantizedAvgPool),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedAvgPool>},
     {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Softmax>},
+    {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Quantize>},
     {TI(ngraph::op::ReplaceSlice),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ReplaceSlice>},
     {TI(ngraph::op::ConvolutionAdd),

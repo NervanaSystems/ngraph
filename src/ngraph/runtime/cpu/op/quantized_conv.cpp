@@ -55,7 +55,6 @@ op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& data_batc
 
     //TODO(nbpatel): Add checks.
 
-    auto& data_batch_et = data_batch->get_element_type();
     auto& data_batch_shape = data_batch->get_shape();
     auto& filters_shape = filters->get_shape();
 

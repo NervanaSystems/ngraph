@@ -46,7 +46,8 @@ namespace ngraph
                     // s32 = f32 * std::pow(2, 31)/ max_abs32;
                     // s8 = f32 * std::pow(2, 7)/ max_abs8;
                     // s8 = s32 * std::pow(2, -24) * max_abs32 / max_abs8;
-                    const float scale = static_cast<float>(std::pow(2, -24) * max_abs32 / max_abs8);
+                    const float scale = static_cast<float>(
+                        (std::pow(2, -24) * static_cast<double>(max_abs32 / max_abs8)));
                     return scale;
                 }
             }
