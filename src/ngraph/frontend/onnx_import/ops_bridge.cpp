@@ -67,6 +67,7 @@
 #include "op/softsign.hpp"
 #include "op/split.hpp"
 #include "op/sqrt.hpp"
+#include "op/squeeze.hpp"
 #include "op/sub.hpp"
 #include "op/sum.hpp"
 #include "op/tanh.hpp"
@@ -182,6 +183,7 @@ namespace ngraph
                     m_map.emplace("Softsign", std::bind(op::softsign, std::placeholders::_1));
                     m_map.emplace("Split", std::bind(op::split, std::placeholders::_1));
                     m_map.emplace("Sqrt", std::bind(op::sqrt, std::placeholders::_1));
+                    m_map.emplace("Squeeze", std::bind(op::squeeze, std::placeholders::_1));
                     m_map.emplace("Sub", std::bind(op::sub, std::placeholders::_1));
                     m_map.emplace("Sum", std::bind(op::sum, std::placeholders::_1));
                     m_map.emplace("Tanh", std::bind(op::tanh, std::placeholders::_1));
