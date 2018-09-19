@@ -151,6 +151,27 @@ void print_results(vector<PerfShape> perf_data, bool timing_detail)
     }
 }
 
+element::Type get_op_element_type()
+{
+    element::Type type;
+    switch (type_id)
+    {
+    case OP_TYPEID::Convert: type = op->get_input_element_type(0); break;
+    case OP_TYPEID::Equal:
+    case OP_TYPEID::Greater:
+    case OP_TYPEID::GreaterEq:
+    case OP_TYPEID::Less:
+    case OP_TYPEID::LessEq:
+    case OP_TYPEID::NotEqual:
+        // Get the type of the second input, not the first
+        // All BinaryElementwiseComparision ops have the same type for inputs
+        // Select has bool for first input and the type we are interested in for the second
+        type = op->get_input_element_type(1);
+        break;
+    default: type = op->get_outputs().at(0).get_element_type(); break;
+    }
+}
+
 int main(int argc, char** argv)
 {
     string model_arg;
