@@ -34,12 +34,12 @@ namespace ngraph
                 const ngraph::element::Type& type, 
                 const ngraph::AxisSet& axes);
 
+            void validate_and_infer_types() override;
+
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
             
             const ngraph::AxisSet& get_axes() const { return m_axes; }
-
-            void validate_and_infer_types() override;
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,

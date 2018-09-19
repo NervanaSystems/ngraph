@@ -35,7 +35,7 @@ op::Quantize::Quantize(
 
 void op::Quantize::validate_and_infer_types()
 {
-    set_output_size(1);
+    //set_output_size(1);
     set_output_type(0, m_type, get_input_shape(0));
 }
 

@@ -843,16 +843,22 @@ private:
         {
             const op::Quantize* quantize = static_cast<const op::Quantize*>(&node);
             element::Type type = node.get_element_type();
-            /*std::cout << "arg size = " << args.size() << std::endl;
-            std::cout << "scale ptr =  |" << (size_t) args[1]->get_data_ptr<T>() << "|" << std::endl;
-            std::cout << "scale data = |" << (T) args[1]->get_data_ptr<T>()[0] << "|" << std::endl;*/
 
             if (type == element::u8)
             {
-                reference::quantize<T, uint8_t>(args[0]->get_data_ptr<T>(),
+                reference::quantize<T>(args[0]->get_data_ptr<T>(),
                                        args[1]->get_data_ptr<T>(),
-                                       args[2]->get_data_ptr<uint8_t>(),
+                                       args[2]->get_data_ptr<T>(),
                                        out[0]->get_data_ptr<uint8_t>(),
+                                       out[0]->get_shape(),
+                                       quantize->get_axes());
+            }
+            else if (type == element::f32)
+            {
+                reference::quantize<T>(args[0]->get_data_ptr<T>(),
+                                       args[1]->get_data_ptr<T>(),
+                                       args[2]->get_data_ptr<T>(),
+                                       out[0]->get_data_ptr<float>(),
                                        out[0]->get_shape(),
                                        quantize->get_axes());
             }
