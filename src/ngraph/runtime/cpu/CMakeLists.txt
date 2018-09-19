@@ -37,6 +37,7 @@ set(SRC
     builder/convert_layout.cpp
     builder/convolution.cpp
     builder/dequantize.cpp
+    builder/quantize.cpp
     builder/dot.cpp
     builder/function_call.cpp
     builder/lstm.cpp
@@ -52,6 +53,8 @@ set(SRC
     builder/reduce_function.cpp
     builder/reduce_function_window.cpp
     builder/replace_slice.cpp
+    builder/quantized_max_pool.cpp
+    builder/quantized_avg_pool.cpp
     builder/reshape.cpp
     builder/reverse.cpp
     builder/reverse_sequence.cpp
@@ -79,10 +82,13 @@ set(SRC
     op/conv_relu.cpp
     op/convert_layout.cpp
     op/dequantize.cpp
+    op/quantize.cpp
     op/loop_kernel.cpp
     op/lstm.cpp
     op/matmul_bias.cpp
     op/max_pool_with_indices.cpp
+    op/quantized_max_pool.cpp
+    op/quantized_avg_pool.cpp
     op/rnn.cpp
     op/sigmoid_mul.cpp
     op/conv_add.cpp

@@ -1376,7 +1376,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
         auto pattern_map = m.get_pattern_map();
         if (!std::dynamic_pointer_cast<op::Constant>(pattern_map[alpha]))
         {
-            throw ngraph_error("alpha must be constant for bounded relu");
+            NGRAPH_DEBUG << "alpha must be constant for bounded relu";
+            return false;
         }
 
         // we wont fuse if the alpha and the Relu output element type are not same

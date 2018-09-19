@@ -36,12 +36,11 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
     auto f = make_shared<Function>(make_shared<op::AllReduce>(A), op::ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    auto v = vector<float>{1, 2, 3, 4};
     int comm_size;
 
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
 
+    auto v = vector<float>{1, 2, 3, 4};
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 2, 3, 4});
 

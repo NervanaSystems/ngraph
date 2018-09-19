@@ -213,14 +213,14 @@ const mkldnn::memory::desc& runtime::cpu::mkldnn_utils::get_input_mkldnn_md(cons
                                                                             size_t index)
 {
     auto cpu_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
-        node->get_inputs()[index].get_output().get_tensor_view()->get_tensor_view_layout());
+        node->get_inputs()[index].get_output().get_tensor_ptr()->get_tensor_layout());
     return cpu_tvl->get_mkldnn_md();
 }
 
 const mkldnn::memory::desc& runtime::cpu::mkldnn_utils::get_output_mkldnn_md(const Node* node,
                                                                              size_t index)
 {
-    auto tvl = node->get_output_tensor_view(index)->get_tensor_view_layout();
+    auto tvl = node->get_output_tensor_ptr(index)->get_tensor_layout();
     return dynamic_cast<runtime::cpu::LayoutDescriptor&>(*tvl).get_mkldnn_md();
 }
 
@@ -235,12 +235,12 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_default_mkldnn_md(
     if (output)
     {
         shape = node->get_output_shape(index);
-        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_output_element_type(0));
+        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_output_element_type(index));
     }
     else
     {
         shape = node->get_input_shape(index);
-        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0));
+        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(index));
     }
 
     return memory::desc(memory::dims(shape.begin(), shape.end()), et, format);

@@ -28,6 +28,7 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/util/arithmetic_reduction.hpp"
 #include "ngraph/shape.hpp"
 
 #include "core/node.hpp"
