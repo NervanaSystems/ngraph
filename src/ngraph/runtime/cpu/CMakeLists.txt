@@ -153,12 +153,11 @@ if (NGRAPH_CPU_ENABLE)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
     endif()
 
-    target_compile_definitions(cpu_backend PRIVATE EIGEN_OPENMP)
-
     if(OPENMP_FOUND)
         target_compile_options(cpu_backend PRIVATE "${OpenMP_CXX_FLAGS}")
+        target_compile_definitions(cpu_backend PRIVATE EIGEN_OPENMP)
     else()
-         message(FATAL_ERROR "The build toolset doesn't support OpenMP which is required by the CPU backend")
+         message(WARNING "The build toolset doesn't support OpenMP. This will impact performance and lead to slowdowns.")
     endif()
 
     if(NGRAPH_DISTRIBUTED_ENABLE)
