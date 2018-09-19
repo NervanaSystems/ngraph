@@ -93,11 +93,7 @@ namespace ngraph
                 void emit_debug_function_entry(Node* node);
                 void emit_debug_function_exit(Node* node);
                 void emit_temp_mem_pool_allocation(std::shared_ptr<Function> current_function);
-                void emit_op(GPU_ExternalFunction* external_function,
-                             codegen::CodeWriter& writer,
-                             const ngraph::Node* node,
-                             const std::vector<GPU_TensorViewWrapper>& args,
-                             const std::vector<GPU_TensorViewWrapper>& out);
+                void emit_op(EMIT_ARGS);
                 void release_function() { m_function = nullptr; }
                 void store_emitted_functions(const std::string& code);
                 std::string emit_op_as_function(const Node& node, const std::string& function_name);

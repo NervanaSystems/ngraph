@@ -33,12 +33,7 @@ namespace ngraph
             class GPU_Emitter
             {
             public:
-                static std::function<void(runtime::gpu::GPU_ExternalFunction*,
-                                          codegen::CodeWriter&,
-                                          const Node*,
-                                          const std::vector<runtime::gpu::GPU_TensorViewWrapper>&,
-                                          const std::vector<runtime::gpu::GPU_TensorViewWrapper>&)>
-                    get_emit_function(const Node& node);
+                static std::function<void(EMIT_ARGS)> get_emit_function(const Node& node);
 
 // This defines a collection of function declarations like this
 // static void emit_Abs(EMIT_ARGS);
@@ -48,11 +43,7 @@ namespace ngraph
 #undef NGRAPH_OP
 
                 template <typename T>
-                static void emit_elementwise(GPU_ExternalFunction* external_function,
-                                             codegen::CodeWriter& writer,
-                                             const ngraph::Node* node,
-                                             const std::vector<GPU_TensorViewWrapper>& args,
-                                             const std::vector<GPU_TensorViewWrapper>& out)
+                static void emit_elementwise(EMIT_ARGS)
                 {
                     if (out[0].get_size() == 0)
                     {
