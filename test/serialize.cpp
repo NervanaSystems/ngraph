@@ -179,8 +179,6 @@ TEST(serialize, unknown_op)
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<UnknownOp>(A), op::ParameterVector{A});
 
-    // auto f = make_shared<Function>(make_shared<UnknownOp>(A), NodeVector{A});
-
     string s = serialize(f, 4);  cout << s << endl;
 }
 
