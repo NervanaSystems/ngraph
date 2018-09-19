@@ -27,9 +27,14 @@ op::Quantize::Quantize(
                 const AxisSet& axes)
 
     : Op("Quantize", check_single_output_args({input, scale, offset}))
+    , m_type(type)
     , m_axes(axes)
 {
     constructor_validate_and_infer_types();
+}
+
+void op::Quantize::validate_and_infer_types()
+{
     set_output_size(1);
     set_output_type(0, m_type, get_input_shape(0));
 }

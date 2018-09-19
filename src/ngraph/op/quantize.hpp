@@ -39,6 +39,8 @@ namespace ngraph
             
             const ngraph::AxisSet& get_axes() const { return m_axes; }
 
+            void validate_and_infer_types() override;
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;

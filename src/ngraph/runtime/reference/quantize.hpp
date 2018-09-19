@@ -19,6 +19,7 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
+#include <iostream>
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate_transform.hpp"
@@ -38,8 +39,21 @@ namespace ngraph
             template <typename TI, typename TO>
             void quantize(const TI* input, const TI* scale, const TO* offset, TO* output, const Shape& shape, const AxisSet& axes)
             {
+                TI i = input[0];
+                TI s = scale[0];
+                TO o = offset[0];
+
+                std::cout << "input ptr  = |" << (size_t) input << "|" << std::endl;
+                std::cout << "input data = |" << i << "|" << std::endl;
+
+                std::cout << "scale ptr  = |" << (size_t) scale << "|" << std::endl;
+                std::cout << "scale data = |" << s << "|" << std::endl;
+
+                std::cout << "offset ptr  = |" << (size_t) offset << "|" << std::endl;
+                std::cout << "offset data = |" << (uint32_t) o << "|" << std::endl;
+
                 for(uint32_t i = 0; i < shape_size(shape); ++i) {
-                    output[i] = std::round(input[i] / scale[0]) + offset[0];
+                    output[i] = input[0];
                 }
 
             }
