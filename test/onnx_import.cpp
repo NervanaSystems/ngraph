@@ -21,6 +21,7 @@
 #include "gtest/gtest.h"
 #include "ngraph/frontend/onnx_import/onnx.hpp"
 #include "ngraph/ngraph.hpp"
+#include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
 #include "util/test_tools.hpp"
@@ -743,4 +744,516 @@ TEST(onnx, model_reshape_output_shape_as_input)
 
     Outputs outputs{execute(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reduce_log_sum)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_log_sum.onnx"));
+
+    // input data shape (1, 1, 4, 4)
+    Inputs inputs{
+        test::NDArray<float, 4>({{{{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}}}})
+            .get_vector()};
+
+    // output data shape (1,)
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{2.77258872f}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reduce_log_sum_exp)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_log_sum_exp.onnx"));
+
+    // input data shape (1, 1, 4, 4)
+    Inputs inputs{
+        test::NDArray<float, 4>({{{{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}}}})
+            .get_vector()};
+
+    // output data shape (1,)
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{3.77258872f}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reduce_l1)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_l1.onnx"));
+
+    // input data shape (1, 1, 4, 4)
+    Inputs inputs{
+        test::NDArray<float, 4>({{{{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}}}})
+            .get_vector()};
+
+    // output data shape (1,)
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{16}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reduce_l2)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_l2.onnx"));
+
+    // input data shape (1, 1, 4, 4)
+    Inputs inputs{
+        test::NDArray<float, 4>({{{{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}}}})
+            .get_vector()};
+
+    // output data shape (1,)
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{4}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reduce_max)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_max.onnx"));
+
+    // input data shape (1, 1, 4, 4)
+    Inputs inputs{
+        test::NDArray<float, 4>({{{{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}, {13, 14, 15, 16}}}})
+            .get_vector()};
+
+    // output data shape (1,)
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{16}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reduce_mean)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_mean.onnx"));
+
+    // input data shape (1, 1, 4, 4)
+    Inputs inputs{
+        test::NDArray<float, 4>({{{{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}}}})
+            .get_vector()};
+
+    // output data shape (1,)
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{1}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reduce_min)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_min.onnx"));
+
+    // input data shape (1, 1, 4, 4)
+    Inputs inputs{
+        test::NDArray<float, 4>({{{{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}, {13, 14, 15, 16}}}})
+            .get_vector()};
+
+    // output data shape (1,)
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{1}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reduce_prod)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_prod.onnx"));
+
+    // input data shape (1, 1, 4, 4)
+    Inputs inputs{
+        test::NDArray<float, 4>({{{{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}}}})
+            .get_vector()};
+
+    // output data shape (1,)
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{1}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reduce_sum)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_sum.onnx"));
+
+    // input data shape (1, 1, 4, 4)
+    Inputs inputs{
+        test::NDArray<float, 4>({{{{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}}}})
+            .get_vector()};
+
+    // output data shape (1,)
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{16}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_reduce_sum_square)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_sum_square.onnx"));
+
+    // input data shape (1, 1, 4, 4)
+    Inputs inputs{
+        test::NDArray<float, 4>({{{{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}}}})
+            .get_vector()};
+
+    // output data shape (1,)
+    Outputs expected_outputs{test::NDArray<float, 4>({{{{16}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_shape)
+{
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/shape.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(test::NDArray<float, 3>(
+                            {{{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
+                             {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
+                             {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}}})
+                            .get_vector());
+
+    std::vector<std::vector<int64_t>> expected_output{{3, 4, 5}};
+
+    std::vector<std::vector<int64_t>> outputs =
+        execute<float, int64_t>(function, inputs, "INTERPRETER");
+    EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx, model_elu)
+{
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/elu.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(
+        test::NDArray<float, 3>(
+            {{{-9, -8, -7, -6, -5}, {-4, -3, -2, -1, 0}, {1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}},
+             {{-4, -3, -2, -1, 0}, {1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}},
+             {{1, 1, 1, 1, 1}, {-1, -1, -1, -1, -1}, {0, 0, 0, 0, 0}, {2, 2, 2, 2, 2}}})
+            .get_vector());
+
+    Outputs expected_output{test::NDArray<float, 3>({{{-1.999753180391830f,
+                                                       -1.999329074744190f,
+                                                       -1.998176236068890f,
+                                                       -1.995042495646670f,
+                                                       -1.986524106001830f},
+                                                      {-1.963368722222530f,
+                                                       -1.900425863264270f,
+                                                       -1.729329433526770f,
+                                                       -1.264241117657120f,
+                                                       0},
+                                                      {1, 2, 3, 4, 5},
+                                                      {6, 7, 8, 9, 10}},
+                                                     {{-1.963368722222530f,
+                                                       -1.900425863264270f,
+                                                       -1.729329433526770f,
+                                                       -1.264241117657120f,
+                                                       0},
+                                                      {1, 2, 3, 4, 5},
+                                                      {6, 7, 8, 9, 10},
+                                                      {11, 12, 13, 14, 15}},
+                                                     {{1, 1, 1, 1, 1},
+                                                      {-1.264241117657120f,
+                                                       -1.264241117657120f,
+                                                       -1.264241117657120f,
+                                                       -1.264241117657120f,
+                                                       -1.264241117657120f},
+                                                      {0, 0, 0, 0, 0},
+                                                      {2, 2, 2, 2, 2}}})
+                                .get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx, model_leaky_relu)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/leaky_relu.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(
+        test::NDArray<float, 3>(
+            {{{-9, -8, -7, -6, -5}, {-4, -3, -2, -1, 0}, {1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}},
+             {{-4, -3, -2, -1, 0}, {1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}},
+             {{1, 1, 1, 1, 1}, {-1, -1, -1, -1, -1}, {0, 0, 0, 0, 0}, {2, 2, 2, 2, 2}}})
+            .get_vector());
+
+    Outputs expected_output{test::NDArray<float, 3>({{{-0.9f, -0.8f, -0.7f, -0.6f, -0.5f},
+                                                      {-0.4f, -0.3f, -0.2f, -0.1f, 0},
+                                                      {1, 2, 3, 4, 5},
+                                                      {6, 7, 8, 9, 10}},
+                                                     {{-0.4f, -0.3f, -0.2f, -0.1f, 0},
+                                                      {1, 2, 3, 4, 5},
+                                                      {6, 7, 8, 9, 10},
+                                                      {11, 12, 13, 14, 15}},
+                                                     {{1, 1, 1, 1, 1},
+                                                      {-0.1f, -0.1f, -0.1f, -0.1f, -0.1f},
+                                                      {0, 0, 0, 0, 0},
+                                                      {2, 2, 2, 2, 2}}})
+                                .get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx, prelu)
+{
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/prelu.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(
+        test::NDArray<float, 3>(
+            {{{-9, -8, -7, -6, -5}, {-4, -3, -2, -1, 0}, {1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}},
+             {{-4, -3, -2, -1, 0}, {1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}},
+             {{1, 1, 1, 1, 1}, {-1, -1, -1, -1, -1}, {0, 0, 0, 0, 0}, {2, 2, 2, 2, 2}}})
+            .get_vector());
+
+    inputs.emplace_back(test::NDArray<float, 3>(
+                            {{{1, 0, 1, 0, 1}, {0, 1, 0, 1, 0}, {1, 0, 1, 0, 1}, {0, 1, 0, 1, 0}},
+                             {{0, 1, 0, 1, 0}, {1, 0, 1, 0, 1}, {0, 1, 0, 1, 0}, {1, 0, 1, 0, 1}},
+                             {{1, 0, 1, 0, 1}, {0, 1, 0, 1, 0}, {1, 0, 1, 0, 1}, {0, 1, 0, 1, 0}}})
+                            .get_vector());
+
+    Outputs expected_output{
+        test::NDArray<float, 3>(
+            {{{-9, 0, -7, 0, -5}, {0, -3, 0, -1, 0}, {1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}},
+             {{0, -3, 0, -1, 0}, {1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}},
+             {{1, 1, 1, 1, 1}, {0, -1, 0, -1, 0}, {0, 0, 0, 0, 0}, {2, 2, 2, 2, 2}}})
+            .get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx, model_selu)
+{
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/selu.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(
+        test::NDArray<float, 3>(
+            {{{-9, -8, -7, -6, -5}, {-4, -3, -2, -1, 0}, {1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}},
+             {{-4, -3, -2, -1, 0}, {1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}},
+             {{1, 1, 1, 1, 1}, {-1, -1, -1, -1, -1}, {0, 0, 0, 0, 0}, {2, 2, 2, 2, 2}}})
+            .get_vector());
+
+    Outputs expected_output{
+        test::NDArray<float, 3>(
+            {{{-5.99925954117548f,
+               -5.99798722423258f,
+               -5.99452870820667f,
+               -5.98512748694000f,
+               -5.95957231800549f},
+              {-5.89010616666759f, -5.70127758979282f, -5.18798830058032f, -3.79272335297135f, 0},
+              {3, 6, 9, 12, 15},
+              {18, 21, 24, 27, 30}},
+             {{-5.89010616666759f, -5.70127758979282f, -5.18798830058032f, -3.79272335297135f, 0},
+              {3, 6, 9, 12, 15},
+              {18, 21, 24, 27, 30},
+              {33, 36, 39, 42, 45}},
+             {{3, 3, 3, 3, 3},
+              {-3.79272335297135f,
+               -3.79272335297135f,
+               -3.79272335297135f,
+               -3.79272335297135f,
+               -3.79272335297135f},
+              {0, 0, 0, 0, 0},
+              {6, 6, 6, 6, 6}}})
+            .get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx, model_sigmoid)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/sigmoid.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(
+        test::NDArray<float, 3>(
+            {{{-9, -8, -7, -6, -5}, {-4, -3, -2, -1, 0}, {1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}},
+             {{-4, -3, -2, -1, 0}, {1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}},
+             {{1, 1, 1, 1, 1}, {-1, -1, -1, -1, -1}, {0, 0, 0, 0, 0}, {2, 2, 2, 2, 2}}})
+            .get_vector());
+
+    Outputs expected_output{test::NDArray<float, 3>({{{0.00012339457598623f,
+                                                       0.00033535013046648f,
+                                                       0.00091105119440065f,
+                                                       0.00247262315663477f,
+                                                       0.00669285092428486f},
+                                                      {0.01798620996209160f,
+                                                       0.04742587317756680f,
+                                                       0.119202922022118f,
+                                                       0.268941421369995f,
+                                                       0.5f},
+                                                      {0.731058578630005f,
+                                                       0.880797077977882f,
+                                                       0.952574126822433f,
+                                                       0.982013790037908f,
+                                                       0.993307149075715f},
+                                                      {0.997527376843365f,
+                                                       0.999088948805599f,
+                                                       0.999664649869534f,
+                                                       0.999876605424014f,
+                                                       0.999954602131298f}},
+                                                     {{0.01798620996209160f,
+                                                       0.04742587317756680f,
+                                                       0.119202922022118f,
+                                                       0.268941421369995f,
+                                                       0.5f},
+                                                      {0.731058578630005f,
+                                                       0.880797077977882f,
+                                                       0.952574126822433f,
+                                                       0.982013790037908f,
+                                                       0.993307149075715f},
+                                                      {0.997527376843365f,
+                                                       0.999088948805599f,
+                                                       0.999664649869534f,
+                                                       0.999876605424014f,
+                                                       0.999954602131298f},
+                                                      {0.999983298578152f,
+                                                       0.999993855825398f,
+                                                       0.999997739675702f,
+                                                       0.999999168471972f,
+                                                       0.999999694097773f}},
+                                                     {{0.731058578630005f,
+                                                       0.731058578630005f,
+                                                       0.731058578630005f,
+                                                       0.731058578630005f,
+                                                       0.731058578630005f},
+                                                      {0.268941421369995f,
+                                                       0.268941421369995f,
+                                                       0.268941421369995f,
+                                                       0.268941421369995f,
+                                                       0.268941421369995f},
+                                                      {0.5f, 0.5f, 0.5f, 0.5f, 0.5f},
+                                                      {0.880797077977882f,
+                                                       0.880797077977882f,
+                                                       0.880797077977882f,
+                                                       0.880797077977882f,
+                                                       0.880797077977882f}}})
+                                .get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx, model_tanh)
+{
+    auto function =
+        onnx_import::import_onnx_function(file_util::path_join(SERIALIZED_ZOO, "onnx/tanh.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(
+        test::NDArray<float, 3>(
+            {{{-9, -8, -7, -6, -5}, {-4, -3, -2, -1, 0}, {1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}},
+             {{-4, -3, -2, -1, 0}, {1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}},
+             {{1, 1, 1, 1, 1}, {-1, -1, -1, -1, -1}, {0, 0, 0, 0, 0}, {2, 2, 2, 2, 2}}})
+            .get_vector());
+
+    Outputs expected_output{test::NDArray<float, 3>({{{-0.999999969540041f,
+                                                       -0.999999774929676f,
+                                                       -0.999998336943945f,
+                                                       -0.999987711650796f,
+                                                       -0.999909204262595f},
+                                                      {-0.999329299739067f,
+                                                       -0.995054753686731f,
+                                                       -0.964027580075817f,
+                                                       -0.761594155955765f,
+                                                       0},
+                                                      {0.761594155955765f,
+                                                       0.964027580075817f,
+                                                       0.995054753686731f,
+                                                       0.999329299739067f,
+                                                       0.999909204262595f},
+                                                      {0.999987711650796f,
+                                                       0.999998336943945f,
+                                                       0.999999774929676f,
+                                                       0.999999969540041f,
+                                                       0.999999995877693f}},
+                                                     {{-0.999329299739067f,
+                                                       -0.995054753686731f,
+                                                       -0.964027580075817f,
+                                                       -0.761594155955765f,
+                                                       0},
+                                                      {0.761594155955765f,
+                                                       0.964027580075817f,
+                                                       0.995054753686731f,
+                                                       0.999329299739067f,
+                                                       0.999909204262595f},
+                                                      {0.999987711650796f,
+                                                       0.999998336943945f,
+                                                       0.999999774929676f,
+                                                       0.999999969540041f,
+                                                       0.999999995877693f},
+                                                      {0.999999999442106f,
+                                                       0.999999999924497f,
+                                                       0.999999999989782f,
+                                                       0.999999999998617f,
+                                                       0.999999999999813f}},
+                                                     {{0.761594155955765f,
+                                                       0.761594155955765f,
+                                                       0.761594155955765f,
+                                                       0.761594155955765f,
+                                                       0.761594155955765f},
+                                                      {-0.761594155955765f,
+                                                       -0.761594155955765f,
+                                                       -0.761594155955765f,
+                                                       -0.761594155955765f,
+                                                       -0.761594155955765f},
+                                                      {0, 0, 0, 0, 0},
+                                                      {0.964027580075817f,
+                                                       0.964027580075817f,
+                                                       0.964027580075817f,
+                                                       0.964027580075817f,
+                                                       0.964027580075817f}}})
+                                .get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx, model_thresholded_relu)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/thresholded_relu.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(
+        test::NDArray<float, 3>(
+            {{{-9, -8, -7, -6, -5}, {-4, -3, -2, -1, 0}, {1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}},
+             {{-4, -3, -2, -1, 0}, {1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}},
+             {{1, 1, 1, 1, 1}, {-1, -1, -1, -1, -1}, {0, 0, 0, 0, 0}, {2, 2, 2, 2, 2}}})
+            .get_vector());
+
+    Outputs expected_output{
+        test::NDArray<float, 3>(
+            {{{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {0, 0, 3, 4, 5}, {6, 7, 8, 9, 10}},
+             {{0, 0, 0, 0, 0}, {0, 0, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}},
+             {{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}}})
+            .get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }

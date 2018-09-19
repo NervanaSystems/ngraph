@@ -14,19 +14,28 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/remainder.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
+#include <memory>
 
-op::Remainder::Remainder(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
-    : BinaryElementwiseArithmetic("Remainder", arg0, arg1)
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/sqrt.hpp"
+
+#include "core/node.hpp"
+
+namespace ngraph
 {
-    constructor_validate_and_infer_types();
-}
+    namespace onnx_import
+    {
+        namespace op
+        {
+            inline NodeVector sqrt(const Node& node)
+            {
+                return {std::make_shared<ngraph::op::Sqrt>(node.get_ng_inputs().at(0))};
+            }
 
-shared_ptr<Node> op::Remainder::copy_with_new_args(const NodeVector& new_args) const
-{
-    check_new_args_count(this, new_args);
-    return make_shared<Remainder>(new_args.at(0), new_args.at(1));
-}
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

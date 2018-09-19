@@ -45,19 +45,12 @@ namespace ngraph
                 if (output_shape.empty() && ng_inputs.size() == 2)
                 {
                     // Currently only support Constant node.
-                    if (ng_inputs.at(1)->description() == "Constant")
-                    {
-                        auto output_shape_node =
-                            std::dynamic_pointer_cast<ngraph::op::Constant>(ng_inputs.at(1));
-                        output_shape = output_shape_node->get_vector<std::size_t>();
-                    }
-                    else
-                    {
-                        throw error::NotSupported("Reshape",
-                                                  node.get_name(),
-                                                  "doesn't support "
-                                                  "shape input of other type than Constant.");
-                    }
+                    ASSERT_IS_SUPPORTED(node, ng_inputs.at(1)->description() == "Constant")
+                        << "doesn't support shape input of other type than Constant.";
+
+                    auto output_shape_node =
+                        std::dynamic_pointer_cast<ngraph::op::Constant>(ng_inputs.at(1));
+                    output_shape = output_shape_node->get_vector<std::size_t>();
                 }
                 // Do nothing if there is no shape argument nor second node input.
                 else if (output_shape.empty())

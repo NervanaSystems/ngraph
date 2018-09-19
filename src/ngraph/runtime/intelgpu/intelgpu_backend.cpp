@@ -73,8 +73,8 @@ static void arguments_check(const shared_ptr<Node>& op, size_t input, size_t out
     {
         ostringstream os;
         os << "Operation \"" << op->description() << "\" input and output sizes mismatch."
-           << " Expected input size=" << op->get_input_size() << ", provided=" << input
-           << ". Expected output size=" << op->get_output_size() << ", provided=" << output;
+           << " Expected input size=" << input << ", provided=" << op->get_input_size()
+           << ". Expected output size=" << output << ", provided=" << op->get_output_size();
         throw invalid_argument(os.str());
     }
 }
@@ -234,7 +234,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             arguments_check(op, 0, 1);
 
-            const string& element_name = op->get_output_tensor_view()->get_tensor().get_name();
+            const string& element_name = op->get_output_tensor_ptr()->get_name();
             const cldnn::layout element_layout =
                 IntelGPULayout::create_cldnn_layout(op->get_element_type(), op->get_shape());
 
@@ -249,7 +249,10 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         }
         else if ("GetOutputElement" == op->description())
         {
-            arguments_check(op, 3, 1);
+            if (op->get_inputs().empty() || op->get_outputs().size() != 1)
+            {
+                arguments_check(op, 1, 1); // at least one input and exact one output expected
+            }
 
             const shared_ptr<op::GetOutputElement> elem =
                 static_pointer_cast<op::GetOutputElement>(op);
@@ -1030,7 +1033,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         }
         else
         {
-            throw invalid_argument("IntelGPU: Unsupported operation \"" + op->description() + "\"");
+            throw unsupported_op(op->description());
         }
     }
 

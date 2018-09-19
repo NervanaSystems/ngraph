@@ -46,7 +46,6 @@
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/relu.hpp"
-#include "ngraph/op/remainder.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
@@ -162,7 +161,6 @@ static std::unordered_map<std::type_index,
          {TI(op::Minimum), cse_binarywise},
          {TI(op::Multiply), cse_binarywise},
          {TI(op::Power), cse_binarywise},
-         //{TI(op::Remainder), cse_binarywise},
          {TI(op::Subtract), cse_binarywise},
          {TI(op::Sum), cse_reduction},
          {TI(op::Product), cse_reduction},
