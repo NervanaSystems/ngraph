@@ -37,11 +37,9 @@
 #include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
 
 #define EMIT_ARGS                                                                                  \
-    runtime::gpu::GPU_ExternalFunction *external_function,\
-    codegen::CodeWriter &writer,\
-    const Node *node,        \
-    const vector<runtime::gpu::GPU_TensorViewWrapper> &args,\
-    const vector<runtime::gpu::GPU_TensorViewWrapper> &out
+    runtime::gpu::GPU_ExternalFunction *external_function, codegen::CodeWriter &writer,            \
+        const Node *node, const vector<runtime::gpu::GPU_TensorViewWrapper> &args,                 \
+        const vector<runtime::gpu::GPU_TensorViewWrapper> &out
 
 namespace ngraph
 {

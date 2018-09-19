@@ -34,10 +34,10 @@ namespace ngraph
             {
             public:
                 static std::function<void(runtime::gpu::GPU_ExternalFunction*,
-                        codegen::CodeWriter&,
-                        const Node*,
-                        const std::vector<runtime::gpu::GPU_TensorViewWrapper>&,
-                        const std::vector<runtime::gpu::GPU_TensorViewWrapper>&)>
+                                          codegen::CodeWriter&,
+                                          const Node*,
+                                          const std::vector<runtime::gpu::GPU_TensorViewWrapper>&,
+                                          const std::vector<runtime::gpu::GPU_TensorViewWrapper>&)>
                     get_emit_function(const Node& node);
 
 // This defines a collection of function declarations like this
