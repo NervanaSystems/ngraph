@@ -38,8 +38,8 @@
 
 #define EMIT_ARGS                                                                                  \
     runtime::gpu::GPU_ExternalFunction *external_function, codegen::CodeWriter &writer,            \
-        const Node *node, const vector<runtime::gpu::GPU_TensorViewWrapper> &args,                 \
-        const vector<runtime::gpu::GPU_TensorViewWrapper> &out
+        const Node *node, const std::vector<runtime::gpu::GPU_TensorViewWrapper> &args,            \
+        const std::vector<runtime::gpu::GPU_TensorViewWrapper> &out
 
 namespace ngraph
 {

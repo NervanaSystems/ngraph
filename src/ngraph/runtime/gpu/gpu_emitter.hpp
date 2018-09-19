@@ -41,22 +41,9 @@ namespace ngraph
                     get_emit_function(const Node& node);
 
 // This defines a collection of function declarations like this
-// static void emit_Abs(GPU_ExternalFunction* external_function,
-//                      codegen::CodeWriter& writer,
-//                      const ngraph::Node* node,
-//                      const std::vector<GPU_TensorViewWrapper>& args,
-//                      const std::vector<GPU_TensorViewWrapper>& out);
-// static void emit_Acos(GPU_ExternalFunction* external_function,
-//                       codegen::CodeWriter& writer,
-//                       const ngraph::Node* node,
-//                       const std::vector<GPU_TensorViewWrapper>& args,
-//                       const std::vector<GPU_TensorViewWrapper>& out);
-#define NGRAPH_OP(a)                                                                               \
-    static void emit_##a(GPU_ExternalFunction* external_function,                                  \
-                         codegen::CodeWriter& writer,                                              \
-                         const ngraph::Node* node,                                                 \
-                         const std::vector<GPU_TensorViewWrapper>& args,                           \
-                         const std::vector<GPU_TensorViewWrapper>& out);
+// static void emit_Abs(EMIT_ARGS);
+// static void emit_Acos(EMIT_ARGS);
+#define NGRAPH_OP(a) static void emit_##a(EMIT_ARGS);
 #include "ngraph/op/op_tbl.hpp"
 #undef NGRAPH_OP
 
