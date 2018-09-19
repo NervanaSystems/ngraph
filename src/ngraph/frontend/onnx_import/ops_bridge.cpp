@@ -71,6 +71,7 @@
 #include "op/sum.hpp"
 #include "op/tanh.hpp"
 #include "op/thresholded_relu.hpp"
+#include "op/transpose.hpp"
 #include "op/unsqueeze.hpp"
 #include "op/xor.hpp"
 #include "ops_bridge.hpp"
@@ -186,6 +187,7 @@ namespace ngraph
                     m_map.emplace("Tanh", std::bind(op::tanh, std::placeholders::_1));
                     m_map.emplace("ThresholdedRelu",
                                   std::bind(op::thresholded_relu, std::placeholders::_1));
+                    m_map.emplace("Transpose", std::bind(op::transpose, std::placeholders::_1));
                     m_map.emplace("Unsqueeze", std::bind(op::unsqueeze, std::placeholders::_1));
                     m_map.emplace("Xor", std::bind(op::logical_xor, std::placeholders::_1));
                 }

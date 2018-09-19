@@ -109,6 +109,8 @@ add_library(onnx_import STATIC
         op/tanh.hpp
         op/thresholded_relu.cpp
         op/thresholded_relu.hpp
+        op/transpose.cpp
+        op/transpose.hpp
         op/unsqueeze.cpp
         op/unsqueeze.hpp
         op/xor.hpp
