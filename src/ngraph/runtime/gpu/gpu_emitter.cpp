@@ -105,10 +105,6 @@ using namespace ngraph;
 
 #define TI(x) type_index(typeid(x))
 
-#define EMIT_ARGS                                                                                  \
-    GPU_ExternalFunction *external_function, codegen::CodeWriter &writer, const Node *node,        \
-        const vector<GPU_TensorViewWrapper> &args, const vector<GPU_TensorViewWrapper> &out
-
 void runtime::gpu::GPU_Emitter::emit_Abs(EMIT_ARGS)
 {
     emit_elementwise<ngraph::op::Abs>(external_function, writer, node, args, out);

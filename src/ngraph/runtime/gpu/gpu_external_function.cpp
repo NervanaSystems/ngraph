@@ -174,14 +174,14 @@ enum class OP_TYPEID
 };
 #undef NGRAPH_OP
 
-static OP_TYPEID get_typeid(const Node& node)
+static function<void(EMIT_ARGS)> get_emit_function(const Node& node)
 {
 // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
 // {<Abs typeid>, OP_TYPEID::Abs},
 // {<Acos typeid>, OP_TYPEID::Acos},
 // ...
-#define NGRAPH_OP(a) {type_index(typeid(ngraph::op::a)), OP_TYPEID::a},
-    static const unordered_map<type_index, OP_TYPEID> typeid_map{
+#define NGRAPH_OP(a) {type_index(typeid(ngraph::op::a)), runtime::gpu::emit_ #a},
+    static const map<type_index, function<void(EMIT_ARGS)>> typeid_map{
 #include "ngraph/op/op_tbl.hpp"
     };
 #undef NGRAPH_OP

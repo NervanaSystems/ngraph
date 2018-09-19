@@ -46,14 +46,9 @@ namespace ngraph
             class GPU_CallFrame;
             struct GPURuntimeContext;
 
-            using OpFunction =
-                std::function<void(GPU_ExternalFunction* external_function,
-                                   codegen::CodeWriter&,
-                                   const ngraph::Node*,
-                                   const std::vector<GPU_TensorViewWrapper>& inputs,
-                                   const std::vector<GPU_TensorViewWrapper>& outputs)>;
-
-            using OpMap = std::unordered_map<std::type_index, OpFunction>;
+#define EMIT_ARGS                                                                                  \
+    GPU_ExternalFunction *external_function, codegen::CodeWriter &writer, const Node *node,        \
+        const vector<GPU_TensorViewWrapper> &args, const vector<GPU_TensorViewWrapper> &out
 
             class GPU_ExternalFunction : public std::enable_shared_from_this<GPU_ExternalFunction>
             {
