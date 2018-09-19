@@ -88,11 +88,13 @@ add_library(onnx_import STATIC
         op/relu.hpp
         op/reshape.cpp
         op/reshape.hpp
-        op/shape.cpp
-        op/shape.hpp
         op/selu.cpp
         op/selu.hpp
+        op/shape.hpp
+        op/shape.cpp
         op/sigmoid.hpp
+        op/slice.cpp
+        op/slice.hpp
         op/softmax.cpp
         op/softmax.hpp
         op/softplus.cpp
