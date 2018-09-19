@@ -35,7 +35,7 @@ RUN pip install --upgrade pip
 # added install for python-pip above and
 # installed sphinx with pip to get the updated version 1.6.5
 # allows for make html build under the doc/source directory as an interim build process
-RUN pip install sphinx
+RUN pip install sphinx==1.7.9
 RUN pip install breathe
 
 # need numpy to successfully build docs for python_api
