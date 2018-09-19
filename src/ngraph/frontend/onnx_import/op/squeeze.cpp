@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <numeric>
+#include <vector>
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -34,7 +35,7 @@ namespace ngraph
                 NodeVector inputs{node.get_ng_inputs()};
                 auto data = inputs.at(0);
                 auto data_shape = data->get_shape();
-                auto axes = node.get_attribute_value<AxisVector>("axes", {});
+                auto axes = node.get_attribute_value<std::vector<uint64_t>>("axes", {});
 
                 if (axes.empty())
                 {
@@ -47,7 +48,7 @@ namespace ngraph
                     }
                 }
 
-                std::sort(std::begin(axes), std::end(axes), std::greater<size_t>());
+                std::sort(std::begin(axes), std::end(axes), std::greater<uint64_t>());
 
                 AxisVector input_order{reshape::get_default_axis_vector(data_shape.size())};
 
