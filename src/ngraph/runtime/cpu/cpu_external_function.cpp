@@ -17,7 +17,6 @@
 #include <cstdlib>
 #include <fstream>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <tuple>
 #include <typeindex>
@@ -1388,19 +1387,17 @@ void runtime::cpu::CPU_ExternalFunction::build()
             for (const descriptor::Input& input : node->get_inputs())
             {
                 const descriptor::Output& output = input.get_output();
-                shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-                auto name = tv->get_tensor().get_name();
-                temp << &tensor_data[name];
-                node_inputs.push_back(name + "(" + temp.str() + ")");
+                shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
+                temp << &tensor_data[tv->get_name()];
+                node_inputs.push_back(tv->get_name() + "(" + temp.str() + ")");
                 temp.str("");
             }
 
             for (const descriptor::Output& output : node->get_outputs())
             {
-                shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-                auto name = tv->get_tensor().get_name();
-                temp << &tensor_data[name];
-                node_outputs.push_back(name + "(" + temp.str() + ")");
+                shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
+                temp << &tensor_data[tv->get_name()];
+                node_outputs.push_back(tv->get_name() + "(" + temp.str() + ")");
                 temp.str("");
             }
             strm << "\n" << node->get_name() << "(";
