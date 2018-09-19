@@ -36,6 +36,13 @@
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
 
+#define EMIT_ARGS                                                                                  \
+    runtime::gpu::GPU_ExternalFunction *external_function,\
+    codegen::CodeWriter &writer,\
+    const Node *node,        \
+    const vector<runtime::gpu::GPU_TensorViewWrapper> &args,\
+    const vector<runtime::gpu::GPU_TensorViewWrapper> &out
+
 namespace ngraph
 {
     namespace runtime
@@ -45,10 +52,6 @@ namespace ngraph
             class GPU_Emitter;
             class GPU_CallFrame;
             struct GPURuntimeContext;
-
-#define EMIT_ARGS                                                                                  \
-    GPU_ExternalFunction *external_function, codegen::CodeWriter &writer, const Node *node,        \
-        const vector<GPU_TensorViewWrapper> &args, const vector<GPU_TensorViewWrapper> &out
 
             class GPU_ExternalFunction : public std::enable_shared_from_this<GPU_ExternalFunction>
             {

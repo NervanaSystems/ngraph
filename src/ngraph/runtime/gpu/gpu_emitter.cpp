@@ -33,6 +33,9 @@
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
+#include "ngraph/op/and.hpp"
+#include "ngraph/op/argmax.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -57,6 +60,7 @@
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
+#include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
@@ -68,6 +72,7 @@
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
@@ -82,16 +87,19 @@
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/select_and_scatter.hpp"
+#include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
 #include "ngraph/op/sinh.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/op/topk.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
@@ -104,6 +112,31 @@ using namespace std;
 using namespace ngraph;
 
 #define TI(x) type_index(typeid(x))
+
+function<void(runtime::gpu::GPU_ExternalFunction*,
+              codegen::CodeWriter&,
+              const Node*,
+              const vector<runtime::gpu::GPU_TensorViewWrapper>&,
+              const vector<runtime::gpu::GPU_TensorViewWrapper>&)>
+    runtime::gpu::GPU_Emitter::get_emit_function(const Node& node)
+{
+// This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
+// {<Abs typeid>, function<void(EMIT_ARGS)},
+// {<Acos typeid>, function<void(EMIT_ARGS)},
+// ...
+#define NGRAPH_OP(a) {type_index(typeid(ngraph::op::a)), runtime::gpu::GPU_Emitter::emit_##a},
+    static const map<type_index, function<void(EMIT_ARGS)>> typeid_map{
+#include "ngraph/op/op_tbl.hpp"
+    };
+#undef NGRAPH_OP
+    auto it = typeid_map.find(type_index(typeid(node)));
+    if (it == typeid_map.end())
+    {
+        throw unsupported_op("Unsupported op '" + node.description() + "'");
+    }
+
+    return it->second;
+}
 
 void runtime::gpu::GPU_Emitter::emit_Abs(EMIT_ARGS)
 {

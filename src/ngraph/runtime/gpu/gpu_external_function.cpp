@@ -24,6 +24,7 @@
 #include <string>
 #include <tuple>
 
+#include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
@@ -163,64 +164,14 @@ static string emit_string_array(const vector<string>& s, size_t max_line_length)
 
 static GPUStaticInitializers s_static_initializers;
 
-// This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
-// Abs,
-// Acos,
-// ...
-#define NGRAPH_OP(a) a,
-enum class OP_TYPEID
-{
-#include "ngraph/op/op_tbl.hpp"
-};
-#undef NGRAPH_OP
-
-static function<void(EMIT_ARGS)> get_emit_function(const Node& node)
-{
-// This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
-// {<Abs typeid>, OP_TYPEID::Abs},
-// {<Acos typeid>, OP_TYPEID::Acos},
-// ...
-#define NGRAPH_OP(a) {type_index(typeid(ngraph::op::a)), runtime::gpu::emit_ #a},
-    static const map<type_index, function<void(EMIT_ARGS)>> typeid_map{
-#include "ngraph/op/op_tbl.hpp"
-    };
-#undef NGRAPH_OP
-    auto it = typeid_map.find(type_index(typeid(node)));
-    if (it == typeid_map.end())
-    {
-        throw unsupported_op("Unsupported op '" + node.description() + "'");
-    }
-
-    return it->second;
-}
-
 void runtime::gpu::GPU_ExternalFunction::emit_op(GPU_ExternalFunction* external_function,
                                                  codegen::CodeWriter& writer,
                                                  const ngraph::Node* node,
                                                  const std::vector<GPU_TensorViewWrapper>& args,
                                                  const std::vector<GPU_TensorViewWrapper>& out)
 {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic error "-Wswitch"
-#pragma GCC diagnostic error "-Wswitch-enum"
-    switch (get_typeid(*node))
-    {
-// This emits a collection of case statements that look like this:
-// case OP_TYPEID::Abs:
-// {
-//     runtime::gpu::GPU_Emitter::emit_Abs(external_function, writer, node, args, out);
-//     break;
-// }
-#define NGRAPH_OP(a)                                                                               \
-    case OP_TYPEID::a:                                                                             \
-    {                                                                                              \
-        runtime::gpu::GPU_Emitter::emit_##a(external_function, writer, node, args, out);           \
-        break;                                                                                     \
-    }
-#include "ngraph/op/op_tbl.hpp"
-#undef NGRAPH_OP
-    }
-#pragma GCC diagnostic pop
+    auto emit_function = GPU_Emitter::get_emit_function(*node);
+    emit_function(external_function, writer, node, args, out);
 };
 
 const size_t runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction::s_memory_pool_alignment = 64;
