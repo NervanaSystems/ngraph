@@ -61,15 +61,18 @@
 #include "op/selu.hpp"
 #include "op/shape.hpp"
 #include "op/sigmoid.hpp"
+#include "op/slice.hpp"
 #include "op/softmax.hpp"
 #include "op/softplus.hpp"
 #include "op/softsign.hpp"
 #include "op/split.hpp"
 #include "op/sqrt.hpp"
+#include "op/squeeze.hpp"
 #include "op/sub.hpp"
 #include "op/sum.hpp"
 #include "op/tanh.hpp"
 #include "op/thresholded_relu.hpp"
+#include "op/transpose.hpp"
 #include "op/unsqueeze.hpp"
 #include "op/xor.hpp"
 #include "ops_bridge.hpp"
@@ -171,19 +174,22 @@ namespace ngraph
                                   std::bind(op::reduce_sum_square, std::placeholders::_1));
                     m_map.emplace("Relu", std::bind(op::relu, std::placeholders::_1));
                     m_map.emplace("Reshape", std::bind(op::reshape, std::placeholders::_1));
-                    m_map.emplace("Shape", std::bind(op::shape, std::placeholders::_1));
                     m_map.emplace("Selu", std::bind(op::selu, std::placeholders::_1));
+                    m_map.emplace("Shape", std::bind(op::shape, std::placeholders::_1));
                     m_map.emplace("Sigmoid", std::bind(op::sigmoid, std::placeholders::_1));
+                    m_map.emplace("Slice", std::bind(op::slice, std::placeholders::_1));
                     m_map.emplace("Softmax", std::bind(op::softmax, std::placeholders::_1));
                     m_map.emplace("Softplus", std::bind(op::softplus, std::placeholders::_1));
                     m_map.emplace("Softsign", std::bind(op::softsign, std::placeholders::_1));
                     m_map.emplace("Split", std::bind(op::split, std::placeholders::_1));
                     m_map.emplace("Sqrt", std::bind(op::sqrt, std::placeholders::_1));
+                    m_map.emplace("Squeeze", std::bind(op::squeeze, std::placeholders::_1));
                     m_map.emplace("Sub", std::bind(op::sub, std::placeholders::_1));
                     m_map.emplace("Sum", std::bind(op::sum, std::placeholders::_1));
                     m_map.emplace("Tanh", std::bind(op::tanh, std::placeholders::_1));
                     m_map.emplace("ThresholdedRelu",
                                   std::bind(op::thresholded_relu, std::placeholders::_1));
+                    m_map.emplace("Transpose", std::bind(op::transpose, std::placeholders::_1));
                     m_map.emplace("Unsqueeze", std::bind(op::unsqueeze, std::placeholders::_1));
                     m_map.emplace("Xor", std::bind(op::logical_xor, std::placeholders::_1));
                 }

@@ -88,11 +88,13 @@ add_library(onnx_import STATIC
         op/relu.hpp
         op/reshape.cpp
         op/reshape.hpp
-        op/shape.cpp
-        op/shape.hpp
         op/selu.cpp
         op/selu.hpp
+        op/shape.hpp
+        op/shape.cpp
         op/sigmoid.hpp
+        op/slice.cpp
+        op/slice.hpp
         op/softmax.cpp
         op/softmax.hpp
         op/softplus.cpp
@@ -102,11 +104,15 @@ add_library(onnx_import STATIC
         op/split.cpp
         op/split.hpp
         op/sqrt.hpp
+        op/squeeze.cpp
+        op/squeeze.hpp
         op/sub.hpp
         op/sum.hpp
         op/tanh.hpp
         op/thresholded_relu.cpp
         op/thresholded_relu.hpp
+        op/transpose.cpp
+        op/transpose.hpp
         op/unsqueeze.cpp
         op/unsqueeze.hpp
         op/xor.hpp
