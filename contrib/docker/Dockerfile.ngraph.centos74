@@ -30,7 +30,7 @@ RUN yum -y update && \
     cmake3 make \
     git \
     wget patch diffutils zlib-devel ncurses-devel libtinfo-dev \
-    python python-devel python-setuptools \
+    python python-devel python3-sphinx python-setuptools \
     doxygen graphviz \
     which \
     'perl(Data::Dumper)'
