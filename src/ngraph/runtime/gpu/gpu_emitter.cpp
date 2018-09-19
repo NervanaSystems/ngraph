@@ -113,12 +113,7 @@ using namespace ngraph;
 
 #define TI(x) type_index(typeid(x))
 
-function<void(runtime::gpu::GPU_ExternalFunction*,
-              codegen::CodeWriter&,
-              const Node*,
-              const vector<runtime::gpu::GPU_TensorViewWrapper>&,
-              const vector<runtime::gpu::GPU_TensorViewWrapper>&)>
-    runtime::gpu::GPU_Emitter::get_emit_function(const Node& node)
+function<void(EMIT_ARGS)> runtime::gpu::GPU_Emitter::get_emit_function(const Node& node)
 {
 // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
 // {<Abs typeid>, function<void(EMIT_ARGS)},
