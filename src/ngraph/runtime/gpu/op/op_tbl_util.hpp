@@ -14,13 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/gpu/op/op_tbl_util.hpp"
-
-#include "ngraph/op/op_tbl.hpp"
-#if CUDNN_VERSION >= 7200
-NGRAPH_GPU_OP(Lstm)
-NGRAPH_GPU_OP(Rnn)
+#if defined(NGRAPH_OP_DISPATCH)
+#define NGRAPH_OP(a) {type_index(typeid(ngraph::op::a)), runtime::gpu::GPU_Emitter::emit_##a},
+#define NGRAPH_GPU_OP(a)                                                                           \
+    {type_index(typeid(ngraph::op::gpu::a)), runtime::gpu::GPU_Emitter::emit_##a},
+#elif defined(NGRAPH_OP_EMIT_DECL)
+#define NGRAPH_OP(a) static void emit_##a(EMIT_ARGS);
+#define NGRAPH_GPU_OP(a) NGRAPH_OP(a)
 #endif
-
-#undef NGRAPH_GPU_OP
-#undef NGRAPH_OP

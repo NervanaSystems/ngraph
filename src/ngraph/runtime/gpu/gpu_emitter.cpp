@@ -116,15 +116,15 @@ using namespace ngraph;
 
 function<void(EMIT_ARGS)> runtime::gpu::GPU_Emitter::get_emit_function(const Node& node)
 {
-// This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
-// {<Abs typeid>, function<void(EMIT_ARGS)},
-// {<Acos typeid>, function<void(EMIT_ARGS)},
-// ...
-#define NGRAPH_OP_DISPATCH
+    // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
+    // {<Abs typeid>, function<void(EMIT_ARGS)},
+    // {<Acos typeid>, function<void(EMIT_ARGS)},
+    // ...
     static const map<type_index, function<void(EMIT_ARGS)>> typeid_map{
+#define NGRAPH_OP_DISPATCH
 #include "ngraph/runtime/gpu/op/op_tbl.hpp"
-    };
 #undef NGRAPH_OP_DISPATCH
+    };
     auto it = typeid_map.find(type_index(typeid(node)));
     if (it == typeid_map.end())
     {
