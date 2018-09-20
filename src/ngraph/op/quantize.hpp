@@ -27,12 +27,18 @@ namespace ngraph
         class Quantize : public ngraph::op::Op
         {
         public:
+            enum class RoundMode {
+                HALF_AWAY_FROM_ZERO,
+                HALF_TO_EVEN
+            };
+
             Quantize(
                 std::shared_ptr<Node> input, 
                 std::shared_ptr<Node> scale, 
                 std::shared_ptr<Node> offset, 
                 const ngraph::element::Type& type, 
-                const ngraph::AxisSet& axes);
+                const ngraph::AxisSet& axes,
+                RoundMode round_mode);
 
             void validate_and_infer_types() override;
 
@@ -47,14 +53,9 @@ namespace ngraph
                                            const NodeVector& deltas) override;
 
         private:
-            enum{
-                INPUT,
-                SCALE,
-                OFFSET
-            };
-
             ngraph::element::Type m_type;
             ngraph::AxisSet m_axes;
+            RoundMode m_round_mode;
         };
     }
 }

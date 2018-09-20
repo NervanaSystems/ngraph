@@ -19,23 +19,26 @@
 using namespace std;
 using namespace ngraph;
 
-// TODO: round mode?
 op::Quantize::Quantize(
                 shared_ptr<Node> input, 
                 shared_ptr<Node> scale, 
                 shared_ptr<Node> offset, 
                 const element::Type& type,
-                const AxisSet& axes)
+                const AxisSet& axes,
+                RoundMode round_mode)
 
     : Op("Quantize", check_single_output_args({input, scale, offset}))
     , m_type(type)
     , m_axes(axes)
+    , m_round_mode(round_mode)
 {
     constructor_validate_and_infer_types();
 }
 
 void op::Quantize::validate_and_infer_types()
 {
+    enum{INPUT, SCALE, OFFSET};
+
     set_output_size(1);
     set_output_type(0, m_type, get_input_shape(INPUT));
 
@@ -75,12 +78,15 @@ void op::Quantize::validate_and_infer_types()
     NODE_VALIDATION_ASSERT(this, get_input_shape(OFFSET) == projected_shape)
         << "Offset shape (" << get_input_shape(OFFSET)
         << ") must match input shape projected along the quantization axes (" << projected_shape << ")";
+
+    NODE_VALIDATION_ASSERT(this, m_round_mode == RoundMode::HALF_AWAY_FROM_ZERO)
+        << "Only RoundMode = HALF_AWAY_FROM_ZERO is supported, for now";
 }
 
 shared_ptr<Node> op::Quantize::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Quantize>(new_args.at(0), new_args.at(1), new_args.at(2), m_type, m_axes);
+    return make_shared<Quantize>(new_args.at(0), new_args.at(1), new_args.at(2), m_type, m_axes, m_round_mode);
 }
 
 void op::Quantize::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
