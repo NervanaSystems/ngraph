@@ -14,6 +14,8 @@
 # limitations under the License.
 # ******************************************************************************
 
+include(FindOpenMP)
+
 set(SRC
     cpu_backend.cpp
     cpu_builder.cpp
@@ -24,6 +26,7 @@ set(SRC
     cpu_tensor_view_wrapper.cpp
     cpu_tensor_view.cpp
     cpu_tracing.cpp
+    quantization_util.cpp
     builder/add.cpp
     builder/allreduce.cpp
     builder/avg_pool.cpp
@@ -35,6 +38,7 @@ set(SRC
     builder/concat.cpp
     builder/convert.cpp
     builder/convert_layout.cpp
+    builder/quantized_conv.cpp
     builder/convolution.cpp
     builder/dequantize.cpp
     builder/quantize.cpp
@@ -80,6 +84,7 @@ set(SRC
     op/group_conv.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
+    op/quantized_conv.cpp
     op/convert_layout.cpp
     op/dequantize.cpp
     op/quantize.cpp
@@ -149,6 +154,13 @@ if (NGRAPH_CPU_ENABLE)
     set_target_properties(cpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
     if (NGRAPH_DEX_ONLY)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
+    endif()
+
+    if(OPENMP_FOUND)
+        target_compile_options(cpu_backend PRIVATE "${OpenMP_CXX_FLAGS}")
+        target_compile_definitions(cpu_backend PRIVATE EIGEN_OPENMP)
+    else()
+         message(WARNING "The build toolset doesn't support OpenMP. This will impact performance and lead to slowdowns.")
     endif()
 
     if(NGRAPH_DISTRIBUTED_ENABLE)
