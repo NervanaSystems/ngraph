@@ -842,7 +842,7 @@ private:
         case OP_TYPEID::Quantize:
         {
             const op::Quantize* quantize = static_cast<const op::Quantize*>(&node);
-            element::Type type = node.get_element_type();
+            auto type = quantize->get_element_type();
 
             if (type == element::u8)
             {
@@ -853,15 +853,22 @@ private:
                                        out[0]->get_shape(),
                                        quantize->get_axes());
             }
-            else if (type == element::f32)
+            else if (type == element::i8)
             {
                 reference::quantize<T>(args[0]->get_data_ptr<T>(),
                                        args[1]->get_data_ptr<T>(),
                                        args[2]->get_data_ptr<T>(),
-                                       out[0]->get_data_ptr<float>(),
+                                       out[0]->get_data_ptr<int8_t>(),
                                        out[0]->get_shape(),
                                        quantize->get_axes());
             }
+            else
+            {
+                std::stringstream ss;
+                ss << "unsupported element type " << type << " op Quantize";
+                throw std::runtime_error(ss.str());
+            }
+
             break;
         }
         case OP_TYPEID::Reduce:

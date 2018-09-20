@@ -9560,47 +9560,30 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_one)
     EXPECT_EQ((vector<float>{3, 1, 4}), read_vector<float>(result1));
 }
 
-/*
 NGRAPH_TEST(${BACKEND_NAME}, quantize)
 {
-    Shape shape{4, 3};
-    auto X = make_shared<op::Parameter>(element::f32, shape);
-    auto Scale = op::Constant::create(element::f32, Shape{1}, {2.0f});
-    auto Offset = op::Constant::create(element::f32, Shape{1}, {1});
-    auto f = make_shared<Function>(make_shared<op::Quantize>(X, Scale, Offset, element::u8, AxisSet{}), op::ParameterVector{X});
+    Shape input_shape{4, 3};
+    Shape scale_offset_shape;
+    AxisSet quantization_axes;
+
+    auto input_type = element::f32;
+    auto output_type = element::u8;
+
+    typedef float input_c_type;
+    typedef uint8_t output_c_type;
+
+    auto X = make_shared<op::Parameter>(input_type, input_shape);
+    auto scale = op::Constant::create(input_type, scale_offset_shape, {2});
+    auto offset = op::Constant::create(input_type, scale_offset_shape, {1});
+    auto quantize = make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes);
+    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto x = backend->create_tensor(input_type, input_shape);
+    auto y = backend->create_tensor(output_type, input_shape);
 
-    auto x = backend->create_tensor(element::f32, shape);
-    copy_data(x, vector<float>{12, 2, 10, 9, 8, 4, 6, 1, 5, 3, 11, 7});
+    copy_data(x, vector<input_c_type>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
 
-    auto result = backend->create_tensor(element::u8, shape);
-
-    backend->call_with_validate(f, {result}, {x});
-    EXPECT_EQ((vector<uint8_t>{7, 2, 6, 6, 5, 3, 4, 2, 4, 3, 7, 5 }), read_vector<uint8_t>(result));
-}
-*/
-
-NGRAPH_TEST(${BACKEND_NAME}, quantize)
-{
-    Shape shape{4, 3};
-    auto X = make_shared<op::Parameter>(element::f32, shape);
-    auto Scale = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto Offset = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto f = make_shared<Function>(make_shared<op::Quantize>(X, Scale, Offset, element::u8, AxisSet{}), op::ParameterVector{X, Scale, Offset});
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    auto x = backend->create_tensor(element::f32, shape);
-    copy_data(x, vector<float>{12, 2, 10, 9, 8, 4, 6, 1, 5, 3, 11, 7});
-
-    auto scale = backend->create_tensor(element::f32, Shape{1});
-    copy_data(scale, vector<float>{2});
-
-    auto offset = backend->create_tensor(element::f32, Shape{1});
-    copy_data(offset, vector<float>{1});
-
-    auto result = backend->create_tensor(element::u8, shape);
-
-    backend->call_with_validate(f, {result}, {x, scale, offset});
-    EXPECT_EQ((vector<uint8_t>{7, 2, 6, 6, 5, 3, 4, 2, 4, 3, 7, 5 }), read_vector<uint8_t>(result));
+    backend->call_with_validate(f, {y}, {x});
+    EXPECT_EQ((vector<output_c_type>{1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7}), read_vector<output_c_type>(y));
 }

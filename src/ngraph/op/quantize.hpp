@@ -46,6 +46,12 @@ namespace ngraph
                                            const NodeVector& deltas) override;
 
         private:
+            enum{
+                INPUT,
+                SCALE,
+                OFFSET
+            };
+            
             ngraph::element::Type m_type;
             ngraph::AxisSet m_axes;
         };
