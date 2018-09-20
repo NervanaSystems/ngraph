@@ -14,35 +14,32 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <chrono>
-#include <iostream>
+#include <memory>
+#include <vector>
 
-#include "gtest/gtest.h"
-#include "ngraph/log.hpp"
+#include "ngraph/node.hpp"
 
-using namespace std;
+#include "transpose.hpp"
+#include "utils/reshape.hpp"
 
-#ifdef NGRAPH_DISTRIBUTED
-#include "ngraph/distributed.hpp"
-#endif
-
-int main(int argc, char** argv)
+namespace ngraph
 {
-#ifdef NGRAPH_DISTRIBUTED
-    ngraph::Distributed dist;
-#endif
-    const char* exclude = "--gtest_filter=-benchmark.*";
-    vector<char*> argv_vector;
-    argv_vector.push_back(argv[0]);
-    argv_vector.push_back(const_cast<char*>(exclude));
-    for (int i = 1; i < argc; i++)
+    namespace onnx_import
     {
-        argv_vector.push_back(argv[i]);
-    }
-    argc++;
+        namespace op
+        {
+            NodeVector transpose(const Node& node)
+            {
+                std::shared_ptr<ngraph::Node> data = node.get_ng_inputs().at(0);
 
-    ::testing::InitGoogleTest(&argc, argv_vector.data());
-    int rc = RUN_ALL_TESTS();
+                auto permute_axes = node.get_attribute_value<std::vector<std::size_t>>("perm", {});
 
-    return rc;
-}
+                return {(permute_axes.empty()) ? reshape::transpose(data)
+                                               : reshape::reorder_axes(data, permute_axes)};
+            }
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

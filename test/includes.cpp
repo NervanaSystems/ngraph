@@ -103,7 +103,6 @@ TEST(DISABLED_include, complete)
                                     "ngraph/op/reduce.hpp",
                                     "ngraph/op/reduce_window.hpp",
                                     "ngraph/op/relu.hpp",
-                                    "ngraph/op/remainder.hpp",
                                     "ngraph/op/replace_slice.hpp",
                                     "ngraph/op/reshape.hpp",
                                     "ngraph/op/reverse.hpp",
