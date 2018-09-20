@@ -36,6 +36,11 @@
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
 
+#define EMIT_ARGS                                                                                  \
+    runtime::gpu::GPU_ExternalFunction *external_function, codegen::CodeWriter &writer,            \
+        const Node *node, const std::vector<runtime::gpu::GPU_TensorViewWrapper> &args,            \
+        const std::vector<runtime::gpu::GPU_TensorViewWrapper> &out
+
 namespace ngraph
 {
     namespace runtime
@@ -45,15 +50,6 @@ namespace ngraph
             class GPU_Emitter;
             class GPU_CallFrame;
             struct GPURuntimeContext;
-
-            using OpFunction =
-                std::function<void(GPU_ExternalFunction* external_function,
-                                   codegen::CodeWriter&,
-                                   const ngraph::Node*,
-                                   const std::vector<GPU_TensorViewWrapper>& inputs,
-                                   const std::vector<GPU_TensorViewWrapper>& outputs)>;
-
-            using OpMap = std::unordered_map<std::type_index, OpFunction>;
 
             class GPU_ExternalFunction : public std::enable_shared_from_this<GPU_ExternalFunction>
             {
@@ -81,6 +77,14 @@ namespace ngraph
                 EntryPoint m_compiled_function;
 
             private:
+                // For non-destructive passthrough kernels, propagate function
+                // input buffers to internal ops
+                void propagate_in_place_input(ngraph::descriptor::Output* output,
+                                              std::string input_name);
+                // For in-place kernels, propagate function output buffers to
+                // internal ops
+                void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
+                                               std::string output_name);
                 void emit_header();
                 void emit_timer_functions();
                 void emit_constant_declarations();
@@ -89,6 +93,7 @@ namespace ngraph
                 void emit_debug_function_entry(Node* node);
                 void emit_debug_function_exit(Node* node);
                 void emit_temp_mem_pool_allocation(std::shared_ptr<Function> current_function);
+                void emit_op(EMIT_ARGS);
                 void release_function() { m_function = nullptr; }
                 void store_emitted_functions(const std::string& code);
                 std::string emit_op_as_function(const Node& node, const std::string& function_name);

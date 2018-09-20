@@ -54,6 +54,7 @@
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
 #include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -64,7 +65,7 @@ using namespace ngraph;
 using namespace ngraph::runtime::cpu;
 
 // Check if the input layout matches the layout requested in `required_mds`
-// If not, insert a layout conversion node between the input tensorview and
+// If not, insert a layout conversion node between the input tensor and
 // the `node`. For now, only MKLDNN nodes/kernels can request specific layouts
 shared_ptr<Node> runtime::cpu::pass::CPULayout::insert_input_conversions(
     runtime::cpu::CPU_ExternalFunction* external_function,
@@ -85,9 +86,8 @@ shared_ptr<Node> runtime::cpu::pass::CPULayout::insert_input_conversions(
     for (const descriptor::Input& input : node->get_inputs())
     {
         const auto& output = input.get_output();
-        auto tv = output.get_tensor_view();
-        auto tvl =
-            dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout());
+        auto tv = output.get_tensor_ptr();
+        auto tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_layout());
 
         if (!tvl)
         {
@@ -149,8 +149,8 @@ void runtime::cpu::pass::CPULayout::set_output_layouts(shared_ptr<Node>& node,
 {
     for (size_t i = 0; i < node->get_output_size(); ++i)
     {
-        auto tv = node->get_output_tensor_view(i);
-        auto tvl = tv->get_tensor_view_layout();
+        auto tv = node->get_output_tensor_ptr(i);
+        auto tvl = tv->get_tensor_layout();
         if (tvl)
         {
             throw ngraph_error("Node (" + node->get_name() +
@@ -159,7 +159,7 @@ void runtime::cpu::pass::CPULayout::set_output_layouts(shared_ptr<Node>& node,
         }
         auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
         layout->set_mkldnn_md(output_mds[i]);
-        tv->set_tensor_view_layout(layout);
+        tv->set_tensor_layout(layout);
         NGRAPH_DEBUG << "Setting Node: " << node->get_name()
                      << " output layout: " << output_mds[i].data.format << endl;
     }
@@ -176,10 +176,10 @@ void runtime::cpu::pass::CPULayout::set_native_layouts(
     for (descriptor::Input& input : node->get_inputs())
     {
         const auto& output = input.get_output();
-        auto tv = output.get_tensor_view();
+        auto tv = output.get_tensor_ptr();
         auto et = tv->get_element_type();
         auto shape = tv->get_shape();
-        auto tvl = tv->get_tensor_view_layout();
+        auto tvl = tv->get_tensor_layout();
         auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
 
         if (cpu_tvl && cpu_tvl->is_mkldnn_layout())
@@ -238,8 +238,8 @@ void runtime::cpu::pass::CPULayout::set_native_layouts(
 
     for (size_t i = 0; i < node->get_output_size(); ++i)
     {
-        auto tv = node->get_output_tensor_view(i);
-        if (tv->get_tensor_view_layout())
+        auto tv = node->get_output_tensor_ptr(i);
+        if (tv->get_tensor_layout())
         {
             // TODO(jbobba): Should this be an error instead?
             // Some unit tests are sharing nodes across graphs
@@ -255,7 +255,7 @@ void runtime::cpu::pass::CPULayout::set_native_layouts(
                 mkldnn_utils::create_blocked_mkldnn_md(shape, layout->get_strides(), et);
             layout->set_mkldnn_md(native_md);
         }
-        tv->set_tensor_view_layout(layout);
+        tv->set_tensor_layout(layout);
     }
 }
 
@@ -1172,10 +1172,7 @@ namespace ngraph
                 {
                     auto result = static_cast<const ngraph::op::Result*>(node.get());
                     auto cpu_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
-                        node->get_inputs()[0]
-                            .get_output()
-                            .get_tensor_view()
-                            ->get_tensor_view_layout());
+                        node->get_inputs()[0].get_output().get_tensor_ptr()->get_tensor_layout());
 
                     if (result->needs_default_layout() || !cpu_tvl->is_mkldnn_layout() ||
                         cpu_tvl->get_size() * cpu_tvl->get_element_type().size() !=
@@ -1196,51 +1193,60 @@ namespace ngraph
                 void CPULayout::LAYOUT_DECL(ngraph::op::Reshape)
                 {
                     auto reshape = static_cast<ngraph::op::Reshape*>(node.get());
-                    if (reshape->get_is_transpose() &&
-                        reshape->get_output_shape().size() ==
-                            reshape->get_argument(0)->get_shape().size())
+                    if (reshape->get_is_transpose())
                     {
-                        auto axis_order = reshape->get_input_order();
-                        auto tvl = node->get_inputs()[0]
-                                       .get_output()
-                                       .get_tensor_view()
-                                       ->get_tensor_view_layout();
-                        auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
-                        if (cpu_tvl && cpu_tvl->is_mkldnn_layout())
+                        if (reshape->get_output_shape().size() ==
+                            reshape->get_argument(0)->get_shape().size())
                         {
-                            // Rotate MKLDNN memory descriptor
-                            auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-                            auto output_md = mkldnn_utils::rotate_blocked_md(input_md, axis_order);
-                            set_output_layouts(node, {output_md});
-                            auto op_annotations = reshape->get_op_annotations();
-                            if (op_annotations)
+                            auto axis_order = reshape->get_input_order();
+                            auto tvl = node->get_inputs()[0]
+                                           .get_output()
+                                           .get_tensor_ptr()
+                                           ->get_tensor_layout();
+                            auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
+                            if (cpu_tvl && cpu_tvl->is_mkldnn_layout())
                             {
-                                // pass-through
-                                op_annotations->add_in_place_oi_pair({0, 0, false});
+                                // Rotate MKLDNN memory descriptor
+                                auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                                auto output_md =
+                                    mkldnn_utils::rotate_blocked_md(input_md, axis_order);
+                                set_output_layouts(node, {output_md});
+                                auto op_annotations = reshape->get_op_annotations();
+                                if (op_annotations)
+                                {
+                                    // pass-through
+                                    op_annotations->add_in_place_oi_pair({0, 0, false});
+                                }
+                                else
+                                {
+                                    op_annotations =
+                                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                                    // pass-through
+                                    op_annotations->add_in_place_oi_pair({0, 0, false});
+                                    reshape->set_op_annotations(op_annotations);
+                                }
                             }
                             else
                             {
-                                op_annotations =
-                                    std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                                // pass-through
-                                op_annotations->add_in_place_oi_pair({0, 0, false});
-                                reshape->set_op_annotations(op_annotations);
+                                auto input_strides = cpu_tvl->get_strides();
+                                Strides output_strides(input_strides.size());
+                                for (size_t i = 0; i < input_strides.size(); i++)
+                                {
+                                    output_strides[i] = input_strides[axis_order[i]];
+                                }
+                                set_native_layouts(external_function, node);
+                                auto output_tvl =
+                                    dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
+                                        node->get_output_tensor_ptr()->get_tensor_layout());
+                                // TODO (jbobba): For now non-MKLDNN layouts are always in row-major format
+                                // Enable this once we support non row-major strided formats
+                                // output_tvl->set_strides(output_strides);
                             }
                         }
                         else
                         {
-                            auto input_strides = cpu_tvl->get_strides();
-                            Strides output_strides(input_strides.size());
-                            for (size_t i = 0; i < input_strides.size(); i++)
-                            {
-                                output_strides[i] = input_strides[axis_order[i]];
-                            }
                             set_native_layouts(external_function, node);
-                            auto output_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
-                                node->get_output_tensor_view()->get_tensor_view_layout());
-                            // TODO (jbobba): For now non-MKLDNN layouts are always in row-major format
-                            // Enable this once we support non row-major strided formats
-                            // output_tvl->set_strides(output_strides);
+                            return;
                         }
                     }
                     else
@@ -1649,6 +1655,20 @@ namespace ngraph
                         throw ngraph_error("Dequantized op is only supported in MKLDNN for now.");
                     }
                 }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Quantize)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        //TODO : Propogate Layout
+                        set_native_layouts(external_function, node);
+                    }
+                    else
+                    {
+                        throw ngraph_error("Quantized op is only supported in MKLDNN for now.");
+                    }
+                }
             }
         }
     }
@@ -1711,6 +1731,7 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::ConvolutionAdd),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionAdd>},
     {TI(ngraph::op::Dequantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Dequantize>},
+    {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Quantize>},
 };
 
 bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)

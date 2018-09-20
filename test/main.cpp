@@ -23,28 +23,14 @@
 using namespace std;
 
 #ifdef NGRAPH_DISTRIBUTED
-#include <mpi.h>
-
-class MpiEnvironment : public ::testing::Environment
-{
-protected:
-    virtual void SetUp()
-    {
-        int flag = 0;
-        MPI_Initialized(&flag);
-        if (!flag)
-        {
-            MPI_Init(NULL, NULL);
-        }
-    }
-    virtual void TearDown() { MPI_Finalize(); }
-    virtual ~MpiEnvironment() {}
-};
-
+#include "ngraph/distributed.hpp"
 #endif
 
 int main(int argc, char** argv)
 {
+#ifdef NGRAPH_DISTRIBUTED
+    ngraph::Distributed dist;
+#endif
     const char* exclude = "--gtest_filter=-benchmark.*";
     vector<char*> argv_vector;
     argv_vector.push_back(argv[0]);
@@ -56,9 +42,6 @@ int main(int argc, char** argv)
     argc++;
 
     ::testing::InitGoogleTest(&argc, argv_vector.data());
-#ifdef NGRAPH_DISTRIBUTED
-    ::testing::AddGlobalTestEnvironment(new MpiEnvironment);
-#endif
     int rc = RUN_ALL_TESTS();
 
     return rc;
