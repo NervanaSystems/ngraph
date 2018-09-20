@@ -16,18 +16,18 @@
 
 #if defined(NGRAPH_OP_DISPATCH)
 #define NGRAPH_OP(a) {type_index(typeid(ngraph::op::a)), runtime::gpu::GPU_Emitter::emit_##a},
-#define NGRAPH_GPU_OP(a, NAMESPACE)                                                                \
-    {type_index(typeid(NAMESPACE::a)), runtime::gpu::GPU_Emitter::emit_##a},
+#define NGRAPH_GPU_OP(a)                                                                           \
+    {type_index(typeid(ngraph::op::gpu::a)), runtime::gpu::GPU_Emitter::emit_##a},
 #elif defined(NGRAPH_OP_EMIT_DECL)
 #define NGRAPH_OP(a) static void emit_##a(EMIT_ARGS);
-#define NGRAPH_GPU_OP(a, NAMESPACE) static void emit_##a(EMIT_ARGS);
+#define NGRAPH_GPU_OP(a) NGRAPH_OP(a)
 #endif
 
 #include "ngraph/op/op_tbl.hpp"
 
 #if CUDNN_VERSION >= 7200
-NGRAPH_GPU_OP(Lstm, ngraph::op::gpu)
-NGRAPH_GPU_OP(Rnn, ngraph::op::gpu)
+NGRAPH_GPU_OP(Lstm)
+NGRAPH_GPU_OP(Rnn)
 #endif
 
 #undef NGRAPH_OP
