@@ -9577,7 +9577,8 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize)
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {2});
     auto offset = op::Constant::create(input_type, scale_offset_shape, {1});
-    auto quantize = make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
+    auto quantize =
+        make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
     auto f = make_shared<Function>(quantize, op::ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -9591,7 +9592,8 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize)
     // equals                         1  2  2  3  3  4  4  5  5  6  6   7
 
     backend->call_with_validate(f, {y}, {x});
-    EXPECT_EQ((vector<output_c_type>{1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7}), read_vector<output_c_type>(y));
+    EXPECT_EQ((vector<output_c_type>{1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7}),
+              read_vector<output_c_type>(y));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, quantize_axes)
@@ -9611,7 +9613,8 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_axes)
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {2, 3, 4, 5});
     auto offset = op::Constant::create(input_type, scale_offset_shape, {10, 20, 30, 40});
-    auto quantize = make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
+    auto quantize =
+        make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
     auto f = make_shared<Function>(quantize, op::ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -9625,5 +9628,6 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_axes)
     // equals                        10 11 11 21 21 22 32 32 32 42 42  42
 
     backend->call_with_validate(f, {y}, {x});
-    EXPECT_EQ((vector<output_c_type>{10, 11, 11, 21, 21, 22, 32, 32, 32, 42, 42, 42}), read_vector<output_c_type>(y));
+    EXPECT_EQ((vector<output_c_type>{10, 11, 11, 21, 21, 22, 32, 32, 32, 42, 42, 42}),
+              read_vector<output_c_type>(y));
 }

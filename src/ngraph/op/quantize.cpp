@@ -19,13 +19,12 @@
 using namespace std;
 using namespace ngraph;
 
-op::Quantize::Quantize(
-                shared_ptr<Node> input, 
-                shared_ptr<Node> scale, 
-                shared_ptr<Node> offset, 
-                const element::Type& type,
-                const AxisSet& axes,
-                RoundMode round_mode)
+op::Quantize::Quantize(shared_ptr<Node> input,
+                       shared_ptr<Node> scale,
+                       shared_ptr<Node> offset,
+                       const element::Type& type,
+                       const AxisSet& axes,
+                       RoundMode round_mode)
 
     : Op("Quantize", check_single_output_args({input, scale, offset}))
     , m_type(type)
@@ -37,18 +36,22 @@ op::Quantize::Quantize(
 
 void op::Quantize::validate_and_infer_types()
 {
-    enum{INPUT, SCALE, OFFSET};
+    enum
+    {
+        INPUT,
+        SCALE,
+        OFFSET
+    };
 
     set_output_size(1);
     set_output_type(0, m_type, get_input_shape(INPUT));
 
     // TODO: quantized types?
     NODE_VALIDATION_ASSERT(this, (m_type == element::u8 || m_type == element::i8))
-        << "Output element type (" << m_type 
-        << ") must be an 8-bit integer";
+        << "Output element type (" << m_type << ") must be an 8-bit integer";
 
     NODE_VALIDATION_ASSERT(this, get_input_element_type(INPUT).is_real())
-        << "Input element type (" << get_input_element_type(INPUT) 
+        << "Input element type (" << get_input_element_type(INPUT)
         << ") must be a floating point number";
 
     NODE_VALIDATION_ASSERT(this, get_input_element_type(SCALE) == get_input_element_type(INPUT))
@@ -64,19 +67,21 @@ void op::Quantize::validate_and_infer_types()
     for (auto axis : m_axes)
     {
         NODE_VALIDATION_ASSERT(this, axis < get_shape().size())
-            << "Quantizaztion axis (" << axis 
-            << ") is greater than input shape rank (" << get_shape().size() << ")";
+            << "Quantizaztion axis (" << axis << ") is greater than input shape rank ("
+            << get_shape().size() << ")";
     }
-    
+
     Shape projected_shape = project(get_input_shape(INPUT), m_axes, false);
 
     NODE_VALIDATION_ASSERT(this, get_input_shape(SCALE) == projected_shape)
         << "Scale shape (" << get_input_shape(SCALE)
-        << ") must match input shape projected along the quantization axes (" << projected_shape << ")";
+        << ") must match input shape projected along the quantization axes (" << projected_shape
+        << ")";
 
     NODE_VALIDATION_ASSERT(this, get_input_shape(OFFSET) == projected_shape)
         << "Offset shape (" << get_input_shape(OFFSET)
-        << ") must match input shape projected along the quantization axes (" << projected_shape << ")";
+        << ") must match input shape projected along the quantization axes (" << projected_shape
+        << ")";
 
     NODE_VALIDATION_ASSERT(this, m_round_mode == RoundMode::HALF_AWAY_FROM_ZERO)
         << "Only RoundMode = HALF_AWAY_FROM_ZERO is supported, for now";
@@ -85,7 +90,8 @@ void op::Quantize::validate_and_infer_types()
 shared_ptr<Node> op::Quantize::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Quantize>(new_args.at(0), new_args.at(1), new_args.at(2), m_type, m_axes, m_round_mode);
+    return make_shared<Quantize>(
+        new_args.at(0), new_args.at(1), new_args.at(2), m_type, m_axes, m_round_mode);
 }
 
 void op::Quantize::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
