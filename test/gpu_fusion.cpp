@@ -274,55 +274,34 @@ TEST(gpu_fusion, lstm_analytic)
 
     auto backend = runtime::Backend::create("GPU");
 
-    // std::shared_ptr<runtime::TensorView> input_xt_t =
-    //     backend->create_tensor(element::f32, input_xt->get_shape());
-    // copy_data(input_xt_t, std::vector<float>{1.0});
+    std::shared_ptr<runtime::TensorView> input_xt_t =
+        backend->create_tensor(element::f32, input_xt->get_shape());
+    copy_data(input_xt_t, std::vector<float>{1.0});
 
-    // std::shared_ptr<runtime::TensorView> weights_i2h_t =
-    //     backend->create_tensor(element::f32, weights_i2h->get_shape());
-    // copy_data(weights_i2h_t, std::vector<float>{-1.0, -1.0, -1.0, -1.0});
+    std::shared_ptr<runtime::TensorView> weights_i2h_t =
+        backend->create_tensor(element::f32, weights_i2h->get_shape());
+    copy_data(weights_i2h_t, std::vector<float>{-1.0, -1.0, -1.0, -1.0});
 
-    // std::shared_ptr<runtime::TensorView> weights_h2h_t =
-    //     backend->create_tensor(element::f32, weights_h2h->get_shape());
-    // copy_data(weights_h2h_t, std::vector<float>{-1.0, -1.0, -1.0, -1.0});
+    std::shared_ptr<runtime::TensorView> weights_h2h_t =
+        backend->create_tensor(element::f32, weights_h2h->get_shape());
+    copy_data(weights_h2h_t, std::vector<float>{-1.0, -1.0, -1.0, -1.0});
 
-    // std::shared_ptr<runtime::TensorView> bias_i2h_t =
-    //     backend->create_tensor(element::f32, bias_i2h->get_shape());
-    // copy_data(bias_i2h_t, std::vector<float>{-1.0, -1.0, -1.0, -1.0});
+    std::shared_ptr<runtime::TensorView> bias_i2h_t =
+        backend->create_tensor(element::f32, bias_i2h->get_shape());
+    copy_data(bias_i2h_t, std::vector<float>{-1.0, -1.0, -1.0, -1.0});
 
-    // std::shared_ptr<runtime::TensorView> bias_h2h_t =
-    //     backend->create_tensor(element::f32, bias_h2h->get_shape());
-    // copy_data(bias_h2h_t, std::vector<float>{-1.0, -1.0, -1.0, -1.0});
-
-    auto params = f->get_parameters();
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> arg_tensors;
-    int i = 0;
-    for (shared_ptr<op::Parameter> param : params)
-    {
-        if (i++ == 0)
-        {
-            std::shared_ptr<runtime::TensorView> tensor =
-                backend->create_tensor(element::f32, input_xt->get_shape());
-            copy_data(tensor, std::vector<float>{1.0});
-            arg_tensors.push_back(tensor);
-            continue;
-        }
-        vector<float> tensor_vals(shape_size(param->get_shape()), -1.0f);
-        auto tensor = backend->create_tensor(element::f32, param->get_shape());
-        copy_data(tensor, tensor_vals);
-        arg_tensors.push_back(tensor);
-    }
+    std::shared_ptr<runtime::TensorView> bias_h2h_t =
+        backend->create_tensor(element::f32, bias_h2h->get_shape());
+    copy_data(bias_h2h_t, std::vector<float>{-1.0, -1.0, -1.0, -1.0});
 
     std::shared_ptr<runtime::TensorView> result_ht =
         backend->create_tensor(element::f32, ht->get_shape());
     std::shared_ptr<runtime::TensorView> result_ct =
         backend->create_tensor(element::f32, ct->get_shape());
 
-    backend->call_with_validate(f, {result_ht, result_ct}, arg_tensors);
-
-    // backend->call_with_validate(f,
-    //                             {result_ht, result_ct},
-    //                             {input_xt_t, weights_i2h_t, weights_h2h_t, bias_i2h_t, bias_h2h_t});
+    backend->call_with_validate(f,
+                                {result_ht, result_ct},
+                                {input_xt_t, weights_i2h_t, weights_h2h_t, bias_i2h_t, bias_h2h_t});
 
     auto sig = [](float x) { return 1.0f / (1.0f + std::exp(-x)); };
     float ct_val = -sig(-4) + sig(-4) * std::tanh(-4);
