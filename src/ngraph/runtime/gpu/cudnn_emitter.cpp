@@ -1143,48 +1143,48 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
     // bh_size *= args[5].get_element_type().size();
     auto recurrent_index = num_tensors_per_layer / 2;
 
-    std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](void** inputs,
-                                                                         void** outputs) {
-        // void* w_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, w_idx);
-        void* workspace_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
+    std::unique_ptr<gpu::primitive> kernel_launch(
+        new gpu::primitive{[=](void** inputs, void** outputs) {
+            // void* w_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, w_idx);
+            void* workspace_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
 
-        // // pack the weight and bias parameter data
-        // cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + weight_offsets[0].first, inputs[2], wx_size);
-        // cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + weight_offsets[recurrent_index].first,
-        //                inputs[3],
-        //                wh_size);
-        // cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + bias_offsets[0].first, inputs[4], bx_size);
-        // cuda_memcpyDtD(
-        //     static_cast<uint8_t*>(w_ptr) + bias_offsets[recurrent_index].first, inputs[5], bh_size);
+            // // pack the weight and bias parameter data
+            // cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + weight_offsets[0].first, inputs[2], wx_size);
+            // cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + weight_offsets[recurrent_index].first,
+            //                inputs[3],
+            //                wh_size);
+            // cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + bias_offsets[0].first, inputs[4], bx_size);
+            // cuda_memcpyDtD(
+            //     static_cast<uint8_t*>(w_ptr) + bias_offsets[recurrent_index].first, inputs[5], bh_size);
 
-        CUDNN_SAFE_CALL(cudnnRNNForwardInferenceEx(*m_ctx->cudnn_handle,
-                                                   rnn_desc,
-                                                   x_desc,
-                                                   inputs[0],
-                                                   hx_desc,
-                                                   inputs[1],
-                                                   cx_desc,
-                                                   inputs[3],
-                                                   w_desc,
-                                                   inputs[2],
-                                                   y_desc, // h_i
-                                                   outputs[0],
-                                                   hy_desc, // h_t
-                                                   outputs[1],
-                                                   cy_desc, // c_t
-                                                   outputs[2],
-                                                   NULL,
-                                                   NULL,
-                                                   NULL,
-                                                   NULL,
-                                                   NULL,
-                                                   NULL,
-                                                   NULL,
-                                                   NULL,
-                                                   workspace_ptr,
-                                                   workspace_size));
-        debug_sync();
-    }});
+            CUDNN_SAFE_CALL(cudnnRNNForwardInferenceEx(*m_ctx->cudnn_handle,
+                                                       rnn_desc,
+                                                       x_desc,
+                                                       inputs[0],
+                                                       hx_desc,
+                                                       inputs[1],
+                                                       cx_desc,
+                                                       inputs[3],
+                                                       w_desc,
+                                                       inputs[2],
+                                                       y_desc, // h_i
+                                                       outputs[0],
+                                                       hy_desc, // h_t
+                                                       outputs[1],
+                                                       cy_desc, // c_t
+                                                       outputs[2],
+                                                       NULL,
+                                                       NULL,
+                                                       NULL,
+                                                       NULL,
+                                                       NULL,
+                                                       NULL,
+                                                       NULL,
+                                                       NULL,
+                                                       workspace_ptr,
+                                                       workspace_size));
+            debug_sync();
+        }});
 
     primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
     m_primitive_emitter->cache(hash, primitive_index);

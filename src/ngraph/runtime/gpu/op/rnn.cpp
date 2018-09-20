@@ -49,8 +49,7 @@ op::gpu::Rnn::Rnn(std::shared_ptr<Node> src_layer,
                   const int src_iter_feature_size,
                   const int direction,
                   const int num_fused_layers)
-    : Op("Rnn",
-         {src_layer, src_iter, params, state_iter})
+    : Op("Rnn", {src_layer, src_iter, params, state_iter})
     , m_num_timesteps(num_timesteps)
     , m_num_gates_per_cell(num_gates_per_cell)
     , m_src_sequence_length(src_sequence_length)

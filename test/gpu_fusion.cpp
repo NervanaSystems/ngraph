@@ -381,7 +381,6 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     auto tanh_2 = std::make_shared<op::Tanh>(ct);
     auto ht = std::make_shared<op::Multiply>(output_gate, tanh_2);
 
-
     // next lstm layer
     auto weights_i2h_0 = std::make_shared<op::Parameter>(element::f32, Shape{4, 1});
     auto weights_i2h_0_reshape_0 =
@@ -389,18 +388,20 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     auto dot_1_0 = std::make_shared<op::Dot>(ht, weights_i2h_0_reshape_0);
 
     auto bias_i2h_0 = std::make_shared<op::Parameter>(element::f32, Shape{4});
-    auto broadcast_bias_i2h_0_0 = std::make_shared<op::Broadcast>(bias_i2h_0, Shape{1, 4}, AxisSet{0});
+    auto broadcast_bias_i2h_0_0 =
+        std::make_shared<op::Broadcast>(bias_i2h_0, Shape{1, 4}, AxisSet{0});
     auto add_1_0 = std::make_shared<op::Add>(dot_1_0, broadcast_bias_i2h_0_0);
 
     auto h_const_0 = op::Constant::create(element::f32, Shape{}, {1.0});
-    auto hidden_ht_0 = std::make_shared<op::Broadcast>(h_const_0, Shape{1, 1}, AxisSet{0, 1    });
+    auto hidden_ht_0 = std::make_shared<op::Broadcast>(h_const_0, Shape{1, 1}, AxisSet{0, 1});
     auto weights_h2h_0 = std::make_shared<op::Parameter>(element::f32, Shape{4, 1});
     auto param2_2_reshape_0 =
         std::make_shared<op::Reshape>(weights_h2h_0, AxisVector{1, 0}, Shape{1, 4});
     auto dot_2_0 = std::make_shared<op::Dot>(hidden_ht_0, param2_2_reshape_0);
 
     auto bias_h2h_0 = std::make_shared<op::Parameter>(element::f32, Shape{4});
-    auto broadcast_bias_h2h_0_0 = std::make_shared<op::Broadcast>(bias_h2h_0, Shape{1, 4}, AxisSet{0});
+    auto broadcast_bias_h2h_0_0 =
+        std::make_shared<op::Broadcast>(bias_h2h_0, Shape{1, 4}, AxisSet{0});
     auto add_2_0 = std::make_shared<op::Add>(dot_2_0, broadcast_bias_h2h_0_0);
 
     auto X_0 = std::make_shared<op::Add>(add_2_0, add_1_0);
@@ -415,13 +416,14 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     auto multiply_forget_gate_0_ct_1_0 = std::make_shared<op::Multiply>(forget_gate_0, ct_1_0);
 
     // construct input gate
-            auto input_slice_1_0 = std::make_shared<op::Slice>(X_0, Coordinate{0, 1}, Coordinate{1, 2});
-                    auto input_gate_0 = std::make_shared<op::Sigmoid>(input_slice_1_0);
-                            auto input_slice_2_0 = std::make_shared<op::Slice>(X_0, Coordinate{0, 2}, Coordinate{1, 3});
+    auto input_slice_1_0 = std::make_shared<op::Slice>(X_0, Coordinate{0, 1}, Coordinate{1, 2});
+    auto input_gate_0 = std::make_shared<op::Sigmoid>(input_slice_1_0);
+    auto input_slice_2_0 = std::make_shared<op::Slice>(X_0, Coordinate{0, 2}, Coordinate{1, 3});
     auto tanh_1_0 = std::make_shared<op::Tanh>(input_slice_2_0);
     auto multiply_input_gate_0_tanh_1_0 = std::make_shared<op::Multiply>(input_gate_0, tanh_1_0);
 
-    auto ct_0 = std::make_shared<op::Add>(multiply_forget_gate_0_ct_1_0, multiply_input_gate_0_tanh_1_0);
+    auto ct_0 =
+        std::make_shared<op::Add>(multiply_forget_gate_0_ct_1_0, multiply_input_gate_0_tanh_1_0);
 
     // construct output gate
     auto input_slice_3_0 = std::make_shared<op::Slice>(X_0, Coordinate{0, 3}, Coordinate{1, 4});
@@ -429,10 +431,16 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     auto tanh_2_0 = std::make_shared<op::Tanh>(ct_0);
     auto ht_0 = std::make_shared<op::Multiply>(output_gate_0, tanh_2_0);
 
-
-    auto f = make_shared<Function>(
-        NodeVector{ht_0, ct_0},
-        op::ParameterVector{input_xt, weights_i2h, weights_h2h, bias_i2h, bias_h2h, weights_i2h_0, weights_h2h_0, bias_i2h_0, bias_h2h_0});
+    auto f = make_shared<Function>(NodeVector{ht_0, ct_0},
+                                   op::ParameterVector{input_xt,
+                                                       weights_i2h,
+                                                       weights_h2h,
+                                                       bias_i2h,
+                                                       bias_h2h,
+                                                       weights_i2h_0,
+                                                       weights_h2h_0,
+                                                       bias_i2h_0,
+                                                       bias_h2h_0});
 
     auto backend = runtime::Backend::create("GPU");
 

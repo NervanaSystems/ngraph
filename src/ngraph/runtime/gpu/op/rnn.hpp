@@ -49,10 +49,10 @@ namespace ngraph
             class Rnn : public Op
             {
             public:
-                Rnn(std::shared_ptr<Node> src_layer,     // x
-                    std::shared_ptr<Node> src_iter,      // hx
+                Rnn(std::shared_ptr<Node> src_layer, // x
+                    std::shared_ptr<Node> src_iter,  // hx
                     std::shared_ptr<Node> params,
-                    std::shared_ptr<Node> state_iter,    // cx
+                    std::shared_ptr<Node> state_iter, // cx
                     const int num_timesteps,
                     const int num_gates_per_cell,
                     const int src_sequence_length,
