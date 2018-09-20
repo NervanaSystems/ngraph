@@ -42,11 +42,10 @@ void op::Quantize::validate_and_infer_types()
     set_output_size(1);
     set_output_type(0, m_type, get_input_shape(INPUT));
 
-    // TODO: further restrict to uint8, int8?
     // TODO: quantized types?
-    NODE_VALIDATION_ASSERT(this, !m_type.is_real())
+    NODE_VALIDATION_ASSERT(this, (m_type == element::u8 || m_type == element::i8))
         << "Output element type (" << m_type 
-        << ") must be a fixed point number";
+        << ") must be an 8-bit integer";
 
     NODE_VALIDATION_ASSERT(this, get_input_element_type(INPUT).is_real())
         << "Input element type (" << get_input_element_type(INPUT) 
@@ -91,5 +90,5 @@ shared_ptr<Node> op::Quantize::copy_with_new_args(const NodeVector& new_args) co
 
 void op::Quantize::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
-    // TODO: Error?
+    throw ngraph_error("Forward-propagation-only operation");
 }
