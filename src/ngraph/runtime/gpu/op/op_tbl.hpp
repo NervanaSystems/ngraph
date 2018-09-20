@@ -15,32 +15,18 @@
 //*****************************************************************************
 
 #if defined(NGRAPH_OP_DISPATCH)
-#define NGRAPH_OP_UNARY(a) {type_index(typeid(ngraph::op::a)), runtime::gpu::GPU_Emitter::emit_##a},
-#define NGRAPH_OP_BINARY(a, NAMESPACE)                                                             \
+#define NGRAPH_OP(a) {type_index(typeid(ngraph::op::a)), runtime::gpu::GPU_Emitter::emit_##a},
+#define NGRAPH_GPU_OP(a, NAMESPACE)                                                                \
     {type_index(typeid(NAMESPACE::a)), runtime::gpu::GPU_Emitter::emit_##a},
-#define NGRAPH_OP_VARIADIC(A, B, FUNC, ...) FUNC
-#define NGRAPH_OP(...)                                                                             \
-    NGRAPH_OP_VARIADIC(__VA_ARGS__,                                                                \
-                       NGRAPH_OP_BINARY(__VA_ARGS__),                                              \
-                       NGRAPH_OP_UNARY(__VA_ARGS__),                                               \
-                       NGRAPH_OP_0(__VA_ARGS__))
 #elif defined(NGRAPH_OP_EMIT_DECL)
-#define NGRAPH_OP_UNARY(a) static void emit_##a(EMIT_ARGS);
-#define NGRAPH_OP_BINARY(a, NAMESPACE) static void emit_##a(EMIT_ARGS);
-#define NGRAPH_OP_VARIADIC(A, B, FUNC, ...) FUNC
-#define NGRAPH_OP(...)                                                                             \
-    NGRAPH_OP_VARIADIC(__VA_ARGS__,                                                                \
-                       NGRAPH_OP_BINARY(__VA_ARGS__),                                              \
-                       NGRAPH_OP_UNARY(__VA_ARGS__),                                               \
-                       NGRAPH_OP_0(__VA_ARGS__))
+#define NGRAPH_OP(a) static void emit_##a(EMIT_ARGS);
+#define NGRAPH_GPU_OP(a, NAMESPACE) static void emit_##a(EMIT_ARGS);
 #endif
 
 #include "ngraph/op/op_tbl.hpp"
 
-NGRAPH_OP(Lstm, ngraph::op::gpu)
-NGRAPH_OP(Rnn, ngraph::op::gpu)
+NGRAPH_GPU_OP(Lstm, ngraph::op::gpu)
+NGRAPH_GPU_OP(Rnn, ngraph::op::gpu)
 
 #undef NGRAPH_OP
-#undef NGRAPH_OP_VARIADIC
-#undef NGRAPH_OP_BINARY
-#undef NGRAPH_OP_UNARY
+#undef NGRAPH_GPU_OP
