@@ -24,7 +24,8 @@ using namespace ngraph;
 
 void ngraph::RNGState::activate()
 {
-    //reentrant?
+    //must be reentrant
+    //the subsequent times it's a nop
     if (!is_active())
     {
         std::random_device rd;

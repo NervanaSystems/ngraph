@@ -24,20 +24,20 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Activate
-        ///
-        class Activate : public op::Op
+        /// \brief ActivateState calls activate() on a state to perform
+        /// state initialization.
+        class ActivateState : public op::Op
         {
         public:
-            Activate(const std::shared_ptr<State>& state)
-                : Op("Activate", {})
+            ActivateState(const std::shared_ptr<State>& state)
+                : Op("ActivateState", {})
                 , m_state(state)
             {
                 constructor_validate_and_infer_types();
             }
 
-            Activate(const std::shared_ptr<Node> arg, const std::shared_ptr<State>& state)
-                : Op("Activate", {check_single_output_args({arg})})
+            ActivateState(const std::shared_ptr<Node> arg, const std::shared_ptr<State>& state)
+                : Op("ActivateState", check_single_output_args({arg}))
                 , m_state(state)
             {
                 constructor_validate_and_infer_types();

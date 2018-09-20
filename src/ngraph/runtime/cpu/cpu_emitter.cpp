@@ -25,6 +25,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
+#include "ngraph/op/activate.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
@@ -42,12 +43,14 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
+#include "ngraph/op/deactivate.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/function_call.hpp"
+#include "ngraph/op/generate_mask.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -4466,6 +4469,45 @@ namespace ngraph
                     writer << tmp << " = " << emitter(sargs) << ";\n";
                 }
 
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::GenerateMask)
+            {
+                auto gm = static_cast<const ngraph::op::GenerateMask*>(node);
+                writer.block_begin();
+
+                writer << "ngraph::RNGState* state = reinterpret_cast<ngraph::RNGState*>("
+                       << gm->get_state() << ");\n";
+                writer << "unsigned int seed = state->get_seed();\n";
+                writer << "bool training = static_cast<bool>(" << args[0].get_name() << "[0]);\n";
+                writer << "reference::generate_mask(";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            " << out[0].get_size() << ",\n";
+                writer << "            seed, " << gm->get_probability() << ",training);\n";
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::ActivateState)
+            {
+                auto act = static_cast<const ngraph::op::ActivateState*>(node);
+                writer.block_begin();
+                writer << "ngraph::State* state = reinterpret_cast<ngraph::State*>("
+                       << act->get_state() << ");\n";
+                writer << "state->activate();\n";
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::DeactivateState)
+            {
+                auto dact = static_cast<const ngraph::op::DeactivateState*>(node);
+                writer.block_begin();
+                writer << "ngraph::State* state = reinterpret_cast<ngraph::State*>("
+                       << dact->get_state() << ");\n";
+                writer << "state->deactivate();\n";
                 writer.block_end();
             }
 

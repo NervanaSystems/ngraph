@@ -24,21 +24,21 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Deactivate
-        ///
-        class Deactivate : public op::Op
+        /// \brief DeactivateState calls deactivate() on a state to perform
+        /// a state reset, release resource, etc.
+        class DeactivateState : public op::Op
         {
         public:
-            Deactivate(const std::shared_ptr<Node> arg, const std::shared_ptr<State>& state)
-                : Op("Deactivate", {arg})
+            DeactivateState(const std::shared_ptr<Node> arg, const std::shared_ptr<State>& state)
+                : Op("DeactivateState", {arg})
                 , m_state(state)
             {
                 constructor_validate_and_infer_types();
             }
 
             //Order specified with control dependency
-            Deactivate(const std::shared_ptr<State>& state)
-                : Op("Deactivate", {})
+            DeactivateState(const std::shared_ptr<State>& state)
+                : Op("DeactivateState", {})
                 , m_state(state)
             {
                 constructor_validate_and_infer_types();
@@ -48,7 +48,7 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
             std::shared_ptr<State> get_state() const { return m_state; }
-            virtual ~Deactivate() {}
+            virtual ~DeactivateState() {}
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override

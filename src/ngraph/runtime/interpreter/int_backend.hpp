@@ -219,12 +219,10 @@ private:
                                    out[0]->get_data_ptr<T>(),
                                    out[0]->get_element_count());
         }
-        else if (node_op == "Activate")
+        else if (node_op == "ActivateState")
         {
-            const op::Activate* activate = static_cast<const op::Activate*>(&node);
-            auto state = activate->get_state();
-            state->activate();
-            //activate
+            const op::ActivateState* activate = static_cast<const op::ActivateState*>(&node);
+            activate->get_state()->activate();
         }
         else if (node_op == "ArgMin")
         {
@@ -555,11 +553,10 @@ private:
             reference::cosh<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
         }
-        else if (node_op == "Deactivate")
+        else if (node_op == "DeactivateState")
         {
-            const op::Deactivate* deactivate = static_cast<const op::Deactivate*>(&node);
-            auto state = deactivate->get_state();
-            state->deactivate();
+            const op::DeactivateState* deactivate = static_cast<const op::DeactivateState*>(&node);
+            deactivate->get_state()->deactivate();
         }
         else if (node_op == "Divide")
         {
@@ -619,10 +616,6 @@ private:
         else if (node_op == "GenerateMask")
         {
             const op::GenerateMask* gm = static_cast<const op::GenerateMask*>(&node);
-            if (!gm->get_state()->is_active())
-            {
-                throw ngraph_error("RNGState needs to be activated first");
-            }
             unsigned int seed = gm->get_state()->get_seed();
             bool training = static_cast<bool>(args[0]->get_data_ptr<T>()[0]);
             reference::generate_mask(out[0]->get_data_ptr<T>(),

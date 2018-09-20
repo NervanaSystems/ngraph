@@ -25,7 +25,11 @@
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/activate.hpp"
+#include "ngraph/op/deactivate.hpp"
+#include "ngraph/op/generate_mask.hpp"
 #include "ngraph/serializer.hpp"
+#include "ngraph/state/rng_state.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
@@ -9504,4 +9508,26 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_one)
     EXPECT_EQ((vector<int32_t>{3, 2, 1}), read_vector<int32_t>(result0));
     backend->call_with_validate(f1, {result1}, {a});
     EXPECT_EQ((vector<float>{3, 1, 4}), read_vector<float>(result1));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, stateful)
+{
+    Shape scalar{};
+    Shape result_shape{1, 20};
+    auto training = op::Constant::create(element::i8, Shape{}, {1});
+    auto rng_state = make_shared<RNGState>();
+    auto activate = make_shared<op::ActivateState>(rng_state);
+    auto gen_mask = make_shared<op::GenerateMask>(
+        training, activate, result_shape, element::i32, 0.5, rng_state);
+    auto f = make_shared<Function>(gen_mask, op::ParameterVector{});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    shared_ptr<runtime::TensorView> result_tv = backend->create_tensor<int>(result_shape);
+    backend->call_with_validate(f, {result_tv}, {});
+    auto result1 = read_vector<int>(result_tv);
+    //check that the rng state is reproducible
+    backend->call_with_validate(f, {result_tv}, {});
+    auto result2 = read_vector<int>(result_tv);
+    ASSERT_EQ(result1, result2);
 }

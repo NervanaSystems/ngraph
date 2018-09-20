@@ -28,6 +28,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/state/rng_state.hpp"
@@ -37,28 +38,26 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(state, stateful)
+TEST(state, autodiff)
 {
-    //Activate(std::shared_ptr<State>& state)
-    //Deactivate(const shared_ptr<Node> arg, std::shared_ptr<State>& state)
-    //GenerateMask(std::shared_ptr<Node> training, std::shared_ptr<Node> activate, const Shape& shape, const element::Type& element_type, double prob, const std::shared_ptr<RNGState>& state):
-
     Shape scalar{};
     Shape result_shape{1, 20};
     auto training = op::Constant::create(element::i8, Shape{}, {1});
     auto rng_state = make_shared<RNGState>();
-    auto activate = make_shared<op::Activate>(rng_state);
+    auto activate = make_shared<op::ActivateState>(rng_state);
+
     auto gen_mask = make_shared<op::GenerateMask>(
         training, activate, result_shape, element::i32, 0.5, rng_state);
-    auto f = make_shared<Function>(gen_mask, op::ParameterVector{});
+    auto A = std::make_shared<op::Parameter>(element::i32, result_shape);
+    auto mul = std::make_shared<op::Multiply>(A, gen_mask);
 
-    auto backend = runtime::Backend::create("INTERPRETER");
+    auto C = std::make_shared<op::Parameter>(element::i32, result_shape);
 
-    // Create some tensors for input/output
-    shared_ptr<runtime::TensorView> result_tv = backend->create_tensor<int>(result_shape);
-    backend->call_with_validate(f, {result_tv}, {});
-    auto result1 = read_vector<int>(result_tv);
-    backend->call_with_validate(f, {result_tv}, {});
-    auto result2 = read_vector<int>(result_tv);
-    ASSERT_EQ(result1, result2);
+    ngraph::autodiff::Adjoints adjoints(NodeVector{mul}, NodeVector{C});
+
+    auto da = adjoints.backprop_node(A);
+
+    ASSERT_TRUE(std::dynamic_pointer_cast<op::Multiply>(da));
+    ASSERT_TRUE(da->get_argument(0) == C || da->get_argument(1));
+    ASSERT_TRUE(da->get_argument(0) == gen_mask || da->get_argument(1) == gen_mask);
 }

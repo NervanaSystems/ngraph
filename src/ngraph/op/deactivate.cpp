@@ -21,12 +21,12 @@ using namespace std;
 using namespace ngraph;
 
 std::shared_ptr<ngraph::Node>
-    ngraph::op::Deactivate::copy_with_new_args(const NodeVector& new_args) const
+    ngraph::op::DeactivateState::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() == 1)
     {
-        return make_shared<op::Deactivate>(new_args.at(0), m_state);
+        return make_shared<op::DeactivateState>(new_args.at(0), m_state);
     }
 
-    return make_shared<op::Deactivate>(m_state);
+    return make_shared<op::DeactivateState>(m_state);
 }

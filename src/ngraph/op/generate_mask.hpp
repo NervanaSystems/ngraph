@@ -44,7 +44,7 @@ namespace ngraph
                 constructor_validate_and_infer_types();
             }
 
-            //Activate node is added as a control dependency
+            //ActivateState node is added as a control dependency
             GenerateMask(std::shared_ptr<Node> training,
                          const Shape& shape,
                          const element::Type& element_type,

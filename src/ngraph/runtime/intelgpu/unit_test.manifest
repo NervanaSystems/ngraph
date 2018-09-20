@@ -112,3 +112,4 @@ topk_3d_max_one
 topk_3d_min_all
 topk_3d_min_partial
 topk_3d_min_one
+stateful
