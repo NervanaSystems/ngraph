@@ -1,75 +1,81 @@
-# nGraph python binding
+# Python binding for the nGraph Library
 
-## Installation
+## Build the nGraph Library (required)
 
-### Install nGraph (Required)
+Follow the [build instructions] to build nGraph. When you get to the `cmake` 
+command, be sure to specify the option that enables ONNX support in the Library: 
 
-```
-Follow the [steps](http://ngraph.nervanasys.com/docs/latest/install.html) to build and install ngraph.
-```
+    $ cmake ../ -DNGRAPH_ONNX_IMPORT_ENABLE=ON 
 
-Clone the pybind repository
 
-```
-cd ngraph/python
-git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
-```
+Next, clone the `pybind11` repository:
 
-Set the environment variables
+    $ cd ngraph/python
+    $ git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
 
-```
-export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist
-export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib
-export DYLD_LIBRARY_PATH=$HOME/ngraph_dist/lib # (Only needed on MacOS)
-export PYBIND_HEADERS_PATH=pybind11
-```
 
-Install Wrapper (python binding)
+Set the environment variables:
 
-```
-python setup.py install
-```
+    export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist
+    export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib
+    export DYLD_LIBRARY_PATH=$HOME/ngraph_dist/lib # (Only needed on MacOS)
+    export PYBIND_HEADERS_PATH=pybind11
 
-To run unit tests, first install additional required packages.
 
-```
-pip install -r test_requirements.txt
-```
+Install the wrapper (Python binding):
 
-Then run a test.
+    $ python setup.py install
 
-```
-pytest test/test_ops.py
-pytest test/ngraph/
-```
+
+Unit tests require additional packages be installed:
+
+    $ pip install -r test_requirements.txt
+
+
+Then run a test:
+
+    $ pytest test/test_ops.py
+    $ pytest test/ngraph/
+
 
 ## Running tests with tox
 
-[Tox](https://tox.readthedocs.io/) is a Python [virtualenv](https://virtualenv.pypa.io/) management and test command line tool. In our project it automates:
+[Tox] is a Python [virtualenv] management and test command line tool. In our 
+project it automates:
 
-* running unit tests using [pytest](https://docs.pytest.org/)
-* checking that code style is compliant with [PEP8](https://www.python.org/dev/peps/pep-0008/) using [Flake8](http://flake8.pycqa.org/)
-* static type checking using [MyPy](http://mypy.readthedocs.io)
+* running of unit tests with [pytest]
+* checking that code style is compliant with [PEP8] using [Flake8]
+* static type checking using [MyPy]
 * testing across Python 2 and 3
+
 
 Installing and running test with Tox:
 
-    pip install tox
-    tox
+    $ pip install tox
+    $ tox
+
 
 You can run tests using only Python 3 or 2 using the `-e` (environment) switch:
 
-    tox -e py36
-    tox -e py27
+    $ tox -e py36
+    $ tox -e py27
+
 
 You can check styles in a particular code directory by specifying the path:
 
-    tox ngraph/
+    $ tox ngraph/
 
-In case of problems, try to recreate the virtual environments by deleting the `.tox` directory:
 
-```
-rm -rf .tox
-tox
-```
+If you run into any problems, try recreating the virtual environments by 
+deleting the `.tox` directory:
 
+    $ rm -rf .tox
+    $ tox
+
+[build instructions]:http://ngraph.nervanasys.com/docs/latest/buildlb.html
+[Tox]:https://tox.readthedocs.io/
+[virtualenv]:https://virtualenv.pypa.io/
+[pytest]:https://docs.pytest.org/
+[PEP8]:https://www.python.org/dev/peps/pep-0008
+[Flake8]:http://flake8.pycqa.org
+[MyPy]:http://mypy.readthedocs.io

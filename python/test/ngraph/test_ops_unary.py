@@ -20,20 +20,6 @@ import ngraph as ng
 from test.ngraph.util import run_op_numeric_data, run_op_node
 
 
-@pytest.mark.xfail(reason='Results mismatch when passing created Constant node from raw data.')
-@pytest.mark.parametrize('ng_api_fn, numpy_fn, range_start, range_end', [
-    (ng.cos, np.cos, -100., 100.),
-    (ng.sin, np.sin, -100., 100.),
-])
-def test_unary_op_array_err(ng_api_fn, numpy_fn, range_start, range_end):
-    np.random.seed(133391)
-    input_data = range_start + np.random.rand(2, 3, 4) * (range_end - range_start)
-    expected = numpy_fn(input_data)
-
-    result = run_op_numeric_data(input_data, ng_api_fn)
-    assert np.allclose(result, expected)
-
-
 @pytest.mark.parametrize('ng_api_fn, numpy_fn, range_start, range_end', [
     (ng.absolute, np.abs, -1, 1),
     (ng.abs, np.abs, -1, 1),
@@ -42,14 +28,15 @@ def test_unary_op_array_err(ng_api_fn, numpy_fn, range_start, range_end):
     (ng.atan, np.arctan, -100., 100.),
     (ng.ceiling, np.ceil, -100., 100.),
     (ng.ceil, np.ceil, -100., 100.),
-    (ng.cos, np.cos, -np.pi * 2., np.pi * 2.),
+    (ng.cos, np.cos, -100., 100.),
     (ng.cosh, np.cosh, -100., 100.),
     (ng.exp, np.exp, -100., 100.),
     (ng.floor, np.floor, -100., 100.),
     (ng.log, np.log, 0, 100.),
+    (ng.logical_not, np.logical_not, -10, 10),
     (ng.relu, lambda x: np.maximum(0, x), -100., 100.),
     (ng.sign, np.sign, -100., 100.),
-    (ng.sin, np.sin, -np.pi * 2., np.pi * 2.),
+    (ng.sin, np.sin, -100., 100.),
     (ng.sinh, np.sinh, -100., 100.),
     (ng.sqrt, np.sqrt, 0., 100.),
     (ng.tan, np.tan, -1., 1.),
@@ -62,10 +49,10 @@ def test_unary_op_array(ng_api_fn, numpy_fn, range_start, range_end):
     expected = numpy_fn(input_data)
 
     result = run_op_node([input_data], ng_api_fn)
-    assert np.allclose(result, expected)
+    np.testing.assert_allclose(result, expected, rtol=0.001)
 
     result = run_op_numeric_data(input_data, ng_api_fn)
-    assert np.allclose(result, expected)
+    np.testing.assert_allclose(result, expected, rtol=0.001)
 
 
 @pytest.mark.parametrize('ng_api_fn, numpy_fn, input_data', [
@@ -81,6 +68,7 @@ def test_unary_op_array(ng_api_fn, numpy_fn, range_start, range_end):
     (ng.exp, np.exp, np.float32(1.5)),
     (ng.floor, np.floor, np.float32(1.5)),
     (ng.log, np.log, np.float32(1.5)),
+    (ng.logical_not, np.logical_not, np.int32(0)),
     (ng.relu, lambda x: np.maximum(0, x), np.float32(-0.125)),
     (ng.sign, np.sign, np.float32(0.)),
     (ng.sin, np.sin, np.float32(np.pi / 4.0)),

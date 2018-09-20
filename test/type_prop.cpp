@@ -1,28 +1,29 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
-#include "ngraph/op/batch_norm.hpp"
-#include "ngraph/op/reverse_sequence.hpp"
 
 #include <memory>
 using namespace std;
 using namespace ngraph;
+
+#define EXPECT_HAS_SUBSTRING(haystack, needle)                                                     \
+    EXPECT_PRED_FORMAT2(testing::IsSubstring, needle, haystack)
 
 //
 // Tests for broadcast.
@@ -37,28 +38,6 @@ TEST(type_prop, broadcast_deduce)
     ASSERT_EQ(bc->get_shape(), bc_shape);
 }
 
-TEST(type_prop, broadcast_deduce_incorrect)
-{
-    // Check deduced type against incorrectly specified type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    try
-    {
-        auto bc = make_shared<op::Broadcast>(param, Shape{2, 4, 3}, AxisSet{1});
-        bc->set_value_type_checked(element::f32, Shape{2, 3, 4});
-
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Deduced type should disagree with specified type";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_EQ(error.what(), std::string("Broadcast arg, shape, and axes are incompatible"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
 TEST(type_prop, batchnorm_rank_less_than_2)
 {
     auto dummy = make_shared<op::Parameter>(element::f32, Shape{1});
@@ -67,10 +46,10 @@ TEST(type_prop, batchnorm_rank_less_than_2)
         auto bc = make_shared<op::BatchNorm>(0.001, dummy, dummy, dummy);
         FAIL() << "BatchNorm c-tor should throw for tensors whose rank is less than 2";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("input tensor to batchnorm must have tensor of at least rank 2"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input argument must have rank of at least 2"));
     }
     catch (...)
     {
@@ -86,11 +65,11 @@ TEST(type_prop, batchnorm_zero_channel_check)
         auto bc = make_shared<op::BatchNorm>(0.001, dummy, dummy, dummy);
         FAIL() << "BatchNorm c-tor should throw for tensors w/ zero-dimension channels";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string(
-                      "input tensor must have at least one channel axis for batch normalization"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Input argument's channel dimension must have size of at least 1"));
     }
     catch (...)
     {
@@ -109,10 +88,11 @@ TEST(type_prop, batchnorm_et_check)
         auto bc = make_shared<op::BatchNorm>(0.001, dummy_f32, dummy_f64, param);
         FAIL() << "BatchNorm c-tor should throw for different element types";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("The element type of beta isn't equal to input data's type"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Element type of beta"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("is not equal to the element type of input"));
     }
     catch (...)
     {
@@ -131,10 +111,11 @@ TEST(type_prop, batchnorm_shape_check)
         auto bc = make_shared<op::BatchNorm>(0.001, dummy_4, dummy_3, param);
         FAIL() << "BatchNorm c-tor should throw if gamma and beta shapes don't match";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("The shape of gamma isn't equal to input channel's shape"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Shape of gamma must match the channel dimension of the input data"));
     }
     catch (...)
     {
@@ -153,9 +134,9 @@ TEST(type_prop, batchnorm_backprop_4d_check)
             make_shared<op::BatchNormBackprop>(0.001, dummy, dummy, param, dummy, dummy, dummy);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Input expected to be a 4D tensor"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input data shape is not a 4D tensor"));
     }
     catch (...)
     {
@@ -175,10 +156,11 @@ TEST(type_prop, batchnorm_backprop_et_check)
             0.001, dummy_f32, dummy_f64, param, dummy_f32, dummy_f32, dummy_f32);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("The element type of beta isn't equal to input data's type"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Element type of beta"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("is not equal to the element type of input"));
     }
     catch (...)
     {
@@ -198,10 +180,11 @@ TEST(type_prop, batchnorm_backprop_shape_check)
             make_shared<op::BatchNormBackprop>(0.001, dummy, dummy2, param, dummy2, dummy2, dummy2);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("The shape of beta isn't equal to input channel's shape"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Shape of beta must match the channel dimension of the input data"));
     }
     catch (...)
     {
@@ -222,9 +205,10 @@ TEST(type_prop, batchnorm_backprop_delta_check)
             make_shared<op::BatchNormBackprop>(0.001, dummy, dummy, param, dummy, dummy, delta);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("delta shape is expected to be equal to input shape"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Shape of delta must match the shape of the input data"));
     }
     catch (...)
     {
@@ -243,29 +227,6 @@ TEST(type_prop, concat_deduce)
     ASSERT_EQ(c->get_shape(), (Shape{2, 12, 4}));
 }
 
-TEST(type_prop, concat_deduce_incorrect)
-{
-    // Check deduced type against incorrectly specified type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 7, 4});
-    auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 2, 4});
-    try
-    {
-        auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 1);
-        c->set_value_type_checked(element::f32, (Shape{2, 14, 4}));
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Deduced type should disagree with specified type";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_EQ(error.what(), std::string("Setting value type to a different ValueType"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
 TEST(type_prop, concat_deduce_wrong_rank)
 {
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
@@ -280,9 +241,9 @@ TEST(type_prop, concat_deduce_wrong_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Deduced type should disagree with specified type";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments to concat do not have same rank"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Not all arguments have the same rank"));
     }
     catch (...)
     {
@@ -301,12 +262,10 @@ TEST(type_prop, concat_deduce_wrong_shape)
         // Should have thrown, so fail if it didn't
         FAIL() << "Deduced type should disagree with specified type";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Arguments to concat do not have same dimension on a non-concatenation axis"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Dimensions of argument 2 do not match for axis 2"));
     }
     catch (...)
     {
@@ -325,9 +284,11 @@ TEST(type_prop, concat_deduce_axis_oob)
         // Should have thrown, so fail if it didn't
         FAIL() << "Deduced type should disagree with specified type";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Concatenation axis is out of bounds"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Concatenation axis (3) is out of bounds (inputs have rank 3)"));
     }
     catch (...)
     {
@@ -357,9 +318,10 @@ TEST(type_prop, concat_deduce_elem_type_mismatch)
         // Should have thrown, so fail if it didn't
         FAIL() << "Deduced type should disagree with specified type";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Argument element types do not match"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Not all arguments have the same element type"));
     }
     catch (...)
     {
@@ -374,27 +336,6 @@ TEST(type_prop, convert_deduce)
     auto c = make_shared<op::Convert>(param, element::i32);
     ASSERT_EQ(c->get_element_type(), element::i32);
     ASSERT_EQ(c->get_shape(), (Shape{2, 3, 4}));
-}
-
-TEST(type_prop, convert_deduce_incorrect)
-{
-    // Check deduced type against incorrectly specified type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
-    try
-    {
-        auto c = make_shared<op::Convert>(param, element::i32);
-        c->set_value_type_checked(element::i32, Shape{2, 14, 4});
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Deduced type should disagree with specified type";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_EQ(error.what(), std::string("Setting value type to a different ValueType"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
 }
 
 TEST(type_prop, dot_deduce_scalar_2d)
@@ -478,9 +419,10 @@ TEST(type_prop, dot_deduce_element_type_mismatch)
         // Should have thrown, so fail if it didn't
         FAIL() << "Element type mismatch not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments to dot must have the same element type"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Arguments do not have the same element type"));
     }
     catch (...)
     {
@@ -499,9 +441,12 @@ TEST(type_prop, dot_deduce_reduction_axes_size_mismatch)
         // Should have thrown, so fail if it didn't
         FAIL() << "Dot reduction axes size mismatch not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Dot axes do not have same length"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Paired axes (axis 1 from arg0, axis 0 from arg1) do not have same length"));
     }
     catch (...)
     {
@@ -529,9 +474,11 @@ void test_binary(std::string node_type,
             // Should have thrown, so fail if it didn't
             FAIL() << "Incompatible view arguments not detected.";
         }
-        catch (const ngraph_error& error)
+        catch (const NodeValidationError& error)
         {
-            EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+            EXPECT_HAS_SUBSTRING(
+                error.what(),
+                std::string("Argument 0 shape Shape{2, 4} differs in shape from argument 1"));
         }
         catch (...)
         {
@@ -548,10 +495,11 @@ void test_binary(std::string node_type,
             // Should have thrown, so fail if it didn't
             FAIL() << "Incompatible view arguments not detected.";
         }
-        catch (const ngraph_error& error)
+        catch (const NodeValidationError& error)
         {
-            EXPECT_EQ(error.what(),
-                      std::string("Arguments must have the same tensor view element type"));
+            EXPECT_HAS_SUBSTRING(error.what(),
+                                 std::string("Argument 0 element type element::Type{32, 1, "
+                                             "1,float} differs in element type from argument 1"));
         }
         catch (...)
         {
@@ -621,9 +569,11 @@ void test_binary_logical(std::string node_type,
             // Should have thrown, so fail if it didn't
             FAIL() << "Incompatible view arguments not detected.";
         }
-        catch (const ngraph_error& error)
+        catch (const NodeValidationError& error)
         {
-            EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+            EXPECT_HAS_SUBSTRING(
+                error.what(),
+                std::string("Argument 0 shape Shape{2, 4} differs in shape from argument 1"));
         }
         catch (...)
         {
@@ -632,8 +582,28 @@ void test_binary_logical(std::string node_type,
     };
     test_binary_bad_arguments_view_shapes(tv0_2_4_param_0, tv0_4_2_param);
 
-    auto test_binary_bad_arguments_view_element_types = [&](const shared_ptr<Node>& x,
-                                                            const shared_ptr<Node>& y) {
+    auto test_binary_differ_arguments_view_element_types = [&](const shared_ptr<Node>& x,
+                                                               const shared_ptr<Node>& y) {
+        try
+        {
+            auto node = f(x, y);
+            // Should have thrown, so fail if it didn't
+            FAIL() << "Incompatible view arguments not detected.";
+        }
+        catch (const NodeValidationError& error)
+        {
+            EXPECT_HAS_SUBSTRING(error.what(),
+                                 std::string("Argument 0 element type element::Type{8, 0, 1,char} "
+                                             "differs in element type from argument 1"));
+        }
+        catch (...)
+        {
+            FAIL() << "Deduced type check failed for unexpected reason";
+        }
+    };
+
+    auto test_binary_non_bool_arguments_view_element_types = [&](const shared_ptr<Node>& x,
+                                                                 const shared_ptr<Node>& y) {
         try
         {
             auto node = f(x, y);
@@ -642,17 +612,18 @@ void test_binary_logical(std::string node_type,
         }
         catch (const ngraph_error& error)
         {
-            EXPECT_EQ(error.what(), std::string("Arguments must have boolean element type"));
+            EXPECT_HAS_SUBSTRING(error.what(), "must have boolean element type");
         }
         catch (...)
         {
             FAIL() << "Deduced type check failed for unexpected reason";
         }
+
     };
 
-    test_binary_bad_arguments_view_element_types(tv0_2_4_param_0, tv0_2_4_param_2);
-    test_binary_bad_arguments_view_element_types(tv0_2_4_param_2, tv0_2_4_param_0);
-    test_binary_bad_arguments_view_element_types(tv0_2_4_param_2, tv0_2_4_param_3);
+    test_binary_differ_arguments_view_element_types(tv0_2_4_param_0, tv0_2_4_param_2);
+    test_binary_non_bool_arguments_view_element_types(tv0_2_4_param_2, tv0_2_4_param_0);
+    test_binary_non_bool_arguments_view_element_types(tv0_2_4_param_2, tv0_2_4_param_3);
 
     auto test_binary_good_arguments = [&](const shared_ptr<Node>& x, const shared_ptr<Node>& y) {
         auto node = f(x, y);
@@ -696,10 +667,10 @@ TEST(type_prop, binary_arithmetic_bad_argument_element_types)
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Operands for arithmetic operators must have numeric element type"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Arguments cannot have boolean element type"));
     }
     catch (...)
     {
@@ -716,10 +687,10 @@ TEST(type_prop, unary_arithmetic_bad_argument_element_types)
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Operands for arithmetic operators must have numeric element type"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Arguments cannot have boolean element type"));
     }
     catch (...)
     {
@@ -748,9 +719,9 @@ TEST(type_prop, select_shape_mismatch_a)
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments must have the same shape"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Arguments do not all have the same shape"));
     }
     catch (...)
     {
@@ -769,9 +740,9 @@ TEST(type_prop, select_shape_mismatch_b)
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments must have the same shape"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Arguments do not all have the same shape"));
     }
     catch (...)
     {
@@ -790,9 +761,9 @@ TEST(type_prop, select_shape_mismatch_c)
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments must have the same shape"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Arguments do not all have the same shape"));
     }
     catch (...)
     {
@@ -811,11 +782,10 @@ TEST(type_prop, select_elem_mismatch_a)
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string("Argument 0 for arithmetic operators must have boolean element type"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Argument 0 does not have boolean element type"));
     }
     catch (...)
     {
@@ -834,9 +804,10 @@ TEST(type_prop, select_elem_mismatch_bc)
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments 1 and 2 must have the same element type"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Arguments 1 and 2 do not have the same element type"));
     }
     catch (...)
     {
@@ -1193,11 +1164,11 @@ TEST(type_prop, reshape_deduce_not_enough_axes)
         // Should have thrown, so fail if it didn't
         FAIL() << "Not enough axes not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Input axis order for reshape is not a permutation of argument's axes"));
+            std::string("Input axis order is not a permutation of argument's axis indices"));
     }
     catch (...)
     {
@@ -1214,11 +1185,11 @@ TEST(type_prop, reshape_deduce_too_many_axes)
         // Should have thrown, so fail if it didn't
         FAIL() << "Too many axes not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Input axis order for reshape is not a permutation of argument's axes"));
+            std::string("Input axis order is not a permutation of argument's axis indices"));
     }
     catch (...)
     {
@@ -1235,11 +1206,11 @@ TEST(type_prop, reshape_deduce_duplicate_axes)
         // Should have thrown, so fail if it didn't
         FAIL() << "Too many axes not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Input axis order for reshape is not a permutation of argument's axes"));
+            std::string("Input axis order is not a permutation of argument's axis indices"));
     }
     catch (...)
     {
@@ -1256,11 +1227,11 @@ TEST(type_prop, reshape_deduce_wrong_output_shape)
         // Should have thrown, so fail if it didn't
         FAIL() << "Too many axes not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Product of output shape dimensions does not match "
-                              "product of argument shape dimensions for reshape"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Product of output shape dimensions does not match "
+                                         "product of argument shape dimensions"));
     }
     catch (...)
     {
@@ -1341,11 +1312,10 @@ TEST(type_prop, slice_deduce_vector_invalid_strides)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid slice strides not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string(
-                      "Number of strides provided for slice does not match number of input axes"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("Rank of strides (2) does not match rank of argument (1)"));
     }
     catch (...)
     {
@@ -1362,9 +1332,10 @@ TEST(type_prop, slice_deduce_vector_edge_upper_oob)
         // Should have thrown, so fail if it didn't
         FAIL() << "Upper bound out of range not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Upper bound for slice is out of range"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Upper bound for slice at axis 0 is out of range"));
     }
     catch (...)
     {
@@ -1381,9 +1352,10 @@ TEST(type_prop, slice_deduce_matrix_edge_upper_oob)
         // Should have thrown, so fail if it didn't
         FAIL() << "Upper bound out of range not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Upper bound for slice is out of range"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Upper bound for slice at axis 1 is out of range"));
     }
     catch (...)
     {
@@ -1400,9 +1372,11 @@ TEST(type_prop, slice_deduce_vector_lower_above_upper)
         // Should have thrown, so fail if it didn't
         FAIL() << "Lower bound above upper not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Lower bound for slice is greater than upper bound"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Lower bound for slice is greater than upper bound at axis 0"));
     }
     catch (...)
     {
@@ -1419,9 +1393,11 @@ TEST(type_prop, slice_deduce_matrix_lower_above_upper)
         // Should have thrown, so fail if it didn't
         FAIL() << "Lower bound above upper not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Lower bound for slice is greater than upper bound"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Lower bound for slice is greater than upper bound at axis 1"));
     }
     catch (...)
     {
@@ -1438,11 +1414,11 @@ TEST(type_prop, slice_deduce_matrix_lower_missing)
         // Should have thrown, so fail if it didn't
         FAIL() << "Missing lower bound coordinate not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Number of lower bounds provided for slice does "
-                              "not match number of input axes"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank of lower bounds (1) does not match rank of argument (2)"));
     }
     catch (...)
     {
@@ -1459,11 +1435,11 @@ TEST(type_prop, slice_deduce_matrix_upper_missing)
         // Should have thrown, so fail if it didn't
         FAIL() << "Missing upper bound coordinate not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Number of upper bounds provided for slice does "
-                              "not match number of input axes"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank of upper bounds (1) does not match rank of argument (2)"));
     }
     catch (...)
     {
@@ -1480,11 +1456,11 @@ TEST(type_prop, slice_deduce_matrix_lower_extra)
         // Should have thrown, so fail if it didn't
         FAIL() << "Extra lower bound coordinate not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Number of lower bounds provided for slice does "
-                              "not match number of input axes"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank of lower bounds (3) does not match rank of argument (2)"));
     }
     catch (...)
     {
@@ -1501,11 +1477,11 @@ TEST(type_prop, slice_deduce_matrix_upper_extra)
         // Should have thrown, so fail if it didn't
         FAIL() << "Extra upper bound coordinate not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Number of upper bounds provided for slice does "
-                              "not match number of input axes"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank of upper bounds (3) does not match rank of argument (2)"));
     }
     catch (...)
     {
@@ -1549,10 +1525,11 @@ TEST(type_prop, tensor_constant_bad_count)
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect number of literals not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Constant does not have the expected number of literals"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Did not get the expected number of literals for a "
+                                         "constant of shape Shape{2, 2} (got 3, expected 1 or 4)"));
     }
     catch (...)
     {
@@ -1645,11 +1622,10 @@ TEST(type_prop, replace_slice_deduce_vector_invalid_strides)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid slice strides not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string(
-                      "Number of strides provided for slice does not match number of input axes"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("Rank of strides (2) does not match rank of argument (1)"));
     }
     catch (...)
     {
@@ -1668,9 +1644,9 @@ TEST(type_prop, replace_slice_deduce_matrix_arg_rank_mismatch)
         // Should have thrown, so fail if it didn't
         FAIL() << "Argument rank mismatch not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Replace-slice argument ranks do not match"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument ranks do not match"));
     }
     catch (...)
     {
@@ -1689,10 +1665,9 @@ TEST(type_prop, replace_slice_deduce_matrix_arg_element_type_mismatch)
         // Should have thrown, so fail if it didn't
         FAIL() << "Argument element type mismatch not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Element types for replace-slice arguments do not match"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument element types do not match"));
     }
     catch (...)
     {
@@ -1711,10 +1686,11 @@ TEST(type_prop, replace_slice_deduce_matrix_slice_shape_mismatch)
         // Should have thrown, so fail if it didn't
         FAIL() << "Slice shape mismatch not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Shape of replacement tensor does not match slice shape"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Shape of replacement tensor (Shape{3, 6}) does not match "
+                                         "the slice shape (Shape{4, 6})"));
     }
     catch (...)
     {
@@ -1733,10 +1709,12 @@ TEST(type_prop, replace_slice_deduce_matrix_slice_shape_mismatch_strided)
         // Should have thrown, so fail if it didn't
         FAIL() << "Slice shape mismatch not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Shape of replacement tensor does not match slice shape"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Shape of replacement tensor (Shape{4, 6}) does not match the slice shape"));
     }
     catch (...)
     {
@@ -1754,9 +1732,10 @@ TEST(type_prop, replace_slice_deduce_vector_edge_upper_oob)
         // Should have thrown, so fail if it didn't
         FAIL() << "Upper bound out of range not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Upper bound for slice is out of range"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Upper bound for slice at axis 0 is out of range"));
     }
     catch (...)
     {
@@ -1775,9 +1754,10 @@ TEST(type_prop, replace_slice_deduce_matrix_edge_upper_oob)
         // Should have thrown, so fail if it didn't
         FAIL() << "Upper bound out of range not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Upper bound for slice is out of range"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Upper bound for slice at axis 1 is out of range"));
     }
     catch (...)
     {
@@ -1795,9 +1775,11 @@ TEST(type_prop, replace_slice_deduce_vector_lower_above_upper)
         // Should have thrown, so fail if it didn't
         FAIL() << "Lower bound above upper not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Lower bound for slice is greater than upper bound"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Lower bound for slice is greater than upper bound at axis 0"));
     }
     catch (...)
     {
@@ -1816,9 +1798,11 @@ TEST(type_prop, replace_slice_deduce_matrix_lower_above_upper)
         // Should have thrown, so fail if it didn't
         FAIL() << "Lower bound above upper not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Lower bound for slice is greater than upper bound"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Lower bound for slice is greater than upper bound at axis 1"));
     }
     catch (...)
     {
@@ -1836,11 +1820,11 @@ TEST(type_prop, replace_slice_deduce_matrix_lower_missing)
         // Should have thrown, so fail if it didn't
         FAIL() << "Missing lower bound coordinate not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Number of lower bounds provided for slice does "
-                              "not match number of input axes"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank of lower bounds (1) does not match rank of argument (2)"));
     }
     catch (...)
     {
@@ -1858,11 +1842,11 @@ TEST(type_prop, replace_slice_deduce_matrix_upper_missing)
         // Should have thrown, so fail if it didn't
         FAIL() << "Missing upper bound coordinate not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Number of upper bounds provided for slice does "
-                              "not match number of input axes"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank of upper bounds (1) does not match rank of argument (2)"));
     }
     catch (...)
     {
@@ -1881,11 +1865,11 @@ TEST(type_prop, replace_slice_deduce_matrix_lower_extra)
         // Should have thrown, so fail if it didn't
         FAIL() << "Extra lower bound coordinate not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Number of lower bounds provided for slice does "
-                              "not match number of input axes"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank of lower bounds (3) does not match rank of argument (2)"));
     }
     catch (...)
     {
@@ -1904,11 +1888,11 @@ TEST(type_prop, replace_slice_deduce_matrix_upper_extra)
         // Should have thrown, so fail if it didn't
         FAIL() << "Extra upper bound coordinate not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Number of upper bounds provided for slice does "
-                              "not match number of input axes"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank of upper bounds (3) does not match rank of argument (2)"));
     }
     catch (...)
     {
@@ -1981,9 +1965,9 @@ TEST(type_prop, one_hot_deduce_axis_oob)
         // Should have thrown, so fail if it didn't
         FAIL() << "One-hot axis out of bounds not detected.";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("One-hot axis is out of bounds"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("One-hot axis (3) is out of bounds"));
     }
     catch (...)
     {
@@ -2002,9 +1986,9 @@ TEST(type_prop, one_hot_deduce_shape_incompatible)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("One-hot argument shape is not compatible with desired output shape"));
+            std::string("Argument shape Shape{12, 24} does not match the expected shape"));
     }
     catch (...)
     {
@@ -2057,7 +2041,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce)
 TEST(type_prop, conv_1d_back_filters_deduce)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 100};
+    // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 91}); // output delta
@@ -2134,7 +2118,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_padded)
 TEST(type_prop, conv_1d_back_filters_deduce_padded)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 100};
+    // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 96}); // output delta
@@ -2208,7 +2192,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_strided)
 TEST(type_prop, conv_1d_back_filters_deduce_strided)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 100};
+    // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 46}); // output delta
@@ -2286,7 +2270,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_strided_padded)
 TEST(type_prop, conv_1d_back_filters_deduce_strided_padded)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 100};
+    // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 48}); // output delta
@@ -2360,7 +2344,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_strided_small_uneven)
 TEST(type_prop, conv_1d_back_filters_deduce_strided_small_uneven)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 5};
+    // Shape data_batch_shape{64, 3, 5};
     Shape filters_shape{128, 3, 2};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 5});   // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 2}); // output delta
@@ -2431,7 +2415,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_strided_small_even)
 TEST(type_prop, conv_1d_back_filters_deduce_strided_small_even)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 6};
+    // Shape data_batch_shape{64, 3, 6};
     Shape filters_shape{128, 3, 2};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 6});   // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 3}); // output delta
@@ -2504,7 +2488,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_window_dilated)
 TEST(type_prop, conv_1d_back_filters_deduce_window_dilated)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 100};
+    // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 82}); // output delta
@@ -2583,7 +2567,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_window_dilated_padded)
 TEST(type_prop, conv_1d_back_filters_deduce_window_dilated_padded)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 100};
+    // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 87}); // output delta
@@ -2671,7 +2655,7 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_window_dilated_data_dilated_padde
 TEST(type_prop, conv_1d_back_filters_deduce_window_dilated_data_dilated_padded)
 {
     // Deduce type
-    //Shape data_batch_shape{64, 3, 100};
+    // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});   // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 285}); // output delta
@@ -2903,10 +2887,10 @@ TEST(type_prop, conv_invalid_element_type_mismatch)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with element type mismatch not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution data batch and filter element types do not match"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Element types for data batch and filters do not match"));
     }
     catch (...)
     {
@@ -2926,12 +2910,10 @@ TEST(type_prop, conv_invalid_0d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 0D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution data batch input must have rank of at "
-                              "least 3 (one batch axis, one input-channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data batch input must have rank of at least 3"));
     }
     catch (...)
     {
@@ -2951,12 +2933,10 @@ TEST(type_prop, conv_invalid_1d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 1D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution data batch input must have rank of at "
-                              "least 3 (one batch axis, one input-channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data batch input must have rank of at least 3"));
     }
     catch (...)
     {
@@ -2976,12 +2956,10 @@ TEST(type_prop, conv_invalid_2d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 2D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution data batch input must have rank of at "
-                              "least 3 (one batch axis, one input-channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data batch input must have rank of at least 3"));
     }
     catch (...)
     {
@@ -3001,9 +2979,9 @@ TEST(type_prop, conv_invalid_0_batch_size)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 batch size not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Convolution data batch size is zero."));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch size is zero"));
     }
     catch (...)
     {
@@ -3023,9 +3001,9 @@ TEST(type_prop, conv_invalid_0_input_channels)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 input channels not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Convolution requires at least one input channel."));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input channel count is zero"));
     }
     catch (...)
     {
@@ -3045,11 +3023,10 @@ TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_many)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too many filter dimensions not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string("Convolution filter input must have rank of 2 + n_spatial_dimensions."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Filter input must have rank equal to the data batch"));
     }
     catch (...)
     {
@@ -3069,11 +3046,10 @@ TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_few)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too few filter dimensions not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string("Convolution filter input must have rank of 2 + n_spatial_dimensions."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Filter input must have rank equal to the data batch"));
     }
     catch (...)
     {
@@ -3093,9 +3069,9 @@ TEST(type_prop, conv_invalid_0_output_channels)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 output channels not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Convolution requires at least one output channel."));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Output channel count for filters is zero"));
     }
     catch (...)
     {
@@ -3115,11 +3091,11 @@ TEST(type_prop, conv_invalid_input_channel_mismatch)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with channel count mismatch not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string("Convolution data batch and filter input channel counts do not match."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input channel count for filters (3) does not match the "
+                                         "number of channels in the data batch (2)"));
     }
     catch (...)
     {
@@ -3139,11 +3115,12 @@ TEST(type_prop, conv_invalid_movement_stride_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong movement stride rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution window movement stride rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Rank of window movement strides does not match the number of spatial dimensions"));
     }
     catch (...)
     {
@@ -3163,11 +3140,12 @@ TEST(type_prop, conv_invalid_window_dilation_stride_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong window dilation stride rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution window dilation stride rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Rank of window dilation strides does not match the number of spatial dimensions"));
     }
     catch (...)
     {
@@ -3193,11 +3171,12 @@ TEST(type_prop, conv_invalid_data_dilation_stride_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong data dilation stride rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution data dilation stride rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Rank of data dilation strides does not match the number of spatial dimensions"));
     }
     catch (...)
     {
@@ -3222,11 +3201,12 @@ TEST(type_prop, conv_invalid_padding_below_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong padding-below rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution padding-below rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Rank of the padding below does not match the number of spatial dimensions"));
     }
     catch (...)
     {
@@ -3251,11 +3231,12 @@ TEST(type_prop, conv_invalid_padding_above_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong padding-above rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution padding-above rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Rank of the padding above does not match the number of spatial dimensions"));
     }
     catch (...)
     {
@@ -3280,12 +3261,11 @@ TEST(type_prop, conv_invalid_input_spatial_size_negative_after_padding)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with negative-length post-padding spatial axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string(
-                "Convolution input spatial dimension after padding and dilation is negative."));
+            std::string("Input dimension after padding and dilation is non-positive"));
     }
     catch (...)
     {
@@ -3310,12 +3290,11 @@ TEST(type_prop, conv_invalid_input_spatial_size_zero_after_padding)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length post-padding spatial axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string(
-                "Convolution input spatial dimension after dilation is zero even with padding."));
+            std::string("Input dimension after padding and dilation is non-positive"));
     }
     catch (...)
     {
@@ -3335,12 +3314,11 @@ TEST(type_prop, conv_invalid_input_spatial_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length spatial axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string(
-                "Convolution input spatial dimension after dilation is zero even with padding."));
+            std::string("Input dimension after padding and dilation is non-positive"));
     }
     catch (...)
     {
@@ -3360,9 +3338,10 @@ TEST(type_prop, conv_invalid_window_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length window axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Convolution window shape has a zero-length axis."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Filters shape at spatial dimension 1 is zero"));
     }
     catch (...)
     {
@@ -3382,9 +3361,10 @@ TEST(type_prop, conv_invalid_window_dilation_stride_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong 0-length window dilation stride axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Convolution window axis dilation stride is zero."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Window dilation stride at spatial dimension 1 is zero"));
     }
     catch (...)
     {
@@ -3410,9 +3390,10 @@ TEST(type_prop, conv_invalid_data_dilation_stride_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong 0-length data dilation stride axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Convolution data dilation stride is zero."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data dilation stride at spatial dimension 1 is zero"));
     }
     catch (...)
     {
@@ -3432,11 +3413,11 @@ TEST(type_prop, conv_invalid_dilated_window_too_large)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with oversized dilated window not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution window after dilation is larger than the "
-                              "spatial dimensions even with padding."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Post-dilation window shape is smaller than the "
+                                         "post-padding/dilation input item shape"));
     }
     catch (...)
     {
@@ -3456,9 +3437,10 @@ TEST(type_prop, conv_invalid_movement_stride_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong 0-length movement stride axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Convolution window axis movement stride is zero."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Window movement stride at spatial dimension 0 is zero"));
     }
     catch (...)
     {
@@ -3581,12 +3563,10 @@ TEST(type_prop, max_pool_invalid_0d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 0D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Max-pool data batch input must have rank of at "
-                              "least 3 (one batch axis, one channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data input shape does not have rank of at least 3"));
     }
     catch (...)
     {
@@ -3606,12 +3586,10 @@ TEST(type_prop, max_pool_invalid_1d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 1D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Max-pool data batch input must have rank of at "
-                              "least 3 (one batch axis, one channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data input shape does not have rank of at least 3"));
     }
     catch (...)
     {
@@ -3631,12 +3609,10 @@ TEST(type_prop, max_pool_invalid_2d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 2D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Max-pool data batch input must have rank of at "
-                              "least 3 (one batch axis, one channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data input shape does not have rank of at least 3"));
     }
     catch (...)
     {
@@ -3656,9 +3632,9 @@ TEST(type_prop, max_pool_invalid_0_batch_size)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 batch size not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Max-pool data batch size is zero."));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch size is zero"));
     }
     catch (...)
     {
@@ -3678,9 +3654,9 @@ TEST(type_prop, max_pool_invalid_0_channels)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 channels not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Max-pool requires at least one feature channel."));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Channel count is zero"));
     }
     catch (...)
     {
@@ -3700,11 +3676,11 @@ TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_many)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too many window dimensions not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Max-pool window shape rank does not match number of spatial dimensions."));
+            std::string("Window shape rank does not match number of spatial dimensions"));
     }
     catch (...)
     {
@@ -3724,11 +3700,11 @@ TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_few)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too few window dimensions not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Max-pool window shape rank does not match number of spatial dimensions."));
+            std::string("Window shape rank does not match number of spatial dimensions"));
     }
     catch (...)
     {
@@ -3749,11 +3725,11 @@ TEST(type_prop, max_pool_invalid_movement_stride_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong movement stride rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Max-pool window movement stride rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Window movement stride rank does not match number of spatial dimensions"));
     }
     catch (...)
     {
@@ -3773,10 +3749,11 @@ TEST(type_prop, max_pool_invalid_input_data_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length spatial axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Max-pool input spatial dimension is zero even after padding."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Data input spatial dimension 0 has zero length even after padding"));
     }
     catch (...)
     {
@@ -3796,9 +3773,9 @@ TEST(type_prop, max_pool_invalid_window_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length window axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Max-pool window shape has a zero-length axis."));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Window shape dimension 1 has zero length"));
     }
     catch (...)
     {
@@ -3818,12 +3795,11 @@ TEST(type_prop, max_pool_invalid_dilated_too_large)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with oversized window not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string(
-                "Max-pool window shape is larger than the spatial dimensions even after padding."));
+            std::string("Window shape after padding is larger than the spatial dimensions"));
     }
     catch (...)
     {
@@ -3844,9 +3820,10 @@ TEST(type_prop, max_pool_invalid_movement_stride_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0-length movement stride axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Max-pool window axis movement stride is zero."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Window movement strides dimension 0 has zero length"));
     }
     catch (...)
     {
@@ -4015,9 +3992,9 @@ TEST(type_prop, reverse_3d_deduce_oob)
         // Should have thrown, so fail if it didn't
         FAIL() << "Axis out of bounds not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Reverse axis 3 is out of bounds (input rank is 3)."));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Reverse axis (3) is out of bounds"));
     }
     catch (...)
     {
@@ -4036,9 +4013,10 @@ TEST(type_prop, reverse_sequence_1_dim)
         auto bc = make_shared<op::ReverseSequence>(data, seq_lenghts, batch_axis, seq_axis);
         FAIL() << "ReverseSequence c-tor should throw for seq_lenghts whose rank isn't equal to 1";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("indices should be a 1-dimensional array"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Sequence indices must be a 1-dimensional tensor"));
     }
     catch (...)
     {
@@ -4057,9 +4035,9 @@ TEST(type_prop, reverse_sequence_batch_index_oob)
         auto bc = make_shared<op::ReverseSequence>(data, seq_lenghts, batch_axis, seq_axis);
         FAIL() << "ReverseSequence c-tor should throw for out-of-bounds batch axis index";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("batch axis index is out of bounds"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Batch axis index (3) is out of bounds"));
     }
     catch (...)
     {
@@ -4070,17 +4048,17 @@ TEST(type_prop, reverse_sequence_batch_index_oob)
 TEST(type_prop, reverse_sequence_sequence_index_oob)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2});
-    auto seq_lenghts = make_shared<op::Parameter>(element::f32, Shape{3});
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, Shape{3});
     try
     {
         size_t batch_axis = 1;
         size_t seq_axis = 3;
-        auto bc = make_shared<op::ReverseSequence>(data, seq_lenghts, batch_axis, seq_axis);
+        auto bc = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
         FAIL() << "ReverseSequence c-tor should throw for out-of-bounds sequence axis index";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("sequence axis index is out of bounds"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Sequence axis index (3) is out of bounds"));
     }
     catch (...)
     {
@@ -4100,10 +4078,11 @@ TEST(type_prop, reverse_sequence_seq_len_size_equal_to_batch_dim)
         FAIL() << "ReverseSequence c-tor should throw when sequence length size isn't equal to "
                   "batch dimension";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Sequence length size should be equal to batch axis dimension"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Sequence length (3) is not equal to batch axis dimension (4)"));
     }
     catch (...)
     {
@@ -5681,10 +5660,9 @@ TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_result_element_
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Return element type from scatter function does not match the init value type"));
+        EXPECT_EQ(error.what(),
+                  std::string("Return element type from scatter function does "
+                              "not match the init value type"));
     }
     catch (...)
     {
@@ -5879,12 +5857,9 @@ TEST(type_prop, avg_pool_invalid_0d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 0D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool data batch input must have rank of at "
-                              "least 3 (one batch axis, one channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(), "Data input shape does not have rank of at least 3");
     }
     catch (...)
     {
@@ -5904,12 +5879,9 @@ TEST(type_prop, avg_pool_invalid_1d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 1D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool data batch input must have rank of at "
-                              "least 3 (one batch axis, one channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(), "Data input shape does not have rank of at least 3");
     }
     catch (...)
     {
@@ -5929,12 +5901,9 @@ TEST(type_prop, avg_pool_invalid_2d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 2D input not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool data batch input must have rank of at "
-                              "least 3 (one batch axis, one channel axis, at "
-                              "least one spatial dimension)."));
+        EXPECT_HAS_SUBSTRING(error.what(), "Data input shape does not have rank of at least 3");
     }
     catch (...)
     {
@@ -5954,9 +5923,9 @@ TEST(type_prop, avg_pool_invalid_0_batch_size)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 batch size not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Average-pool data batch size is zero."));
+        EXPECT_HAS_SUBSTRING(error.what(), "Data batch size is zero");
     }
     catch (...)
     {
@@ -5976,9 +5945,9 @@ TEST(type_prop, avg_pool_invalid_0_channels)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 channels not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Average-pool requires at least one feature channel."));
+        EXPECT_HAS_SUBSTRING(error.what(), "Channel count is zero");
     }
     catch (...)
     {
@@ -5998,12 +5967,10 @@ TEST(type_prop, avg_pool_invalid_wrong_number_of_window_dimensions_too_many)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too many window dimensions not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Average-pool window shape rank does not match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Window shape rank does not match number of spatial dimensions");
     }
     catch (...)
     {
@@ -6023,12 +5990,10 @@ TEST(type_prop, avg_pool_invalid_wrong_number_of_window_dimensions_too_few)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too few window dimensions not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Average-pool window shape rank does not match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Window shape rank does not match number of spatial dimensions");
     }
     catch (...)
     {
@@ -6049,11 +6014,11 @@ TEST(type_prop, avg_pool_invalid_movement_stride_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong movement stride rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool window movement stride rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Window movement stride rank does not match number of spatial dimensions");
     }
     catch (...)
     {
@@ -6077,11 +6042,10 @@ TEST(type_prop, avg_pool_invalid_padding_below_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong below-padding rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool below-padding rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Below-padding rank does not match number of spatial dimensions");
     }
     catch (...)
     {
@@ -6105,11 +6069,10 @@ TEST(type_prop, avg_pool_invalid_padding_above_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong above-padding rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool above-padding rank does not "
-                              "match number of spatial dimensions."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Above-padding rank does not match number of spatial dimensions");
     }
     catch (...)
     {
@@ -6129,10 +6092,10 @@ TEST(type_prop, avg_pool_invalid_input_item_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length spatial axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool input spatial dimension is zero even after padding."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Data input spatial dimension 0 has zero length even after padding");
     }
     catch (...)
     {
@@ -6152,9 +6115,9 @@ TEST(type_prop, avg_pool_invalid_window_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length window axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Average-pool window shape has a zero-length axis."));
+        EXPECT_HAS_SUBSTRING(error.what(), "Window shape dimension 1 has zero length");
     }
     catch (...)
     {
@@ -6174,11 +6137,10 @@ TEST(type_prop, avg_pool_invalid_dilated_too_large)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with oversized window not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool window shape is larger than the spatial "
-                              "dimensions even after padding."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Window shape after padding is larger than the spatial dimensions");
     }
     catch (...)
     {
@@ -6199,9 +6161,9 @@ TEST(type_prop, avg_pool_invalid_movement_stride_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0-length movement stride axis not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Average-pool window axis movement stride is zero."));
+        EXPECT_HAS_SUBSTRING(error.what(), "Window movement strides dimension 0 has zero length");
     }
     catch (...)
     {
@@ -6310,10 +6272,9 @@ TEST(type_prop, pad_deduce_element_type_mismatch)
         // Should have thrown, so fail if it didn't
         FAIL() << "Element tpye mismatch not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Pad argument tensor and padding value element types do not match"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument element types do not match"));
     }
     catch (...)
     {
@@ -6337,9 +6298,10 @@ TEST(type_prop, pad_deduce_nonscalar_pad_value)
         // Should have thrown, so fail if it didn't
         FAIL() << "Non-scalar pad value not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(), std::string("Padding value for pad is not a scalar"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Argument for padding value is not a scalar"));
     }
     catch (...)
     {
@@ -6363,10 +6325,11 @@ TEST(type_prop, pad_deduce_below_padding_wrong_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Wrong below-padding rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Pad rank for below-padding does not match rank of argument tensor"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank for padding below does not match the rank of the data argument"));
     }
     catch (...)
     {
@@ -6390,10 +6353,11 @@ TEST(type_prop, pad_deduce_above_padding_wrong_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Wrong above-padding rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Pad rank for above-padding does not match rank of argument tensor"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank for padding above does not match the rank of the data argument"));
     }
     catch (...)
     {
@@ -6417,11 +6381,11 @@ TEST(type_prop, pad_deduce_interior_padding_wrong_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Wrong interior padding rank not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Pad rank for interior padding does not match rank of argument tensor"));
+            std::string("Rank for interior padding does not match the rank of the data argument"));
     }
     catch (...)
     {
@@ -6460,10 +6424,142 @@ TEST(type_prop, sum_axis_oob)
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect out-of-bound axis for sum";
     }
-    catch (const ngraph_error& error)
+    catch (const NodeValidationError& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Reduction axis for arithmetic reduction operator is out of bounds"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Reduction axis (2) is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, index_reduction_scalar)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{});
+
+    try
+    {
+        auto argmin = make_shared<op::ArgMin>(a, 0, element::i32);
+        FAIL() << "ArgMin c-tor should throw for scalar shapes";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument rank must be at least 1");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, index_reduction_invalid_rank)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+
+    try
+    {
+        auto argmin = make_shared<op::ArgMin>(a, 2, element::i32);
+        FAIL() << "ArgMin c-tor should throw for axis out of bounds";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "is greater than rank of");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, index_reduction_invalid_index_type)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+
+    try
+    {
+        auto argmin = make_shared<op::ArgMin>(a, 1, element::f32);
+        FAIL() << "ArgMin c-tor should throw for invalid index type";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Index element type must be");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, topk_invalid_rank)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{});
+
+    try
+    {
+        auto topk = make_shared<op::TopK>(a, 0, element::i32, 1, true);
+        FAIL() << "TopK c-tor should throw for scalar shapes";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Input Tensor's rank must be greater than 0");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, topk_invalid_top_k)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+
+    try
+    {
+        auto topk = make_shared<op::TopK>(a, 2, element::i32, 1, true);
+        FAIL() << "TopK c-tor should throw for invalid top k axis";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "TopK axis must be less than rank");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, topk_invalid_index_type)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+
+    try
+    {
+        auto topk = make_shared<op::TopK>(a, 0, element::f32, 1, true);
+        FAIL() << "TopK c-tor should throw for invalid index element type";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Index element type must be i64 or i32");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, topk_invalid_k)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+
+    try
+    {
+        auto topk = make_shared<op::TopK>(a, 0, element::i32, 3, true);
+        FAIL() << "TopK c-tor should throw for invalid K";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "K should not exceed TopK axis length");
     }
     catch (...)
     {

@@ -1,0 +1,153 @@
+# ******************************************************************************
+# Copyright (c) 2017-2018 Intel Copyright
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by application law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ******************************************************************************
+
+add_library(onnx_import_interface OBJECT
+        onnx.cpp
+        onnx.hpp)
+
+target_include_directories(onnx_import_interface PRIVATE ${ONNX_PROTO_INCLUDE_DIR})
+
+add_library(onnx_import STATIC
+        core/attribute.cpp
+        core/attribute.hpp
+        core/graph.cpp
+        core/graph.hpp
+        core/model.hpp
+        core/node.cpp
+        core/node.hpp
+        core/tensor.hpp
+        core/value_info.hpp
+        exceptions.hpp
+        op/add.hpp
+        op/and.hpp
+        op/average_pool.cpp
+        op/average_pool.hpp
+        op/batch_norm.cpp
+        op/batch_norm.hpp
+        op/cast.cpp
+        op/cast.hpp
+        op/ceil.hpp
+        op/clip.cpp
+        op/clip.hpp
+        op/concat.cpp
+        op/concat.hpp
+        op/constant.cpp
+        op/constant.hpp
+        op/conv.cpp
+        op/conv.hpp
+        op/div.hpp
+        op/elu.cpp
+        op/elu.hpp
+        op/equal.hpp
+        op/exp.hpp
+        op/flatten.cpp
+        op/flatten.hpp
+        op/floor.hpp
+        op/gemm.cpp
+        op/gemm.hpp
+        op/greater.hpp
+        op/hard_sigmoid.cpp
+        op/hard_sigmoid.hpp
+        op/identity.hpp
+        op/leaky_relu.cpp
+        op/leaky_relu.hpp
+        op/less.hpp
+        op/log.hpp
+        op/log_softmax.hpp
+        op/matmul.hpp
+        op/max_pool.cpp
+        op/max_pool.hpp
+        op/max.hpp
+        op/mean.cpp
+        op/mean.hpp
+        op/min.hpp
+        op/mul.hpp
+        op/neg.hpp
+        op/not.hpp
+        op/or.hpp
+        op/pow.hpp
+        op/prelu.cpp
+        op/prelu.hpp
+        op/reciprocal.cpp
+        op/reciprocal.hpp
+        op/reduce.cpp
+        op/reduce.hpp
+        op/relu.hpp
+        op/reshape.cpp
+        op/reshape.hpp
+        op/selu.cpp
+        op/selu.hpp
+        op/shape.hpp
+        op/shape.cpp
+        op/sigmoid.hpp
+        op/slice.cpp
+        op/slice.hpp
+        op/softmax.cpp
+        op/softmax.hpp
+        op/softplus.cpp
+        op/softplus.hpp
+        op/softsign.cpp
+        op/softsign.hpp
+        op/split.cpp
+        op/split.hpp
+        op/sqrt.hpp
+        op/squeeze.cpp
+        op/squeeze.hpp
+        op/sub.hpp
+        op/sum.hpp
+        op/tanh.hpp
+        op/thresholded_relu.cpp
+        op/thresholded_relu.hpp
+        op/transpose.cpp
+        op/transpose.hpp
+        op/unsqueeze.cpp
+        op/unsqueeze.hpp
+        op/xor.hpp
+        ops_bridge.cpp
+        ops_bridge.hpp
+        utils/broadcasting.cpp
+        utils/broadcasting.hpp
+        utils/common.hpp
+        utils/convpool.cpp
+        utils/convpool.hpp
+        utils/reduction.hpp
+        utils/reshape.cpp
+        utils/reshape.hpp
+        utils/variadic.hpp)
+
+add_dependencies(onnx_import onnx_import_interface)
+
+if (NOT NGRAPH_USE_SYSTEM_PROTOBUF)
+    add_dependencies(onnx_import_interface protobuf::libprotobuf)
+    add_dependencies(onnx_import_interface onnx::libonnx_proto)
+endif()
+
+set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_include_directories(onnx_import PUBLIC ${CMAKE_CURRENT_BINARY_DIR} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${NGRAPH_INCLUDE_PATH} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
+target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES} ${ONNX_PROTO_LIBRARY})
+
+set_property(TARGET onnx_import_interface PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_include_directories(onnx_import_interface PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+    ${NGRAPH_INCLUDE_PATH} ${Protobuf_INCLUDE_DIR})
+
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
+    target_compile_options(onnx_import PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
+            -Wno-extended-offsetof -Wno-shorten-64-to-32 -Wno-unused-macros -Wno-missing-variable-declarations
+            -Wno-unused-private-field -Wno-shadow -Wno-deprecated)
+    target_compile_options(onnx_import_interface PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
+            -Wno-extended-offsetof -Wno-shorten-64-to-32 -Wno-unused-macros -Wno-missing-variable-declarations
+            -Wno-unused-private-field -Wno-shadow -Wno-deprecated)
+endif()

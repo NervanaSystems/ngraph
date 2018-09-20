@@ -28,6 +28,7 @@ SET(JSON_GIT_LABEL v3.1.1)
 if (${CMAKE_VERSION} VERSION_LESS 3.2)
     ExternalProject_Add(
         ext_json
+        PREFIX json
         GIT_REPOSITORY ${JSON_GIT_REPO_URL}
         GIT_TAG ${JSON_GIT_LABEL}
         # Disable install step
@@ -37,10 +38,12 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
         # cmake does not allow calling cmake functions so we call a cmake script in the Module
         # directory.
         PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/cmake/Modules/patch_json.cmake
+        EXCLUDE_FROM_ALL TRUE
         )
 else()
     ExternalProject_Add(
         ext_json
+        PREFIX json
         GIT_REPOSITORY ${JSON_GIT_REPO_URL}
         GIT_TAG ${JSON_GIT_LABEL}
         # Disable install step
@@ -50,13 +53,13 @@ else()
         # cmake does not allow calling cmake functions so we call a cmake script in the Module
         # directory.
         PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/cmake/Modules/patch_json.cmake
+        EXCLUDE_FROM_ALL TRUE
     )
 endif()
 
 #------------------------------------------------------------------------------
 
-get_filename_component(
-    JSON_INCLUDE_DIR
-    "${EXTERNAL_PROJECTS_ROOT}/ext_json-prefix/src/ext_json/include"
-    ABSOLUTE)
-set(JSON_INCLUDE_DIR "${JSON_INCLUDE_DIR}" PARENT_SCOPE)
+ExternalProject_Get_Property(ext_json SOURCE_DIR)
+add_library(libjson INTERFACE)
+target_include_directories(libjson SYSTEM INTERFACE ${SOURCE_DIR}/include)
+add_dependencies(libjson ext_json)

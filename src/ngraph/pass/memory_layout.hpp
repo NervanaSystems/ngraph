@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -55,7 +55,8 @@ public:
     enum class allocation_scheme
     {
         FIRST_FIT,
-        BEST_FIT
+        BEST_FIT,
+        NO_REUSE
     };
 
     class node
@@ -68,7 +69,7 @@ public:
         block_state m_state;
     };
 
-    MemoryManager(size_t alignment = 1);
+    MemoryManager(size_t alignment = 1, bool disable_reuse = false);
     // memory_manager& alignment(size_t a);
 
     size_t allocate(size_t size);
@@ -87,6 +88,7 @@ public:
 private:
     size_t first_fit(size_t size);
     size_t best_fit(size_t size);
+    size_t no_reuse_allocator(size_t size);
 
     std::list<node> m_node_list;
     size_t m_alignment;

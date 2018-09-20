@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <fstream>
 #include <sstream>
@@ -27,6 +27,7 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/all_close.hpp"
+#include "util/autodiff/backprop_function.hpp"
 #include "util/ndarray.hpp"
 
 using namespace std;
@@ -143,6 +144,7 @@ TEST(util, contains)
     EXPECT_FALSE(contains(v1, 8));
 }
 
+#if defined(NGRAPH_INTERPRETER_ENABLE)
 TEST(util, all_close)
 {
     auto backend = runtime::Backend::create("INTERPRETER");
@@ -165,6 +167,7 @@ TEST(util, all_close)
     EXPECT_FALSE(ngraph::test::all_close<float>(c, a, .05f, 0));
     EXPECT_TRUE(ngraph::test::all_close<float>(c, a, .11f, 0));
 }
+#endif
 
 TEST(util, traverse_functions)
 {
@@ -321,4 +324,93 @@ TEST(util, parse_string)
     EXPECT_FLOAT_EQ(numeric_limits<double>::infinity(), parse_string<double>("infinity"));
     EXPECT_FLOAT_EQ(-numeric_limits<double>::infinity(), parse_string<double>("-INFINITY"));
     EXPECT_TRUE(std::isnan(parse_string<double>("NaN")));
+}
+
+TEST(graph_util, get_subgraph_outputs_trivial_tests)
+{
+    auto outputs = ngraph::get_subgraph_outputs(NodeVector{}, NodeVector{});
+    ASSERT_EQ(outputs.size(), 0);
+
+    Shape shape{};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto absn = make_shared<op::Abs>(A);
+    auto neg_absn = make_shared<op::Negative>(absn);
+    outputs = ngraph::get_subgraph_outputs(NodeVector{A}, NodeVector{});
+    ASSERT_EQ(outputs, (NodeVector{A}));
+
+    outputs = ngraph::get_subgraph_outputs(NodeVector{A}, NodeVector{A});
+    ASSERT_EQ(outputs, (NodeVector{}));
+
+    outputs = ngraph::get_subgraph_outputs(NodeVector{A, absn}, NodeVector{});
+    ASSERT_EQ(outputs, (NodeVector{absn}));
+
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto abs_b = make_shared<op::Abs>(B);
+    auto neg_b = make_shared<op::Negative>(B);
+    auto abs_b_neg = make_shared<op::Negative>(abs_b);
+    outputs = ngraph::get_subgraph_outputs(NodeVector{B, abs_b}, NodeVector{});
+    ASSERT_EQ(outputs, (NodeVector{B, abs_b}));
+
+    outputs = ngraph::get_subgraph_outputs(NodeVector{B, abs_b}, NodeVector{B});
+    ASSERT_EQ(outputs, (NodeVector{abs_b}));
+
+    outputs = ngraph::get_subgraph_outputs(NodeVector{B, abs_b, abs_b_neg}, NodeVector{});
+    ASSERT_EQ(outputs, (NodeVector{B}));
+
+    auto add_b = make_shared<op::Add>(neg_b, abs_b_neg);
+    outputs =
+        ngraph::get_subgraph_outputs(NodeVector{B, abs_b, neg_b, abs_b_neg, add_b}, NodeVector{});
+    ASSERT_EQ(outputs, (NodeVector{}));
+
+    // now add_b uses abs_b_neg
+    outputs = ngraph::get_subgraph_outputs(NodeVector{B, abs_b, abs_b_neg}, NodeVector{});
+    ASSERT_EQ(outputs, (NodeVector{B, abs_b_neg}));
+}
+
+TEST(util, test_fprop_cache)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto output = (A + B) * C + A;
+
+    auto f = make_shared<Function>(NodeVector{output}, op::ParameterVector{A, B, C});
+
+    auto bf = autodiff::backprop_function(f);
+
+    auto fprop_cache = cache_fprop(f, bf);
+
+    EXPECT_EQ(fprop_cache.fprop->get_results().size(), 2);
+    EXPECT_EQ(fprop_cache.bprop->get_parameters().size(), 5);
+}
+
+TEST(graph_util, test_subgraph_topological_sort)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto add = A + B;
+    auto mul = C * add;
+    auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A});
+    std::list<std::shared_ptr<Node>> expected{A, add, mul};
+    ASSERT_EQ(expected, sorted);
+}
+
+TEST(graph_util, test_subgraph_topological_sort_control_dependencies)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto D = make_shared<op::Abs>(A);
+    auto E = make_shared<op::Abs>(B);
+    auto add = A + B;
+    add->add_control_dependency(D);
+    add->add_control_dependency(E);
+    auto mul = C * add;
+    auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A, D}, true);
+    std::list<std::shared_ptr<Node>> expected{A, D, add, mul};
+    ASSERT_EQ(expected, sorted);
 }

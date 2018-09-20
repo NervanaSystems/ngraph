@@ -1,8 +1,8 @@
 .. project/index.rst
 
 
-Project Docs
-============
+More about nGraph
+==================
 
 This section contains documentation about the project and how to contribute.
 

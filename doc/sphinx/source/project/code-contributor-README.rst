@@ -4,24 +4,35 @@
 Core Contributor Guidelines
 ###########################
 
+License
+=======
+
+All contributed code must be compatible with the `Apache 2`_ license,
+preferably by being contributed under the Apache 2 license. Code
+contributed with another license will need the license reviewed by
+Intel before it can be accepted.
+
 Code formatting
 ================
 
-All C/C++ source code in the repository, including the test code, must adhere to
-the source-code formatting and style guidelines described here.
+All C/C++ source code in the repository, including the test code, must
+adhere to the source-code formatting and style guidelines described
+here.  The coding style described here applies to the nGraph
+repository. Related repositories may make adjustments to better match
+the coding styles of libraries they are using.
+
 
 Adding ops to nGraph Core
 -------------------------
 
-Our design philosophy is that the graph is not a script for running kernels;
-rather, the graph is a snapshot of the computation's building blocks which we
-call ``ops``. Compilation should match ``ops`` to appropriate kernels for the
-backend(s) in use. Thus, we expect that adding of new Core ops should be
-infrequent and that most functionality instead gets added with new functions
-that build sub-graphs from existing core ops.
-
-The coding style described here should apply to both Core ``ops``, and to any
-functions that build out (upon) sub-graphs from the core.
+Our design philosophy is that the graph is not a script for running
+optimized kernels; rather, the graph is a specification for a
+computation composed of basic building blocks which we call
+``ops``. Compilation should match groups of ``ops`` to appropriate
+optimal semantically equivalent groups of kernels for the backend(s)
+in use. Thus, we expect that adding of new Core ops should be
+infrequent and that most functionality instead gets added with new
+functions that build sub-graphs from existing core ops.
 
 
 Coding style
@@ -32,7 +43,8 @@ standard is impeding progress, we either adjust that part or remove it. To this
 end, we employ coding standards that facilitate understanding of *what nGraph
 components are doing*. Programs are easiest to understand when they can be
 understood locally; if most local changes have local impact, you do not need to
-dig through multiple files to understand what something does.
+dig through multiple files to understand what something does and if it
+is safe to modify.
 
 Names
 ~~~~~
@@ -42,16 +54,17 @@ standards:
 
 - Define C++ class or type names with ``CamelCase``.
 - Assign template parameters with ``UPPER_SNAKE_CASE``.
-- Case variable and function names with ``snake_case``.
+- Case variable and function names with ``lower_snake_case``.
 
-Method names for basic accessors are prefixed by ``get_`` or ``set_`` and
+Method names for basic accessors are prefixed by ``get_``, ``is_``, or ``set_`` and
 should have simple :math:`\mathcal{O}(1)` implementations:
 
 - A ``get_`` method should be externally idempotent. It may perform some simple
-  initialization and cache the result for later use.
+  initialization and cache the result for later use.  Trivial ``get_``
+  methods can be defined in a header file. If a method is
+  non-trivial, that is often a sign that it is not a basic accessor.
 
-- An ``is_`` may be used instead of ``get_`` for boolean accessors. Trivial ``get_``
-  methods can be defined in a header file.
+- An ``is_`` may be used instead of ``get_`` for boolean accessors.
 
 - A ``set_`` method should change the value returned by the corresponding ``get_``
   method.
@@ -107,7 +120,7 @@ File Names
 
 - Unit test files are in the ``tests`` directory.
 
-  * Tranformer-dependent tests are tests running on the default transformer or
+  * Transformer-dependent tests are tests running on the default transformer or
     specifying a transformer. For these, use the form
 
     .. code-block:: cpp
@@ -156,7 +169,7 @@ it is automatically enforced and reduces merge conflicts.
   * Put headers in groups separated by a blank line. Logically order the groups
     downward from system-level to 3rd-party to ``ngraph``.
   * Formatting will keep the files in each group in alphabetic order.
-  * Use this syntax for files that **do not change during development**; they
+  * Use this syntax for files that **do not change during nGraph development**; they
     will not be checked for changes during builds. Normally this will be
     everything but the ngraph files:
 
@@ -164,7 +177,7 @@ it is automatically enforced and reduces merge conflicts.
 
        #include <file>
 
-  * Use this syntax for files that **are changing during development**; they will
+  * Use this syntax for files that **are changing during nGraph development**; they will
     be checked for changes during builds. Normally this will be ngraph headers:
 
     .. code-block:: cpp
@@ -177,12 +190,14 @@ it is automatically enforced and reduces merge conflicts.
 
        #include <c...>
 
-- To guard against multiple inclusion, avoid using the ``#define X_H`` style.
-  Use this syntax instead:
+- To guard against multiple inclusion, use:
 
   .. code-block:: cpp
 
      #pragma once
+
+  * The syntax is a compiler extension that has been adopted by all
+    supported compilers.
 
 - The initialization
 
@@ -243,3 +258,5 @@ it is automatically enforced and reduces merge conflicts.
        int y;
        int* z;
 
+
+.. _`Apache 2`: https://www.apache.org/licenses/LICENSE-2.0

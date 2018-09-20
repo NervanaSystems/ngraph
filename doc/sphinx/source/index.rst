@@ -71,8 +71,9 @@ Python-based API. See the `ngraph onnx companion tool`_ to get started.
 
    TensorFlow, Yes, Yes
    MXNet, Yes, Yes
+   PaddlePaddle, Coming Soon, Yes
    neon, none needed, Yes
-   PyTorch, Not yet, Yes
+   PyTorch, Coming Soon, Yes
    CNTK, Not yet, Yes
    Other, Not yet, Doable
 
@@ -120,7 +121,7 @@ resources available for the breadth of ML/DL tasks.  We welcome ideas and
 
 
 Further project details can be found on our :doc:`project/about` page, or see 
-our :doc:`install` guide for how to get started.   
+our :doc:`buildlb` guide for how to get started.   
 
 
 .. note:: The library code is under active development as we're continually 
@@ -138,14 +139,18 @@ Contents
    :name: tocmaster
    :caption: Documentation
 
-   install.rst
+   buildlb.rst
    graph-basics.rst
    howto/index.rst
    ops/index.rst
-   project/index.rst
    framework-integration-guides.rst
-   optimize/index.rst
+   frameworks/index.rst
+   fusion/index.rst
+   programmable/index.rst
+   distr/index.rst
    python_api/index.rst
+   project/index.rst
+
 
 
 Indices and tables
@@ -159,3 +164,4 @@ Indices and tables
 .. _ngraph onnx companion tool: https://github.com/NervanaSystems/ngraph-onnx
 .. _Movidius: https://www.movidius.com/
 .. _contributions: https://github.com/NervanaSystems/ngraph#how-to-contribute
+  

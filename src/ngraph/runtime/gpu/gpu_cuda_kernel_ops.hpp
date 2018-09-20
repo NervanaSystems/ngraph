@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -22,6 +22,7 @@ namespace ngraph
     {
         class Abs;
         class Acos;
+        class Add;
         class Asin;
         class Atan;
         class Ceiling;
@@ -38,6 +39,9 @@ namespace ngraph
         class Subtract;
         class Divide;
         class Sign;
+        class Maximum;
+        class Minimum;
+        class Multiply;
         class Convert;
         class Equal;
         class NotEqual;
@@ -56,11 +60,22 @@ namespace ngraph
         class Select;
         class And;
         class Or;
+        class Nop;
+        class Sigmoid;
+        class SigmoidBackprop;
     }
     namespace runtime
     {
         namespace gpu
         {
+            enum class OpName
+            {
+                add,
+                multiply,
+                minimum,
+                maximum
+            };
+
             template <typename T>
             struct CudaOpMap;
 
@@ -195,6 +210,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "subtractf";
                 static constexpr const char* math_kernel = "x0-x1";
+                static constexpr const char* atomic = "atomicSub";
             };
 
             template <>
@@ -275,6 +291,13 @@ namespace ngraph
             };
 
             template <>
+            struct CudaOpMap<ngraph::op::Negative>
+            {
+                static constexpr const char* op = "negative";
+                static constexpr const char* math_kernel = "-x0";
+            };
+
+            template <>
             struct CudaOpMap<ngraph::op::Select>
             {
                 static constexpr const char* op = "select";
@@ -293,6 +316,7 @@ namespace ngraph
             {
                 static constexpr const char* op = "logical_and";
                 static constexpr const char* math_kernel = "x0 & x1";
+                static constexpr const char* atomic = "atomicAnd";
             };
 
             template <>
@@ -300,6 +324,60 @@ namespace ngraph
             {
                 static constexpr const char* op = "logical_or";
                 static constexpr const char* math_kernel = "x0 | x1";
+                static constexpr const char* atomic = "atomicOr";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Add>
+            {
+                static constexpr const char* op = "add";
+                static constexpr const char* math_kernel = "x0 + x1";
+                static constexpr const char* atomic = "atomicAdd";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Multiply>
+            {
+                static constexpr const char* op = "mul";
+                static constexpr const char* math_kernel = "x0 * x1";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Minimum>
+            {
+                static constexpr const char* op = "min";
+                static constexpr const char* math_kernel = "x0 > x1 ? x1 : x0";
+                static constexpr const char* atomic = "atomicMin";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Maximum>
+            {
+                static constexpr const char* op = "max";
+                static constexpr const char* math_kernel = "x0 > x1 ? x0 : x1";
+                static constexpr const char* atomic = "atomicMax";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Nop>
+            {
+                static constexpr const char* op = "";
+                static constexpr const char* math_kernel = "";
+                static constexpr const char* atomic = "";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::Sigmoid>
+            {
+                static constexpr const char* op = "sigmoid";
+                static constexpr const char* math_kernel = "1 / (1 + expf(-x0))";
+            };
+
+            template <>
+            struct CudaOpMap<ngraph::op::SigmoidBackprop>
+            {
+                static constexpr const char* op = "sigmoid_backprop";
+                static constexpr const char* math_kernel = "x1 / (2 + expf(-x0) + expf(x0))";
             };
         }
     }

@@ -8,14 +8,14 @@ This section explains how to manually perform the steps that would normally be
 performed by a framework :term:`bridge` to execute a computation. The nGraph 
 library is targeted toward automatic construction; it is far easier for a 
 processing unit (GPU, CPU, or an `Intel Nervana NNP`_) to run a computation than 
-it is for a user to map out how that computation happens. Unfortunately, things 
+it is for a human to map out how that computation happens. Unfortunately, things 
 that make by-hand graph construction simpler tend to make automatic construction 
 more difficult, and vice versa.
 
 Here we will do all the bridge steps manually. The :term:`model description` 
-we're explaining is based on the :file:`abc.cpp` file in the ``/doc/examples/`` 
-directory. We'll be deconstructing the steps that an entity (framework or 
-user) must be able to carry out in order to successfully execute a computation:
+walk-through below is based on the :file:`abc.cpp` code in the ``/doc/examples/`` 
+directory. We'll be deconstructing the steps that must happen (either programmatically 
+or manually) in order to successfully execute a computation:
 
 * :ref:`define_cmp`
 * :ref:`specify_bkd`
@@ -25,7 +25,7 @@ user) must be able to carry out in order to successfully execute a computation:
 * :ref:`invoke_cmp`
 * :ref:`access_outputs`
 
-The final code is at the :ref:`end of this page <all_together>`.
+The full code is at the :ref:`end of this page <all_together>`.
 
 
 .. _define_cmp:
@@ -34,59 +34,54 @@ Define the computation
 ======================
 
 To a :term:`framework`, a computation is simply a transformation of inputs to 
-outputs. While a *framework bridge* can programmatically construct the graph 
+outputs. While a :term:`bridge` can programmatically construct the graph 
 from a framework's representation of the computation, graph construction can be 
-somewhat more tedious for users. To a user, who is usually interested in 
-specific nodes (vertices) or edges of a computation that reveal "what is 
-happening where", it can be helpful to think of a computation as a zoomed-out 
-and *stateless* dataflow graph where all of the nodes are well-defined tensor 
-operations and all of the edges denote use of an output from one operation as 
-an input for another operation.
-
-.. TODO
-
-.. image for representing nodes and edges of (a+b)*c
-
+somewhat more tedious when done manually. For anyone interested in specific 
+nodes (vertices) or edges of a computation that reveal "what is happening where", 
+it can be helpful to think of a computation as a zoomed-out and *stateless* 
+:term:`data-flow graph` where all of the nodes are well-defined tensor 
+operations and all of the edges denote use of an output from one operation as an 
+input for another operation.
 
 Most of the public portion of the nGraph API is in the ``ngraph`` namespace, so 
 we will omit the namespace. Use of namespaces other than ``std`` will be 
 namespaces in ``ngraph``. For example, the ``op::Add`` is assumed to refer to 
-``ngraph::op::Add``.
-
-A computation's graph is constructed from ops; each is a member of a subclass of 
-``op::Op``, which, in turn, is a subclass of ``Node``. Not all graphs are 
-computation, but all graphs are composed entirely of instances of ``Node``.  
-Computation graphs contain only ``op::Op`` nodes.
+``ngraph::op::Add``. A computation's graph is constructed from ops; each is a 
+member of a subclass of ``op::Op``, which, in turn, is a subclass of ``Node``. 
+Not all graphs are computation, but all graphs are composed entirely of 
+instances of ``Node``.  Computation graphs contain only ``op::Op`` nodes.
 
 We mostly use :term:`shared pointers<shared pointer>` for nodes, i.e.
-``std::shared_ptr<Node>`` so that they will be automatically
-deallocated when they are no longer needed. A brief summary of shared
-pointers is given in the glossary.
+``std::shared_ptr<Node>``, so that they will be automatically deallocated when 
+they are no longer needed. More detail on shared pointers is given in the 
+glossary.
 
 Every node has zero or more *inputs*, zero or more *outputs*, and zero or more 
-*attributes*.  The specifics for each ``type`` permitted on a core ``Op``-specific 
-basis can be discovered in our :doc:`../ops/index` docs. For our 
-purpose to :ref:`define a computation <define_cmp>`, nodes should be thought of 
-as essentially immutable; that is, when constructing a node, we need to supply 
-all of its inputs. We get this process started with ops that have no inputs, 
-since any op with no inputs is going to first need some inputs.
+*attributes*. 
+
+The specifics for each ``type`` permitted on a core ``Op``-specific basis can be 
+discovered in our :doc:`../ops/index` docs. For our purpose to 
+:ref:`define a computation <define_cmp>`, nodes should be thought of as essentially 
+immutable; that is, when constructing a node, we need to supply all of its 
+inputs. We get this process started with ops that have no inputs, since any op 
+with no inputs is going to first need some inputs.
 
 ``op::Parameter`` specifes the tensors that will be passed to the computation. 
 They receive their values from outside of the graph, so they have no inputs. 
 They have attributes for the element type and the shape of the tensor that will 
 be passed to them.
 
-.. literalinclude:: ../../../examples/abc.cpp
+.. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp
-   :lines: 26-29
+   :lines: 25-29
 
-Here we have made three parameter nodes, each a 32-bit float of shape ``(2, 3)`` 
-using a row-major element layout.
+The above code makes three parameter nodes where each is a 32-bit float of 
+shape ``(2, 3)`` and a row-major element layout.
 
-We can create a graph for ``(a+b)*c`` by creating an ``op::Add`` node with inputs 
+To create a graph for ``(a + b) * c``, first make an ``op::Add`` node with inputs 
 from ``a`` and ``b``, and an ``op::Multiply`` node from the add node and ``c``:
 
-.. literalinclude:: ../../../examples/abc.cpp
+.. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 31-32
 
@@ -99,7 +94,7 @@ type and shape of its unique output.
 
 Once the graph is built, we need to package it in a ``Function``:
 
-.. literalinclude:: ../../../examples/abc.cpp
+.. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 35-36
 
@@ -130,11 +125,13 @@ process.
 There are two backends for the CPU: the optimized ``"CPU"`` backend, which uses 
 the `Intel MKL-DNN`_, and the ``"INTERPRETER"`` backend, which runs reference 
 versions of kernels that favor implementation clarity over speed. The 
-``"INTERPRETER"`` backend can be slow, and is primarily intended for testing.  
+``"INTERPRETER"`` backend can be slow, and is primarily intended for testing. 
+See the documentation on :doc:`runtime options for various backends <../programmable/index>` 
+for additional details.
 
-To select the ``"CPU"`` backend,
+To continue with our original example and select the ``"CPU"`` backend: 
 
-.. literalinclude:: ../../../examples/abc.cpp
+.. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 38-39
 
@@ -150,10 +147,6 @@ in a single thread at a time. A ``CallFrame`` may be reused, but any particular
 ``CallFrame`` must only be running in one thread at any time. If more than one 
 thread needs to execute the function at the same time, create multiple 
 ``CallFrame`` objects from the ``ExternalFunction``.
-
-.. literalinclude:: ../../../examples/abc.cpp
-   :language: cpp
-   :lines: 43-44
 
 
 .. _allocate_bkd_storage:
@@ -173,15 +166,17 @@ you switch between odd/even generations of variables on each update.
 
 Backends are responsible for managing storage. If the storage is off-CPU, caches 
 are used to minimize copying between device and CPU. We can allocate storage for 
-the three parameters and the return value as follows:
+the three parameters and the return value.
 
-.. literalinclude:: ../../../examples/abc.cpp
+.. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 41-46
 
-Each tensor is a shared pointer to a ``runtime::TensorView``, the interface 
+Each tensor is a shared pointer to a :term:`Tensorview`, which is the interface 
 backends implement for tensor use. When there are no more references to the 
-tensor view, it will be freed when convenient for the backend.
+tensor view, it will be freed when convenient for the backend. See the 
+:doc:`../programmable/index` documentation for details on ``TensorView``.
+
 
 .. _initialize_inputs:
 
@@ -190,7 +185,7 @@ Initialize the inputs
 
 Next we need to copy some data into the tensors.
 
-.. literalinclude:: ../../../examples/abc.cpp
+.. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 48-55
 
@@ -205,7 +200,7 @@ Invoke the computation
 To invoke the function, we simply pass argument and resultant tensors to the 
 call frame:
 
-.. literalinclude:: ../../../examples/abc.cpp
+.. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 57-58
 
@@ -217,7 +212,7 @@ Access the outputs
 
 We can use the ``read`` method to access the result:
 
-.. literalinclude:: ../../../examples/abc.cpp
+.. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 60-77
 
@@ -226,8 +221,9 @@ We can use the ``read`` method to access the result:
 Put it all together
 ===================
 
-.. literalinclude:: ../../../examples/abc.cpp
+.. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp
+   :linenos:
    :caption: "The (a + b) * c example for executing a computation on nGraph"
 
 

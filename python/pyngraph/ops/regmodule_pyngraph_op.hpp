@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -20,6 +20,9 @@
 #include "pyngraph/ops/abs.hpp"
 #include "pyngraph/ops/acos.hpp"
 #include "pyngraph/ops/add.hpp"
+#include "pyngraph/ops/and.hpp"
+#include "pyngraph/ops/argmax.hpp"
+#include "pyngraph/ops/argmin.hpp"
 #include "pyngraph/ops/asin.hpp"
 #include "pyngraph/ops/atan.hpp"
 #include "pyngraph/ops/avg_pool.hpp"
@@ -41,6 +44,7 @@
 #include "pyngraph/ops/less.hpp"
 #include "pyngraph/ops/less_eq.hpp"
 #include "pyngraph/ops/log.hpp"
+#include "pyngraph/ops/lrn.hpp"
 #include "pyngraph/ops/max_pool.hpp"
 #include "pyngraph/ops/maximum.hpp"
 #include "pyngraph/ops/minimum.hpp"
@@ -56,6 +60,7 @@
 #include "pyngraph/ops/max.hpp"
 #include "pyngraph/ops/min.hpp"
 #include "pyngraph/ops/one_hot.hpp"
+#include "pyngraph/ops/or.hpp"
 #include "pyngraph/ops/pad.hpp"
 #include "pyngraph/ops/parameter.hpp"
 #include "pyngraph/ops/parameter_vector.hpp"
@@ -77,6 +82,7 @@
 #include "pyngraph/ops/sum.hpp"
 #include "pyngraph/ops/tan.hpp"
 #include "pyngraph/ops/tanh.hpp"
+#include "pyngraph/ops/topk.hpp"
 
 namespace py = pybind11;
 

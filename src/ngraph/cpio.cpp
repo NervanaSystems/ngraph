@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "ngraph/cpio.hpp"
 #include "ngraph/log.hpp"
@@ -213,6 +213,7 @@ cpio::Reader::~Reader()
 void cpio::Reader::open(istream& in)
 {
     m_stream = &in;
+    m_stream->seekg(0, ios_base::beg);
 }
 
 void cpio::Reader::open(const string& filename)
@@ -278,6 +279,41 @@ void cpio::Reader::read(const string& file_name, void* data, size_t size_in_byte
             break;
         }
     }
+}
+
+bool cpio::is_cpio(const string& path)
+{
+    ifstream in(path, ios_base::binary | ios_base::in);
+    return is_cpio(in);
+}
+
+bool cpio::is_cpio(istream& in)
+{
+    size_t offset = in.tellg();
+    in.seekg(0, ios_base::beg);
+    bool rc = false;
+    uint8_t ch;
+    in.read(reinterpret_cast<char*>(&ch), 1);
+    switch (ch)
+    {
+    case 0x71: // Big Endian
+        in.read(reinterpret_cast<char*>(&ch), 1);
+        if (ch == 0xC7)
+        {
+            rc = true;
+        }
+        break;
+    case 0xC7: // Little Endian
+        in.read(reinterpret_cast<char*>(&ch), 1);
+        if (ch == 0x71)
+        {
+            rc = true;
+        }
+        break;
+    default: break;
+    }
+    in.seekg(offset, ios_base::beg);
+    return rc;
 }
 
 const string& cpio::FileInfo::get_name() const

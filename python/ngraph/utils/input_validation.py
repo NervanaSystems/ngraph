@@ -21,7 +21,7 @@ from typing import Iterable
 
 from ngraph.exceptions import UserInputError
 
-log = logging.getLogger(__file__)
+log = logging.getLogger(__name__)
 
 
 def assert_list_of_ints(value_list, message):  # type: (Iterable[int], str) -> None

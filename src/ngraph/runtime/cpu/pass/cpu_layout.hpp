@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -56,13 +56,13 @@ namespace ngraph
                     static std::shared_ptr<Node> insert_input_conversions(
                         CPU_ExternalFunction* external_function,
                         std::shared_ptr<Node>& node,
-                        const std::vector<mkldnn::memory::format>& required_formats);
-                    static void set_output_layouts(
-                        std::shared_ptr<Node>& node,
-                        const std::vector<mkldnn::memory::format>& output_formats);
-                    static void set_default_layouts(CPU_ExternalFunction* external_function,
-                                                    std::shared_ptr<Node> node,
-                                                    bool use_replace);
+                        const std::vector<mkldnn::memory::desc>& required_mds);
+                    static void
+                        set_output_layouts(std::shared_ptr<Node>& node,
+                                           const std::vector<mkldnn::memory::desc>& output_mds);
+                    static void set_native_layouts(CPU_ExternalFunction* external_function,
+                                                   std::shared_ptr<Node> node,
+                                                   bool use_replace);
                 };
             }
         }

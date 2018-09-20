@@ -26,9 +26,11 @@ usually named ``<some_model>.onnx`` or ``<some_model>.onnx.pb``. These
    or ``.onnx.pb`` formatted file, you should be able to run the inference 
    without needing to dig into anything from the "Frameworks" sections. You 
    will, however, need to have completed the steps outlined in 
-   our :doc:`../install` guide.  
+   our :doc:`../buildlb` guide.  If you intend to build nGraph for :   doc:`distributed-training`, 
+   you will need to build that has already been compiled with the additional 
+   cmake flag: ``-DNGRAPH_DISTRIBUTED_ENABLE=TRUE``.
 
-To demonstrate functionality, we'll use an already serialized CIFAR10 model 
+To demonstrate functionality, we'll use an already-serialized CIFAR10 model 
 trained via ResNet20. Remember that this model has already been trained and 
 exported from a framework such as Caffe2, PyTorch or CNTK; we are simply going 
 to build an nGraph representation of the model, execute it, and produce some 
@@ -50,40 +52,41 @@ skip ahead to the next section, :ref:`install_ngonnx`.
    .. code-block:: console
 
       $ apt update
-      $ apt install python3 python3-pip python3-dev
+      $ apt install python3 python3-pip python3-dev python3-venv
       $ apt install build-essential cmake curl clang-3.9 git zlib1g zlib1g-dev libtinfo-dev
       $ git clone https://github.com/NervanaSystems/ngraph.git
       $ cd ngraph && mkdir build
-      $ cd build && cmake ../ -DNGRAPH_USE_PREBUILT_LLVM=TRUE
+      $ cd build && cmake ../ -DCMAKE_INSTALL_PREFIX=~/ngraph_dist -DNGRAPH_USE_PREBUILT_LLVM=TRUE
       $ make install
 
-#. Build the Python package (binary wheel) for ngraph:
+#. Build the Python package (binary wheel) for ngraph and set up an env for ONNX;
+   be sure to export the ``NGRAPH_CPP_BUILD_PATH`` where the ``ngraph_dist`` was 
+   installed. 
 
    .. code-block:: console
 
       $ cd ngraph/python
       $ git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
       $ export PYBIND_HEADERS_PATH=$PWD/pybind11
-      $ export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist
+      $ export NGRAPH_CPP_BUILD_PATH=~/ngraph_dist
       $ python3 setup.py bdist_wheel
+      $ cd .. python3 -m venv onnx
+      $ cd onnx/
+      $ . bin/activate
 
-#. Check for the binary wheel file under ``/ngraph/python/dist/`` and activate a 
-   Python3 virtual environment to work with ONNX.
+#. Check for the binary wheel file under ``/ngraph/python/dist/`` and install it 
+   with pip.
 
    .. code-block:: console
 
-      $ cd dist/
-      $ python3 -m venv onnx
-      $ cd onnx/
-      $ . bin/activate
-      (onnx)$ pip install -U ngraph-0.2.0-cp35-cp35m-linux_x86_64.whl    
+      (onnx)$ pip install -U python/dist/ngraph-0.5.0-cp35-cp35m-linux_x86_64.whl    
 
 
 #. Confirm ngraph is properly installed through a Python interpreter:
 
    .. code-block:: console
 
-      (onnx) $ python3
+      (onnx)$ python3
 
    .. code-block:: python
       
@@ -98,6 +101,13 @@ skip ahead to the next section, :ref:`install_ngonnx`.
 
 Installing ngraph-onnx
 -----------------------
+
+Add the dependencies for ONNX:  
+
+.. code-block:: console
+
+   $ apt install protobuf-compiler libprotobuf-dev
+
 
 Install the ``ngraph-onnx`` companion tool using pip:
 
@@ -143,7 +153,7 @@ specify the relative path to the location of the ``.onnx`` file.
 Enable ONNX and load an ONNX file from disk
 --------------------------------------------
 
-.. literalinclude:: ../../../examples/onnx_example.py
+.. literalinclude:: ../../../examples/onnx/onnx_example.py
    :language: python
    :lines: 17-19
 
@@ -151,7 +161,7 @@ Enable ONNX and load an ONNX file from disk
 Convert an ONNX model to an ngraph model 
 -------------------------------------------
 
-.. literalinclude:: ../../../examples/onnx_example.py
+.. literalinclude:: ../../../examples/onnx/onnx_example.py
    :language: python
    :lines: 22-23
 
@@ -178,7 +188,7 @@ input parameters for the computation which generates the output.
 Using ngraph_api, create a callable computation object
 -------------------------------------------------------
 
-.. literalinclude:: ../../../examples/onnx_example.py
+.. literalinclude:: ../../../examples/onnx/onnx_example.py
    :language: python
    :lines: 27-29
 
@@ -186,14 +196,14 @@ Using ngraph_api, create a callable computation object
 Load or create an image
 ------------------------
 
-.. literalinclude:: ../../../examples/onnx_example.py
+.. literalinclude:: ../../../examples/onnx/onnx_example.py
    :language: python
    :lines: 32-33
 
 Run ResNet inference on picture
 ---------------------------------
 
-.. literalinclude:: ../../../examples/onnx_example.py
+.. literalinclude:: ../../../examples/onnx/onnx_example.py
    :language: python
    :lines: 36-37
  
@@ -201,7 +211,7 @@ Run ResNet inference on picture
 Put it all together
 ===================
 
-.. literalinclude:: ../../../examples/onnx_example.py
+.. literalinclude:: ../../../examples/onnx/onnx_example.py
    :language: python
    :lines: 17-37
    :caption: "Demo sample code to run inference with nGraph"

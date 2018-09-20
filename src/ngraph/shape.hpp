@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -68,11 +68,43 @@ namespace ngraph
     };
 
     /// Number of elements in spanned by a shape
-    size_t shape_size(const Shape& shape);
+    template <typename SHAPE_TYPE>
+    size_t shape_size(const SHAPE_TYPE& shape)
+    {
+        size_t size = 1;
+        for (auto d : shape)
+        {
+            size *= d;
+        }
+        return size;
+    }
 
     /// Row-major strides for a shape
-    Strides row_major_strides(const Shape& shape);
+    template <typename SHAPE_TYPE>
+    std::vector<size_t> row_major_strides(const SHAPE_TYPE& shape)
+    {
+        std::vector<size_t> strides(shape.size());
+        size_t s = 1;
+        auto st = strides.rbegin();
+        for (auto d = shape.rbegin(); d != shape.rend(); d++, st++)
+        {
+            *st = s;
+            s *= *d;
+        }
+        return strides;
+    }
 
-    inline bool is_scalar(const Shape& shape) { return 0 == shape.size(); }
-    inline bool is_vector(const Shape& shape) { return 1 == shape.size(); }
+    template <typename SHAPE_TYPE>
+    inline bool is_scalar(const SHAPE_TYPE& shape)
+    {
+        return 0 == shape.size();
+    }
+
+    template <typename SHAPE_TYPE>
+    inline bool is_vector(const SHAPE_TYPE& shape)
+    {
+        return 1 == shape.size();
+    }
+
+    std::ostream& operator<<(std::ostream& s, const Shape& shape);
 }

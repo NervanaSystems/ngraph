@@ -1,0 +1,9 @@
+digraph G {
+    Parameter_0 -> Add_2
+    Constant_1 -> Add_2
+    Parameter_0 [shape=box color=blue]
+    Constant_1 [shape=ellipse color=black]
+    Add_2 [shape=ellipse color=black]
+}
+
+
