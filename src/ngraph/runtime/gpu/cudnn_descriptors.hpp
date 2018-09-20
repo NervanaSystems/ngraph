@@ -135,6 +135,7 @@ namespace ngraph
                 }
             };
 
+#if CUDNN_VERSION >= 7200
             template <>
             struct cudnn_descriptor<cudnnRNNDataDescriptor_t>
             {
@@ -147,7 +148,7 @@ namespace ngraph
                     CUDNN_SAFE_CALL_NO_THROW(cudnnDestroyRNNDataDescriptor(desc));
                 }
             };
-
+#endif
             template <>
             struct cudnn_descriptor<cudnnPoolingDescriptor_t>
             {
