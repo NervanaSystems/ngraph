@@ -1371,3 +1371,71 @@ void runtime::intelgpu::do_sigmoid_backprop_operation(cldnn::topology& topology,
                                                           gws);
     topology.add(op_sigmoid_backprop);
 }
+
+void runtime::intelgpu::do_custom_eltwise_operation(cldnn::topology& topology,
+                                                    const string& input_name,
+                                                    const Shape& input_shape,
+                                                    const element::Type& input_type,
+                                                    const string& output_name,
+                                                    const Shape& output_shape,
+                                                    const element::Type& output_type,
+                                                    const CUSTOM_ELTWISE operation_name)
+{
+    const string entry_point_name = "op_custom_eltwise_" + output_name;
+    codegen::CodeWriter writer;
+    vector<size_t> gws;
+
+    gen_func_def(writer,
+                 entry_point_name,
+                 {get_opencl_type_name(input_type)},
+                 {input_shape},
+                 get_opencl_type_name(output_type),
+                 output_shape);
+    writer.block_begin();
+    {
+        gws = generate_loops(writer, output_shape, true);
+        writer << "output" << access_dims(output_shape) << " = ";
+        switch (operation_name)
+        {
+        case CUSTOM_ELTWISE::Atan:
+        {
+            writer << "atan";
+            break;
+        }
+        case CUSTOM_ELTWISE::Ceil:
+        {
+            writer << "ceil";
+            break;
+        }
+        case CUSTOM_ELTWISE::Floor:
+        {
+            writer << "floor";
+            break;
+        }
+        case CUSTOM_ELTWISE::Sign:
+        {
+            writer << "sign";
+            break;
+        }
+        case CUSTOM_ELTWISE::Tan:
+        {
+            writer << "tan";
+            break;
+        }
+        }
+        writer << "(input0" << access_dims(input_shape) << ");\n";
+        generate_loops(writer, output_shape, false);
+    }
+    writer.block_end();
+
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const cldnn::custom_gpu_primitive op_custom_eltwise(output_name,
+                                                        {input_name},
+                                                        {writer.get_code()},
+                                                        entry_point_name,
+                                                        get_kernel_args(1, 1),
+                                                        "",
+                                                        layout,
+                                                        gws);
+    topology.add(op_custom_eltwise);
+}
