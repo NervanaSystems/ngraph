@@ -25,8 +25,10 @@
 
 #include "ngraph/op/op_tbl.hpp"
 
+#if CUDNN_VERSION >= 7200
 NGRAPH_GPU_OP(Lstm, ngraph::op::gpu)
 NGRAPH_GPU_OP(Rnn, ngraph::op::gpu)
+#endif
 
 #undef NGRAPH_OP
 #undef NGRAPH_GPU_OP

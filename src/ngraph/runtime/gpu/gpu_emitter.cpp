@@ -1552,6 +1552,7 @@ void runtime::gpu::GPU_Emitter::emit_Sum(EMIT_ARGS)
     writer.block_end();
 }
 
+#if CUDNN_VERSION >= 7200
 void runtime::gpu::GPU_Emitter::emit_Lstm(EMIT_ARGS)
 {
     // LSTMs are fused to RNNs and so don't require explicit emission
@@ -1573,6 +1574,7 @@ void runtime::gpu::GPU_Emitter::emit_Rnn(EMIT_ARGS)
     }
     writer.block_end();
 }
+#endif
 
 void runtime::gpu::GPU_Emitter::emit_Tan(EMIT_ARGS)
 {

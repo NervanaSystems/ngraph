@@ -569,27 +569,23 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     auto allocator = std::make_shared<runtime::gpu::GPUAllocator>(
         m_shared_context->m_primitive_emitter->get_memory_allocator());
 
+#if CUDNN_VERSION >= 7200
     // recurrent network fusion
     m_pass_manager.register_pass<runtime::gpu::pass::LSTMFusion>();
-
     m_pass_manager.register_pass<runtime::gpu::pass::RNNFusion>();
-
     m_pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-
     m_pass_manager.register_pass<runtime::gpu::pass::MultiLayerRNNFusion>();
-
+#else
+    m_pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+#endif
     m_pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     m_pass_manager
         .register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();
-
     m_pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
     m_pass_manager.register_pass<ngraph::pass::Liveness>();
-
     m_pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
-
     m_pass_manager.register_pass<runtime::gpu::pass::TensorMemoryReservation>(
         allocator, m_tensor_memory_buffers);
-
     std::string common_function_string;
     auto femitter = bind(&ngraph::runtime::gpu::GPU_ExternalFunction::emit_op_as_function,
                          this,
@@ -597,7 +593,6 @@ void runtime::gpu::GPU_ExternalFunction::compile()
                          placeholders::_2);
     m_pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
         femitter, m_node_function_map, common_function_string);
-
     string dump_filename = file_util::path_join(s_output_dir, m_function_name + "_ops.txt");
     m_pass_manager.register_pass<ngraph::pass::DumpSorted>(dump_filename);
 

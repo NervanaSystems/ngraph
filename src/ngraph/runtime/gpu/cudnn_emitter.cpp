@@ -945,6 +945,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Min* node)
     return primitive_index;
 }
 
+#if CUDNN_VERSION >= 7200
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
 {
     auto& args = node->get_inputs();
@@ -1190,6 +1191,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }
+#endif
 
 size_t runtime::gpu::CUDNNEmitter::build_convolution(const std::string& dtype,
                                                      const Shape& input_tensor_shape,
