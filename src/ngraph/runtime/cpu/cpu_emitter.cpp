@@ -74,7 +74,6 @@
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/relu.hpp"
-#include "ngraph/op/remainder.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
@@ -114,6 +113,7 @@
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
+#include "ngraph/runtime/cpu/quantization_util.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -1942,6 +1942,32 @@ namespace ngraph
             {
                 const ngraph::op::Slice* slice = static_cast<const ngraph::op::Slice*>(node);
 
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto out_shape = out[0].get_shape();
+
+                    auto lower_bounds = slice->get_lower_bounds();
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    auto slice_index = mkldnn_emitter->build_slice(
+                        input_desc, result_desc, lower_bounds, out_shape);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(slice_index);
+
+                    writer.block_begin();
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(slice_index) << ");\n";
+                    writer.block_end();
+                    return;
+                }
+
                 writer.block_begin();
 #if USE_EIGEN_CORE_INLINE == 1
                 size_t arg_rank = args[0].get_shape().size();
@@ -2632,6 +2658,37 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedConvolution)
+            {
+                auto qconvolution = static_cast<const ngraph::op::QuantizedConvolution*>(node);
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto conv_index =
+                        mkldnn_emitter->build_convolution<ngraph::op::QuantizedConvolution>(
+                            node, args, out);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << out[0].get_name() << ");\n";
+                    writer << "*(" << out[1].get_name()
+                           << ") = " << qconvolution->get_freezed_output_min() << ";\n";
+                    writer << "*(" << out[2].get_name()
+                           << ") = " << qconvolution->get_freezed_output_max() << ";\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(conv_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("unsupported parameters for QuantizedConvolution");
+                }
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::GroupConvolution)
             {
                 auto convolution = static_cast<const ngraph::op::GroupConvolution*>(node);
@@ -2731,6 +2788,43 @@ namespace ngraph
                     writer << "                         {"
                            << join(convolution->get_data_dilation_strides()) << "},\n";
                     writer << "                         0, 1, 1, 0, 0, 1, false);\n";
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Quantize)
+            {
+                auto quantize = static_cast<const ngraph::op::Quantize*>(node);
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    std::vector<float> quant_util; // min_range, max_range & scale.
+                    quantization_util::get_min_max_range(quantize->get_input_min(),
+                                                         quantize->get_input_max(),
+                                                         (quantize->get_quantize_et()).is_signed(),
+                                                         quant_util);
+                    std::vector<float> scales;
+                    scales.push_back(quant_util[2]);
+
+                    size_t quantize_index = 0;
+                    quantize_index = mkldnn_emitter->build_quantize_reorder(
+                        input_data_desc, result_desc, scales);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(quantize_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+                    writer << "*(" << out[1].get_name() << ") = " << quant_util[0] << ";\n";
+                    writer << "*(" << out[2].get_name() << ") = " << quant_util[1] << ";\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(quantize_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("Unsupported parameters for QuantizeOp");
                 }
             }
 

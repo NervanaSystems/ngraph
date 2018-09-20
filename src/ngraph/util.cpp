@@ -207,7 +207,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     std::unordered_set<std::shared_ptr<Node>> in_bprop;
     ngraph::traverse_nodes(bprop,
                            [&in_bprop](std::shared_ptr<Node> node) {
-                               if (node->get_outputs().size() == 1)
+                               if (node->get_output_size() == 1)
                                {
                                    if (in_bprop.count(node) == 0)
                                    {
