@@ -759,6 +759,66 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             do_eltwise_operation(topology, op, cldnn::eltwise_mode::pow);
         }
+        else if ("Atan" == op->description())
+        {
+            arguments_check(op, 1, 1);
+            do_custom_eltwise_operation(topology,
+                                        get_input_name(op),
+                                        get_input_shape(op),
+                                        get_input_type(op),
+                                        get_output_name(op),
+                                        get_output_shape(op),
+                                        get_output_type(op),
+                                        CUSTOM_ELTWISE::Atan);
+        }
+        else if ("Ceiling" == op->description())
+        {
+            arguments_check(op, 1, 1);
+            do_custom_eltwise_operation(topology,
+                                        get_input_name(op),
+                                        get_input_shape(op),
+                                        get_input_type(op),
+                                        get_output_name(op),
+                                        get_output_shape(op),
+                                        get_output_type(op),
+                                        CUSTOM_ELTWISE::Ceil);
+        }
+        else if ("Floor" == op->description())
+        {
+            arguments_check(op, 1, 1);
+            do_custom_eltwise_operation(topology,
+                                        get_input_name(op),
+                                        get_input_shape(op),
+                                        get_input_type(op),
+                                        get_output_name(op),
+                                        get_output_shape(op),
+                                        get_output_type(op),
+                                        CUSTOM_ELTWISE::Floor);
+        }
+        else if ("Sign" == op->description())
+        {
+            arguments_check(op, 1, 1);
+            do_custom_eltwise_operation(topology,
+                                        get_input_name(op),
+                                        get_input_shape(op),
+                                        get_input_type(op),
+                                        get_output_name(op),
+                                        get_output_shape(op),
+                                        get_output_type(op),
+                                        CUSTOM_ELTWISE::Sign);
+        }
+        else if ("Tan" == op->description())
+        {
+            arguments_check(op, 1, 1);
+            do_custom_eltwise_operation(topology,
+                                        get_input_name(op),
+                                        get_input_shape(op),
+                                        get_input_type(op),
+                                        get_output_name(op),
+                                        get_output_shape(op),
+                                        get_output_type(op),
+                                        CUSTOM_ELTWISE::Tan);
+        }
         else if ("Pad" == op->description())
         {
             arguments_check(op, 2, 1);
