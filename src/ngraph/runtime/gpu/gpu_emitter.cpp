@@ -120,11 +120,11 @@ function<void(EMIT_ARGS)> runtime::gpu::GPU_Emitter::get_emit_function(const Nod
 // {<Abs typeid>, function<void(EMIT_ARGS)},
 // {<Acos typeid>, function<void(EMIT_ARGS)},
 // ...
-#define NGRAPH_OP(a) {type_index(typeid(ngraph::op::a)), runtime::gpu::GPU_Emitter::emit_##a},
+#define NGRAPH_OP_DISPATCH
     static const map<type_index, function<void(EMIT_ARGS)>> typeid_map{
-#include "ngraph/op/op_tbl.hpp"
+#include "ngraph/runtime/gpu/op/op_tbl.hpp"
     };
-#undef NGRAPH_OP
+#undef NGRAPH_OP_DISPATCH
     auto it = typeid_map.find(type_index(typeid(node)));
     if (it == typeid_map.end())
     {
@@ -1547,32 +1547,29 @@ void runtime::gpu::GPU_Emitter::emit_Sum(EMIT_ARGS)
                 writer << "void* output[] = {" << node_names(out) << "};\n";
                 writer << "gpu::invoke_primitive(ctx, " << sum_index << ", input, output);\n";
             }
-
-            template <>
-            void GPU_Emitter::EMITTER_DECL(ngraph::op::gpu::Rnn)
-            {
-                auto rnn = static_cast<const ngraph::op::gpu::Rnn*>(node);
-
-                auto& cudnn_emitter =
-                    external_function->get_primitive_emitter()->get_cudnn_emitter();
-                size_t rnn_index = cudnn_emitter->build_primitive(rnn);
-
-                writer << "gpu::invoke_primitive(ctx, " << rnn_index << ", ";
-                writer << "std::vector<void*>{" << args.front().get_name();
-                for (size_t i = 1; i < args.size(); i++)
-                {
-                    writer << ", " << args[i].get_name();
-                }
-                writer << "}.data(), ";
-                writer << "std::vector<void*>{" << out.front().get_name();
-                for (size_t i = 1; i < out.size(); i++)
-                {
-                    writer << ", " << out[i].get_name();
-                }
-                writer << "}.data()";
-                writer << ");\n";
-            }
         }
+    }
+    writer.block_end();
+}
+
+void runtime::gpu::GPU_Emitter::emit_Lstm(EMIT_ARGS)
+{
+    // LSTMs are fused to RNNs and so don't require explicit emission
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+void runtime::gpu::GPU_Emitter::emit_Rnn(EMIT_ARGS)
+{
+    auto rnn = static_cast<const ngraph::op::gpu::Rnn*>(node);
+
+    auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
+    size_t index = cudnn_emitter->build_primitive(rnn);
+
+    writer.block_begin();
+    {
+        writer << "void* input[] = {" << node_names(args) << "};\n";
+        writer << "void* output[] = {" << node_names(out) << "};\n";
+        writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
     }
     writer.block_end();
 }
