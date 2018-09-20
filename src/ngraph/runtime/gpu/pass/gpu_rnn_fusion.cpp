@@ -307,6 +307,22 @@ static std::shared_ptr<ngraph::Node>
     }
 }
 
+// static std::shared_ptr<ngraph::Node>
+// concat_rnn_params(std::vector<std::shared_ptr<pattern::op::Label>>& wx_labels,
+//                   std::vector<std::shared_ptr<pattern::op::Label>>& wh_labels,
+//                   std::vector<std::shared_ptr<pattern::op::Label>>& bx_labels,
+//                   std::vector<std::shared_ptr<pattern::op::Label>>& bh_labels,
+//                   pattern::RecurrentMatcher& m)
+// {
+//     NGRAPH_DEBUG << "Inside concat params " << rnn_labels.size();
+
+//     auto wx_bound = m.get_bound_nodes_for_pattern(wx_labels[0]).back();
+//     auto wh_bound = m.get_bound_nodes_for_pattern(wh_labels[0]).back();
+//     auto bx_bound = m.get_bound_nodes_for_pattern(bx_labels[0]).back();
+//     auto bh_bound = m.get_bound_nodes_for_pattern(bh_labels[0]).back();
+//     std::make_shared<op::Concat>(NodeVector{wx_bound, wh_bound, bx_bound, bh_bound}, 0);
+// }
+
 void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 {
     auto ht_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
@@ -383,6 +399,16 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             std::vector<std::shared_ptr<pattern::op::Label>> bias_iter_labels{bias_h2h};
             auto bias_iter = compute_rnn_args(bias_iter_labels, m);
 
+            NodeVector flat_params;
+            for (auto& param : NodeVector{weights_layer, weights_iter, bias_layer, bias_iter})
+            {
+                auto shape = param->get_shape();
+                flat_params.push_back(
+                    std::make_shared<op::Reshape>(param, get_default_order(shape), Shape{shape_size(shape)}));
+            }
+            auto params = std::make_shared<op::Concat>(flat_params, 0);
+
+
             std::vector<std::shared_ptr<pattern::op::Label>> state_iter_labels{rpattern_ct_1};
             auto state_iter = compute_rnn_args(state_iter_labels, m);
 
@@ -432,10 +458,7 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
             auto rnn = std::make_shared<op::gpu::Rnn>(src_layer,
                                                       src_iter,
-                                                      weights_layer,
-                                                      weights_iter,
-                                                      bias_layer,
-                                                      bias_iter,
+                                                      params,
                                                       state_iter,
                                                       num_of_lstm_matched,
                                                       num_gates_in_lstm,
@@ -550,12 +573,42 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 }
 
 static std::shared_ptr<Node>
-    compute_multi_layer_rnn_inputs(const std::shared_ptr<pattern::op::Label>& rnn_label,
-                                   pattern::RecurrentMatcher& m)
+compute_multi_layer_rnn_inputs(const std::shared_ptr<pattern::op::Label>& rnn_label,
+                               pattern::RecurrentMatcher& m)
 {
     auto node_labels = m.get_bound_nodes_for_pattern(rnn_label);
     std::reverse(node_labels.begin(), node_labels.end());
     return std::make_shared<op::Concat>(node_labels, 0);
+}
+
+static std::shared_ptr<Node>
+compute_multi_layer_rnn_params(const std::shared_ptr<pattern::op::Label>& param_label,
+                               pattern::RecurrentMatcher& m)
+{
+    auto param_nodes = m.get_bound_nodes_for_pattern(param_label);
+    std::reverse(param_nodes.begin(), param_nodes.end());
+
+    // iterate over params for each layer in order [layer 0, ... layer n]
+    NodeVector biases;
+    NodeVector layer_params;
+    for (auto& param : param_nodes)
+    {
+        // split and group layer weights and layer biases
+        auto const& args = param->get_arguments();
+        for (size_t i = 0; i < args.size(); i++)
+        {
+            if (i < (args.size() / 2))
+            {
+                layer_params.push_back(args[i]);
+            }
+            else
+            {
+                biases.push_back(args[i]);
+            }
+        }
+    }
+    layer_params.insert(layer_params.end(), biases.begin(), biases.end());
+    return std::make_shared<op::Concat>(layer_params, 0);
 }
 
 void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_fusion_fprop()
@@ -566,10 +619,11 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         std::make_shared<pattern::op::Skip>(src_layer_label, pattern::has_class<op::Slice>());
 
     auto src_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{20, 100});
-    auto weights_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
-    auto weights_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
-    auto bias_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
-    auto bias_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
+    // auto weights_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
+    // auto weights_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
+    // auto bias_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
+    // auto bias_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
+    auto params_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400*100 + 400*100 + 400 + 400});
     auto state_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{20, 100});
 
     size_t ref_number_of_timesteps = 3;
@@ -582,10 +636,7 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
 
     auto ref_rnn_node = std::make_shared<op::gpu::Rnn>(src_slice,
                                                        src_iter_label,
-                                                       weights_layer_label,
-                                                       weights_iter_label,
-                                                       bias_layer_label,
-                                                       bias_iter_label,
+                                                       params_label,
                                                        state_iter_label,
                                                        ref_number_of_timesteps,
                                                        ref_number_of_gates_per_cell,
@@ -602,10 +653,7 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
 
     pattern::recurrent_graph_rewrite_callback callback = [src_layer_label,
                                                           src_iter_label,
-                                                          weights_layer_label,
-                                                          weights_iter_label,
-                                                          bias_layer_label,
-                                                          bias_iter_label,
+                                                          params_label,
                                                           state_iter_label,
                                                           rnn_ht_label](
         pattern::RecurrentMatcher& m) {
@@ -640,10 +688,7 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
 
         auto src_iter = compute_multi_layer_rnn_inputs(src_iter_label, m);
         auto state_iter = compute_multi_layer_rnn_inputs(state_iter_label, m);
-        auto weights_layer = compute_multi_layer_rnn_inputs(weights_layer_label, m);
-        auto weights_iter = compute_multi_layer_rnn_inputs(weights_iter_label, m);
-        auto bias_layer = compute_multi_layer_rnn_inputs(bias_layer_label, m);
-        auto bias_iter = compute_multi_layer_rnn_inputs(bias_iter_label, m);
+        auto params = compute_multi_layer_rnn_params(params_label, m);
 
         // collect list of rnn ops (layers)
         std::vector<std::shared_ptr<op::gpu::Rnn>> rnn_nodes;
@@ -673,10 +718,10 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         NGRAPH_DEBUG << "src_layer: " << join(src_layer->get_shape());
         NGRAPH_DEBUG << "src_iter: " << join(src_iter->get_shape());
         NGRAPH_DEBUG << "state_iter: " << join(state_iter->get_shape());
-        NGRAPH_DEBUG << "weights_layer: " << join(weights_layer->get_shape());
-        NGRAPH_DEBUG << "weights_iter: " << join(weights_iter->get_shape());
-        NGRAPH_DEBUG << "bias_layer: " << join(bias_layer->get_shape());
-        NGRAPH_DEBUG << "bias_iter: " << join(bias_iter->get_shape());
+        // NGRAPH_DEBUG << "weights_layer: " << join(weights_layer->get_shape());
+        // NGRAPH_DEBUG << "weights_iter: " << join(weights_iter->get_shape());
+        // NGRAPH_DEBUG << "bias_layer: " << join(bias_layer->get_shape());
+        // NGRAPH_DEBUG << "bias_iter: " << join(bias_iter->get_shape());
         NGRAPH_DEBUG << "src_seq_len: " << sequence_len;
         NGRAPH_DEBUG << "batch_size: " << batch_size;
         NGRAPH_DEBUG << "feature_size: " << feature_size;
@@ -697,24 +742,21 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         NGRAPH_ASSERT((state_iter->get_arguments().size()) == num_fused_rnn_layers)
             << "number of cell states for RNN op in the layer fusion is not equal to num of "
                "fused_rnn_layers";
-        NGRAPH_ASSERT((weights_layer->get_arguments().size()) == num_fused_rnn_layers)
-            << "weights w.r.to input symbols of RNN op in the layer fusion is not equal to num of "
-               "fused_rnn_layers";
-        NGRAPH_ASSERT((weights_iter->get_arguments().size()) == num_fused_rnn_layers)
-            << "weights w.r.to cell states of RNN op in the layer fusion is not equal to num of "
-               "fused_rnn_layers";
-        NGRAPH_ASSERT((bias_layer->get_arguments().size()) == num_fused_rnn_layers)
-            << "input bias of RNN op in the layer fusion is not equal to num of fused_rnn_layers";
-        NGRAPH_ASSERT((bias_iter->get_arguments().size()) == num_fused_rnn_layers)
-            << "recurrent bias of RNN op in the layer fusion is not equal to num of "
-               "fused_rnn_layers";
+        // NGRAPH_ASSERT((weights_layer->get_arguments().size()) == num_fused_rnn_layers)
+        //     << "weights w.r.to input symbols of RNN op in the layer fusion is not equal to num of "
+        //        "fused_rnn_layers";
+        // NGRAPH_ASSERT((weights_iter->get_arguments().size()) == num_fused_rnn_layers)
+        //     << "weights w.r.to cell states of RNN op in the layer fusion is not equal to num of "
+        //        "fused_rnn_layers";
+        // NGRAPH_ASSERT((bias_layer->get_arguments().size()) == num_fused_rnn_layers)
+        //     << "input bias of RNN op in the layer fusion is not equal to num of fused_rnn_layers";
+        // NGRAPH_ASSERT((bias_iter->get_arguments().size()) == num_fused_rnn_layers)
+        //     << "recurrent bias of RNN op in the layer fusion is not equal to num of "
+        //        "fused_rnn_layers";
 
         auto rnn = std::make_shared<op::gpu::Rnn>(src_layer,
                                                   src_iter,
-                                                  weights_layer,
-                                                  weights_iter,
-                                                  bias_layer,
-                                                  bias_iter,
+                                                  params,
                                                   state_iter,
                                                   num_time_steps,
                                                   num_gates_in_lstm,

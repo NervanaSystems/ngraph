@@ -51,10 +51,7 @@ namespace ngraph
             public:
                 Rnn(std::shared_ptr<Node> src_layer,     // x
                     std::shared_ptr<Node> src_iter,      // hx
-                    std::shared_ptr<Node> weights_layer, // wx
-                    std::shared_ptr<Node> weights_iter,  // whx
-                    std::shared_ptr<Node> bias_layer,    // bx
-                    std::shared_ptr<Node> bias_iter,     // bhx
+                    std::shared_ptr<Node> params,
                     std::shared_ptr<Node> state_iter,    // cx
                     const int num_timesteps,
                     const int num_gates_per_cell,

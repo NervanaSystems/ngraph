@@ -951,13 +951,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
     auto& out = node->get_outputs();
     auto dtype = out[0].get_element_type().c_type_string();
 
-    auto wx_size = shape_size(args[2].get_shape());
-    auto wh_size = shape_size(args[3].get_shape());
-    auto bx_size = shape_size(args[4].get_shape());
-    auto bh_size = shape_size(args[5].get_shape());
-
     std::stringstream ss;
-    ss << "rnn_wx" << wx_size << "_wh" << wh_size << "_bx" << bx_size << "_bh" << bh_size;
+    ss << "rnn_psz" << shape_size(args[2].get_shape());
     std::string hash = ss.str();
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash);
@@ -1139,27 +1134,28 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
     std::vector<cudnnTensorDescriptor_t> seq_descriptors(seq_length, temp_input_desc);
     CUDNN_SAFE_CALL(cudnnGetRNNWorkspaceSize(
         *m_ctx->cudnn_handle, rnn_desc, seq_length, seq_descriptors.data(), &workspace_size));
+
     size_t workspace_idx = allocator.reserve_workspace(workspace_size);
 
-    wx_size *= args[2].get_element_type().size();
-    wh_size *= args[3].get_element_type().size();
-    bx_size *= args[4].get_element_type().size();
-    bh_size *= args[5].get_element_type().size();
+    // wx_size *= args[2].get_element_type().size();
+    // wh_size *= args[3].get_element_type().size();
+    // bx_size *= args[4].get_element_type().size();
+    // bh_size *= args[5].get_element_type().size();
     auto recurrent_index = num_tensors_per_layer / 2;
 
     std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](void** inputs,
                                                                          void** outputs) {
-        void* w_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, w_idx);
+        // void* w_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, w_idx);
         void* workspace_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
 
-        // pack the weight and bias parameter data
-        cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + weight_offsets[0].first, inputs[2], wx_size);
-        cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + weight_offsets[recurrent_index].first,
-                       inputs[3],
-                       wh_size);
-        cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + bias_offsets[0].first, inputs[4], bx_size);
-        cuda_memcpyDtD(
-            static_cast<uint8_t*>(w_ptr) + bias_offsets[recurrent_index].first, inputs[5], bh_size);
+        // // pack the weight and bias parameter data
+        // cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + weight_offsets[0].first, inputs[2], wx_size);
+        // cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + weight_offsets[recurrent_index].first,
+        //                inputs[3],
+        //                wh_size);
+        // cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + bias_offsets[0].first, inputs[4], bx_size);
+        // cuda_memcpyDtD(
+        //     static_cast<uint8_t*>(w_ptr) + bias_offsets[recurrent_index].first, inputs[5], bh_size);
 
         CUDNN_SAFE_CALL(cudnnRNNForwardInferenceEx(*m_ctx->cudnn_handle,
                                                    rnn_desc,
@@ -1168,9 +1164,9 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
                                                    hx_desc,
                                                    inputs[1],
                                                    cx_desc,
-                                                   inputs[6],
+                                                   inputs[3],
                                                    w_desc,
-                                                   w_ptr,
+                                                   inputs[2],
                                                    y_desc, // h_i
                                                    outputs[0],
                                                    hy_desc, // h_t

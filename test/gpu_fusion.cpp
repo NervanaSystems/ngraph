@@ -62,98 +62,98 @@
 using namespace ngraph;
 using namespace std;
 
-TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
-{
-    auto src_layer = make_shared<op::Parameter>(element::f32, Shape{10, 100});
-    auto src_iter = make_shared<op::Parameter>(element::f32, Shape{10, 100});
-    auto state_iter = make_shared<op::Parameter>(element::f32, Shape{10, 100});
-    auto weights_layer = make_shared<op::Parameter>(element::f32, Shape{400, 100});
-    auto weights_iter = make_shared<op::Parameter>(element::f32, Shape{400, 100});
-    auto bias_layer = make_shared<op::Parameter>(element::f32, Shape{400});
-    auto bias_iter = make_shared<op::Parameter>(element::f32, Shape{400});
+// TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
+// {
+//     auto src_layer = make_shared<op::Parameter>(element::f32, Shape{10, 100});
+//     auto src_iter = make_shared<op::Parameter>(element::f32, Shape{10, 100});
+//     auto state_iter = make_shared<op::Parameter>(element::f32, Shape{10, 100});
+//     auto weights_layer = make_shared<op::Parameter>(element::f32, Shape{400, 100});
+//     auto weights_iter = make_shared<op::Parameter>(element::f32, Shape{400, 100});
+//     auto bias_layer = make_shared<op::Parameter>(element::f32, Shape{400});
+//     auto bias_iter = make_shared<op::Parameter>(element::f32, Shape{400});
 
-    const int number_of_timesteps = 1;
-    const int number_of_gates_per_cell = 4;
-    const int src_seq_length = 1;
-    const int src_layer_feature_size = 100;
-    const int feature_size = 100;
-    const int rnn_direction = 1;
-    const int num_of_rnn_fused_layer = 1;
-    auto rnn_node = make_shared<op::gpu::Rnn>(src_layer,
-                                              src_iter,
-                                              weights_layer,
-                                              weights_iter,
-                                              bias_layer,
-                                              bias_iter,
-                                              state_iter,
-                                              number_of_timesteps,
-                                              number_of_gates_per_cell,
-                                              src_seq_length,
-                                              src_layer_feature_size,
-                                              feature_size,
-                                              rnn_direction,
-                                              num_of_rnn_fused_layer);
-    auto rnn_ht_output = make_shared<op::GetOutputElement>(rnn_node, 0);
-    auto rnn_ct_output = make_shared<op::GetOutputElement>(rnn_node, 1);
+//     const int number_of_timesteps = 1;
+//     const int number_of_gates_per_cell = 4;
+//     const int src_seq_length = 1;
+//     const int src_layer_feature_size = 100;
+//     const int feature_size = 100;
+//     const int rnn_direction = 1;
+//     const int num_of_rnn_fused_layer = 1;
+//     auto rnn_node = make_shared<op::gpu::Rnn>(src_layer,
+//                                               src_iter,
+//                                               weights_layer,
+//                                               weights_iter,
+//                                               bias_layer,
+//                                               bias_iter,
+//                                               state_iter,
+//                                               number_of_timesteps,
+//                                               number_of_gates_per_cell,
+//                                               src_seq_length,
+//                                               src_layer_feature_size,
+//                                               feature_size,
+//                                               rnn_direction,
+//                                               num_of_rnn_fused_layer);
+//     auto rnn_ht_output = make_shared<op::GetOutputElement>(rnn_node, 0);
+//     auto rnn_ct_output = make_shared<op::GetOutputElement>(rnn_node, 1);
 
-    auto func = make_shared<Function>(
-        NodeVector{rnn_ht_output, rnn_ct_output},
-        op::ParameterVector{
-            src_layer, src_iter, weights_layer, weights_iter, bias_layer, bias_iter, state_iter});
-    auto backend = runtime::Backend::create("GPU");
+//     auto func = make_shared<Function>(
+//         NodeVector{rnn_ht_output, rnn_ct_output},
+//         op::ParameterVector{
+//             src_layer, src_iter, weights_layer, weights_iter, bias_layer, bias_iter, state_iter});
+//     auto backend = runtime::Backend::create("GPU");
 
-    shared_ptr<runtime::TensorView> src_layer_t =
-        backend->create_tensor(element::f32, src_layer->get_shape());
-    shared_ptr<runtime::TensorView> src_iter_t =
-        backend->create_tensor(element::f32, src_iter->get_shape());
-    shared_ptr<runtime::TensorView> state_iter_t =
-        backend->create_tensor(element::f32, state_iter->get_shape());
-    shared_ptr<runtime::TensorView> weights_layer_t =
-        backend->create_tensor(element::f32, weights_layer->get_shape());
-    shared_ptr<runtime::TensorView> weights_iter_t =
-        backend->create_tensor(element::f32, weights_iter->get_shape());
-    shared_ptr<runtime::TensorView> bias_layer_t =
-        backend->create_tensor(element::f32, bias_layer->get_shape());
-    shared_ptr<runtime::TensorView> bias_iter_t =
-        backend->create_tensor(element::f32, bias_iter->get_shape());
-    shared_ptr<runtime::TensorView> result_ht = backend->create_tensor(element::f32, {10, 100});
-    shared_ptr<runtime::TensorView> result_ct =
-        backend->create_tensor(element::f32, Shape{10, 100});
+//     shared_ptr<runtime::TensorView> src_layer_t =
+//         backend->create_tensor(element::f32, src_layer->get_shape());
+//     shared_ptr<runtime::TensorView> src_iter_t =
+//         backend->create_tensor(element::f32, src_iter->get_shape());
+//     shared_ptr<runtime::TensorView> state_iter_t =
+//         backend->create_tensor(element::f32, state_iter->get_shape());
+//     shared_ptr<runtime::TensorView> weights_layer_t =
+//         backend->create_tensor(element::f32, weights_layer->get_shape());
+//     shared_ptr<runtime::TensorView> weights_iter_t =
+//         backend->create_tensor(element::f32, weights_iter->get_shape());
+//     shared_ptr<runtime::TensorView> bias_layer_t =
+//         backend->create_tensor(element::f32, bias_layer->get_shape());
+//     shared_ptr<runtime::TensorView> bias_iter_t =
+//         backend->create_tensor(element::f32, bias_iter->get_shape());
+//     shared_ptr<runtime::TensorView> result_ht = backend->create_tensor(element::f32, {10, 100});
+//     shared_ptr<runtime::TensorView> result_ct =
+//         backend->create_tensor(element::f32, Shape{10, 100});
 
-    copy_data(src_layer_t, vector<float>(1000, 1));
-    copy_data(src_iter_t, vector<float>(1000, 1));
-    copy_data(state_iter_t, vector<float>(1000, 1));
-    copy_data(weights_layer_t, vector<float>(400 * 100, 1));
-    copy_data(weights_iter_t, vector<float>(400 * 100, 1));
-    copy_data(bias_layer_t, vector<float>(400, 1));
-    copy_data(bias_iter_t, vector<float>(400, 1));
+//     copy_data(src_layer_t, vector<float>(1000, 1));
+//     copy_data(src_iter_t, vector<float>(1000, 1));
+//     copy_data(state_iter_t, vector<float>(1000, 1));
+//     copy_data(weights_layer_t, vector<float>(400 * 100, 1));
+//     copy_data(weights_iter_t, vector<float>(400 * 100, 1));
+//     copy_data(bias_layer_t, vector<float>(400, 1));
+//     copy_data(bias_iter_t, vector<float>(400, 1));
 
-    backend->call_with_validate(func,
-                                {result_ht, result_ct},
-                                {src_layer_t,
-                                 src_iter_t,
-                                 weights_layer_t,
-                                 weights_iter_t,
-                                 bias_layer_t,
-                                 bias_iter_t,
-                                 state_iter_t});
-    vector<float> expected_ht(10 * 100, 0.964028f);
-    vector<float> expected_ct;
-    for (size_t i = 0; i < 10 * 100; i++)
-    {
-        if (i < 1000)
-        {
-            expected_ct.push_back(0.964028f);
-        }
-        else
-        {
-            expected_ct.push_back(2.0f);
-        }
-    }
+//     backend->call_with_validate(func,
+//                                 {result_ht, result_ct},
+//                                 {src_layer_t,
+//                                  src_iter_t,
+//                                  weights_layer_t,
+//                                  weights_iter_t,
+//                                  bias_layer_t,
+//                                  bias_iter_t,
+//                                  state_iter_t});
+//     vector<float> expected_ht(10 * 100, 0.964028f);
+//     vector<float> expected_ct;
+//     for (size_t i = 0; i < 10 * 100; i++)
+//     {
+//         if (i < 1000)
+//         {
+//             expected_ct.push_back(0.964028f);
+//         }
+//         else
+//         {
+//             expected_ct.push_back(2.0f);
+//         }
+//     }
 
-    EXPECT_TRUE(test::all_close(expected_ht, read_vector<float>(result_ht)));
-    EXPECT_TRUE(test::all_close(expected_ct, read_vector<float>(result_ct)));
-}
+//     EXPECT_TRUE(test::all_close(expected_ht, read_vector<float>(result_ht)));
+//     EXPECT_TRUE(test::all_close(expected_ct, read_vector<float>(result_ct)));
+// }
 
 TEST(gpu_fusion, fuse_lstm_cells)
 {

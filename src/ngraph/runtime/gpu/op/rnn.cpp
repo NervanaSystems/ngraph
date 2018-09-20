@@ -23,15 +23,12 @@ using namespace ngraph;
 
 shared_ptr<Node> op::gpu::Rnn::copy_with_new_args(const NodeVector& new_args) const
 {
-    NGRAPH_ASSERT(new_args.size() == 7) << "Incorrect number of new arguments";
+    NGRAPH_ASSERT(new_args.size() == 4) << "Incorrect number of new arguments";
 
     return make_shared<Rnn>(new_args[0],
                             new_args[1],
                             new_args[2],
                             new_args[3],
-                            new_args[4],
-                            new_args[5],
-                            new_args[6],
                             m_num_timesteps,
                             m_num_gates_per_cell,
                             m_src_sequence_length,
@@ -43,10 +40,7 @@ shared_ptr<Node> op::gpu::Rnn::copy_with_new_args(const NodeVector& new_args) co
 
 op::gpu::Rnn::Rnn(std::shared_ptr<Node> src_layer,
                   std::shared_ptr<Node> src_iter,
-                  std::shared_ptr<Node> weights_layer,
-                  std::shared_ptr<Node> weights_iter,
-                  std::shared_ptr<Node> bias_layer,
-                  std::shared_ptr<Node> bias_iter,
+                  std::shared_ptr<Node> params,
                   std::shared_ptr<Node> state_iter,
                   const int num_timesteps,
                   const int num_gates_per_cell,
@@ -56,7 +50,7 @@ op::gpu::Rnn::Rnn(std::shared_ptr<Node> src_layer,
                   const int direction,
                   const int num_fused_layers)
     : Op("Rnn",
-         {src_layer, src_iter, weights_layer, weights_iter, bias_layer, bias_iter, state_iter})
+         {src_layer, src_iter, params, state_iter})
     , m_num_timesteps(num_timesteps)
     , m_num_gates_per_cell(num_gates_per_cell)
     , m_src_sequence_length(src_sequence_length)
@@ -65,10 +59,10 @@ op::gpu::Rnn::Rnn(std::shared_ptr<Node> src_layer,
     , m_direction(direction)
     , m_num_fused_layers(num_fused_layers)
 {
-    NGRAPH_ASSERT(src_layer->get_shape().size() == weights_layer->get_shape().size())
-        << "src_layer and i2h weights size dont match";
-    NGRAPH_ASSERT(src_iter->get_shape().size() == weights_iter->get_shape().size())
-        << "src_iter and h2h weights size dont match";
+    // NGRAPH_ASSERT(src_layer->get_shape().size() == weights_layer->get_shape().size())
+    //     << "src_layer and i2h weights size dont match";
+    // NGRAPH_ASSERT(src_iter->get_shape().size() == weights_iter->get_shape().size())
+    //     << "src_iter and h2h weights size dont match";
     NGRAPH_ASSERT(src_layer->get_shape().size() == 2) << "src_layer doesnt have a rank 2";
 
     m_batch_size = static_cast<int>(src_layer->get_shape()[0] / num_timesteps);
@@ -76,11 +70,11 @@ op::gpu::Rnn::Rnn(std::shared_ptr<Node> src_layer,
     NGRAPH_ASSERT(shape_size(src_layer->get_shape()) ==
                   m_src_sequence_length * m_batch_size * m_src_layer_feature_size)
         << "src_layer size is not equal t*n*c";
-    NGRAPH_ASSERT(bias_layer->get_shape() == bias_iter->get_shape())
-        << "bias tensor shapes do not match";
-    NGRAPH_ASSERT(bias_layer->get_shape()[0] == weights_layer->get_shape()[0] &&
-                  bias_iter->get_shape()[0] == weights_iter->get_shape()[0])
-        << "bias and weights_shape are not compatible";
+    // NGRAPH_ASSERT(bias_layer->get_shape() == bias_iter->get_shape())
+    //     << "bias tensor shapes do not match";
+    // NGRAPH_ASSERT(bias_layer->get_shape()[0] == weights_layer->get_shape()[0] &&
+    //               bias_iter->get_shape()[0] == weights_iter->get_shape()[0])
+    //     << "bias and weights_shape are not compatible";
 
     auto et = src_layer->get_element_type();
     for (auto& rnn_input : get_arguments())
