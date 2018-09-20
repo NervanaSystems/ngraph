@@ -848,6 +848,71 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             do_eltwise_operation(topology, op, cldnn::eltwise_mode::pow);
             break;
         }
+        case OP_TYPEID::Atan:
+        {
+            arguments_check(op, 1, 1);
+            do_custom_eltwise_operation(topology,
+                                        get_input_name(op),
+                                        get_input_shape(op),
+                                        get_input_type(op),
+                                        get_output_name(op),
+                                        get_output_shape(op),
+                                        get_output_type(op),
+                                        CUSTOM_ELTWISE::Atan);
+            break;
+        }
+        case OP_TYPEID::Ceiling:
+        {
+            arguments_check(op, 1, 1);
+            do_custom_eltwise_operation(topology,
+                                        get_input_name(op),
+                                        get_input_shape(op),
+                                        get_input_type(op),
+                                        get_output_name(op),
+                                        get_output_shape(op),
+                                        get_output_type(op),
+                                        CUSTOM_ELTWISE::Ceil);
+            break;
+        }
+        case OP_TYPEID::Floor:
+        {
+            arguments_check(op, 1, 1);
+            do_custom_eltwise_operation(topology,
+                                        get_input_name(op),
+                                        get_input_shape(op),
+                                        get_input_type(op),
+                                        get_output_name(op),
+                                        get_output_shape(op),
+                                        get_output_type(op),
+                                        CUSTOM_ELTWISE::Floor);
+            break;
+        }
+        case OP_TYPEID::Sign:
+        {
+            arguments_check(op, 1, 1);
+            do_custom_eltwise_operation(topology,
+                                        get_input_name(op),
+                                        get_input_shape(op),
+                                        get_input_type(op),
+                                        get_output_name(op),
+                                        get_output_shape(op),
+                                        get_output_type(op),
+                                        CUSTOM_ELTWISE::Sign);
+            break;
+        }
+        case OP_TYPEID::Tan:
+        {
+            arguments_check(op, 1, 1);
+            do_custom_eltwise_operation(topology,
+                                        get_input_name(op),
+                                        get_input_shape(op),
+                                        get_input_type(op),
+                                        get_output_name(op),
+                                        get_output_shape(op),
+                                        get_output_type(op),
+                                        CUSTOM_ELTWISE::Tan);
+            break;
+        }
         case OP_TYPEID::Pad:
         {
             arguments_check(op, 2, 1);

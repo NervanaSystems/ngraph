@@ -32,6 +32,8 @@
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
+#include "ngraph/runtime/cpu/op/quantized_conv.hpp"
+#include "ngraph/runtime/cpu/quantization_util.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -103,6 +105,15 @@ namespace ngraph
                                                  const ngraph::CoordinateDiff& padding_below,
                                                  const ngraph::CoordinateDiff& padding_above,
                                                  const mkldnn::post_ops& pops = mkldnn::post_ops());
+
+                size_t build_quantized_convolution(const mkldnn::memory::desc& input_data_desc,
+                                                   const mkldnn::memory::desc& weights_desc,
+                                                   const mkldnn::memory::desc& result_desc,
+                                                   const ngraph::Strides& strides,
+                                                   const ngraph::Strides& dilation_strides,
+                                                   const ngraph::CoordinateDiff& padding_below,
+                                                   const ngraph::CoordinateDiff& padding_above,
+                                                   const float scale);
 
                 template <typename OP>
                 size_t build_convolution(const ngraph::Node* node,
@@ -184,6 +195,19 @@ namespace ngraph
                                                          convolution->get_padding_below(),
                                                          convolution->get_padding_above(),
                                                          ops);
+                    }
+                    else if (std::is_same<OP, ngraph::op::QuantizedConvolution>())
+                    {
+                        const float scale = quantization_util::get_scale(node);
+                        return build_quantized_convolution(
+                            data_desc,
+                            weights_desc,
+                            result_desc,
+                            convolution->get_window_movement_strides(),
+                            window_dilation_strides_adjusted,
+                            convolution->get_padding_below(),
+                            convolution->get_padding_above(),
+                            scale);
                     }
                     else
                     {
@@ -490,6 +514,11 @@ namespace ngraph
                 size_t build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
                                     const mkldnn::memory::desc& result_desc,
                                     const size_t concat_dim);
+
+                size_t build_slice(const mkldnn::memory::desc& input_desc,
+                                   const mkldnn::memory::desc& result_desc,
+                                   const ngraph::Coordinate& lower_bounds,
+                                   const ngraph::Shape& result_shape);
 
                 size_t build_softmax_forward(const mkldnn::memory::desc& input_desc,
                                              const mkldnn::memory::desc& result_desc,
