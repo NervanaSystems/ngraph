@@ -59,11 +59,15 @@ void op::Quantize::validate_and_infer_types()
         << "Offset element type (" << get_input_element_type(OFFSET)
         << ") must match input element type (" << get_input_element_type(INPUT) << ")";
 
-    // TODO: longer term we need to suport quantization axes
-    NODE_VALIDATION_ASSERT(this, m_axes.size() == 0)
-        << "Quantization axes must be empty, for now, implying scalar values for scale and offset";
+    for (auto axis : m_axes)
+    {
+        NODE_VALIDATION_ASSERT(this, axis < get_shape().size())
+            << "Quantizaztion axis (" << axis 
+            << ") is greater than input shape rank (" << get_shape().size() << ")";
+    }
     
     Shape projected_shape;
+    // TODO: project_for_realz
     for (size_t i = 0; i < get_input_shape(INPUT).size(); ++i)
     {
         if (m_axes.find(i) != m_axes.end())

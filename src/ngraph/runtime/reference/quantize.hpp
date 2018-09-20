@@ -37,10 +37,38 @@ namespace ngraph
         namespace reference
         {
             template <typename TI, typename TO>
-            void quantize(const TI* input, const TI* scale, const TI* offset, TO* output, const Shape& shape, const AxisSet& axes)
+            void quantize(
+                const TI* input, 
+                const TI* scale, 
+                const TI* offset, 
+                TO* output, 
+                const Shape& input_shape, 
+                const Shape& scale_offset_shape,
+                const AxisSet& axes)
             {
-                for(size_t i = 0; i < shape_size(shape); ++i) {
-                    output[i] = static_cast<TO>(std::round(input[i] / scale[0]) + std::round(offset[0]));
+                CoordinateTransform input_transform(input_shape);
+                CoordinateTransform scale_offset_transform(scale_offset_shape);
+
+                for (const Coordinate& input_coord : input_transform)
+                {
+                    Coordinate scale_offset_coord;
+                    // TODO: project_for_realz
+                    for (size_t i = 0; i < input_coord.size(); ++i)
+                    {
+                        if (axes.find(i) != axes.end())
+                        {
+                            scale_offset_coord.push_back(input_coord[i]);
+                        }
+                    }
+
+                    output[input_transform.index(input_coord)] = 
+                        static_cast<TO>(
+                            std::round(
+                                input[input_transform.index(input_coord)] / 
+                                scale[scale_offset_transform.index(scale_offset_coord)]
+                            )
+                            + offset[scale_offset_transform.index(scale_offset_coord)]
+                        );
                 }
             }
         }

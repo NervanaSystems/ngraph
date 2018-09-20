@@ -850,7 +850,8 @@ private:
                                        args[1]->get_data_ptr<T>(),
                                        args[2]->get_data_ptr<T>(),
                                        out[0]->get_data_ptr<uint8_t>(),
-                                       out[0]->get_shape(),
+                                       args[0]->get_shape(),
+                                       args[1]->get_shape(),
                                        quantize->get_axes());
             }
             else if (type == element::i8)
@@ -859,7 +860,8 @@ private:
                                        args[1]->get_data_ptr<T>(),
                                        args[2]->get_data_ptr<T>(),
                                        out[0]->get_data_ptr<int8_t>(),
-                                       out[0]->get_shape(),
+                                       args[0]->get_shape(),
+                                       args[1]->get_shape(),
                                        quantize->get_axes());
             }
             else
