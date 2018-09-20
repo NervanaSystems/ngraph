@@ -117,7 +117,7 @@ namespace ngraph
             }
 
             std::shared_ptr<ngraph::Node> reorder_axes(const std::shared_ptr<ngraph::Node>& node,
-                                                       std::vector<size_t> axes_order = {})
+                                                       std::vector<std::size_t> axes_order = {})
             {
                 Shape out_shape = node->get_shape();
                 if (axes_order.empty())
