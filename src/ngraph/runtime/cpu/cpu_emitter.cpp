@@ -1942,6 +1942,32 @@ namespace ngraph
             {
                 const ngraph::op::Slice* slice = static_cast<const ngraph::op::Slice*>(node);
 
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto out_shape = out[0].get_shape();
+
+                    auto lower_bounds = slice->get_lower_bounds();
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    auto slice_index = mkldnn_emitter->build_slice(
+                        input_desc, result_desc, lower_bounds, out_shape);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(slice_index);
+
+                    writer.block_begin();
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(slice_index) << ");\n";
+                    writer.block_end();
+                    return;
+                }
+
                 writer.block_begin();
 #if USE_EIGEN_CORE_INLINE == 1
                 size_t arg_rank = args[0].get_shape().size();

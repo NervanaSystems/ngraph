@@ -34,6 +34,7 @@
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -670,6 +671,20 @@ namespace ngraph
                 }
 
                 template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::Slice)
+                {
+                    auto slice = static_cast<op::Slice*>(node);
+                    auto strides = slice->get_strides();
+                    if (!is_strided(strides) && node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        slice->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedMaxPool)
                 {
                     if (node->get_input_element_type(0) == element::u8 ||
@@ -682,6 +697,7 @@ namespace ngraph
                         quantized_mp->set_op_annotations(op_annotations);
                     }
                 }
+
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedAvgPool)
                 {
@@ -814,6 +830,7 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::QuantizedAvgPool),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedAvgPool>},
     {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Softmax>},
+    {TI(ngraph::op::Slice), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Slice>},
     {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Quantize>},
     {TI(ngraph::op::ReplaceSlice),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ReplaceSlice>},

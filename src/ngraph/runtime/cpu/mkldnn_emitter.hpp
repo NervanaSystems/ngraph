@@ -515,6 +515,11 @@ namespace ngraph
                                     const mkldnn::memory::desc& result_desc,
                                     const size_t concat_dim);
 
+                size_t build_slice(const mkldnn::memory::desc& input_desc,
+                                   const mkldnn::memory::desc& result_desc,
+                                   const ngraph::Coordinate& lower_bounds,
+                                   const ngraph::Shape& result_shape);
+
                 size_t build_softmax_forward(const mkldnn::memory::desc& input_desc,
                                              const mkldnn::memory::desc& result_desc,
                                              int softmax_axis);
