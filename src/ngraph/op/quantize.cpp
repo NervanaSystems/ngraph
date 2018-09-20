@@ -66,15 +66,7 @@ void op::Quantize::validate_and_infer_types()
             << ") is greater than input shape rank (" << get_shape().size() << ")";
     }
     
-    Shape projected_shape;
-    // TODO: project_for_realz
-    for (size_t i = 0; i < get_input_shape(INPUT).size(); ++i)
-    {
-        if (m_axes.find(i) != m_axes.end())
-        {
-            projected_shape.push_back(get_input_shape(INPUT)[i]);
-        }
-    }
+    Shape projected_shape = project(get_input_shape(INPUT), m_axes, false);
 
     NODE_VALIDATION_ASSERT(this, get_input_shape(SCALE) == projected_shape)
         << "Scale shape (" << get_input_shape(SCALE)

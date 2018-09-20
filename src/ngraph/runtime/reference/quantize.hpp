@@ -51,15 +51,7 @@ namespace ngraph
 
                 for (const Coordinate& input_coord : input_transform)
                 {
-                    Coordinate scale_offset_coord;
-                    // TODO: project_for_realz
-                    for (size_t i = 0; i < input_coord.size(); ++i)
-                    {
-                        if (axes.find(i) != axes.end())
-                        {
-                            scale_offset_coord.push_back(input_coord[i]);
-                        }
-                    }
+                    Coordinate scale_offset_coord = project(input_coord, axes, false);
 
                     output[input_transform.index(input_coord)] = 
                         static_cast<TO>(

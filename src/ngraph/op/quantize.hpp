@@ -41,6 +41,7 @@ namespace ngraph
             
             const ngraph::AxisSet& get_axes() const { return m_axes; }
 
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
@@ -51,7 +52,7 @@ namespace ngraph
                 SCALE,
                 OFFSET
             };
-            
+
             ngraph::element::Type m_type;
             ngraph::AxisSet m_axes;
         };
