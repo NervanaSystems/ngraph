@@ -158,6 +158,30 @@ TEST(serialize, constant)
     EXPECT_TRUE(found);
 }
 
+class UnknownOp : public ngraph::op::Op
+{
+public:
+    UnknownOp(const std::shared_ptr<Node>& arg)
+        : Op("Unknown", {arg})
+    {
+    }
+
+    std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override
+    {
+        return nullptr;
+    }
+};
+
+TEST(serialize, unknown_op)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<UnknownOp>(A), op::ParameterVector{A});
+
+    string s = serialize(f, 4);
+}
+
 TEST(benchmark, serialize)
 {
     stopwatch timer;
