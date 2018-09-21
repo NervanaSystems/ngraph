@@ -115,7 +115,7 @@ static std::shared_ptr<Node> compute_lstm_params(const std::shared_ptr<Node>& w_
     {
         auto shape = param->get_shape();
         flat_params.push_back(std::make_shared<op::Reshape>(
-                                  param, get_default_order(shape), Shape{shape_size(shape)}));
+            param, get_default_order(shape), Shape{shape_size(shape)}));
     }
     return std::make_shared<op::Concat>(flat_params, 0);
 }
@@ -228,10 +228,13 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                                   pattern_map[hidden_ht],
                                                   params,
                                                   pattern_map[ct_1],
-                                                  1, 4, 1,
+                                                  1,
+                                                  4,
+                                                  1,
                                                   pattern_map[input_xt]->get_shape()[1],
                                                   pattern_map[hidden_ht]->get_shape()[1],
-                                                  1, 1);
+                                                  1,
+                                                  1);
         }
         else if (!intermediate_lstm &&
                  (std::dynamic_pointer_cast<op::Broadcast>(pattern_map[input_xt]) &&
@@ -246,10 +249,13 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                                   pattern_map[input_xt],
                                                   params,
                                                   pattern_map[ct_1],
-                                                  1, 4, 1,
+                                                  1,
+                                                  4,
+                                                  1,
                                                   pattern_map[hidden_ht]->get_shape()[1],
                                                   pattern_map[input_xt]->get_shape()[1],
-                                                  1, 1);
+                                                  1,
+                                                  1);
         }
         else if (pattern_map[hidden_ht]->get_arguments().size() &&
                  pattern_map[ct_1]->get_arguments().at(0)->get_instance_id() ==
@@ -268,10 +274,13 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                                   pattern_map[hidden_ht],
                                                   params,
                                                   pattern_map[ct_1],
-                                                  1, 4, 1,
+                                                  1,
+                                                  4,
+                                                  1,
                                                   pattern_map[input_xt]->get_shape()[1],
                                                   pattern_map[hidden_ht]->get_shape()[1],
-                                                  1, 1);
+                                                  1,
+                                                  1);
         }
         else
         {
@@ -286,10 +295,13 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                                   pattern_map[input_xt],
                                                   params,
                                                   pattern_map[ct_1],
-                                                  1, 4, 1,
+                                                  1,
+                                                  4,
+                                                  1,
                                                   pattern_map[hidden_ht]->get_shape()[1],
                                                   pattern_map[input_xt]->get_shape()[1],
-                                                  1, 1);
+                                                  1,
+                                                  1);
         }
 
         auto ht_output = std::make_shared<op::GetOutputElement>(lstm, 0);
@@ -357,20 +369,26 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 {
     auto xt = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
     auto ht_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
-    auto params_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400*100 + 400*100 + 400 + 400});
+    auto params_label = std::make_shared<pattern::op::Label>(
+        element::f32, Shape{400 * 100 + 400 * 100 + 400 + 400});
     auto rpattern_ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
 
-    auto lstm = std::make_shared<op::gpu::Rnn>(xt, ht_1, params_label, rpattern_ct_1,
-                                               1, 4, 1,
+    auto lstm = std::make_shared<op::gpu::Rnn>(xt,
+                                               ht_1,
+                                               params_label,
+                                               rpattern_ct_1,
+                                               1,
+                                               4,
+                                               1,
                                                xt->get_shape()[1],
                                                ht_1->get_shape()[1],
-                                               1, 1);
+                                               1,
+                                               1);
     auto goe = std::make_shared<op::GetOutputElement>(lstm, 0); // hidden output
     auto lstm_node_label = std::make_shared<pattern::op::Label>(goe, nullptr, NodeVector{goe});
 
     pattern::recurrent_graph_rewrite_callback callback =
-        [lstm_node_label, xt, ht_1, params_label, rpattern_ct_1](
-            pattern::RecurrentMatcher& m) {
+        [lstm_node_label, xt, ht_1, params_label, rpattern_ct_1](pattern::RecurrentMatcher& m) {
 
             NGRAPH_DEBUG << " In RNN fusion callback";
 
@@ -455,11 +473,11 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             NGRAPH_DEBUG << "feature_size: " << feature_size;
 
             std::cout << src_layer->get_name() << std::endl;
-            for (auto& arg: src_layer->get_arguments())
+            for (auto& arg : src_layer->get_arguments())
             {
-                std::cout << "  " <<arg->get_name() << std::endl;
+                std::cout << "  " << arg->get_name() << std::endl;
             }
-            std::cout << src_layer->get_arguments().size() << " " <<  sequence_len << std::endl;
+            std::cout << src_layer->get_arguments().size() << " " << sequence_len << std::endl;
 
             NGRAPH_ASSERT(src_layer->get_arguments().size() == sequence_len ||
                           std::dynamic_pointer_cast<op::Parameter>(src_layer))
@@ -484,7 +502,6 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                           src_iter->get_element_type() == element::f32)
                 << "input tensor type and input recurrent state tensor type for RNN op should "
                    "be float32";
-
 
             // NGRAPH_ASSERT(src_layer->get_shape().size() == weights_layer->get_shape().size())
             //     << "src_layer and i2h weights size dont match";
