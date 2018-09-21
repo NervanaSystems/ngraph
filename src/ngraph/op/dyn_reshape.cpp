@@ -34,8 +34,8 @@ void op::DynReshape::validate_and_infer_types()
 {
     Shape input_shape = get_input_shape(0);
 
-    NODE_VALIDATION_ASSERT(this, get_input_element_type(1) == element::u64)
-        << "Shape argument must have type u64 (actual element type: " << get_input_element_type(1)
+    NODE_VALIDATION_ASSERT(this, get_input_element_type(1) == element::i64)
+        << "Shape argument must have type i64 (actual element type: " << get_input_element_type(1)
         << ").";
 
     // Temporary limitation until we add wildcard support.
