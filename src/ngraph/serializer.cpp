@@ -1381,7 +1381,7 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Quantize:
     {
         auto tmp = dynamic_cast<const op::Quantize*>(&n);
-        node["type"] = tmp->get_element_type();
+        node["type"] = write_element_type(tmp->get_element_type());
         node["axes"] = tmp->get_axes();
         node["round_mode"] = tmp->get_round_mode();
         break;

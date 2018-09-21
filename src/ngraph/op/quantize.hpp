@@ -47,7 +47,6 @@ namespace ngraph
 
             const ngraph::AxisSet& get_axes() const { return m_axes; }
             RoundMode get_round_mode() const { return m_round_mode; }
-
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
