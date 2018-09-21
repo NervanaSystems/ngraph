@@ -1355,7 +1355,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
     {
         string filename = file_util::path_join(s_debug_dir, m_function_name + "_debug.txt");
         std::stringstream strm;
-        auto find_role = [&](CPUTensorRole tensor_role) -> string {
+        auto find_role = [](CPUTensorRole tensor_role) -> string {
             switch (tensor_role)
             {
             case CPUTensorRole::INPUT: return string("CPUTensorRole::INPUT");
@@ -1374,7 +1374,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
         write_to_file(strm.str(), s_debug_dir, filename);
         strm.str("");
 
-        //dump the op's the order of execution along with their memory references
+        //dump the op's order of execution along with the address of
+        //tensor_data which holds the base address of each tensor.
         for (shared_ptr<Node> node : m_function->get_ordered_ops())
         {
             std::vector<string> node_inputs;
