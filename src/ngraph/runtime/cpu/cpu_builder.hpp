@@ -179,6 +179,10 @@
     {                                                                                              \
         PARTIAL_SELECT_RANK(KV, int8_t, R, K);                                                     \
     }                                                                                              \
+    else if (ET == element::u8)                                                                    \
+    {                                                                                              \
+        PARTIAL_SELECT_RANK(KV, uint8_t, R, K);                                                    \
+    }                                                                                              \
     else                                                                                           \
     {                                                                                              \
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
