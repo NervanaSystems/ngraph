@@ -14,32 +14,32 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-#include "ngraph/pass/graph_rewrite.hpp"
+#include <memory>
+
+#include "ngraph/op/lrn.hpp"
+
+#include "core/node.hpp"
+#include "lrn.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace onnx_import
     {
-        namespace cpu
+        namespace op
         {
-            namespace pass
+            NodeVector lrn(const Node& node)
             {
-                class CPUPostLayoutOptimizations;
-            }
-        }
-    }
-}
+                auto data = node.get_ng_inputs().at(0);
+                double alpha = node.get_attribute_value<double>("alpha", 1e-4);
+                double beta = node.get_attribute_value<double>("beta", 0.75);
+                double bias = node.get_attribute_value<double>("bias", 1);
+                size_t size = node.get_attribute_value<size_t>("size");
 
-class ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations : public ngraph::pass::GraphRewrite
-{
-public:
-    CPUPostLayoutOptimizations()
-        : GraphRewrite()
-    {
-        construct_weight_fusion();
-        construct_slice_convertLayout_fusion();
-    }
-    void construct_weight_fusion();
-    void construct_slice_convertLayout_fusion();
-};
+                return {std::make_shared<ngraph::op::LRN>(data, alpha, beta, bias, size)};
+            }
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,31 +15,20 @@
 //*****************************************************************************
 
 #pragma once
-#include "ngraph/pass/graph_rewrite.hpp"
+
+#include "ngraph/node_vector.hpp"
+
+#include "core/node.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace onnx_import
     {
-        namespace cpu
+        namespace op
         {
-            namespace pass
-            {
-                class CPUPostLayoutOptimizations;
-            }
-        }
-    }
-}
+            NodeVector squeeze(const Node& node);
+        } // namespace  op
 
-class ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations : public ngraph::pass::GraphRewrite
-{
-public:
-    CPUPostLayoutOptimizations()
-        : GraphRewrite()
-    {
-        construct_weight_fusion();
-        construct_slice_convertLayout_fusion();
-    }
-    void construct_weight_fusion();
-    void construct_slice_convertLayout_fusion();
-};
+    } // namespace  onnx_import
+
+} // namespace  ngraph

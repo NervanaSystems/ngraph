@@ -12,41 +12,23 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
 #include "ngraph/node_vector.hpp"
-#include "ngraph/pass/pass.hpp"
-#include "ngraph/pattern/matcher.hpp"
+
+#include "core/node.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace onnx_import
     {
-        namespace cpu
+        namespace op
         {
-            namespace pass
-            {
-                class CPUWorkspaceInsertion;
-            }
-        }
-    }
-}
+            NodeVector transpose(const Node& node);
+        } // namespace op
 
-class ngraph::runtime::cpu::pass::CPUWorkspaceInsertion : public ngraph::pass::FunctionPass
-{
-public:
-    CPUWorkspaceInsertion(ngraph::NodeVector& indices_list, bool return_indices = true)
-        : FunctionPass()
-        , m_indices_list(indices_list)
-        , m_return_indices(return_indices)
-    {
-    }
+    } // namespace onnx_import
 
-    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
-
-private:
-    ngraph::NodeVector& m_indices_list;
-    bool m_return_indices;
-    bool transform(ngraph::pattern::Matcher& m);
-};
+} // namespace ngraph

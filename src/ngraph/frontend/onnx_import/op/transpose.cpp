@@ -14,32 +14,32 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-#include "ngraph/pass/graph_rewrite.hpp"
+#include <memory>
+#include <vector>
+
+#include "ngraph/node.hpp"
+
+#include "transpose.hpp"
+#include "utils/reshape.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace onnx_import
     {
-        namespace cpu
+        namespace op
         {
-            namespace pass
+            NodeVector transpose(const Node& node)
             {
-                class CPUPostLayoutOptimizations;
-            }
-        }
-    }
-}
+                std::shared_ptr<ngraph::Node> data = node.get_ng_inputs().at(0);
 
-class ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations : public ngraph::pass::GraphRewrite
-{
-public:
-    CPUPostLayoutOptimizations()
-        : GraphRewrite()
-    {
-        construct_weight_fusion();
-        construct_slice_convertLayout_fusion();
-    }
-    void construct_weight_fusion();
-    void construct_slice_convertLayout_fusion();
-};
+                auto permute_axes = node.get_attribute_value<std::vector<std::size_t>>("perm", {});
+
+                return {(permute_axes.empty()) ? reshape::transpose(data)
+                                               : reshape::reorder_axes(data, permute_axes)};
+            }
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

@@ -30,7 +30,7 @@ get_target_property(EIGEN_INCLUDE_DIR libeigen INTERFACE_INCLUDE_DIRECTORIES)
 get_target_property(LLVM_LIB_DIR libllvm INTERFACE_INCLUDE_DIRECTORIES)
 
 # find_file(HEADER_1 cmath HINTS /usr/include/c++/7)
-get_filename_component(LLVM_LIB_DIR ${LLVM_LIB_DIR}/../lib/clang/5.0.1/include ABSOLUTE)
+get_filename_component(LLVM_LIB_DIR ${LLVM_LIB_DIR}/../lib/clang/5.0.2/include ABSOLUTE)
 
 set(HEADER_SEARCH_DEFINES
     "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\""
