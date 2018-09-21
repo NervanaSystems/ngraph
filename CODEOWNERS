@@ -8,7 +8,7 @@
 
 /.ci/					@crlishka
 /contrib/docker/			@crlishka
-/.travis.yml				@crlishka @postrational
+/.travis.yml				@postrational
 
 /.clang-format				@rkimballn1
 /.gitattributes				@rkimballn1
@@ -31,7 +31,7 @@
 /src/resource/				@rkimballn1
 /src/tools/				@rkimballn1
 /src/ngraph/autodiff/			@diyessi
-/src/ngraph/builder/			@brookhart
+/src/ngraph/builder/			@mbrookhart
 /src/ngraph/codegen/			@rkimballn1
 /src/ngraph/frontend/			@postrational
 /src/ngraph/op/				@diyessi @aprocter
