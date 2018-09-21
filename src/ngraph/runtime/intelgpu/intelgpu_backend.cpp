@@ -17,6 +17,7 @@
 #include <CPP/activation.hpp>
 #include <CPP/activation_grad.hpp>
 #include <CPP/batch_norm.hpp>
+#include <CPP/broadcast.hpp>
 #include <CPP/concatenation.hpp>
 #include <CPP/convolution.hpp>
 #include <CPP/data.hpp>
@@ -71,7 +72,7 @@ using namespace ngraph;
 // Abs,
 // Acos,
 // ...
-#define NGRAPH_OP(a) a,
+#define NGRAPH_OP(a, b) a,
 enum class OP_TYPEID
 {
 #include "ngraph/op/op_tbl.hpp"
@@ -84,7 +85,7 @@ static OP_TYPEID get_typeid(const string& s)
 // {"Abs", OP_TYPEID::Abs},
 // {"Acos", OP_TYPEID::Acos},
 // ...
-#define NGRAPH_OP(a) {#a, OP_TYPEID::a},
+#define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
     static const unordered_map<string, OP_TYPEID> typeid_map{
 #include "ngraph/op/op_tbl.hpp"
     };
@@ -591,6 +592,15 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             if (axis.empty())
             {
                 do_equal_propagation(topology, get_input_name(op), get_output_name(op));
+            }
+            else if (get_input_shape(op).empty() ||
+                     (get_input_shape(op).size() == 1 && get_input_shape(op).at(0) == 1))
+            {
+                const cldnn::tensor output_tensor_size =
+                    runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(get_output_shape(op));
+                const cldnn::broadcast cldnn_broadcast(
+                    get_output_name(op), get_input_name(op), output_tensor_size);
+                topology.add(cldnn_broadcast);
             }
             else
             {
@@ -1197,9 +1207,6 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         case OP_TYPEID::AllReduce:
         case OP_TYPEID::ArgMax:
         case OP_TYPEID::ArgMin:
-        case OP_TYPEID::Atan:
-        case OP_TYPEID::Ceiling:
-        case OP_TYPEID::Floor:
         case OP_TYPEID::FunctionCall:
         case OP_TYPEID::LRN:
         case OP_TYPEID::Reduce:
@@ -1207,9 +1214,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         case OP_TYPEID::ReplaceSlice:
         case OP_TYPEID::ReverseSequence:
         case OP_TYPEID::SelectAndScatter:
-        case OP_TYPEID::Sign:
         case OP_TYPEID::StopGradient:
-        case OP_TYPEID::Tan:
         case OP_TYPEID::TopK:
         {
             throw unsupported_op("Unsupported op '" + op->description() +

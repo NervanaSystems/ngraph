@@ -20,11 +20,19 @@ find_package(ZLIB REQUIRED)
 
 # Override default LLVM binaries
 if(NOT DEFINED LLVM_TARBALL_URL)
-    set(LLVM_TARBALL_URL http://releases.llvm.org/5.0.1/clang+llvm-5.0.1-x86_64-linux-gnu-ubuntu-16.04.tar.xz)
+    if(APPLE)
+        set(LLVM_TARBALL_URL https://releases.llvm.org/5.0.2/clang+llvm-5.0.2-x86_64-apple-darwin.tar.xz)
+    else()
+        set(LLVM_TARBALL_URL https://releases.llvm.org/5.0.2/clang+llvm-5.0.2-x86_64-linux-gnu-ubuntu-16.04.tar.xz)
+    endif()
 endif()
 
 if(NOT DEFINED LLVM_SHA1_HASH)
-    set(LLVM_SHA1_HASH 2fddf9a90b182fa594786be6923e58f5ead71e9c)
+    if(APPLE)
+        set(LLVM_SHA1_HASH 8c8ce5cb5e057aa6806275c3f28cd09b09f48b9b)
+    else()
+        set(LLVM_SHA1_HASH d16c7bfaa67b82042bedd5891809a608733cfc0e)
+    endif()
 endif()
 
 # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
@@ -131,10 +139,13 @@ set(LLVM_LINK_LIBS
     ${SOURCE_DIR}/lib/libLLVMBinaryFormat.a
     ${SOURCE_DIR}/lib/libLLVMSupport.a
     ${SOURCE_DIR}/lib/libLLVMDemangle.a
-    tinfo
-    z
-    m
 )
+
+if(APPLE)
+    set(LLVM_LINK_LIBS ${LLVM_LINK_LIBS} curses z m)
+else()
+    set(LLVM_LINK_LIBS ${LLVM_LINK_LIBS} tinfo z m)
+endif()
 
 add_library(libllvm INTERFACE)
 add_dependencies(libllvm ext_llvm)
