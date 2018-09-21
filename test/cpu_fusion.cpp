@@ -2667,6 +2667,7 @@ TEST(cpu_fusion, fuse_rnn_across_layer)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion_1>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     //pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     //pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
     //pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();

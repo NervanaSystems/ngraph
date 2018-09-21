@@ -86,8 +86,17 @@ bool runtime::cpu::pass::CPURnnMatFusion_1::run_on_function(std::shared_ptr<Func
     auto W = std::make_shared<pattern::op::Label>(element::f32, Shape{50, 400}, weights_pred);
     //auto reshape = std::make_shared<op::Reshape>(W, AxisVector{1, 0}, Shape{50, 400});
     auto dot = std::make_shared<op::Dot>(skip, W);
-    auto dot_matcher = std::make_shared<pattern::Matcher>(dot);
+    auto broadcast_pred = [](std::shared_ptr<Node> n) {
+        return std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr;
+    };
+    auto bias_broadcast =
+        std::make_shared<pattern::op::Label>(element::f32, Shape{10, 400}, broadcast_pred);
+    auto add_bias = std::make_shared<op::Add>(dot, bias_broadcast);
+
+    auto dot_matcher = std::make_shared<pattern::Matcher>(add_bias);
     std::map<std::shared_ptr<Node>, NodeVector> map_weights_to_pattern;
+    std::map<std::shared_ptr<Node>, NodeVector> map_weights_to_data;
+    std::map<std::shared_ptr<Node>, std::shared_ptr<Node>> map_weights_to_bias;
 
     for (auto n : function->get_ordered_ops())
     {
@@ -98,32 +107,60 @@ bool runtime::cpu::pass::CPURnnMatFusion_1::run_on_function(std::shared_ptr<Func
             std::cout << data->get_name() << "   " << join(data->get_shape()) << std::endl;
             std::cout << dot_matcher->get_match_root()->get_name() << "  " << n->get_name()
                       << std::endl;
+            std::cout << " matched_weights " << matched_weights->get_name() << std::endl;
             map_weights_to_pattern[matched_weights].push_back(dot_matcher->get_match_root());
+            map_weights_to_data[matched_weights].push_back(
+                dot_matcher->get_pattern_map()[data_param]);
+            map_weights_to_bias[matched_weights] =
+                (dot_matcher->get_pattern_map()[bias_broadcast]->get_argument(0));
         }
     }
 
-    for (auto& it : map_weights_to_pattern)
+    // fuse the input vector to a matrix
+    for (auto& it : map_weights_to_data)
     {
         std::cout << "weights : " << (it.first)->get_name() << std::endl;
         NodeVector param_nodes;
         for (auto& x : it.second)
         {
             std::cout << "inputs : " << x->get_name() << std::endl;
-            param_nodes.push_back(x->get_argument(0));
+            param_nodes.push_back(x);
         }
         // now concat the parameter hashed to the same weights
 
         auto concated_data = std::make_shared<op::Concat>(param_nodes, 0);
         std::cout << join(concated_data->get_shape()) << std::endl;
         // insert rehape on the concated data to make it 2D, if its 3D
-        auto& data_shape = it.first->get_shape();
+        auto& data_shape = concated_data->get_shape();
+        auto& w_shape = it.first->get_shape();
         auto data_order = ngraph::get_default_order(concated_data->get_shape());
-        auto weight_reshape_node = std::make_shared<op::Reshape>(
-            it.first, data_order, Shape{data_shape[1], data_shape[0]});
-        auto new_dot = std::make_shared<op::Dot>(concated_data, weight_reshape_node);
-        std::cout << "Replacing op " << it.second[0]->get_name() << " with " << new_dot->get_name()
-                  << std::endl;
-        function->replace_node(it.second[0], new_dot);
+        //std::cout << "insertinng reshape for " << it.first->get_name() << " " << join(it.first->get_shape()) << std::endl;
+        auto input_reshape_node = std::make_shared<op::Reshape>(
+            concated_data, data_order, Shape{data_shape[0] * data_shape[1], data_shape[2]});
+        auto w_reshape_node = std::make_shared<op::Reshape>(
+            it.first, AxisVector{1, 0}, Shape{w_shape[1], w_shape[0]});
+        auto new_dot = std::make_shared<op::Dot>(input_reshape_node, w_reshape_node);
+        auto bias_broadcast_node = std::make_shared<op::Broadcast>(
+            map_weights_to_bias[it.first], new_dot->get_shape(), AxisSet{0});
+        auto new_add_bias = std::make_shared<op::Add>(new_dot, bias_broadcast_node);
+
+        // now slice the new_add feed the corrsponding root nodes
+        // std::vector<std::shared_ptr<op::Slice>> slice_nodes;
+        int start_index = 0;
+        int batch_size = data_shape[0] / it.second.size();
+        int end_index = batch_size;
+        for (auto& data_nodes : map_weights_to_pattern[it.first])
+        {
+            auto slice_node = std::make_shared<op::Slice>(
+                new_add_bias,
+                Coordinate{start_index, 0},
+                Coordinate{end_index, input_reshape_node->get_shape()[1]});
+            start_index += batch_size;
+            end_index += batch_size;
+            std::cout << "Replacing op " << data_nodes->get_name() << " with "
+                      << new_add_bias->get_name() << std::endl;
+            function->replace_node(data_nodes, slice_node);
+        }
     }
 }
 bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Function> function)
