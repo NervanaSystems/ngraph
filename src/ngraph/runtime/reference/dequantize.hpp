@@ -38,7 +38,7 @@ namespace ngraph
         {
             template <typename TI, typename TO>
             void dequantize(const TI* input,
-                          const TI* scale,
+                          const TO* scale,
                           const TI* offset,
                           TO* output,
                           const Shape& input_shape,

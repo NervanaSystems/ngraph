@@ -9700,7 +9700,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize)
     typedef float output_c_type;
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
-    auto scale = op::Constant::create(input_type, scale_offset_shape, {2});
+    auto scale = op::Constant::create(output_type, scale_offset_shape, {2});
     auto offset = op::Constant::create(input_type, scale_offset_shape, {1});
     auto dequantize =
         make_shared<op::Dequantize>(X, scale, offset, output_type, quantization_axes);

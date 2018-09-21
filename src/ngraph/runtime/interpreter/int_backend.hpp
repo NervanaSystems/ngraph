@@ -592,7 +592,7 @@ private:
             if (type == element::f32)
             {
                 reference::dequantize<T>(args[0]->get_data_ptr<T>(),
-                                       args[1]->get_data_ptr<T>(),
+                                       args[1]->get_data_ptr<float>(),
                                        args[2]->get_data_ptr<T>(),
                                        out[0]->get_data_ptr<float>(),
                                        args[0]->get_shape(),
@@ -602,7 +602,7 @@ private:
             else if (type == element::f64)
             {
                 reference::dequantize<T>(args[0]->get_data_ptr<T>(),
-                                       args[1]->get_data_ptr<T>(),
+                                       args[1]->get_data_ptr<double>(),
                                        args[2]->get_data_ptr<T>(),
                                        out[0]->get_data_ptr<double>(),
                                        args[0]->get_shape(),

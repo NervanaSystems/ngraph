@@ -54,10 +54,9 @@ void op::Dequantize::validate_and_infer_types()
         << "Output element type (" << m_type
         << ") must be a floating point number";
 
-    // TODO: this MUST match m_type (not input) before merge
-    NODE_VALIDATION_ASSERT(this, get_input_element_type(SCALE) == get_input_element_type(INPUT))
+    NODE_VALIDATION_ASSERT(this, get_input_element_type(SCALE) == m_type)
         << "Scale element type (" << get_input_element_type(SCALE)
-        << ") must match output element type (" << get_input_element_type(INPUT) << ")";
+        << ") must match output element type (" << m_type << ")";
 
     NODE_VALIDATION_ASSERT(this, get_input_element_type(OFFSET) == get_input_element_type(INPUT))
         << "Offset element type (" << get_input_element_type(OFFSET)
