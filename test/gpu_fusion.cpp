@@ -304,8 +304,8 @@ TEST(gpu_fusion, lstm_analytic)
                                 {input_xt_t, weights_i2h_t, weights_h2h_t, bias_i2h_t, bias_h2h_t});
 
     auto sig = [](float x) { return 1.0f / (1.0f + std::exp(-x)); };
-    float ct_val = -sig(-4) + sig(-4) * std::tanh(-4);
-    float ht_val = sig(-4) * std::tanh(ct_val);
+    float ct_val = -sig(-4.0f) + sig(-4.0f) * std::tanh(-4.0f);
+    float ht_val = sig(-4.0f) * std::tanh(ct_val);
 
     EXPECT_TRUE(test::all_close(std::vector<float>{ht_val}, read_vector<float>(result_ht)));
     EXPECT_TRUE(test::all_close(std::vector<float>{ct_val}, read_vector<float>(result_ct)));
@@ -442,11 +442,11 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     //EXPECT_EQ(1, count_ops_of_type<op::gpu::Rnn>(f));
 
     auto sig = [](float x) { return 1.0f / (1.0f + std::exp(-x)); };
-    float kernel = 4;
+    float kernel = 4.0f;
     float ct_val_first = sig(kernel) + sig(kernel) * std::tanh(kernel);
     float ht_val_first = sig(kernel) * std::tanh(ct_val_first);
 
-    kernel = 3 + ht_val_first;
+    kernel = 3.0f + ht_val_first;
     float ct_val_second = sig(kernel) + sig(kernel) * std::tanh(kernel);
     float ht_val_second = sig(kernel) * std::tanh(ct_val_second);
 
