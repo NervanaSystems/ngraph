@@ -38,15 +38,8 @@ static bool has_zero_dim(std::shared_ptr<Node> node)
         throw ngraph_error("has_zero_dim is called on multi-output op");
     }
 
-    for (auto d : node->get_shape())
-    {
-        if (d == 0)
-        {
-            return true;
-        }
-    }
-
-    return false;
+    const auto& shape = node->get_shape();
+    return std::find(shape.begin(), shape.end(), 0) != shape.end();
 }
 
 static bool verify_no_internal_zero_length_ops(std::shared_ptr<ngraph::Function> f)
