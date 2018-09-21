@@ -43,6 +43,7 @@
 #include "op/less.hpp"
 #include "op/log.hpp"
 #include "op/log_softmax.hpp"
+#include "op/lrn.hpp"
 #include "op/matmul.hpp"
 #include "op/max.hpp"
 #include "op/max_pool.hpp"
@@ -133,6 +134,7 @@ namespace ngraph
                     m_map.emplace("Constant", std::bind(op::constant, std::placeholders::_1));
                     m_map.emplace("Conv", std::bind(op::conv, std::placeholders::_1));
                     m_map.emplace("Div", std::bind(op::div, std::placeholders::_1));
+                    m_map.emplace("Dropout", std::bind(op::identity, std::placeholders::_1));
                     m_map.emplace("Elu", std::bind(op::elu, std::placeholders::_1));
                     m_map.emplace("Equal", std::bind(op::equal, std::placeholders::_1));
                     m_map.emplace("Exp", std::bind(op::exp, std::placeholders::_1));
@@ -147,6 +149,7 @@ namespace ngraph
                     m_map.emplace("Less", std::bind(op::less, std::placeholders::_1));
                     m_map.emplace("Log", std::bind(op::log, std::placeholders::_1));
                     m_map.emplace("LogSoftmax", std::bind(op::log_softmax, std::placeholders::_1));
+                    m_map.emplace("LRN", std::bind(op::lrn, std::placeholders::_1));
                     m_map.emplace("MatMul", std::bind(op::matmul, std::placeholders::_1));
                     m_map.emplace("MaxPool", std::bind(op::max_pool, std::placeholders::_1));
                     m_map.emplace("Max", std::bind(op::max, std::placeholders::_1));
