@@ -567,6 +567,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
 }
+
 size_t runtime::gpu::CUDAEmitter::build_reshape(const std::array<std::string, 2>& dtypes,
                                                 NVShape input_shape,
                                                 NVShape input_order)
@@ -641,6 +642,186 @@ size_t runtime::gpu::CUDAEmitter::build_reshape(const std::array<std::string, 2>
                                           block_size_x,
                                           1,
                                           1, // block dim
+                                          0,
+                                          NULL, // shared mem and stream
+                                          args_list,
+                                          0)); // arguments
+            debug_sync();
+        }});
+
+    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
+
+size_t runtime::gpu::CUDAEmitter::build_reshape_2d(const std::array<std::string, 2>& dtypes,
+                                                   NVShape input_shape,
+                                                   NVShape input_order)
+{
+    auto rank = input_shape.size();
+    std::stringstream kernel_name;
+    kernel_name << "reshape_" << join(dtypes, "_");
+
+    std::string hash =
+        kernel_name.str() + "_i_" + join(input_shape, "_") + "_o_" + join(input_order, "_");
+    // For backwards compatability we currently use two unordered maps
+    // 1. one looks up the compiled cuda kernel (CudaFunctionPool)
+    // 2. the other looks to see if this kernel is already in the primitive list
+
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    // TODO: currently we set it to 16, will add tuning method later
+    uint32_t block_size = 16;
+    uint32_t aligned_grid_size_x = align_to_block_size(input_shape[1], block_size);
+    uint32_t aligned_grid_size_y = align_to_block_size(input_shape[0], block_size);
+    NVShape input_strides = row_major_strides(input_shape);
+    NVShape output_strides(rank);
+    NVShape trans_strides(rank);
+    int stride = 1;
+    for (int64_t i = rank - 1; i >= 0; i--)
+    {
+        output_strides[i] = stride;
+        stride *= input_shape[input_order[i]];
+    }
+    for (int64_t i = 0; i < rank; i++)
+    {
+        trans_strides[input_order[i]] = output_strides[i];
+    }
+
+    // get an allocator for transient per kernel gpu memory
+    auto args = m_primitive_emitter->add_kernel_args();
+    args.add_placeholder(dtypes[0], "in")
+        .add_placeholder(dtypes[1], "out")
+        .add("input_strides", input_strides)
+        .add("trans_strides", trans_strides)
+        .add("nx", input_shape[1])
+        .add("ny", input_shape[0]);
+
+    // check if the kernel has already been compiled. if so, create
+    // a launch primitive for it based on the input tensor shape
+    // but do not recompile the kernel. otherwise, do it all:
+    // recompile the kernel and then create the primitive
+    auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
+    if (compiled_kernel == nullptr)
+    {
+        codegen::CodeWriter writer;
+        CudaKernelBuilder::add_pod_typedefs(writer);
+        CudaKernelBuilder::get_reshape_op_2d(
+            writer, kernel_name.str(), args, dtypes[1], block_size);
+        compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
+    }
+
+    // create the launch primitive
+    std::unique_ptr<gpu::primitive> kernel_launch(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void** args_list = args.resolve_placeholder(0, &inputs[0])
+                                   .resolve_placeholder(1, &outputs[0])
+                                   .get_argument_list();
+
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          aligned_grid_size_x,
+                                          aligned_grid_size_y,
+                                          1, // grid dim
+                                          block_size,
+                                          block_size,
+                                          1, // block dim
+                                          0,
+                                          NULL, // shared mem and stream
+                                          args_list,
+                                          0)); // arguments
+            debug_sync();
+        }});
+
+    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
+    m_primitive_emitter->cache(hash, primitive_index);
+    return primitive_index;
+}
+size_t runtime::gpu::CUDAEmitter::build_reshape_3d(const std::array<std::string, 2>& dtypes,
+                                                   NVShape input_shape,
+                                                   NVShape input_order)
+{
+    auto rank = input_shape.size();
+    std::stringstream kernel_name;
+    kernel_name << "reshape_" << join(dtypes, "_") << "_r_" << join(input_order, "_");
+
+    std::string hash = kernel_name.str() + "_i_" + join(input_shape, "_");
+    // For backwards compatability we currently use two unordered maps
+    // 1. one looks up the compiled cuda kernel (CudaFunctionPool)
+    // 2. the other looks to see if this kernel is already in the primitive list
+
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    std::vector<uint32_t> block_size(3, 0);
+    // TODO: currently we set it to 16, will add tuning method later
+    uint32_t block_size_x = 16;
+    block_size[0] = block_size_x;                                       //x
+    block_size[2] = (input_order[2] == 0) ? block_size_x : 1;           //z
+    block_size[1] = (block_size[2] == block_size_x) ? 1 : block_size_x; //y
+    uint32_t aligned_grid_size_x = align_to_block_size(input_shape[2], block_size[0]);
+    uint32_t aligned_grid_size_y = align_to_block_size(input_shape[1], block_size[1]);
+    uint32_t aligned_grid_size_z = align_to_block_size(input_shape[0], block_size[2]);
+    NVShape input_strides = row_major_strides(input_shape);
+    NVShape output_strides(rank);
+    NVShape trans_strides(rank);
+    int stride = 1;
+    for (int64_t i = rank - 1; i >= 0; i--)
+    {
+        output_strides[i] = stride;
+        stride *= input_shape[input_order[i]];
+    }
+    for (int64_t i = 0; i < rank; i++)
+    {
+        trans_strides[input_order[i]] = output_strides[i];
+    }
+
+    // get an allocator for transient per kernel gpu memory
+    auto args = m_primitive_emitter->add_kernel_args();
+    args.add_placeholder(dtypes[0], "in")
+        .add_placeholder(dtypes[1], "out")
+        .add("input_strides", input_strides)
+        .add("trans_strides", trans_strides)
+        .add("nx", input_shape[2])
+        .add("ny", input_shape[1])
+        .add("nz", input_shape[0]);
+
+    // check if the kernel has already been compiled. if so, create
+    // a launch primitive for it based on the input tensor shape
+    // but do not recompile the kernel. otherwise, do it all:
+    // recompile the kernel and then create the primitive
+    auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
+    if (compiled_kernel == nullptr)
+    {
+        codegen::CodeWriter writer;
+        CudaKernelBuilder::add_pod_typedefs(writer);
+        CudaKernelBuilder::get_reshape_op_3d(
+            writer, kernel_name.str(), args, dtypes[1], input_order, block_size);
+        compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
+    }
+
+    // create the launch primitive
+    std::unique_ptr<gpu::primitive> kernel_launch(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void** args_list = args.resolve_placeholder(0, &inputs[0])
+                                   .resolve_placeholder(1, &outputs[0])
+                                   .get_argument_list();
+
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          aligned_grid_size_x,
+                                          aligned_grid_size_y,
+                                          aligned_grid_size_z, // grid dim
+                                          block_size[0],
+                                          block_size[1],
+                                          block_size[2], // block dim
                                           0,
                                           NULL, // shared mem and stream
                                           args_list,

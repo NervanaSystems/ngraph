@@ -36,7 +36,7 @@ namespace ngraph
 // Abs,
 // Acos,
 // ...
-#define NGRAPH_OP(a) a,
+#define NGRAPH_OP(a, b) a,
 enum class ngraph::runtime::interpreter::OP_TYPEID
 {
 #include "ngraph/op/op_tbl.hpp"
