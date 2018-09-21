@@ -134,6 +134,7 @@ namespace ngraph
                     m_map.emplace("Constant", std::bind(op::constant, std::placeholders::_1));
                     m_map.emplace("Conv", std::bind(op::conv, std::placeholders::_1));
                     m_map.emplace("Div", std::bind(op::div, std::placeholders::_1));
+                    m_map.emplace("Dropout", std::bind(op::identity, std::placeholders::_1));
                     m_map.emplace("Elu", std::bind(op::elu, std::placeholders::_1));
                     m_map.emplace("Equal", std::bind(op::equal, std::placeholders::_1));
                     m_map.emplace("Exp", std::bind(op::exp, std::placeholders::_1));
