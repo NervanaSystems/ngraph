@@ -160,6 +160,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_collapse_dims.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_concat_inputs.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_horizontal_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
@@ -387,6 +388,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUHorizontalFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
     NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
     pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi, false);
@@ -1138,7 +1140,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
     ngraph::pass::Manager pass_manager;
     register_common_passes(pass_manager);
-
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
     pass_manager.run_passes(m_function, false);
