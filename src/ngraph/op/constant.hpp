@@ -110,6 +110,10 @@ namespace ngraph
             {
                 infer_element_type();
                 set_output_type(0, m_element_type, m_shape);
+                if (m_element_type == element::i64)
+                {
+                    set_output_static_value(0, get_vector<size_t>());
+                }
             }
 
             /// \brief Wrapper around constructing a shared_ptr of a Constant
