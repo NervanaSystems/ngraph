@@ -45,7 +45,6 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
-#include "ngraph/runtime/gpu/op/lstm.hpp"
 #include "ngraph/runtime/gpu/op/rnn.hpp"
 
 using namespace ngraph;
@@ -90,6 +89,35 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_sigmoid()
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(divide_1_over_exp, callback);
     this->add_matcher(m);
+}
+
+static std::shared_ptr<Node> compute_lstm_params(const std::shared_ptr<Node>& w_x,
+                                                 const std::shared_ptr<Node>& w_h,
+                                                 const std::shared_ptr<Node>& b_x,
+                                                 const std::shared_ptr<Node>& b_h)
+{
+    // check if concat of params exists already
+    // if so, use it
+    for (auto& node : w_x->get_users())
+    {
+        for (auto& possible_concat : node->get_users())
+        {
+            if (auto concat = std::dynamic_pointer_cast<op::Concat>(possible_concat))
+            {
+                std::cout << concat->get_name() << std::endl;
+                return concat;
+            }
+        }
+    }
+
+    NodeVector flat_params;
+    for (auto& param : NodeVector{w_x, w_h, b_x, b_h})
+    {
+        auto shape = param->get_shape();
+        flat_params.push_back(std::make_shared<op::Reshape>(
+                                  param, get_default_order(shape), Shape{shape_size(shape)}));
+    }
+    return std::make_shared<op::Concat>(flat_params, 0);
 }
 
 void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
@@ -179,14 +207,12 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
 
         // Determine which is ht_1 and xt. but if both xt and ht_1 have the same shape we need to capture this
         // reliably in the RNN fusion.
-        std::shared_ptr<op::gpu::Lstm> lstm = nullptr;
+        std::shared_ptr<op::gpu::Rnn> lstm = nullptr;
         bool intermediate_lstm = false;
-
         if (std::dynamic_pointer_cast<op::GetOutputElement>(pattern_map[ct_1]))
         {
             intermediate_lstm = true;
         }
-
         // if the matched LSTM is the first cell we need to check if symbol input_xt corresponds
         // to the input data tensor, or the hidden (recurrent) data tensor
         if (!intermediate_lstm &&
@@ -194,26 +220,36 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
              std::dynamic_pointer_cast<op::Constant>(pattern_map[hidden_ht]->get_argument(0))))
         // label input_xt is the input data to the first LSTM
         {
-            lstm = std::make_shared<op::gpu::Lstm>(pattern_map[input_xt],
-                                                   pattern_map[weights_i2h],
-                                                   pattern_map[hidden_ht],
-                                                   pattern_map[weights_h2h],
-                                                   pattern_map[bias_i2h],
-                                                   pattern_map[bias_h2h],
-                                                   pattern_map[ct_1]);
+            auto params = compute_lstm_params(pattern_map[weights_i2h],
+                                              pattern_map[weights_h2h],
+                                              pattern_map[bias_i2h],
+                                              pattern_map[bias_h2h]);
+            lstm = std::make_shared<op::gpu::Rnn>(pattern_map[input_xt],
+                                                  pattern_map[hidden_ht],
+                                                  params,
+                                                  pattern_map[ct_1],
+                                                  1, 4, 1,
+                                                  pattern_map[input_xt]->get_shape()[1],
+                                                  pattern_map[hidden_ht]->get_shape()[1],
+                                                  1, 1);
         }
         else if (!intermediate_lstm &&
                  (std::dynamic_pointer_cast<op::Broadcast>(pattern_map[input_xt]) &&
                   std::dynamic_pointer_cast<op::Constant>(pattern_map[input_xt]->get_argument(0))))
         // label hidden_ht is the input data to the first LSTM
         {
-            lstm = std::make_shared<op::gpu::Lstm>(pattern_map[hidden_ht],
-                                                   pattern_map[weights_h2h],
-                                                   pattern_map[input_xt],
-                                                   pattern_map[weights_i2h],
-                                                   pattern_map[bias_h2h],
-                                                   pattern_map[bias_i2h],
-                                                   pattern_map[ct_1]);
+            auto params = compute_lstm_params(pattern_map[weights_h2h],
+                                              pattern_map[weights_i2h],
+                                              pattern_map[bias_h2h],
+                                              pattern_map[bias_i2h]);
+            lstm = std::make_shared<op::gpu::Rnn>(pattern_map[hidden_ht],
+                                                  pattern_map[input_xt],
+                                                  params,
+                                                  pattern_map[ct_1],
+                                                  1, 4, 1,
+                                                  pattern_map[hidden_ht]->get_shape()[1],
+                                                  pattern_map[input_xt]->get_shape()[1],
+                                                  1, 1);
         }
         else if (pattern_map[hidden_ht]->get_arguments().size() &&
                  pattern_map[ct_1]->get_arguments().at(0)->get_instance_id() ==
@@ -224,30 +260,40 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
             // label input_xt is the output data from the previous LSTM cell
             NGRAPH_DEBUG << "ct_shape : " << join(pattern_map[ct_1]->get_shape())
                          << " hidden state shape: " << join(pattern_map[hidden_ht]->get_shape());
-            lstm = std::make_shared<op::gpu::Lstm>(pattern_map[input_xt],
-                                                   pattern_map[weights_i2h],
-                                                   pattern_map[hidden_ht],
-                                                   pattern_map[weights_h2h],
-                                                   pattern_map[bias_i2h],
-                                                   pattern_map[bias_h2h],
-                                                   pattern_map[ct_1]);
+            auto params = compute_lstm_params(pattern_map[weights_i2h],
+                                              pattern_map[weights_h2h],
+                                              pattern_map[bias_i2h],
+                                              pattern_map[bias_h2h]);
+            lstm = std::make_shared<op::gpu::Rnn>(pattern_map[input_xt],
+                                                  pattern_map[hidden_ht],
+                                                  params,
+                                                  pattern_map[ct_1],
+                                                  1, 4, 1,
+                                                  pattern_map[input_xt]->get_shape()[1],
+                                                  pattern_map[hidden_ht]->get_shape()[1],
+                                                  1, 1);
         }
         else
         {
             // label hidden_ht is the output data from the previous LSTM cell
             NGRAPH_DEBUG << "ct_shape: " << join(pattern_map[ct_1]->get_shape())
                          << " hidden state shape: " << join(pattern_map[input_xt]->get_shape());
-            lstm = std::make_shared<op::gpu::Lstm>(pattern_map[hidden_ht],
-                                                   pattern_map[weights_h2h],
-                                                   pattern_map[input_xt],
-                                                   pattern_map[weights_i2h],
-                                                   pattern_map[bias_h2h],
-                                                   pattern_map[bias_i2h],
-                                                   pattern_map[ct_1]);
+            auto params = compute_lstm_params(pattern_map[weights_h2h],
+                                              pattern_map[weights_i2h],
+                                              pattern_map[bias_h2h],
+                                              pattern_map[bias_i2h]);
+            lstm = std::make_shared<op::gpu::Rnn>(pattern_map[hidden_ht],
+                                                  pattern_map[input_xt],
+                                                  params,
+                                                  pattern_map[ct_1],
+                                                  1, 4, 1,
+                                                  pattern_map[hidden_ht]->get_shape()[1],
+                                                  pattern_map[input_xt]->get_shape()[1],
+                                                  1, 1);
         }
 
         auto ht_output = std::make_shared<op::GetOutputElement>(lstm, 0);
-        auto ct_output = std::make_shared<op::GetOutputElement>(lstm, 1);
+        auto ct_output = std::make_shared<op::GetOutputElement>(lstm, 2);
 
         NGRAPH_ASSERT(lstm->get_outputs().at(0).get_inputs().size() == 2)
             << "Lstm node doesnt have two outputs";
@@ -309,26 +355,29 @@ static std::shared_ptr<ngraph::Node>
 
 void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 {
-    auto ht_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
-    auto weights_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
     auto xt = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
-    auto weights_i2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
-    auto bias_i2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
-    auto bias_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
+    auto ht_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
+    auto params_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400*100 + 400*100 + 400 + 400});
     auto rpattern_ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
 
-    auto lstm = std::make_shared<op::gpu::Lstm>(
-        xt, weights_i2h, ht_1, weights_h2h, bias_i2h, bias_h2h, rpattern_ct_1);
+    auto lstm = std::make_shared<op::gpu::Rnn>(xt, ht_1, params_label, rpattern_ct_1,
+                                               1, 4, 1,
+                                               xt->get_shape()[1],
+                                               ht_1->get_shape()[1],
+                                               1, 1);
     auto goe = std::make_shared<op::GetOutputElement>(lstm, 0); // hidden output
     auto lstm_node_label = std::make_shared<pattern::op::Label>(goe, nullptr, NodeVector{goe});
 
     pattern::recurrent_graph_rewrite_callback callback =
-        [lstm_node_label, xt, weights_h2h, ht_1, weights_i2h, bias_i2h, bias_h2h, rpattern_ct_1](
+        [lstm_node_label, xt, ht_1, params_label, rpattern_ct_1](
             pattern::RecurrentMatcher& m) {
 
             NGRAPH_DEBUG << " In RNN fusion callback";
 
             auto ht_1_label = m.get_bound_nodes_for_pattern(ht_1);
+            auto params_bound = m.get_bound_nodes_for_pattern(params_label);
+            std::cout << ht_1_label.size() << std::endl;
+            std::cout << params_bound.size() << std::endl;
 
             // determine the ht and xt
             std::shared_ptr<ngraph::Node> src_layer = nullptr;
@@ -373,29 +422,18 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                 return false;
             }
 
-            std::vector<std::shared_ptr<pattern::op::Label>> weights_layer_labels{weights_i2h};
-            auto weights_layer = compute_rnn_args(weights_layer_labels, m);
-            std::vector<std::shared_ptr<pattern::op::Label>> weights_iter_labels{weights_h2h};
-            auto weights_iter = compute_rnn_args(weights_iter_labels, m);
-
-            std::vector<std::shared_ptr<pattern::op::Label>> bias_layer_labels{bias_i2h};
-            auto bias_layer = compute_rnn_args(bias_layer_labels, m);
-            std::vector<std::shared_ptr<pattern::op::Label>> bias_iter_labels{bias_h2h};
-            auto bias_iter = compute_rnn_args(bias_iter_labels, m);
-
-            NodeVector flat_params;
-            for (auto& param : NodeVector{weights_layer, weights_iter, bias_layer, bias_iter})
-            {
-                auto shape = param->get_shape();
-                flat_params.push_back(std::make_shared<op::Reshape>(
-                    param, get_default_order(shape), Shape{shape_size(shape)}));
-            }
-            auto params = std::make_shared<op::Concat>(flat_params, 0);
+            std::vector<std::shared_ptr<pattern::op::Label>> params_labels{params_label};
+            auto params = compute_rnn_args(params_labels, m);
 
             std::vector<std::shared_ptr<pattern::op::Label>> state_iter_labels{rpattern_ct_1};
             auto state_iter = compute_rnn_args(state_iter_labels, m);
 
             auto num_of_lstm_matched = m.get_number_of_recurrent_matches();
+            if (num_of_lstm_matched <= 1)
+            {
+                return false;
+            }
+
             size_t num_gates_in_lstm = 4;
             // TODO: assert for batch_size, sequence length and num_of_lstm's fused
             size_t batch_size = src_layer->get_shape()[0] / num_of_lstm_matched;
@@ -408,47 +446,55 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
             NGRAPH_DEBUG << "src_layer: " << join(src_layer->get_shape());
             NGRAPH_DEBUG << "src_iter: " << join(src_iter->get_shape());
-            NGRAPH_DEBUG << "weights_layer: " << join(weights_layer->get_shape());
-            NGRAPH_DEBUG << "weights_iter: " << join(weights_iter->get_shape());
-            NGRAPH_DEBUG << "bias_layer: " << join(bias_layer->get_shape());
-            NGRAPH_DEBUG << "bias_iter: " << join(bias_iter->get_shape());
+            // NGRAPH_DEBUG << "weights_layer: " << join(weights_layer->get_shape());
+            // NGRAPH_DEBUG << "weights_iter: " << join(weights_iter->get_shape());
+            // NGRAPH_DEBUG << "bias_layer: " << join(bias_layer->get_shape());
+            // NGRAPH_DEBUG << "bias_iter: " << join(bias_iter->get_shape());
             NGRAPH_DEBUG << "src_seq_len: " << sequence_len;
             NGRAPH_DEBUG << "batch_size: " << batch_size;
             NGRAPH_DEBUG << "feature_size: " << feature_size;
+
+            std::cout << src_layer->get_name() << std::endl;
+            for (auto& arg: src_layer->get_arguments())
+            {
+                std::cout << "  " <<arg->get_name() << std::endl;
+            }
+            std::cout << src_layer->get_arguments().size() << " " <<  sequence_len << std::endl;
 
             NGRAPH_ASSERT(src_layer->get_arguments().size() == sequence_len ||
                           std::dynamic_pointer_cast<op::Parameter>(src_layer))
                 << "number of lstm inputs captured in the RNN fusion is not equal to "
                    "src_sequence_length";
+
             NGRAPH_ASSERT(!std::dynamic_pointer_cast<op::Parameter>(src_layer) || sequence_len == 1)
                 << "number of lstm inputs captured in the RNN fusion is not equal to "
                    "src_sequence_length";
 
             auto src_layer_rank = src_layer->get_shape().size();
             auto src_iter_rank = src_iter->get_shape().size();
-            auto weights_layer_rank = weights_layer->get_shape().size();
-            auto weights_iter_rank = weights_iter->get_shape().size();
-            auto bias_rank = bias_layer->get_shape().size();
-            NGRAPH_ASSERT(src_layer_rank == 2 && src_iter_rank == 2 && weights_layer_rank == 2 &&
-                          weights_iter_rank == 2)
-                << "Pattern matcher error src_layer, weights_layer, src_iter, weights_iter should "
-                   "have rank 2 for RNN op";
-            NGRAPH_ASSERT(bias_rank == 1) << "Bias should have rank of 1 for Rnn op";
+            // auto weights_layer_rank = weights_layer->get_shape().size();
+            // auto weights_iter_rank = weights_iter->get_shape().size();
+            // auto bias_rank = bias_layer->get_shape().size();
+            // NGRAPH_ASSERT(src_layer_rank == 2 && src_iter_rank == 2 && weights_layer_rank == 2 &&
+            //               weights_iter_rank == 2)
+            //     << "Pattern matcher error src_layer, weights_layer, src_iter, weights_iter should "
+            //        "have rank 2 for RNN op";
+            // NGRAPH_ASSERT(bias_rank == 1) << "Bias should have rank of 1 for Rnn op";
             NGRAPH_ASSERT(src_layer->get_element_type() == element::f32 &&
                           src_iter->get_element_type() == element::f32)
                 << "input tensor type and input recurrent state tensor type for RNN op should "
                    "be float32";
 
 
-            NGRAPH_ASSERT(src_layer->get_shape().size() == weights_layer->get_shape().size())
-                << "src_layer and i2h weights size dont match";
-            NGRAPH_ASSERT(src_iter->get_shape().size() == weights_iter->get_shape().size())
-                << "src_iter and h2h weights size dont match";
-            NGRAPH_ASSERT(bias_layer->get_shape() == bias_iter->get_shape())
-                << "bias tensor shapes do not match";
-            NGRAPH_ASSERT(bias_layer->get_shape()[0] == weights_layer->get_shape()[0] &&
-                          bias_iter->get_shape()[0] == weights_iter->get_shape()[0])
-                << "bias and weights_shape are not compatible";
+            // NGRAPH_ASSERT(src_layer->get_shape().size() == weights_layer->get_shape().size())
+            //     << "src_layer and i2h weights size dont match";
+            // NGRAPH_ASSERT(src_iter->get_shape().size() == weights_iter->get_shape().size())
+            //     << "src_iter and h2h weights size dont match";
+            // NGRAPH_ASSERT(bias_layer->get_shape() == bias_iter->get_shape())
+            //     << "bias tensor shapes do not match";
+            // NGRAPH_ASSERT(bias_layer->get_shape()[0] == weights_layer->get_shape()[0] &&
+            //               bias_iter->get_shape()[0] == weights_iter->get_shape()[0])
+            //     << "bias and weights_shape are not compatible";
 
             auto rnn = std::make_shared<op::gpu::Rnn>(src_layer,
                                                       src_iter,
@@ -614,10 +660,6 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         std::make_shared<pattern::op::Skip>(src_layer_label, pattern::has_class<op::Slice>());
 
     auto src_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{20, 100});
-    // auto weights_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
-    // auto weights_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
-    // auto bias_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
-    // auto bias_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
     auto params_label = std::make_shared<pattern::op::Label>(
         element::f32, Shape{400 * 100 + 400 * 100 + 400 + 400});
     auto state_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{20, 100});

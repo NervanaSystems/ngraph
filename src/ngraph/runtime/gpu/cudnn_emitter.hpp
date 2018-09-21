@@ -35,7 +35,6 @@
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
-#include "ngraph/runtime/gpu/op/lstm.hpp"
 #include "ngraph/runtime/gpu/op/rnn.hpp"
 
 namespace ngraph

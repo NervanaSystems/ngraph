@@ -1553,12 +1553,6 @@ void runtime::gpu::GPU_Emitter::emit_Sum(EMIT_ARGS)
 }
 
 #if CUDNN_VERSION >= 7200
-void runtime::gpu::GPU_Emitter::emit_Lstm(EMIT_ARGS)
-{
-    // LSTMs are fused to RNNs and so don't require explicit emission
-    throw unsupported_op("Unsupported op '" + node->description() + "'");
-}
-
 void runtime::gpu::GPU_Emitter::emit_Rnn(EMIT_ARGS)
 {
     auto rnn = static_cast<const ngraph::op::gpu::Rnn*>(node);

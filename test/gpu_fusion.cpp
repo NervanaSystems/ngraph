@@ -45,7 +45,6 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
-#include "ngraph/runtime/gpu/op/lstm.hpp"
 #include "ngraph/runtime/gpu/op/rnn.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_rnn_fusion.hpp"
 #include "ngraph/serializer.hpp"
@@ -165,7 +164,7 @@ TEST(gpu_fusion, fuse_lstm_cells)
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
-    auto lstm_ops = get_ops_of_type<op::gpu::Lstm>(func);
+    auto lstm_ops = get_ops_of_type<op::gpu::Rnn>(func);
     EXPECT_EQ(lstm_ops.size(), 6);
 }
 

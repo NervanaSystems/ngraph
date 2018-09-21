@@ -18,7 +18,6 @@
 
 #include "ngraph/op/op_tbl.hpp"
 #if CUDNN_VERSION >= 7200
-NGRAPH_GPU_OP(Lstm)
 NGRAPH_GPU_OP(Rnn)
 #endif
 

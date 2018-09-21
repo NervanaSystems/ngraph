@@ -1138,26 +1138,11 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
 
     size_t workspace_idx = allocator.reserve_workspace(workspace_size);
 
-    // wx_size *= args[2].get_element_type().size();
-    // wh_size *= args[3].get_element_type().size();
-    // bx_size *= args[4].get_element_type().size();
-    // bh_size *= args[5].get_element_type().size();
     auto recurrent_index = num_tensors_per_layer / 2;
 
     std::unique_ptr<gpu::primitive> kernel_launch(
         new gpu::primitive{[=](void** inputs, void** outputs) {
-            // void* w_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, w_idx);
             void* workspace_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
-
-            // // pack the weight and bias parameter data
-            // cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + weight_offsets[0].first, inputs[2], wx_size);
-            // cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + weight_offsets[recurrent_index].first,
-            //                inputs[3],
-            //                wh_size);
-            // cuda_memcpyDtD(static_cast<uint8_t*>(w_ptr) + bias_offsets[0].first, inputs[4], bx_size);
-            // cuda_memcpyDtD(
-            //     static_cast<uint8_t*>(w_ptr) + bias_offsets[recurrent_index].first, inputs[5], bh_size);
-
             CUDNN_SAFE_CALL(cudnnRNNForwardInferenceEx(*m_ctx->cudnn_handle,
                                                        rnn_desc,
                                                        x_desc,

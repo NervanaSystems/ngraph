@@ -112,7 +112,6 @@
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
-#include "ngraph/runtime/gpu/op/lstm.hpp"
 #include "ngraph/runtime/gpu/op/rnn.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_layout.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_rnn_fusion.hpp"
