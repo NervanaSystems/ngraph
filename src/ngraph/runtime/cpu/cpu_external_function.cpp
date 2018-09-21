@@ -134,6 +134,7 @@
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
+#include "ngraph/runtime/cpu/cpu_visualize_tree.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
@@ -150,6 +151,7 @@
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
+#include "ngraph/runtime/cpu/op/quantized_conv.hpp"
 #include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
@@ -305,6 +307,8 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::GroupConvolution), &runtime::cpu::CPU_Emitter::emit<op::GroupConvolution>},
     {TI(ngraph::op::ConvolutionBias), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBias>},
     {TI(ngraph::op::ConvolutionRelu), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionRelu>},
+    {TI(ngraph::op::QuantizedConvolution),
+     &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolution>},
     {TI(ngraph::op::ConvolutionBiasAdd), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBiasAdd>},
     // conv+bias backprop for data share the same implementation as ConvolutionBackpropData
     {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
@@ -368,20 +372,8 @@ static void
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_ExternalFunction::compile()
+void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Manager& pass_manager)
 {
-    if (m_is_compiled)
-    {
-        return;
-    }
-
-    m_mkldnn_emitter.reset(new MKLDNNEmitter());
-
-    ngraph::pass::Manager pass_manager;
-
-    // nv_cwi is required only by some frontends
-    // in which case they should run this pass(CPUWorkspaceInsertion) explicitly
-    NodeVector nv_cwi;
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
@@ -396,11 +388,26 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
+    NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
+    pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi, false);
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
+    pass_manager.get_state().set_visualize_tree_ops_map(runtime::cpu::get_visualize_tree_ops_map());
+}
+
+void runtime::cpu::CPU_ExternalFunction::compile()
+{
+    if (m_is_compiled)
+    {
+        return;
+    }
+
+    m_mkldnn_emitter.reset(new MKLDNNEmitter());
+
+    ngraph::pass::Manager pass_manager;
+    register_common_passes(pass_manager);
     unordered_map<Node*, Node*> node_function_map;
     string common_function_string;
     auto femitter = bind(&ngraph::runtime::cpu::CPU_ExternalFunction::emit_op_as_function,
@@ -1130,27 +1137,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
     static StaticInitializers s_static_initializers(s_debug_dir);
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
     ngraph::pass::Manager pass_manager;
+    register_common_passes(pass_manager);
 
-    // nv_cwi is required only by some frontends
-    // in which case they should run this pass(CPUWorkspaceInsertion) explicitly
-    NodeVector nv_cwi;
-    pass_manager.register_pass<ngraph::pass::NopElimination>();
-    // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
-    // failing mxnet unit tests.
-    // pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
-    // pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
-    // pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<ngraph::pass::CoreFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
-    pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
-    pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
-    pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
-    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
     pass_manager.run_passes(m_function, false);
@@ -1294,7 +1282,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
 
         m_op_attrs.emplace_back(node->description(), out_names, in_names);
 
-        size_t functor_count = functors.size();
         handler->second(this, node.get(), in, out);
 
         bool disable_caching = computes_result(node.get()) || possibly_overwritten(node.get());
@@ -1347,7 +1334,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
             };
         }
 
-        enables.emplace_back(make_pair(enable, functors.size() - functor_count));
+        enables.emplace_back(enable);
         enable_nodename_list.emplace_back(make_pair(enable, node->get_name()));
     }
 
@@ -1410,6 +1397,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
             strm.str("");
         }
     }
+    //This check ensures we have exactly one functor for Op.
+    assert(m_op_attrs.size() == functors.size());
 
     executor = [&](CPURuntimeContext* ctx, vector<void*>& inputs, vector<void*>& outputs) {
         cpu::Timestamp start_ts;
@@ -1451,45 +1440,33 @@ void runtime::cpu::CPU_ExternalFunction::build()
                 auto it = enable_nodename_list.begin();
                 for (const auto& p : enables)
                 {
-                    std::vector<std::function<void(CPURuntimeContext*)>> ftrs;
-                    for (size_t j = 0; j < p.second; j++)
-                    {
-                        ftrs.push_back(*functor);
-                        std::advance(functor, 1);
-                    }
-
                     tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>*
                         flowgraph_node = new tbb::flow::continue_node<tbb::flow::continue_msg,
                                                                       tbb::flow::lightweight>(
-                            *(ctx->G), [&, ftrs](const tbb::flow::continue_msg& msg) {
-                                if (p.first(ctx) || ctx->first_iteration)
+                            *(ctx->G), [&](const tbb::flow::continue_msg& msg) {
+                                if (p(ctx) || ctx->first_iteration)
                                 {
-                                    for (size_t j = 0; j < p.second; j++)
+                                    if (runtime::cpu::IsTracingEnabled())
                                     {
-                                        if (runtime::cpu::IsTracingEnabled())
-                                        {
-                                            start_ts = cpu::Clock::now();
-                                        }
-                                        ftrs[j](ctx);
-                                        if (runtime::cpu::IsTracingEnabled())
-                                        {
-                                            ctx->op_durations[profiler_count++] =
-                                                (std::chrono::duration_cast<cpu::Timescale>(
-                                                     cpu::Clock::now() - start_ts))
-                                                    .count();
-                                        }
+                                        start_ts = cpu::Clock::now();
+                                    }
+                                    (*functor)(ctx);
+                                    if (runtime::cpu::IsTracingEnabled())
+                                    {
+                                        ctx->op_durations[profiler_count++] =
+                                            (std::chrono::duration_cast<cpu::Timescale>(
+                                                 cpu::Clock::now() - start_ts))
+                                                .count();
                                     }
                                 }
                                 else
                                 {
                                     if (runtime::cpu::IsTracingEnabled())
                                     {
-                                        for (size_t j = 0; j < p.second; j++)
-                                        {
-                                            ctx->op_durations[profiler_count++] = 0;
-                                        }
+                                        ctx->op_durations[profiler_count++] = 0;
                                     }
                                 }
+                                std::advance(functor, 1);
                             });
                     nodename_tbbnode_map.insert({it->second, flowgraph_node});
                     it++;
@@ -1540,37 +1517,31 @@ void runtime::cpu::CPU_ExternalFunction::build()
         {
             for (const auto& p : enables)
             {
-                if (p.first(ctx) || ctx->first_iteration)
+                if (p(ctx) || ctx->first_iteration)
                 {
-                    for (size_t j = 0; j < p.second; j++)
+                    // Each Op will have exactly one functor, start the clock before the exceution of functor
+                    // and collect the profiler_count once the execution complets
+                    if (runtime::cpu::IsTracingEnabled())
                     {
-                        if (runtime::cpu::IsTracingEnabled())
-                        {
-                            start_ts = cpu::Clock::now();
-                        }
-                        (*functor)(ctx);
-                        if (runtime::cpu::IsTracingEnabled())
-                        {
-                            ctx->op_durations[profiler_count++] =
-                                (std::chrono::duration_cast<cpu::Timescale>(cpu::Clock::now() -
-                                                                            start_ts))
-                                    .count();
-                        }
-
-                        std::advance(functor, 1);
+                        start_ts = cpu::Clock::now();
+                    }
+                    (*functor)(ctx);
+                    if (runtime::cpu::IsTracingEnabled())
+                    {
+                        ctx->op_durations[profiler_count++] =
+                            (std::chrono::duration_cast<cpu::Timescale>(cpu::Clock::now() -
+                                                                        start_ts))
+                                .count();
                     }
                 }
                 else
                 {
                     if (runtime::cpu::IsTracingEnabled())
                     {
-                        for (size_t j = 0; j < p.second; j++)
-                        {
-                            ctx->op_durations[profiler_count++] = 0;
-                        }
+                        ctx->op_durations[profiler_count++] = 0;
                     }
-                    std::advance(functor, p.second);
                 }
+                std::advance(functor, 1);
             }
         }
         ctx->first_iteration = false;

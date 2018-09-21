@@ -12,12 +12,21 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
-#include "ngraph/node_vector.hpp"
-#include "ngraph/pass/pass.hpp"
-#include "ngraph/pattern/matcher.hpp"
+#include <functional>
+#include <memory>
+#include <set>
+#include <sstream>
+#include <string>
+#include <typeindex>
+#include <typeinfo>
+#include <unordered_map>
+
+#include "ngraph/node.hpp"
+#include "ngraph/pass/manager_state.hpp"
 
 namespace ngraph
 {
@@ -25,28 +34,7 @@ namespace ngraph
     {
         namespace cpu
         {
-            namespace pass
-            {
-                class CPUWorkspaceInsertion;
-            }
+            const visualize_tree_ops_map_t& get_visualize_tree_ops_map();
         }
     }
 }
-
-class ngraph::runtime::cpu::pass::CPUWorkspaceInsertion : public ngraph::pass::FunctionPass
-{
-public:
-    CPUWorkspaceInsertion(ngraph::NodeVector& indices_list, bool return_indices = true)
-        : FunctionPass()
-        , m_indices_list(indices_list)
-        , m_return_indices(return_indices)
-    {
-    }
-
-    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
-
-private:
-    ngraph::NodeVector& m_indices_list;
-    bool m_return_indices;
-    bool transform(ngraph::pattern::Matcher& m);
-};
