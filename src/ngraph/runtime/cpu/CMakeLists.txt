@@ -26,6 +26,7 @@ set(SRC
     cpu_tensor_view_wrapper.cpp
     cpu_tensor_view.cpp
     cpu_tracing.cpp
+    cpu_visualize_tree.cpp
     quantization_util.cpp
     builder/add.cpp
     builder/allreduce.cpp

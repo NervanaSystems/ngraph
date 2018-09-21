@@ -134,6 +134,7 @@
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
+#include "ngraph/runtime/cpu/cpu_visualize_tree.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
@@ -393,6 +394,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
+    pass_manager.get_state().set_visualize_tree_ops_map(runtime::cpu::get_visualize_tree_ops_map());
 }
 
 void runtime::cpu::CPU_ExternalFunction::compile()
@@ -1282,7 +1284,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
 
         m_op_attrs.emplace_back(node->description(), out_names, in_names);
 
-        size_t functor_count = functors.size();
         handler->second(this, node.get(), in, out);
 
         bool disable_caching = computes_result(node.get()) || possibly_overwritten(node.get());
@@ -1335,9 +1336,12 @@ void runtime::cpu::CPU_ExternalFunction::build()
             };
         }
 
-        enables.emplace_back(make_pair(enable, functors.size() - functor_count));
+        enables.emplace_back(enable);
         enable_nodename_list.emplace_back(make_pair(enable, node->get_name()));
     }
+
+    //This check ensures we have exactly one functor for Op.
+    assert(m_op_attrs.size() == functors.size());
 
     executor = [&](CPURuntimeContext* ctx, vector<void*>& inputs, vector<void*>& outputs) {
         cpu::Timestamp start_ts;
@@ -1379,45 +1383,33 @@ void runtime::cpu::CPU_ExternalFunction::build()
                 auto it = enable_nodename_list.begin();
                 for (const auto& p : enables)
                 {
-                    std::vector<std::function<void(CPURuntimeContext*)>> ftrs;
-                    for (size_t j = 0; j < p.second; j++)
-                    {
-                        ftrs.push_back(*functor);
-                        std::advance(functor, 1);
-                    }
-
                     tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>*
                         flowgraph_node = new tbb::flow::continue_node<tbb::flow::continue_msg,
                                                                       tbb::flow::lightweight>(
-                            *(ctx->G), [&, ftrs](const tbb::flow::continue_msg& msg) {
-                                if (p.first(ctx) || ctx->first_iteration)
+                            *(ctx->G), [&](const tbb::flow::continue_msg& msg) {
+                                if (p(ctx) || ctx->first_iteration)
                                 {
-                                    for (size_t j = 0; j < p.second; j++)
+                                    if (runtime::cpu::IsTracingEnabled())
                                     {
-                                        if (runtime::cpu::IsTracingEnabled())
-                                        {
-                                            start_ts = cpu::Clock::now();
-                                        }
-                                        ftrs[j](ctx);
-                                        if (runtime::cpu::IsTracingEnabled())
-                                        {
-                                            ctx->op_durations[profiler_count++] =
-                                                (std::chrono::duration_cast<cpu::Timescale>(
-                                                     cpu::Clock::now() - start_ts))
-                                                    .count();
-                                        }
+                                        start_ts = cpu::Clock::now();
+                                    }
+                                    (*functor)(ctx);
+                                    if (runtime::cpu::IsTracingEnabled())
+                                    {
+                                        ctx->op_durations[profiler_count++] =
+                                            (std::chrono::duration_cast<cpu::Timescale>(
+                                                 cpu::Clock::now() - start_ts))
+                                                .count();
                                     }
                                 }
                                 else
                                 {
                                     if (runtime::cpu::IsTracingEnabled())
                                     {
-                                        for (size_t j = 0; j < p.second; j++)
-                                        {
-                                            ctx->op_durations[profiler_count++] = 0;
-                                        }
+                                        ctx->op_durations[profiler_count++] = 0;
                                     }
                                 }
+                                std::advance(functor, 1);
                             });
                     nodename_tbbnode_map.insert({it->second, flowgraph_node});
                     it++;
@@ -1468,37 +1460,31 @@ void runtime::cpu::CPU_ExternalFunction::build()
         {
             for (const auto& p : enables)
             {
-                if (p.first(ctx) || ctx->first_iteration)
+                if (p(ctx) || ctx->first_iteration)
                 {
-                    for (size_t j = 0; j < p.second; j++)
+                    // Each Op will have exactly one functor, start the clock before the exceution of functor
+                    // and collect the profiler_count once the execution complets
+                    if (runtime::cpu::IsTracingEnabled())
                     {
-                        if (runtime::cpu::IsTracingEnabled())
-                        {
-                            start_ts = cpu::Clock::now();
-                        }
-                        (*functor)(ctx);
-                        if (runtime::cpu::IsTracingEnabled())
-                        {
-                            ctx->op_durations[profiler_count++] =
-                                (std::chrono::duration_cast<cpu::Timescale>(cpu::Clock::now() -
-                                                                            start_ts))
-                                    .count();
-                        }
-
-                        std::advance(functor, 1);
+                        start_ts = cpu::Clock::now();
+                    }
+                    (*functor)(ctx);
+                    if (runtime::cpu::IsTracingEnabled())
+                    {
+                        ctx->op_durations[profiler_count++] =
+                            (std::chrono::duration_cast<cpu::Timescale>(cpu::Clock::now() -
+                                                                        start_ts))
+                                .count();
                     }
                 }
                 else
                 {
                     if (runtime::cpu::IsTracingEnabled())
                     {
-                        for (size_t j = 0; j < p.second; j++)
-                        {
-                            ctx->op_durations[profiler_count++] = 0;
-                        }
+                        ctx->op_durations[profiler_count++] = 0;
                     }
-                    std::advance(functor, p.second);
                 }
+                std::advance(functor, 1);
             }
         }
         ctx->first_iteration = false;

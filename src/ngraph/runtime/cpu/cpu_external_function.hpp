@@ -213,7 +213,7 @@ namespace ngraph
                 std::string m_function_name;
 
                 std::list<std::function<void(CPURuntimeContext*)>> functors;
-                std::list<std::pair<std::function<bool(CPURuntimeContext*)>, size_t>> enables;
+                std::list<std::function<bool(CPURuntimeContext*)>> enables;
                 std::list<std::pair<std::function<bool(CPURuntimeContext*)>, std::string>>
                     enable_nodename_list;
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>
