@@ -72,7 +72,7 @@ using namespace ngraph;
 // Abs,
 // Acos,
 // ...
-#define NGRAPH_OP(a) a,
+#define NGRAPH_OP(a, b) a,
 enum class OP_TYPEID
 {
 #include "ngraph/op/op_tbl.hpp"
@@ -85,7 +85,7 @@ static OP_TYPEID get_typeid(const string& s)
 // {"Abs", OP_TYPEID::Abs},
 // {"Acos", OP_TYPEID::Acos},
 // ...
-#define NGRAPH_OP(a) {#a, OP_TYPEID::a},
+#define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
     static const unordered_map<string, OP_TYPEID> typeid_map{
 #include "ngraph/op/op_tbl.hpp"
     };
