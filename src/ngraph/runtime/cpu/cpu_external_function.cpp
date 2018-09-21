@@ -368,30 +368,6 @@ static void
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Manager& pass_manager)
-{
-    pass_manager.register_pass<ngraph::pass::LikeReplacement>();
-    pass_manager.register_pass<ngraph::pass::NopElimination>();
-    // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
-    // failing mxnet unit tests.
-    // pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
-    // pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    // pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
-    // pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<ngraph::pass::CoreFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
-    NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
-    pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi, false);
-    pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
-    pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
-    pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
-    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
-}
-
 void runtime::cpu::CPU_ExternalFunction::compile()
 {
     if (m_is_compiled)
@@ -1011,7 +987,31 @@ using namespace ngraph::runtime;
     }
 }
 
-#endif
+#endif // !defined(NGRAPH_DEX_ONLY)
+
+void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Manager& pass_manager)
+{
+    pass_manager.register_pass<ngraph::pass::LikeReplacement>();
+    pass_manager.register_pass<ngraph::pass::NopElimination>();
+    // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
+    // failing mxnet unit tests.
+    // pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    // pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    // pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
+    // pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+    pass_manager.register_pass<ngraph::pass::CoreFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
+    NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
+    pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi, false);
+    pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
+    pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
+    pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
+    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
+}
 
 bool runtime::cpu::CPU_ExternalFunction::computes_result(Node* node)
 {
