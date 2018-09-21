@@ -37,7 +37,7 @@ namespace ngraph
 
                 ASSERT_VALID_ARGUMENT(node, !axes.empty()) << "'axes' attribute is mandatory.";
 
-                std::sort(std::begin(axes), std::end(axes), std::greater<int64_t>());
+                std::sort(std::begin(axes), std::end(axes), std::less<int64_t>());
 
                 AxisVector input_order{reshape::get_default_axis_vector(data_shape.size())};
 
