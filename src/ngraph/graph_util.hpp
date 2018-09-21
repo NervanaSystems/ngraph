@@ -313,4 +313,6 @@ namespace ngraph
     // Return true if a node's user could potentially overwrite
     // the output of this node with in-place kernels
     bool possibly_overwritten(Node* node);
+
+    bool is_strided(const Strides& strides);
 }

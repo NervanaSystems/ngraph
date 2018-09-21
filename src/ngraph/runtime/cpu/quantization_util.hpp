@@ -24,12 +24,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
+
 #pragma once
+
+#include <limits>
 #include <vector>
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/util.hpp"
+
 namespace ngraph
 {
     namespace runtime
@@ -38,6 +42,23 @@ namespace ngraph
         {
             namespace quantization_util
             {
+                template <class T1, class T2, class T3>
+                void quantization_range_for_multiplication(
+                    float min_a, float max_a, float min_b, float max_b, float* min_c, float* max_c)
+                {
+                    // begin code copied and pasted (and modified) from
+                    // github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/quantization_utils.h
+                    float a_one_quant_level = (max_a - min_a) / (std::numeric_limits<T1>::max() -
+                                                                 std::numeric_limits<T1>::min());
+                    float b_one_quant_level = (max_b - min_b) / (std::numeric_limits<T2>::max() -
+                                                                 std::numeric_limits<T2>::min());
+                    float c_one_quant_level = a_one_quant_level * b_one_quant_level;
+                    *min_c = c_one_quant_level * std::numeric_limits<T3>::min();
+                    *max_c = c_one_quant_level * std::numeric_limits<T3>::max();
+                    // end code copied and pasted (and modified) from
+                    // github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/quantization_utils.h
+                }
+
                 static inline void get_min_max_range(float input_min_range,
                                                      float input_max_range,
                                                      bool is_signed,
@@ -67,6 +88,8 @@ namespace ngraph
                     quant_util.push_back(max_range);
                     quant_util.push_back(scale);
                 }
+
+                float get_scale(const ngraph::Node* node);
             }
         }
     }
