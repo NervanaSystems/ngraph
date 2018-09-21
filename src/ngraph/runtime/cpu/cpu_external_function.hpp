@@ -130,6 +130,10 @@ namespace ngraph
                     return callees;
                 }
                 bool is_direct_execution() const { return m_direct_execution; }
+                void write_to_file(const std::string& code,
+                                   const std::string& directory,
+                                   const std::string& filename);
+
             protected:
                 void build();
 
