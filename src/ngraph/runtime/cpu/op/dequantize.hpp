@@ -24,10 +24,10 @@ namespace ngraph
 {
     namespace op
     {
-        class Dequantize : public Op
+        class DequantizeCPU : public Op
         {
         public:
-            Dequantize(std::shared_ptr<Node> input,
+            DequantizeCPU(std::shared_ptr<Node> input,
                        std::shared_ptr<Node> min,
                        std::shared_ptr<Node> max,
                        const element::Type& type);

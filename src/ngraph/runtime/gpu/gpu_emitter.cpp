@@ -505,6 +505,11 @@ void runtime::gpu::GPU_Emitter::emit_Divide(EMIT_ARGS)
     emit_elementwise<ngraph::op::Divide>(external_function, writer, node, args, out);
 }
 
+void runtime::gpu::GPU_Emitter::emit_Dequantize(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 void runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
 {
     if (out[0].get_size() == 0)

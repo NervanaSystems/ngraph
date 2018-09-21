@@ -52,6 +52,7 @@ set (SRC
     op/convolution.cpp
     op/cos.cpp
     op/cosh.cpp
+    op/dequantize.cpp
     op/divide.cpp
     op/dot.cpp
     op/equal.cpp

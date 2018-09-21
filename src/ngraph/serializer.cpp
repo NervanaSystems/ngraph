@@ -39,6 +39,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
@@ -619,6 +620,10 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::Cosh:
             {
                 node = make_shared<op::Cosh>(args[0]);
+                break;
+            }
+            case OP_TYPEID::Dequantize:
+            {
                 break;
             }
             case OP_TYPEID::Divide:
@@ -1250,6 +1255,10 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Cos: { break;
     }
     case OP_TYPEID::Cosh: { break;
+    }
+    case OP_TYPEID::Dequantize:
+    {
+        break;
     }
     case OP_TYPEID::Divide: { break;
     }

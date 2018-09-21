@@ -75,13 +75,19 @@ namespace ngraph
 
     // Removes some values from a vector of axis values
     template <typename AXIS_VALUES>
-    AXIS_VALUES project(const AXIS_VALUES& axis_values, const AxisSet& deleted_axes)
+    AXIS_VALUES project(const AXIS_VALUES& axis_values,
+                        const AxisSet& axes,
+                        bool deleted_axes_specified = true)
     {
         AXIS_VALUES result;
 
         for (size_t i = 0; i < axis_values.size(); i++)
         {
-            if (deleted_axes.find(i) == deleted_axes.end())
+            if (deleted_axes_specified && axes.find(i) == axes.end())
+            {
+                result.push_back(axis_values[i]);
+            }
+            else if (!deleted_axes_specified && axes.find(i) != axes.end())
             {
                 result.push_back(axis_values[i]);
             }
