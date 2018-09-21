@@ -19,7 +19,6 @@
 #include "ngraph/op/lrn.hpp"
 
 #include "core/node.hpp"
-
 #include "lrn.hpp"
 
 namespace ngraph
