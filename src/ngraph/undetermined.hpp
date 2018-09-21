@@ -31,5 +31,5 @@ namespace ngraph
 
     std::ostream& operator<<(std::ostream& str, const Undetermined&);
 
-    extern const Undetermined undet;
+    const ngraph::Undetermined undet;
 }

@@ -29,7 +29,7 @@ void op::GetShape::validate_and_infer_types()
 {
     auto& arg_shape = get_input_shape(0);
 
-    set_output_type(0, element::u64, Shape{arg_shape.size()});
+    set_output_type(0, element::i64, Shape{arg_shape.size()});
     set_output_static_value(0, arg_shape);
 }
 
