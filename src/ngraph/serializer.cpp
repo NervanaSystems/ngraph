@@ -67,6 +67,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/relu.hpp"
@@ -838,9 +839,9 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Quantize:
             {
-                //TODO:
-                //auto reduction_axes = node_js.at("axes").get<set<size_t>>();
-                //node = make_shared<op::Quantize>(args[0], args[1], args[2], reduction_axes);
+                auto type = read_element_type(node_js.at("type"));
+                auto axes = node_js.at("axes").get<set<size_t>>();
+                auto round_mode = node_js.at("round_mode").get<op::Quantize::RoundMode>();
                 break;
             }
             case OP_TYPEID::Reduce:
@@ -1377,7 +1378,13 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::Power: { break;
     }
-    case OP_TYPEID::Quantize: { break;
+    case OP_TYPEID::Quantize:
+    {
+        auto tmp = dynamic_cast<const op::Quantize*>(&n);
+        node["type"] = tmp->get_element_type();
+        node["axes"] = tmp->get_axes();
+        node["round_mode"] = tmp->get_round_mode();
+        break;
     }
     case OP_TYPEID::Reduce:
     {
