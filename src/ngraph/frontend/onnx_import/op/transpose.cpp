@@ -15,13 +15,12 @@
 //*****************************************************************************
 
 #include <memory>
+#include <vector>
 
 #include "ngraph/node.hpp"
-#include "ngraph/op/get_shape.hpp"
-#include "ngraph/shape.hpp"
-#include "ngraph/type/element_type.hpp"
 
-#include "shape.hpp"
+#include "transpose.hpp"
+#include "utils/reshape.hpp"
 
 namespace ngraph
 {
@@ -29,11 +28,14 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector shape(const Node& node)
+            NodeVector transpose(const Node& node)
             {
-                auto data = node.get_ng_inputs().at(0);
+                std::shared_ptr<ngraph::Node> data = node.get_ng_inputs().at(0);
 
-                return {std::make_shared<ngraph::op::GetShape>(data)};
+                auto permute_axes = node.get_attribute_value<std::vector<std::size_t>>("perm", {});
+
+                return {(permute_axes.empty()) ? reshape::transpose(data)
+                                               : reshape::reorder_axes(data, permute_axes)};
             }
 
         } // namespace op

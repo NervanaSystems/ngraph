@@ -20,5 +20,3 @@ std::ostream& ngraph::operator<<(std::ostream& str, const Undetermined&)
 {
     return (str << "?");
 }
-
-const ngraph::Undetermined undet;

@@ -50,7 +50,7 @@ namespace ngraph
 
     inline std::shared_ptr<Node> get_output_element(const std::shared_ptr<Node> node, size_t i = 0)
     {
-        return ((i == 0) && node->get_input_size() == 1)
+        return ((i == 0) && node->get_output_size() == 1)
                    ? node
                    : std::make_shared<op::GetOutputElement>(node, i);
     }
