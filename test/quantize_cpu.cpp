@@ -261,7 +261,7 @@ TEST(quantize_cpu, quantize_to_uint8_small)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = op::Constant::create(element::f32, Shape{}, {-85.0f});
     auto C = op::Constant::create(element::f32, Shape{}, {15.0f});
-    auto QT = make_shared<op::Quantize>(A, B, C, element::u8);
+    auto QT = make_shared<op::QuantizeCPU>(A, B, C, element::u8);
     auto output_data = std::make_shared<op::GetOutputElement>(QT, 0);
     auto output_min = std::make_shared<op::GetOutputElement>(QT, 1);
     auto output_max = std::make_shared<op::GetOutputElement>(QT, 2);
@@ -287,7 +287,7 @@ TEST(quantize_cpu, quantize_to_uint8)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = op::Constant::create(element::f32, Shape{}, {-255.0f});
     auto C = op::Constant::create(element::f32, Shape{}, {127.0f});
-    auto QT = make_shared<op::Quantize>(A, B, C, element::u8);
+    auto QT = make_shared<op::QuantizeCPU>(A, B, C, element::u8);
     auto output_data = std::make_shared<op::GetOutputElement>(QT, 0);
     auto output_min = std::make_shared<op::GetOutputElement>(QT, 1);
     auto output_max = std::make_shared<op::GetOutputElement>(QT, 2);
@@ -313,7 +313,7 @@ TEST(quantize_cpu, quantize_to_int8)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = op::Constant::create(element::f32, Shape{}, {-127.0f});
     auto C = op::Constant::create(element::f32, Shape{}, {127.0f});
-    auto QT = make_shared<op::Quantize>(A, B, C, element::i8);
+    auto QT = make_shared<op::QuantizeCPU>(A, B, C, element::i8);
     auto output_data = std::make_shared<op::GetOutputElement>(QT, 0);
     auto output_min = std::make_shared<op::GetOutputElement>(QT, 1);
     auto output_max = std::make_shared<op::GetOutputElement>(QT, 2);

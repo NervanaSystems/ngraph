@@ -46,7 +46,9 @@ void op::Quantize::validate_and_infer_types()
     set_output_size(1);
     set_output_type(0, m_type, get_input_shape(INPUT));
 
-    // TODO: quantized types?
+    // TODO: longer term we probably want quantized types
+    // 1) for type safety - so quantized types are not passed to non-quantized ops
+    // 2) to reflect quantized type min/max which can vary e.g. [-127, 127] for "scaled" int8
     NODE_VALIDATION_ASSERT(this, (m_type == element::u8 || m_type == element::i8))
         << "Output element type (" << m_type << ") must be an 8-bit integer";
 

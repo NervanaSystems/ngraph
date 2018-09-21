@@ -297,7 +297,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Ceiling), &runtime::cpu::CPU_Emitter::emit<op::Ceiling>},
     {TI(ngraph::op::Sqrt), &runtime::cpu::CPU_Emitter::emit<op::Sqrt>},
     {TI(ngraph::op::Convolution), &runtime::cpu::CPU_Emitter::emit<op::Convolution>},
-    {TI(ngraph::op::Quantize), &runtime::cpu::CPU_Emitter::emit<op::Quantize>},
+    {TI(ngraph::op::QuantizeCPU), &runtime::cpu::CPU_Emitter::emit<op::QuantizeCPU>},
     {TI(ngraph::op::Dequantize), &runtime::cpu::CPU_Emitter::emit<op::Dequantize>},
     {TI(ngraph::op::ConvolutionBackpropFilters),
      &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropFilters>},

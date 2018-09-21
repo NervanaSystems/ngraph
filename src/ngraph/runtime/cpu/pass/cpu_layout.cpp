@@ -1737,7 +1737,7 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::Quantize)
+                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizeCPU)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
@@ -1746,7 +1746,7 @@ namespace ngraph
                     }
                     else
                     {
-                        throw ngraph_error("Quantized op is only supported in MKLDNN for now.");
+                        throw ngraph_error("QuantizeCPUd op is only supported in MKLDNN for now.");
                     }
                 }
             }
@@ -1814,7 +1814,7 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionAdd>},
     {TI(ngraph::op::Dequantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Dequantize>},
     {TI(ngraph::op::Slice), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Slice>},
-    {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Quantize>},
+    {TI(ngraph::op::QuantizeCPU), &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizeCPU>},
 };
 
 bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)

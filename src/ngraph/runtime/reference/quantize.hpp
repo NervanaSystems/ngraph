@@ -52,10 +52,18 @@ namespace ngraph
                 {
                     Coordinate scale_offset_coord = project(input_coord, axes, false);
 
-                    output[input_transform.index(input_coord)] = static_cast<TO>(
+                    // apply scale and offset
+                    TI qvalue =
                         std::round(input[input_transform.index(input_coord)] /
                                    scale[scale_offset_transform.index(scale_offset_coord)]) +
-                        offset[scale_offset_transform.index(scale_offset_coord)]);
+                        offset[scale_offset_transform.index(scale_offset_coord)];
+
+                    // clamp
+                    qvalue = std::max<TI>(qvalue, static_cast<TI>(std::numeric_limits<TO>::min()));
+                    qvalue = std::min<TI>(qvalue, static_cast<TI>(std::numeric_limits<TO>::max()));
+
+                    // cast
+                    output[input_transform.index(input_coord)] = static_cast<TO>(qvalue);
                 }
             }
         }

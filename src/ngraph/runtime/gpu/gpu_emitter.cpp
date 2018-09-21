@@ -974,6 +974,11 @@ void runtime::gpu::GPU_Emitter::emit_Product(EMIT_ARGS)
     writer.block_end();
 }
 
+void runtime::gpu::GPU_Emitter::emit_Quantize(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
 {
     // reduction function supported by GPU
