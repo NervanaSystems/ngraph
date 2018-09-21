@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <algorithm>
 #include <cstdio>
@@ -50,6 +50,7 @@
 #include "ngraph/runtime/cpu/op/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
+#include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
@@ -924,7 +925,7 @@ TEST(cpu_fusion, fuse_conv_bias_add)
     ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(func_nofuse1), 0);
 
     pass_manager.run_passes(func_nofuse2);
-    ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(func_nofuse2), 0);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(func_nofuse2), 1);
 }
 
 TEST(cpu_fusion, conv_bias_add)
@@ -939,6 +940,61 @@ TEST(cpu_fusion, conv_bias_add)
 
     auto int_results = execute(int_f, args, "INTERPRETER");
     auto cpu_results = execute(cpu_f, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+}
+
+// ConvolutionAdd relies on an in-place fused MKLDNN kernel.
+// Need to ensure that it is fused only when in-place buffer allocation is feasible
+shared_ptr<Function> gen_conv_add(bool param_input, bool result_output)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{2, 1, 2, 2});
+    auto weights = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1, 1});
+    auto conv = make_shared<op::Convolution>(A, weights, Strides{1, 1}, Strides{1, 1});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{2, 1, 2, 2});
+    auto abs_B = make_shared<op::Abs>(B);
+    auto add = param_input ? make_shared<op::Add>(conv, B) : make_shared<op::Add>(conv, abs_B);
+    auto abs = make_shared<op::Abs>(add);
+
+    return result_output ? make_shared<Function>(add, op::ParameterVector{A, weights, B})
+                         : make_shared<Function>(abs, op::ParameterVector{A, weights, B});
+}
+
+TEST(cpu_fusion, fuse_conv_add)
+{
+    auto func_fuse = gen_conv_add(false, false);
+    auto func_nofuse1 = gen_conv_add(true, false);
+    auto func_nofuse2 = gen_conv_add(false, true);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.run_passes(func_fuse);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionAdd>(func_fuse), 1);
+
+    pass_manager.run_passes(func_nofuse1);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionAdd>(func_nofuse1), 0);
+
+    pass_manager.run_passes(func_nofuse2);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionAdd>(func_nofuse2), 1);
+}
+
+TEST(cpu_fusion, conv_add)
+{
+    auto int_f = gen_conv_add(false, false);
+    auto cpu_f = gen_conv_add(false, false);
+
+    vector<vector<float>> args{{1.25f, 2.25f, 5.25f, 6.25f, -1.25f, -1.25f, 3.25f, -4.25f},
+                               {-1.25f},
+                               {1.25f, 2.25f, -3.25f, 2.25f, 4.25f, 4.25f, 1.25f, 2.25f}};
+
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+
+    int_f = gen_conv_add(false, true);
+    cpu_f = gen_conv_add(false, true);
+
+    int_results = execute(int_f, args, "INTERPRETER");
+    cpu_results = execute(cpu_f, args, "CPU");
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
@@ -1062,7 +1118,7 @@ TEST(cpu_fusion, weight_fusion)
     auto reshape_conv =
         std::make_shared<ngraph::op::Reshape>(param, AxisVector{0}, Shape{16, 4, 1, 1});
     auto data_conv = std::make_shared<op::Parameter>(element::f32, Shape{16, 4, 7, 7});
-    auto tvt = reshape_conv->get_outputs().at(0).get_tensor_view().get();
+    auto tvt = reshape_conv->get_outputs().at(0).get_tensor_ptr().get();
     auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt);
     auto cvt_lt_conv = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_conv, lt_desc);
     auto conv = std::make_shared<ngraph::op::Convolution>(
@@ -1071,7 +1127,7 @@ TEST(cpu_fusion, weight_fusion)
     auto reshape_conv_bprop =
         std::make_shared<op::Reshape>(param, AxisVector{0}, Shape{16, 4, 1, 1});
     auto dummy_arg_conv_bprop = std::make_shared<op::Parameter>(element::f32, Shape{1, 16, 7, 7});
-    auto tvt_bprop = reshape_conv_bprop->get_outputs().at(0).get_tensor_view().get();
+    auto tvt_bprop = reshape_conv_bprop->get_outputs().at(0).get_tensor_ptr().get();
     auto lt_desc_bprop = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt_bprop);
     auto cvt_lt_conv_bprop =
         std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_conv_bprop, lt_desc_bprop);
@@ -1737,6 +1793,8 @@ TEST(cpu_fusion, group_convolution)
     ASSERT_EQ(rv, erv);
 }
 
+//TODO(Pruthvi) enable this test after MKLDNN RNN bug is fixed
+#if 0
 TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
 {
     auto src_layer = make_shared<op::Parameter>(element::f32, Shape{10, 100});
@@ -1814,6 +1872,7 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     EXPECT_TRUE(test::all_close(expected_ht, read_vector<float>(result_ht)));
     EXPECT_TRUE(test::all_close(expected_ct, read_vector<float>(result_ct)));
 }
+#endif
 
 TEST(cpu_fusion, fuse_lstm_cells)
 {

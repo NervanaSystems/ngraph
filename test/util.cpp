@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <fstream>
 #include <sstream>
@@ -383,4 +383,34 @@ TEST(util, test_fprop_cache)
 
     EXPECT_EQ(fprop_cache.fprop->get_results().size(), 2);
     EXPECT_EQ(fprop_cache.bprop->get_parameters().size(), 5);
+}
+
+TEST(graph_util, test_subgraph_topological_sort)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto add = A + B;
+    auto mul = C * add;
+    auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A});
+    std::list<std::shared_ptr<Node>> expected{A, add, mul};
+    ASSERT_EQ(expected, sorted);
+}
+
+TEST(graph_util, test_subgraph_topological_sort_control_dependencies)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto D = make_shared<op::Abs>(A);
+    auto E = make_shared<op::Abs>(B);
+    auto add = A + B;
+    add->add_control_dependency(D);
+    add->add_control_dependency(E);
+    auto mul = C * add;
+    auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A, D}, true);
+    std::list<std::shared_ptr<Node>> expected{A, D, add, mul};
+    ASSERT_EQ(expected, sorted);
 }

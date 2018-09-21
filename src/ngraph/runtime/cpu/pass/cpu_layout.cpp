@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <algorithm>
 #include <memory>
@@ -40,18 +40,25 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/sigmoid.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
+#include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/dequantize.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/quantize.hpp"
+#include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
+#include "ngraph/runtime/cpu/op/quantized_conv.hpp"
+#include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 
 using namespace std;
@@ -60,7 +67,7 @@ using namespace ngraph;
 using namespace ngraph::runtime::cpu;
 
 // Check if the input layout matches the layout requested in `required_mds`
-// If not, insert a layout conversion node between the input tensorview and
+// If not, insert a layout conversion node between the input tensor and
 // the `node`. For now, only MKLDNN nodes/kernels can request specific layouts
 shared_ptr<Node> runtime::cpu::pass::CPULayout::insert_input_conversions(
     runtime::cpu::CPU_ExternalFunction* external_function,
@@ -81,9 +88,8 @@ shared_ptr<Node> runtime::cpu::pass::CPULayout::insert_input_conversions(
     for (const descriptor::Input& input : node->get_inputs())
     {
         const auto& output = input.get_output();
-        auto tv = output.get_tensor_view();
-        auto tvl =
-            dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout());
+        auto tv = output.get_tensor_ptr();
+        auto tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_layout());
 
         if (!tvl)
         {
@@ -145,8 +151,8 @@ void runtime::cpu::pass::CPULayout::set_output_layouts(shared_ptr<Node>& node,
 {
     for (size_t i = 0; i < node->get_output_size(); ++i)
     {
-        auto tv = node->get_output_tensor_view(i);
-        auto tvl = tv->get_tensor_view_layout();
+        auto tv = node->get_output_tensor_ptr(i);
+        auto tvl = tv->get_tensor_layout();
         if (tvl)
         {
             throw ngraph_error("Node (" + node->get_name() +
@@ -155,7 +161,7 @@ void runtime::cpu::pass::CPULayout::set_output_layouts(shared_ptr<Node>& node,
         }
         auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
         layout->set_mkldnn_md(output_mds[i]);
-        tv->set_tensor_view_layout(layout);
+        tv->set_tensor_layout(layout);
         NGRAPH_DEBUG << "Setting Node: " << node->get_name()
                      << " output layout: " << output_mds[i].data.format << endl;
     }
@@ -172,10 +178,10 @@ void runtime::cpu::pass::CPULayout::set_native_layouts(
     for (descriptor::Input& input : node->get_inputs())
     {
         const auto& output = input.get_output();
-        auto tv = output.get_tensor_view();
-        auto et = tv->get_tensor_view_type()->get_element_type();
-        auto shape = tv->get_tensor_view_type()->get_shape();
-        auto tvl = tv->get_tensor_view_layout();
+        auto tv = output.get_tensor_ptr();
+        auto et = tv->get_element_type();
+        auto shape = tv->get_shape();
+        auto tvl = tv->get_tensor_layout();
         auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
 
         if (cpu_tvl && cpu_tvl->is_mkldnn_layout())
@@ -234,16 +240,16 @@ void runtime::cpu::pass::CPULayout::set_native_layouts(
 
     for (size_t i = 0; i < node->get_output_size(); ++i)
     {
-        auto tv = node->get_output_tensor_view(i);
-        if (tv->get_tensor_view_layout())
+        auto tv = node->get_output_tensor_ptr(i);
+        if (tv->get_tensor_layout())
         {
             // TODO(jbobba): Should this be an error instead?
             // Some unit tests are sharing nodes across graphs
             continue;
         }
 
-        auto shape = tv->get_tensor_view_type()->get_shape();
-        auto et = tv->get_tensor_view_type()->get_element_type();
+        auto shape = tv->get_shape();
+        auto et = tv->get_element_type();
         auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
         if (mkldnn_utils::can_create_mkldnn_md(shape, layout->get_strides(), et))
         {
@@ -251,7 +257,7 @@ void runtime::cpu::pass::CPULayout::set_native_layouts(
                 mkldnn_utils::create_blocked_mkldnn_md(shape, layout->get_strides(), et);
             layout->set_mkldnn_md(native_md);
         }
-        tv->set_tensor_view_layout(layout);
+        tv->set_tensor_layout(layout);
     }
 }
 
@@ -293,6 +299,11 @@ namespace ngraph
                     memory::data_type et =
                         mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0));
 
+                    memory::data_type et_weights = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
+                        node->get_input_element_type(1));
+                    memory::data_type et_result = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
+                        node->get_output_element_type(0));
+
                     engine cpu_engine(engine::cpu, 0);
                     memory::dims mkldnn_arg0_shape(arg0_shape.begin(), arg0_shape.end());
                     memory::dims mkldnn_arg1_shape(arg1_shape.begin(), arg1_shape.end());
@@ -304,8 +315,10 @@ namespace ngraph
                     memory::dims mkldnn_padding_below(padding_below.begin(), padding_below.end());
                     memory::dims mkldnn_padding_above(padding_above.begin(), padding_above.end());
                     const memory::desc input_data_desc(mkldnn_arg0_shape, et, memory::format::any);
-                    const memory::desc weights_desc(mkldnn_arg1_shape, et, memory::format::any);
-                    const memory::desc result_desc(mkldnn_result_shape, et, memory::format::any);
+                    const memory::desc weights_desc(
+                        mkldnn_arg1_shape, et_weights, memory::format::any);
+                    const memory::desc result_desc(
+                        mkldnn_result_shape, et_result, memory::format::any);
                     std::unique_ptr<convolution_forward::desc> fwd_desc{nullptr};
                     if (use_bias)
                     {
@@ -361,23 +374,55 @@ namespace ngraph
                     }
                     convolution_forward::primitive_desc prim_desc(*fwd_desc, cpu_engine);
                     i_mds.push_back(prim_desc.src_primitive_desc().desc());
-
-                    if (default_weights_format)
-                    {
-                        // note, we need the original shape (4D) while arg_shape1 is redefined
-                        i_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 1, false, memory::format::oihw));
-                    }
-                    else
-                    {
-                        i_mds.push_back(prim_desc.weights_primitive_desc().desc());
-                    }
+                    i_mds.push_back(prim_desc.weights_primitive_desc().desc());
 
                     if (use_bias)
                     {
                         i_mds.push_back(prim_desc.bias_primitive_desc().desc());
                     }
                     o_mds.push_back(prim_desc.dst_primitive_desc().desc());
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedConvolution)
+                {
+                    if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::desc> i_mds;
+                        vector<memory::desc> o_mds;
+                        ConvolutionLayout<ngraph::op::QuantizedConvolution, false, false>(
+                            node, i_mds, o_mds);
+                        auto min_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 2, false, memory::format::x);
+                        auto max_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 3, false, memory::format::x);
+                        auto min_filter_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 4, false, memory::format::x);
+                        auto max_filter_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 5, false, memory::format::x);
+                        auto min_freezed_output_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 6, false, memory::format::x);
+                        auto max_freezed_output_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 7, false, memory::format::x);
+                        auto min_output_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 1, true, memory::format::x);
+                        auto max_output_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 2, true, memory::format::x);
+                        i_mds.push_back(min_input_md);
+                        i_mds.push_back(max_input_md);
+                        i_mds.push_back(min_filter_md);
+                        i_mds.push_back(max_filter_md);
+                        i_mds.push_back(min_freezed_output_md);
+                        i_mds.push_back(max_freezed_output_md);
+                        o_mds.push_back(min_output_md);
+                        o_mds.push_back(max_output_md);
+                        node = insert_input_conversions(external_function, node, i_mds);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        set_native_layouts(external_function, node);
+                    }
                 }
 
                 template <>
@@ -471,6 +516,26 @@ namespace ngraph
                     else
                     {
                         set_native_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::ConvolutionAdd)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::desc> i_mds;
+                        vector<memory::desc> o_mds;
+                        ConvolutionLayout<ngraph::op::ConvolutionAdd, false, false>(
+                            node, i_mds, o_mds);
+                        // Force second input to sum to use the same layout as convolution output
+                        i_mds.push_back(o_mds[0]);
+                        node = insert_input_conversions(external_function, node, i_mds);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        throw ngraph_error("ConvolutionAdd only supported in MKLDNN for now");
                     }
                 }
 
@@ -706,65 +771,71 @@ namespace ngraph
                     }
                 }
 
+                template <typename T>
+                void AvgPoolLayout(std::shared_ptr<ngraph::Node> node,
+                                   vector<memory::desc>& i_mds,
+                                   vector<memory::desc>& o_mds)
+                {
+                    auto avg_pool = static_cast<const ngraph::op::AvgPool*>(node.get());
+
+                    auto arg0_shape = node->get_input_shape(0);
+                    auto result_shape = node->get_output_shape(0);
+                    auto filter_shape = avg_pool->get_window_shape();
+                    auto filter_strides = avg_pool->get_window_movement_strides();
+                    auto padding_below = avg_pool->get_padding_below();
+                    auto padding_above = avg_pool->get_padding_above();
+
+                    memory::data_type et =
+                        mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0));
+
+                    algorithm algorithm_enumerator =
+                        avg_pool->get_include_padding_in_avg_computation()
+                            ? algorithm::pooling_avg_include_padding
+                            : algorithm::pooling_avg_exclude_padding;
+
+                    memory::dims mkldnn_arg0_shape(arg0_shape.begin(), arg0_shape.end());
+                    memory::dims mkldnn_result_shape(result_shape.begin(), result_shape.end());
+                    memory::dims mkldnn_filter_shape(filter_shape.begin(), filter_shape.end());
+                    memory::dims mkldnn_filter_strides(filter_strides.begin(),
+                                                       filter_strides.end());
+                    memory::dims mkldnn_padding_below(padding_below.begin(), padding_below.end());
+                    memory::dims mkldnn_padding_above(padding_above.begin(), padding_above.end());
+
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                    auto result_desc = memory::desc(mkldnn_result_shape, et, memory::format::any);
+
+                    try
+                    {
+                        auto prim_desc =
+                            pooling_forward::primitive_desc({prop_kind::forward_inference,
+                                                             algorithm_enumerator,
+                                                             input_desc,
+                                                             result_desc,
+                                                             mkldnn_filter_strides,
+                                                             mkldnn_filter_shape,
+                                                             mkldnn_padding_below,
+                                                             mkldnn_padding_above,
+                                                             padding_kind::zero},
+                                                            mkldnn_utils::global_cpu_engine);
+                        i_mds.push_back(input_desc);
+                        o_mds.push_back(prim_desc.dst_primitive_desc().desc());
+                    }
+                    catch (const mkldnn::error& e)
+                    {
+                        throw ngraph_error("MKLDNN Unsupported pooling layout" +
+                                           to_string(input_desc.data.format) + e.message);
+                    }
+                }
+
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::AvgPool)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        auto avg_pool = static_cast<const ngraph::op::AvgPool*>(node.get());
-
-                        auto arg0_shape = node->get_input_shape(0);
-                        auto result_shape = node->get_output_shape(0);
-                        auto filter_shape = avg_pool->get_window_shape();
-                        auto filter_strides = avg_pool->get_window_movement_strides();
-                        auto padding_below = avg_pool->get_padding_below();
-                        auto padding_above = avg_pool->get_padding_above();
-
-                        memory::data_type et =
-                            mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0));
-
-                        algorithm algorithm_enumerator =
-                            avg_pool->get_include_padding_in_avg_computation()
-                                ? algorithm::pooling_avg_include_padding
-                                : algorithm::pooling_avg_exclude_padding;
-
-                        memory::dims mkldnn_arg0_shape(arg0_shape.begin(), arg0_shape.end());
-                        memory::dims mkldnn_result_shape(result_shape.begin(), result_shape.end());
-                        memory::dims mkldnn_filter_shape(filter_shape.begin(), filter_shape.end());
-                        memory::dims mkldnn_filter_strides(filter_strides.begin(),
-                                                           filter_strides.end());
-                        memory::dims mkldnn_padding_below(padding_below.begin(),
-                                                          padding_below.end());
-                        memory::dims mkldnn_padding_above(padding_above.begin(),
-                                                          padding_above.end());
-
-                        auto input_desc = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-                        auto result_desc =
-                            memory::desc(mkldnn_result_shape, et, memory::format::any);
-
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        try
-                        {
-                            auto prim_desc =
-                                pooling_forward::primitive_desc({prop_kind::forward_inference,
-                                                                 algorithm_enumerator,
-                                                                 input_desc,
-                                                                 result_desc,
-                                                                 mkldnn_filter_strides,
-                                                                 mkldnn_filter_shape,
-                                                                 mkldnn_padding_below,
-                                                                 mkldnn_padding_above,
-                                                                 padding_kind::zero},
-                                                                mkldnn_utils::global_cpu_engine);
-                            i_mds.push_back(input_desc);
-                            o_mds.push_back(prim_desc.dst_primitive_desc().desc());
-                        }
-                        catch (const mkldnn::error& e)
-                        {
-                            throw ngraph_error("MKLDNN Unsupported pooling layout" +
-                                               to_string(input_desc.data.format) + e.message);
-                        }
+
+                        AvgPoolLayout<ngraph::op::AvgPool>(node, i_mds, o_mds);
 
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
@@ -910,6 +981,73 @@ namespace ngraph
                     {
                         throw ngraph_error("MKLDNN Unsupported pooling fwd layout" +
                                            to_string(input_desc.data.format) + e.message);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedMaxPool)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::desc> i_mds;
+                        vector<memory::desc> o_mds;
+
+                        MaxPoolLayout<ngraph::op::QuantizedMaxPool, prop_kind::forward_inference>(
+                            node, i_mds, o_mds);
+
+                        auto min_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 1, false, memory::format::x);
+                        auto max_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 2, false, memory::format::x);
+                        auto min_output_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 1, true, memory::format::x);
+                        auto max_output_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 2, true, memory::format::x);
+
+                        i_mds.push_back(min_input_md);
+                        i_mds.push_back(max_input_md);
+                        o_mds.push_back(min_output_md);
+                        o_mds.push_back(max_output_md);
+
+                        node = insert_input_conversions(external_function, node, i_mds);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        set_native_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedAvgPool)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::desc> i_mds;
+                        vector<memory::desc> o_mds;
+
+                        AvgPoolLayout<ngraph::op::QuantizedAvgPool>(node, i_mds, o_mds);
+
+                        auto min_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 1, false, memory::format::x);
+                        auto max_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 2, false, memory::format::x);
+                        auto min_output_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 1, true, memory::format::x);
+                        auto max_output_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 2, true, memory::format::x);
+
+                        i_mds.push_back(min_input_md);
+                        i_mds.push_back(max_input_md);
+                        o_mds.push_back(min_output_md);
+                        o_mds.push_back(max_output_md);
+
+                        node = insert_input_conversions(external_function, node, i_mds);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -1075,10 +1213,7 @@ namespace ngraph
                 {
                     auto result = static_cast<const ngraph::op::Result*>(node.get());
                     auto cpu_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
-                        node->get_inputs()[0]
-                            .get_output()
-                            .get_tensor_view()
-                            ->get_tensor_view_layout());
+                        node->get_inputs()[0].get_output().get_tensor_ptr()->get_tensor_layout());
 
                     if (result->needs_default_layout() || !cpu_tvl->is_mkldnn_layout() ||
                         cpu_tvl->get_size() * cpu_tvl->get_element_type().size() !=
@@ -1099,51 +1234,60 @@ namespace ngraph
                 void CPULayout::LAYOUT_DECL(ngraph::op::Reshape)
                 {
                     auto reshape = static_cast<ngraph::op::Reshape*>(node.get());
-                    if (reshape->get_is_transpose() &&
-                        reshape->get_output_shape().size() ==
-                            reshape->get_argument(0)->get_shape().size())
+                    if (reshape->get_is_transpose())
                     {
-                        auto axis_order = reshape->get_input_order();
-                        auto tvl = node->get_inputs()[0]
-                                       .get_output()
-                                       .get_tensor_view()
-                                       ->get_tensor_view_layout();
-                        auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
-                        if (cpu_tvl && cpu_tvl->is_mkldnn_layout())
+                        if (reshape->get_output_shape().size() ==
+                            reshape->get_argument(0)->get_shape().size())
                         {
-                            // Rotate MKLDNN memory descriptor
-                            auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-                            auto output_md = mkldnn_utils::rotate_blocked_md(input_md, axis_order);
-                            set_output_layouts(node, {output_md});
-                            auto op_annotations = reshape->get_op_annotations();
-                            if (op_annotations)
+                            auto axis_order = reshape->get_input_order();
+                            auto tvl = node->get_inputs()[0]
+                                           .get_output()
+                                           .get_tensor_ptr()
+                                           ->get_tensor_layout();
+                            auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
+                            if (cpu_tvl && cpu_tvl->is_mkldnn_layout())
                             {
-                                // pass-through
-                                op_annotations->add_in_place_oi_pair({0, 0, false});
+                                // Rotate MKLDNN memory descriptor
+                                auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                                auto output_md =
+                                    mkldnn_utils::rotate_blocked_md(input_md, axis_order);
+                                set_output_layouts(node, {output_md});
+                                auto op_annotations = reshape->get_op_annotations();
+                                if (op_annotations)
+                                {
+                                    // pass-through
+                                    op_annotations->add_in_place_oi_pair({0, 0, false});
+                                }
+                                else
+                                {
+                                    op_annotations =
+                                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                                    // pass-through
+                                    op_annotations->add_in_place_oi_pair({0, 0, false});
+                                    reshape->set_op_annotations(op_annotations);
+                                }
                             }
                             else
                             {
-                                op_annotations =
-                                    std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                                // pass-through
-                                op_annotations->add_in_place_oi_pair({0, 0, false});
-                                reshape->set_op_annotations(op_annotations);
+                                auto input_strides = cpu_tvl->get_strides();
+                                Strides output_strides(input_strides.size());
+                                for (size_t i = 0; i < input_strides.size(); i++)
+                                {
+                                    output_strides[i] = input_strides[axis_order[i]];
+                                }
+                                set_native_layouts(external_function, node);
+                                auto output_tvl =
+                                    dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
+                                        node->get_output_tensor_ptr()->get_tensor_layout());
+                                // TODO (jbobba): For now non-MKLDNN layouts are always in row-major format
+                                // Enable this once we support non row-major strided formats
+                                // output_tvl->set_strides(output_strides);
                             }
                         }
                         else
                         {
-                            auto input_strides = cpu_tvl->get_strides();
-                            Strides output_strides(input_strides.size());
-                            for (size_t i = 0; i < input_strides.size(); i++)
-                            {
-                                output_strides[i] = input_strides[axis_order[i]];
-                            }
                             set_native_layouts(external_function, node);
-                            auto output_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
-                                node->get_output_tensor_view()->get_tensor_view_layout());
-                            // TODO (jbobba): For now non-MKLDNN layouts are always in row-major format
-                            // Enable this once we support non row-major strided formats
-                            // output_tvl->set_strides(output_strides);
+                            return;
                         }
                     }
                     else
@@ -1431,6 +1575,45 @@ namespace ngraph
                 }
 
                 template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Slice)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        // pass input format to output
+                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        NGRAPH_DEBUG << "input memory format: " << input_md.data.format << "\n";
+                        auto result_format =
+                            static_cast<mkldnn::memory::format>(input_md.data.format);
+
+                        vector<memory::desc> o_mds;
+                        if (result_format == mkldnn::memory::blocked)
+                        {
+                            auto cpu_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
+                                node->get_inputs()[0]
+                                    .get_output()
+                                    .get_tensor_ptr()
+                                    ->get_tensor_layout());
+                            auto result_desc =
+                                mkldnn_utils::create_blocked_mkldnn_md(node->get_output_shape(0),
+                                                                       cpu_tvl->get_strides(),
+                                                                       node->get_element_type());
+                            o_mds.push_back(result_desc);
+                        }
+                        else
+                        {
+                            auto result_desc = mkldnn_utils::create_default_mkldnn_md(
+                                node.get(), 0, true, result_format);
+                            o_mds.push_back(result_desc);
+                        }
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        set_native_layouts(external_function, node);
+                    }
+                }
+
+                template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Concat)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
@@ -1538,6 +1721,34 @@ namespace ngraph
                         set_native_layouts(external_function, node);
                     }
                 }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Dequantize)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        //TODO : Propogate Layout
+                        set_native_layouts(external_function, node);
+                    }
+                    else
+                    {
+                        throw ngraph_error("Dequantized op is only supported in MKLDNN for now.");
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Quantize)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        //TODO : Propogate Layout
+                        set_native_layouts(external_function, node);
+                    }
+                    else
+                    {
+                        throw ngraph_error("Quantized op is only supported in MKLDNN for now.");
+                    }
+                }
             }
         }
     }
@@ -1551,6 +1762,8 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPool>},
     {TI(ngraph::op::AvgPoolBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPoolBackprop>},
+    {TI(ngraph::op::QuantizedConvolution),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolution>},
     {TI(ngraph::op::Convolution), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Convolution>},
     {TI(ngraph::op::GroupConvolution),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::GroupConvolution>},
@@ -1559,6 +1772,10 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::ConvolutionBackpropFilters),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBackpropFilters>},
     {TI(ngraph::op::MaxPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPool>},
+    {TI(ngraph::op::QuantizedMaxPool),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedMaxPool>},
+    {TI(ngraph::op::QuantizedAvgPool),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedAvgPool>},
     {TI(ngraph::op::MaxPoolWithIndices),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPoolWithIndices>},
     {TI(ngraph::op::MaxPoolBackprop),
@@ -1593,6 +1810,11 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Rnn>},
     {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Softmax>},
     {TI(ngraph::op::BoundedRelu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BoundedRelu>},
+    {TI(ngraph::op::ConvolutionAdd),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionAdd>},
+    {TI(ngraph::op::Dequantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Dequantize>},
+    {TI(ngraph::op::Slice), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Slice>},
+    {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Quantize>},
 };
 
 bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)

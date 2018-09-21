@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "ngraph/runtime/cpu/kernel/max_pool.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -144,7 +144,6 @@ namespace ngraph
                             ctx, fdeps[2], ctx->mkldnn_workspaces[fdeps[3]]);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, max_pool_index - 1);
                     };
-                    functors.emplace_back(functor_fprop);
                     auto& bdeps = mkldnn_emitter->get_primitive_deps(max_pool_index);
                     auto functor_bprop = [&, max_pool_index](CPURuntimeContext* ctx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, bdeps[0], delta_tensor);
@@ -153,7 +152,11 @@ namespace ngraph
                         cpu::mkldnn_utils::set_memory_ptr(ctx, bdeps[2], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, max_pool_index);
                     };
-                    functors.emplace_back(functor_bprop);
+                    auto functor = [&, functor_fprop, functor_bprop](CPURuntimeContext* ctx) {
+                        functor_fprop(ctx);
+                        functor_bprop(ctx);
+                    };
+                    functors.emplace_back(functor);
                 }
                 else
                 {

@@ -1,28 +1,27 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
-#include "ngraph/node.hpp"
 #include <memory>
 #include <sstream>
 #include <typeindex>
 #include <typeinfo>
 
 #include "ngraph/autodiff/adjoints.hpp"
-#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
-#include "ngraph/descriptor/primary_tensor_view.hpp"
+#include "ngraph/descriptor/layout/tensor_layout.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/placement.hpp"
@@ -32,7 +31,7 @@ using namespace ngraph;
 
 atomic<size_t> Node::m_next_instance_id(0);
 
-Node::Node(const std::string& node_type, const NodeVector& arguments)
+Node::Node(const std::string& node_type, const NodeVector& arguments, size_t output_size)
     : m_node_type(node_type)
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_unique_name(description() + "_" + to_string(m_instance_id))
@@ -46,32 +45,48 @@ Node::Node(const std::string& node_type, const NodeVector& arguments)
             m_inputs.emplace_back(this, i++, output);
         }
     }
+    set_output_size(output_size);
 }
 
-void Node::set_value_type_checked(const element::Type& element_type, const Shape& shape)
+// While we are still doing validation and type inference in the constructor, this is true
+// It can be set to false to debug doing validation/inference after construction. When that
+// is working, these two functions will be removed.
+static bool in_transition = true;
+
+void Node::constructor_validate_and_infer_types()
 {
-    if (m_outputs.size() == 0)
+    if (in_transition)
     {
-        add_output(element_type, shape);
+        validate_and_infer_types();
     }
-    if (element_type != get_element_type() || shape != get_shape())
+}
+
+void Node::delayed_validate_and_infer_types()
+{
+    if (!in_transition)
     {
-        throw ngraph_error("Setting value type to a different ValueType");
+        validate_and_infer_types();
     }
 }
 
-void Node::add_output(const element::Type& element_type, const Shape& shape)
+void Node::set_output_size(size_t n)
 {
-    shared_ptr<TensorViewType> tensor_view_type = make_shared<TensorViewType>(element_type, shape);
-    size_t i = m_outputs.size();
-    auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(
-        tensor_view_type, ngraph::descriptor::Tensor::make_tensor_name(this, i));
-    m_outputs.emplace_back(this, i, tensor_view_descriptor);
+    m_outputs.clear();
+    for (size_t i = m_outputs.size(); i < n; ++i)
+    {
+        auto tensor_descriptor = make_shared<descriptor::Tensor>(
+            element::unspecified, Shape(), get_name() + "_" + to_string(i));
+        m_outputs.emplace_back(this, i, tensor_descriptor);
+    }
 }
 
-void Node::set_value_type_checked(const shared_ptr<const TensorViewType>& value_type)
+void Node::validate_and_infer_types()
 {
-    set_value_type_checked(value_type->get_element_type(), value_type->get_shape());
+}
+
+void Node::set_output_type(size_t i, const element::Type& element_type, const Shape& shape)
+{
+    m_outputs.at(i).get_tensor_ptr()->set_tensor_view_type(element_type, shape);
 }
 
 std::deque<descriptor::Output>& Node::get_outputs()
@@ -167,6 +182,16 @@ NodeVector Node::get_arguments() const
     return result;
 }
 
+const std::set<std::shared_ptr<Node>>& Node::get_control_dependencies() const
+{
+    return m_control_dependencies;
+}
+
+void Node::add_control_dependency(std::shared_ptr<Node> node)
+{
+    m_control_dependencies.insert(node);
+}
+
 std::vector<std::shared_ptr<Function>> Node::get_functions() const
 {
     return std::vector<std::shared_ptr<Function>>{};
@@ -176,17 +201,27 @@ namespace ngraph
 {
     ostream& operator<<(ostream& out, const Node& node)
     {
-        auto parameter_tmp = dynamic_cast<const op::Parameter*>(&node);
-        if (parameter_tmp)
-        {
-            out << "Parameter(" << parameter_tmp->get_name() << ")";
-        }
-        else
-        {
-            out << "Node(" << node.get_name() << ")";
-        }
-        return out;
+        return out << NodeDescription(node, false);
     }
+}
+
+std::ostream& Node::write_short_description(std::ostream& out) const
+{
+    return out << get_name();
+}
+
+std::ostream& Node::write_long_description(std::ostream& out) const
+{
+    out << description() << '[' << get_name() << "](";
+    string sep = "";
+    for (auto arg : get_arguments())
+    {
+        out << sep << NodeDescription(*arg, true);
+        sep = ", ";
+    }
+    out << ")";
+
+    return out;
 }
 
 size_t Node::get_output_size() const
@@ -217,24 +252,27 @@ const Shape& Node::get_shape() const
 {
     if (get_output_size() != 1)
     {
-        throw ngraph_error("get_shape() must be called on a node with exactly one output.");
+        stringstream es;
+        es << "get_shape() must be called on a node with exactly one output (" << description()
+           << ")";
+        throw ngraph_error(es);
     }
     return get_output_shape(0);
 }
 
-shared_ptr<descriptor::TensorView> Node::get_output_tensor_view(size_t i) const
+shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr(size_t i) const
 {
-    return m_outputs.at(i).get_tensor_view();
+    return m_outputs.at(i).get_tensor_ptr();
 }
 
-shared_ptr<descriptor::TensorView> Node::get_output_tensor_view() const
+shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr() const
 {
     if (get_output_size() != 1)
     {
         throw ngraph_error(
-            "get_output_tensor_view() must be called on a node with exactly one output.");
+            "get_output_tensor_ptr() must be called on a node with exactly one output.");
     }
-    return get_output_tensor_view(0);
+    return get_output_tensor_ptr(0);
 }
 
 const std::set<descriptor::Input*>& Node::get_output_inputs(size_t i) const
@@ -327,10 +365,70 @@ NodeVector Node::get_users() const
     return result;
 }
 
-std::string ngraph::type_check_assert_string(const Node* node)
+std::string ngraph::node_validation_assertion_string(const Node* node)
 {
     std::stringstream ss;
-    ss << "While type-checking node '" << node->get_name() << "' of type '" << node->description()
-       << "'";
+    ss << "While validating node '" << *node << "' of type '" << node->description() << "'";
     return ss.str();
+}
+
+void ngraph::check_new_args_count(const Node* node, const NodeVector& new_args)
+{
+    NODE_VALIDATION_ASSERT(node, new_args.size() == node->get_arguments().size())
+        << "copy_with_new_args() expected " << node->get_arguments().size() << " argument"
+        << (node->get_arguments().size() == 1 ? "" : "s") << " but got " << new_args.size();
+}
+
+const std::shared_ptr<Node>& ngraph::check_single_output_arg(const std::shared_ptr<Node>& node,
+                                                             size_t i)
+{
+    NGRAPH_ASSERT(node->get_output_size() == 1) << "Argument " << i << node
+                                                << " must produce exactly one value.";
+    return node;
+}
+
+const NodeVector& ngraph::check_single_output_args(const NodeVector& args)
+{
+    for (size_t i = 0; i < args.size(); ++i)
+    {
+        ngraph::check_single_output_arg(args.at(i), i);
+    }
+    return args;
+}
+
+void Node::validate_and_infer_elementwise(element::Type result_type)
+{
+    const element::Type& element_type = get_input_element_type(0);
+    const Shape& shape = get_input_shape(0);
+    if (get_input_size() > 1)
+    {
+        for (size_t i = 1; i < get_input_size(); ++i)
+        {
+            NODE_VALIDATION_ASSERT(this, get_input_element_type(i) == element_type)
+                << "Argument 0 element type " << element_type
+                << " differs in element type from argument " << i << " " << *get_argument(i)
+                << " element type " << get_input_element_type(i);
+
+            NODE_VALIDATION_ASSERT(this, get_input_shape(i) == shape)
+                << "Argument 0 shape " << shape << " differs in shape from argument " << i << " "
+                << *get_argument(i) << " shape " << get_input_shape(i);
+        }
+    }
+    set_output_type(0, result_type, shape);
+}
+
+void Node::validate_and_infer_elementwise_arithmetic()
+{
+    NODE_VALIDATION_ASSERT(this, get_input_element_type(0) != element::boolean)
+        << "Arguments cannot have boolean element type (argument element type: "
+        << get_input_element_type(0) << ").";
+    validate_and_infer_elementwise(get_input_element_type(0));
+}
+
+void Node::validate_and_infer_elementwise_logical()
+{
+    NODE_VALIDATION_ASSERT(this, get_input_element_type(0) == element::boolean)
+        << "Operands for logical operators must have boolean element type but have element type "
+        << get_input_element_type(0) << ".";
+    validate_and_infer_elementwise(get_input_element_type(0));
 }

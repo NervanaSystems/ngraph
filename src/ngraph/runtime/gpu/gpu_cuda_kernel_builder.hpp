@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -56,16 +56,47 @@ namespace ngraph
 
                 static void get_reshape_op(codegen::CodeWriter& writer,
                                            const std::string& name,
+                                           runtime::gpu::GPUKernelArgs& args,
                                            const std::array<std::string, 2>& data_types,
                                            size_t rank);
 
-                static void get_reduce_op(codegen::CodeWriter& writer,
-                                          const std::string& name,
-                                          runtime::gpu::GPUKernelArgs& args,
-                                          const std::vector<std::string>& data_types,
-                                          const std::string& reduce_op,
-                                          size_t out_rank,
-                                          size_t reduce_rank);
+                static void get_reshape_op_3d(codegen::CodeWriter& writer,
+                                              const std::string& name,
+                                              runtime::gpu::GPUKernelArgs& args,
+                                              const std::string& data_type,
+                                              const std::vector<uint32_t>& order,
+                                              const std::vector<uint32_t>& block_size);
+
+                static void get_reshape_op_2d(codegen::CodeWriter& writer,
+                                              const std::string& name,
+                                              runtime::gpu::GPUKernelArgs& args,
+                                              const std::string& data_type,
+                                              uint32_t block_size);
+
+                static void get_reduce_to_nd_op(codegen::CodeWriter& writer,
+                                                const std::string& name,
+                                                runtime::gpu::GPUKernelArgs& args,
+                                                const std::vector<std::string>& data_types,
+                                                const std::string& reduce_op,
+                                                size_t out_rank,
+                                                size_t reduce_rank);
+
+                //using one block with at most 512 threads to reduce to scalar.
+                static void get_reduce_to_scalar_op(codegen::CodeWriter& writer,
+                                                    const std::string& name,
+                                                    runtime::gpu::GPUKernelArgs& args,
+                                                    const std::vector<std::string>& data_types,
+                                                    const std::string& reduce_op,
+                                                    uint32_t block_size_x);
+
+                //This is the preprocess to reduce to scalar if the data size is large than a number.
+                //The number can be tuned based on hardware.
+                //This cuda kernel will accumulate reduction to a certain number of bins depends on hardware.
+                static void get_reduce_to_scalar_acc_op(codegen::CodeWriter& writer,
+                                                        const std::string& name,
+                                                        runtime::gpu::GPUKernelArgs& args,
+                                                        const std::vector<std::string>& data_types,
+                                                        const std::string& reduce_op);
 
                 static void get_slice_op(codegen::CodeWriter& writer,
                                          const std::string& name,

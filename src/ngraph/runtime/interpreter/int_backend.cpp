@@ -1,25 +1,27 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "ngraph/runtime/interpreter/int_backend.hpp"
-#include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
+#include "ngraph/except.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/util/binary_elementwise_comparison.hpp"
 #include "ngraph/pass/assign_layout.hpp"
+#include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/util.hpp"
@@ -27,7 +29,7 @@
 using namespace std;
 using namespace ngraph;
 
-using descriptor::layout::DenseTensorViewLayout;
+using descriptor::layout::DenseTensorLayout;
 
 extern "C" const char* get_ngraph_version_string()
 {
@@ -63,9 +65,15 @@ bool runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
     {
         instance.m_is_compiled = true;
         pass::Manager pass_manager;
-        pass_manager.register_pass<pass::AssignLayout<DenseTensorViewLayout>>();
+        pass_manager.register_pass<pass::LikeReplacement>();
+        pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
         pass_manager.register_pass<pass::Liveness>();
         pass_manager.run_passes(function);
+
+        for (const shared_ptr<Node>& node : function->get_ordered_ops())
+        {
+            instance.m_wrapped_nodes.emplace_back(node);
+        }
     }
 
     return true;
@@ -105,7 +113,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     {
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
-            descriptor::TensorView* tv = param->get_output_tensor_view(i).get();
+            descriptor::Tensor* tv = param->get_output_tensor_ptr(i).get();
             tensor_map.insert({tv, func_inputs[input_count++]});
         }
     }
@@ -118,23 +126,24 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         {
             throw ngraph_error("One of function's outputs isn't op::Result");
         }
-        descriptor::TensorView* tv = output->get_output_tensor_view(0).get();
+        descriptor::TensorView* tv = output->get_output_tensor_ptr(0).get();
         tensor_map.insert({tv, func_outputs[output_count]});
     }
 
     // for each ordered op in the graph
-    for (shared_ptr<Node> op : function->get_ordered_ops())
+    for (const NodeWrapper& wrapped : instance.m_wrapped_nodes)
     {
-        if (op->description() == "Parameter")
+        const Node* op = &wrapped.get_node();
+        auto type_id = wrapped.get_typeid();
+        if (type_id == OP_TYPEID::Parameter)
         {
             continue;
         }
-
         // get op inputs from map
         vector<shared_ptr<runtime::HostTensorView>> op_inputs;
         for (const descriptor::Input& input : op->get_inputs())
         {
-            descriptor::TensorView* tv = input.get_output().get_tensor_view().get();
+            descriptor::TensorView* tv = input.get_output().get_tensor_ptr().get();
             op_inputs.push_back(tensor_map.at(tv));
         }
 
@@ -142,9 +151,10 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         vector<shared_ptr<runtime::HostTensorView>> op_outputs;
         for (size_t i = 0; i < op->get_output_size(); ++i)
         {
-            descriptor::TensorView* tv = op->get_output_tensor_view(i).get();
+            descriptor::TensorView* tv = op->get_output_tensor_ptr(i).get();
             shared_ptr<runtime::HostTensorView> htv;
-            if (!contains_key(tensor_map, tv))
+            auto it = tensor_map.find(tv);
+            if (it == tensor_map.end())
             {
                 // the output tensor is not in the tensor map so create a new tensor
                 const Shape& shape = op->get_output_shape(i);
@@ -155,42 +165,42 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
             }
             else
             {
-                htv = tensor_map.at(tv);
+                htv = it->second;
             }
             op_outputs.push_back(htv);
         }
 
         // get op type
         element::Type type;
-        if (dynamic_pointer_cast<op::util::BinaryElementwiseComparison>(op) ||
-            dynamic_pointer_cast<op::Select>(op))
+        switch (type_id)
         {
+        case OP_TYPEID::Convert: type = op->get_input_element_type(0); break;
+        case OP_TYPEID::Equal:
+        case OP_TYPEID::Greater:
+        case OP_TYPEID::GreaterEq:
+        case OP_TYPEID::Less:
+        case OP_TYPEID::LessEq:
+        case OP_TYPEID::NotEqual:
             // Get the type of the second input, not the first
             // All BinaryElementwiseComparision ops have the same type for inputs
             // Select has bool for first input and the type we are interested in for the second
-            type = op->get_inputs().at(1).get_tensor().get_element_type();
-        }
-        else if (dynamic_pointer_cast<op::Convert>(op))
-        {
-            type = op->get_inputs().at(0).get_tensor().get_element_type();
-        }
-        else
-        {
-            type = op->get_outputs().at(0).get_element_type();
+            type = op->get_input_element_type(1);
+            break;
+        default: type = op->get_outputs().at(0).get_element_type(); break;
         }
 
         if (instance.m_performance_counters_enabled)
         {
-            instance.m_timer_map[op.get()].start();
+            instance.m_timer_map[op].start();
         }
-        generate_calls(type, *op, op_outputs, op_inputs);
+        generate_calls(type, wrapped, op_outputs, op_inputs);
         if (instance.m_performance_counters_enabled)
         {
-            instance.m_timer_map[op.get()].stop();
+            instance.m_timer_map[op].stop();
         }
         if (instance.m_nan_check_enabled)
         {
-            perform_nan_check(op_outputs, op.get());
+            perform_nan_check(op_outputs, op);
         }
 
         // delete any obsolete tensors
@@ -212,7 +222,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
 
 void runtime::interpreter::INTBackend::generate_calls(
     const element::Type& type,
-    Node& op,
+    const NodeWrapper& op,
     const vector<shared_ptr<HostTensorView>>& outputs,
     const vector<shared_ptr<HostTensorView>>& inputs)
 {
@@ -263,7 +273,7 @@ void runtime::interpreter::INTBackend::generate_calls(
     else
     {
         stringstream ss;
-        ss << "unsupported element type " << type << " op " << op.get_name();
+        ss << "unsupported element type " << type << " op " << op.get_node().get_name();
         throw ngraph_error(ss.str());
     }
 }
@@ -301,7 +311,7 @@ void runtime::interpreter::INTBackend::perform_nan_check(
     size_t arg_number = 1;
     for (shared_ptr<HostTensorView> tv : tvs)
     {
-        const element::Type& type = tv->get_tensor().get_element_type();
+        const element::Type& type = tv->get_element_type();
         if (type == element::f32)
         {
             const float* data = tv->get_data_ptr<float>();

@@ -16,29 +16,31 @@
 
 set(SRC
     algebraic_simplification.cpp
+    all_close_f.cpp
     assertion.cpp
-    builder_autobroadcast.cpp
     build_graph.cpp
+    builder_autobroadcast.cpp
     constant_folding.cpp
+    control_dependencies.cpp
+    coordinate.cpp
     copy.cpp
     cpio.cpp
     cse.cpp
     element_type.cpp
     file_util.cpp
-    all_close_f.cpp
+    graph_partition.cpp
     inliner.cpp
     input_output_assign.cpp
     main.cpp
-    op.cpp
-    graph_partition.cpp
     nop_elimination.cpp
+    op.cpp
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
-    serialize.cpp
     pattern.cpp
-    shape.cpp
     reshape_elimination.cpp
+    serialize.cpp
+    shape.cpp
     tensor.cpp
     type_prop.cpp
     util.cpp
@@ -47,14 +49,9 @@ set(SRC
 )
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
-    if (APPLE OR WIN32)
-        list(APPEND SRC onnx_import.cpp)
-    else()
-        # ONNX unit tests temporarly disabled if CentOS detected
-        # (Protobuf issue with interpreting messages)
-        if (NOT ${DISTRIB_ID} STREQUAL "CentOS Linux")
-            list(APPEND SRC onnx_import.cpp)
-        endif()
+    list(APPEND SRC onnx_import.cpp)
+    if (NGRAPH_ONNXIFI_ENABLE)
+        list(APPEND SRC onnxifi.cpp)
     endif()
 endif()
 
@@ -63,7 +60,7 @@ if (NGRAPH_INTERPRETER_ENABLE)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
-    set(SRC ${SRC} core_fusion.cpp)
+    set(SRC ${SRC} core_fusion.cpp quantize_cpu.cpp)
 endif()
 
 add_subdirectory(models)
@@ -154,6 +151,11 @@ endif()
 
 if (NGRAPH_GPU_ENABLE)
     target_link_libraries(unit-test gpu_backend)
+endif()
+
+if (NGRAPH_ONNXIFI_ENABLE)
+    target_include_directories(unit-test SYSTEM PUBLIC ${ONNX_INCLUDE_DIR})
+    target_link_libraries(unit-test onnxifi-ngraph)
 endif()
 
 add_custom_target(unit-test-check

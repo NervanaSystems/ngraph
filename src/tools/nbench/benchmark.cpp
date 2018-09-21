@@ -1,26 +1,25 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
-#include <iomanip>
 #include <random>
 
 #include "benchmark.hpp"
 #include "ngraph/file_util.hpp"
-#include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/host_tensor_view.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/serializer.hpp"
@@ -28,93 +27,6 @@
 
 using namespace std;
 using namespace ngraph;
-
-multimap<size_t, string>
-    aggregate_timing_details(const vector<runtime::PerformanceCounter>& perf_data,
-                             shared_ptr<Function> func)
-{
-    unordered_map<string, shared_ptr<Node>> node_map;
-    vector<shared_ptr<Function>> fs;
-    traverse_functions(func, [&](shared_ptr<Function> f) { fs.push_back(f); });
-    for (shared_ptr<Function> f : fs)
-    {
-        for (shared_ptr<Node> node : f->get_ops())
-        {
-            node_map.insert({node->get_name(), node});
-        }
-    }
-
-    unordered_map<string, size_t> timing;
-    unordered_map<string, size_t> count;
-    for (const runtime::PerformanceCounter& p : perf_data)
-    {
-        shared_ptr<Node> node = node_map.at(p.name());
-        string op = p.name().substr(0, p.name().find('_'));
-        string shape_name = " {" + join(node->get_outputs()[0].get_shape()) + "} ";
-        timing[op + shape_name] += p.microseconds();
-        count[op + shape_name] += 1;
-    }
-
-    multimap<size_t, string> rc;
-    for (const pair<string, size_t>& t : timing)
-    {
-        rc.insert({t.second, t.first + to_string(count[t.first])});
-    }
-    return rc;
-}
-
-multimap<size_t, string> aggregate_timing(const vector<runtime::PerformanceCounter>& perf_data)
-{
-    unordered_map<string, size_t> timing;
-    for (const runtime::PerformanceCounter& p : perf_data)
-    {
-        string op = p.name().substr(0, p.name().find('_'));
-        timing[op] += p.microseconds();
-    }
-
-    multimap<size_t, string> rc;
-    for (const pair<string, size_t>& t : timing)
-    {
-        rc.insert({t.second, t.first});
-    }
-    return rc;
-}
-
-void run_benchmark(const string& json_path,
-                   const string& backend_name,
-                   size_t iterations,
-                   bool timing_detail,
-                   int warmup_iterations)
-{
-    stopwatch timer;
-    timer.start();
-    const string json_string = file_util::read_file_to_string(json_path);
-    stringstream ss(json_string);
-    shared_ptr<Function> f = deserialize(ss);
-    timer.stop();
-    cout << "deserialize time: " << timer.get_milliseconds() << "ms" << endl;
-    run_benchmark(f, backend_name, iterations, timing_detail, warmup_iterations);
-}
-
-void print_times(const multimap<size_t, string>& timing)
-{
-    // set the column widths
-    int name_width = 0;
-    int time_width = 0;
-    for (const pair<size_t, string>& p : timing)
-    {
-        name_width = max(name_width, static_cast<int>(p.second.size()));
-        stringstream ss;
-        ss.imbue(locale(""));
-        ss << p.first;
-        time_width = max(time_width, static_cast<int>(ss.str().size()));
-    }
-    for (auto it = timing.rbegin(); it != timing.rend(); it++)
-    {
-        cout << setw(name_width + 2) << left << it->second << " " << setw(time_width + 2) << right
-             << it->first << "us\n";
-    }
-}
 
 static default_random_engine s_random_engine;
 
@@ -236,11 +148,12 @@ static void random_init(shared_ptr<runtime::TensorView> tv)
     }
 }
 
-void run_benchmark(shared_ptr<Function> f,
-                   const string& backend_name,
-                   size_t iterations,
-                   bool timing_detail,
-                   int warmup_iterations)
+vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
+                                                  const string& backend_name,
+                                                  size_t iterations,
+                                                  bool timing_detail,
+                                                  int warmup_iterations,
+                                                  bool copy_data)
 {
     stopwatch timer;
     timer.start();
@@ -251,20 +164,28 @@ void run_benchmark(shared_ptr<Function> f,
     cout.imbue(locale(""));
     cout << "compile time: " << timer.get_milliseconds() << "ms" << endl;
 
+    vector<shared_ptr<runtime::HostTensorView>> arg_data;
     vector<shared_ptr<runtime::TensorView>> args;
     vector<bool> args_cacheable;
     for (shared_ptr<op::Parameter> param : f->get_parameters())
     {
         auto tensor = backend->create_tensor(param->get_element_type(), param->get_shape());
+        auto tensor_data =
+            make_shared<runtime::HostTensorView>(param->get_element_type(), param->get_shape());
         random_init(tensor);
         args.push_back(tensor);
+        arg_data.push_back(tensor_data);
         args_cacheable.push_back(param->get_cacheable());
     }
+    vector<shared_ptr<runtime::HostTensorView>> result_data;
     vector<shared_ptr<runtime::TensorView>> results;
     for (shared_ptr<Node> out : f->get_results())
     {
         auto result = backend->create_tensor(out->get_element_type(), out->get_shape());
+        auto tensor_data =
+            make_shared<runtime::HostTensorView>(out->get_element_type(), out->get_shape());
         results.push_back(result);
+        result_data.push_back(tensor_data);
     }
 
     for (size_t i = 0; i < args.size(); i++)
@@ -285,26 +206,38 @@ void run_benchmark(shared_ptr<Function> f,
 
     stopwatch t1;
     t1.start();
-    for (size_t i = 0; i < static_cast<size_t>(iterations); i++)
+    for (size_t i = 0; i < iterations; i++)
     {
+        if (copy_data)
+        {
+            for (size_t arg_index = 0; arg_index < args.size(); arg_index++)
+            {
+                const shared_ptr<runtime::TensorView>& arg = args[arg_index];
+                if (arg->get_stale())
+                {
+                    const shared_ptr<runtime::HostTensorView>& data = arg_data[arg_index];
+                    arg->write(data->get_data_ptr(),
+                               0,
+                               data->get_size() * data->get_element_type().size());
+                }
+            }
+        }
         backend->call(f, results, args);
+        if (copy_data)
+        {
+            for (size_t result_index = 0; result_index < results.size(); result_index++)
+            {
+                const shared_ptr<runtime::HostTensorView>& data = result_data[result_index];
+                const shared_ptr<runtime::TensorView>& result = results[result_index];
+                result->read(
+                    data->get_data_ptr(), 0, data->get_size() * data->get_element_type().size());
+            }
+        }
     }
     t1.stop();
     float time = t1.get_milliseconds();
     cout << time / iterations << "ms per iteration" << endl;
 
     vector<runtime::PerformanceCounter> perf_data = backend->get_performance_data(f);
-    sort(perf_data.begin(),
-         perf_data.end(),
-         [](const runtime::PerformanceCounter& p1, const runtime::PerformanceCounter& p2) {
-             return p1.total_microseconds() > p2.total_microseconds();
-         });
-    multimap<size_t, string> timing = aggregate_timing(perf_data);
-    multimap<size_t, string> timing_details = aggregate_timing_details(perf_data, f);
-
-    cout << "\n---- Aggregate times per op type ----\n";
-    print_times(timing);
-
-    cout << "\n---- Aggregate times per op type/shape/count ----\n";
-    print_times(timing_details);
+    return perf_data;
 }

@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -65,6 +65,22 @@ namespace ngraph
                     }
                 };
 
+                struct data_type_undefined : ngraph_error
+                {
+                    data_type_undefined()
+                        : ngraph_error{"data type is not defined"}
+                    {
+                    }
+                };
+
+                struct segments_unsupported : ngraph_error
+                {
+                    segments_unsupported()
+                        : ngraph_error{"loading segments not supported"}
+                    {
+                    }
+                };
+
             } // namespace tensor
 
         } // namespace error
@@ -82,6 +98,13 @@ namespace ngraph
                         {
                             return {std::begin(container), std::end(container)};
                         }
+
+                        template <typename T>
+                        inline std::vector<T> __get_raw_data(const std::string& raw_data)
+                        {
+                            auto it = reinterpret_cast<const T*>(raw_data.data());
+                            return {it, it + (raw_data.size() / sizeof(T))};
+                        }
                     }
                 }
 
@@ -94,6 +117,10 @@ namespace ngraph
                 template <>
                 inline std::vector<double> get_data(const onnx::TensorProto& tensor)
                 {
+                    if (tensor.has_raw_data())
+                    {
+                        return detail::__get_raw_data<double>(tensor.raw_data());
+                    }
                     if (tensor.data_type() == onnx::TensorProto_DataType_DOUBLE)
                     {
                         return detail::__get_data<double>(tensor.double_data());
@@ -121,6 +148,10 @@ namespace ngraph
                 template <>
                 inline std::vector<float> get_data(const onnx::TensorProto& tensor)
                 {
+                    if (tensor.has_raw_data())
+                    {
+                        return detail::__get_raw_data<float>(tensor.raw_data());
+                    }
                     if ((tensor.data_type() == onnx::TensorProto_DataType_FLOAT) or
                         (tensor.data_type() == onnx::TensorProto_DataType_FLOAT16))
                     {
@@ -144,6 +175,10 @@ namespace ngraph
                 template <>
                 inline std::vector<int32_t> get_data(const onnx::TensorProto& tensor)
                 {
+                    if (tensor.has_raw_data())
+                    {
+                        return detail::__get_raw_data<int32_t>(tensor.raw_data());
+                    }
                     if (tensor.data_type() == onnx::TensorProto_DataType_INT32)
                     {
                         return detail::__get_data<int32_t>(tensor.int32_data());
@@ -154,6 +189,10 @@ namespace ngraph
                 template <>
                 inline std::vector<int64_t> get_data(const onnx::TensorProto& tensor)
                 {
+                    if (tensor.has_raw_data())
+                    {
+                        return detail::__get_raw_data<int64_t>(tensor.raw_data());
+                    }
                     if (tensor.data_type() != onnx::TensorProto_DataType_INT64)
                     {
                         throw error::tensor::invalid_data_type{tensor.data_type()};
@@ -164,6 +203,10 @@ namespace ngraph
                 template <>
                 inline std::vector<uint64_t> get_data(const onnx::TensorProto& tensor)
                 {
+                    if (tensor.has_raw_data())
+                    {
+                        return detail::__get_raw_data<uint64_t>(tensor.raw_data());
+                    }
                     if (tensor.data_type() != onnx::TensorProto_DataType_UINT64)
                     {
                         throw error::tensor::invalid_data_type{tensor.data_type()};
@@ -198,7 +241,7 @@ namespace ngraph
 
             Tensor() = delete;
             explicit Tensor(const onnx::TensorProto& tensor)
-                : m_tensor_proto{tensor}
+                : m_tensor_proto{&tensor}
                 , m_shape{std::begin(tensor.dims()), std::end(tensor.dims())}
             {
             }
@@ -213,34 +256,38 @@ namespace ngraph
             template <typename T>
             std::vector<T> get_data() const
             {
-                return detail::tensor::get_data<T>(m_tensor_proto);
+                if (m_tensor_proto->has_segment())
+                {
+                    throw error::tensor::segments_unsupported{};
+                }
+                return detail::tensor::get_data<T>(*m_tensor_proto);
             }
 
             const std::string& get_name() const
             {
-                if (!m_tensor_proto.has_name())
+                if (!m_tensor_proto->has_name())
                 {
                     throw error::tensor::unspecified_name{};
                 }
-                return m_tensor_proto.name();
+                return m_tensor_proto->name();
             }
 
             Type get_type() const
             {
-                if (!m_tensor_proto.has_data_type())
+                if (!m_tensor_proto->has_data_type())
                 {
                     throw error::tensor::unspecified_data_type{};
                 }
-                return static_cast<Type>(m_tensor_proto.data_type());
+                return static_cast<Type>(m_tensor_proto->data_type());
             }
 
             const element::Type& get_ng_type() const
             {
-                if (!m_tensor_proto.has_data_type())
+                if (!m_tensor_proto->has_data_type())
                 {
                     throw error::tensor::unspecified_data_type{};
                 }
-                switch (m_tensor_proto.data_type())
+                switch (m_tensor_proto->data_type())
                 {
                 case onnx::TensorProto_DataType::TensorProto_DataType_BOOL: return element::boolean;
                 case onnx::TensorProto_DataType::TensorProto_DataType_FLOAT:
@@ -254,13 +301,15 @@ namespace ngraph
                 case onnx::TensorProto_DataType::TensorProto_DataType_UINT16: return element::u16;
                 case onnx::TensorProto_DataType::TensorProto_DataType_UINT32: return element::u32;
                 case onnx::TensorProto_DataType::TensorProto_DataType_UINT64: return element::u64;
-                default: throw error::tensor::unsupported_data_type{m_tensor_proto.data_type()};
+                case onnx::TensorProto_DataType::TensorProto_DataType_UNDEFINED:
+                    throw error::tensor::data_type_undefined{};
+                default: throw error::tensor::unsupported_data_type{m_tensor_proto->data_type()};
                 }
             }
 
-            operator onnx::TensorProto_DataType() const { return m_tensor_proto.data_type(); }
+            operator onnx::TensorProto_DataType() const { return m_tensor_proto->data_type(); }
         private:
-            const onnx::TensorProto& m_tensor_proto;
+            const onnx::TensorProto* m_tensor_proto;
             Shape m_shape;
         };
 

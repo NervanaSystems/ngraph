@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -36,6 +36,7 @@
 #endif
 
 #include "ngraph/function.hpp"
+#include "ngraph/pass/manager.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
@@ -139,6 +140,9 @@ namespace ngraph
 #endif
 
             private:
+                // Register passes that are common to codegen and DEX
+                void register_common_passes(ngraph::pass::Manager& pass_manager);
+
                 // For non-destructive passthrough kernels, propagate function
                 // input buffers to internal ops
                 void propagate_in_place_input(ngraph::descriptor::Output* output,
@@ -209,7 +213,7 @@ namespace ngraph
                 std::string m_function_name;
 
                 std::list<std::function<void(CPURuntimeContext*)>> functors;
-                std::list<std::pair<std::function<bool(CPURuntimeContext*)>, size_t>> enables;
+                std::list<std::function<bool(CPURuntimeContext*)>> enables;
                 std::list<std::pair<std::function<bool(CPURuntimeContext*)>, std::string>>
                     enable_nodename_list;
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>

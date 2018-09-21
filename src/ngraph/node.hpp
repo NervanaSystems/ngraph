@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -34,7 +34,6 @@
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/placement.hpp"
-#include "ngraph/type/type.hpp"
 
 namespace ngraph
 {
@@ -59,7 +58,15 @@ namespace ngraph
                                  const std::shared_ptr<Node>& dst_node,
                                  const std::shared_ptr<Node>& new_node);
 
-    std::string type_check_assert_string(const Node* node);
+    std::string node_validation_assertion_string(const Node* node);
+
+    const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
+                                                         size_t i);
+    const NodeVector& check_single_output_args(const NodeVector& args);
+
+    const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
+                                                         size_t i);
+    const NodeVector& check_single_output_args(const NodeVector& args);
 
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
@@ -81,11 +88,28 @@ namespace ngraph
         friend class ngraph::pass::GetOutputElementElimination;
 
     protected:
-        Node(const std::string& node_type, const NodeVector& arguments);
+        /// Throws if the node is invalid.
+        virtual void validate_and_infer_types();
+
+        // Called in constructors during transition
+        void constructor_validate_and_infer_types();
+
+        void validate_and_infer_elementwise(element::Type result_type);
+        void validate_and_infer_elementwise()
+        {
+            validate_and_infer_elementwise(get_input_element_type(0));
+        }
+        void validate_and_infer_elementwise_arithmetic();
+        void validate_and_infer_elementwise_logical();
+
+        Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
         virtual ~Node();
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
     public:
+        // Called after transition
+        void delayed_validate_and_infer_types();
+
         /// The class name, must not contain spaces
         std::string description() const { return m_node_type; }
         const std::string& get_friendly_name() const;
@@ -100,12 +124,7 @@ namespace ngraph
             return std::type_index(typeid(*this)) == std::type_index(typeid(*n));
         }
 
-        // Set the value type if it has not already been set; otherwise, ensure that
-        // value_type agrees with the value type that was set.
-        // This is used when the framework specifies a value type for the value, and we
-        // independently compute what we thing the value type should be from the arguments.
-        void set_value_type_checked(const std::shared_ptr<const TensorViewType>& value_type);
-        void set_value_type_checked(const element::Type& element_type, const Shape& shape);
+        void set_output_type(size_t i, const element::Type& element_type, const Shape& shape);
 
         bool is_parameter() const;
         virtual bool is_output() const;
@@ -113,6 +132,8 @@ namespace ngraph
         virtual bool is_commutative() { return false; }
         size_t get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
+        virtual std::ostream& write_short_description(std::ostream&) const;
+        virtual std::ostream& write_long_description(std::ostream&) const;
 
         // TODO: Deprecate
         std::deque<descriptor::Input>& get_inputs() { return m_inputs; }
@@ -124,6 +145,16 @@ namespace ngraph
         // Deprecated
         // TODO: Remove from unit tests.
         const std::deque<descriptor::Output>& get_outputs() const;
+
+        /// Get control dependencies registered on the node
+        const std::set<std::shared_ptr<Node>>& get_control_dependencies() const;
+
+        void add_control_dependency(std::shared_ptr<Node> node);
+
+        void remove_control_dependency(std::shared_ptr<Node> node)
+        {
+            m_control_dependencies.erase(node);
+        }
 
         /// Returns the number of outputs on the for the node.
         size_t get_output_size() const;
@@ -147,10 +178,10 @@ namespace ngraph
         descriptor::Tensor& get_output_tensor() const;
 
         /// Returns the tensor view of output i
-        std::shared_ptr<descriptor::TensorView> get_output_tensor_view(size_t i) const;
+        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr(size_t i) const;
 
         /// Checks that there is exactly one output and returns its tensor view.
-        std::shared_ptr<descriptor::TensorView> get_output_tensor_view() const;
+        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr() const;
 
         /// Returns the set of inputs using output i
         const std::set<descriptor::Input*>& get_output_inputs(size_t i) const;
@@ -194,8 +225,11 @@ namespace ngraph
         NodeVector get_users() const;
 
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
+        /// Use instance ids for comparison instead of memory addresses to improve determinism
+        bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
     protected:
-        void add_output(const element::Type& element_type, const Shape& shape);
+        std::set<std::shared_ptr<Node>> m_control_dependencies;
+        void set_output_size(size_t n);
 
         std::string m_node_type;
         size_t m_instance_id;
@@ -208,22 +242,44 @@ namespace ngraph
         Placement m_placement = Placement::DEFAULT;
     };
 
-    class TypeCheckError : public AssertionFailure
+    class NodeValidationError : public AssertionFailure
     {
     public:
-        TypeCheckError(std::string what)
+        NodeValidationError(std::string what)
             : AssertionFailure(what)
         {
         }
-        TypeCheckError(const char* what)
+        NodeValidationError(const char* what)
             : AssertionFailure(what)
         {
         }
     };
+
+    class NodeDescription
+    {
+    public:
+        NodeDescription(const Node& node, bool is_short)
+            : m_node(node)
+            , m_is_short(is_short)
+        {
+        }
+
+        friend std::ostream& operator<<(std::ostream& out, const NodeDescription node_description)
+        {
+            return node_description.m_is_short
+                       ? node_description.m_node.write_short_description(out)
+                       : node_description.m_node.write_long_description(out);
+        }
+        const Node& m_node;
+        bool m_is_short;
+    };
+
+    void check_new_args_count(const Node* node, const NodeVector& new_args);
 }
 
-#define TYPE_CHECK_ASSERT(node, cond)                                                              \
+#define NODE_VALIDATION_ASSERT(node, cond)                                                         \
     NGRAPH_ASSERT_STREAM_WITH_LOC(                                                                 \
-        ::ngraph::TypeCheckError, cond, ::ngraph::type_check_assert_string(node))
-#define TYPE_CHECK_FAIL(node)                                                                      \
-    NGRAPH_FAIL_STREAM_WITH_LOC(::ngraph::TypeCheckError, ::ngraph::type_check_assert_string(node))
+        ::ngraph::NodeValidationError, cond, ::ngraph::node_validation_assertion_string(node))
+#define NODE_VALIDATION_FAIL(node)                                                                 \
+    NGRAPH_FAIL_STREAM_WITH_LOC(::ngraph::NodeValidationError,                                     \
+                                ::ngraph::node_validation_assertion_string(node))

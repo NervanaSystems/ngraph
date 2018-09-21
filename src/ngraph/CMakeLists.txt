@@ -25,12 +25,10 @@ set (SRC
     coordinate_diff.cpp
     coordinate_transform.cpp
     descriptor/input.cpp
-    descriptor/layout/dense_tensor_view_layout.cpp
-    descriptor/layout/tensor_view_layout.cpp
+    descriptor/layout/dense_tensor_layout.cpp
+    descriptor/layout/tensor_layout.cpp
     descriptor/output.cpp
-    descriptor/primary_tensor_view.cpp
     descriptor/tensor.cpp
-    descriptor/tensor_view.cpp
     file_util.cpp
     function.cpp
     log.cpp
@@ -86,7 +84,6 @@ set (SRC
     op/reduce.cpp
     op/reduce_window.cpp
     op/relu.cpp
-    op/remainder.cpp
     op/replace_slice.cpp
     op/reshape.cpp
     op/result.cpp
@@ -106,15 +103,13 @@ set (SRC
     op/sum.cpp
     op/tan.cpp
     op/tanh.cpp
+    op/topk.cpp
     op/util/arithmetic_reduction.cpp
     op/util/binary_elementwise_arithmetic.cpp
     op/util/binary_elementwise_comparison.cpp
     op/util/binary_elementwise_logical.cpp
-    op/util/binary_elementwise.cpp
     op/util/index_reduction.cpp
-    op/util/requires_tensor_view_args.cpp
     op/util/unary_elementwise_arithmetic.cpp
-    op/util/unary_elementwise.cpp
     pass/assign_placement.cpp
     pass/algebraic_simplification.cpp
     pass/common_function_collection.cpp
@@ -124,6 +119,7 @@ set (SRC
     pass/get_output_element_elimination.cpp
     pass/graph_rewrite.cpp
     pass/inliner.cpp
+    pass/like_replacement.cpp
     pass/liveness.cpp
     pass/manager.cpp
     pass/manager_state.cpp
@@ -132,7 +128,6 @@ set (SRC
     pass/nop_elimination.cpp
     pass/pass.cpp
     pass/reshape_elimination.cpp
-    pass/result_copy_elimination.cpp
     pass/zero_dim_tensor_elimination.cpp
     pass/validate_graph.cpp
     pass/visualize_tree.cpp
@@ -149,30 +144,22 @@ set (SRC
     shape.cpp
     strides.cpp
     type/element_type.cpp
-    type/type.cpp
     util.cpp
     graph_util.cpp
     placement.cpp
     cpio.cpp
     )
 
-add_subdirectory(frontend)
+if(NGRAPH_DISTRIBUTED_ENABLE)
+    find_package(MPI REQUIRED)
+    add_definitions(-DNGRAPH_DISTRIBUTED)
+    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    link_libraries(${MPI_CXX_LIBRARIES})
+    set (SRC distributed.cpp ${SRC})
+endif()
 
-message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/op)
-file(GLOB OPS "${CMAKE_CURRENT_SOURCE_DIR}/op/" "${CMAKE_CURRENT_SOURCE_DIR}/op/*.hpp")
-foreach(OP ${OPS})
-    file(STRINGS ${OP} OP_CLASS REGEX "class [A-Za-z0-9_]+ :")
-    foreach(LINE ${OP_CLASS})
-        string(REGEX REPLACE ".*class ([A-Za-z0-9_]+) : public ([A-Za-z0-9_]+).*" "\\1" CLASS_FOUND ${LINE})
-        string(REGEX REPLACE ".*class ([A-Za-z0-9_]+) : public ([A-Za-z0-9_]+).*" "\\2" BASE_FOUND ${LINE})
-        if (NOT ${BASE_FOUND} STREQUAL "std" AND NOT ${CLASS_FOUND} STREQUAL "Op")
-            set(OP_CLASS_LIST ${OP_CLASS_LIST} ${CLASS_FOUND})
-        endif()
-    endforeach(LINE ${OP_CLASS})
-endforeach()
-message(STATUS "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt")
-string(REPLACE ";" "\n" OP_CLASS_LINES "${OP_CLASS_LIST}")
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt" "${OP_CLASS_LINES}")
+add_subdirectory(frontend)
 
 find_package(Graphviz QUIET)
 if (GRAPHVIZ_FOUND)

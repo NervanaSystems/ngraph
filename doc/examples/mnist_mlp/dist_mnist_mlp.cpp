@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <cstdio>
 #include <functional>
@@ -20,13 +20,13 @@
 #include <list>
 #include <math.h>
 #include <memory>
-#include <mpi.h>
 #include <random>
 #include <set>
 #include <stdexcept>
 #include <string>
 
 #include <ngraph/autodiff/adjoints.hpp>
+#include <ngraph/distributed.hpp>
 #include <ngraph/graph_util.hpp>
 #include <ngraph/ngraph.hpp>
 
@@ -109,7 +109,7 @@ float test_accuracy(MNistDataLoader& loader,
 
 int main(int argc, const char* argv[])
 {
-    MPI::Init();
+    ngraph::Distributed dist;
 
     size_t epochs = 5;
     size_t batch_size = 128;
@@ -290,8 +290,6 @@ int main(int argc, const char* argv[])
                       << std::endl;
         }
     }
-
-    MPI::Finalize();
 
     return 0;
 }

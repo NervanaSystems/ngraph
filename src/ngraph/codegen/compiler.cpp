@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <iostream>
 
@@ -408,9 +408,15 @@ void codegen::CompilerCore::configure_search_path()
 #endif
 
 #if defined(__APPLE__)
+#ifdef EIGEN_HEADERS_PATH
     add_header_search_path(EIGEN_HEADERS_PATH);
+#endif
+#ifdef MKLDNN_HEADERS_PATH
     add_header_search_path(MKLDNN_HEADERS_PATH);
+#endif
+#ifdef TBB_HEADERS_PATH
     add_header_search_path(TBB_HEADERS_PATH);
+#endif
     add_header_search_path(NGRAPH_HEADERS_PATH);
     add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
 
@@ -422,9 +428,15 @@ void codegen::CompilerCore::configure_search_path()
     // Instead of re-implementing all of that functionality in a custom toolchain
     // just hardcode the paths relevant to frequently used build/test machines for now
     add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
+#ifdef EIGEN_HEADERS_PATH
     add_header_search_path(EIGEN_HEADERS_PATH);
+#endif
+#ifdef MKLDNN_HEADERS_PATH
     add_header_search_path(MKLDNN_HEADERS_PATH);
+#endif
+#ifdef TBB_HEADERS_PATH
     add_header_search_path(TBB_HEADERS_PATH);
+#endif
     add_header_search_path(NGRAPH_HEADERS_PATH);
 
     string header_version = find_header_version("/usr/include/c++");

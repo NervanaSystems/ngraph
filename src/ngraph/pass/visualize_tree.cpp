@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <fstream>
 
@@ -26,6 +26,8 @@
 
 using namespace ngraph;
 using namespace std;
+
+#define TI(x) std::type_index(typeid(x))
 
 bool pass::VisualizeTree::run_on_module(vector<shared_ptr<ngraph::Function>>& functions)
 {
@@ -101,12 +103,20 @@ std::string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
 
     ss << " label=\"" << node->get_name();
 
-    if (std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES") != nullptr)
+    static const auto nvtos = std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES");
+    if (nvtos != nullptr)
     {
         // The shapes of the Outputs of a multi-output op
         // will be printed for its corresponding `GetOutputElement`s
         ss << " " << (node->get_outputs().size() != 1 ? std::string("[skipped]")
                                                       : vector_to_string(node->get_shape()));
+    }
+
+    const Node& n = *node;
+    auto eh = m_ops_to_details.find(TI(n));
+    if (eh != m_ops_to_details.end())
+    {
+        eh->second(n, ss);
     }
 
     ss << " \"]\n";

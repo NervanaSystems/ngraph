@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "ngraph/op/reduce_window.hpp"
 #include "ngraph/function.hpp"
@@ -27,11 +27,13 @@ op::ReduceWindow::ReduceWindow(const shared_ptr<Node>& arg_reductee,
                                const shared_ptr<Function>& reduction_function,
                                const Shape& window_shape,
                                const Strides& window_movement_strides)
-    : RequiresTensorViewArgs("ReduceWindow", {arg_reductee, arg_init})
+    : Op("ReduceWindow", check_single_output_args({arg_reductee, arg_init}))
     , m_reduction_function(reduction_function)
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
 {
+    constructor_validate_and_infer_types();
+
     auto& input_reductee = get_inputs().at(0);
     auto& input_init = get_inputs().at(1);
     auto input_reductee_shape = input_reductee.get_shape();
@@ -128,15 +130,12 @@ op::ReduceWindow::ReduceWindow(const shared_ptr<Node>& arg_reductee,
             ceil_div(input_reductee_shape[i] - window_shape[i] + 1, window_movement_strides[i]));
     }
 
-    set_value_type_checked(input_reductee.get_element_type(), result_shape);
+    set_output_type(0, input_reductee.get_element_type(), result_shape);
 }
 
 shared_ptr<Node> op::ReduceWindow::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 2)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     auto node = make_shared<ReduceWindow>(new_args.at(0),
                                           new_args.at(1),
                                           m_reduction_function,

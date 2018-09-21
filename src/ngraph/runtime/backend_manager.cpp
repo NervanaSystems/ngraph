@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #ifdef WIN32
 #include <windows.h>
@@ -91,7 +91,7 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
         if (!handle)
         {
             stringstream ss;
-            ss << "Backend '" << type << "' not registered";
+            ss << "Backend '" << type << "' not registered. Error:" << dlerror();
             throw runtime_error(ss.str());
         }
         function<const char*()> get_ngraph_version_string =
@@ -175,28 +175,7 @@ map<string, string> runtime::BackendManager::get_registered_device_map()
         string backend_name;
         if (is_backend_name(name, backend_name))
         {
-            DL_HANDLE handle;
-#ifdef WIN32
-            handle = LoadLibrary(file.c_str());
-#else
-            handle = dlopen(file.c_str(), RTLD_LAZY | RTLD_LOCAL);
-#endif
-            if (handle)
-            {
-                if (DLSYM(handle, "new_backend") && DLSYM(handle, "delete_backend"))
-                {
-                    function<const char*()> get_ngraph_version_string =
-                        reinterpret_cast<const char* (*)()>(
-                            DLSYM(handle, "get_ngraph_version_string"));
-                    if (get_ngraph_version_string &&
-                        get_ngraph_version_string() == string(NGRAPH_VERSION))
-                    {
-                        rc.insert({to_upper(backend_name), file});
-                    }
-                }
-
-                CLOSE_LIBRARY(handle);
-            }
+            rc.insert({to_upper(backend_name), file});
         }
     };
     file_util::iterate_files(my_directory, f, false, true);

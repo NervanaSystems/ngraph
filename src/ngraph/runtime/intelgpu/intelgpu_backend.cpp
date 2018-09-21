@@ -1,22 +1,23 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <CPP/activation.hpp>
 #include <CPP/activation_grad.hpp>
 #include <CPP/batch_norm.hpp>
+#include <CPP/broadcast.hpp>
 #include <CPP/concatenation.hpp>
 #include <CPP/convolution.hpp>
 #include <CPP/data.hpp>
@@ -67,14 +68,44 @@
 using namespace std;
 using namespace ngraph;
 
+// This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
+// Abs,
+// Acos,
+// ...
+#define NGRAPH_OP(a, b) a,
+enum class OP_TYPEID
+{
+#include "ngraph/op/op_tbl.hpp"
+};
+#undef NGRAPH_OP
+
+static OP_TYPEID get_typeid(const string& s)
+{
+// This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
+// {"Abs", OP_TYPEID::Abs},
+// {"Acos", OP_TYPEID::Acos},
+// ...
+#define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
+    static const unordered_map<string, OP_TYPEID> typeid_map{
+#include "ngraph/op/op_tbl.hpp"
+    };
+#undef NGRAPH_OP
+    auto it = typeid_map.find(s);
+    if (it == typeid_map.end())
+    {
+        throw unsupported_op("Unsupported op '" + s + "'");
+    }
+    return it->second;
+}
+
 static void arguments_check(const shared_ptr<Node>& op, size_t input, size_t output)
 {
     if (op->get_input_size() != input || op->get_output_size() != output)
     {
         ostringstream os;
         os << "Operation \"" << op->description() << "\" input and output sizes mismatch."
-           << " Expected input size=" << op->get_input_size() << ", provided=" << input
-           << ". Expected output size=" << op->get_output_size() << ", provided=" << output;
+           << " Expected input size=" << input << ", provided=" << op->get_input_size()
+           << ". Expected output size=" << output << ", provided=" << op->get_output_size();
         throw invalid_argument(os.str());
     }
 }
@@ -107,15 +138,6 @@ static const element::Type& get_input_type(const shared_ptr<Node>& op, size_t nu
 static const element::Type& get_output_type(const shared_ptr<Node>& op, size_t num = 0)
 {
     return op->get_outputs().at(num).get_tensor().get_element_type();
-}
-
-static void argument_type_check(const element::Type& type)
-{
-    if (type != element::f32 && type != element::boolean)
-    {
-        throw invalid_argument("Kernel data type \"" + type.c_type_string() +
-                               "\" is not supported.");
-    }
 }
 
 static void do_eltwise_operation(cldnn::topology& topology,
@@ -168,16 +190,13 @@ static void do_logical_operation(cldnn::topology& topology,
                                  const string& operation)
 {
     arguments_check(op, 2, 1);
-    argument_type_check(get_input_type(op, 0));
-    argument_type_check(get_input_type(op, 1));
 
     runtime::intelgpu::do_logic_kernel(topology,
                                        get_input_name(op, 0),
                                        get_input_shape(op, 0),
-                                       get_input_type(op, 0).c_type_string(),
+                                       get_input_type(op, 0),
                                        get_input_name(op, 1),
                                        get_input_shape(op, 1),
-                                       get_input_type(op, 1).c_type_string(),
                                        get_output_name(op),
                                        get_output_shape(op),
                                        get_output_type(op),
@@ -242,33 +261,47 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
     for (shared_ptr<Node> op : func->get_ops())
     {
-        if ("Parameter" == op->description())
+// We want to check that every OP_TYPEID enumeration is included in the list.
+// These GCC flags enable compile-time checking so that if an enumeration
+// is not in the list an error is generated.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+        switch (get_typeid(op->description()))
+        {
+        case OP_TYPEID::Parameter:
         {
             arguments_check(op, 0, 1);
 
-            const string& element_name = op->get_output_tensor_view()->get_tensor().get_name();
+            const string& element_name = op->get_output_tensor_ptr()->get_name();
             const cldnn::layout element_layout =
                 IntelGPULayout::create_cldnn_layout(op->get_element_type(), op->get_shape());
 
             const cldnn::input_layout op_layout(element_name, element_layout);
             topology.add(op_layout);
+            break;
         }
-        else if ("Result" == op->description())
+        case OP_TYPEID::Result:
         {
             arguments_check(op, 1, 1);
 
             do_equal_propagation(topology, get_input_name(op), get_output_name(op));
+            break;
         }
-        else if ("GetOutputElement" == op->description())
+        case OP_TYPEID::GetOutputElement:
         {
-            arguments_check(op, 3, 1);
+            if (op->get_inputs().empty() || op->get_outputs().size() != 1)
+            {
+                arguments_check(op, 1, 1); // at least one input and exact one output expected
+            }
 
             const shared_ptr<op::GetOutputElement> elem =
                 static_pointer_cast<op::GetOutputElement>(op);
 
             do_equal_propagation(topology, get_input_name(op, elem->get_n()), get_output_name(op));
+            break;
         }
-        else if ("Slice" == op->description())
+        case OP_TYPEID::Slice:
         {
             arguments_check(op, 1, 1);
 
@@ -294,8 +327,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                    upper_bounds,
                                    strides);
             }
+            break;
         }
-        else if ("Select" == op->description())
+        case OP_TYPEID::Select:
         {
             arguments_check(op, 3, 1);
 
@@ -309,8 +343,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                 get_output_name(op),
                                 get_output_shape(op),
                                 get_output_type(op));
+            break;
         }
-        else if ("Reverse" == op->description())
+        case OP_TYPEID::Reverse:
         {
             arguments_check(op, 1, 1);
 
@@ -331,8 +366,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                      get_output_type(op),
                                      reversed_axes);
             }
+            break;
         }
-        else if ("Convert" == op->description())
+        case OP_TYPEID::Convert:
         {
             arguments_check(op, 1, 1);
 
@@ -350,8 +386,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                      get_output_shape(op),
                                      get_output_type(op));
             }
+            break;
         }
-        else if ("Concat" == op->description())
+        case OP_TYPEID::Concat:
         {
             if (op->get_inputs().empty() || op->get_outputs().size() != 1)
             {
@@ -377,8 +414,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
             const cldnn::concatenation cldnn_concat(get_output_name(op), inputs, cldnn_axis);
             topology.add(cldnn_concat);
+            break;
         }
-        else if ("Softmax" == op->description())
+        case OP_TYPEID::Softmax:
         {
             arguments_check(op, 1, 1);
 
@@ -421,28 +459,34 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                     get_output_name(op), get_input_name(op), dimension);
                 topology.add(cldnn_softmax);
             }
+            break;
         }
-        else if ("Add" == op->description())
+        case OP_TYPEID::Add:
         {
             do_eltwise_operation(topology, op, cldnn::eltwise_mode::sum);
+            break;
         }
-        else if ("Multiply" == op->description())
+        case OP_TYPEID::Multiply:
         {
             do_eltwise_operation(topology, op, cldnn::eltwise_mode::prod);
+            break;
         }
-        else if ("Divide" == op->description())
+        case OP_TYPEID::Divide:
         {
             do_eltwise_operation(topology, op, cldnn::eltwise_mode::div);
+            break;
         }
-        else if ("Maximum" == op->description())
+        case OP_TYPEID::Maximum:
         {
             do_eltwise_operation(topology, op, cldnn::eltwise_mode::max);
+            break;
         }
-        else if ("Minimum" == op->description())
+        case OP_TYPEID::Minimum:
         {
             do_eltwise_operation(topology, op, cldnn::eltwise_mode::min);
+            break;
         }
-        else if ("Constant" == op->description())
+        case OP_TYPEID::Constant:
         {
             arguments_check(op, 0, 1);
 
@@ -456,8 +500,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
             const cldnn::data op_const(get_output_name(op), mem);
             topology.add(op_const);
+            break;
         }
-        else if ("Dot" == op->description())
+        case OP_TYPEID::Dot:
         {
             arguments_check(op, 2, 1);
 
@@ -469,8 +514,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                              get_output_name(op),
                              get_output_shape(op),
                              get_output_type(op));
+            break;
         }
-        else if ("MaxPool" == op->description())
+        case OP_TYPEID::MaxPool:
         {
             const shared_ptr<op::MaxPool> max_pool = static_pointer_cast<op::MaxPool>(op);
 
@@ -480,8 +526,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                  max_pool->get_window_movement_strides(),
                                  max_pool->get_padding_below(),
                                  cldnn::pooling_mode::max);
+            break;
         }
-        else if ("MaxPoolBackprop" == op->description())
+        case OP_TYPEID::MaxPoolBackprop:
         {
             arguments_check(op, 2, 1);
 
@@ -499,8 +546,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                            max_pool_b->get_window_shape(),
                                            max_pool_b->get_window_movement_strides(),
                                            max_pool_b->get_padding_below());
+            break;
         }
-        else if ("AvgPool" == op->description())
+        case OP_TYPEID::AvgPool:
         {
             const shared_ptr<op::AvgPool> avg_pool = static_pointer_cast<op::AvgPool>(op);
             const cldnn::pooling_mode mode = avg_pool->get_include_padding_in_avg_computation()
@@ -513,8 +561,28 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                  avg_pool->get_window_movement_strides(),
                                  avg_pool->get_padding_below(),
                                  mode);
+            break;
         }
-        else if ("Broadcast" == op->description())
+        case OP_TYPEID::AvgPoolBackprop:
+        {
+            arguments_check(op, 1, 1);
+
+            const shared_ptr<op::AvgPoolBackprop> avg_pool_b =
+                static_pointer_cast<op::AvgPoolBackprop>(op);
+
+            do_avg_pool_backprop_operation(topology,
+                                           get_input_name(op, 0),
+                                           get_input_shape(op, 0),
+                                           get_output_name(op),
+                                           get_output_shape(op),
+                                           get_output_type(op),
+                                           avg_pool_b->get_window_shape(),
+                                           avg_pool_b->get_window_movement_strides(),
+                                           avg_pool_b->get_padding_below(),
+                                           avg_pool_b->get_include_padding_in_avg_computation());
+            break;
+        }
+        case OP_TYPEID::Broadcast:
         {
             arguments_check(op, 1, 1);
 
@@ -525,19 +593,30 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             {
                 do_equal_propagation(topology, get_input_name(op), get_output_name(op));
             }
+            else if (get_input_shape(op).empty() ||
+                     (get_input_shape(op).size() == 1 && get_input_shape(op).at(0) == 1))
+            {
+                const cldnn::tensor output_tensor_size =
+                    runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(get_output_shape(op));
+                const cldnn::broadcast cldnn_broadcast(
+                    get_output_name(op), get_input_name(op), output_tensor_size);
+                topology.add(cldnn_broadcast);
+            }
             else
             {
                 do_bcast_sum_operation(topology,
                                        get_input_name(op),
                                        get_input_shape(op),
+                                       get_input_type(op),
                                        get_output_name(op),
                                        get_output_shape(op),
                                        get_output_type(op),
                                        axis,
                                        true);
             }
+            break;
         }
-        else if ("Sum" == op->description())
+        case OP_TYPEID::Sum:
         {
             arguments_check(op, 1, 1);
 
@@ -553,14 +632,16 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                 do_bcast_sum_operation(topology,
                                        get_input_name(op),
                                        get_input_shape(op),
+                                       get_input_type(op),
                                        get_output_name(op),
                                        get_output_shape(op),
                                        get_output_type(op),
                                        axis,
                                        false);
             }
+            break;
         }
-        else if ("Product" == op->description())
+        case OP_TYPEID::Product:
         {
             arguments_check(op, 1, 1);
 
@@ -581,43 +662,54 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                      get_output_type(op),
                                      axis);
             }
+            break;
         }
-        else if ("Reshape" == op->description())
+        case OP_TYPEID::Reshape:
         {
             arguments_check(op, 1, 1);
 
-            const shared_ptr<op::Reshape> op_broadcast = static_pointer_cast<op::Reshape>(op);
-            const AxisVector& broadcast_axes = op_broadcast->get_input_order();
+            const shared_ptr<op::Reshape> op_reshape = static_pointer_cast<op::Reshape>(op);
 
-            vector<uint16_t> permute_order({0, 1, 2, 3}); // No action by default
-            const size_t max_dim = 4;
-            const size_t scale =
-                broadcast_axes.size() < max_dim ? max_dim - broadcast_axes.size() : 0;
-
-            // Need to scale indexes up according on array rank.
-            // For example, in 2D array, indexes are 0,1 but in 4D array it should be 2,3
-            // because cldnn::tensor is always 4D assuming cldnn::bfyx model
-            size_t rindex = max_dim;
-            for (auto i = broadcast_axes.crbegin(); i != broadcast_axes.crend() && rindex > 0;
-                 ++i, --rindex)
+            if (op_reshape->get_is_transpose())
             {
-                permute_order.at(rindex - 1) = *i + scale;
-            }
+                vector<uint16_t> permute_order({0, 1, 2, 3}); // No action by default
+                const AxisVector& reshape_axes = op_reshape->get_input_order();
+                const size_t max_dim = 4;
+                const size_t scale =
+                    reshape_axes.size() < max_dim ? max_dim - reshape_axes.size() : 0;
 
-            const cldnn::permute cldnn_permute(
-                get_output_name(op), get_input_name(op), permute_order);
-            topology.add(cldnn_permute);
+                // Need to scale indexes up according on array rank.
+                // For example, in 2D array, indexes are 0,1 but in 4D array it should be 2,3
+                // because cldnn::tensor is always 4D assuming cldnn::bfyx model
+                size_t rindex = max_dim;
+                for (auto i = reshape_axes.crbegin(); i != reshape_axes.crend() && rindex > 0;
+                     ++i, --rindex)
+                {
+                    permute_order.at(rindex - 1) = *i + scale;
+                }
+
+                const cldnn::permute cldnn_permute(
+                    get_output_name(op), get_input_name(op), permute_order);
+                topology.add(cldnn_permute);
+            }
+            else
+            {
+                do_equal_propagation(topology, get_input_name(op), get_output_name(op));
+            }
+            break;
         }
-        else if ("Negative" == op->description())
+        case OP_TYPEID::Negative:
         {
             const cldnn_activation_additional_params param = {-1.f, 0.f};
             do_unary_operation(topology, op, activation_linear, param);
+            break;
         }
-        else if ("Relu" == op->description())
+        case OP_TYPEID::Relu:
         {
             do_unary_operation(topology, op, activation_relu);
+            break;
         }
-        else if ("ReluBackprop" == op->description())
+        case OP_TYPEID::ReluBackprop:
         {
             arguments_check(op, 2, 1);
 
@@ -628,56 +720,83 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                                           activation_grad_relu,
                                                           param);
             topology.add(cldnn_activ_grad);
+            break;
         }
-        else if ("Abs" == op->description())
+        case OP_TYPEID::Abs:
         {
             do_unary_operation(topology, op, activation_abs);
+            break;
         }
-        else if ("Sqrt" == op->description())
+        case OP_TYPEID::Sqrt:
         {
             do_unary_operation(topology, op, activation_sqrt);
+            break;
         }
-        else if ("Tanh" == op->description())
+        case OP_TYPEID::Tanh:
         {
             do_unary_operation(topology, op, activation_hyperbolic_tan);
+            break;
         }
-        else if ("Sin" == op->description())
+        case OP_TYPEID::Sin:
         {
             do_unary_operation(topology, op, activation_sin);
+            break;
         }
-        else if ("Asin" == op->description())
+        case OP_TYPEID::Asin:
         {
             do_unary_operation(topology, op, activation_asin);
+            break;
         }
-        else if ("Sinh" == op->description())
+        case OP_TYPEID::Sinh:
         {
             do_unary_operation(topology, op, activation_sinh);
+            break;
         }
-        else if ("Cos" == op->description())
+        case OP_TYPEID::Cos:
         {
             do_unary_operation(topology, op, activation_cos);
+            break;
         }
-        else if ("Acos" == op->description())
+        case OP_TYPEID::Acos:
         {
             do_unary_operation(topology, op, activation_acos);
+            break;
         }
-        else if ("Cosh" == op->description())
+        case OP_TYPEID::Cosh:
         {
             do_unary_operation(topology, op, activation_cosh);
+            break;
         }
-        else if ("Log" == op->description())
+        case OP_TYPEID::Log:
         {
             do_unary_operation(topology, op, activation_log);
+            break;
         }
-        else if ("Exp" == op->description())
+        case OP_TYPEID::Exp:
         {
             do_unary_operation(topology, op, activation_exp);
+            break;
         }
-        else if ("Sigmoid" == op->description())
+        case OP_TYPEID::Sigmoid:
         {
             do_unary_operation(topology, op, activation_logistic);
+            break;
         }
-        else if ("Not" == op->description())
+        case OP_TYPEID::SigmoidBackprop:
+        {
+            arguments_check(op, 2, 1);
+
+            do_sigmoid_backprop_operation(topology,
+                                          get_input_name(op, 0),
+                                          get_input_shape(op, 0),
+                                          get_input_name(op, 1),
+                                          get_input_shape(op, 1),
+                                          get_output_name(op),
+                                          get_output_shape(op),
+                                          get_output_type(op));
+            break;
+        }
+        case OP_TYPEID::Not:
         {
             arguments_check(op, 1, 1);
 
@@ -687,53 +806,128 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                              get_output_name(op),
                              get_output_shape(op),
                              get_output_type(op));
+            break;
         }
-        else if ("Greater" == op->description())
+        case OP_TYPEID::Greater:
         {
             do_logical_operation(topology, op, " > ");
+            break;
         }
-        else if ("GreaterEq" == op->description())
+        case OP_TYPEID::GreaterEq:
         {
             do_logical_operation(topology, op, " >= ");
+            break;
         }
-        else if ("Equal" == op->description())
+        case OP_TYPEID::Equal:
         {
             do_logical_operation(topology, op, " == ");
+            break;
         }
-        else if ("NotEqual" == op->description())
+        case OP_TYPEID::NotEqual:
         {
             do_logical_operation(topology, op, " != ");
+            break;
         }
-        else if ("Less" == op->description())
+        case OP_TYPEID::Less:
         {
             do_logical_operation(topology, op, " < ");
+            break;
         }
-        else if ("LessEq" == op->description())
+        case OP_TYPEID::LessEq:
         {
             do_logical_operation(topology, op, " <= ");
+            break;
         }
-        else if ("And" == op->description())
+        case OP_TYPEID::And:
         {
             do_logical_operation(topology, op, " && ");
+            break;
         }
-        else if ("Or" == op->description())
+        case OP_TYPEID::Or:
         {
             do_logical_operation(topology, op, " || ");
+            break;
         }
-        else if ("Subtract" == op->description())
+        case OP_TYPEID::Subtract:
         {
             do_eltwise_operation(topology, op, cldnn::eltwise_mode::sub);
+            break;
         }
-        else if ("Power" == op->description())
+        case OP_TYPEID::Power:
         {
             do_eltwise_operation(topology, op, cldnn::eltwise_mode::pow);
+            break;
         }
-        else if ("Pad" == op->description())
+        case OP_TYPEID::Atan:
+        {
+            arguments_check(op, 1, 1);
+            do_custom_eltwise_operation(topology,
+                                        get_input_name(op),
+                                        get_input_shape(op),
+                                        get_input_type(op),
+                                        get_output_name(op),
+                                        get_output_shape(op),
+                                        get_output_type(op),
+                                        CUSTOM_ELTWISE::Atan);
+            break;
+        }
+        case OP_TYPEID::Ceiling:
+        {
+            arguments_check(op, 1, 1);
+            do_custom_eltwise_operation(topology,
+                                        get_input_name(op),
+                                        get_input_shape(op),
+                                        get_input_type(op),
+                                        get_output_name(op),
+                                        get_output_shape(op),
+                                        get_output_type(op),
+                                        CUSTOM_ELTWISE::Ceil);
+            break;
+        }
+        case OP_TYPEID::Floor:
+        {
+            arguments_check(op, 1, 1);
+            do_custom_eltwise_operation(topology,
+                                        get_input_name(op),
+                                        get_input_shape(op),
+                                        get_input_type(op),
+                                        get_output_name(op),
+                                        get_output_shape(op),
+                                        get_output_type(op),
+                                        CUSTOM_ELTWISE::Floor);
+            break;
+        }
+        case OP_TYPEID::Sign:
+        {
+            arguments_check(op, 1, 1);
+            do_custom_eltwise_operation(topology,
+                                        get_input_name(op),
+                                        get_input_shape(op),
+                                        get_input_type(op),
+                                        get_output_name(op),
+                                        get_output_shape(op),
+                                        get_output_type(op),
+                                        CUSTOM_ELTWISE::Sign);
+            break;
+        }
+        case OP_TYPEID::Tan:
+        {
+            arguments_check(op, 1, 1);
+            do_custom_eltwise_operation(topology,
+                                        get_input_name(op),
+                                        get_input_shape(op),
+                                        get_input_type(op),
+                                        get_output_name(op),
+                                        get_output_shape(op),
+                                        get_output_type(op),
+                                        CUSTOM_ELTWISE::Tan);
+            break;
+        }
+        case OP_TYPEID::Pad:
         {
             arguments_check(op, 2, 1);
 
             const shared_ptr<op::Pad> pad = static_pointer_cast<op::Pad>(op);
-            const Shape& pad_above = pad->get_padding_above();
             const Shape& pad_below = pad->get_padding_below();
             const Shape& pad_interior = pad->get_padding_interior();
 
@@ -746,8 +940,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                              get_output_type(op),
                              pad_below,
                              pad_interior);
+            break;
         }
-        else if ("BatchNormBackprop" == op->description())
+        case OP_TYPEID::BatchNormBackprop:
         {
             arguments_check(op, 6, 3);
 
@@ -785,8 +980,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                              get_output_name(op, 0),
                                              get_output_name(op, 1),
                                              get_output_name(op, 2));
+            break;
         }
-        else if ("BatchNorm" == op->description())
+        case OP_TYPEID::BatchNorm:
         {
             const shared_ptr<op::BatchNorm> batch_norm = static_pointer_cast<op::BatchNorm>(op);
             const double eps = batch_norm->get_eps_value();
@@ -845,8 +1041,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             {
                 arguments_check(op, 5, 1); // throw exception in this case
             }
+            break;
         }
-        else if ("Convolution" == op->description())
+        case OP_TYPEID::Convolution:
         {
             arguments_check(op, 2, 1);
 
@@ -857,16 +1054,11 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             const CoordinateDiff& pad_below = conv_op->get_padding_below();
             const CoordinateDiff& pad_above = conv_op->get_padding_above();
 
-            // clDNN failed with filter size 1
-            const Shape filter_data(get_input_shape(op, 1).cbegin() + 2,
-                                    get_input_shape(op, 1).cend());
-            const size_t filter_size = shape_size(filter_data);
-
             // clDNN has quite limited support for Convolution operation
             // following are the checks to go with workaround
             if ((win_stride.size() > 2) || (pad_below.size() > 2 || pad_above.size() > 2) ||
                 (pad_below.at(0) != pad_above.at(0) || pad_below.at(1) != pad_above.at(1)) ||
-                (win_dilation.size() > 2) || (filter_size < 2) ||
+                (win_dilation.size() > 2) ||
                 (data_dilation.size() > 2 || data_dilation.at(0) != 1 || data_dilation.at(1) != 1))
             {
                 do_convolution_operation(topology,
@@ -903,8 +1095,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                                     dilation);
                 topology.add(cldnn_conv);
             }
+            break;
         }
-        else if ("ConvolutionBackpropFilters" == op->description())
+        case OP_TYPEID::ConvolutionBackpropFilters:
         {
             arguments_check(op, 2, 1);
 
@@ -930,8 +1123,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                      "filter[input_channel][output_channel]",
                                      "output[output_channel][batch]",
                                      false);
+            break;
         }
-        else if ("ConvolutionBackpropData" == op->description())
+        case OP_TYPEID::ConvolutionBackpropData:
         {
             arguments_check(op, 2, 1);
 
@@ -957,8 +1151,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                      "filter[input_channel][output_channel]",
                                      "output[batch][output_channel]",
                                      true);
+            break;
         }
-        else if ("Min" == op->description())
+        case OP_TYPEID::Min:
         {
             arguments_check(op, 1, 1);
 
@@ -973,8 +1168,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                  get_output_type(op),
                                  axis,
                                  true);
+            break;
         }
-        else if ("Max" == op->description())
+        case OP_TYPEID::Max:
         {
             arguments_check(op, 1, 1);
 
@@ -989,8 +1185,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                  get_output_type(op),
                                  axis,
                                  false);
+            break;
         }
-        else if ("OneHot" == op->description())
+        case OP_TYPEID::OneHot:
         {
             arguments_check(op, 1, 1);
 
@@ -1005,10 +1202,25 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                  get_output_shape(op),
                                  get_output_type(op),
                                  one_hot_axis);
+            break;
         }
-        else
+        case OP_TYPEID::AllReduce:
+        case OP_TYPEID::ArgMax:
+        case OP_TYPEID::ArgMin:
+        case OP_TYPEID::FunctionCall:
+        case OP_TYPEID::LRN:
+        case OP_TYPEID::Reduce:
+        case OP_TYPEID::ReduceWindow:
+        case OP_TYPEID::ReplaceSlice:
+        case OP_TYPEID::ReverseSequence:
+        case OP_TYPEID::SelectAndScatter:
+        case OP_TYPEID::StopGradient:
+        case OP_TYPEID::TopK:
         {
-            throw invalid_argument("IntelGPU: Unsupported operation \"" + op->description() + "\"");
+            throw unsupported_op("Unsupported op '" + op->description() +
+                                 "' in IntelGPU back end.");
+        }
+#pragma GCC diagnostic pop
         }
     }
 

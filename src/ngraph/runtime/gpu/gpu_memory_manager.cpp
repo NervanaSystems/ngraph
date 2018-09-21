@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <cstring>
 
@@ -27,7 +27,7 @@ constexpr const uint32_t initial_buffer_size = 10 * 1024 * 1024;
 runtime::gpu::GPUMemoryManager::GPUMemoryManager(GPUPrimitiveEmitter* emitter)
     : m_buffer_offset(0)
     , m_buffered_mem(initial_buffer_size)
-    , m_workspace_manager(runtime::gpu::GPUMemoryManager::alignment)
+    , m_workspace_manager(new pass::MemoryManager(runtime::gpu::GPUMemoryManager::alignment))
     , m_argspace_mem(1, {nullptr, 0})
     , m_workspace_mem(1, {nullptr, 0})
     , m_primitive_emitter(emitter)
@@ -62,7 +62,7 @@ runtime::gpu::GPUMemoryManager::~GPUMemoryManager()
 
 void runtime::gpu::GPUMemoryManager::allocate()
 {
-    if (m_workspace_manager.get_node_list().size() != 1)
+    if (m_workspace_manager->get_node_list().size() != 1)
     {
         throw std::runtime_error(
             "Attempt to allocate memory while reservations are inprogress. Ensure all "
@@ -83,12 +83,14 @@ void runtime::gpu::GPUMemoryManager::allocate()
         m_buffer_offset = 0;
     }
 
-    auto workspace_size = m_workspace_manager.max_allocated();
+    auto workspace_size = m_workspace_manager->max_allocated();
     if (workspace_size)
     {
         m_workspace_mem.back().ptr = runtime::gpu::create_gpu_buffer(workspace_size);
         m_workspace_mem.back().size = workspace_size;
         m_workspace_mem.push_back({nullptr, 0});
+        m_workspace_manager.reset(
+            new pass::MemoryManager(runtime::gpu::GPUMemoryManager::alignment));
     }
 }
 
@@ -142,7 +144,7 @@ size_t runtime::gpu::GPUAllocator::reserve_argspace(const void* data, size_t siz
 
 size_t runtime::gpu::GPUAllocator::reserve_workspace(size_t size, bool zero_initialize)
 {
-    size_t offset = m_manager->m_workspace_manager.allocate(size);
+    size_t offset = m_manager->m_workspace_manager->allocate(size);
     m_active.push(offset);
     auto local = std::prev(m_manager->m_workspace_mem.end());
     // return a lambda that will yield the gpu memory address. this
@@ -168,7 +170,7 @@ void runtime::gpu::GPUAllocator::close()
 {
     while (!m_active.empty())
     {
-        m_manager->m_workspace_manager.free(m_active.top());
+        m_manager->m_workspace_manager->free(m_active.top());
         m_active.pop();
     }
 }

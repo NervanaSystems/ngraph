@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <algorithm>
 #include <iostream>
@@ -50,6 +50,7 @@
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
+#include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
@@ -993,6 +994,143 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
     this->add_matcher(m);
 }
 
+void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add()
+{
+    Shape shape{2, 2, 1, 1};
+    auto data_batch = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
+
+    auto pconv = std::make_shared<op::Convolution>(data_batch,
+                                                   filters,
+                                                   Strides{1, 1},
+                                                   Strides{1, 1},
+                                                   CoordinateDiff{0, 0},
+                                                   CoordinateDiff{0, 0},
+                                                   Strides{1, 1});
+    auto add_input = std::make_shared<pattern::op::Label>(element::f32, pconv->get_shape());
+    auto padd = std::make_shared<op::Add>(add_input, pconv);
+
+    pattern::graph_rewrite_callback callback = [data_batch, filters](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_conv_add against "
+                     << m.get_match_root()->get_name();
+
+        auto add_m = m.get_match_root();
+        auto pattern_map = m.get_pattern_map();
+        auto conv_m = std::dynamic_pointer_cast<op::Convolution>(add_m->get_argument(1));
+        auto inplace_input = add_m->get_argument(0);
+
+        if (!conv_m)
+        {
+            conv_m = std::dynamic_pointer_cast<op::Convolution>(add_m->get_argument(0));
+            inplace_input = add_m->get_argument(1);
+        }
+
+        //These checks are to make sure a MKLDNN Convolution kernel can be used.
+        bool data_dilated = false;
+        for (size_t s : conv_m->get_data_dilation_strides())
+        {
+            data_dilated = data_dilated || (s != 1);
+        }
+
+        if (data_dilated)
+        {
+            NGRAPH_DEBUG << "Convolution has dilations greater than 1";
+            return false;
+        }
+
+        if (conv_m->get_element_type() != element::f32)
+        {
+            NGRAPH_DEBUG << "Convolution isn't of type float";
+            return false;
+        }
+
+        auto arg0_rank = conv_m->get_input_shape(0).size();
+        auto arg1_rank = conv_m->get_input_shape(1).size();
+
+        if (arg0_rank != 4 || arg1_rank != 4)
+        {
+            NGRAPH_DEBUG << "Convolution's arguments ranks aren't equal to 4";
+            return false;
+        }
+
+        if (get_user_count(conv_m.get()) > 1)
+        {
+            NGRAPH_DEBUG << "Convolution has more than one user";
+            return false;
+        }
+
+        if (!is_post_dominated(inplace_input.get(), add_m.get()))
+        {
+            NGRAPH_DEBUG << "Unsafe to use in-place kernel since add's in-place input has "
+                            "potential live users";
+            return false;
+        }
+
+        if (inplace_input->is_parameter())
+        {
+            NGRAPH_DEBUG
+                << "Unsafe to use in-place kernel since add's in-place input is a parameter";
+            return false;
+        }
+
+        auto conv_add = std::shared_ptr<Node>(new op::ConvolutionAdd(conv_m, inplace_input, false));
+        ngraph::replace_node(m.get_match_root(), conv_add);
+        return true;
+    };
+
+    auto m = std::make_shared<pattern::Matcher>(padd, callback, "conv_add");
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add_relu()
+{
+    Shape shape{2, 2, 1, 1};
+    auto data_batch = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto add_input = std::make_shared<pattern::op::Label>(element::f32, shape);
+
+    auto pconv = std::make_shared<op::ConvolutionAdd>(data_batch,
+                                                      filters,
+                                                      add_input,
+                                                      Strides{1, 1},
+                                                      Strides{1, 1},
+                                                      CoordinateDiff{0, 0},
+                                                      CoordinateDiff{0, 0},
+                                                      Strides{1, 1},
+                                                      false);
+    auto prelu = std::make_shared<op::Relu>(pconv);
+
+    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_conv_add_relu against "
+                     << m.get_match_root()->get_name();
+
+        auto conv_m =
+            std::dynamic_pointer_cast<op::ConvolutionAdd>(m.get_match_root()->get_argument(0));
+        if (conv_m->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "Convolution has more than one user";
+            return false;
+        }
+
+        // ConvolutionAdd created only if it can run with MKLDNN.
+        // No further checks needed.
+        auto conv_n = std::make_shared<op::ConvolutionAdd>(conv_m->get_argument(0),
+                                                           conv_m->get_argument(1),
+                                                           conv_m->get_argument(2),
+                                                           conv_m->get_window_movement_strides(),
+                                                           conv_m->get_window_dilation_strides(),
+                                                           conv_m->get_padding_below(),
+                                                           conv_m->get_padding_above(),
+                                                           conv_m->get_data_dilation_strides(),
+                                                           true);
+        ngraph::replace_node(m.get_match_root(), conv_n);
+        return true;
+    };
+
+    auto m = std::make_shared<pattern::Matcher>(prelu, callback, "conv_add_relu");
+    this->add_matcher(m);
+}
+
 void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
 {
     Shape shape{2, 2, 1, 1};
@@ -1072,17 +1210,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
             NGRAPH_DEBUG
                 << "Unsafe to use in-place kernel since add's in-place input is a parameter";
             return false;
-        }
-
-        for (auto add_user : m.get_match_root()->get_users())
-        {
-            if (add_user->is_output())
-            {
-                // TODO: Remove restriction once we handle this case in codegen
-                NGRAPH_DEBUG
-                    << "Unsafe to use in-place kernel since add's in-place output is a result";
-                return false;
-            }
         }
 
         auto conv_add =
@@ -1246,7 +1373,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
         auto pattern_map = m.get_pattern_map();
         if (!std::dynamic_pointer_cast<op::Constant>(pattern_map[alpha]))
         {
-            throw ngraph_error("alpha must be constant for bounded relu");
+            NGRAPH_DEBUG << "alpha must be constant for bounded relu";
+            return false;
         }
 
         // we wont fuse if the alpha and the Relu output element type are not same

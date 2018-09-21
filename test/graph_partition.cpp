@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <memory>
 #include <sstream>
@@ -54,7 +54,7 @@ static function<Placement(shared_ptr<Node>)> int_with_cpu_mul_policy = [](shared
 // 1. HybridBackend's main use case is to test device placement and graph partition routines.
 // 2. It also shows how glued-hybrid runtime can be built by combining different runtimes.
 //
-// By default, HybridBackend operates on INTERPRETER (for example, the primary tensor view is
+// By default, HybridBackend operates on INTERPRETER (for example, the tensor view is
 // INTERPRETER tensor view). It falls back to CPU when requested by placement.
 class HybridBackend
 {
@@ -73,7 +73,7 @@ public:
 
     bool compile(const shared_ptr<Function>& func)
     {
-        if (!contains_key(m_function_map, func))
+        if (m_function_map.find(func) == m_function_map.end())
         {
             // Clone function
             FunctionInstance instance;
