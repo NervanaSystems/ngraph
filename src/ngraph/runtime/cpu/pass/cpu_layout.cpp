@@ -374,17 +374,7 @@ namespace ngraph
                     }
                     convolution_forward::primitive_desc prim_desc(*fwd_desc, cpu_engine);
                     i_mds.push_back(prim_desc.src_primitive_desc().desc());
-
-                    if (default_weights_format)
-                    {
-                        // note, we need the original shape (4D) while arg_shape1 is redefined
-                        i_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 1, false, memory::format::oihw));
-                    }
-                    else
-                    {
-                        i_mds.push_back(prim_desc.weights_primitive_desc().desc());
-                    }
+                    i_mds.push_back(prim_desc.weights_primitive_desc().desc());
 
                     if (use_bias)
                     {
