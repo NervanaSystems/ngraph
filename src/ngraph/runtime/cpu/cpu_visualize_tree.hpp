@@ -16,44 +16,25 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
+#include <set>
+#include <sstream>
+#include <string>
+#include <typeindex>
+#include <typeinfo>
+#include <unordered_map>
 
 #include "ngraph/node.hpp"
+#include "ngraph/pass/manager_state.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace interpreter
+        namespace cpu
         {
-            enum class OP_TYPEID;
-            class NodeWrapper;
+            const visualize_tree_ops_map_t& get_visualize_tree_ops_map();
         }
     }
 }
-
-// This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
-// Abs,
-// Acos,
-// ...
-#define NGRAPH_OP(a, b) a,
-enum class ngraph::runtime::interpreter::OP_TYPEID
-{
-#include "ngraph/op/op_tbl.hpp"
-};
-#undef NGRAPH_OP
-
-/// \brief This class allows adding an enum typeid to each Node. This makes dealing with
-/// collections of Nodes a little easier and faster as we can use switch() instead of
-/// if/else statements
-class ngraph::runtime::interpreter::NodeWrapper
-{
-public:
-    NodeWrapper(const std::shared_ptr<const ngraph::Node>& node);
-
-    const Node& get_node() const { return *m_node; }
-    ngraph::runtime::interpreter::OP_TYPEID get_typeid() const { return m_typeid; }
-private:
-    std::shared_ptr<const ngraph::Node> m_node;
-    OP_TYPEID m_typeid;
-};

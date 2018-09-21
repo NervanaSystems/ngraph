@@ -88,9 +88,7 @@ op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(
     constructor_validate_and_infer_types();
 
     auto& data_batch_shape = data_batch->get_shape();
-    auto& data_batch_et = data_batch->get_element_type();
     auto& filters_shape = filters->get_shape();
-    auto& filters_et = filters->get_element_type();
 
     auto min_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(min_input);
     auto max_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(max_input);
