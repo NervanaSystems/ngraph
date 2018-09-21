@@ -75,8 +75,8 @@ namespace ngraph
     ///
     ///   class CompileError : public AssertionFailure;
     ///
-    ///   #define COMPILE_ASSERT(node,cond)                                                  \
-    ///      NGRAPH_ASSERT_STREAM_WITH_LOC(::ngraph::CompileError, cond,                     \
+    ///   #define COMPILE_ASSERT(node,cond)                                       <backslash>
+    ///      NGRAPH_ASSERT_STREAM_WITH_LOC(::ngraph::CompileError, cond,          <backslash>
     ///                                    "While compiling node " + node->name())
     ///
     ///   ...
