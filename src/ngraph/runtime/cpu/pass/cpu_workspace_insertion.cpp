@@ -168,6 +168,9 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
                                                          m_max_pool->get_padding_above());
 
     ngraph::replace_node(m_max_pool_bprop, max_pool_with_indices_bprop);
-    m_indices_list.push_back(max_pool_with_indices_indices);
+    if (m_return_indices)
+    {
+        m_indices_list.push_back(max_pool_with_indices_indices);
+    }
     return true;
 }

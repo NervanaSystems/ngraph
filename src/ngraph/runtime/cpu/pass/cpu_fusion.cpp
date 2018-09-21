@@ -26,12 +26,14 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -41,6 +43,7 @@
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sigmoid.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
@@ -1373,7 +1376,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
         auto pattern_map = m.get_pattern_map();
         if (!std::dynamic_pointer_cast<op::Constant>(pattern_map[alpha]))
         {
-            throw ngraph_error("alpha must be constant for bounded relu");
+            NGRAPH_DEBUG << "alpha must be constant for bounded relu";
+            return false;
         }
 
         // we wont fuse if the alpha and the Relu output element type are not same
