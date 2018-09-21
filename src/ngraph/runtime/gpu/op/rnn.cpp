@@ -58,10 +58,6 @@ op::gpu::Rnn::Rnn(std::shared_ptr<Node> src_layer,
     , m_direction(direction)
     , m_num_fused_layers(num_fused_layers)
 {
-    // NGRAPH_ASSERT(src_layer->get_shape().size() == weights_layer->get_shape().size())
-    //     << "src_layer and i2h weights size dont match";
-    // NGRAPH_ASSERT(src_iter->get_shape().size() == weights_iter->get_shape().size())
-    //     << "src_iter and h2h weights size dont match";
     NGRAPH_ASSERT(src_layer->get_shape().size() == 2) << "src_layer doesnt have a rank 2";
 
     m_batch_size = static_cast<int>(src_layer->get_shape()[0] / num_timesteps);
@@ -69,11 +65,6 @@ op::gpu::Rnn::Rnn(std::shared_ptr<Node> src_layer,
     NGRAPH_ASSERT(shape_size(src_layer->get_shape()) ==
                   m_src_sequence_length * m_batch_size * m_src_layer_feature_size)
         << "src_layer size is not equal t*n*c";
-    // NGRAPH_ASSERT(bias_layer->get_shape() == bias_iter->get_shape())
-    //     << "bias tensor shapes do not match";
-    // NGRAPH_ASSERT(bias_layer->get_shape()[0] == weights_layer->get_shape()[0] &&
-    //               bias_iter->get_shape()[0] == weights_iter->get_shape()[0])
-    //     << "bias and weights_shape are not compatible";
 
     auto et = src_layer->get_element_type();
     for (auto& rnn_input : get_arguments())

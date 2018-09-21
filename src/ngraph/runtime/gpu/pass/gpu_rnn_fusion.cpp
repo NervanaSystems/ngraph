@@ -307,22 +307,6 @@ static std::shared_ptr<ngraph::Node>
     }
 }
 
-// static std::shared_ptr<ngraph::Node>
-// concat_rnn_params(std::vector<std::shared_ptr<pattern::op::Label>>& wx_labels,
-//                   std::vector<std::shared_ptr<pattern::op::Label>>& wh_labels,
-//                   std::vector<std::shared_ptr<pattern::op::Label>>& bx_labels,
-//                   std::vector<std::shared_ptr<pattern::op::Label>>& bh_labels,
-//                   pattern::RecurrentMatcher& m)
-// {
-//     NGRAPH_DEBUG << "Inside concat params " << rnn_labels.size();
-
-//     auto wx_bound = m.get_bound_nodes_for_pattern(wx_labels[0]).back();
-//     auto wh_bound = m.get_bound_nodes_for_pattern(wh_labels[0]).back();
-//     auto bx_bound = m.get_bound_nodes_for_pattern(bx_labels[0]).back();
-//     auto bh_bound = m.get_bound_nodes_for_pattern(bh_labels[0]).back();
-//     std::make_shared<op::Concat>(NodeVector{wx_bound, wh_bound, bx_bound, bh_bound}, 0);
-// }
-
 void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 {
     auto ht_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
@@ -455,6 +439,17 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                 << "input tensor type and input recurrent state tensor type for RNN op should "
                    "be float32";
 
+
+            NGRAPH_ASSERT(src_layer->get_shape().size() == weights_layer->get_shape().size())
+                << "src_layer and i2h weights size dont match";
+            NGRAPH_ASSERT(src_iter->get_shape().size() == weights_iter->get_shape().size())
+                << "src_iter and h2h weights size dont match";
+            NGRAPH_ASSERT(bias_layer->get_shape() == bias_iter->get_shape())
+                << "bias tensor shapes do not match";
+            NGRAPH_ASSERT(bias_layer->get_shape()[0] == weights_layer->get_shape()[0] &&
+                          bias_iter->get_shape()[0] == weights_iter->get_shape()[0])
+                << "bias and weights_shape are not compatible";
+
             auto rnn = std::make_shared<op::gpu::Rnn>(src_layer,
                                                       src_iter,
                                                       params,
@@ -470,7 +465,8 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             std::vector<std::shared_ptr<op::Slice>> ht_slice_per_timestep(num_of_lstm_matched,
                                                                           nullptr);
             auto rnn_ht_out = std::make_shared<op::GetOutputElement>(rnn, 0);
-            auto rnn_ct_out = std::make_shared<op::GetOutputElement>(rnn, 2);
+            auto layer_rnn_ht = std::make_shared<op::GetOutputElement>(rnn, 1);
+            auto layer_rnn_ct = std::make_shared<op::GetOutputElement>(rnn, 2);
 
             //slice the rnn ht's
             size_t start_index = 0;
@@ -540,7 +536,7 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                     {
                         // check if the last LSTM cell has any consumers
                         auto n_time_step_lstm_ct_goe = goes->get_node();
-                        ngraph::replace_node(n_time_step_lstm_ct_goe, rnn_ct_out);
+                        ngraph::replace_node(n_time_step_lstm_ct_goe, layer_rnn_ct);
                     }
                 }
             }
@@ -742,17 +738,9 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         NGRAPH_ASSERT((state_iter->get_arguments().size()) == num_fused_rnn_layers)
             << "number of cell states for RNN op in the layer fusion is not equal to num of "
                "fused_rnn_layers";
-        // NGRAPH_ASSERT((weights_layer->get_arguments().size()) == num_fused_rnn_layers)
-        //     << "weights w.r.to input symbols of RNN op in the layer fusion is not equal to num of "
-        //        "fused_rnn_layers";
-        // NGRAPH_ASSERT((weights_iter->get_arguments().size()) == num_fused_rnn_layers)
-        //     << "weights w.r.to cell states of RNN op in the layer fusion is not equal to num of "
-        //        "fused_rnn_layers";
-        // NGRAPH_ASSERT((bias_layer->get_arguments().size()) == num_fused_rnn_layers)
-        //     << "input bias of RNN op in the layer fusion is not equal to num of fused_rnn_layers";
-        // NGRAPH_ASSERT((bias_iter->get_arguments().size()) == num_fused_rnn_layers)
-        //     << "recurrent bias of RNN op in the layer fusion is not equal to num of "
-        //        "fused_rnn_layers";
+        NGRAPH_ASSERT((params->get_arguments().size()) == num_fused_rnn_layers * 4)
+            << "RNN param tensor does not consist of normal and recurrent weight and bias tensor "
+               "for each layer";
 
         auto rnn = std::make_shared<op::gpu::Rnn>(src_layer,
                                                   src_iter,
@@ -766,8 +754,8 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                                                   rnn_direction,
                                                   num_fused_rnn_layers);
 
-        auto layer_rnn_ht = std::make_shared<op::GetOutputElement>(rnn, 0);
-        // auto layer_rnn_ht = std::make_shared<op::GetOutputElement>(rnn, 1);
+        auto output_layer_rnn_ht = std::make_shared<op::GetOutputElement>(rnn, 0);
+        auto layer_rnn_ht = std::make_shared<op::GetOutputElement>(rnn, 1);
         auto layer_rnn_ct = std::make_shared<op::GetOutputElement>(rnn, 2);
 
         // Replace all the users of RNN cell state {ct} across different user.
@@ -811,7 +799,7 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                     {
                         if (rnn_goe_node->get_n() == 0)
                         {
-                            ngraph::replace_node(rnn_goes, layer_rnn_ht);
+                            ngraph::replace_node(rnn_goes, output_layer_rnn_ht);
                         }
                     }
                     if (rnn_goe_node->get_n() == 2)

@@ -29,12 +29,11 @@ namespace ngraph
             // across multiple time slices
 
             // INPUTS:
-            // [0] - {X0, X1...., Xt} input tensor of layout TNC, Shape{sequence length*batch_size, feature_size}
-            // [1] - recurrent state tensors {ht_1 | ct_1} of Shape{sequence length*batch_size, feature_size}
-            // [2] - initializer for the input weights matrix, used for the linear transformation of the inputs.
-            // [3] - initializer for the recurrent weights matrix, used for the linear transformation of the recurrent state.
-            // [4] - Initializer for the bias vector w.r.to inputs
-            // [5] - Initializer for the bias vector w.r.to hidden state
+            // [0] - {X0, X1...., Xt} input tensor of layout TNC, Shape{num_fused_layers*batch_size, feature_size}
+            // [1] - recurrent input tensor ht_1 of Shape{sequence length*batch_size, feature_size}
+            // [2] - flat parameter tensor consisting of weights and biases for each layer
+            //       {W_x^0 | W_h^0 | W_x^1 | W_h^1 | ... | B_x^0 | B_h^0 | B_x^1 | B_h^1 }
+            // [3] - recurrent cell state tensor ct_1 with same shape as ht_1
             // number_of_timesteps - number of unrolled cells up to timestep t.
             // num_gates_per_cell - number of gates per RNN cell, LSTM = 4, GRU = 3, vanilla RNN = 1
             // src_sequence_length - this will be same as number_of_timesteps
@@ -43,8 +42,9 @@ namespace ngraph
             // num_cell_states - number of recurrent state tensor states , LSTM = 2, GRU = 1, vanilla RNN = 1
 
             // OUTPUT VALUE: A tuple with the following structure:
-            //   [0] - ht, output tensor with shape (sequence_length*batch_size, feature_size) .
-            //   [1] - {ht | ct} output recurrent state tensor with the same shape as states i.e (sequence_length*batch_size, feature_size)
+            //   [0] - ht, sequence-wise output tensor with shape (sequence_length*batch_size, feature_size) .
+            //   [1] - hf, layer-wise output tensor with shape (num_fused_layers*batch_size, feature_size) .
+            //   [2] - ct output cell state tensor with the same shape as states i.e (sequence_length*batch_size, feature_size)
 
             class Rnn : public Op
             {
