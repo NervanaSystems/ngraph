@@ -842,6 +842,7 @@ static shared_ptr<ngraph::Function>
                 auto type = read_element_type(node_js.at("type"));
                 auto axes = node_js.at("axes").get<set<size_t>>();
                 auto round_mode = node_js.at("round_mode").get<op::Quantize::RoundMode>();
+                node = make_shared<op::Quantize>(args[0], args[1], args[2], type, axes, round_mode);
                 break;
             }
             case OP_TYPEID::Reduce:
