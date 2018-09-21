@@ -26,7 +26,7 @@ runtime::interpreter::NodeWrapper::NodeWrapper(const shared_ptr<const Node>& nod
 // {"Abs", runtime::interpreter::OP_TYPEID::Abs},
 // {"Acos", runtime::interpreter::OP_TYPEID::Acos},
 // ...
-#define NGRAPH_OP(a) {#a, runtime::interpreter::OP_TYPEID::a},
+#define NGRAPH_OP(a, b) {#a, runtime::interpreter::OP_TYPEID::a},
     static unordered_map<string, runtime::interpreter::OP_TYPEID> typeid_map{
 #include "ngraph/op/op_tbl.hpp"
     };

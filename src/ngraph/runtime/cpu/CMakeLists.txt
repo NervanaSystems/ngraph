@@ -14,6 +14,8 @@
 # limitations under the License.
 # ******************************************************************************
 
+include(FindOpenMP)
+
 set(SRC
     cpu_backend.cpp
     cpu_builder.cpp
@@ -25,6 +27,7 @@ set(SRC
     cpu_tensor_view.cpp
     cpu_tracing.cpp
     cpu_visualize_tree.cpp
+    quantization_util.cpp
     builder/add.cpp
     builder/allreduce.cpp
     builder/avg_pool.cpp
@@ -36,8 +39,10 @@ set(SRC
     builder/concat.cpp
     builder/convert.cpp
     builder/convert_layout.cpp
+    builder/quantized_conv.cpp
     builder/convolution.cpp
     builder/dequantize.cpp
+    builder/quantize.cpp
     builder/dot.cpp
     builder/function_call.cpp
     builder/lstm.cpp
@@ -80,8 +85,10 @@ set(SRC
     op/group_conv.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
+    op/quantized_conv.cpp
     op/convert_layout.cpp
     op/dequantize.cpp
+    op/quantize.cpp
     op/loop_kernel.cpp
     op/lstm.cpp
     op/matmul_bias.cpp
@@ -150,6 +157,13 @@ if (NGRAPH_CPU_ENABLE)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
     endif()
 
+    if(OPENMP_FOUND)
+        target_compile_options(cpu_backend PRIVATE "${OpenMP_CXX_FLAGS}")
+        target_compile_definitions(cpu_backend PRIVATE EIGEN_OPENMP)
+    else()
+         message(WARNING "The build toolset doesn't support OpenMP. This will impact performance and lead to slowdowns.")
+    endif()
+
     if(NGRAPH_DISTRIBUTED_ENABLE)
         find_package(MPI REQUIRED)
         add_definitions(-DNGRAPH_DISTRIBUTED)
@@ -165,6 +179,14 @@ if (NGRAPH_CPU_ENABLE)
     endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
     set_target_properties(cpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+    if (NOT APPLE)
+        # CPU backend uses third-party libraries like Eigen that might be linked in and
+        # exported by other DSOs as well. In the absence of versioning, this could lead to the
+        # CPU backend picking up the wrong version or even multiple versions of the
+        # third-party library. -Bsymbolic-functions tells the linker to prefer the internal
+        # version inside cpu_backend over what is available through the global symbol table
+        set_property(TARGET cpu_backend APPEND PROPERTY LINK_FLAGS "-Wl,-Bsymbolic-functions")
+    endif()
 
     install(TARGETS cpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

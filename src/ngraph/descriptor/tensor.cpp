@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/node.hpp"
 
 using namespace ngraph;
@@ -34,10 +34,6 @@ void descriptor::Tensor::set_tensor_view_type(const element::Type& element_type,
 {
     m_shape = shape;
     m_element_type = element_type;
-    if (nullptr != m_tensor_view_layout)
-    {
-        m_tensor_view_layout->set_tensor_view_type(element_type, shape);
-    }
 }
 
 void descriptor::Tensor::set_pool_offset(size_t offset)
@@ -52,7 +48,7 @@ size_t descriptor::Tensor::get_pool_offset() const
 
 size_t descriptor::Tensor::size() const
 {
-    if (auto tvl = get_tensor_view_layout())
+    if (auto tvl = get_tensor_layout())
     {
         return tvl->get_allocated_size();
     }
@@ -60,6 +56,20 @@ size_t descriptor::Tensor::size() const
     {
         return shape_size(get_shape()) * m_element_type.size();
     }
+}
+
+void descriptor::Tensor::set_tensor_layout(
+    const std::shared_ptr<layout::TensorLayout>& tensor_layout)
+{
+    if (tensor_layout->get_shape() != get_shape())
+    {
+        throw ngraph_error("Setting tensor's layout to a layout with a different shape.");
+    }
+    if (tensor_layout->get_element_type() != get_element_type())
+    {
+        throw ngraph_error("Setting tensor's layout to a layout with a different element type.");
+    }
+    m_tensor_layout = tensor_layout;
 }
 
 ostream& operator<<(ostream& out, const descriptor::Tensor& tensor)

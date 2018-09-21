@@ -69,14 +69,14 @@ Tensor& Input::get_tensor()
     return m_output->get_tensor();
 }
 
-std::shared_ptr<const TensorView> Input::get_tensor_view() const
+std::shared_ptr<const Tensor> Input::get_tensor_ptr() const
 {
-    return m_output->get_tensor_view();
+    return m_output->get_tensor_ptr();
 }
 
-std::shared_ptr<TensorView> Input::get_tensor_view()
+std::shared_ptr<Tensor> Input::get_tensor_ptr()
 {
-    return m_output->get_tensor_view();
+    return m_output->get_tensor_ptr();
 }
 
 const Shape& Input::get_shape() const
