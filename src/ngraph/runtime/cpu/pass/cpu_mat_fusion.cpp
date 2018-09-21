@@ -73,6 +73,59 @@ static std::shared_ptr<Node>
     return dot_label + bias_broadcast;
 }
 
+bool runtime::cpu::pass::CPURnnMatFusion_1::run_on_function(std::shared_ptr<Function> function)
+{
+    auto data_pred = [](std::shared_ptr<Node> n) {
+        return std::dynamic_pointer_cast<op::Parameter>(n) != nullptr;
+    };
+    auto weights_pred = [](std::shared_ptr<Node> n) {
+        return std::dynamic_pointer_cast<op::Reshape>(n) != nullptr;
+    };
+    auto data_param = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 50}, data_pred);
+    auto skip = std::make_shared<pattern::op::Skip>(data_param, pattern::has_class<op::Reshape>());
+    auto W = std::make_shared<pattern::op::Label>(element::f32, Shape{50, 400}, weights_pred);
+    //auto reshape = std::make_shared<op::Reshape>(W, AxisVector{1, 0}, Shape{50, 400});
+    auto dot = std::make_shared<op::Dot>(skip, W);
+    auto dot_matcher = std::make_shared<pattern::Matcher>(dot);
+    std::map<std::shared_ptr<Node>, NodeVector> map_weights_to_pattern;
+
+    for (auto n : function->get_ordered_ops())
+    {
+        if (dot_matcher->match(n))
+        {
+            auto matched_weights = dot_matcher->get_pattern_map()[W]->get_argument(0);
+            auto data = dot_matcher->get_pattern_map()[data_param];
+            std::cout << data->get_name() << "   " << join(data->get_shape()) << std::endl;
+            std::cout << dot_matcher->get_match_root()->get_name() << "  " << n->get_name()
+                      << std::endl;
+            map_weights_to_pattern[matched_weights].push_back(dot_matcher->get_match_root());
+        }
+    }
+
+    for (auto& it : map_weights_to_pattern)
+    {
+        std::cout << "weights : " << (it.first)->get_name() << std::endl;
+        NodeVector param_nodes;
+        for (auto& x : it.second)
+        {
+            std::cout << "inputs : " << x->get_name() << std::endl;
+            param_nodes.push_back(x->get_argument(0));
+        }
+        // now concat the parameter hashed to the same weights
+
+        auto concated_data = std::make_shared<op::Concat>(param_nodes, 0);
+        std::cout << join(concated_data->get_shape()) << std::endl;
+        // insert rehape on the concated data to make it 2D, if its 3D
+        auto& data_shape = it.first->get_shape();
+        auto data_order = ngraph::get_default_order(concated_data->get_shape());
+        auto weight_reshape_node = std::make_shared<op::Reshape>(
+            it.first, data_order, Shape{data_shape[1], data_shape[0]});
+        auto new_dot = std::make_shared<op::Dot>(concated_data, weight_reshape_node);
+        std::cout << "Replacing op " << it.second[0]->get_name() << " with " << new_dot->get_name()
+                  << std::endl;
+        function->replace_node(it.second[0], new_dot);
+    }
+}
 bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Function> function)
 {
     bool modified = false;

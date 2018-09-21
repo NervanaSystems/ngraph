@@ -2666,12 +2666,13 @@ TEST(cpu_fusion, fuse_batch_dot_forward)
 TEST(cpu_fusion, fuse_rnn_across_layer)
 {
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion_1>();
+    //pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    //pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    //pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    //pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
     const string json_path =
-        file_util::path_join(SERIALIZED_ZOO, "mxnet/2rnn_layer_1timestep.json");
+        file_util::path_join(SERIALIZED_ZOO, "mxnet/2rnn_layer_3lstm_cell.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
