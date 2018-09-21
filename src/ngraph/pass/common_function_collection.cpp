@@ -46,15 +46,24 @@ bool pass::CommonFunctionCollection::run_on_module(vector<shared_ptr<Function>>&
     const string function_name = "__f__";
     for (const shared_ptr<Function>& current_function : functions)
     {
-        list<shared_ptr<Node>> op_list = current_function->get_ordered_ops();
-        for (const shared_ptr<Node>& op : op_list)
+        for (const shared_ptr<Node>& n : current_function->get_ordered_ops())
         {
-            if (op->is_constant() || op->is_parameter())
+            if (n->is_constant() || n->is_parameter())
             {
                 continue;
             }
+            if (auto op = std::dynamic_pointer_cast<op::Op>(n))
+            {
+                auto annotations = op->get_op_annotations();
+                // If an op is passed through, do not add it to the common function
+                // collection so that the emitter can decide to eliminate it if desired
+                if (annotations && annotations->get_in_place_oi_pairs().size() > 0)
+                {
+                    continue;
+                }
+            }
 
-            Node& node = *op;
+            Node& node = *n;
 
             // First emit the op as a function, something like this:
             // static void __f__(float* _arg0, float *_out1)

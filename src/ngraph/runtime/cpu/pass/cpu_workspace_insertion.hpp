@@ -36,9 +36,10 @@ namespace ngraph
 class ngraph::runtime::cpu::pass::CPUWorkspaceInsertion : public ngraph::pass::FunctionPass
 {
 public:
-    CPUWorkspaceInsertion(ngraph::NodeVector& indices_list)
+    CPUWorkspaceInsertion(ngraph::NodeVector& indices_list, bool return_indices = true)
         : FunctionPass()
         , m_indices_list(indices_list)
+        , m_return_indices(return_indices)
     {
     }
 
@@ -46,5 +47,6 @@ public:
 
 private:
     ngraph::NodeVector& m_indices_list;
+    bool m_return_indices;
     bool transform(ngraph::pattern::Matcher& m);
 };

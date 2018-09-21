@@ -36,6 +36,7 @@
 #endif
 
 #include "ngraph/function.hpp"
+#include "ngraph/pass/manager.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
@@ -139,6 +140,9 @@ namespace ngraph
 #endif
 
             private:
+                // Register passes that are common to codegen and DEX
+                void register_common_passes(ngraph::pass::Manager& pass_manager);
+
                 // For non-destructive passthrough kernels, propagate function
                 // input buffers to internal ops
                 void propagate_in_place_input(ngraph::descriptor::Output* output,
