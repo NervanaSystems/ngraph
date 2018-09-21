@@ -104,8 +104,8 @@ namespace ngraph
                 auto paddings = convpool::get_pads(node);
 
                 // Convert padding from CoordinateDiff to Shape objects
-                const CoordinateDiff& padding_below{paddings.first};
-                const CoordinateDiff& padding_above{paddings.second};
+                const CoordinateDiff& padding_above{paddings.first};
+                const CoordinateDiff& padding_below{paddings.second};
                 Shape padding_below_shape{std::begin(padding_below), std::end(padding_below)};
                 Shape padding_above_shape{std::begin(padding_above), std::end(padding_above)};
 
