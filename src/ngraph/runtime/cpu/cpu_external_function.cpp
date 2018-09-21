@@ -1351,7 +1351,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
             };
         }
 
-        enables.emplace_back(make_pair(enable, 1));
+        enables.emplace_back(enable);
         enable_nodename_list.emplace_back(make_pair(enable, node->get_name()));
     }
 
@@ -1402,7 +1402,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
                         flowgraph_node = new tbb::flow::continue_node<tbb::flow::continue_msg,
                                                                       tbb::flow::lightweight>(
                             *(ctx->G), [&](const tbb::flow::continue_msg& msg) {
-                                if (p.first(ctx) || ctx->first_iteration)
+                                if (p(ctx) || ctx->first_iteration)
                                 {
                                     if (runtime::cpu::IsTracingEnabled())
                                     {
@@ -1475,7 +1475,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         {
             for (const auto& p : enables)
             {
-                if (p.first(ctx) || ctx->first_iteration)
+                if (p(ctx) || ctx->first_iteration)
                 {
                     // Each Op will have exactly one functor, start the clock before the exceution of functor
                     // and collect the profiler_count once the execution complets
