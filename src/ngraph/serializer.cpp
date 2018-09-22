@@ -622,7 +622,10 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Cosh>(args[0]);
                 break;
             }
-            case OP_TYPEID::Dequantize: { break;
+            case OP_TYPEID::Dequantize:
+            {
+                // TODO
+                break;
             }
             case OP_TYPEID::Divide:
             {
@@ -1254,7 +1257,10 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::Cosh: { break;
     }
-    case OP_TYPEID::Dequantize: { break;
+    case OP_TYPEID::Dequantize:
+    {
+        // TODO
+        break;
     }
     case OP_TYPEID::Divide: { break;
     }
