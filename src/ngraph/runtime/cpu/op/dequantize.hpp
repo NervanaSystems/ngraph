@@ -28,9 +28,9 @@ namespace ngraph
         {
         public:
             DequantizeCPU(std::shared_ptr<Node> input,
-                       std::shared_ptr<Node> min,
-                       std::shared_ptr<Node> max,
-                       const element::Type& type);
+                          std::shared_ptr<Node> min,
+                          std::shared_ptr<Node> max,
+                          const element::Type& type);
             const element::Type& get_dequantize_et() const { return m_element_type; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

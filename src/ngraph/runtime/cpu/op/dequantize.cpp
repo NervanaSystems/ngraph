@@ -18,9 +18,9 @@
 #include "ngraph/op/constant.hpp"
 
 ngraph::op::DequantizeCPU::DequantizeCPU(std::shared_ptr<Node> input,
-                                   std::shared_ptr<Node> min,
-                                   std::shared_ptr<Node> max,
-                                   const element::Type& type)
+                                         std::shared_ptr<Node> min,
+                                         std::shared_ptr<Node> max,
+                                         const element::Type& type)
     : Op("DequantizeCPU", check_single_output_args({input, min, max}))
     , m_element_type(type)
 {

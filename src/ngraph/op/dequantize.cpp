@@ -20,10 +20,10 @@ using namespace std;
 using namespace ngraph;
 
 op::Dequantize::Dequantize(shared_ptr<Node> input,
-                       shared_ptr<Node> scale,
-                       shared_ptr<Node> offset,
-                       const element::Type& type,
-                       const AxisSet& axes)
+                           shared_ptr<Node> scale,
+                           shared_ptr<Node> offset,
+                           const element::Type& type,
+                           const AxisSet& axes)
 
     : Op("Dequantize", check_single_output_args({input, scale, offset}))
     , m_type(type)
@@ -47,12 +47,13 @@ void op::Dequantize::validate_and_infer_types()
     // TODO: longer term we probably want quantized types
     // 1) for type safety - so quantized types are not passed to non-quantized ops
     // 2) to reflect quantized type min/max which can vary e.g. [-127, 127] for "scaled" int8
-    NODE_VALIDATION_ASSERT(this, (get_input_element_type(INPUT) == element::u8 || get_input_element_type(INPUT) == element::i8))
+    NODE_VALIDATION_ASSERT(this,
+                           (get_input_element_type(INPUT) == element::u8 ||
+                            get_input_element_type(INPUT) == element::i8))
         << "Input element type (" << get_input_element_type(INPUT) << ") must be an 8-bit integer";
 
-    NODE_VALIDATION_ASSERT(this, m_type.is_real())
-        << "Output element type (" << m_type
-        << ") must be a floating point number";
+    NODE_VALIDATION_ASSERT(this, m_type.is_real()) << "Output element type (" << m_type
+                                                   << ") must be a floating point number";
 
     NODE_VALIDATION_ASSERT(this, get_input_element_type(SCALE) == m_type)
         << "Scale element type (" << get_input_element_type(SCALE)
@@ -85,8 +86,7 @@ void op::Dequantize::validate_and_infer_types()
 shared_ptr<Node> op::Dequantize::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Dequantize>(
-        new_args.at(0), new_args.at(1), new_args.at(2), m_type, m_axes);
+    return make_shared<Dequantize>(new_args.at(0), new_args.at(1), new_args.at(2), m_type, m_axes);
 }
 
 void op::Dequantize::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

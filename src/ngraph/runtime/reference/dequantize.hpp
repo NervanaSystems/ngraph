@@ -17,18 +17,9 @@
 #pragma once
 
 #include <cmath>
-#include <iostream>
-#include <iostream>
-#include <vector>
 
-#include "ngraph/axis_vector.hpp"
+#include "ngraph/axis_set.hpp"
 #include "ngraph/coordinate_transform.hpp"
-#include "ngraph/runtime/reference/add.hpp"
-#include "ngraph/runtime/reference/broadcast.hpp"
-#include "ngraph/runtime/reference/divide.hpp"
-#include "ngraph/runtime/reference/multiply.hpp"
-#include "ngraph/runtime/reference/sum.hpp"
-#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -36,14 +27,14 @@ namespace ngraph
     {
         namespace reference
         {
-            template <typename TI, typename TO>
-            void dequantize(const TI* input,
-                          const TO* scale,
-                          const TI* offset,
-                          TO* output,
-                          const Shape& input_shape,
-                          const Shape& scale_offset_shape,
-                          const AxisSet& axes)
+            template <typename REAL, typename QUANT>
+            void dequantize(const REAL* input,
+                            const QUANT* scale,
+                            const REAL* offset,
+                            QUANT* output,
+                            const Shape& input_shape,
+                            const Shape& scale_offset_shape,
+                            const AxisSet& axes)
             {
                 CoordinateTransform input_transform(input_shape);
                 CoordinateTransform scale_offset_transform(scale_offset_shape);
@@ -52,7 +43,10 @@ namespace ngraph
                 {
                     Coordinate scale_offset_coord = project(input_coord, axes, false);
 
-                    output[input_transform.index(input_coord)] = static_cast<TO>((input[input_transform.index(input_coord)] - offset[scale_offset_transform.index(scale_offset_coord)]) * scale[scale_offset_transform.index(scale_offset_coord)]);
+                    output[input_transform.index(input_coord)] = static_cast<QUANT>(
+                        (input[input_transform.index(input_coord)] -
+                         offset[scale_offset_transform.index(scale_offset_coord)]) *
+                        scale[scale_offset_transform.index(scale_offset_coord)]);
                 }
             }
         }

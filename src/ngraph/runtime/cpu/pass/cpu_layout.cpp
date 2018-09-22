@@ -1812,7 +1812,8 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::BoundedRelu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BoundedRelu>},
     {TI(ngraph::op::ConvolutionAdd),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionAdd>},
-    {TI(ngraph::op::DequantizeCPU), &runtime::cpu::pass::CPULayout::layout<ngraph::op::DequantizeCPU>},
+    {TI(ngraph::op::DequantizeCPU),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::DequantizeCPU>},
     {TI(ngraph::op::Slice), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Slice>},
     {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Quantize>},
 };

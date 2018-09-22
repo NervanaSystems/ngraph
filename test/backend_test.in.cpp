@@ -9702,8 +9702,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize)
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(output_type, scale_offset_shape, {2});
     auto offset = op::Constant::create(input_type, scale_offset_shape, {1});
-    auto dequantize =
-        make_shared<op::Dequantize>(X, scale, offset, output_type, quantization_axes);
+    auto dequantize = make_shared<op::Dequantize>(X, scale, offset, output_type, quantization_axes);
     auto f = make_shared<Function>(dequantize, op::ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
