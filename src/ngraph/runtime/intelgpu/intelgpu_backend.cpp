@@ -262,6 +262,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         return true;
     }
 
+    cldnn::topology topology;
     ngraph::pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::NopElimination>();
@@ -272,8 +273,6 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
 
     pass_manager.run_passes(func);
-
-    cldnn::topology topology;
 
     for (shared_ptr<Node> op : func->get_ops())
     {
