@@ -36,7 +36,6 @@ endif()
 
 if(NGRAPH_TBB_ENABLE)
     list(APPEND HEADER_SEARCH_DEFINES TBB_HEADERS_PATH="${TBB_ROOT}/include")
-    list(APPEND HEADER_SEARCH_DEFINES NGRAPH_TBB_ENABLE)
 endif()
 
 add_executable(resource_generator EXCLUDE_FROM_ALL ${SRC})

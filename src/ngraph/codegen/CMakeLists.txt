@@ -64,16 +64,27 @@ endif()
 set_source_files_properties(compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
 
 # Generate the resource file containing all headers used by the codegen compiler
-add_custom_target(header_resource
-    resource_generator --output ${CMAKE_BINARY_DIR}/header_resource.hpp --base codegen
-    DEPENDS resource_generator ext_eigen ext_llvm ext_mkldnn
-    BYPRODUCTS
-)
+if(NGRAPH_CPU_ENABLE)
+    add_custom_target(header_resource
+        resource_generator --output ${CMAKE_BINARY_DIR}/header_resource.hpp --base codegen
+        DEPENDS resource_generator ext_eigen ext_llvm ext_mkldnn
+        BYPRODUCTS
+    )
+else()
+    add_custom_target(header_resource
+        resource_generator --output ${CMAKE_BINARY_DIR}/header_resource.hpp --base codegen
+        DEPENDS resource_generator ext_llvm
+        BYPRODUCTS
+    )
+endif()
 
 if (NGRAPH_GPU_ENABLE OR (NGRAPH_CPU_ENABLE AND NOT NGRAPH_DEX_ONLY))
     add_library(codegen SHARED ${SRC})
     set_target_properties(codegen PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
-    add_dependencies(codegen header_resource libmkldnn libeigen)
+    add_dependencies(codegen header_resource)
+    if (NGRAPH_CPU_ENABLE)
+        add_dependencies(codegen libmkldnn libeigen)
+    endif()
     target_include_directories(codegen SYSTEM PUBLIC ${CMAKE_BINARY_DIR})
     target_link_libraries(codegen PRIVATE libllvm ngraph)
     install(TARGETS codegen DESTINATION ${NGRAPH_INSTALL_LIB})
