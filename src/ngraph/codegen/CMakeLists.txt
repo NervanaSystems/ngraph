@@ -64,18 +64,13 @@ endif()
 set_source_files_properties(compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
 
 # Generate the resource file containing all headers used by the codegen compiler
-if(NGRAPH_CPU_ENABLE)
-    add_custom_target(header_resource
-        resource_generator --output ${CMAKE_BINARY_DIR}/header_resource.hpp --base codegen
-        DEPENDS resource_generator ext_eigen ext_llvm ext_mkldnn
-        BYPRODUCTS
-    )
-else()
-    add_custom_target(header_resource
-        resource_generator --output ${CMAKE_BINARY_DIR}/header_resource.hpp --base codegen
-        DEPENDS resource_generator ext_llvm
-        BYPRODUCTS
-    )
+add_custom_target(header_resource
+    resource_generator --output ${CMAKE_BINARY_DIR}/header_resource.hpp --base codegen
+    DEPENDS resource_generator ext_llvm
+    BYPRODUCTS
+)
+if (NGRAPH_CPU_ENABLE)
+    add_dependencies(codegen ext_eigen ext_mkldnn)
 endif()
 
 if (NGRAPH_GPU_ENABLE OR (NGRAPH_CPU_ENABLE AND NOT NGRAPH_DEX_ONLY))
