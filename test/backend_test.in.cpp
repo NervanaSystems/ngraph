@@ -9703,7 +9703,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize)
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {2});
-    auto offset = op::Constant::create(input_type, scale_offset_shape, {1});
+    auto offset = op::Constant::create(output_type, scale_offset_shape, {1});
     auto quantize =
         make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
     auto f = make_shared<Function>(quantize, op::ParameterVector{X});
@@ -9739,7 +9739,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_axes)
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {2, 3, 4, 5});
-    auto offset = op::Constant::create(input_type, scale_offset_shape, {10, 20, 30, 40});
+    auto offset = op::Constant::create(output_type, scale_offset_shape, {10, 20, 30, 40});
     auto quantize =
         make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
     auto f = make_shared<Function>(quantize, op::ParameterVector{X});
@@ -9775,7 +9775,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_int8)
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {2});
-    auto offset = op::Constant::create(input_type, scale_offset_shape, {1});
+    auto offset = op::Constant::create(output_type, scale_offset_shape, {1});
     auto quantize =
         make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
     auto f = make_shared<Function>(quantize, op::ParameterVector{X});
@@ -9811,7 +9811,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_clamp)
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {0.00001});
-    auto offset = op::Constant::create(input_type, scale_offset_shape, {1});
+    auto offset = op::Constant::create(output_type, scale_offset_shape, {1});
     auto quantize =
         make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
     auto f = make_shared<Function>(quantize, op::ParameterVector{X});

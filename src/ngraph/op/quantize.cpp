@@ -60,11 +60,9 @@ void op::Quantize::validate_and_infer_types()
         << "Scale element type (" << get_input_element_type(SCALE)
         << ") must match input element type (" << get_input_element_type(INPUT) << ")";
 
-    // TODO: longer term we want to assert offset type == m_type
-    // TODO: if we assert offset type == m_type do we need m_type as a parameter?
-    NODE_VALIDATION_ASSERT(this, get_input_element_type(OFFSET) == get_input_element_type(INPUT))
+    NODE_VALIDATION_ASSERT(this, get_input_element_type(OFFSET) == m_type)
         << "Offset element type (" << get_input_element_type(OFFSET)
-        << ") must match input element type (" << get_input_element_type(INPUT) << ")";
+        << ") must match input element type (" << m_type << ")";
 
     for (auto axis : m_axes)
     {

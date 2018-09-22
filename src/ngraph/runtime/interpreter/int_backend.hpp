@@ -848,7 +848,7 @@ private:
             {
                 reference::quantize<T>(args[0]->get_data_ptr<T>(),
                                        args[1]->get_data_ptr<T>(),
-                                       args[2]->get_data_ptr<T>(),
+                                       args[2]->get_data_ptr<uint8_t>(),
                                        out[0]->get_data_ptr<uint8_t>(),
                                        args[0]->get_shape(),
                                        args[1]->get_shape(),
@@ -858,7 +858,7 @@ private:
             {
                 reference::quantize<T>(args[0]->get_data_ptr<T>(),
                                        args[1]->get_data_ptr<T>(),
-                                       args[2]->get_data_ptr<T>(),
+                                       args[2]->get_data_ptr<int8_t>(),
                                        out[0]->get_data_ptr<int8_t>(),
                                        args[0]->get_shape(),
                                        args[1]->get_shape(),
