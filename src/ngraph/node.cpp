@@ -154,10 +154,8 @@ std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
     for (auto& i : get_inputs())
     {
-        if (i.get_output().get_node()->get_outputs().size() != 1)
-        {
-            throw "get_argument called on an argument w/ multiple outputs";
-        }
+        NGRAPH_ASSERT(i.get_output().get_node()->get_outputs().size() == 1)
+            << "child " << i.get_output().get_node()->get_name() << " has multiple outputs";
     }
     return m_inputs.at(index).get_output().get_node();
 }
