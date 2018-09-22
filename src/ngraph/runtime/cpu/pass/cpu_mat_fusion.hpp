@@ -26,12 +26,12 @@ namespace ngraph
         {
             namespace pass
             {
-                class CPURnnMatFusion : public ngraph::pass::FunctionPass
+                class CPURnnMatFusion_v1 : public ngraph::pass::FunctionPass
                 {
                 public:
                     bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
                 };
-                class CPURnnMatFusion_1 : public ngraph::pass::FunctionPass
+                class CPURnnMatFusion_v2 : public ngraph::pass::FunctionPass
                 {
                 public:
                     bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
