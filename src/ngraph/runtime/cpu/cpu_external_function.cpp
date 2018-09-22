@@ -1253,8 +1253,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
         }
         auto& n = *node; // Work around a compiler warning (*node inside typeid may have effects
         // with shared pointers, which is fine here but clang doesn't like it.)
-        auto handler = build_dispatcher.find(type_index(typeid(n)));
-        if (handler == build_dispatcher.end())
+        auto handler = GetGlobalBuildDispatcher().find(type_index(typeid(n)));
+        if (handler == GetGlobalBuildDispatcher().end())
         {
             throw unsupported_op(node->description());
         }
