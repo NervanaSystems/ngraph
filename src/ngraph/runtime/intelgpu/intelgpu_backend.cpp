@@ -32,6 +32,11 @@
 #include <CPP/softmax.hpp>
 #include <CPP/topology.hpp>
 
+#include "ngraph/pass/algebraic_simplification.hpp"
+#include "ngraph/pass/cse.hpp"
+#include "ngraph/pass/get_output_element_elimination.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/nop_elimination.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
@@ -258,6 +263,16 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
     }
 
     cldnn::topology topology;
+    ngraph::pass::Manager pass_manager;
+
+    pass_manager.register_pass<ngraph::pass::NopElimination>();
+    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+
+    // GetOutputElementElimination must be after CommonSubexpressionElimination
+    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
+
+    pass_manager.run_passes(func);
 
     for (shared_ptr<Node> op : func->get_ops())
     {
