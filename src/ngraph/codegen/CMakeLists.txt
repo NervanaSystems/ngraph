@@ -70,7 +70,7 @@ add_custom_target(header_resource
     BYPRODUCTS
 )
 if (NGRAPH_CPU_ENABLE)
-    add_dependencies(codegen ext_eigen ext_mkldnn)
+    add_dependencies(header_resource ext_eigen ext_mkldnn)
 endif()
 
 if (NGRAPH_GPU_ENABLE OR (NGRAPH_CPU_ENABLE AND NOT NGRAPH_DEX_ONLY))
