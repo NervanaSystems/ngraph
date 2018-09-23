@@ -151,25 +151,27 @@ void print_results(vector<PerfShape> perf_data, bool timing_detail)
     }
 }
 
-element::Type get_op_element_type()
+element::Type get_op_element_type(const Node& op)
 {
     element::Type type;
-    switch (type_id)
+    if (op.description() == "Convert")
     {
-    case OP_TYPEID::Convert: type = op->get_input_element_type(0); break;
-    case OP_TYPEID::Equal:
-    case OP_TYPEID::Greater:
-    case OP_TYPEID::GreaterEq:
-    case OP_TYPEID::Less:
-    case OP_TYPEID::LessEq:
-    case OP_TYPEID::NotEqual:
+        type = op.get_input_element_type(0);
+    }
+    else if (op.description() == "Equal" || op.description() == "Greater" ||
+             op.description() == "GreaterEq" || op.description() == "Less" ||
+             op.description() == "LessEq" || op.description() == "NotEqual")
+    {
         // Get the type of the second input, not the first
         // All BinaryElementwiseComparision ops have the same type for inputs
         // Select has bool for first input and the type we are interested in for the second
-        type = op->get_input_element_type(1);
-        break;
-    default: type = op->get_outputs().at(0).get_element_type(); break;
+        type = op.get_input_element_type(1);
     }
+    else
+    {
+        type = op.get_outputs().at(0).get_element_type();
+    }
+    return type;
 }
 
 int main(int argc, char** argv)
@@ -307,7 +309,8 @@ OPTIONS
     vector<PerfShape> aggregate_perf_data;
     for (const string& model : models)
     {
-        cout << "\n============================================================================\n";
+        cout << "\n============================================================================"
+                "\n";
         cout << "---- Processing '" << model << "'\n";
         cout << "============================================================================\n";
         if (visualize)
@@ -329,12 +332,16 @@ OPTIONS
             cout << "Total nodes: " << f->get_ops().size() << endl;
             size_t total_constant_bytes = 0;
             unordered_map<string, size_t> op_list;
+            set<string> type_list;
             for (shared_ptr<Node> node : f->get_ordered_ops())
             {
                 string name = node->get_name();
                 string op_name = name.substr(0, name.find('_'));
                 string shape_name = "{" + join(node->get_outputs()[0].get_shape()) + "}";
                 op_list[op_name + shape_name]++;
+                auto et = get_op_element_type(*node);
+                string type_string = et.c_type_string();
+                type_list.insert(type_string);
 
                 if (op_name == "Constant")
                 {
@@ -351,7 +358,15 @@ OPTIONS
                     }
                 }
             }
+            cout << "--\n";
             cout << "Total Constant size: " << total_constant_bytes << " bytes\n";
+            cout << "--\n";
+            cout << "Types used:\n";
+            for (const string& type : type_list)
+            {
+                cout << "    " << type << "\n";
+            }
+            cout << "--\n";
             for (const pair<string, size_t>& op_info : op_list)
             {
                 cout << op_info.first << ": " << op_info.second << " ops" << endl;
@@ -384,7 +399,8 @@ OPTIONS
 
     if (models.size() > 1)
     {
-        cout << "\n============================================================================\n";
+        cout << "\n============================================================================"
+                "\n";
         cout << "---- Aggregate over all models\n";
         cout << "============================================================================\n";
         print_results(aggregate_perf_data, timing_detail);
