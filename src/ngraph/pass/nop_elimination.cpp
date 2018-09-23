@@ -24,6 +24,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/pad.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/sum.hpp"
@@ -101,6 +102,17 @@ HANDLER_DECL(eliminate_broadcast)
     return false;
 }
 
+HANDLER_DECL(eliminate_reshape)
+{
+    auto reshape = std::dynamic_pointer_cast<ngraph::op::Reshape>(node);
+    if (!reshape->get_is_transpose())
+    {
+        ngraph::replace_node(node, node->get_argument(0));
+        return true;
+    }
+    return false;
+}
+
 HANDLER_DECL(eliminate_stop_gradient)
 {
     ngraph::replace_node(node, node->get_argument(0));
@@ -113,6 +125,7 @@ static const std::unordered_map<std::type_index,
                {TI(ngraph::op::Sum), &eliminate_sum},
                {TI(ngraph::op::Convert), &eliminate_convert},
                {TI(ngraph::op::Slice), &eliminate_slice},
+               {TI(ngraph::op::Reshape), &eliminate_reshape},
                {TI(ngraph::op::StopGradient), &eliminate_stop_gradient},
                {TI(ngraph::op::BroadcastLike), &replace_broadcast_like},
                {TI(ngraph::op::Broadcast), &eliminate_broadcast}};
