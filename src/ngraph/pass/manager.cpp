@@ -135,6 +135,7 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func, bool transitiv
             if (m_visualize)
             {
                 pass::VisualizeTree vt(base_filename + pass::VisualizeTree::get_file_ext());
+                vt.set_ops_to_details(get_state().get_visualize_tree_ops_map());
                 vt.run_on_module(fs);
             }
 
