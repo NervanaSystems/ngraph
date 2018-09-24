@@ -49,7 +49,7 @@ namespace ngraph
             class GPU_Emitter;
             struct GPURuntimeContext;
 
-            class GPU_ExternalFunction : public std::enable_shared_from_this<GPU_ExternalFunction>
+            class GPU_ExternalFunction
             {
                 friend class GPU_Backend;
 
