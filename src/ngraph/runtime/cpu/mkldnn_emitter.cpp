@@ -227,29 +227,6 @@ mkldnn::memory::format MKLDNNEmitter::query_convolution_forward_weight_format(
         prim_desc.weights_primitive_desc().desc().data.format);
 }
 
-std::pair<size_t, size_t> MKLDNNEmitter::build_group_convolution_forward(
-    const mkldnn::memory::desc& input_reorder_desc,
-    const mkldnn::memory::desc& input_conv_desc,
-    const mkldnn::memory::desc& weights_desc,
-    const mkldnn::memory::desc& result_reorder_desc,
-    const mkldnn::memory::desc& result_desc,
-    const ngraph::Strides& filter_strides,
-    const ngraph::Strides& window_dilation_strides_adjusted,
-    const ngraph::CoordinateDiff& padding_below,
-    const ngraph::CoordinateDiff& padding_above)
-{
-    size_t reorder_index = this->build_reorder(input_reorder_desc, result_reorder_desc);
-    size_t conv_index = this->build_convolution_forward(input_conv_desc,
-                                                        weights_desc,
-                                                        result_desc,
-                                                        filter_strides,
-                                                        window_dilation_strides_adjusted,
-                                                        padding_below,
-                                                        padding_above);
-
-    return std::make_pair(reorder_index, conv_index);
-}
-
 size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& input_data_desc,
                                                 const mkldnn::memory::desc& weights_desc,
                                                 const mkldnn::memory::desc& result_desc,
@@ -294,6 +271,45 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
     {
         throw ngraph_error("Could not create mkldnn convolution " + e.message);
     }
+    return conv_index;
+}
+
+size_t MKLDNNEmitter::build_quantized_convolution(const mkldnn::memory::desc& input_data_desc,
+                                                  const mkldnn::memory::desc& weights_desc,
+                                                  const mkldnn::memory::desc& result_desc,
+                                                  const ngraph::Strides& strides,
+                                                  const ngraph::Strides& dilation_strides,
+                                                  const ngraph::CoordinateDiff& padding_below,
+                                                  const ngraph::CoordinateDiff& padding_above,
+                                                  const float scale)
+{
+    size_t input_data_index = build_memory_primitive(input_data_desc);
+    size_t weights_index = build_memory_primitive(weights_desc);
+    size_t result_index = build_memory_primitive(result_desc);
+    std::vector<float> output_scale;
+    output_scale.push_back(scale);
+    mkldnn::primitive_attr conv_attr;
+    /* Specify the rounding mode */
+    conv_attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
+    /* Specify the scales array and corresponding mask */
+    conv_attr.set_output_scales(0, output_scale);
+    size_t conv_index = insert_primitive(new mkldnn::convolution_forward(
+        {{mkldnn::prop_kind::forward,
+          mkldnn::algorithm::convolution_direct,
+          input_data_desc,
+          weights_desc,
+          result_desc,
+          mkldnn::memory::dims(strides.begin(), strides.end()),
+          mkldnn::memory::dims(dilation_strides.begin(), dilation_strides.end()),
+          mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+          mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
+          mkldnn::padding_kind::zero},
+         conv_attr,
+         mkldnn_utils::global_cpu_engine},
+        *m_mkldnn_primitives[input_data_index],
+        *m_mkldnn_primitives[weights_index],
+        *m_mkldnn_primitives[result_index]));
+    m_primitive_deps[conv_index] = {input_data_index, weights_index, result_index};
     return conv_index;
 }
 
@@ -1072,6 +1088,37 @@ size_t MKLDNNEmitter::build_concat(const std::vector<mkldnn::memory::desc>& inpu
     in_out_index.push_back(result_index);
     m_primitive_deps[concat_index] = in_out_index;
     return concat_index;
+}
+
+size_t MKLDNNEmitter::build_slice(const mkldnn::memory::desc& input_desc,
+                                  const mkldnn::memory::desc& result_desc,
+                                  const ngraph::Coordinate& lower_bounds,
+                                  const ngraph::Shape& result_shape)
+{
+    std::vector<size_t> in_out_index;
+    mkldnn::memory::primitive_desc input_pd =
+        mkldnn::memory::primitive_desc(input_desc, runtime::cpu::mkldnn_utils::global_cpu_engine);
+    size_t input_index = build_memory_primitive(input_desc);
+
+    auto dims = mkldnn::memory::dims(result_shape.begin(), result_shape.end());
+    auto offsets = mkldnn::memory::dims(lower_bounds.begin(), lower_bounds.end());
+    auto view_pd = mkldnn::view::primitive_desc(input_pd, dims, offsets).dst_primitive_desc();
+
+    mkldnn::memory::primitive_desc result_pd =
+        mkldnn::memory::primitive_desc(result_desc, runtime::cpu::mkldnn_utils::global_cpu_engine);
+    size_t result_index = build_memory_primitive(result_desc);
+
+    // reorder primitive descriptor
+    mkldnn::reorder::primitive_desc reorder_pd =
+        mkldnn::reorder::primitive_desc(view_pd, result_pd);
+    // reorder primitive
+    size_t reorder_index = insert_primitive(new mkldnn::reorder(
+        reorder_pd, *m_mkldnn_primitives[input_index], *m_mkldnn_primitives[result_index]));
+
+    in_out_index.push_back(input_index);
+    in_out_index.push_back(result_index);
+    m_primitive_deps[reorder_index] = in_out_index;
+    return reorder_index;
 }
 
 size_t MKLDNNEmitter::build_softmax_forward(const mkldnn::memory::desc& input_desc,
