@@ -16,10 +16,19 @@
 
 #pragma once
 
+#include <functional>
+#include <initializer_list>
 #include <memory>
+#include <typeindex>
+#include <typeinfo>
+#include <utility>
 #include <vector>
 
 #include "ngraph/function.hpp"
+#include "ngraph/node.hpp"
+
+using visualize_tree_ops_map_t =
+    std::unordered_map<std::type_index, std::function<void(const ngraph::Node&, std::ostream& ss)>>;
 
 namespace ngraph
 {
@@ -41,6 +50,17 @@ public:
         m_function_list.insert(m_function_list.begin(), collection.begin(), collection.end());
     }
 
+    void set_visualize_tree_ops_map(const visualize_tree_ops_map_t& ops_map)
+    {
+        m_visualize_tree_ops_map = ops_map;
+    }
+
+    const visualize_tree_ops_map_t& get_visualize_tree_ops_map()
+    {
+        return m_visualize_tree_ops_map;
+    }
+
 private:
     std::vector<std::shared_ptr<Function>> m_function_list;
+    visualize_tree_ops_map_t m_visualize_tree_ops_map;
 };

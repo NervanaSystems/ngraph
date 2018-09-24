@@ -26,6 +26,7 @@ set(SRC
     cpu_tensor_view_wrapper.cpp
     cpu_tensor_view.cpp
     cpu_tracing.cpp
+    cpu_visualize_tree.cpp
     quantization_util.cpp
     builder/add.cpp
     builder/allreduce.cpp
@@ -101,6 +102,7 @@ set(SRC
     pass/cpu_collapse_dims.cpp
     pass/cpu_concat_inputs.cpp
     pass/cpu_fusion.cpp
+    pass/cpu_horizontal_fusion.cpp
     pass/cpu_layout.cpp
     pass/cpu_loop_kernel_fusion.cpp
     pass/cpu_mat_fusion.cpp
