@@ -461,7 +461,6 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         }
 
         size_t num_gates_in_lstm = 4;
-        // TODO: assert for batch_size, sequence length and num_of_lstm's fused
         size_t batch_size = src_layer->get_shape()[0] / num_of_lstm_matched;
         size_t sequence_len = num_of_lstm_matched;
         size_t src_layer_feature_size = src_layer->get_shape()[1];
@@ -488,17 +487,10 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         auto src_iter_rank = src_iter->get_shape().size();
         RETURN_IF_FALSE(src_layer_rank == 2 && src_iter_rank == 2,
                         "Pattern matcher error src_layer, src_iter, have rank 2 for RNN op");
-        // RETURN_IF_FALSE(bias_rank == 1, "Bias should have rank of 1 for Rnn op");
         RETURN_IF_FALSE(src_layer->get_element_type() == element::f32 &&
                             src_iter->get_element_type() == element::f32,
                         "input tensor type and input recurrent state tensor type for RNN op should "
                         "be float32");
-
-        // RETURN_IF_FALSE(src_layer->get_shape().size() == weights_layer->get_shape().size(), "src_layer and i2h weights size dont match");
-        // RETURN_IF_FALSE(src_iter->get_shape().size() == weights_iter->get_shape().size(), "src_iter and h2h weights size dont match");
-        // RETURN_IF_FALSE(bias_layer->get_shape() == bias_iter->get_shape(), "bias tensor shapes do not match");
-        // RETURN_IF_FALSE(bias_layer->get_shape()[0] == weights_layer->get_shape()[0] &&
-        //                 bias_iter->get_shape()[0] == weights_iter->get_shape()[0], "bias and weights_shape are not compatible");
 
         auto rnn = std::make_shared<op::gpu::Rnn>(src_layer,
                                                   src_iter,
@@ -640,6 +632,7 @@ static std::shared_ptr<Node>
         auto const& args = param->get_arguments();
         for (size_t i = 0; i < args.size(); i++)
         {
+            // first half set of params are weights, second half are biases
             if (i < (args.size() / 2))
             {
                 layer_params.push_back(args[i]);
@@ -754,10 +747,7 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             NGRAPH_DEBUG << "src_layer: " << join(src_layer->get_shape());
             NGRAPH_DEBUG << "src_iter: " << join(src_iter->get_shape());
             NGRAPH_DEBUG << "state_iter: " << join(state_iter->get_shape());
-            // NGRAPH_DEBUG << "weights_layer: " << join(weights_layer->get_shape());
-            // NGRAPH_DEBUG << "weights_iter: " << join(weights_iter->get_shape());
-            // NGRAPH_DEBUG << "bias_layer: " << join(bias_layer->get_shape());
-            // NGRAPH_DEBUG << "bias_iter: " << join(bias_iter->get_shape());
+            NGRAPH_DEBUG << "params size {wx|wh|bx|bh}: " << shape_size(params->get_shape());
             NGRAPH_DEBUG << "src_seq_len: " << sequence_len;
             NGRAPH_DEBUG << "batch_size: " << batch_size;
             NGRAPH_DEBUG << "feature_size: " << feature_size;
