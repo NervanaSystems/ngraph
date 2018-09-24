@@ -105,7 +105,8 @@ HANDLER_DECL(eliminate_broadcast)
 HANDLER_DECL(eliminate_reshape)
 {
     auto reshape = std::dynamic_pointer_cast<ngraph::op::Reshape>(node);
-    if (!reshape->get_is_transpose())
+    if (!reshape->get_is_transpose() &&
+        (reshape->get_input_shape(0) == reshape->get_output_shape()))
     {
         ngraph::replace_node(node, node->get_argument(0));
         return true;
