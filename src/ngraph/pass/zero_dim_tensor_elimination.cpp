@@ -104,8 +104,14 @@ bool ngraph::pass::ZeroDimTensorElimination::run_on_function(std::shared_ptr<ngr
             continue;
         }
 
-        if (n->get_inputs().size() == 0 ||
-            !has_zero_dim(n->get_inputs().at(0).get_output().get_node()))
+        if (n->get_inputs().size() == 0)
+        {
+            continue;
+        }
+
+        auto arg = n->get_inputs().at(0).get_output().get_node();
+
+        if (arg->get_outputs().size() != 1 || !has_zero_dim(arg))
         {
             continue;
         }
