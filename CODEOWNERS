@@ -7,6 +7,8 @@
 /cmake/                             @rkimballn1 @silee2
 
 /.ci/                               @crlishka
+/.ci/travis/                        @postrational
+/.ci/onnx/                          @postrational
 /contrib/docker/                    @crlishka
 /.travis.yml                        @postrational
 
@@ -15,7 +17,7 @@
 /.gitignore                         @rkimballn1
 /VERSION.in                         @rkimballn1 @silee2
 
-/maint/                             @rkimballn1
+/maint/                             @crlishka
 
 /doc/                               @indie
 /README.md                          @indie
@@ -37,7 +39,7 @@
 /src/ngraph/op/                     @diyessi @aprocter
 /src/ngraph/pass/                   @Krovatkin
 /src/ngraph/pattern/                @Krovatkin
-/src/ngraph/runtime/                @rkimballn1 @jbobba
+/src/ngraph/runtime/                @rkimballn1 @Krovatkin
 /src/ngraph/runtime/cpu/            @jbobba
 /src/ngraph/runtime/gpu/            @rkimballn1
 /src/ngraph/runtime/intelgpu/       @shssf
