@@ -46,7 +46,6 @@ namespace ngraph
                 const char* get_data_ptr() const;
 
                 size_t get_size() const;
-                const element::Type& get_element_type() const;
 
                 /// \brief Write bytes directly into the tensor
                 /// \param p Pointer to source of data

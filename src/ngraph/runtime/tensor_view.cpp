@@ -21,16 +21,6 @@
 using namespace ngraph;
 using namespace std;
 
-shared_ptr<const descriptor::TensorView> runtime::TensorView::get_descriptor() const
-{
-    return m_descriptor;
-}
-
-shared_ptr<descriptor::TensorView> runtime::TensorView::get_descriptor()
-{
-    return m_descriptor;
-}
-
 const Shape& runtime::TensorView::get_shape() const
 {
     return m_descriptor->get_shape();
@@ -49,6 +39,12 @@ const element::Type& runtime::TensorView::get_element_type() const
 shared_ptr<descriptor::layout::TensorLayout> runtime::TensorView::get_tensor_layout() const
 {
     return m_descriptor->get_tensor_layout();
+}
+
+void runtime::TensorView::set_tensor_layout(
+    const shared_ptr<descriptor::layout::TensorLayout>& layout)
+{
+    m_descriptor->set_tensor_layout(layout);
 }
 
 const std::string& runtime::TensorView::get_name() const
