@@ -160,6 +160,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_collapse_dims.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_concat_inputs.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_horizontal_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
@@ -204,7 +205,7 @@ static const string s_output_dir = "cpu_codegen";
 class StaticInitializers
 {
 public:
-    StaticInitializers() { ngraph::file_util::remove_directory(s_output_dir); }
+    StaticInitializers(string directory) { ngraph::file_util::remove_directory(directory); }
 };
 
 static string emit_string_array(const vector<string>& s, size_t max_line_length)
@@ -239,7 +240,7 @@ static string emit_string_array(const vector<string>& s, size_t max_line_length)
     return ss.str();
 }
 
-static StaticInitializers s_static_initializers;
+static StaticInitializers s_static_initializers(s_output_dir);
 
 #define TI(x) type_index(typeid(x))
 
@@ -387,6 +388,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUHorizontalFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
     NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
     pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi, false);
@@ -946,12 +948,9 @@ using namespace ngraph::runtime;
     }
 
     // TODO: Cleanup and make this a utility function
-    file_util::make_directory(s_output_dir);
     string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");
-    ofstream out(filename);
     string code = writer.get_code();
-    out << code;
-    out.close();
+    runtime::cpu::CPU_ExternalFunction::write_to_file(writer.get_code(), s_output_dir, filename);
 
     m_compiler.reset(new codegen::Compiler());
     m_execution_engine.reset(new codegen::ExecutionEngine());
@@ -1135,12 +1134,12 @@ void runtime::cpu::CPU_ExternalFunction::build()
     {
         return;
     }
-
+    // stream writer to dump the debug manifest for the DEX
+    static const string s_debug_dir = "cpu_codegen";
+    static StaticInitializers s_static_initializers(s_debug_dir);
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
-
     ngraph::pass::Manager pass_manager;
     register_common_passes(pass_manager);
-
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
     pass_manager.run_passes(m_function, false);
@@ -1258,8 +1257,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
         }
         auto& n = *node; // Work around a compiler warning (*node inside typeid may have effects
         // with shared pointers, which is fine here but clang doesn't like it.)
-        auto handler = build_dispatcher.find(type_index(typeid(n)));
-        if (handler == build_dispatcher.end())
+        auto handler = GetGlobalBuildDispatcher().find(type_index(typeid(n)));
+        if (handler == GetGlobalBuildDispatcher().end())
         {
             throw unsupported_op(node->description());
         }
@@ -1340,6 +1339,65 @@ void runtime::cpu::CPU_ExternalFunction::build()
         enable_nodename_list.emplace_back(make_pair(enable, node->get_name()));
     }
 
+    if ((std::getenv("NGRAPH_DEX_DEBUG") != nullptr))
+    {
+        string filename = file_util::path_join(s_debug_dir, m_function_name + "_debug.txt");
+        std::stringstream strm;
+        auto find_role = [](CPUTensorRole tensor_role) -> string {
+            switch (tensor_role)
+            {
+            case CPUTensorRole::INPUT: return string("CPUTensorRole::INPUT");
+            case CPUTensorRole::INTERMEDIATE: return string("CPUTensorRole::INTERMEDIATE");
+            case CPUTensorRole::CONSTANT: return string("CPUTensorRole::CONSTANT");
+            case CPUTensorRole::OUTPUT: return string("CPUTensorRole::OUTPUT");
+            }
+        };
+
+        //dump the tensor roles to debug manifest
+        for (const auto& tensor_roles : m_tensor_roles)
+        {
+            strm << tensor_roles.first << ", " << find_role(tensor_roles.second) << "\n";
+        }
+
+        write_to_file(strm.str(), s_debug_dir, filename);
+        strm.str("");
+
+        //dump the op's order of execution along with the address of
+        //tensor_data which holds the base address of each tensor.
+        for (shared_ptr<Node> node : m_function->get_ordered_ops())
+        {
+            std::vector<string> node_inputs;
+            std::vector<string> node_outputs;
+            std::stringstream temp;
+            if (node->is_parameter() || node->is_constant())
+            {
+                continue;
+            }
+            for (const descriptor::Input& input : node->get_inputs())
+            {
+                const descriptor::Output& output = input.get_output();
+                shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
+                temp << &tensor_data[tv->get_name()];
+                node_inputs.push_back(tv->get_name() + "(" + temp.str() + ")");
+                temp.str("");
+            }
+
+            for (const descriptor::Output& output : node->get_outputs())
+            {
+                shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
+                temp << &tensor_data[tv->get_name()];
+                node_outputs.push_back(tv->get_name() + "(" + temp.str() + ")");
+                temp.str("");
+            }
+            strm << "\n" << node->get_name() << "(";
+            vector<string> parameter_nodes = node_inputs;
+            parameter_nodes.insert(parameter_nodes.end(), node_outputs.begin(), node_outputs.end());
+            strm << join(parameter_nodes);
+            strm << ")\n";
+            write_to_file(strm.str(), s_debug_dir, filename);
+            strm.str("");
+        }
+    }
     //This check ensures we have exactly one functor for Op.
     assert(m_op_attrs.size() == functors.size());
 
@@ -1493,6 +1551,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         {
             assert(m_op_attrs.size() == profiler_count);
         }
+
     };
 
     m_is_built = true;
@@ -1544,6 +1603,18 @@ const runtime::cpu::LayoutDescriptorPtrs&
     runtime::cpu::CPU_ExternalFunction::get_result_layout_descriptors()
 {
     return result_layout_descriptors;
+}
+
+void runtime::cpu::CPU_ExternalFunction::write_to_file(const std::string& code,
+                                                       const std::string& directory,
+                                                       const std::string& filename)
+{
+    std::ofstream out;
+    file_util::make_directory(directory);
+    bool is_exist = file_util::exists(filename);
+    is_exist ? out.open(filename, std::ofstream::app) : out.open(filename);
+    out << code;
+    out.close();
 }
 
 #if !defined(NGRAPH_DEX_ONLY)
