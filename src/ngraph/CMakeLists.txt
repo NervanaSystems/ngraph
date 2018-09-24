@@ -132,6 +132,7 @@ set (SRC
     pass/nop_elimination.cpp
     pass/pass.cpp
     pass/reshape_elimination.cpp
+    pass/static_value_elimination.cpp
     pass/zero_dim_tensor_elimination.cpp
     pass/validate_graph.cpp
     pass/visualize_tree.cpp

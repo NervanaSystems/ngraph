@@ -41,6 +41,7 @@ set(SRC
     reshape_elimination.cpp
     serialize.cpp
     shape.cpp
+    static_value_elimination.cpp
     tensor.cpp
     type_prop.cpp
     util.cpp

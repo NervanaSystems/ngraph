@@ -126,6 +126,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
+#include "ngraph/pass/static_value_elimination.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
@@ -386,6 +387,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     // in which case they should run this pass(CPUWorkspaceInsertion) explicitly
     NodeVector nv_cwi;
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
+    pass_manager.register_pass<ngraph::pass::StaticValueElimination>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
     // failing mxnet unit tests.
@@ -1139,6 +1141,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
     // nv_cwi is required only by some frontends
     // in which case they should run this pass(CPUWorkspaceInsertion) explicitly
     NodeVector nv_cwi;
+    pass_manager.register_pass<ngraph::pass::LikeReplacement>();
+    pass_manager.register_pass<ngraph::pass::StaticValueElimination>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
     // failing mxnet unit tests.
