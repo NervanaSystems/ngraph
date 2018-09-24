@@ -392,6 +392,8 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     // pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
     // pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion_v1>();
+    pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion_v2>();
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
@@ -1144,6 +1146,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
     // pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion_v1>();
+    pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion_v2>();
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();

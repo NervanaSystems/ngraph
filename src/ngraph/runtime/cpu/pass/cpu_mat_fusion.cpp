@@ -49,6 +49,7 @@ struct Type
 
 bool runtime::cpu::pass::CPURnnMatFusion_v2::run_on_function(std::shared_ptr<Function> function)
 {
+    bool modify_graph = false;
     auto data_pred = [](std::shared_ptr<Node> n) {
         return std::dynamic_pointer_cast<op::Parameter>(n) != nullptr;
     };
@@ -83,7 +84,6 @@ bool runtime::cpu::pass::CPURnnMatFusion_v2::run_on_function(std::shared_ptr<Fun
                 matched_data);
         }
     }
-
     // fuse the input vector to a matrix
     for (auto& it : map_weights_bias_to_data)
     {
@@ -140,7 +140,9 @@ bool runtime::cpu::pass::CPURnnMatFusion_v2::run_on_function(std::shared_ptr<Fun
                          << slice_node->get_name() << std::endl;
             function->replace_node(matched_root_node, slice_node);
         }
+        bool modify_graph = true;
     }
+    return modify_graph;
 }
 
 static std::shared_ptr<Node> construct_data_pattern(std::shared_ptr<pattern::op::Label> data_slice)
