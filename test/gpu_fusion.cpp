@@ -13,9 +13,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *******************************************************************************/
-#include <cudnn.h>
 #include <algorithm>
 #include <cstdio>
+#include <cudnn.h>
 #include <iostream>
 #include <list>
 #include <memory>
@@ -66,7 +66,8 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
 {
     auto src_layer = make_shared<op::Parameter>(element::f32, Shape{10, 100});
     auto src_iter = make_shared<op::Parameter>(element::f32, Shape{10, 100});
-    auto params = make_shared<op::Parameter>(element::f32, Shape{400*100 + 400*100 + 400 + 400});
+    auto params =
+        make_shared<op::Parameter>(element::f32, Shape{400 * 100 + 400 * 100 + 400 + 400});
     auto state_iter = make_shared<op::Parameter>(element::f32, Shape{10, 100});
 
     const int number_of_timesteps = 1;
@@ -90,10 +91,8 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
     auto rnn_ht_output = make_shared<op::GetOutputElement>(rnn_node, 0);
     auto rnn_ct_output = make_shared<op::GetOutputElement>(rnn_node, 1);
 
-    auto func = make_shared<Function>(
-        NodeVector{rnn_ht_output, rnn_ct_output},
-        op::ParameterVector{
-            src_layer, src_iter, params, state_iter});
+    auto func = make_shared<Function>(NodeVector{rnn_ht_output, rnn_ct_output},
+                                      op::ParameterVector{src_layer, src_iter, params, state_iter});
     auto backend = runtime::Backend::create("GPU");
 
     shared_ptr<runtime::TensorView> src_layer_t =
@@ -114,12 +113,8 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
     copy_data(state_iter_t, vector<float>(1000, 1));
     copy_data(params_t, vector<float>(shape_size(params->get_shape()), 1));
 
-    backend->call_with_validate(func,
-                                {result_ht, result_ct},
-                                {src_layer_t,
-                                 src_iter_t,
-                                 params_t,
-                                 state_iter_t});
+    backend->call_with_validate(
+        func, {result_ht, result_ct}, {src_layer_t, src_iter_t, params_t, state_iter_t});
     vector<float> expected_ht(10 * 100, 0.964028f);
     vector<float> expected_ct;
     for (size_t i = 0; i < 10 * 100; i++)
