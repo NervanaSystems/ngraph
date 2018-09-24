@@ -1,12 +1,15 @@
-.. drop_out.rst:
+:orphan:
+
+.. op_stub: 
+
 
 #######
-DropOut
+Op Stub
 #######
 
 .. code-block:: cpp
 
-   DropOut  // DropOut 
+   Op  // Put your op's short description here 
 
 
 Description
@@ -14,13 +17,17 @@ Description
 
 .. TODO
 
+Put your op's longer description here. 
+
+
+
 Inputs
 ------
 
 .. TODO
 
 +-----------------+-------------------------+----------------------------------+
-|                 |                         |                                  |
+| Name            |                         |                                  |
 +=================+=========================+==================================+
 |                 |                         |                                  |
 +-----------------+-------------------------+----------------------------------+
