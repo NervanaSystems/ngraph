@@ -111,7 +111,6 @@ static std::shared_ptr<Node> compute_lstm_params(const std::shared_ptr<Node>& w_
         {
             if (auto concat = std::dynamic_pointer_cast<op::Concat>(possible_concat))
             {
-                std::cout << concat->get_name() << std::endl;
                 return concat;
             }
         }
@@ -405,8 +404,6 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         auto ht_1_label = m.get_bound_nodes_for_pattern(ht_1);
         auto params_bound = m.get_bound_nodes_for_pattern(params_label);
-        std::cout << ht_1_label.size() << std::endl;
-        std::cout << params_bound.size() << std::endl;
 
         // determine the ht and xt
         std::shared_ptr<ngraph::Node> src_layer = nullptr;
@@ -489,9 +486,8 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         auto src_layer_rank = src_layer->get_shape().size();
         auto src_iter_rank = src_iter->get_shape().size();
-        // RETURN_IF_FALSE(src_layer_rank == 2 && src_iter_rank == 2 && weights_layer_rank == 2 &&
-        //                 weights_iter_rank == 2, "Pattern matcher error src_layer, weights_layer, src_iter, weights_iter should "
-        //                 "have rank 2 for RNN op");
+        RETURN_IF_FALSE(src_layer_rank == 2 && src_iter_rank == 2,
+                        "Pattern matcher error src_layer, src_iter, have rank 2 for RNN op");
         // RETURN_IF_FALSE(bias_rank == 1, "Bias should have rank of 1 for Rnn op");
         RETURN_IF_FALSE(src_layer->get_element_type() == element::f32 &&
                             src_iter->get_element_type() == element::f32,
