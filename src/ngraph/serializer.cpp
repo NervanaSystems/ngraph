@@ -624,7 +624,9 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Dequantize:
             {
-                // TODO
+                auto type = read_element_type(node_js.at("type"));
+                auto axes = node_js.at("axes").get<set<size_t>>();
+                node = make_shared<op::Dequantize>(args[0], args[1], args[2], type, axes);
                 break;
             }
             case OP_TYPEID::Divide:
@@ -1259,7 +1261,9 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::Dequantize:
     {
-        // TODO
+        auto tmp = dynamic_cast<const op::Dequantize*>(&n);
+        node["type"] = write_element_type(tmp->get_element_type());
+        node["axes"] = tmp->get_axes();
         break;
     }
     case OP_TYPEID::Divide: { break;

@@ -27,11 +27,11 @@ namespace ngraph
     {
         namespace reference
         {
-            template <typename REAL, typename QUANT>
-            void dequantize(const REAL* input,
-                            const QUANT* scale,
-                            const REAL* offset,
-                            QUANT* output,
+            template <typename QUANT, typename REAL>
+            void dequantize(const QUANT* input,
+                            const REAL* scale,
+                            const QUANT* offset,
+                            REAL* output,
                             const Shape& input_shape,
                             const Shape& scale_offset_shape,
                             const AxisSet& axes)
@@ -43,7 +43,7 @@ namespace ngraph
                 {
                     Coordinate scale_offset_coord = project(input_coord, axes, false);
 
-                    output[input_transform.index(input_coord)] = static_cast<QUANT>(
+                    output[input_transform.index(input_coord)] = static_cast<REAL>(
                         (input[input_transform.index(input_coord)] -
                          offset[scale_offset_transform.index(scale_offset_coord)]) *
                         scale[scale_offset_transform.index(scale_offset_coord)]);
