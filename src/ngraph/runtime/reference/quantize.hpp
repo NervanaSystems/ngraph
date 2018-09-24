@@ -41,7 +41,7 @@ namespace ngraph
 
                 for (const Coordinate& input_coord : input_transform)
                 {
-                    Coordinate scale_offset_coord = project(input_coord, axes, false);
+                    Coordinate scale_offset_coord = project(input_coord, axes);
 
                     // apply scale and offset
                     REAL qvalue =

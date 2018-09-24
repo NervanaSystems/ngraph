@@ -71,7 +71,7 @@ void op::Quantize::validate_and_infer_types()
             << get_shape().size() << ")";
     }
 
-    Shape projected_shape = project(get_input_shape(INPUT), m_axes, false);
+    Shape projected_shape = project(get_input_shape(INPUT), m_axes);
 
     NODE_VALIDATION_ASSERT(this, get_input_shape(SCALE) == projected_shape)
         << "Scale shape (" << get_input_shape(SCALE)
