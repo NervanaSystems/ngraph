@@ -1820,7 +1820,7 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
        "ops" : [
            {
              "element_type" :
-                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true},
+                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true, "is_quantized" : false},
              "inputs" : [],
              "name" : "Parameter_4",
              "op" : "Parameter",
@@ -1829,7 +1829,7 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
            },
            {
              "element_type" :
-                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true},
+                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true, "is_quantized" : false},
              "inputs" : [],
              "name" : "Parameter_0",
              "op" : "Parameter",
@@ -1838,7 +1838,7 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
            },
            {
              "element_type" :
-                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true},
+                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true, "is_quantized" : false},
              "inputs" : [],
              "name" : "Constant_1",
              "op" : "Constant",
@@ -1849,7 +1849,7 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
            {
              "axes" : [ 0, 1 ],
              "element_type" :
-                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true},
+                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true, "is_quantized" : false},
              "inputs" : ["Constant_1"],
              "name" : "Broadcast_2",
              "op" : "Broadcast",
@@ -1858,7 +1858,7 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
            },
            {
              "element_type" :
-                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true},
+                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true, "is_quantized" : false},
              "inputs" : [ "Parameter_0", "Broadcast_2" ],
              "name" : "Maximum_3",
              "op" : "Maximum",
@@ -1866,7 +1866,7 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
            },
            {
              "element_type" :
-                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true},
+                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true, "is_quantized" : false},
              "inputs" : [ "Maximum_3", "Parameter_4" ],
              "name" : "Multiply_5",
              "op" : "Multiply",
@@ -1877,7 +1877,7 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
        "result" : ["Multiply_5"],
        "result_shape" : [ 3, 4 ],
        "result_type" :
-           {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true}
+           {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true, "is_quantized" : false}
     }])";
     stringstream ss(js);
 

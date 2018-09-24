@@ -153,12 +153,14 @@ static element::Type read_element_type(const json& j)
     size_t bitwidth = 0;
     bool is_real = false;
     bool is_signed = false;
+    bool is_quantized = false;
     string c_type_string = "";
     if (j.is_object())
     {
         bitwidth = j.at("bitwidth").get<size_t>();
         is_real = j.at("is_real").get<bool>();
         is_signed = j.at("is_signed").get<bool>();
+        is_quantized = j.at("is_quantized").get<bool>();
         c_type_string = j.at("c_type_string").get<string>();
     }
     else
@@ -171,12 +173,13 @@ static element::Type read_element_type(const json& j)
                 bitwidth = t->bitwidth();
                 is_real = t->is_real();
                 is_signed = t->is_signed();
+                is_quantized = t->is_quantized();
                 c_type_string = t->c_type_string();
                 break;
             }
         }
     }
-    return element::Type(bitwidth, is_real, is_signed, c_type_string);
+    return element::Type(bitwidth, is_real, is_signed, is_quantized, c_type_string);
 }
 
 void ngraph::serialize(const string& path, shared_ptr<ngraph::Function> func, size_t indent)

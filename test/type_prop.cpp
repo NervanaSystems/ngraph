@@ -497,9 +497,10 @@ void test_binary(std::string node_type,
         }
         catch (const NodeValidationError& error)
         {
-            EXPECT_HAS_SUBSTRING(error.what(),
-                                 std::string("Argument 0 element type element::Type{32, 1, "
-                                             "1,float} differs in element type from argument 1"));
+            EXPECT_HAS_SUBSTRING(
+                error.what(),
+                std::string("Argument 0 element type element::Type{32, 1, "
+                            "1, 0,float} differs in element type from argument 1"));
         }
         catch (...)
         {
@@ -592,9 +593,10 @@ void test_binary_logical(std::string node_type,
         }
         catch (const NodeValidationError& error)
         {
-            EXPECT_HAS_SUBSTRING(error.what(),
-                                 std::string("Argument 0 element type element::Type{8, 0, 1,char} "
-                                             "differs in element type from argument 1"));
+            EXPECT_HAS_SUBSTRING(
+                error.what(),
+                std::string("Argument 0 element type element::Type{8, 0, 1, 0,char} "
+                            "differs in element type from argument 1"));
         }
         catch (...)
         {

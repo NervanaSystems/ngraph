@@ -1773,7 +1773,7 @@ namespace ngraph
                     }
                     else
                     {
-                        throw ngraph_error("QuantizeCPUd op is only supported in MKLDNN for now.");
+                        throw ngraph_error("QuantizeCPU op is only supported in MKLDNN for now.");
                     }
                 }
             }

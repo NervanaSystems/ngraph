@@ -49,20 +49,20 @@ void op::Quantize::validate_and_infer_types()
     // TODO: longer term we probably want quantized types
     // 1) for type safety - so quantized types are not passed to non-quantized ops
     // 2) to reflect quantized type min/max which can vary e.g. [-127, 127] for "scaled" int8
-    NODE_VALIDATION_ASSERT(this, (m_type == element::u8 || m_type == element::i8))
-        << "Output element type (" << m_type << ") must be an 8-bit integer";
+    NODE_VALIDATION_ASSERT(this, m_type.is_quantized()) << "Output element type (" << m_type
+                                                        << ") must be a quantized type";
 
     NODE_VALIDATION_ASSERT(this, get_input_element_type(INPUT).is_real())
         << "Input element type (" << get_input_element_type(INPUT)
         << ") must be a floating point number";
 
-    NODE_VALIDATION_ASSERT(this, get_input_element_type(SCALE) == get_input_element_type(INPUT))
+    NODE_VALIDATION_ASSERT(this, get_input_element_type(SCALE).is_real())
         << "Scale element type (" << get_input_element_type(SCALE)
-        << ") must match input element type (" << get_input_element_type(INPUT) << ")";
+        << ") must be a floating point number";
 
     NODE_VALIDATION_ASSERT(this, get_input_element_type(OFFSET) == m_type)
         << "Offset element type (" << get_input_element_type(OFFSET)
-        << ") must match input element type (" << m_type << ")";
+        << ") must match output element type (" << m_type << ")";
 
     for (auto axis : m_axes)
     {
