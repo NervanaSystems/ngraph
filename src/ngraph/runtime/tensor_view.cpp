@@ -41,9 +41,19 @@ Strides runtime::TensorView::get_strides() const
     return m_descriptor->get_tensor_layout()->get_strides();
 }
 
+const element::Type& runtime::TensorView::get_element_type() const
+{
+    return m_descriptor->get_element_type();
+}
+
 shared_ptr<descriptor::layout::TensorLayout> runtime::TensorView::get_tensor_layout() const
 {
     return m_descriptor->get_tensor_layout();
+}
+
+const std::string& runtime::TensorView::get_name() const
+{
+    return m_descriptor->get_name();
 }
 
 size_t runtime::TensorView::get_element_count() const
@@ -54,9 +64,4 @@ size_t runtime::TensorView::get_element_count() const
         rc *= s;
     }
     return rc;
-}
-
-const descriptor::Tensor& runtime::TensorView::get_tensor() const
-{
-    return *get_descriptor();
 }

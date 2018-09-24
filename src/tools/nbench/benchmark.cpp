@@ -97,7 +97,7 @@ void init_real_tv(shared_ptr<runtime::TensorView> tv, T min, T max)
 
 static void random_init(shared_ptr<runtime::TensorView> tv)
 {
-    element::Type et = tv->get_tensor().get_element_type();
+    element::Type et = tv->get_element_type();
     if (et == element::boolean)
     {
         init_int_tv<char>(tv, 0, 1);
