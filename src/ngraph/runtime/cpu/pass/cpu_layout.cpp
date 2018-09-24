@@ -1585,6 +1585,33 @@ namespace ngraph
                         auto result_format =
                             static_cast<mkldnn::memory::format>(input_md.data.format);
 
+                        auto slice = static_cast<ngraph::op::Slice*>(node.get());
+                        auto lower_bounds = slice->get_lower_bounds();
+                        if (result_format == mkldnn::memory::nChw16c)
+                        {
+                            // check lower bound of channels
+                            if (lower_bounds[1] % 16 != 0)
+                            {
+                                NGRAPH_DEBUG
+                                    << "slice nChw16c: lower bound of channels not multiple of 16, "
+                                       "set native layout\n";
+                                set_native_layouts(external_function, node);
+                                return;
+                            }
+                        }
+                        else if (result_format == mkldnn::memory::nChw8c)
+                        {
+                            // check lower bound of channels
+                            if (lower_bounds[1] % 8 != 0)
+                            {
+                                NGRAPH_DEBUG
+                                    << "slice nChw8C: lower bound of channels not multiple of 8,"
+                                       "set native layout\n";
+                                set_native_layouts(external_function, node);
+                                return;
+                            }
+                        }
+
                         vector<memory::desc> o_mds;
                         if (result_format == mkldnn::memory::blocked)
                         {

@@ -21,6 +21,7 @@
 #include <cuda_runtime.h>
 #include <cudnn.h>
 #include <iostream>
+#include <numeric>
 #include <nvrtc.h>
 #include <set>
 #include <string>
