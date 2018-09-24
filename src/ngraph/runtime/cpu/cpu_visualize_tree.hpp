@@ -14,11 +14,27 @@
 // limitations under the License.
 //*****************************************************************************
 
-#if defined(NGRAPH_OP_DISPATCH)
-#define NGRAPH_OP(a) {type_index(typeid(ngraph::op::a)), runtime::gpu::GPU_Emitter::emit_##a},
-#define NGRAPH_GPU_OP(a)                                                                           \
-    {type_index(typeid(ngraph::op::gpu::a)), runtime::gpu::GPU_Emitter::emit_##a},
-#elif defined(NGRAPH_OP_EMIT_DECL)
-#define NGRAPH_OP(a) static void emit_##a(EMIT_ARGS);
-#define NGRAPH_GPU_OP(a) NGRAPH_OP(a)
-#endif
+#pragma once
+
+#include <functional>
+#include <memory>
+#include <set>
+#include <sstream>
+#include <string>
+#include <typeindex>
+#include <typeinfo>
+#include <unordered_map>
+
+#include "ngraph/node.hpp"
+#include "ngraph/pass/manager_state.hpp"
+
+namespace ngraph
+{
+    namespace runtime
+    {
+        namespace cpu
+        {
+            const visualize_tree_ops_map_t& get_visualize_tree_ops_map();
+        }
+    }
+}

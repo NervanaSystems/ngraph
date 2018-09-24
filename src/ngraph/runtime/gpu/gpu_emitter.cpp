@@ -21,6 +21,7 @@
 #include <cuda_runtime.h>
 #include <cudnn.h>
 #include <iostream>
+#include <numeric>
 #include <nvrtc.h>
 #include <set>
 #include <string>
@@ -116,15 +117,15 @@ using namespace ngraph;
 
 function<void(EMIT_ARGS)> runtime::gpu::GPU_Emitter::get_emit_function(const Node& node)
 {
-    // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
-    // {<Abs typeid>, function<void(EMIT_ARGS)},
-    // {<Acos typeid>, function<void(EMIT_ARGS)},
-    // ...
+// This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
+// {<Abs typeid>, function<void(EMIT_ARGS)},
+// {<Acos typeid>, function<void(EMIT_ARGS)},
+// ...
+#define NGRAPH_OP(a, b) {type_index(typeid(b::a)), runtime::gpu::GPU_Emitter::emit_##a},
     static const map<type_index, function<void(EMIT_ARGS)>> typeid_map{
-#define NGRAPH_OP_DISPATCH
 #include "ngraph/runtime/gpu/op/op_tbl.hpp"
-#undef NGRAPH_OP_DISPATCH
     };
+#undef NGRAPH_OP
     auto it = typeid_map.find(type_index(typeid(node)));
     if (it == typeid_map.end())
     {
@@ -1398,6 +1399,24 @@ void runtime::gpu::GPU_Emitter::emit_ReverseSequence(EMIT_ARGS)
     writer.block_end();
 }
 
+#if CUDNN_VERSION >= 7200
+void runtime::gpu::GPU_Emitter::emit_Rnn(EMIT_ARGS)
+{
+    auto rnn = static_cast<const ngraph::op::gpu::Rnn*>(node);
+
+    auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
+    size_t index = cudnn_emitter->build_primitive(rnn);
+
+    writer.block_begin();
+    {
+        writer << "void* input[] = {" << node_names(args) << "};\n";
+        writer << "void* output[] = {" << node_names(out) << "};\n";
+        writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+    }
+    writer.block_end();
+}
+#endif
+
 void runtime::gpu::GPU_Emitter::emit_Select(EMIT_ARGS)
 {
     emit_elementwise<ngraph::op::Select>(external_function, writer, node, args, out);
@@ -1551,24 +1570,6 @@ void runtime::gpu::GPU_Emitter::emit_Sum(EMIT_ARGS)
     }
     writer.block_end();
 }
-
-#if CUDNN_VERSION >= 7200
-void runtime::gpu::GPU_Emitter::emit_Rnn(EMIT_ARGS)
-{
-    auto rnn = static_cast<const ngraph::op::gpu::Rnn*>(node);
-
-    auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
-    size_t index = cudnn_emitter->build_primitive(rnn);
-
-    writer.block_begin();
-    {
-        writer << "void* input[] = {" << node_names(args) << "};\n";
-        writer << "void* output[] = {" << node_names(out) << "};\n";
-        writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
-    }
-    writer.block_end();
-}
-#endif
 
 void runtime::gpu::GPU_Emitter::emit_Tan(EMIT_ARGS)
 {

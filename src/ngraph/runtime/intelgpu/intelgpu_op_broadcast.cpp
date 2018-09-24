@@ -28,6 +28,79 @@
 using namespace std;
 using namespace ngraph;
 
+static void do_sum_to_scalar_operation(cldnn::topology& topology,
+                                       const string& input_name,
+                                       const Shape& input_shape,
+                                       const element::Type& input_type,
+                                       const string& output_name,
+                                       const Shape& output_shape,
+                                       const element::Type& output_type,
+                                       const AxisSet& axis)
+{
+    const string function_name = "sum_to_scalar_" + output_name;
+    const string input_type_str = runtime::intelgpu::get_opencl_type_name(input_type);
+    const string output_type_str = runtime::intelgpu::get_opencl_type_name(output_type);
+    const size_t main_loop_count = shape_size(input_shape);
+    const size_t vect_channels = 32;
+    codegen::CodeWriter writer;
+    vector<size_t> gws = {32};
+    vector<size_t> lws = {vect_channels};
+
+    // The kernel name and parameters
+    writer << "__attribute__((intel_reqd_sub_group_size(" << vect_channels << ")))\n"
+           << "__kernel void " << function_name << "(const __global " << input_type_str
+           << " *input0, __global " << output_type_str << " *output)\n";
+    writer.block_begin();
+    { // Main function body
+
+        writer << "//  input array dims: input0" << runtime::intelgpu::array_dims(input_shape)
+               << "\n"
+               << "// output array dims: output" << runtime::intelgpu::array_dims(output_shape)
+               << "\n"
+               << output_type_str << " result = 0.0f;\n"
+               << "const uint id = get_sub_group_local_id();\n"
+               << "uint element_id = id;\n"
+               << "for (uint i = 0; i < " << main_loop_count << " / " << vect_channels
+               << "; ++i)\n";
+        writer.block_begin();
+        {
+            writer << "result += input0[element_id];\n"
+                   << "element_id += " << vect_channels << ";\n";
+            writer.block_end();
+
+            writer << "if (element_id < " << main_loop_count << ")\n";
+            writer.block_begin();
+            {
+                writer << "result += input0[element_id];\n";
+            }
+            writer.block_end();
+
+            writer << output_type_str << " sub_group_result = sub_group_reduce_add(result);\n";
+
+            writer << "if (id == 0)\n";
+            writer.block_begin();
+            {
+                writer << "*output = sub_group_result;\n";
+            }
+            writer.block_end();
+        } // End of function bracket
+        writer.block_end();
+
+        const cldnn::layout layout =
+            runtime::intelgpu::IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+        const cldnn::custom_gpu_primitive op_bcast_sum(output_name,
+                                                       {input_name},
+                                                       {writer.get_code()},
+                                                       function_name,
+                                                       runtime::intelgpu::get_kernel_args(1, 1),
+                                                       "",
+                                                       layout,
+                                                       gws,
+                                                       lws);
+        topology.add(op_bcast_sum);
+    }
+}
+
 void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
                                                const string& input_name,
                                                const Shape& input_shape,
@@ -64,6 +137,19 @@ void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
         }
         else
         {
+            // corner case with scalar
+            if (output_shape.empty() || (!output_shape.empty() && (output_shape.at(0) == 1)))
+            {
+                return do_sum_to_scalar_operation(topology,
+                                                  input_name,
+                                                  input_shape,
+                                                  input_type,
+                                                  output_name,
+                                                  output_shape,
+                                                  output_type,
+                                                  axis);
+            }
+
             const string reduction_str =
                 "output" + access_dims(input_shape, "i", axis) + " = result;\n";
 

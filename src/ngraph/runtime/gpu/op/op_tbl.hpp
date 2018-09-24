@@ -14,12 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/gpu/op/op_tbl_util.hpp"
-
 #include "ngraph/op/op_tbl.hpp"
 #if CUDNN_VERSION >= 7200
-NGRAPH_GPU_OP(Rnn)
+NGRAPH_OP(Rnn, ngraph::op::gpu)
 #endif
-
-#undef NGRAPH_GPU_OP
-#undef NGRAPH_OP
