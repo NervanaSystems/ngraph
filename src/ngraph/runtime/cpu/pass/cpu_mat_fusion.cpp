@@ -140,7 +140,7 @@ bool runtime::cpu::pass::CPURnnMatFusion_v2::run_on_function(std::shared_ptr<Fun
                          << slice_node->get_name() << std::endl;
             function->replace_node(matched_root_node, slice_node);
         }
-        bool modify_graph = true;
+        modify_graph = true;
     }
     return modify_graph;
 }
