@@ -16,25 +16,6 @@
 # otherwise. Any license under such intellectual property rights must be express
 # and approved by Intel in writing.
 
-
-PATTERN='[-a-zA-Z0-9_]*='
-for i in "$@"
-do
-    case $i in
-        --help*)
-            printf "Following parameters are available:
-    
-            --help  displays this message
-            --ngraph-branch ngraph branch name to build
-            "
-            exit 0
-        ;;
-        --ngraph-branch=*)
-            NGRAPH_BRANCH=`echo $i | sed "s/${PATTERN}//"`
-        ;;
-    esac
-done
-
 set -x
 
 function build_ngraph() {
@@ -43,7 +24,7 @@ function build_ngraph() {
     cd "${ngraph_directory}/ngraph"
     mkdir -p ./build
     cd ./build
-    cmake ../ -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="${ngraph_directory}/ngraph_dist"
+    cmake ../ -DNGRAPH_TOOLS_ENABLE=FALSE -DNGRAPH_UNIT_TEST_ENABLE=FALSE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="${ngraph_directory}/ngraph_dist"
     rm "${ngraph_directory}"/ngraph/python/dist/ngraph*.whl
     make -j $(lscpu --parse=CORE | grep -v '#' | sort | uniq | wc -l)
     make install
@@ -56,26 +37,7 @@ function build_ngraph() {
     python3 setup.py bdist_wheel
 }
 
-# Clone and build nGraph master 
-cd /home
-if [ -e ./ngraph ]; then
-    cd ./ngraph
-    if [[ $(git pull) != *"Already up-to-date"* ]]; then
-        build_ngraph "/home"
-    fi
-else
-    git clone https://github.com/NervanaSystems/ngraph.git -b master
-    build_ngraph "/home"
-fi
-
-cp -R /home/ngraph/build /root/ngraph/
-cp -R /home/ngraph_dist /root/
 # Change directory to ngraph cloned initially by CI, which is already on relevant branch
-cd /root/ngraph
-for f in $(find build/ -name 'CMakeCache.txt'); 
-do 
-    sed -i 's/home/root/g' $f
-done
 build_ngraph "/root"
 
 # Copy Onnx models
