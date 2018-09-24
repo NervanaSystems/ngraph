@@ -47,6 +47,11 @@ void runtime::TensorView::set_tensor_layout(
     m_descriptor->set_tensor_layout(layout);
 }
 
+size_t runtime::TensorView::get_size() const
+{
+    return get_tensor_layout()->get_size();
+}
+
 const std::string& runtime::TensorView::get_name() const
 {
     return m_descriptor->get_name();

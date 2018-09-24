@@ -50,6 +50,7 @@ namespace ngraph
             ngraph::Strides get_strides() const;
             size_t get_element_count() const;
             const element::Type& get_element_type() const;
+            size_t get_size() const;
             const std::string& get_name() const;
             std::shared_ptr<descriptor::layout::TensorLayout> get_tensor_layout() const;
             void set_tensor_layout(const std::shared_ptr<descriptor::layout::TensorLayout>& layout);

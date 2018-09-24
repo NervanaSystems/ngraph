@@ -158,8 +158,3 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
         memcpy(target, &source[tensor_offset], n);
     }
 }
-
-size_t runtime::cpu::CPUTensorView::get_size() const
-{
-    return get_element_count();
-}
