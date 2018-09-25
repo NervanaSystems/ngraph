@@ -56,3 +56,13 @@ const std::string& runtime::TensorView::get_name() const
 {
     return m_descriptor->get_name();
 }
+
+bool runtime::TensorView::get_stale() const
+{
+    return m_stale;
+}
+
+void runtime::TensorView::set_stale(bool val)
+{
+    m_stale = val;
+}
