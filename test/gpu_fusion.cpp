@@ -119,14 +119,7 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
     vector<float> expected_ct;
     for (size_t i = 0; i < 10 * 100; i++)
     {
-        if (i < 1000)
-        {
-            expected_ct.push_back(0.964028f);
-        }
-        else
-        {
-            expected_ct.push_back(2.0f);
-        }
+        expected_ct.push_back(0.964028f);
     }
 
     EXPECT_TRUE(test::all_close(expected_ht, read_vector<float>(result_ht)));
