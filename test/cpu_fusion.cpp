@@ -1049,15 +1049,14 @@ TEST(cpu_fusion, conv_add)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
-std::vector<shared_ptr<runtime::Tensor>>
-    rnn_matrix_fusion_eval(const size_t time_steps,
-                           const Shape& data_shape,
-                           const Shape& weights_shape,
-                           const Shape& bias_shape,
-                           const vector<float>& data_val,
-                           const vector<float>& weights_val,
-                           const vector<float>& bias_val,
-                           const bool enable_pass)
+std::vector<shared_ptr<runtime::Tensor>> rnn_matrix_fusion_eval(const size_t time_steps,
+                                                                const Shape& data_shape,
+                                                                const Shape& weights_shape,
+                                                                const Shape& bias_shape,
+                                                                const vector<float>& data_val,
+                                                                const vector<float>& weights_val,
+                                                                const vector<float>& bias_val,
+                                                                const bool enable_pass)
 {
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
     auto weights = make_shared<op::Parameter>(element::f32, weights_shape);
@@ -2273,8 +2272,7 @@ void sigmoid_multiply_fusion_forward_compute(shared_ptr<runtime::Backend>& backe
                                              shared_ptr<Node> input_1_node,
                                              const vector<float>& expected)
 {
-    shared_ptr<runtime::Tensor> result_tensor =
-        backend->create_tensor(element::f32, result_shape);
+    shared_ptr<runtime::Tensor> result_tensor = backend->create_tensor(element::f32, result_shape);
 
     vector<shared_ptr<runtime::Tensor>> input_tensors;
     for (int i = 0; i < input_params.size(); ++i)
@@ -2451,8 +2449,7 @@ void sigmoid_multiply_fusion_backward_compute(shared_ptr<runtime::Backend>& back
     }
 
     auto delta_param = make_shared<op::Parameter>(element::f32, delta_shape);
-    shared_ptr<runtime::Tensor> delta_tensor =
-        backend->create_tensor(element::f32, delta_shape);
+    shared_ptr<runtime::Tensor> delta_tensor = backend->create_tensor(element::f32, delta_shape);
     copy_data(delta_tensor, delta_data);
 
     op::ParameterVector back_params(input_params);

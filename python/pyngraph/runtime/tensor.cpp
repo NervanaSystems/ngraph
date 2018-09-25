@@ -25,8 +25,8 @@ namespace py = pybind11;
 
 void regclass_pyngraph_runtime_Tensor(py::module m)
 {
-    py::class_<ngraph::runtime::Tensor, std::shared_ptr<ngraph::runtime::Tensor>>
-        tensorView(m, "Tensor");
+    py::class_<ngraph::runtime::Tensor, std::shared_ptr<ngraph::runtime::Tensor>> tensorView(
+        m, "Tensor");
     tensorView.doc() = "ngraph.impl.runtime.TensorView wraps ngraph::runtime::Tensor";
     tensorView.def("write",
                    (void (ngraph::runtime::Tensor::*)(const void*, size_t, size_t)) &
