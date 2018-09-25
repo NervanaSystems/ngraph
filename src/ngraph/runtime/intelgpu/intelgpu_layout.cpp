@@ -128,7 +128,7 @@ cldnn::layout runtime::intelgpu::IntelGPULayout::create_cldnn_layout(
     const ngraph::element::Type& element_type, const Shape& element_shape)
 {
     const cldnn::format::type format = cldnn::format::bfyx;
-    const cldnn::data_types data_type = get_cldnn_type(element_type);;
+    const cldnn::data_types data_type = get_cldnn_type(element_type);
     const cldnn::tensor tensor = create_cldnn_tensor(element_shape);
 
     return cldnn::layout(data_type, format, tensor);
