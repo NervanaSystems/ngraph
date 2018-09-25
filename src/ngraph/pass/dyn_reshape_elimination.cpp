@@ -55,6 +55,7 @@ void ngraph::pass::DynReshapeElimination::construct_dyn_reshape_pattern()
         if (!sop->get_outputs()[0].has_static_value())
         {
             NGRAPH_DEBUG << "Bailing, because no static value on the shape input";
+            return false;
         }
 
         AxisVector perm;
