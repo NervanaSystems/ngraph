@@ -56,13 +56,3 @@ const std::string& runtime::TensorView::get_name() const
 {
     return m_descriptor->get_name();
 }
-
-size_t runtime::TensorView::get_element_count() const
-{
-    size_t rc = 1;
-    for (size_t s : get_shape())
-    {
-        rc *= s;
-    }
-    return rc;
-}

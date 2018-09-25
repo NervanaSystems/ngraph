@@ -48,14 +48,13 @@ namespace ngraph
 
             const ngraph::Shape& get_shape() const;
             ngraph::Strides get_strides() const;
-            size_t get_element_count() const;
             const element::Type& get_element_type() const;
             size_t get_size() const;
             const std::string& get_name() const;
             std::shared_ptr<descriptor::layout::TensorLayout> get_tensor_layout() const;
             void set_tensor_layout(const std::shared_ptr<descriptor::layout::TensorLayout>& layout);
 
-            bool get_stale() { return m_stale; }
+            bool get_stale() const { return m_stale; }
             void set_stale(bool val) { m_stale = val; }
             /// \brief Write bytes directly into the tensor
             /// \param p Pointer to source of data
