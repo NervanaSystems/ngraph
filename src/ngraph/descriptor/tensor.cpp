@@ -30,7 +30,7 @@ descriptor::Tensor::Tensor(const element::Type& element_type,
 {
 }
 
-void descriptor::Tensor::set_tensor_view_type(const element::Type& element_type, const Shape& shape)
+void descriptor::Tensor::set_tensor_type(const element::Type& element_type, const Shape& shape)
 {
     m_shape = shape;
     m_element_type = element_type;
