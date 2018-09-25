@@ -22,7 +22,6 @@
 #include "pyngraph/function.hpp"
 #include "pyngraph/node.hpp"
 #include "pyngraph/node_vector.hpp"
-#include "pyngraph/onnx_import/onnx_import.hpp"
 #include "pyngraph/ops/op.hpp"
 #include "pyngraph/ops/regmodule_pyngraph_op.hpp"
 #include "pyngraph/ops/util/regmodule_pyngraph_op_util.hpp"
@@ -33,6 +32,10 @@
 #include "pyngraph/strides.hpp"
 #include "pyngraph/types/regmodule_pyngraph_types.hpp"
 #include "pyngraph/util.hpp"
+
+#ifdef NGRAPH_ONNX_IMPORT_ENABLE
+#include "pyngraph/onnx_import/onnx_import.hpp"
+#endif // NGRAPH_ONNX_IMPORT_ENABLE
 
 namespace py = pybind11;
 
@@ -50,10 +53,6 @@ PYBIND11_MODULE(_pyngraph, m)
     regmodule_pyngraph_types(m);
     regclass_pyngraph_Function(m);
     regclass_pyngraph_Serializer(m);
-    py::module m_onnx_import = m.def_submodule("onnx_import",
-                                               "Package ngraph.impl.onnx_import "
-                                               "that wraps ngraph::onnx_import");
-    regmodule_pyngraph_onnx_import(m_onnx_import);
     py::module m_op = m.def_submodule("op", "Package ngraph.impl.op that wraps ngraph::op");
     regclass_pyngraph_op_Op(m_op);
     regmodule_pyngraph_op_util(m_op);
@@ -61,4 +60,10 @@ PYBIND11_MODULE(_pyngraph, m)
     regmodule_pyngraph_runtime(m);
     regmodule_pyngraph_passes(m);
     regmodule_pyngraph_util(m);
+#ifdef NGRAPH_ONNX_IMPORT_ENABLE
+    py::module m_onnx_import = m.def_submodule("onnx_import",
+                                               "Package ngraph.impl.onnx_import "
+                                               "that wraps ngraph::onnx_import");
+    regmodule_pyngraph_onnx_import(m_onnx_import);
+#endif // NGRAPH_ONNX_IMPORT_ENABLE
 }
