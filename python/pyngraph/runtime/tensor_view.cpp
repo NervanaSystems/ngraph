@@ -36,6 +36,6 @@ void regclass_pyngraph_runtime_TensorView(py::module m)
     tensorView.def_property_readonly("shape", &ngraph::runtime::TensorView::get_shape);
     tensorView.def_property_readonly("element_count", &ngraph::runtime::TensorView::get_size);
     tensorView.def_property_readonly("element_type", [](const ngraph::runtime::TensorView& self) {
-        return self.get_tensor().get_element_type();
+        return self.get_element_type();
     });
 }
