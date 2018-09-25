@@ -198,15 +198,15 @@ runtime::cpu::CPU_ExternalFunction::~CPU_ExternalFunction()
 {
 }
 
-#if !defined(NGRAPH_DEX_ONLY)
-
-static const string s_output_dir = "cpu_codegen";
-
 class StaticInitializers
 {
 public:
     StaticInitializers(string directory) { ngraph::file_util::remove_directory(directory); }
 };
+
+#if !defined(NGRAPH_DEX_ONLY)
+
+static const string s_output_dir = "cpu_codegen";
 
 static string emit_string_array(const vector<string>& s, size_t max_line_length)
 {
