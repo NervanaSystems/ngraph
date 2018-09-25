@@ -17,8 +17,6 @@
 /.gitignore                         @rkimballn1
 /VERSION.in                         @rkimballn1 @silee2
 
-/maint/                             @cconvey
-
 /doc/                               @indie
 /README.md                          @indie
 /changes.md                         @indie @diyessi
