@@ -9703,10 +9703,10 @@ NGRAPH_TEST(${BACKEND_NAME}, get_shape)
     }
     copy_data(a, some_arbitrary_values);
 
-    auto result = backend->create_tensor(element::u64, Shape{shape.size()});
+    auto result = backend->create_tensor(element::i64, Shape{shape.size()});
 
     backend->call_with_validate(f, {result}, {a});
-    EXPECT_EQ((vector<uint64_t>{2, 3, 4, 5}), read_vector<uint64_t>(result));
+    EXPECT_EQ((vector<int64_t>{2, 3, 4, 5}), read_vector<int64_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, get_shape_scalar)
@@ -9725,10 +9725,10 @@ NGRAPH_TEST(${BACKEND_NAME}, get_shape_scalar)
     }
     copy_data(a, some_arbitrary_values);
 
-    auto result = backend->create_tensor(element::u64, Shape{shape.size()});
+    auto result = backend->create_tensor(element::i64, Shape{shape.size()});
 
     backend->call_with_validate(f, {result}, {a});
-    EXPECT_EQ((vector<uint64_t>{}), read_vector<uint64_t>(result));
+    EXPECT_EQ((vector<int64_t>{}), read_vector<int64_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, dyn_reshape)

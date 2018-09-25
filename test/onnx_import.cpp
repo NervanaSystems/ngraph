@@ -1262,4 +1262,7 @@ TEST(onnx, model_superres)
 {
     auto function = onnx_import::import_onnx_function(
         file_util::path_join(SERIALIZED_ZOO, "onnx/superres.onnx"));
+
+    Inputs inputs{{224 * 224, 1.0f}};
+    Outputs outputs{execute(function, inputs, "CPU")};
 }

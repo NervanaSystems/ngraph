@@ -73,7 +73,7 @@ void op::Broadcast::validate_and_infer_types()
     if (get_inputs()[0].get_output().has_static_value())
     {
         if (m_broadcast_axes.empty() && get_input_shape(0).size() < 2)
-        { 
+        {
             set_output_static_value(0, get_inputs()[0].get_output().get_static_value());
             return;
         }

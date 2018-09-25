@@ -27,7 +27,7 @@ using namespace ngraph;
 template <typename T>
 void copy_static_value_data(void* dst, const size_t* src, size_t n_items)
 {
-    T *dst_t = reinterpret_cast<T*>(dst);
+    T* dst_t = reinterpret_cast<T*>(dst);
 
     for (size_t i = 0; i < n_items; i++)
     {
@@ -112,12 +112,14 @@ bool ngraph::pass::StaticValueElimination::run_on_function(std::shared_ptr<ngrap
         void* data_ptr;
         get_static_value_data(sv, n->get_output_element_type(0), &data_ptr);
 
-        auto new_node = std::make_shared<op::Constant>(n->get_output_element_type(0), Shape{sv.size()}, data_ptr);
+        auto new_node = std::make_shared<op::Constant>(
+            n->get_output_element_type(0), Shape{sv.size()}, data_ptr);
 
         std::free(data_ptr);
 
         replaced = true;
-        NGRAPH_DEBUG << " Replacing statically evaluated node " << n->get_name() << " with " << new_node->get_name();
+        NGRAPH_DEBUG << " Replacing statically evaluated node " << n->get_name() << " with "
+                     << new_node->get_name();
         replace_node(n, new_node);
     }
 

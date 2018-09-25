@@ -38,36 +38,44 @@ void op::DynReshape::validate_and_infer_types()
         << "Shape argument must have type i64 (actual element type: " << get_input_element_type(1)
         << ").";
 
-    // Temporary limitation until we add wildcard support.
-    NODE_VALIDATION_ASSERT(this, get_inputs()[1].get_output().has_static_value())
-        << "Shape argument has no static value.";
-
-    Shape output_shape = get_inputs()[1].get_output().get_static_value();
-
-    // Once we have wildcard support we'll need to skip this check if input_shape or output_shape is not fully determined.
-    NODE_VALIDATION_ASSERT(this, shape_size(input_shape) == shape_size(output_shape))
-        << "Number of elements in output shape does not match number of elements in argument shape "
-        << "(output shape: " << output_shape << ", argument shape: " << input_shape << ").";
-
-    set_output_type(0, get_input_element_type(0), output_shape);
-
-    // Static value propagation.
-    // We will only propagate when reshaping to/from scalars/vectors. This has
-    // the very useful property of being the identity. :/
-    if (input_shape.size() < 2 && output_shape.size() < 2 &&
-        get_inputs()[0].get_output().has_static_value())
+    // If the input shape tensor does not have a static value, we will set a fake shape.
+    // Once incomplete shapes are supported through static value propagation, we will be able to
+    // set "?" here.
+    if (!get_inputs()[1].get_output().has_static_value())
     {
-        auto& sv = get_inputs()[0].get_output().get_static_value();
-
-        // This check should be redundant but you never know.
-        NODE_VALIDATION_ASSERT(this, output_shape.size() == 1 || sv.size() == 1)
-            << "Reshaping to a scalar but static value has more than one element "
-            << "(input 0 static value: " << sv << ")";
-        set_output_static_value(0, sv);
+        set_output_type(0, get_input_element_type(0), Shape{});
+        clear_output_static_value(0);
     }
     else
     {
-        clear_output_static_value(0);
+        Shape output_shape = get_inputs()[1].get_output().get_static_value();
+
+        // Once we have wildcard support we'll need to skip this check if input_shape or output_shape is not fully determined.
+        NODE_VALIDATION_ASSERT(this, shape_size(input_shape) == shape_size(output_shape))
+            << "Number of elements in output shape does not match number of elements in argument "
+               "shape "
+            << "(output shape: " << output_shape << ", argument shape: " << input_shape << ").";
+
+        set_output_type(0, get_input_element_type(0), output_shape);
+
+        // Static value propagation.
+        // We will only propagate when reshaping to/from scalars/vectors. This has
+        // the very useful property of being the identity. :/
+        if (input_shape.size() < 2 && output_shape.size() < 2 &&
+            get_inputs()[0].get_output().has_static_value())
+        {
+            auto& sv = get_inputs()[0].get_output().get_static_value();
+
+            // This check should be redundant but you never know.
+            NODE_VALIDATION_ASSERT(this, output_shape.size() == 1 || sv.size() == 1)
+                << "Reshaping to a scalar but static value has more than one element "
+                << "(input 0 static value: " << sv << ")";
+            set_output_static_value(0, sv);
+        }
+        else
+        {
+            clear_output_static_value(0);
+        }
     }
 }
 

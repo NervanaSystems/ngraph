@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "reshape_elimination.hpp"
+#include "dyn_reshape_elimination.hpp"
 #include <algorithm>
 #include <iostream>
 #include <numeric>
@@ -26,6 +26,7 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/dyn_reshape.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/pattern/matcher.hpp"
@@ -33,10 +34,11 @@
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/util.hpp"
 
-/*
+using namespace ngraph;
+
 void ngraph::pass::DynReshapeElimination::construct_dyn_reshape_pattern()
 {
-    Shape shape_data_op{1,2,3};
+    Shape shape_data_op{1, 2, 3};
     Shape shape_shape_op{2};
 
     auto data_op = std::make_shared<pattern::op::Label>(element::f32, shape_data_op);
@@ -44,20 +46,31 @@ void ngraph::pass::DynReshapeElimination::construct_dyn_reshape_pattern()
     auto dyn_reshape = std::make_shared<op::DynReshape>(data_op, shape_op);
 
     auto callback = [data_op, shape_op](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In callback for construct_dyn_reshape_pattern against node = " << *(m.get_match_root());
+        NGRAPH_DEBUG << "In callback for construct_dyn_reshape_pattern against node = "
+                     << *(m.get_match_root());
         auto pattern_map = m.get_pattern_map();
         auto dop = pattern_map[data_op];
         auto sop = pattern_map[shape_op];
 
-        if (sop->get_output(0))
+        if (!sop->get_outputs()[0].has_static_value())
+        {
+            NGRAPH_DEBUG << "Bailing, because no static value on the shape input";
+        }
 
-        auto dr = m.get_match_root();
+        AxisVector perm;
+        for (size_t i = 0; i < data_op->get_shape().size(); i++)
+        {
+            perm.push_back(i);
+        }
+        auto replacement =
+            std::make_shared<ngraph::op::Reshape>(dop, perm, sop->get_output_static_value(0));
 
-        ngraph::replace_node(m.get_match_root(), gop);
+        NGRAPH_DEBUG << "Replacing " << *(m.get_match_root()) << " with " << *replacement;
+
+        ngraph::replace_node(m.get_match_root(), replacement);
         return true;
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(reshape1, callback);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(dyn_reshape, callback);
     this->add_matcher(m);
 }
-*/

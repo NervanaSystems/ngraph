@@ -120,6 +120,7 @@
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
+#include "ngraph/pass/dyn_reshape_elimination.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
@@ -388,6 +389,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     NodeVector nv_cwi;
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<ngraph::pass::StaticValueElimination>();
+    pass_manager.register_pass<ngraph::pass::DynReshapeElimination>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
     // failing mxnet unit tests.
@@ -1143,6 +1145,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
     NodeVector nv_cwi;
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<ngraph::pass::StaticValueElimination>();
+    pass_manager.register_pass<ngraph::pass::DynReshapeElimination>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
     // failing mxnet unit tests.

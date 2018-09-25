@@ -120,6 +120,7 @@ set (SRC
     pass/constant_folding.cpp
     pass/cse.cpp
     pass/dump_sorted.cpp
+    pass/dyn_reshape_elimination.cpp
     pass/get_output_element_elimination.cpp
     pass/graph_rewrite.cpp
     pass/inliner.cpp
