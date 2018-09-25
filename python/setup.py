@@ -126,7 +126,6 @@ sources = ['pyngraph/function.cpp',
            'pyngraph/serializer.cpp',
            'pyngraph/node.cpp',
            'pyngraph/node_vector.cpp',
-           'pyngraph/onnx_import/onnx_import.cpp',
            'pyngraph/shape.cpp',
            'pyngraph/strides.cpp',
            'pyngraph/coordinate_diff.cpp',
@@ -219,6 +218,16 @@ sources = ['pyngraph/function.cpp',
            'pyngraph/types/regmodule_pyngraph_types.cpp',
            ]
 
+package_dir={'ngraph': PYNGRAPH_SOURCE_DIR + "/ngraph",
+             'ngraph.utils': PYNGRAPH_SOURCE_DIR + "/ngraph/utils",
+             'ngraph.impl': PYNGRAPH_SOURCE_DIR + "/ngraph/impl",
+             'ngraph.impl.op': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/op",
+             'ngraph.impl.op.util': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/op/util",
+             'ngraph.impl.passes': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/passes",
+             'ngraph.impl.runtime': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/runtime"}
+packages = ['ngraph', 'ngraph.utils', 'ngraph.impl', 'ngraph.impl.op', 
+            'ngraph.impl.op.util', 'ngraph.impl.passes', 'ngraph.impl.runtime']
+
 sources = [PYNGRAPH_SOURCE_DIR + "/" + source for source in sources]
 
 include_dirs = [PYNGRAPH_SOURCE_DIR,
@@ -249,6 +258,27 @@ ext_modules = [Extension(
                    language = "c++",
                    )
               ]
+
+
+if(os.environ.get('NGRAPH_ONNX_IMPORT_ENABLE') == 'TRUE'):
+    onnx_sources = ['pyngraph/pyngraph_onnx_import.cpp']
+    onnx_sources.append('pyngraph/onnx_import/onnx_import.cpp')
+    onnx_sources = [PYNGRAPH_SOURCE_DIR + "/" + source for source in onnx_sources]
+
+    package_dir['ngraph.impl.onnx_import'] = PYNGRAPH_SOURCE_DIR + "/ngraph/impl/onnx_import"
+    packages.append('ngraph.impl.onnx_import')
+
+    ext_modules.append(Extension(
+                           '_pyngraph_onnx_import',
+                           sources = onnx_sources,
+                           include_dirs = include_dirs,
+                           define_macros = [("VERSION_INFO", __version__)],
+                           library_dirs = library_dirs,
+                           libraries = libraries,
+                           extra_link_args = extra_link_args,
+                           language = "c++",
+                           )
+                      )
 
 
 class BuildExt(build_ext):
@@ -295,17 +325,8 @@ setup(
     description='Python wrapper for ngraph',
     long_description='',
     ext_modules=ext_modules,
-    package_dir={'ngraph': PYNGRAPH_SOURCE_DIR + "/ngraph",
-                 'ngraph.utils': PYNGRAPH_SOURCE_DIR + "/ngraph/utils",
-                 'ngraph.impl': PYNGRAPH_SOURCE_DIR + "/ngraph/impl",
-                 'ngraph.impl.onnx_import': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/onnx_import",
-                 'ngraph.impl.op': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/op",
-                 'ngraph.impl.op.util': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/op/util",
-                 'ngraph.impl.passes': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/passes",
-                 'ngraph.impl.runtime': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/runtime"},
-    packages = ['ngraph', 'ngraph.utils', 'ngraph.impl', 'ngraph.impl.onnx_import',
-                'ngraph.impl.op', 'ngraph.impl.op.util', 'ngraph.impl.passes',
-                'ngraph.impl.runtime'],
+    package_dir=package_dir,
+    packages = packages,
     cmdclass={'build_ext': BuildExt},
     data_files = data_files,
     install_requires = requirements,
