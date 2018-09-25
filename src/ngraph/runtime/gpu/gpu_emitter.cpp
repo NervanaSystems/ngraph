@@ -21,6 +21,7 @@
 #include <cuda_runtime.h>
 #include <cudnn.h>
 #include <iostream>
+#include <numeric>
 #include <nvrtc.h>
 #include <set>
 #include <string>
@@ -119,7 +120,7 @@ function<void(EMIT_ARGS)> runtime::gpu::GPU_Emitter::get_emit_function(const Nod
 // {<Abs typeid>, function<void(EMIT_ARGS)},
 // {<Acos typeid>, function<void(EMIT_ARGS)},
 // ...
-#define NGRAPH_OP(a) {type_index(typeid(ngraph::op::a)), runtime::gpu::GPU_Emitter::emit_##a},
+#define NGRAPH_OP(a, b) {type_index(typeid(b::a)), runtime::gpu::GPU_Emitter::emit_##a},
     static const map<type_index, function<void(EMIT_ARGS)>> typeid_map{
 #include "ngraph/op/op_tbl.hpp"
     };
