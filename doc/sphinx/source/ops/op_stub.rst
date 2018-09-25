@@ -3,6 +3,7 @@
 .. op_stub: 
 
 
+
 #######
 Op Stub
 #######
@@ -72,4 +73,4 @@ Mathematical Definition
 C++ Interface
 =============
 
-.. coming soon
+.. see other ops for how this is done; also see checklist.txt 
