@@ -86,7 +86,7 @@ void Node::validate_and_infer_types()
 
 void Node::set_output_type(size_t i, const element::Type& element_type, const Shape& shape)
 {
-    m_outputs.at(i).get_tensor_ptr()->set_tensor_view_type(element_type, shape);
+    m_outputs.at(i).get_tensor_ptr()->set_tensor_type(element_type, shape);
 }
 
 std::deque<descriptor::Output>& Node::get_outputs()
@@ -154,10 +154,8 @@ std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
     for (auto& i : get_inputs())
     {
-        if (i.get_output().get_node()->get_outputs().size() != 1)
-        {
-            throw "get_argument called on an argument w/ multiple outputs";
-        }
+        NGRAPH_ASSERT(i.get_output().get_node()->get_outputs().size() == 1)
+            << "child " << i.get_output().get_node()->get_name() << " has multiple outputs";
     }
     return m_inputs.at(index).get_output().get_node();
 }
