@@ -131,6 +131,8 @@ static const std::map<memory::format, const std::string> s_mkldnn_format_string_
     {memory::format::ldsnc, "memory::format::ldsnc"},
     {memory::format::ldigo, "memory::format::ldigo"},
     {memory::format::ldgo, "memory::format::ldgo"},
+    {memory::format::ldgo, "memory::format::Goihw8g"},
+    {memory::format::ldgo, "memory::format::Goihw16g"},
 };
 
 static const std::set<memory::format> s_filter_formats{

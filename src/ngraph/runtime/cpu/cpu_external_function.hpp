@@ -130,6 +130,10 @@ namespace ngraph
                     return callees;
                 }
                 bool is_direct_execution() const { return m_direct_execution; }
+                void write_to_file(const std::string& code,
+                                   const std::string& directory,
+                                   const std::string& filename);
+
             protected:
                 void build();
 
@@ -213,7 +217,7 @@ namespace ngraph
                 std::string m_function_name;
 
                 std::list<std::function<void(CPURuntimeContext*)>> functors;
-                std::list<std::pair<std::function<bool(CPURuntimeContext*)>, size_t>> enables;
+                std::list<std::function<bool(CPURuntimeContext*)>> enables;
                 std::list<std::pair<std::function<bool(CPURuntimeContext*)>, std::string>>
                     enable_nodename_list;
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>

@@ -32,6 +32,11 @@
 #include <CPP/softmax.hpp>
 #include <CPP/topology.hpp>
 
+#include "ngraph/pass/algebraic_simplification.hpp"
+#include "ngraph/pass/cse.hpp"
+#include "ngraph/pass/get_output_element_elimination.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/nop_elimination.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
@@ -68,11 +73,13 @@
 using namespace std;
 using namespace ngraph;
 
+using intelgpu_space = runtime::intelgpu::IntelGPULayout;
+
 // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
 // Abs,
 // Acos,
 // ...
-#define NGRAPH_OP(a) a,
+#define NGRAPH_OP(a, b) a,
 enum class OP_TYPEID
 {
 #include "ngraph/op/op_tbl.hpp"
@@ -85,7 +92,7 @@ static OP_TYPEID get_typeid(const string& s)
 // {"Abs", OP_TYPEID::Abs},
 // {"Acos", OP_TYPEID::Acos},
 // ...
-#define NGRAPH_OP(a) {#a, OP_TYPEID::a},
+#define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
     static const unordered_map<string, OP_TYPEID> typeid_map{
 #include "ngraph/op/op_tbl.hpp"
     };
@@ -171,14 +178,10 @@ static void do_pooling_operation(cldnn::topology& topology,
 {
     arguments_check(op, 1, 1);
 
-    const cldnn::tensor output_size =
-        runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(get_output_shape(op));
-
-    const cldnn::tensor input_offset =
-        runtime::intelgpu::IntelGPULayout::create_cldnn_offset(pad_below);
-    const cldnn::tensor size = runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(pool_shape);
-    const cldnn::tensor stride =
-        runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(pool_strides);
+    const cldnn::tensor output_size = intelgpu_space::create_cldnn_tensor(get_output_shape(op));
+    const cldnn::tensor input_offset = intelgpu_space::create_cldnn_offset(pad_below);
+    const cldnn::tensor size = intelgpu_space::create_cldnn_tensor(pool_shape);
+    const cldnn::tensor stride = intelgpu_space::create_cldnn_tensor(pool_strides);
 
     const cldnn::pooling cldnn_pooling(
         get_output_name(op), get_input_name(op), mode, size, stride, input_offset, output_size);
@@ -258,6 +261,16 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
     }
 
     cldnn::topology topology;
+    ngraph::pass::Manager pass_manager;
+
+    pass_manager.register_pass<ngraph::pass::NopElimination>();
+    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+
+    // GetOutputElementElimination must be after CommonSubexpressionElimination
+    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
+
+    pass_manager.run_passes(func);
 
     for (shared_ptr<Node> op : func->get_ops())
     {
@@ -394,14 +407,17 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             {
                 arguments_check(op, 1, 1);
             }
-            const size_t ngraph_tensor_dims = get_input_shape(op, 0).size();
+
+            // All input shapes must be the same
+            // if shape is empty (means Shape{}) in this case treat its size as 1
+            const size_t ngraph_tensor_dims =
+                get_input_shape(op).empty() ? 1 : get_input_shape(op).size();
             const shared_ptr<op::Concat> concat_op = static_pointer_cast<op::Concat>(op);
             const size_t ngraph_concat_axis = concat_op->get_concatenation_axis();
             vector<cldnn::primitive_id> inputs;
 
             cldnn::concatenation::concatenation_axis cldnn_axis =
-                runtime::intelgpu::IntelGPULayout::get_cldnn_axis(ngraph_tensor_dims,
-                                                                  ngraph_concat_axis);
+                intelgpu_space::get_cldnn_axis(ngraph_tensor_dims, ngraph_concat_axis);
 
             for (auto const& input : op->get_inputs())
             {
@@ -597,7 +613,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                      (get_input_shape(op).size() == 1 && get_input_shape(op).at(0) == 1))
             {
                 const cldnn::tensor output_tensor_size =
-                    runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(get_output_shape(op));
+                    intelgpu_space::create_cldnn_tensor(get_output_shape(op));
                 const cldnn::broadcast cldnn_broadcast(
                     get_output_name(op), get_input_name(op), output_tensor_size);
                 topology.add(cldnn_broadcast);
