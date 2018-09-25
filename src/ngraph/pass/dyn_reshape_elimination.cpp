@@ -58,7 +58,7 @@ void ngraph::pass::DynReshapeElimination::construct_dyn_reshape_pattern()
         }
 
         AxisVector perm;
-        for (size_t i = 0; i < data_op->get_shape().size(); i++)
+        for (size_t i = 0; i < dop->get_shape().size(); i++)
         {
             perm.push_back(i);
         }
