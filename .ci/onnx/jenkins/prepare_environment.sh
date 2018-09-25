@@ -17,17 +17,49 @@
 # and approved by Intel in writing.
 
 set -x
+set -e
+
+NGRAPH_CACHE_PATH="/home/ngraph"
+
+function check_cached_ngraph() {
+    # if no ngraph in /home - clone
+    if [ ! -e "${NGRAPH_CACHE_PATH}" ]; then
+        cd /home/
+        git clone --single-branch https://github.com/NervanaSystems/ngraph -b master
+    fi
+}
 
 function build_ngraph() {
     # directory containing ngraph repo
     local ngraph_directory="$1"
+    local func_parameters="$2"
     cd "${ngraph_directory}/ngraph"
+    for parameter in $func_parameters
+    do
+        case $parameter in
+            REBUILD)
+                rm -rf "${ngraph_directory}/ngraph/build"
+                rm -rf "${ngraph_directory}/ngraph_dist"
+            ;;
+            UPDATE)
+                git pull
+            ;;
+            USE_CACHED)
+                check_cached_ngraph
+                cp -Rf "${NGRAPH_CACHE_PATH}/build" "${ngraph_directory}/ngraph/"
+                for f in $(find ${ngraph_directory}/ngraph/build/ -name 'CMakeCache.txt');
+                do 	
+                    sed -i 's/${NGRAPH_CACHE_PATH}/${ngraph_directory}/g' $f
+                done
+            ;;
+        esac
+    done
     mkdir -p ./build
     cd ./build
     cmake ../ -DNGRAPH_TOOLS_ENABLE=FALSE -DNGRAPH_UNIT_TEST_ENABLE=FALSE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="${ngraph_directory}/ngraph_dist"
-    rm "${ngraph_directory}"/ngraph/python/dist/ngraph*.whl
+    rm -f "${ngraph_directory}"/ngraph/python/dist/ngraph*.whl
     make -j $(lscpu --parse=CORE | grep -v '#' | sort | uniq | wc -l)
-    make install
+    make install || return 1
     cd "${ngraph_directory}/ngraph/python"
     if [ ! -d ./pybind11 ]; then
         git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
@@ -35,10 +67,14 @@ function build_ngraph() {
     export PYBIND_HEADERS_PATH="${ngraph_directory}/ngraph/python/pybind11"
     export NGRAPH_CPP_BUILD_PATH="${ngraph_directory}/ngraph_dist"
     python3 setup.py bdist_wheel
+    return 0
 }
 
-# Change directory to ngraph cloned initially by CI, which is already on relevant branch
-build_ngraph "/root"
+# Copy stored nGraph master and use it to build PR branch
+if ! build_ngraph "/root" "USE_CACHED"; then
+    build_ngraph "/home" "UPDATE REBUILD"
+    build_ngraph "/root" "REBUILD USE_CACHED"
+fi
 
 # Copy Onnx models
 if [ -d /home/onnx_models/.onnx ]; then
