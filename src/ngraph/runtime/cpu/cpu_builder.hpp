@@ -171,6 +171,10 @@
     {                                                                                              \
         PARTIAL_SELECT_RANK(KV, float, R, K);                                                      \
     }                                                                                              \
+    else if (ET == element::f64)                                                                   \
+    {                                                                                              \
+        PARTIAL_SELECT_RANK(KV, double, R, K);                                                     \
+    }                                                                                              \
     else if (ET == element::i8)                                                                    \
     {                                                                                              \
         PARTIAL_SELECT_RANK(KV, int8_t, R, K);                                                     \
