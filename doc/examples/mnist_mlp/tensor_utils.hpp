@@ -43,7 +43,7 @@ void randomize(std::function<T()> rand,
             "Randomize generator size is not the same as tensor "
             "element size");
     }
-    size_t element_count = t->get_element_count();
+    size_t element_count = t->get_size();
     std::vector<T> temp;
     for (size_t i = 0; i < element_count; ++i)
     {
@@ -126,7 +126,7 @@ public:
            const std::shared_ptr<ngraph::runtime::TensorView>& tensor)
         : TensorDumper(name, tensor)
     {
-        size_t n = m_tensor->get_element_count();
+        size_t n = m_tensor->get_size();
         for (size_t i = 0; i < n; ++i)
         {
             float s = get_scalar<float>(m_tensor, i);
