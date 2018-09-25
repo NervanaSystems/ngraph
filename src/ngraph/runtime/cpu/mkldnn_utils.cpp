@@ -343,31 +343,10 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md(
     return memory::desc(md);
 }
 
-memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& in,
-                                                           AxisVector& axis_order)
+// MKLDNN kernel selection sometimes relies on named layouts like "mkldnn_nchw"
+// Try and convert a blocked layout into a named layout
+memory::desc runtime::cpu::mkldnn_utils::try_get_named_md(mkldnn_memory_desc_t md)
 {
-    mkldnn_memory_desc_t md;
-    md.primitive_kind = in.data.primitive_kind;
-    md.ndims = in.data.ndims;
-    md.format = mkldnn_blocked;
-    md.data_type = in.data.data_type;
-
-    for (size_t i = 0; i < in.data.ndims; i++)
-    {
-        md.layout_desc.blocking.block_dims[i] =
-            in.data.layout_desc.blocking.block_dims[axis_order[i]];
-        md.layout_desc.blocking.strides[1][i] =
-            in.data.layout_desc.blocking.strides[1][axis_order[i]];
-        md.layout_desc.blocking.strides[0][i] =
-            in.data.layout_desc.blocking.strides[0][axis_order[i]];
-        md.layout_desc.blocking.padding_dims[i] =
-            in.data.layout_desc.blocking.padding_dims[axis_order[i]];
-        md.layout_desc.blocking.offset_padding_to_data[i] =
-            in.data.layout_desc.blocking.offset_padding_to_data[axis_order[i]];
-        md.dims[i] = in.data.dims[axis_order[i]];
-    }
-    md.layout_desc.blocking.offset_padding = in.data.layout_desc.blocking.offset_padding;
-
     auto out_md = memory::desc(md);
 
     auto get_named_md = [](const mkldnn_memory_desc_t& blk, const mkldnn_memory_format_t format) {
@@ -420,12 +399,118 @@ memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& i
     return out_md;
 }
 
-bool runtime::cpu::mkldnn_utils::use_mkldnn_kernel(const ngraph::Node* node)
+memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& in,
+                                                           const AxisVector& axis_order)
 {
-    auto op_annotations = static_cast<const ngraph::op::Op*>(node)->get_op_annotations();
-    return (op_annotations &&
-            static_pointer_cast<ngraph::runtime::cpu::CPUOpAnnotations>(op_annotations)
-                ->is_mkldnn_op());
+    mkldnn_memory_desc_t md;
+    md.primitive_kind = in.data.primitive_kind;
+    md.ndims = in.data.ndims;
+    md.format = mkldnn_blocked;
+    md.data_type = in.data.data_type;
+
+    for (size_t i = 0; i < in.data.ndims; i++)
+    {
+        md.layout_desc.blocking.block_dims[i] =
+            in.data.layout_desc.blocking.block_dims[axis_order[i]];
+        md.layout_desc.blocking.strides[1][i] =
+            in.data.layout_desc.blocking.strides[1][axis_order[i]];
+        md.layout_desc.blocking.strides[0][i] =
+            in.data.layout_desc.blocking.strides[0][axis_order[i]];
+        md.layout_desc.blocking.padding_dims[i] =
+            in.data.layout_desc.blocking.padding_dims[axis_order[i]];
+        md.layout_desc.blocking.offset_padding_to_data[i] =
+
+            in.data.layout_desc.blocking.offset_padding_to_data[axis_order[i]];
+        md.dims[i] = in.data.dims[axis_order[i]];
+    }
+    md.layout_desc.blocking.offset_padding = in.data.layout_desc.blocking.offset_padding;
+
+    return try_get_named_md(md);
+}
+
+memory::desc runtime::cpu::mkldnn_utils::squeeze_blocked_md(const memory::desc& in,
+                                                            AxisVector& axis_list)
+{
+    if (in.data.ndims <= axis_list.size())
+    {
+        throw ngraph_error("Squeezing too many axes: input " + to_string(in.data.ndims) +
+                           " , removing " + to_string(axis_list.size()));
+    }
+    for (auto axis : axis_list)
+    {
+        if (in.data.dims[axis] != 1)
+        {
+            throw ngraph_error("Cannot squeeze axis on non unit-size, axis: " + to_string(axis) +
+                               " size: " + to_string(in.data.dims[axis]));
+        }
+    }
+
+    mkldnn_memory_desc_t md;
+    md.primitive_kind = in.data.primitive_kind;
+    md.ndims = in.data.ndims - axis_list.size();
+    md.format = mkldnn_blocked;
+    md.data_type = in.data.data_type;
+
+    size_t k = 0;
+    for (size_t i = 0, j = 0; i < in.data.ndims; i++)
+    {
+        if (i == axis_list[k])
+        {
+            k++;
+            continue;
+        }
+
+        md.layout_desc.blocking.block_dims[j] = in.data.layout_desc.blocking.block_dims[i];
+        md.layout_desc.blocking.strides[1][j] = in.data.layout_desc.blocking.strides[1][i];
+        md.layout_desc.blocking.strides[0][j] = in.data.layout_desc.blocking.strides[0][i];
+        md.layout_desc.blocking.padding_dims[j] = in.data.layout_desc.blocking.padding_dims[i];
+        md.layout_desc.blocking.offset_padding_to_data[j] =
+
+            in.data.layout_desc.blocking.offset_padding_to_data[i];
+        md.dims[j] = in.data.dims[i];
+        j++;
+    }
+    md.layout_desc.blocking.offset_padding = in.data.layout_desc.blocking.offset_padding;
+
+    return try_get_named_md(md);
+}
+
+memory::desc runtime::cpu::mkldnn_utils::expand_blocked_md(const memory::desc& in,
+                                                           AxisVector& axis_list)
+{
+    mkldnn_memory_desc_t md;
+    md.primitive_kind = in.data.primitive_kind;
+    md.ndims = in.data.ndims + axis_list.size();
+    md.format = mkldnn_blocked;
+    md.data_type = in.data.data_type;
+
+    size_t k = 0;
+    for (size_t i = 0, j = 0; j < md.ndims; j++, i++)
+    {
+        if (j == axis_list[k])
+        {
+            i--;
+            k++;
+            md.dims[j] = 1;
+            md.layout_desc.blocking.block_dims[j] = 1;
+            md.layout_desc.blocking.padding_dims[j] = 1;
+            md.layout_desc.blocking.offset_padding_to_data[j] = 0;
+        }
+        else
+        {
+            md.dims[j] = in.data.dims[i];
+            md.layout_desc.blocking.block_dims[j] = in.data.layout_desc.blocking.block_dims[i];
+            md.layout_desc.blocking.padding_dims[j] = in.data.layout_desc.blocking.padding_dims[i];
+            md.layout_desc.blocking.offset_padding_to_data[j] =
+                in.data.layout_desc.blocking.offset_padding_to_data[i];
+        }
+
+        md.layout_desc.blocking.strides[1][j] = in.data.layout_desc.blocking.strides[1][i];
+        md.layout_desc.blocking.strides[0][j] = in.data.layout_desc.blocking.strides[0][i];
+    }
+    md.layout_desc.blocking.offset_padding = in.data.layout_desc.blocking.offset_padding;
+
+    return try_get_named_md(md);
 }
 
 bool runtime::cpu::mkldnn_utils::compare_mkldnn_formats(mkldnn::memory::format lhs,
@@ -464,4 +549,36 @@ bool runtime::cpu::mkldnn_utils::is_mkldnn_blocked_data_format(mkldnn::memory::f
         return true;
     }
     return false;
+}
+
+// Most of the layout optimizations like expansion/squeezing dims are not pad-aware.
+// This check allows us to skip if anything looks fishy.
+bool runtime::cpu::mkldnn_utils::is_mkldnn_padded_layout(const mkldnn::memory::desc& in)
+{
+    for (size_t i = 0; i < in.data.ndims; i++)
+    {
+        if (in.data.layout_desc.blocking.padding_dims[i] != in.data.dims[i])
+        {
+            return true;
+        }
+        if (in.data.layout_desc.blocking.offset_padding_to_data[i] != 0)
+        {
+            return true;
+        }
+    }
+
+    if (in.data.layout_desc.blocking.offset_padding != 0)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+bool runtime::cpu::mkldnn_utils::use_mkldnn_kernel(const ngraph::Node* node)
+{
+    auto op_annotations = static_cast<const ngraph::op::Op*>(node)->get_op_annotations();
+    return (op_annotations &&
+            static_pointer_cast<ngraph::runtime::cpu::CPUOpAnnotations>(op_annotations)
+                ->is_mkldnn_op());
 }

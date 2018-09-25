@@ -51,6 +51,7 @@ namespace ngraph
                 {
                     return m_mkldnn_md.data.format != mkldnn::memory::format::format_undef;
                 }
+                bool is_row_major_layout();
 
                 static const mkldnn::memory::desc DummyDesc;
 

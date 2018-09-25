@@ -118,6 +118,15 @@ namespace ngraph
                         e.message);
                 }
             }
+
+            bool LayoutDescriptor::is_row_major_layout()
+            {
+                if (!is_mkldnn_layout())
+                    return true;
+                auto native_md = runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md(
+                    get_shape(), m_strides, get_element_type());
+                return runtime::cpu::mkldnn_utils::compare_mkldnn_mds(m_mkldnn_md, native_md);
+            }
         }
     }
 }
