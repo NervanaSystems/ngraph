@@ -33,18 +33,18 @@ namespace ngraph
 
     namespace runtime
     {
-        class TensorView
+        class Tensor
         {
         protected:
-            TensorView(const std::shared_ptr<ngraph::descriptor::Tensor>& descriptor)
+            Tensor(const std::shared_ptr<ngraph::descriptor::Tensor>& descriptor)
                 : m_descriptor(descriptor)
                 , m_stale(true)
             {
             }
 
         public:
-            virtual ~TensorView() {}
-            TensorView& operator=(const TensorView&) = default;
+            virtual ~Tensor() {}
+            Tensor& operator=(const Tensor&) = default;
 
             /// \brief Get tensor shape
             /// \return const reference to a Shape
@@ -100,6 +100,6 @@ namespace ngraph
             bool m_stale;
         };
 
-        using TensorViewPtrs = std::vector<std::shared_ptr<TensorView>>;
+        using TensorViewPtrs = std::vector<std::shared_ptr<Tensor>>;
     }
 }

@@ -45,24 +45,24 @@ namespace ngraph
     namespace autodiff
     {
         template <typename T>
-        std::vector<std::shared_ptr<runtime::TensorView>>
+        std::vector<std::shared_ptr<runtime::Tensor>>
             get_autodiff(const std::shared_ptr<runtime::Backend>& backend,
                          std::shared_ptr<Function>& df,
-                         const std::vector<std::shared_ptr<runtime::TensorView>>& df_input_args,
+                         const std::vector<std::shared_ptr<runtime::Tensor>>& df_input_args,
                          const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
         {
             // df/dX* = f'(c, ...)
             // using X* to denote all x "of interest" (represented by indep_params)
 
             // return value for this function
-            std::vector<std::shared_ptr<runtime::TensorView>> results;
+            std::vector<std::shared_ptr<runtime::Tensor>> results;
 
             // adjoint
             auto c_arg = df_input_args[0];
             auto y_shape = c_arg->get_shape();
 
             // df/dX* arguments
-            std::vector<std::shared_ptr<runtime::TensorView>> df_output_args;
+            std::vector<std::shared_ptr<runtime::Tensor>> df_output_args;
 
             // for each x "of interest"
             for (auto x : indep_params)
@@ -125,10 +125,10 @@ namespace ngraph
         }
 
         template <typename T>
-        std::vector<std::shared_ptr<runtime::TensorView>> backprop_derivative(
+        std::vector<std::shared_ptr<runtime::Tensor>> backprop_derivative(
             const std::shared_ptr<runtime::Backend>& backend,
             const std::shared_ptr<Function>& f,
-            const std::vector<std::shared_ptr<runtime::TensorView>>& f_input_args,
+            const std::vector<std::shared_ptr<runtime::Tensor>>& f_input_args,
             const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
         {
             // y = f(X)
@@ -165,7 +165,7 @@ namespace ngraph
             auto df = s_df_map[f];
 
             // (c, X) arguments
-            std::vector<std::shared_ptr<runtime::TensorView>> df_input_args = f_input_args;
+            std::vector<std::shared_ptr<runtime::Tensor>> df_input_args = f_input_args;
             df_input_args.insert(df_input_args.begin(), c_arg);
 
             // call f'(c,X) to get df/dX*
@@ -177,11 +177,11 @@ namespace ngraph
             auto fprop_cache = cache_fprop(f, df);
 
             // (y, cached) arguments
-            std::vector<std::shared_ptr<runtime::TensorView>> mod_f_output_args;
+            std::vector<std::shared_ptr<runtime::Tensor>> mod_f_output_args;
             mod_f_output_args.push_back(backend->create_tensor<T>(y_shape));
 
             // (c, cached) arguments
-            std::vector<std::shared_ptr<runtime::TensorView>> mod_df_input_args = df_input_args;
+            std::vector<std::shared_ptr<runtime::Tensor>> mod_df_input_args = df_input_args;
 
             // add cached nodes to both modified f output and modified f' input arguments
             for (auto node : fprop_cache.fprop_output_nodes)

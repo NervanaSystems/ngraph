@@ -35,7 +35,7 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
                                            const Shape& shape,
                                            void* memory_pointer,
                                            const string& name)
-    : runtime::TensorView(
+    : runtime::Tensor(
           std::make_shared<ngraph::descriptor::TensorView>(element_type, shape, name))
     , buffer(nullptr)
     , aligned_buffer(nullptr)

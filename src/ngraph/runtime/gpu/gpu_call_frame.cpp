@@ -39,8 +39,8 @@ runtime::gpu::GPU_CallFrame::~GPU_CallFrame()
 }
 
 void runtime::gpu::GPU_CallFrame::call(
-    const std::vector<std::shared_ptr<runtime::TensorView>>& output_tvs,
-    const std::vector<std::shared_ptr<runtime::TensorView>>& input_tvs,
+    const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
+    const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs,
     GPURuntimeContext* ctx)
 {
     // Device tensors

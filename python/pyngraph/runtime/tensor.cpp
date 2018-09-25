@@ -18,24 +18,24 @@
 #include <pybind11/stl.h>
 
 #include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
-#include "pyngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
+#include "pyngraph/runtime/tensor.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_runtime_TensorView(py::module m)
+void regclass_pyngraph_runtime_Tensor(py::module m)
 {
-    py::class_<ngraph::runtime::TensorView, std::shared_ptr<ngraph::runtime::TensorView>>
-        tensorView(m, "TensorView");
-    tensorView.doc() = "ngraph.impl.runtime.TensorView wraps ngraph::runtime::TensorView";
+    py::class_<ngraph::runtime::Tensor, std::shared_ptr<ngraph::runtime::Tensor>>
+        tensorView(m, "Tensor");
+    tensorView.doc() = "ngraph.impl.runtime.TensorView wraps ngraph::runtime::Tensor";
     tensorView.def("write",
-                   (void (ngraph::runtime::TensorView::*)(const void*, size_t, size_t)) &
-                       ngraph::runtime::TensorView::write);
-    tensorView.def("read", &ngraph::runtime::TensorView::read);
+                   (void (ngraph::runtime::Tensor::*)(const void*, size_t, size_t)) &
+                       ngraph::runtime::Tensor::write);
+    tensorView.def("read", &ngraph::runtime::Tensor::read);
 
-    tensorView.def_property_readonly("shape", &ngraph::runtime::TensorView::get_shape);
-    tensorView.def_property_readonly("element_count", &ngraph::runtime::TensorView::get_size);
-    tensorView.def_property_readonly("element_type", [](const ngraph::runtime::TensorView& self) {
+    tensorView.def_property_readonly("shape", &ngraph::runtime::Tensor::get_shape);
+    tensorView.def_property_readonly("element_count", &ngraph::runtime::Tensor::get_size);
+    tensorView.def_property_readonly("element_type", [](const ngraph::runtime::Tensor& self) {
         return self.get_element_type();
     });
 }
