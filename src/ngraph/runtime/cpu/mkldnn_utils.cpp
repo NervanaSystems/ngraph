@@ -454,7 +454,7 @@ memory::desc runtime::cpu::mkldnn_utils::squeeze_blocked_md(const memory::desc& 
     size_t k = 0;
     for (size_t i = 0, j = 0; i < in.data.ndims; i++)
     {
-        if (i == axis_list[k])
+        if (k < axis_list.size() && i == axis_list[k])
         {
             k++;
             continue;
@@ -551,12 +551,15 @@ bool runtime::cpu::mkldnn_utils::is_mkldnn_blocked_data_format(mkldnn::memory::f
     return false;
 }
 
-// Most of the layout optimizations like expansion/squeezing dims are not pad-aware.
-// This check allows us to skip if anything looks fishy.
-bool runtime::cpu::mkldnn_utils::is_mkldnn_padded_layout(const mkldnn::memory::desc& in)
+bool runtime::cpu::mkldnn_utils::is_mkldnn_padded_layout(const mkldnn::memory::desc& in,
+                                                         const AxisVector& axis_list)
 {
     for (size_t i = 0; i < in.data.ndims; i++)
     {
+        if (std::find(axis_list.begin(), axis_list.end(), i) == axis_list.end())
+        {
+            continue;
+        }
         if (in.data.layout_desc.blocking.padding_dims[i] != in.data.dims[i])
         {
             return true;

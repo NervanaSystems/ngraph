@@ -66,7 +66,8 @@ namespace ngraph
                 bool compare_mkldnn_formats(mkldnn::memory::format lhs, mkldnn::memory::format rhs);
                 bool compare_mkldnn_mds(const mkldnn::memory::desc& lhs,
                                         const mkldnn::memory::desc& rhs);
-                bool is_mkldnn_padded_layout(const mkldnn::memory::desc& in);
+                bool is_mkldnn_padded_layout(const mkldnn::memory::desc& in,
+                                             const AxisVector& axis_list);
                 bool is_mkldnn_filter_format(mkldnn::memory::format fmt);
                 bool is_mkldnn_blocked_data_format(mkldnn::memory::format fmt);
 

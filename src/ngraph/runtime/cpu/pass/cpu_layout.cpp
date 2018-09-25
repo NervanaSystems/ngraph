@@ -1251,7 +1251,8 @@ namespace ngraph
                 }
 
                 static bool can_be_squeezed(const ngraph::op::Reshape* reshape,
-                                            const mkldnn::memory::desc& md)
+                                            const mkldnn::memory::desc& md,
+                                            AxisVector& squeezed_axis)
                 {
                     auto input_shape = reshape->get_input_shape(0);
                     auto output_shape = reshape->get_output_shape();
@@ -1262,9 +1263,6 @@ namespace ngraph
                     if ((shape_size(input_shape)) == 1)
                         return false;
 
-                    if (mkldnn_utils::is_mkldnn_padded_layout(md))
-                        return false;
-
                     for (size_t i = 0, j = 0; i < input_shape.size(); i++)
                     {
                         if (j >= output_shape.size() || input_shape[i] != output_shape[j])
@@ -1272,17 +1270,23 @@ namespace ngraph
                             // Squeezed axis
                             if (input_shape[i] != 1)
                                 return false;
+                            squeezed_axis.push_back(i);
                         }
                         else
                         {
                             j++;
                         }
                     }
+
+                    if (mkldnn_utils::is_mkldnn_padded_layout(md, squeezed_axis))
+                        return false;
+
                     return true;
                 }
 
                 static bool can_be_expanded(const ngraph::op::Reshape* reshape,
-                                            const mkldnn::memory::desc& md)
+                                            const mkldnn::memory::desc& md,
+                                            AxisVector& expanded_axis)
                 {
                     auto input_shape = reshape->get_input_shape(0);
                     auto output_shape = reshape->get_output_shape();
@@ -1293,9 +1297,6 @@ namespace ngraph
                     if ((shape_size(input_shape)) == 1)
                         return false;
 
-                    if (mkldnn_utils::is_mkldnn_padded_layout(md))
-                        return false;
-
                     for (size_t i = 0, j = 0; j < output_shape.size(); j++)
                     {
                         if (i >= input_shape.size() || input_shape[i] != output_shape[j])
@@ -1303,6 +1304,7 @@ namespace ngraph
                             // Expanded axis
                             if (output_shape[j] != 1)
                                 return false;
+                            expanded_axis.push_back(j);
                         }
                         else
                         {
@@ -1327,6 +1329,8 @@ namespace ngraph
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         auto input_shape = reshape->get_input_shape(0);
                         auto output_shape = reshape->get_output_shape();
+                        AxisVector squeezed_axis;
+                        AxisVector expanded_axis;
 
                         // Case 1: Transpose only. Rotate layouts
                         // Case 2: Squeeze dims. Removes size-1 dimensions. Squeeze mkldnn layout
@@ -1340,42 +1344,16 @@ namespace ngraph
                             skip_reshape = true;
                             skip_input_reorder = true;
                         }
-                        else if (can_be_squeezed(reshape, input_md))
+                        else if (can_be_squeezed(reshape, input_md, squeezed_axis))
                         {
-                            AxisVector squeezed_axis;
-                            for (size_t i = 0, j = 0; i < input_shape.size(); i++)
-                            {
-                                if (j >= output_shape.size() || input_shape[i] != output_shape[j])
-                                {
-                                    squeezed_axis.push_back(i);
-                                }
-                                else
-                                {
-                                    j++;
-                                }
-                            }
-
                             auto output_md =
                                 mkldnn_utils::squeeze_blocked_md(input_md, squeezed_axis);
                             set_output_layouts(node, {output_md});
                             skip_reshape = true;
                             skip_input_reorder = true;
                         }
-                        else if (can_be_expanded(reshape, input_md))
+                        else if (can_be_expanded(reshape, input_md, expanded_axis))
                         {
-                            AxisVector expanded_axis;
-                            for (size_t i = 0, j = 0; j < output_shape.size(); j++)
-                            {
-                                if (i >= input_shape.size() || input_shape[i] != output_shape[j])
-                                {
-                                    expanded_axis.push_back(j);
-                                }
-                                else
-                                {
-                                    i++;
-                                }
-                            }
-
                             auto output_md =
                                 mkldnn_utils::expand_blocked_md(input_md, expanded_axis);
                             set_output_layouts(node, {output_md});
