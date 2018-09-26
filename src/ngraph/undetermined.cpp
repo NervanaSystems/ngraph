@@ -16,7 +16,6 @@
 
 #include "ngraph/undetermined.hpp"
 
-std::ostream& ngraph::operator<<(std::ostream& str, const Undetermined&)
-{
-    return (str << "?");
-}
+using namespace ngraph;
+
+const Undetermined ngraph::undetermined{};

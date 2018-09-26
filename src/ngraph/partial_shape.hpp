@@ -29,24 +29,24 @@ namespace ngraph
     {
     public:
         PartialShape(std::initializer_list<Length> init)
-            : m_rank_fixed(true)
+            : m_rank_is_determined(true)
             , m_lengths(init)
         {
         }
         PartialShape(const Undetermined&)
-            : m_rank_fixed(false)
+            : m_rank_is_determined(false)
             , m_lengths()
         {
         }
-        bool rank_fixed() const { return m_rank_fixed; }
-        bool fixed() const;
-        Rank rank() const { return m_rank_fixed ? Rank(m_lengths.size()) : undet; }
+        bool rank_is_determined() const { return m_rank_is_determined; }
+        bool is_complete() const;
+        Rank rank() const { return m_rank_is_determined ? Rank(m_lengths.size()) : undetermined; }
         friend std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
         friend PartialShape operator+(const PartialShape& s1, const PartialShape& s2);
         PartialShape append(const PartialShape& other);
 
     private:
-        bool m_rank_fixed;
+        bool m_rank_is_determined;
         std::vector<Length> m_lengths;
     };
 

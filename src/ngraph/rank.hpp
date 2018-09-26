@@ -42,7 +42,7 @@ namespace ngraph
             , m_fixed(true)
         {
         }
-        bool fixed() const { return m_fixed; }
+        bool is_fixed() const { return m_fixed; }
         explicit operator size_t() const { return m_rank; }
     private:
         size_t m_rank;

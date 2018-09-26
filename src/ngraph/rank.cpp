@@ -18,7 +18,7 @@
 
 std::ostream& ngraph::operator<<(std::ostream& str, const Rank& rank)
 {
-    if (rank.fixed())
+    if (rank.is_fixed())
     {
         return (str << size_t(rank));
     }
@@ -30,10 +30,10 @@ std::ostream& ngraph::operator<<(std::ostream& str, const Rank& rank)
 
 bool ngraph::operator==(const Rank& r1, const Rank& r2)
 {
-    return (r1.fixed() && r2.fixed() && size_t(r1) == size_t(r2));
+    return (r1.is_fixed() && r2.is_fixed() && size_t(r1) == size_t(r2));
 }
 
 bool ngraph::operator!=(const Rank& r1, const Rank& r2)
 {
-    return (r1.fixed() && r2.fixed() && size_t(r1) != size_t(r2));
+    return (r1.is_fixed() && r2.is_fixed() && size_t(r1) != size_t(r2));
 }

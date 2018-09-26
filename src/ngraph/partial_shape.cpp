@@ -21,18 +21,18 @@
 
 using namespace ngraph;
 
-bool ngraph::PartialShape::fixed() const
+bool ngraph::PartialShape::is_complete() const
 {
-    return m_rank_fixed && std::all_of(m_lengths.begin(), m_lengths.end(), [](const Length& l) {
-               return l.fixed();
-           });
+    return m_rank_is_determined && std::all_of(m_lengths.begin(),
+                                               m_lengths.end(),
+                                               [](const Length& l) { return l.is_determined(); });
 }
 
 ngraph::PartialShape ngraph::operator+(const PartialShape& s1, const PartialShape& s2)
 {
-    if (!s1.rank_fixed() || !s2.rank_fixed())
+    if (!s1.rank_is_determined() || !s2.rank_is_determined())
     {
-        return undet;
+        return undetermined;
     }
 
     if (s1.rank() != s2.rank())
@@ -41,7 +41,7 @@ ngraph::PartialShape ngraph::operator+(const PartialShape& s1, const PartialShap
     }
 
     PartialShape result{};
-    result.m_rank_fixed = true;
+    result.m_rank_is_determined = true;
     for (size_t i = 0; i < s1.m_lengths.size(); i++)
     {
         result.m_lengths.push_back(s1.m_lengths[i] + s2.m_lengths[i]);
@@ -51,7 +51,7 @@ ngraph::PartialShape ngraph::operator+(const PartialShape& s1, const PartialShap
 
 std::ostream& ngraph::operator<<(std::ostream& str, const PartialShape& shape)
 {
-    if (shape.m_rank_fixed)
+    if (shape.m_rank_is_determined)
     {
         str << "{";
         bool first = true;

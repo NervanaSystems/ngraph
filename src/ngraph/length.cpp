@@ -18,7 +18,7 @@
 
 std::ostream& ngraph::operator<<(std::ostream& str, const Length& length)
 {
-    if (length.fixed())
+    if (length.is_determined())
     {
         return (str << size_t(length));
     }
@@ -30,5 +30,6 @@ std::ostream& ngraph::operator<<(std::ostream& str, const Length& length)
 
 ngraph::Length ngraph::operator+(const Length& l1, const Length& l2)
 {
-    return (l1.fixed() && l2.fixed() ? size_t(l1) + size_t(l2) : Length(undet));
+    return (l1.is_determined() && l2.is_determined() ? size_t(l1) + size_t(l2)
+                                                     : Length(undetermined));
 }

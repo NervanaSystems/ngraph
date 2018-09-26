@@ -26,10 +26,7 @@ namespace ngraph
     {
     public:
         Undetermined() {}
-        friend std::ostream& operator<<(std::ostream& str, const Undetermined&);
     };
 
-    std::ostream& operator<<(std::ostream& str, const Undetermined&);
-
-    const ngraph::Undetermined undet;
+    extern const Undetermined undetermined;
 }

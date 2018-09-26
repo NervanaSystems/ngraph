@@ -29,24 +29,24 @@ namespace ngraph
     public:
         Length(size_t length)
             : m_length(length)
-            , m_fixed(true)
+            , m_is_determined(true)
         {
         }
         Length(const Undetermined&)
             : m_length(0)
-            , m_fixed(false)
+            , m_is_determined(false)
         {
         }
         Length()
             : m_length(0)
-            , m_fixed(true)
+            , m_is_determined(true)
         {
         }
-        bool fixed() const { return m_fixed; }
+        bool is_determined() const { return m_is_determined; }
         explicit operator size_t() const { return m_length; }
     private:
         size_t m_length;
-        bool m_fixed;
+        bool m_is_determined;
     };
 
     std::ostream& operator<<(std::ostream& str, const Length& length);
