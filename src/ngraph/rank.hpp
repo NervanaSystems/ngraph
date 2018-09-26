@@ -14,42 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-// XXX: THIS CLASS IS NOT IN USE YET AND THE ENTIRE DESIGN IS SUBJECT TO CHANGE.
-
 #pragma once
 
-#include <stddef.h>
-
-#include "ngraph/undetermined.hpp"
+#include "ngraph/dimension.hpp"
 
 namespace ngraph
 {
-    class Rank
-    {
-    public:
-        Rank(size_t rank)
-            : m_rank(rank)
-            , m_is_determined(true)
-        {
-        }
-        Rank(const Undetermined&)
-            : m_rank(0)
-            , m_is_determined(false)
-        {
-        }
-        Rank()
-            : m_rank(0)
-            , m_is_determined(false)
-        {
-        }
-        bool is_determined() const { return m_is_determined; }
-        explicit operator size_t() const { return m_rank; }
-    private:
-        size_t m_rank;
-        bool m_is_determined;
-    };
-
-    std::ostream& operator<<(std::ostream& str, const Rank& rank);
-    bool operator==(const Rank& r1, const Rank& r2);
-    bool operator!=(const Rank& r1, const Rank& r2);
+    using Rank = Dimension;
 }

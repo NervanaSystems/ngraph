@@ -20,7 +20,7 @@
 
 #include <stddef.h>
 
-#include "ngraph/length.hpp"
+#include "ngraph/dimension.hpp"
 #include "ngraph/rank.hpp"
 
 namespace ngraph
@@ -28,26 +28,28 @@ namespace ngraph
     class PartialShape
     {
     public:
-        PartialShape(std::initializer_list<Length> init)
-            : m_rank_is_determined(true)
-            , m_lengths(init)
-        {
-        }
-        PartialShape(const Undetermined&)
-            : m_rank_is_determined(false)
-            , m_lengths()
+        PartialShape(std::initializer_list<Dimension> init)
+            : PartialShape(true, init)
         {
         }
         bool rank_is_determined() const { return m_rank_is_determined; }
         bool is_complete() const;
-        Rank rank() const { return m_rank_is_determined ? Rank(m_lengths.size()) : undetermined; }
+        Rank rank() const
+        {
+            return m_rank_is_determined ? Rank(m_dimensions.size()) : Rank::undetermined();
+        }
         friend std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
         friend PartialShape operator+(const PartialShape& s1, const PartialShape& s2);
         PartialShape append(const PartialShape& other);
-
+        static PartialShape undetermined() { return PartialShape(false, {}); }
     private:
+        PartialShape(bool rank_is_determined, std::initializer_list<Dimension> init)
+            : m_rank_is_determined(rank_is_determined)
+            , m_dimensions(init)
+        {
+        }
         bool m_rank_is_determined;
-        std::vector<Length> m_lengths;
+        std::vector<Dimension> m_dimensions;
     };
 
     PartialShape operator+(const PartialShape& s1, const PartialShape& s2);

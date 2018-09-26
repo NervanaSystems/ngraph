@@ -14,13 +14,18 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/rank.hpp"
+#include <iostream>
+#include <limits>
 
-std::ostream& ngraph::operator<<(std::ostream& str, const Rank& rank)
+#include "ngraph/dimension.hpp"
+
+using namespace ngraph;
+
+std::ostream& ngraph::operator<<(std::ostream& str, const Dimension& dimension)
 {
-    if (rank.is_determined())
+    if (dimension.is_determined())
     {
-        return (str << size_t(rank));
+        return (str << size_t(dimension));
     }
     else
     {
@@ -28,12 +33,20 @@ std::ostream& ngraph::operator<<(std::ostream& str, const Rank& rank)
     }
 }
 
-bool ngraph::operator==(const Rank& r1, const Rank& r2)
+Dimension ngraph::operator+(const Dimension& d1, const Dimension& d2)
 {
-    return (r1.is_determined() && r2.is_determined() && size_t(r1) == size_t(r2));
+    return (d1.is_determined() && d2.is_determined() ? size_t(d1) + size_t(d2)
+                                                     : Dimension::undetermined());
 }
 
-bool ngraph::operator!=(const Rank& r1, const Rank& r2)
+bool ngraph::operator==(const Dimension& d1, const Dimension& d2)
 {
-    return (r1.is_determined() && r2.is_determined() && size_t(r1) != size_t(r2));
+    return (d1.is_determined() && d2.is_determined() && size_t(d1) == size_t(d2));
 }
+
+bool ngraph::operator!=(const Dimension& d1, const Dimension& d2)
+{
+    return (d1.is_determined() && d2.is_determined() && size_t(d1) != size_t(d2));
+}
+
+const Dimension& Dimension::s_undetermined{};

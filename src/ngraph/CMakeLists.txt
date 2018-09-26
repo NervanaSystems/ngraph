@@ -29,9 +29,9 @@ set (SRC
     descriptor/layout/tensor_layout.cpp
     descriptor/output.cpp
     descriptor/tensor.cpp
+    dimension.cpp
     file_util.cpp
     function.cpp
-    length.cpp
     log.cpp
     node.cpp
     op/abs.cpp
@@ -137,7 +137,6 @@ set (SRC
     pass/serialize.cpp
     pass/zero_dim_tensor_elimination.cpp
     pattern/matcher.cpp
-    rank.cpp
     runtime/aligned_buffer.cpp
     runtime/backend.cpp
     runtime/backend_manager.cpp
@@ -147,7 +146,6 @@ set (SRC
     shape.cpp
     strides.cpp
     type/element_type.cpp
-    undetermined.cpp
     util.cpp
     graph_util.cpp
     placement.cpp

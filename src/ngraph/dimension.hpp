@@ -18,15 +18,33 @@
 
 #pragma once
 
-#include <iostream>
+#include <limits>
+#include <stddef.h>
 
 namespace ngraph
 {
-    class Undetermined
+    class Dimension
     {
     public:
-        Undetermined() {}
+        Dimension(size_t dimension)
+            : m_dimension(dimension)
+        {
+        }
+        Dimension()
+            : m_dimension(s_undetermined_val)
+        {
+        }
+        bool is_determined() const { return m_dimension != s_undetermined_val; }
+        explicit operator size_t() const { return m_dimension; }
+        static const Dimension& undetermined() { return s_undetermined; }
+    private:
+        size_t m_dimension;
+        static const Dimension& s_undetermined;
+        static const size_t s_undetermined_val{std::numeric_limits<size_t>::max()};
     };
 
-    extern const Undetermined undetermined;
+    std::ostream& operator<<(std::ostream& str, const Dimension& dimension);
+    Dimension operator+(const Dimension& d1, const Dimension& d2);
+    bool operator==(const Dimension& d1, const Dimension& d2);
+    bool operator!=(const Dimension& d1, const Dimension& d2);
 }
