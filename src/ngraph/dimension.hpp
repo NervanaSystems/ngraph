@@ -42,13 +42,20 @@ namespace ngraph
         {
         }
 
-        /// \brief Returns true if this dimension is known.
+        /// \brief Returns true if this dimension is determined.
         bool is_determined() const { return m_dimension != s_undetermined_val; }
-        /// \brief Converts this dimension to size_t. If the dimension is unknown, behavior is
-        ///        undefined.
+        /// \brief Converts this dimension to size_t. If the dimension is undetermined, return
+        ///        value is implementation-dependent.
         explicit operator size_t() const { return m_dimension; }
+        /// \brief Tests whether "this" is possibly equal to s.
+        bool possibly_eq(const Dimension& d) const { return !(*this != d); }
+        /// \brief Tests whether "this" is possibly not equal to s.
+        bool possibly_neq(const Dimension& d) const { return !(*this == d); }
         /// \brief Constructs an unknown dimension.
         static Dimension undetermined() { return s_undetermined_val; }
+        friend bool operator==(const Dimension& d1, const Dimension& d2);
+        friend bool operator!=(const Dimension& d1, const Dimension& d2);
+
     private:
         // The actual numerical value of the dimension. s_undetermined_val is a special case,
         // representing an unknown dimension.
