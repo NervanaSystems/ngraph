@@ -183,7 +183,6 @@ runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     , m_function(function)
     , m_emit_timing(false)
     , m_is_compiled(false)
-    , m_tensor_memory_buffers(new std::unordered_map<std::string, size_t>)
     , m_shared_context(shared_context)
 {
 }
@@ -393,7 +392,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_temp_mem_pool_allocation(
         // TODO memory pool malloc.
         m_writer
             << "char* pool_base_ptr = (char*)ngraph::runtime::gpu::invoke_memory_primitive(ctx, "
-            << m_tensor_memory_buffers->at(current_function->get_name()) << ");\n";
+            << m_tensor_memory_buffers.at(current_function->get_name()) << ");\n";
 
         // Add temporaries to the variable name map
         for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
@@ -568,9 +567,6 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 
     m_function_name = m_function->get_name();
 
-    auto allocator = std::make_shared<runtime::gpu::GPUAllocator>(
-        m_shared_context->m_primitive_emitter->get_memory_allocator());
-
     m_pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     m_pass_manager
         .register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();
@@ -580,6 +576,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 
     m_pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
 
+    GPUAllocator allocator = m_shared_context->m_primitive_emitter->get_memory_allocator();
     m_pass_manager.register_pass<runtime::gpu::pass::TensorMemoryReservation>(
         allocator, m_tensor_memory_buffers);
 
@@ -609,7 +606,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     emit_functions();
 
     // allocate device buffers for primitive arguments and workspace
-    allocator->close();
+    allocator.close();
     m_shared_context->m_primitive_emitter->allocate_primitive_memory();
 
     string code = m_writer.get_code();
