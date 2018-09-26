@@ -129,8 +129,15 @@ void runtime::gpu::GPU_Backend::initialize_io(void** target,
     for (size_t i = 0; i < source.size(); i++)
     {
         shared_ptr<runtime::gpu::GPU_TensorView> tv =
-            static_pointer_cast<runtime::gpu::GPU_TensorView>(source[i]);
-        target[i] = tv->m_allocated_buffer_pool;
+            dynamic_pointer_cast<runtime::gpu::GPU_TensorView>(source[i]);
+        if (tv)
+        {
+            target[i] = tv->m_allocated_buffer_pool;
+        }
+        else
+        {
+            throw invalid_argument("Tensors passed to GPU backend must be GPU Tensors");
+        }
     }
 }
 
