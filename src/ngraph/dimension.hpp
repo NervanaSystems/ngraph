@@ -14,8 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-// XXX: THIS CLASS IS NOT IN USE YET AND THE ENTIRE DESIGN IS SUBJECT TO CHANGE.
-
 #pragma once
 
 #include <limits>
@@ -27,6 +25,8 @@ namespace ngraph
     ///
     ///        Known dimensions may be implicitly converted from size_t. An unknown dimension is
     ///        constructed with Dimension() or Dimension::undetermined().
+    ///
+    /// XXX: THIS CLASS IS NOT IN USE YET AND THE ENTIRE DESIGN IS SUBJECT TO CHANGE.
     class Dimension
     {
     public:
