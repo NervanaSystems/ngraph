@@ -14,49 +14,54 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/type/element_type.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-shared_ptr<const descriptor::TensorView> runtime::TensorView::get_descriptor() const
-{
-    return m_descriptor;
-}
-
-shared_ptr<descriptor::TensorView> runtime::TensorView::get_descriptor()
-{
-    return m_descriptor;
-}
-
-const Shape& runtime::TensorView::get_shape() const
+const Shape& runtime::Tensor::get_shape() const
 {
     return m_descriptor->get_shape();
 }
 
-Strides runtime::TensorView::get_strides() const
+Strides runtime::Tensor::get_strides() const
 {
     return m_descriptor->get_tensor_layout()->get_strides();
 }
 
-shared_ptr<descriptor::layout::TensorLayout> runtime::TensorView::get_tensor_layout() const
+const element::Type& runtime::Tensor::get_element_type() const
+{
+    return m_descriptor->get_element_type();
+}
+
+shared_ptr<descriptor::layout::TensorLayout> runtime::Tensor::get_tensor_layout() const
 {
     return m_descriptor->get_tensor_layout();
 }
 
-size_t runtime::TensorView::get_element_count() const
+void runtime::Tensor::set_tensor_layout(const shared_ptr<descriptor::layout::TensorLayout>& layout)
 {
-    size_t rc = 1;
-    for (size_t s : get_shape())
-    {
-        rc *= s;
-    }
-    return rc;
+    m_descriptor->set_tensor_layout(layout);
 }
 
-const descriptor::Tensor& runtime::TensorView::get_tensor() const
+size_t runtime::Tensor::get_size() const
 {
-    return *get_descriptor();
+    return get_tensor_layout()->get_size();
+}
+
+const std::string& runtime::Tensor::get_name() const
+{
+    return m_descriptor->get_name();
+}
+
+bool runtime::Tensor::get_stale() const
+{
+    return m_stale;
+}
+
+void runtime::Tensor::set_stale(bool val)
+{
+    m_stale = val;
 }

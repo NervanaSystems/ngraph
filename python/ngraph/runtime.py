@@ -80,10 +80,10 @@ class Computation(object):
 
     def __call__(self, *input_values):  # type: (*NumericData) -> NumericData
         """Run computation on input values and return result."""
-        for tensor_view, value in zip(self.tensor_views, input_values):
+        for tensor, value in zip(self.tensor_views, input_values):
             if not isinstance(value, np.ndarray):
                 value = np.array(value)
-            Computation._write_ndarray_to_tensor_view(value, tensor_view)
+            Computation._write_ndarray_to_tensor_view(value, tensor)
 
         result_element_type = self.function.get_output_element_type(0)
         result_shape = self.function.get_output_shape(0)
@@ -111,28 +111,28 @@ class Computation(object):
         return int((element_type.bitwidth / 8.0) * element_count)
 
     @staticmethod
-    def _write_ndarray_to_tensor_view(value, tensor_view):
+    def _write_ndarray_to_tensor_view(value, tensor):
         # type: (np.ndarray, TensorView) -> None
-        tensor_view_dtype = get_dtype(tensor_view.element_type)
-        if list(tensor_view.shape) != list(value.shape) and len(value.shape) > 0:
+        tensor_view_dtype = get_dtype(tensor.element_type)
+        if list(tensor.shape) != list(value.shape) and len(value.shape) > 0:
             raise UserInputError('Provided tensor\'s shape: %s does not match the expected: %s.',
-                                 list(value.shape), list(tensor_view.shape))
+                                 list(value.shape), list(tensor.shape))
         if value.dtype != tensor_view_dtype:
             log.warning(
                 'Attempting to write a %s value to a %s tensor. Will attempt type conversion.',
                 value.dtype,
-                tensor_view.element_type)
+                tensor.element_type)
             value = value.astype(tensor_view_dtype)
 
         buffer_size = Computation._get_buffer_size(
-            tensor_view.element_type, tensor_view.element_count)
+            tensor.element_type, tensor.element_count)
 
         nparray = np.ascontiguousarray(value)
-        tensor_view.write(util.numpy_to_c(nparray), 0, buffer_size)
+        tensor.write(util.numpy_to_c(nparray), 0, buffer_size)
 
     @staticmethod
-    def _read_tensor_view_to_ndarray(tensor_view, output):
+    def _read_tensor_view_to_ndarray(tensor, output):
         # type: (TensorView, np.ndarray) -> None
         buffer_size = Computation._get_buffer_size(
-            tensor_view.element_type, tensor_view.element_count)
-        tensor_view.read(util.numpy_to_c(output), 0, buffer_size)
+            tensor.element_type, tensor.element_count)
+        tensor.read(util.numpy_to_c(output), 0, buffer_size)

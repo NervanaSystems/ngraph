@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
 #include "ngraph/type/element_type.hpp"
 
 // This define is a workaround for gcc on centos and is required for aligned()
@@ -30,7 +30,7 @@ namespace ngraph
     {
         namespace cpu
         {
-            class CPUTensorView : public ngraph::runtime::TensorView
+            class CPUTensorView : public ngraph::runtime::Tensor
             {
             public:
                 CPUTensorView(const ngraph::element::Type& element_type,
@@ -44,9 +44,6 @@ namespace ngraph
 
                 char* get_data_ptr();
                 const char* get_data_ptr() const;
-
-                size_t get_size() const;
-                const element::Type& get_element_type() const;
 
                 /// \brief Write bytes directly into the tensor
                 /// \param p Pointer to source of data

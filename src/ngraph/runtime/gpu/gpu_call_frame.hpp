@@ -25,7 +25,7 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
 
 namespace ngraph
 {
@@ -52,8 +52,8 @@ namespace ngraph
                 /// \brief Invoke the function with values matching the signature of the function.
                 ///
                 /// Tuples will be expanded into their tensor views to build the call frame.
-                void call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
-                          const std::vector<std::shared_ptr<runtime::TensorView>>& inputs,
+                void call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                          const std::vector<std::shared_ptr<runtime::Tensor>>& inputs,
                           GPURuntimeContext* ctx);
 
             protected:

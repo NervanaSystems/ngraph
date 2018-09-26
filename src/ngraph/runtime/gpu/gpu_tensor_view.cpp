@@ -29,7 +29,7 @@ using namespace std;
 runtime::gpu::GPU_TensorView::GPU_TensorView(const ngraph::element::Type& element_type,
                                              const Shape& shape,
                                              void* memory_pointer)
-    : runtime::TensorView(
+    : runtime::Tensor(
           std::make_shared<ngraph::descriptor::TensorView>(element_type, shape, "external"))
     , m_custom_memory(false)
 {

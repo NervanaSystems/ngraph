@@ -52,7 +52,7 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/host_tensor_view.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/interpreter/node_wrapper.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
@@ -120,7 +120,7 @@
 #include "ngraph/runtime/reference/tan.hpp"
 #include "ngraph/runtime/reference/tanh.hpp"
 #include "ngraph/runtime/reference/topk.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/runtime/reference/allreduce.hpp"
@@ -140,17 +140,16 @@ namespace ngraph
 class ngraph::runtime::interpreter::INTBackend : public Backend
 {
 public:
-    std::shared_ptr<TensorView>
+    std::shared_ptr<Tensor>
         create_tensor(const element::Type& type, const Shape& shape, void* memory_pointer) override;
 
-    std::shared_ptr<TensorView> create_tensor(const element::Type& type,
-                                              const Shape& shape) override;
+    std::shared_ptr<Tensor> create_tensor(const element::Type& type, const Shape& shape) override;
 
     bool compile(std::shared_ptr<Function> function) override;
 
     bool call(std::shared_ptr<Function> function,
-              const std::vector<std::shared_ptr<TensorView>>& outputs,
-              const std::vector<std::shared_ptr<TensorView>>& intputs) override;
+              const std::vector<std::shared_ptr<Tensor>>& outputs,
+              const std::vector<std::shared_ptr<Tensor>>& intputs) override;
 
     void set_nan_check(std::shared_ptr<Function> func, bool);
 
@@ -170,18 +169,18 @@ private:
     };
     std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
 
-    static void perform_nan_check(const std::vector<std::shared_ptr<HostTensorView>>&,
+    static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
                                   const Node* op = nullptr);
 
     void generate_calls(const element::Type& type,
                         const NodeWrapper& op,
-                        const std::vector<std::shared_ptr<HostTensorView>>& outputs,
-                        const std::vector<std::shared_ptr<HostTensorView>>& inputs);
+                        const std::vector<std::shared_ptr<HostTensor>>& outputs,
+                        const std::vector<std::shared_ptr<HostTensor>>& inputs);
 
     template <typename T>
     void op_engine(const NodeWrapper& node_wrapper,
-                   const std::vector<std::shared_ptr<HostTensorView>>& out,
-                   const std::vector<std::shared_ptr<HostTensorView>>& args)
+                   const std::vector<std::shared_ptr<HostTensor>>& out,
+                   const std::vector<std::shared_ptr<HostTensor>>& args)
     {
         const Node& node = node_wrapper.get_node();
         std::string node_op = node.description();
@@ -198,13 +197,13 @@ private:
         case OP_TYPEID::Abs:
         {
             reference::abs<T>(
-                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_size());
             break;
         }
         case OP_TYPEID::Acos:
         {
             reference::acos<T>(
-                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_size());
             break;
         }
         case OP_TYPEID::Add:
@@ -212,7 +211,7 @@ private:
             reference::add<T>(args[0]->get_data_ptr<T>(),
                               args[1]->get_data_ptr<T>(),
                               out[0]->get_data_ptr<T>(),
-                              out[0]->get_element_count());
+                              out[0]->get_size());
             break;
         }
         case OP_TYPEID::AllReduce: {
@@ -220,7 +219,7 @@ private:
             reference::allreduce<T>(args[0]->get_data_ptr<T>(),
                                     out[0]->get_data_ptr<T>(),
                                     args[0]->get_element_type(),
-                                    static_cast<int>(args[0]->get_element_count()));
+                                    static_cast<int>(args[0]->get_size()));
 #endif
             break;
         }
@@ -229,7 +228,7 @@ private:
             reference::logical_and(args[0]->get_data_ptr<T>(),
                                    args[1]->get_data_ptr<T>(),
                                    out[0]->get_data_ptr<T>(),
-                                   out[0]->get_element_count());
+                                   out[0]->get_size());
             break;
         }
         case OP_TYPEID::ArgMin:
@@ -285,13 +284,13 @@ private:
         case OP_TYPEID::Asin:
         {
             reference::asin<T>(
-                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_size());
             break;
         }
         case OP_TYPEID::Atan:
         {
             reference::atan<T>(
-                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_size());
             break;
         }
         case OP_TYPEID::AvgPool:
@@ -314,7 +313,7 @@ private:
             const op::GetOutputElement* get_output_element =
                 static_cast<const op::GetOutputElement*>(&node);
             size_t n = get_output_element->get_n();
-            size_t num_bytes = out[0]->get_element_count() * out[0]->get_element_type().size();
+            size_t num_bytes = out[0]->get_size() * out[0]->get_element_type().size();
             std::memcpy(out[0]->get_data_ptr(), args[n]->get_data_ptr(), num_bytes);
             break;
         }
@@ -393,7 +392,7 @@ private:
         case OP_TYPEID::Ceiling:
         {
             reference::ceiling<T>(
-                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_size());
             break;
         }
         case OP_TYPEID::Concat:
@@ -401,7 +400,7 @@ private:
             const op::Concat* concat = static_cast<const op::Concat*>(&node);
             std::vector<const T*> in_args;
             std::vector<Shape> in_shapes;
-            for (std::shared_ptr<HostTensorView> arg : args)
+            for (std::shared_ptr<HostTensor> arg : args)
             {
                 in_args.push_back(arg->get_data_ptr<T>());
                 in_shapes.push_back(arg->get_shape());
@@ -417,7 +416,7 @@ private:
         {
             const op::Constant* c = static_cast<const op::Constant*>(&node);
             reference::constant<T>(
-                c->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+                c->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_size());
             break;
         }
         case OP_TYPEID::Convert:
@@ -426,69 +425,65 @@ private:
             element::Type type = node.get_element_type();
             if (type == element::boolean)
             {
-                reference::convert<T>(args[0]->get_data_ptr<T>(),
-                                      out[0]->get_data_ptr<char>(),
-                                      out[0]->get_element_count());
+                reference::convert<T>(
+                    args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<char>(), out[0]->get_size());
             }
             else if (type == element::f32)
             {
-                reference::convert<T>(args[0]->get_data_ptr<T>(),
-                                      out[0]->get_data_ptr<float>(),
-                                      out[0]->get_element_count());
+                reference::convert<T>(
+                    args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<float>(), out[0]->get_size());
             }
             else if (type == element::f64)
             {
-                reference::convert<T>(args[0]->get_data_ptr<T>(),
-                                      out[0]->get_data_ptr<double>(),
-                                      out[0]->get_element_count());
+                reference::convert<T>(
+                    args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<double>(), out[0]->get_size());
             }
             else if (type == element::i8)
             {
-                reference::convert<T>(args[0]->get_data_ptr<T>(),
-                                      out[0]->get_data_ptr<int8_t>(),
-                                      out[0]->get_element_count());
+                reference::convert<T>(
+                    args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<int8_t>(), out[0]->get_size());
             }
             else if (type == element::i16)
             {
                 reference::convert<T>(args[0]->get_data_ptr<T>(),
                                       out[0]->get_data_ptr<int16_t>(),
-                                      out[0]->get_element_count());
+                                      out[0]->get_size());
             }
             else if (type == element::i32)
             {
                 reference::convert<T>(args[0]->get_data_ptr<T>(),
                                       out[0]->get_data_ptr<int32_t>(),
-                                      out[0]->get_element_count());
+                                      out[0]->get_size());
             }
             else if (type == element::i64)
             {
                 reference::convert<T>(args[0]->get_data_ptr<T>(),
                                       out[0]->get_data_ptr<int64_t>(),
-                                      out[0]->get_element_count());
+                                      out[0]->get_size());
             }
             else if (type == element::u8)
             {
                 reference::convert<T>(args[0]->get_data_ptr<T>(),
                                       out[0]->get_data_ptr<uint8_t>(),
-                                      out[0]->get_element_count());
+                                      out[0]->get_size());
             }
             else if (type == element::u16)
             {
                 reference::convert<T>(args[0]->get_data_ptr<T>(),
                                       out[0]->get_data_ptr<uint16_t>(),
-                                      out[0]->get_element_count());
+                                      out[0]->get_size());
             }
             else if (type == element::u32)
             {
                 reference::convert<T>(args[0]->get_data_ptr<T>(),
                                       out[0]->get_data_ptr<uint32_t>(),
-                                      out[0]->get_element_count());
+                                      out[0]->get_size());
             }
             else if (type == element::u64)
             {
                 reference::convert<T>(args[0]->get_data_ptr<T>(),
                                       out[0]->get_data_ptr<uint64_t>(),
-                                      out[0]->get_element_count());
+                                      out[0]->get_size());
             }
             else
             {
@@ -573,13 +568,13 @@ private:
         case OP_TYPEID::Cos:
         {
             reference::cos<T>(
-                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_size());
             break;
         }
         case OP_TYPEID::Cosh:
         {
             reference::cosh<T>(
-                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_size());
             break;
         }
         case OP_TYPEID::Divide:
@@ -587,7 +582,7 @@ private:
             reference::divide<T>(args[0]->get_data_ptr<T>(),
                                  args[1]->get_data_ptr<T>(),
                                  out[0]->get_data_ptr<T>(),
-                                 out[0]->get_element_count());
+                                 out[0]->get_size());
             break;
         }
         case OP_TYPEID::Dot:
@@ -608,35 +603,35 @@ private:
             reference::equal<T>(args[0]->get_data_ptr<T>(),
                                 args[1]->get_data_ptr<T>(),
                                 out[0]->get_data_ptr<char>(),
-                                out[0]->get_element_count());
+                                out[0]->get_size());
             break;
         }
         case OP_TYPEID::Exp:
         {
             reference::exp<T>(
-                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_size());
             break;
         }
         case OP_TYPEID::Floor:
         {
             reference::floor<T>(
-                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_size());
             break;
         }
         case OP_TYPEID::FunctionCall:
         {
             std::shared_ptr<Function> function = node.get_functions()[0];
 
-            std::vector<std::shared_ptr<runtime::TensorView>> outputs;
+            std::vector<std::shared_ptr<runtime::Tensor>> outputs;
             for (auto tv : out)
             {
-                outputs.push_back(std::static_pointer_cast<runtime::TensorView>(tv));
+                outputs.push_back(std::static_pointer_cast<runtime::Tensor>(tv));
             }
 
-            std::vector<std::shared_ptr<runtime::TensorView>> inputs;
+            std::vector<std::shared_ptr<runtime::Tensor>> inputs;
             for (auto tv : args)
             {
-                inputs.push_back(std::static_pointer_cast<runtime::TensorView>(tv));
+                inputs.push_back(std::static_pointer_cast<runtime::Tensor>(tv));
             }
 
             call(function, outputs, inputs);
@@ -647,7 +642,7 @@ private:
             reference::greater<T>(args[0]->get_data_ptr<T>(),
                                   args[1]->get_data_ptr<T>(),
                                   out[0]->get_data_ptr<char>(),
-                                  out[0]->get_element_count());
+                                  out[0]->get_size());
             break;
         }
         case OP_TYPEID::GreaterEq:
@@ -655,7 +650,7 @@ private:
             reference::greater_eq<T>(args[0]->get_data_ptr<T>(),
                                      args[1]->get_data_ptr<T>(),
                                      out[0]->get_data_ptr<char>(),
-                                     out[0]->get_element_count());
+                                     out[0]->get_size());
             break;
         }
         case OP_TYPEID::Less:
@@ -663,7 +658,7 @@ private:
             reference::less<T>(args[0]->get_data_ptr<T>(),
                                args[1]->get_data_ptr<T>(),
                                out[0]->get_data_ptr<char>(),
-                               out[0]->get_element_count());
+                               out[0]->get_size());
             break;
         }
         case OP_TYPEID::LessEq:
@@ -671,13 +666,13 @@ private:
             reference::less_eq<T>(args[0]->get_data_ptr<T>(),
                                   args[1]->get_data_ptr<T>(),
                                   out[0]->get_data_ptr<char>(),
-                                  out[0]->get_element_count());
+                                  out[0]->get_size());
             break;
         }
         case OP_TYPEID::Log:
         {
             reference::log<T>(
-                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_size());
             break;
         }
         case OP_TYPEID::LRN:
@@ -707,7 +702,7 @@ private:
             reference::maximum<T>(args[0]->get_data_ptr<T>(),
                                   args[1]->get_data_ptr<T>(),
                                   out[0]->get_data_ptr<T>(),
-                                  out[0]->get_element_count());
+                                  out[0]->get_size());
             break;
         }
         case OP_TYPEID::MaxPool:
@@ -755,7 +750,7 @@ private:
             reference::minimum<T>(args[0]->get_data_ptr<T>(),
                                   args[1]->get_data_ptr<T>(),
                                   out[0]->get_data_ptr<T>(),
-                                  out[0]->get_element_count());
+                                  out[0]->get_size());
             break;
         }
         case OP_TYPEID::Multiply:
@@ -763,19 +758,19 @@ private:
             reference::multiply<T>(args[0]->get_data_ptr<T>(),
                                    args[1]->get_data_ptr<T>(),
                                    out[0]->get_data_ptr<T>(),
-                                   out[0]->get_element_count());
+                                   out[0]->get_size());
             break;
         }
         case OP_TYPEID::Negative:
         {
             reference::negate<T>(
-                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_size());
             break;
         }
         case OP_TYPEID::Not:
         {
             reference::logical_not(
-                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_size());
             break;
         }
         case OP_TYPEID::NotEqual:
@@ -783,7 +778,7 @@ private:
             reference::not_equal<T>(args[0]->get_data_ptr<T>(),
                                     args[1]->get_data_ptr<T>(),
                                     out[0]->get_data_ptr<char>(),
-                                    out[0]->get_element_count());
+                                    out[0]->get_size());
             break;
         }
         case OP_TYPEID::OneHot:
@@ -801,7 +796,7 @@ private:
             reference::logical_or(args[0]->get_data_ptr<T>(),
                                   args[1]->get_data_ptr<T>(),
                                   out[0]->get_data_ptr<T>(),
-                                  out[0]->get_element_count());
+                                  out[0]->get_size());
             break;
         }
         case OP_TYPEID::Parameter: break;
@@ -824,7 +819,7 @@ private:
             reference::power<T>(args[0]->get_data_ptr<T>(),
                                 args[1]->get_data_ptr<T>(),
                                 out[0]->get_data_ptr<T>(),
-                                out[0]->get_element_count());
+                                out[0]->get_size());
             break;
         }
         case OP_TYPEID::Product:
@@ -843,11 +838,11 @@ private:
             std::shared_ptr<Function> reduction_function = reduce->get_functions()[0];
 
             std::function<T(T, T)> f = [this, &node, reduction_function](T x, T y) -> T {
-                auto tx = std::make_shared<HostTensorView>(
+                auto tx = std::make_shared<HostTensor>(
                     node.get_inputs().at(0).get_element_type(), Shape{}, "reduce_temp_x");
-                auto ty = std::make_shared<HostTensorView>(
+                auto ty = std::make_shared<HostTensor>(
                     node.get_inputs().at(1).get_element_type(), Shape{}, "reduce_temp_y");
-                auto tr = std::make_shared<HostTensorView>(
+                auto tr = std::make_shared<HostTensor>(
                     node.get_output_element_type(0), Shape{}, "reduce_temp_r");
                 *(tx->get_data_ptr<T>()) = x;
                 *(ty->get_data_ptr<T>()) = y;
@@ -870,11 +865,11 @@ private:
             std::shared_ptr<Function> reduction_function = reduce_window->get_functions()[0];
 
             std::function<T(T, T)> f = [this, &node, reduction_function](T x, T y) -> T {
-                auto tx = std::make_shared<HostTensorView>(
+                auto tx = std::make_shared<HostTensor>(
                     node.get_inputs().at(0).get_element_type(), Shape{}, "reduce_window_temp_x");
-                auto ty = std::make_shared<HostTensorView>(
+                auto ty = std::make_shared<HostTensor>(
                     node.get_inputs().at(1).get_element_type(), Shape{}, "reduce_window_temp_y");
-                auto tr = std::make_shared<HostTensorView>(
+                auto tr = std::make_shared<HostTensor>(
                     node.get_output_element_type(0), Shape{}, "reduce_window_temp_r");
                 *(tx->get_data_ptr<T>()) = x;
                 *(ty->get_data_ptr<T>()) = y;
@@ -895,7 +890,7 @@ private:
         case OP_TYPEID::Relu:
         {
             reference::relu<T>(
-                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_size());
             break;
         }
         case OP_TYPEID::ReluBackprop:
@@ -903,7 +898,7 @@ private:
             reference::relu_backprop<T>(args[0]->get_data_ptr<T>(),
                                         args[1]->get_data_ptr<T>(),
                                         out[0]->get_data_ptr<T>(),
-                                        out[0]->get_element_count());
+                                        out[0]->get_size());
             break;
         }
         case OP_TYPEID::ReplaceSlice:
@@ -972,7 +967,7 @@ private:
                                  args[1]->get_data_ptr<T>(),
                                  args[2]->get_data_ptr<T>(),
                                  out[0]->get_data_ptr<T>(),
-                                 out[0]->get_element_count());
+                                 out[0]->get_size());
             break;
         }
         case OP_TYPEID::SelectAndScatter:
@@ -984,11 +979,11 @@ private:
                 select_and_scatter->get_functions()[0];
             std::function<bool(T, T)> f_selection = [this, &node, selection_function](T x,
                                                                                       T y) -> bool {
-                auto tx = std::make_shared<runtime::HostTensorView>(
+                auto tx = std::make_shared<runtime::HostTensor>(
                     node.get_inputs().at(0).get_element_type(), Shape{}, "selection_temp_x");
-                auto ty = std::make_shared<runtime::HostTensorView>(
+                auto ty = std::make_shared<runtime::HostTensor>(
                     node.get_inputs().at(1).get_element_type(), Shape{}, "selection_temp_y");
-                auto tr = std::make_shared<runtime::HostTensorView>(
+                auto tr = std::make_shared<runtime::HostTensor>(
                     element::boolean, Shape{}, "selection_temp_r");
                 *(tx->get_data_ptr<T>()) = x;
                 *(ty->get_data_ptr<T>()) = y;
@@ -999,11 +994,11 @@ private:
             std::shared_ptr<ngraph::Function> scatter_function =
                 select_and_scatter->get_functions()[1];
             std::function<T(T, T)> f_scatter = [this, &node, scatter_function](T x, T y) -> T {
-                auto tx = std::make_shared<runtime::HostTensorView>(
+                auto tx = std::make_shared<runtime::HostTensor>(
                     node.get_inputs().at(0).get_element_type(), Shape{}, "scatter_temp_x");
-                auto ty = std::make_shared<runtime::HostTensorView>(
+                auto ty = std::make_shared<runtime::HostTensor>(
                     node.get_inputs().at(1).get_element_type(), Shape{}, "scatter_temp_y");
-                auto tr = std::make_shared<runtime::HostTensorView>(
+                auto tr = std::make_shared<runtime::HostTensor>(
                     node.get_output_element_type(0), Shape{}, "scatter_temp_r");
                 *(tx->get_data_ptr<T>()) = x;
                 *(ty->get_data_ptr<T>()) = y;
@@ -1027,7 +1022,7 @@ private:
         case OP_TYPEID::Sigmoid:
         {
             reference::sigmoid<T>(
-                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_size());
             break;
         }
         case OP_TYPEID::SigmoidBackprop:
@@ -1035,25 +1030,25 @@ private:
             reference::sigmoid_backprop<T>(args[0]->get_data_ptr<T>(),
                                            args[1]->get_data_ptr<T>(),
                                            out[0]->get_data_ptr<T>(),
-                                           out[0]->get_element_count());
+                                           out[0]->get_size());
             break;
         }
         case OP_TYPEID::Sign:
         {
             reference::sign<T>(
-                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_size());
             break;
         }
         case OP_TYPEID::Sin:
         {
             reference::sin<T>(
-                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_size());
             break;
         }
         case OP_TYPEID::Sinh:
         {
             reference::sinh<T>(
-                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_size());
             break;
         }
         case OP_TYPEID::Slice:
@@ -1080,7 +1075,7 @@ private:
         case OP_TYPEID::Sqrt:
         {
             reference::sqrt<T>(
-                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_size());
             break;
         }
         case OP_TYPEID::StopGradient: { throw unsupported_op("Unsupported op 'StopGradient'");
@@ -1090,7 +1085,7 @@ private:
             reference::subtract<T>(args[0]->get_data_ptr<T>(),
                                    args[1]->get_data_ptr<T>(),
                                    out[0]->get_data_ptr<T>(),
-                                   out[0]->get_element_count());
+                                   out[0]->get_size());
             break;
         }
         case OP_TYPEID::Sum:
@@ -1106,13 +1101,13 @@ private:
         case OP_TYPEID::Tan:
         {
             reference::tan<T>(
-                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_size());
             break;
         }
         case OP_TYPEID::Tanh:
         {
             reference::tanh<T>(
-                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+                args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_size());
             break;
         }
         case OP_TYPEID::TopK:
