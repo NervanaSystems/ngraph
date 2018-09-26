@@ -20,5 +20,10 @@
 
 namespace ngraph
 {
+    /// \brief Alias for "Dimension". Should be used to when the value represents the number of
+    ///        axes in a shape-like object, rather than the size of one dimension in a shape-like
+    ///        object.
+    ///
+    /// XXX: THIS TYPE IS EXPERIMENTAL AND THE ENTIRE DESIGN IS SUBJECT TO CHANGE.
     using Rank = Dimension;
 }
