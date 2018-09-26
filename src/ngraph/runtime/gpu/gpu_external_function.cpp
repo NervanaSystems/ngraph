@@ -635,17 +635,6 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     }
 }
 
-shared_ptr<ngraph::runtime::gpu::GPU_CallFrame>
-    runtime::gpu::GPU_ExternalFunction::make_call_frame()
-{
-    if (!m_is_compiled)
-    {
-        compile();
-    }
-
-    return make_shared<GPU_CallFrame>(shared_from_this(), m_compiled_function);
-}
-
 void runtime::gpu::GPU_ExternalFunction::emit_debug_function_entry(Node* node)
 {
     if (m_emit_timing)
