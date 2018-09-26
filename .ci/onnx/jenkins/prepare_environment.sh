@@ -49,7 +49,7 @@ function build_ngraph() {
                 cp -Rf "${NGRAPH_CACHE_PATH}/build" "${ngraph_directory}/ngraph/"
                 for f in $(find ${ngraph_directory}/ngraph/build/ -name 'CMakeCache.txt');
                 do 	
-                    sed -i 's/${NGRAPH_CACHE_PATH}/${ngraph_directory}/g' $f
+                    sed -i "s\\${NGRAPH_CACHE_PATH}\\${ngraph_directory}\\g" $f
                 done
             ;;
         esac
