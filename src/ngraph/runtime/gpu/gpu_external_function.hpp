@@ -93,6 +93,9 @@ namespace ngraph
                 std::string emit_op_as_function(const Node& node, const std::string& function_name);
                 std::string strip_comments(const std::string& s) const;
 
+                static const std::string& get_pch_header_source();
+                static const std::string& get_header_source();
+
                 codegen::CodeWriter m_writer;
                 ngraph::pass::Manager m_pass_manager;
 
@@ -112,7 +115,6 @@ namespace ngraph
                 size_t m_offset;
 
                 std::string m_function_name;
-                std::string m_pch_header_source;
 
                 std::shared_ptr<std::unordered_map<std::string, size_t>> m_tensor_memory_buffers;
                 std::shared_ptr<GPU_Backend::BackendContext> m_shared_context;
