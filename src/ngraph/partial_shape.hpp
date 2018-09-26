@@ -98,6 +98,6 @@ namespace ngraph
     ///           returns a new shape whose ith dimension is s1[i] + s2[i].
     PartialShape operator+(const PartialShape& s1, const PartialShape& s2);
 
-    /// \brief Pushes a human-readable representation of "shape" onto "str".
+    /// \brief Inserts a human-readable representation of "shape" into "str".
     std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
 }

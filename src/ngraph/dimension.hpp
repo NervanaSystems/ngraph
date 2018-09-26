@@ -58,7 +58,7 @@ namespace ngraph
         static const size_t s_undetermined_val{std::numeric_limits<size_t>::max()};
     };
 
-    /// \brief Pushes a human-readable representation of "dimension" onto "str".
+    /// \brief Inserts a human-readable representation of "dimension" into "str".
     std::ostream& operator<<(std::ostream& str, const Dimension& dimension);
 
     /// \brief Addition operator for dimensions.
