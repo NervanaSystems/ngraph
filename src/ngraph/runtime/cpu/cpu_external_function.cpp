@@ -198,15 +198,15 @@ runtime::cpu::CPU_ExternalFunction::~CPU_ExternalFunction()
 {
 }
 
-#if !defined(NGRAPH_DEX_ONLY)
-
-static const string s_output_dir = "cpu_codegen";
-
 class StaticInitializers
 {
 public:
     StaticInitializers(string directory) { ngraph::file_util::remove_directory(directory); }
 };
+
+#if !defined(NGRAPH_DEX_ONLY)
+
+static const string s_output_dir = "cpu_codegen";
 
 static string emit_string_array(const vector<string>& s, size_t max_line_length)
 {
@@ -371,32 +371,6 @@ static void
            << "\", (" << ctype << "*)" << out[0].get_name() << ", " << out[0].get_size() << ");\n";
     writer.indent--;
     writer << "}\n";
-}
-
-void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Manager& pass_manager)
-{
-    pass_manager.register_pass<ngraph::pass::LikeReplacement>();
-    pass_manager.register_pass<ngraph::pass::NopElimination>();
-    // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
-    // failing mxnet unit tests.
-    // pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
-    // pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    // pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
-    // pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<ngraph::pass::CoreFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUHorizontalFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
-    NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
-    pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi, false);
-    pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
-    pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
-    pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
-    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
-    pass_manager.get_state().set_visualize_tree_ops_map(runtime::cpu::get_visualize_tree_ops_map());
 }
 
 void runtime::cpu::CPU_ExternalFunction::compile()
@@ -1015,7 +989,33 @@ using namespace ngraph::runtime;
     }
 }
 
-#endif
+#endif // !defined(NGRAPH_DEX_ONLY)
+
+void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Manager& pass_manager)
+{
+    pass_manager.register_pass<ngraph::pass::LikeReplacement>();
+    pass_manager.register_pass<ngraph::pass::NopElimination>();
+    // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
+    // failing mxnet unit tests.
+    // pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    // pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    // pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
+    // pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+    pass_manager.register_pass<ngraph::pass::CoreFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUHorizontalFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
+    NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
+    pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi, false);
+    pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
+    pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
+    pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
+    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
+    pass_manager.get_state().set_visualize_tree_ops_map(runtime::cpu::get_visualize_tree_ops_map());
+}
 
 bool runtime::cpu::CPU_ExternalFunction::computes_result(Node* node)
 {
