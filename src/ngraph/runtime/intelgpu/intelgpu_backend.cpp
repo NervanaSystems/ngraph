@@ -29,6 +29,7 @@
 #include <CPP/reorder.hpp>
 #include <CPP/reshape.hpp>
 #include <CPP/scale.hpp>
+#include <CPP/select.hpp>
 #include <CPP/softmax.hpp>
 #include <CPP/topology.hpp>
 
@@ -74,6 +75,8 @@ using namespace std;
 using namespace ngraph;
 
 using intelgpu_space = runtime::intelgpu::IntelGPULayout;
+
+#define USE_INTELGPU_CUSTOM_KERNELS 0
 
 // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
 // Abs,
@@ -342,10 +345,8 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             }
             break;
         }
-        case OP_TYPEID::Select:
-        {
-            arguments_check(op, 3, 1);
-
+        case OP_TYPEID::Select: { arguments_check(op, 3, 1);
+#if USE_INTELGPU_CUSTOM_KERNELS
             do_select_operation(topology,
                                 get_input_name(op, 0),
                                 get_input_shape(op, 0),
@@ -356,6 +357,13 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                 get_output_name(op),
                                 get_output_shape(op),
                                 get_output_type(op));
+#else
+            const cldnn::select cldnn_select(get_output_name(op),
+                                             get_input_name(op, 1),
+                                             get_input_name(op, 2),
+                                             get_input_name(op));
+            topology.add(cldnn_select);
+#endif
             break;
         }
         case OP_TYPEID::Reverse:
