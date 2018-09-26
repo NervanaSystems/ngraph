@@ -31,6 +31,7 @@ set (SRC
     descriptor/tensor.cpp
     file_util.cpp
     function.cpp
+    length.cpp
     log.cpp
     node.cpp
     op/abs.cpp
@@ -110,6 +111,7 @@ set (SRC
     op/util/binary_elementwise_logical.cpp
     op/util/index_reduction.cpp
     op/util/unary_elementwise_arithmetic.cpp
+    partial_shape.cpp
     pass/assign_placement.cpp
     pass/algebraic_simplification.cpp
     pass/common_function_collection.cpp
@@ -135,6 +137,7 @@ set (SRC
     pass/serialize.cpp
     pass/zero_dim_tensor_elimination.cpp
     pattern/matcher.cpp
+    rank.cpp
     runtime/aligned_buffer.cpp
     runtime/backend.cpp
     runtime/backend_manager.cpp
@@ -144,6 +147,7 @@ set (SRC
     shape.cpp
     strides.cpp
     type/element_type.cpp
+    undetermined.cpp
     util.cpp
     graph_util.cpp
     placement.cpp
