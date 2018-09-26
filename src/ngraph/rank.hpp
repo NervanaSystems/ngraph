@@ -29,24 +29,24 @@ namespace ngraph
     public:
         Rank(size_t rank)
             : m_rank(rank)
-            , m_fixed(true)
+            , m_is_determined(true)
         {
         }
         Rank(const Undetermined&)
             : m_rank(0)
-            , m_fixed(false)
+            , m_is_determined(false)
         {
         }
         Rank()
             : m_rank(0)
-            , m_fixed(true)
+            , m_is_determined(false)
         {
         }
-        bool is_fixed() const { return m_fixed; }
+        bool is_determined() const { return m_is_determined; }
         explicit operator size_t() const { return m_rank; }
     private:
         size_t m_rank;
-        bool m_fixed;
+        bool m_is_determined;
     };
 
     std::ostream& operator<<(std::ostream& str, const Rank& rank);

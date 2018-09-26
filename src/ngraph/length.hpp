@@ -39,7 +39,7 @@ namespace ngraph
         }
         Length()
             : m_length(0)
-            , m_is_determined(true)
+            , m_is_determined(false)
         {
         }
         bool is_determined() const { return m_is_determined; }
