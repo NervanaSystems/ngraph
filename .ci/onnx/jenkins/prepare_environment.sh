@@ -46,7 +46,11 @@ function build_ngraph() {
             ;;
             USE_CACHED)
                 check_cached_ngraph
-                cp -Rf "${NGRAPH_CACHE_DIR}/ngraph/build" "${ngraph_directory}/ngraph/"
+                if [[ -n $(ls /home/ngraph/build 2> /dev/null) ]]; then 
+                    cp -Rf "${NGRAPH_CACHE_DIR}/ngraph/build" "${ngraph_directory}/ngraph/" || return 1
+                else 
+                    return 1
+                fi
                 for f in $(find ${ngraph_directory}/ngraph/build/ -name 'CMakeCache.txt');
                 do 	
                     sed -i "s\\${NGRAPH_CACHE_DIR}\\${ngraph_directory}\\g" $f
