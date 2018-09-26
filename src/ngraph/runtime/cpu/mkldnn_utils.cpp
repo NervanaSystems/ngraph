@@ -449,7 +449,7 @@ memory::desc runtime::cpu::mkldnn_utils::squeeze_blocked_md(const memory::desc& 
 
     mkldnn_memory_desc_t md;
     md.primitive_kind = in.data.primitive_kind;
-    md.ndims = in.data.ndims - axis_list.size();
+    md.ndims = in.data.ndims - static_cast<int>(axis_list.size());
     md.format = mkldnn_blocked;
     md.data_type = in.data.data_type;
 
@@ -482,33 +482,47 @@ memory::desc runtime::cpu::mkldnn_utils::expand_blocked_md(const memory::desc& i
 {
     mkldnn_memory_desc_t md;
     md.primitive_kind = in.data.primitive_kind;
-    md.ndims = in.data.ndims + axis_list.size();
+    md.ndims = in.data.ndims + static_cast<int>(axis_list.size());
     md.format = mkldnn_blocked;
     md.data_type = in.data.data_type;
 
     size_t k = 0;
-    for (size_t i = 0, j = 0; j < md.ndims; j++, i++)
+    for (size_t i = 0, j = 0; j < md.ndims; j++)
     {
         if (j == axis_list[k])
         {
-            i--;
             k++;
             md.dims[j] = 1;
             md.layout_desc.blocking.block_dims[j] = 1;
             md.layout_desc.blocking.padding_dims[j] = 1;
             md.layout_desc.blocking.offset_padding_to_data[j] = 0;
+            if (i > 0)
+            {
+                md.layout_desc.blocking.strides[1][j] =
+                    in.data.layout_desc.blocking.strides[1][i - 1];
+                md.layout_desc.blocking.strides[0][j] =
+                    in.data.layout_desc.blocking.strides[0][i - 1];
+            }
+            else
+            {
+                md.layout_desc.blocking.strides[1][j] = 0;
+                size_t nelems = 1;
+                for (size_t idx = 0; idx < in.data.ndims; idx++)
+                    nelems *= in.data.dims[idx];
+                md.layout_desc.blocking.strides[0][j] = nelems;
+            }
         }
         else
         {
             md.dims[j] = in.data.dims[i];
+            md.layout_desc.blocking.strides[1][j] = in.data.layout_desc.blocking.strides[1][i];
+            md.layout_desc.blocking.strides[0][j] = in.data.layout_desc.blocking.strides[0][i];
             md.layout_desc.blocking.block_dims[j] = in.data.layout_desc.blocking.block_dims[i];
             md.layout_desc.blocking.padding_dims[j] = in.data.layout_desc.blocking.padding_dims[i];
             md.layout_desc.blocking.offset_padding_to_data[j] =
                 in.data.layout_desc.blocking.offset_padding_to_data[i];
+            i++;
         }
-
-        md.layout_desc.blocking.strides[1][j] = in.data.layout_desc.blocking.strides[1][i];
-        md.layout_desc.blocking.strides[0][j] = in.data.layout_desc.blocking.strides[0][i];
     }
     md.layout_desc.blocking.offset_padding = in.data.layout_desc.blocking.offset_padding;
 

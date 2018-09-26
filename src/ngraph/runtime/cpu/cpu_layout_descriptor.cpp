@@ -44,7 +44,7 @@ namespace ngraph
                     s *= shape[shape.size() - (i + 1)];
                 }
                 std::reverse(m_strides.begin(), m_strides.end());
-                m_mkldnn_memory_size = shape_size(tv.get_shape()) * tv.get_element_type().size();
+                m_buffer_size = shape_size(tv.get_shape()) * tv.get_element_type().size();
             }
 
             size_t LayoutDescriptor::get_index_offset(const std::vector<size_t>& indices)
@@ -109,7 +109,7 @@ namespace ngraph
                 {
                     auto mem_prim_desc =
                         mkldnn::memory::primitive_desc(md, mkldnn_utils::global_cpu_engine);
-                    m_mkldnn_memory_size = mem_prim_desc.get_size();
+                    m_buffer_size = mem_prim_desc.get_size();
                 }
                 catch (const mkldnn::error& e)
                 {
