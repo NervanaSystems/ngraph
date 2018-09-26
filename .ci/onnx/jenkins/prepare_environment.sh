@@ -56,9 +56,9 @@ function build_ngraph() {
     done
     mkdir -p ./build
     cd ./build
-    cmake ../ -DNGRAPH_TOOLS_ENABLE=FALSE -DNGRAPH_UNIT_TEST_ENABLE=FALSE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="${ngraph_directory}/ngraph_dist"
+    cmake ../ -DNGRAPH_TOOLS_ENABLE=FALSE -DNGRAPH_UNIT_TEST_ENABLE=FALSE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="${ngraph_directory}/ngraph_dist" || return 1
     rm -f "${ngraph_directory}"/ngraph/python/dist/ngraph*.whl
-    make -j $(lscpu --parse=CORE | grep -v '#' | sort | uniq | wc -l)
+    make -j $(lscpu --parse=CORE | grep -v '#' | sort | uniq | wc -l) || return 1
     make install || return 1
     cd "${ngraph_directory}/ngraph/python"
     if [ ! -d ./pybind11 ]; then
