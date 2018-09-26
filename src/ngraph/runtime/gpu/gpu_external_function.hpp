@@ -55,8 +55,7 @@ namespace ngraph
 
             public:
                 GPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                     std::shared_ptr<GPU_Backend::BackendContext>& shared_context,
-                                     bool release_function = true);
+                                     std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
                 ~GPU_ExternalFunction();
 
                 std::unique_ptr<runtime::gpu::GPURuntimeContext>& ctx();
@@ -90,7 +89,6 @@ namespace ngraph
                 void emit_debug_function_exit(Node* node);
                 void emit_temp_mem_pool_allocation(std::shared_ptr<Function> current_function);
                 void emit_op(EMIT_ARGS);
-                void release_function() { m_function = nullptr; }
                 void store_emitted_functions(const std::string& code);
                 std::string emit_op_as_function(const Node& node, const std::string& function_name);
                 std::string strip_comments(const std::string& s) const;
@@ -110,7 +108,6 @@ namespace ngraph
 
                 bool m_emit_timing;
                 bool m_is_compiled;
-                bool m_release_function;
                 bool m_temporaries_used;
                 size_t m_offset;
 

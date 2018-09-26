@@ -178,13 +178,11 @@ const size_t runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction::s_memory_
 
 runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function,
-    std::shared_ptr<GPU_Backend::BackendContext>& shared_context,
-    bool release_function)
+    std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
     : m_compiled_function(nullptr)
     , m_function(function)
     , m_emit_timing(false)
     , m_is_compiled(false)
-    , m_release_function(release_function)
     , m_temporaries_used(false)
     , m_tensor_memory_buffers(new std::unordered_map<std::string, size_t>)
     , m_shared_context(shared_context)
@@ -629,10 +627,6 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     }
 
     m_is_compiled = true;
-    if (m_release_function)
-    {
-        release_function();
-    }
 }
 
 void runtime::gpu::GPU_ExternalFunction::emit_debug_function_entry(Node* node)
