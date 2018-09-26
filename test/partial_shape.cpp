@@ -87,8 +87,8 @@ TEST(partial_shape, dim_equal_left_undetermined)
     Dimension d1{Dimension::undetermined()};
     Dimension d2{3};
 
-    // Note: Can't use ASSERT_NE because the undetermined dimension has "NaN-like" behavior.
     ASSERT_FALSE(d1 == d2);
+    ASSERT_TRUE(d1.possibly_eq(d2));
 }
 
 TEST(partial_shape, dim_not_equal_left_undetermined)
@@ -96,8 +96,8 @@ TEST(partial_shape, dim_not_equal_left_undetermined)
     Dimension d1{Dimension::undetermined()};
     Dimension d2{3};
 
-    // Note: Can't use ASSERT_EQ because the undetermined dimension has "NaN-like" behavior.
     ASSERT_FALSE(d1 != d2);
+    ASSERT_TRUE(d1.possibly_neq(d2));
 }
 
 TEST(partial_shape, dim_equal_right_undetermined)
@@ -105,8 +105,8 @@ TEST(partial_shape, dim_equal_right_undetermined)
     Dimension d1{3};
     Dimension d2{Dimension::undetermined()};
 
-    // Note: Can't use ASSERT_NE because the undetermined dimension has "NaN-like" behavior.
     ASSERT_FALSE(d1 == d2);
+    ASSERT_TRUE(d1.possibly_eq(d2));
 }
 
 TEST(partial_shape, dim_not_equal_right_undetermined)
@@ -114,8 +114,8 @@ TEST(partial_shape, dim_not_equal_right_undetermined)
     Dimension d1{3};
     Dimension d2{Dimension::undetermined()};
 
-    // Note: Can't use ASSERT_EQ because the undetermined dimension has "NaN-like" behavior.
     ASSERT_FALSE(d1 != d2);
+    ASSERT_TRUE(d1.possibly_neq(d2));
 }
 
 TEST(partial_shape, dim_equal_both_undetermined)
@@ -124,6 +124,7 @@ TEST(partial_shape, dim_equal_both_undetermined)
     Dimension d2{Dimension::undetermined()};
 
     ASSERT_FALSE(d1 == d2);
+    ASSERT_TRUE(d1.possibly_eq(d2));
 }
 
 TEST(partial_shape, dim_not_equal_both_undetermined)
@@ -132,6 +133,7 @@ TEST(partial_shape, dim_not_equal_both_undetermined)
     Dimension d2{Dimension::undetermined()};
 
     ASSERT_FALSE(d1 != d2);
+    ASSERT_TRUE(d1.possibly_neq(d2));
 }
 
 TEST(partial_shape, dim_equal_both_determined)
@@ -141,7 +143,9 @@ TEST(partial_shape, dim_equal_both_determined)
     Dimension d3{3};
 
     ASSERT_FALSE(d1 == d2);
+    ASSERT_FALSE(d1.possibly_eq(d2));
     ASSERT_TRUE(d1 == d3);
+    ASSERT_TRUE(d1.possibly_eq(d3));
 }
 
 TEST(partial_shape, dim_not_equal_both_determined)
@@ -151,7 +155,9 @@ TEST(partial_shape, dim_not_equal_both_determined)
     Dimension d3{3};
 
     ASSERT_TRUE(d1 != d2);
+    ASSERT_TRUE(d1.possibly_neq(d2));
     ASSERT_FALSE(d1 != d3);
+    ASSERT_FALSE(d1.possibly_neq(d3));
 }
 
 TEST(partial_shape, shapes_equal_both_rank_undetermined)
