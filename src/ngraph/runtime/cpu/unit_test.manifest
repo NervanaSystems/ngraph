@@ -17,3 +17,5 @@ quantize_axes
 quantize_int8
 quantize_clamp
 dequantize
+dequantize_axes
+dequantize_int8
