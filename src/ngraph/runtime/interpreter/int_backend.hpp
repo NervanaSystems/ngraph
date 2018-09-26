@@ -39,6 +39,7 @@
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/replace_slice.hpp"
@@ -100,6 +101,7 @@
 #include "ngraph/runtime/reference/pad.hpp"
 #include "ngraph/runtime/reference/power.hpp"
 #include "ngraph/runtime/reference/product.hpp"
+#include "ngraph/runtime/reference/quantize.hpp"
 #include "ngraph/runtime/reference/reduce.hpp"
 #include "ngraph/runtime/reference/reduce_window.hpp"
 #include "ngraph/runtime/reference/relu.hpp"
@@ -871,6 +873,40 @@ private:
                                   args[0]->get_shape(),
                                   out[0]->get_shape(),
                                   product->get_reduction_axes());
+            break;
+        }
+        case OP_TYPEID::Quantize:
+        {
+            const op::Quantize* quantize = static_cast<const op::Quantize*>(&node);
+            auto type = quantize->get_element_type();
+
+            if (type == element::u8)
+            {
+                reference::quantize<T>(args[0]->get_data_ptr<T>(),
+                                       args[1]->get_data_ptr<T>(),
+                                       args[2]->get_data_ptr<uint8_t>(),
+                                       out[0]->get_data_ptr<uint8_t>(),
+                                       args[0]->get_shape(),
+                                       args[1]->get_shape(),
+                                       quantize->get_axes());
+            }
+            else if (type == element::i8)
+            {
+                reference::quantize<T>(args[0]->get_data_ptr<T>(),
+                                       args[1]->get_data_ptr<T>(),
+                                       args[2]->get_data_ptr<int8_t>(),
+                                       out[0]->get_data_ptr<int8_t>(),
+                                       args[0]->get_shape(),
+                                       args[1]->get_shape(),
+                                       quantize->get_axes());
+            }
+            else
+            {
+                std::stringstream ss;
+                ss << "unsupported element type " << type << " op Quantize";
+                throw std::runtime_error(ss.str());
+            }
+
             break;
         }
         case OP_TYPEID::Reduce:

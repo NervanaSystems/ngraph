@@ -27,14 +27,14 @@ namespace ngraph
     {
         namespace reference
         {
-            template <typename QUANT, typename REAL>
-            void dequantize(const QUANT* input,
-                            const REAL* scale,
-                            const QUANT* offset,
-                            REAL* output,
-                            const Shape& input_shape,
-                            const Shape& scale_offset_shape,
-                            const AxisSet& axes)
+            template <typename REAL, typename QUANT>
+            void quantize(const REAL* input,
+                          const REAL* scale,
+                          const QUANT* offset,
+                          QUANT* output,
+                          const Shape& input_shape,
+                          const Shape& scale_offset_shape,
+                          const AxisSet& axes)
             {
                 CoordinateTransform input_transform(input_shape);
                 CoordinateTransform scale_offset_transform(scale_offset_shape);
@@ -43,10 +43,20 @@ namespace ngraph
                 {
                     Coordinate scale_offset_coord = project(input_coord, axes);
 
-                    output[input_transform.index(input_coord)] = static_cast<REAL>(
-                        (input[input_transform.index(input_coord)] -
-                         offset[scale_offset_transform.index(scale_offset_coord)]) *
-                        scale[scale_offset_transform.index(scale_offset_coord)]);
+                    // apply scale and offset
+                    REAL qvalue =
+                        std::round(input[input_transform.index(input_coord)] /
+                                   scale[scale_offset_transform.index(scale_offset_coord)]) +
+                        offset[scale_offset_transform.index(scale_offset_coord)];
+
+                    // clamp
+                    qvalue = std::max<REAL>(qvalue,
+                                            static_cast<REAL>(std::numeric_limits<QUANT>::min()));
+                    qvalue = std::min<REAL>(qvalue,
+                                            static_cast<REAL>(std::numeric_limits<QUANT>::max()));
+
+                    // cast
+                    output[input_transform.index(input_coord)] = static_cast<QUANT>(qvalue);
                 }
             }
         }

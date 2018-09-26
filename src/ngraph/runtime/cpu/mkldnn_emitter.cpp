@@ -281,7 +281,8 @@ size_t MKLDNNEmitter::build_quantized_convolution(const mkldnn::memory::desc& in
                                                   const ngraph::Strides& dilation_strides,
                                                   const ngraph::CoordinateDiff& padding_below,
                                                   const ngraph::CoordinateDiff& padding_above,
-                                                  const float scale)
+                                                  const float scale,
+                                                  const mkldnn::post_ops& pops)
 {
     size_t input_data_index = build_memory_primitive(input_data_desc);
     size_t weights_index = build_memory_primitive(weights_desc);
@@ -289,6 +290,7 @@ size_t MKLDNNEmitter::build_quantized_convolution(const mkldnn::memory::desc& in
     std::vector<float> output_scale;
     output_scale.push_back(scale);
     mkldnn::primitive_attr conv_attr;
+    conv_attr.set_post_ops(pops);
     /* Specify the rounding mode */
     conv_attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
     /* Specify the scales array and corresponding mask */

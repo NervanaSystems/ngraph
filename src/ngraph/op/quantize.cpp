@@ -14,25 +14,27 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/dequantize.hpp"
+#include "ngraph/op/quantize.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::Dequantize::Dequantize(shared_ptr<Node> input,
-                           shared_ptr<Node> scale,
-                           shared_ptr<Node> offset,
-                           const element::Type& type,
-                           const AxisSet& axes)
+op::Quantize::Quantize(shared_ptr<Node> input,
+                       shared_ptr<Node> scale,
+                       shared_ptr<Node> offset,
+                       const element::Type& type,
+                       const AxisSet& axes,
+                       RoundMode round_mode)
 
-    : Op("Dequantize", check_single_output_args({input, scale, offset}))
+    : Op("Quantize", check_single_output_args({input, scale, offset}))
     , m_type(type)
     , m_axes(axes)
+    , m_round_mode(round_mode)
 {
     constructor_validate_and_infer_types();
 }
 
-void op::Dequantize::validate_and_infer_types()
+void op::Quantize::validate_and_infer_types()
 {
     enum
     {
@@ -44,19 +46,23 @@ void op::Dequantize::validate_and_infer_types()
     set_output_size(1);
     set_output_type(0, m_type, get_input_shape(INPUT));
 
-    NODE_VALIDATION_ASSERT(this, get_input_element_type(INPUT).is_quantized())
-        << "Input element type (" << get_input_element_type(INPUT) << ") must be a quantized type";
+    // TODO: longer term we probably want quantized types
+    // 1) for type safety - so quantized types are not passed to non-quantized ops
+    // 2) to reflect quantized type min/max which can vary e.g. [-127, 127] for "scaled" int8
+    NODE_VALIDATION_ASSERT(this, m_type.is_quantized()) << "Output element type (" << m_type
+                                                        << ") must be a quantized type";
 
-    NODE_VALIDATION_ASSERT(this, m_type.is_real()) << "Output element type (" << m_type
-                                                   << ") must be a floating point number";
+    NODE_VALIDATION_ASSERT(this, get_input_element_type(INPUT).is_real())
+        << "Input element type (" << get_input_element_type(INPUT)
+        << ") must be a floating point number";
 
     NODE_VALIDATION_ASSERT(this, get_input_element_type(SCALE).is_real())
         << "Scale element type (" << get_input_element_type(SCALE)
         << ") must be a floating point number";
 
-    NODE_VALIDATION_ASSERT(this, get_input_element_type(OFFSET) == get_input_element_type(INPUT))
+    NODE_VALIDATION_ASSERT(this, get_input_element_type(OFFSET) == m_type)
         << "Offset element type (" << get_input_element_type(OFFSET)
-        << ") must match input element type (" << get_input_element_type(INPUT) << ")";
+        << ") must match output element type (" << m_type << ")";
 
     for (auto axis : m_axes)
     {
@@ -76,15 +82,19 @@ void op::Dequantize::validate_and_infer_types()
         << "Offset shape (" << get_input_shape(OFFSET)
         << ") must match input shape projected along the quantization axes (" << projected_shape
         << ")";
+
+    NODE_VALIDATION_ASSERT(this, m_round_mode == RoundMode::HALF_AWAY_FROM_ZERO)
+        << "Only RoundMode = HALF_AWAY_FROM_ZERO is supported, for now";
 }
 
-shared_ptr<Node> op::Dequantize::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Quantize::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Dequantize>(new_args.at(0), new_args.at(1), new_args.at(2), m_type, m_axes);
+    return make_shared<Quantize>(
+        new_args.at(0), new_args.at(1), new_args.at(2), m_type, m_axes, m_round_mode);
 }
 
-void op::Dequantize::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Quantize::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }

@@ -48,39 +48,39 @@ TEST(element_type, mapable)
 TEST(element_type, size)
 {
     {
-        element::Type t1{1, false, false, ""};
+        element::Type t1{1, false, false, false, ""};
         EXPECT_EQ(1, t1.size());
     }
     {
-        element::Type t1{2, false, false, ""};
+        element::Type t1{2, false, false, false, ""};
         EXPECT_EQ(1, t1.size());
     }
     {
-        element::Type t1{3, false, false, ""};
+        element::Type t1{3, false, false, false, ""};
         EXPECT_EQ(1, t1.size());
     }
     {
-        element::Type t1{4, false, false, ""};
+        element::Type t1{4, false, false, false, ""};
         EXPECT_EQ(1, t1.size());
     }
     {
-        element::Type t1{5, false, false, ""};
+        element::Type t1{5, false, false, false, ""};
         EXPECT_EQ(1, t1.size());
     }
     {
-        element::Type t1{6, false, false, ""};
+        element::Type t1{6, false, false, false, ""};
         EXPECT_EQ(1, t1.size());
     }
     {
-        element::Type t1{7, false, false, ""};
+        element::Type t1{7, false, false, false, ""};
         EXPECT_EQ(1, t1.size());
     }
     {
-        element::Type t1{8, false, false, ""};
+        element::Type t1{8, false, false, false, ""};
         EXPECT_EQ(1, t1.size());
     }
     {
-        element::Type t1{9, false, false, ""};
+        element::Type t1{9, false, false, false, ""};
         EXPECT_EQ(2, t1.size());
     }
 }
