@@ -109,6 +109,7 @@
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
+#include "ngraph/runtime/cpu/op/quantized_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -2987,6 +2988,42 @@ namespace ngraph
                     writer << "                         {"
                            << join(convolution->get_data_dilation_strides_backward()) << "},\n";
                     writer << "                         0, 1, 0, 1, 0, 1, true);\n";
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedConvolutionBias)
+            {
+                auto qconvolution_bias =
+                    static_cast<const ngraph::op::QuantizedConvolutionBias*>(node);
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto qconv_index =
+                        mkldnn_emitter->build_convolution<ngraph::op::QuantizedConvolutionBias>(
+                            node, args, out);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(qconv_index);
+
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << args[2].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
+                           << ", " << out[0].get_name() << ");\n";
+                    writer << "*(" << out[1].get_name()
+                           << ") = " << qconvolution_bias->get_freezed_output_min() << ";\n";
+                    writer << "*(" << out[2].get_name()
+                           << ") = " << qconvolution_bias->get_freezed_output_max() << ";\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(qconv_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error(
+                        "QuantizedConvolutionBias is only supported with MKLDNN kernel.");
                 }
             }
 
