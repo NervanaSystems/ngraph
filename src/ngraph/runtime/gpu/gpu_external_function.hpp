@@ -111,7 +111,6 @@ namespace ngraph
 
                 bool m_emit_timing;
                 bool m_is_compiled;
-                bool m_temporaries_used;
                 size_t m_offset;
 
                 std::string m_function_name;

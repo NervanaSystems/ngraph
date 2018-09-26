@@ -183,7 +183,6 @@ runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     , m_function(function)
     , m_emit_timing(false)
     , m_is_compiled(false)
-    , m_temporaries_used(false)
     , m_tensor_memory_buffers(new std::unordered_map<std::string, size_t>)
     , m_shared_context(shared_context)
 {
@@ -375,20 +374,20 @@ void runtime::gpu::GPU_ExternalFunction::emit_function_declarations()
 void runtime::gpu::GPU_ExternalFunction::emit_temp_mem_pool_allocation(
     shared_ptr<Function> current_function)
 {
-    m_temporaries_used = false;
+    bool temporaries_used = false;
     size_t worst_case_tmp_size = 0;
     for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
     {
         if (node->liveness_new_list.size() > 0)
         {
-            m_temporaries_used = true;
+            temporaries_used = true;
             for (descriptor::Tensor* tensor : node->liveness_new_list)
             {
                 worst_case_tmp_size += tensor->size();
             }
         }
     }
-    if (m_temporaries_used)
+    if (temporaries_used)
     {
         m_writer << "// Allocate the memory pool\n";
         // TODO memory pool malloc.
