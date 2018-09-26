@@ -19,11 +19,11 @@
 set -x
 set -e
 
-NGRAPH_CACHE_PATH="/home/ngraph"
+NGRAPH_CACHE_DIR="/home"
 
 function check_cached_ngraph() {
     # if no ngraph in /home - clone
-    if [ ! -e "${NGRAPH_CACHE_PATH}" ]; then
+    if [ ! -e "${NGRAPH_CACHE_DIR}/ngraph" ]; then
         cd /home/
         git clone --single-branch https://github.com/NervanaSystems/ngraph -b master
     fi
@@ -46,10 +46,10 @@ function build_ngraph() {
             ;;
             USE_CACHED)
                 check_cached_ngraph
-                cp -Rf "${NGRAPH_CACHE_PATH}/build" "${ngraph_directory}/ngraph/"
+                cp -Rf "${NGRAPH_CACHE_DIR}/ngraph/build" "${ngraph_directory}/ngraph/"
                 for f in $(find ${ngraph_directory}/ngraph/build/ -name 'CMakeCache.txt');
                 do 	
-                    sed -i "s\\${NGRAPH_CACHE_PATH}\\${ngraph_directory}\\g" $f
+                    sed -i "s\\${NGRAPH_CACHE_DIR}\\${ngraph_directory}\\g" $f
                 done
             ;;
         esac
