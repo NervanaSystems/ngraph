@@ -83,7 +83,18 @@ namespace ngraph
                     std::shared_ptr<GPU_ExternalFunction> m_external_function;
                     bool m_performance_counters_enabled = false;
                     EntryPoint m_compiled_function;
+                    std::vector<void*> m_inputs;
+                    std::vector<void*> m_outputs;
                 };
+
+                /// \brief Convert a vector of TensorView into a vector of void* where each void*
+                /// points to a TensorView's data buffer.
+                /// \param target Pointer to a pre-allocated array of void* with
+                /// size >= source.size()
+                /// \param source Source vector of TensorViews
+                static void
+                    initialize_io(void** target,
+                                  const std::vector<std::shared_ptr<runtime::TensorView>>& source);
 
                 std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
                 std::shared_ptr<BackendContext> m_context;
