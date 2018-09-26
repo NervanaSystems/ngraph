@@ -76,7 +76,7 @@ namespace ngraph
 
             /// \brief Get the stale value of the tensor. A tensor is stale if it's data is
             /// changed.
-            /// \return true if tensor data is stale
+            /// \return true if there is new data in this tensor
             bool get_stale() const;
 
             /// \brief Set the stale value of the tensor. A tensor is stale if it's data is
