@@ -33,7 +33,7 @@ static default_random_engine s_random_engine;
 template <typename T>
 void init_int_tv(shared_ptr<runtime::TensorView> tv, T min, T max)
 {
-    size_t size = tv->get_size();
+    size_t size = tv->size();
     uniform_int_distribution<T> dist(min, max);
     vector<T> vec(size);
     for (T& element : vec)
@@ -46,7 +46,7 @@ void init_int_tv(shared_ptr<runtime::TensorView> tv, T min, T max)
 template <>
 void init_int_tv<char>(shared_ptr<runtime::TensorView> tv, char min, char max)
 {
-    size_t size = tv->get_size();
+    size_t size = tv->size();
     uniform_int_distribution<int16_t> dist(static_cast<short>(min), static_cast<short>(max));
     vector<char> vec(size);
     for (char& element : vec)
@@ -59,7 +59,7 @@ void init_int_tv<char>(shared_ptr<runtime::TensorView> tv, char min, char max)
 template <>
 void init_int_tv<int8_t>(shared_ptr<runtime::TensorView> tv, int8_t min, int8_t max)
 {
-    size_t size = tv->get_size();
+    size_t size = tv->size();
     uniform_int_distribution<int16_t> dist(static_cast<short>(min), static_cast<short>(max));
     vector<int8_t> vec(size);
     for (int8_t& element : vec)
@@ -72,7 +72,7 @@ void init_int_tv<int8_t>(shared_ptr<runtime::TensorView> tv, int8_t min, int8_t 
 template <>
 void init_int_tv<uint8_t>(shared_ptr<runtime::TensorView> tv, uint8_t min, uint8_t max)
 {
-    size_t size = tv->get_size();
+    size_t size = tv->size();
     uniform_int_distribution<int16_t> dist(static_cast<short>(min), static_cast<short>(max));
     vector<uint8_t> vec(size);
     for (uint8_t& element : vec)
@@ -85,7 +85,7 @@ void init_int_tv<uint8_t>(shared_ptr<runtime::TensorView> tv, uint8_t min, uint8
 template <typename T>
 void init_real_tv(shared_ptr<runtime::TensorView> tv, T min, T max)
 {
-    size_t size = tv->get_size();
+    size_t size = tv->size();
     uniform_real_distribution<T> dist(min, max);
     vector<T> vec(size);
     for (T& element : vec)
@@ -218,7 +218,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
                     const shared_ptr<runtime::HostTensorView>& data = arg_data[arg_index];
                     arg->write(data->get_data_ptr(),
                                0,
-                               data->get_size() * data->get_element_type().size());
+                               data->size() * data->get_element_type().size());
                 }
             }
         }
@@ -230,7 +230,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
                 const shared_ptr<runtime::HostTensorView>& data = result_data[result_index];
                 const shared_ptr<runtime::TensorView>& result = results[result_index];
                 result->read(
-                    data->get_data_ptr(), 0, data->get_size() * data->get_element_type().size());
+                    data->get_data_ptr(), 0, data->size() * data->get_element_type().size());
             }
         }
     }

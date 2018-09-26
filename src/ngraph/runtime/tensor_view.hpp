@@ -60,7 +60,7 @@ namespace ngraph
 
             /// \brief Get tensor size, number of elements in the tensor
             /// \return size
-            size_t get_size() const;
+            size_t size() const;
 
             /// \brief Get tensor's unique name
             /// \return tensor's name
@@ -75,12 +75,12 @@ namespace ngraph
             void set_tensor_layout(const std::shared_ptr<descriptor::layout::TensorLayout>& layout);
 
             /// \brief Get the stale value of the tensor. A tensor is stale if it's data is
-            /// unchanged.
+            /// changed.
             /// \return true if tensor data is stale
             bool get_stale() const;
 
             /// \brief Set the stale value of the tensor. A tensor is stale if it's data is
-            /// unchanged.
+            /// changed.
             void set_stale(bool val);
 
             /// \brief Write bytes directly into the tensor
