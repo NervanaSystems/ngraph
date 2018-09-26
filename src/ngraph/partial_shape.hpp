@@ -37,7 +37,7 @@ namespace ngraph
     class PartialShape
     {
     public:
-        /// \brief Constructs a shape with undetermined rank.
+        /// \brief Constructs a shape with determined rank.
         ///
         ///        Examples:
         ///
