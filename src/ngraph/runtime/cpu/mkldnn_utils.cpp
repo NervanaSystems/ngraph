@@ -209,7 +209,6 @@ const std::string&
     auto it = get_mkldnn_data_type_string_map().find(type);
     if (it == get_mkldnn_data_type_string_map().end() || it->second.empty())
     {
-        std::cout << "---- GD: string func: type is " << type.c_type_string() << "\n";
         throw ngraph_error("No MKLDNN data type exists for the given element type" +
                            type.c_type_string());
     }
@@ -219,11 +218,9 @@ const std::string&
 mkldnn::memory::data_type
     runtime::cpu::mkldnn_utils::get_mkldnn_data_type(const ngraph::element::Type& type)
 {
-    //std::cout << "---- GD: size of map: " << get_mkldnn_data_type_map().size() << "\n";
     auto it = get_mkldnn_data_type_map().find(type);
     if (it == get_mkldnn_data_type_map().end())
     {
-        //std::cout << "---- GD: type is " << type.c_type_string() << "\n";
         throw ngraph_error("No MKLDNN data type exists for the given element type" +
                            type.c_type_string());
     }
@@ -270,8 +267,6 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_default_mkldnn_md(
     else
     {
         shape = node->get_input_shape(index);
-        std::cout << " ---- GD: in create_default_mkldnn_md, index: " << index << ", "
-                  << node->get_name() << ", type: " << node->get_input_element_type(index) << "\n";
         et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(index));
     }
 
