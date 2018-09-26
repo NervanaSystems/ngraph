@@ -345,7 +345,11 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             }
             break;
         }
-        case OP_TYPEID::Select: { arguments_check(op, 3, 1);
+        case OP_TYPEID::Select:
+        {
+            arguments_check(op, 3, 1);
+
+// Leave it here for some time
 #if USE_INTELGPU_CUSTOM_KERNELS
             do_select_operation(topology,
                                 get_input_name(op, 0),
