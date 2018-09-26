@@ -54,6 +54,7 @@ function build_ngraph() {
             ;;
         esac
     done
+    cd "${ngraph_directory}/ngraph"
     mkdir -p ./build
     cd ./build
     cmake ../ -DNGRAPH_TOOLS_ENABLE=FALSE -DNGRAPH_UNIT_TEST_ENABLE=FALSE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="${ngraph_directory}/ngraph_dist" || return 1
@@ -72,7 +73,7 @@ function build_ngraph() {
 
 # Copy stored nGraph master and use it to build PR branch
 if ! build_ngraph "/root" "USE_CACHED"; then
-    build_ngraph "/home" "UPDATE REBUILD"
+    build_ngraph "${NGRAPH_CACHE_DIR}" "UPDATE REBUILD"
     build_ngraph "/root" "REBUILD USE_CACHED"
 fi
 
