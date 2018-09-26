@@ -1820,7 +1820,7 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
        "ops" : [
            {
              "element_type" :
-                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true},
+                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true, "is_quantized" : false},
              "inputs" : [],
              "name" : "Parameter_4",
              "op" : "Parameter",
@@ -1829,7 +1829,7 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
            },
            {
              "element_type" :
-                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true},
+                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true, "is_quantized" : false},
              "inputs" : [],
              "name" : "Parameter_0",
              "op" : "Parameter",
@@ -1838,7 +1838,7 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
            },
            {
              "element_type" :
-                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true},
+                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true, "is_quantized" : false},
              "inputs" : [],
              "name" : "Constant_1",
              "op" : "Constant",
@@ -1849,7 +1849,7 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
            {
              "axes" : [ 0, 1 ],
              "element_type" :
-                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true},
+                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true, "is_quantized" : false},
              "inputs" : ["Constant_1"],
              "name" : "Broadcast_2",
              "op" : "Broadcast",
@@ -1858,7 +1858,7 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
            },
            {
              "element_type" :
-                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true},
+                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true, "is_quantized" : false},
              "inputs" : [ "Parameter_0", "Broadcast_2" ],
              "name" : "Maximum_3",
              "op" : "Maximum",
@@ -1866,7 +1866,7 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
            },
            {
              "element_type" :
-                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true},
+                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true, "is_quantized" : false},
              "inputs" : [ "Maximum_3", "Parameter_4" ],
              "name" : "Multiply_5",
              "op" : "Multiply",
@@ -1877,7 +1877,7 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
        "result" : ["Multiply_5"],
        "result_shape" : [ 3, 4 ],
        "result_type" :
-           {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true}
+           {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true, "is_quantized" : false}
     }])";
     stringstream ss(js);
 
@@ -9685,4 +9685,145 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_one)
     EXPECT_EQ((vector<int32_t>{3, 2, 1}), read_vector<int32_t>(result0));
     backend->call_with_validate(f1, {result1}, {a});
     EXPECT_EQ((vector<float>{3, 1, 4}), read_vector<float>(result1));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, quantize)
+{
+    Shape input_shape{4, 3};
+    Shape scale_offset_shape;
+    AxisSet quantization_axes;
+
+    auto input_type = element::f32;
+    auto output_type = element::u8;
+
+    typedef float input_c_type;
+    typedef uint8_t output_c_type;
+
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto X = make_shared<op::Parameter>(input_type, input_shape);
+    auto scale = op::Constant::create(input_type, scale_offset_shape, {2});
+    auto offset = op::Constant::create(output_type, scale_offset_shape, {1});
+    auto quantize =
+        make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
+    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto x = backend->create_tensor(input_type, input_shape);
+    auto y = backend->create_tensor(output_type, input_shape);
+
+    copy_data(x, vector<input_c_type>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
+    // divide by scale                2  2  2  2  2  2  2  2  2  2  2   2
+    // equals (rounded)               0  1  1  2  2  3  3  4  4  5  5   6
+    // plus offset                    1  1  1  1  1  1  1  1  1  1  1   1
+    // equals                         1  2  2  3  3  4  4  5  5  6  6   7
+
+    backend->call_with_validate(f, {y}, {x});
+    EXPECT_EQ((vector<output_c_type>{1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7}),
+              read_vector<output_c_type>(y));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, quantize_axes)
+{
+    Shape input_shape{4, 3};
+    Shape scale_offset_shape{4};
+    AxisSet quantization_axes{0};
+
+    auto input_type = element::f32;
+    auto output_type = element::u8;
+
+    typedef float input_c_type;
+    typedef uint8_t output_c_type;
+
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto X = make_shared<op::Parameter>(input_type, input_shape);
+    auto scale = op::Constant::create(input_type, scale_offset_shape, {2, 3, 4, 5});
+    auto offset = op::Constant::create(output_type, scale_offset_shape, {10, 20, 30, 40});
+    auto quantize =
+        make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
+    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto x = backend->create_tensor(input_type, input_shape);
+    auto y = backend->create_tensor(output_type, input_shape);
+
+    copy_data(x, vector<input_c_type>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
+    // divided by scale               2  2  2  3  3  3  4  4  4  5  5   5
+    // equals (rounded)               0  1  1  1  1  2  2  2  2  2  2   2
+    // plus offset                   10 10 10 20 20 20 30 30 30 40 40  40
+    // equals                        10 11 11 21 21 22 32 32 32 42 42  42
+
+    backend->call_with_validate(f, {y}, {x});
+    EXPECT_EQ((vector<output_c_type>{10, 11, 11, 21, 21, 22, 32, 32, 32, 42, 42, 42}),
+              read_vector<output_c_type>(y));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, quantize_int8)
+{
+    Shape input_shape{4, 3};
+    Shape scale_offset_shape;
+    AxisSet quantization_axes;
+
+    auto input_type = element::f32;
+    auto output_type = element::i8;
+
+    typedef float input_c_type;
+    typedef int8_t output_c_type;
+
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto X = make_shared<op::Parameter>(input_type, input_shape);
+    auto scale = op::Constant::create(input_type, scale_offset_shape, {2});
+    auto offset = op::Constant::create(output_type, scale_offset_shape, {1});
+    auto quantize =
+        make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
+    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto x = backend->create_tensor(input_type, input_shape);
+    auto y = backend->create_tensor(output_type, input_shape);
+
+    copy_data(x, vector<input_c_type>{0, -1, 2, -3, 4, -5, 6, -7, 8, -9, 10, -11});
+    // divide by scale                2   2  2   2  2   2  2   2  2   2  2    2
+    // equals (rounded)               0  -1  1  -2  2  -3  3  -4  4  -5  5   -6
+    // plus offset                    1   1  1   1  1   1  1   1  1   1  1    1
+    // equals                         1   0  2  -1  3  -2  4  -3  5  -4  6   -5
+
+    backend->call_with_validate(f, {y}, {x});
+    EXPECT_EQ((vector<output_c_type>{1, 0, 2, -1, 3, -2, 4, -3, 5, -4, 6, -5}),
+              read_vector<output_c_type>(y));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, quantize_clamp)
+{
+    Shape input_shape{4, 3};
+    Shape scale_offset_shape;
+    AxisSet quantization_axes;
+
+    auto input_type = element::f32;
+    auto output_type = element::i8;
+
+    typedef float input_c_type;
+    typedef int8_t output_c_type;
+
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto X = make_shared<op::Parameter>(input_type, input_shape);
+    auto scale = op::Constant::create(input_type, scale_offset_shape, {0.00001});
+    auto offset = op::Constant::create(output_type, scale_offset_shape, {1});
+    auto quantize =
+        make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
+    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto x = backend->create_tensor(input_type, input_shape);
+    auto y = backend->create_tensor(output_type, input_shape);
+
+    copy_data(x, vector<input_c_type>{0, -1, 2, -3, 4, -5, 6, -7, 8, -9, 10, -11});
+
+    backend->call_with_validate(f, {y}, {x});
+    EXPECT_EQ(
+        (vector<output_c_type>{1, -128, 127, -128, 127, -128, 127, -128, 127, -128, 127, -128}),
+        read_vector<output_c_type>(y));
 }
