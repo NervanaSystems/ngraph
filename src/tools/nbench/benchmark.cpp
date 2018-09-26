@@ -216,9 +216,8 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
                 if (arg->get_stale())
                 {
                     const shared_ptr<runtime::HostTensorView>& data = arg_data[arg_index];
-                    arg->write(data->get_data_ptr(),
-                               0,
-                               data->size() * data->get_element_type().size());
+                    arg->write(
+                        data->get_data_ptr(), 0, data->size() * data->get_element_type().size());
                 }
             }
         }
