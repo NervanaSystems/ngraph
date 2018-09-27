@@ -9752,7 +9752,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize)
     // equals                         0  2  2  4  4  6  6  8  8 10 10 12
 
     backend->call_with_validate(f, {y}, {x});
-    EXPECT_EQ((vector<output_c_type>{0, 2, 2, 4, 4,  6,  6,  8,  8, 10, 10, 12}),
+    EXPECT_EQ((vector<output_c_type>{0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12}),
               read_vector<output_c_type>(y));
 }
 
@@ -9807,8 +9807,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_axes)
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(output_type, scale_offset_shape, {2, 3, 4, 5});
     auto offset = op::Constant::create(input_type, scale_offset_shape, {10, 20, 30, 40});
-    auto dequantize =
-        make_shared<op::Dequantize>(X, scale, offset, output_type, quantization_axes);
+    auto dequantize = make_shared<op::Dequantize>(X, scale, offset, output_type, quantization_axes);
     auto f = make_shared<Function>(dequantize, op::ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -9819,10 +9818,10 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_axes)
     // minus offset                   10  10  10  20  20  20  30  30  30  40  40  40
     // equals                          0   1   1   1   1   2   2   2   2   2   2   2
     // multiplied by scale             2   2   2   3   3   3   4   4   4   5   5   5
-    // equals                          0   2   2   3   3   6   8   8   8  10  10  10 
+    // equals                          0   2   2   3   3   6   8   8   8  10  10  10
 
     backend->call_with_validate(f, {y}, {x});
-    EXPECT_EQ((vector<output_c_type>{0,   2,   2 ,  3  , 3  , 6 ,  8  , 8  , 8  ,10 , 10,  10}),
+    EXPECT_EQ((vector<output_c_type>{0, 2, 2, 3, 3, 6, 8, 8, 8, 10, 10, 10}),
               read_vector<output_c_type>(y));
 }
 
@@ -9877,8 +9876,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_int8)
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(output_type, scale_offset_shape, {2});
     auto offset = op::Constant::create(input_type, scale_offset_shape, {1});
-    auto dequantize =
-        make_shared<op::Dequantize>(X, scale, offset, output_type, quantization_axes);
+    auto dequantize = make_shared<op::Dequantize>(X, scale, offset, output_type, quantization_axes);
     auto f = make_shared<Function>(dequantize, op::ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -9892,7 +9890,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_int8)
     // equals                         0 -2  2  -4  4  -6  6  -8  8 -10 10 -12
 
     backend->call_with_validate(f, {y}, {x});
-    EXPECT_EQ((vector<output_c_type>{0, -2 , 2  ,-4  ,4  ,-6 , 6  ,-8  ,8 ,-10 ,10 ,-12}),
+    EXPECT_EQ((vector<output_c_type>{0, -2, 2, -4, 4, -6, 6, -8, 8, -10, 10, -12}),
               read_vector<output_c_type>(y));
 }
 

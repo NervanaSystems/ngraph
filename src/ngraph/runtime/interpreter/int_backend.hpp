@@ -614,7 +614,7 @@ private:
             else
             {
                 std::stringstream ss;
-                ss << "unsupported element type " << type << " op Quantize";
+                ss << "unsupported element type " << type << " op Dequantize";
                 throw std::runtime_error(ss.str());
             }
 
