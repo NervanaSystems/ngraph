@@ -1631,19 +1631,16 @@ namespace ngraph
                         auto result_format =
                             static_cast<mkldnn::memory::format>(input_md.data.format);
 
-                        if (result_format == mkldnn::memory::nChw16c ||
-                            result_format == mkldnn::memory::nChw8c ||
-                            result_format == mkldnn::memory::blocked)
-                        {
-                            auto slice = static_cast<ngraph::op::Slice*>(node.get());
-                            auto lower_bounds = slice->get_lower_bounds();
-                            auto out_shape = slice->get_outputs().at(0).get_shape();
-                            auto channels_block_size =
-                                input_md.data.layout_desc.blocking.block_dims[1];
+                        auto slice = static_cast<ngraph::op::Slice*>(node.get());
+                        auto lower_bounds = slice->get_lower_bounds();
+                        auto out_shape = slice->get_outputs().at(0).get_shape();
 
-                            // check lower bound of channels
-                            if (lower_bounds[1] % channels_block_size != 0 ||
-                                out_shape[1] % channels_block_size != 0)
+                        // check lower bounds and output shape
+                        for (auto i = 0; i < input_md.data.ndims; i++)
+                        {
+                            auto block_size = input_md.data.layout_desc.blocking.block_dims[i];
+                            if (block_size != 0 && (lower_bounds[i] % block_size != 0 ||
+                                                    out_shape[i] % block_size != 0))
                             {
                                 NGRAPH_DEBUG << "slice: number of channels in lower bounds or "
                                                 "output shape is not multiple of block size, "
@@ -1652,6 +1649,7 @@ namespace ngraph
                                 return;
                             }
                         }
+
                         vector<memory::desc> o_mds;
                         if (result_format == mkldnn::memory::blocked)
                         {
