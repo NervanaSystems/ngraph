@@ -400,7 +400,10 @@ void runtime::gpu::GPU_Emitter::emit_Concat(EMIT_ARGS)
     writer.block_end();
 }
 
-void runtime::gpu::GPU_Emitter::emit_Constant(EMIT_ARGS) {}
+void runtime::gpu::GPU_Emitter::emit_Constant(EMIT_ARGS) 
+{
+    
+}
 
 void runtime::gpu::GPU_Emitter::emit_Convert(EMIT_ARGS)
 {
