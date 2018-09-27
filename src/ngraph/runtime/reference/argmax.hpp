@@ -38,7 +38,7 @@ namespace ngraph
 
                 for (const Coordinate& input_coord : input_transform)
                 {
-                    Coordinate output_coord = project(input_coord, av);
+                    Coordinate output_coord = reduce(input_coord, av);
                     CoordinateTransform output_transform(out_shape);
 
                     auto min_index = static_cast<size_t>(out[output_transform.index(output_coord)]);
