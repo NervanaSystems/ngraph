@@ -18,8 +18,10 @@
 #include <functional>
 #include <unordered_map>
 
+#include "ngraph/runtime/gpu/cublas_emitter.hpp"
 #include "ngraph/runtime/gpu/cuda_emitter.hpp"
 #include "ngraph/runtime/gpu/cudnn_emitter.hpp"
+
 #include "ngraph/runtime/gpu/gpu_kernel_args.hpp"
 #include "ngraph/runtime/gpu/gpu_memory_manager.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
@@ -32,6 +34,7 @@ namespace ngraph
         {
             class CUDAEmitter;
             class CUDNNEmitter;
+            class CUBLASEmitter;
             class GPUPrimitiveEmitter
             {
             public:
@@ -39,6 +42,7 @@ namespace ngraph
                 GPUPrimitiveEmitter(const std::unique_ptr<GPURuntimeContext>& ctx);
                 std::unique_ptr<CUDAEmitter>& get_cuda_emitter();
                 std::unique_ptr<CUDNNEmitter>& get_cudnn_emitter();
+                std::unique_ptr<CUBLASEmitter>& get_cublas_emitter();
                 std::vector<gpu::primitive*>& get_primitives() { return m_gpu_primitives; }
                 std::vector<gpu::memory_primitive>& get_memory_primitives()
                 {
@@ -61,6 +65,7 @@ namespace ngraph
                 std::shared_ptr<GPUHostParameters> m_host_parameters;
                 std::unique_ptr<CUDAEmitter> m_cuda_emitter;
                 std::unique_ptr<CUDNNEmitter> m_cudnn_emitter;
+                std::unique_ptr<CUBLASEmitter> m_cublas_emitter;
             };
         }
     }

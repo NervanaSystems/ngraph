@@ -14,10 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <limits>
-
-#include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
+#include <limits>
 
 using namespace ngraph;
 using namespace ngraph::runtime::gpu;
@@ -27,6 +25,7 @@ GPUPrimitiveEmitter::GPUPrimitiveEmitter()
     , m_host_parameters(new GPUHostParameters)
     , m_cuda_emitter(new CUDAEmitter(this, nullptr))
     , m_cudnn_emitter(new CUDNNEmitter(this, nullptr, nullptr))
+    , m_cublas_emitter(new CUBLASEmitter(this, nullptr))
 {
 }
 
@@ -35,6 +34,7 @@ GPUPrimitiveEmitter::GPUPrimitiveEmitter(const std::unique_ptr<GPURuntimeContext
     , m_host_parameters(new GPUHostParameters)
     , m_cuda_emitter(new CUDAEmitter(this, ctx.get()))
     , m_cudnn_emitter(new CUDNNEmitter(this, ctx.get(), this->m_host_parameters))
+    , m_cublas_emitter(new CUBLASEmitter(this, ctx.get()))
 
 {
 }
@@ -46,6 +46,11 @@ std::unique_ptr<CUDAEmitter>& GPUPrimitiveEmitter::get_cuda_emitter()
 std::unique_ptr<CUDNNEmitter>& GPUPrimitiveEmitter::get_cudnn_emitter()
 {
     return m_cudnn_emitter;
+}
+
+std::unique_ptr<CUBLASEmitter>& GPUPrimitiveEmitter::get_cublas_emitter()
+{
+    return m_cublas_emitter;
 }
 size_t GPUPrimitiveEmitter::insert(std::unique_ptr<gpu::primitive>&& f)
 {

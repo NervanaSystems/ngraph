@@ -400,9 +400,7 @@ void runtime::gpu::GPU_Emitter::emit_Concat(EMIT_ARGS)
     writer.block_end();
 }
 
-void runtime::gpu::GPU_Emitter::emit_Constant(EMIT_ARGS)
-{
-}
+void runtime::gpu::GPU_Emitter::emit_Constant(EMIT_ARGS) {}
 
 void runtime::gpu::GPU_Emitter::emit_Convert(EMIT_ARGS)
 {
@@ -504,6 +502,33 @@ void runtime::gpu::GPU_Emitter::emit_Cosh(EMIT_ARGS)
 void runtime::gpu::GPU_Emitter::emit_Divide(EMIT_ARGS)
 {
     emit_elementwise<ngraph::op::Divide>(external_function, writer, node, args, out);
+}
+
+void runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
+{
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+    auto dot = static_cast<const ngraph::op::Dot*>(node);
+    size_t reduction_axes_count = dot->get_reduction_axes_count();
+    const Shape& arg0_shape = args[0].get_shape();
+    const Shape& arg1_shape = args[1].get_shape();
+    const Shape& out_shape = out[0].get_shape();
+
+    writer.block_begin();
+    {
+        auto& cublas_emitter = external_function->get_primitive_emitter()->get_cublas_emitter();
+
+        auto index =
+            cublas_emitter->build_dot(out[0].get_element_type(), arg0_shape, arg1_shape, out_shape, reduction_axes_count);
+
+        writer << "void* input[] = {" << node_names(args) << "};\n";
+        writer << "void* output[] = {" << node_names(out) << "};\n";
+        writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+    }
+    writer.block_end();
+
 }
 
 void runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
@@ -727,9 +752,7 @@ void runtime::gpu::GPU_Emitter::emit_Log(EMIT_ARGS)
     emit_elementwise<ngraph::op::Log>(external_function, writer, node, args, out);
 }
 
-void runtime::gpu::GPU_Emitter::emit_LRN(EMIT_ARGS)
-{
-}
+void runtime::gpu::GPU_Emitter::emit_LRN(EMIT_ARGS) {}
 
 void runtime::gpu::GPU_Emitter::emit_Max(EMIT_ARGS)
 {
@@ -926,9 +949,7 @@ void runtime::gpu::GPU_Emitter::emit_Pad(EMIT_ARGS)
     writer.block_end();
 }
 
-void runtime::gpu::GPU_Emitter::emit_Parameter(EMIT_ARGS)
-{
-}
+void runtime::gpu::GPU_Emitter::emit_Parameter(EMIT_ARGS) {}
 
 void runtime::gpu::GPU_Emitter::emit_Power(EMIT_ARGS)
 {
