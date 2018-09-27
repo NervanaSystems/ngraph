@@ -191,6 +191,27 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
             throw invalid_argument("arg1 and output shape does not match for dot.");
         }
     }
+
+    dot.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
+        const float alpha = 1.0;
+        const float beta = 0;
+
+        CUBLAS_SAFE_CALL(cublasSetPointerMode(*m_ctx->cublas_handle, CUBLAS_POINTER_MODE_HOST));
+        CUBLAS_SAFE_CALL(cublasSgemm(*m_ctx->cublas_handle,
+                                     CUBLAS_OP_N,
+                                     CUBLAS_OP_N,
+                                     n, m, k,
+                                     &alpha,
+                                     static_cast<const float*>(inputs[1]), n,
+                                     static_cast<const float*>(inputs[0]), k,
+                                     &beta,
+                                     static_cast<float*>(outputs[0]), n));
+        CUBLAS_SAFE_CALL(cublasSetPointerMode(*m_ctx->cublas_handle, CUBLAS_POINTER_MODE_DEVICE));
+
+        debug_sync();
+    }});
+
+    return getPrimitiveIndex(dot, hash);
 }
 
 void runtime::gpu::CUBLASEmitter::sync()
