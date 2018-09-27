@@ -27,15 +27,15 @@ void regclass_pyngraph_runtime_Tensor(py::module m)
 {
     py::class_<ngraph::runtime::Tensor, std::shared_ptr<ngraph::runtime::Tensor>> tensor(m,
                                                                                          "Tensor");
-    tensorView.doc() = "ngraph.impl.runtime.Tensor wraps ngraph::runtime::Tensor";
-    tensorView.def("write",
-                   (void (ngraph::runtime::Tensor::*)(const void*, size_t, size_t)) &
-                       ngraph::runtime::Tensor::write);
-    tensorView.def("read", &ngraph::runtime::Tensor::read);
+    tensor.doc() = "ngraph.impl.runtime.Tensor wraps ngraph::runtime::Tensor";
+    tensor.def("write",
+               (void (ngraph::runtime::Tensor::*)(const void*, size_t, size_t)) &
+                   ngraph::runtime::Tensor::write);
+    tensor.def("read", &ngraph::runtime::Tensor::read);
 
-    tensorView.def_property_readonly("shape", &ngraph::runtime::Tensor::get_shape);
-    tensorView.def_property_readonly("element_count", &ngraph::runtime::Tensor::get_element_count);
-    tensorView.def_property_readonly("element_type", [](const ngraph::runtime::Tensor& self) {
+    tensor.def_property_readonly("shape", &ngraph::runtime::Tensor::get_shape);
+    tensor.def_property_readonly("element_count", &ngraph::runtime::Tensor::get_element_count);
+    tensor.def_property_readonly("element_type", [](const ngraph::runtime::Tensor& self) {
         return self.get_element_type();
     });
 }
