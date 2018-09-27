@@ -47,9 +47,14 @@ void runtime::TensorView::set_tensor_layout(
     m_descriptor->set_tensor_layout(layout);
 }
 
-size_t runtime::TensorView::size() const
+size_t runtime::TensorView::get_element_count() const
 {
     return get_tensor_layout()->get_size();
+}
+
+size_t runtime::TensorView::get_size_in_bytes() const
+{
+    return get_tensor_layout()->get_size() * get_element_type().size();
 }
 
 const std::string& runtime::TensorView::get_name() const

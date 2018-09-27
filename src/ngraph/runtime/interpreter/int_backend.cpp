@@ -315,7 +315,7 @@ void runtime::interpreter::INTBackend::perform_nan_check(
         if (type == element::f32)
         {
             const float* data = tv->get_data_ptr<float>();
-            for (size_t i = 0; i < tv->size(); i++)
+            for (size_t i = 0; i < tv->get_element_count(); i++)
             {
                 if (std::isnan(data[i]))
                 {
@@ -334,7 +334,7 @@ void runtime::interpreter::INTBackend::perform_nan_check(
         else if (type == element::f64)
         {
             const double* data = tv->get_data_ptr<double>();
-            for (size_t i = 0; i < tv->size(); i++)
+            for (size_t i = 0; i < tv->get_element_count(); i++)
             {
                 if (std::isnan(data[i]))
                 {
