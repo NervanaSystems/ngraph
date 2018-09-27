@@ -125,11 +125,11 @@ namespace ngraph
         }
 
         template <typename T>
-        std::vector<std::shared_ptr<runtime::Tensor>> backprop_derivative(
-            const std::shared_ptr<runtime::Backend>& backend,
-            const std::shared_ptr<Function>& f,
-            const std::vector<std::shared_ptr<runtime::Tensor>>& f_input_args,
-            const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
+        std::vector<std::shared_ptr<runtime::Tensor>>
+            backprop_derivative(const std::shared_ptr<runtime::Backend>& backend,
+                                const std::shared_ptr<Function>& f,
+                                const std::vector<std::shared_ptr<runtime::Tensor>>& f_input_args,
+                                const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
         {
             // y = f(X)
             // using X (upper case) to denote all paramenters of f (represented by f_input_args)

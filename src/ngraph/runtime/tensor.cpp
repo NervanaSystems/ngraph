@@ -41,8 +41,7 @@ shared_ptr<descriptor::layout::TensorLayout> runtime::Tensor::get_tensor_layout(
     return m_descriptor->get_tensor_layout();
 }
 
-void runtime::Tensor::set_tensor_layout(
-    const shared_ptr<descriptor::layout::TensorLayout>& layout)
+void runtime::Tensor::set_tensor_layout(const shared_ptr<descriptor::layout::TensorLayout>& layout)
 {
     m_descriptor->set_tensor_layout(layout);
 }

@@ -68,7 +68,7 @@ TEST(benchmark, concat_32x1x200_axis1_6)
     vector<std::string> backend_names{"INTERPRETER", "CPU"};
     vector<int> n_runs{200, 200, using_ref_kernels ? 200 : 200000}; // one for each backend
     vector<std::function<void()>> test_callbacks;                   // one for each backend
-    vector<std::shared_ptr<runtime::Tensor>> result_tvs;        // one for each backend
+    vector<std::shared_ptr<runtime::Tensor>> result_tvs;            // one for each backend
 
     for (std::string backend_name : backend_names)
     {

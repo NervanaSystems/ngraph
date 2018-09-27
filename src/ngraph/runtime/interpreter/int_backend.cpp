@@ -221,11 +221,10 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     return true;
 }
 
-void runtime::interpreter::INTBackend::generate_calls(
-    const element::Type& type,
-    const NodeWrapper& op,
-    const vector<shared_ptr<HostTensor>>& outputs,
-    const vector<shared_ptr<HostTensor>>& inputs)
+void runtime::interpreter::INTBackend::generate_calls(const element::Type& type,
+                                                      const NodeWrapper& op,
+                                                      const vector<shared_ptr<HostTensor>>& outputs,
+                                                      const vector<shared_ptr<HostTensor>>& inputs)
 {
     if (type == element::boolean)
     {
@@ -306,8 +305,8 @@ vector<runtime::PerformanceCounter>
     return rc;
 }
 
-void runtime::interpreter::INTBackend::perform_nan_check(
-    const vector<shared_ptr<HostTensor>>& tvs, const Node* op)
+void runtime::interpreter::INTBackend::perform_nan_check(const vector<shared_ptr<HostTensor>>& tvs,
+                                                         const Node* op)
 {
     size_t arg_number = 1;
     for (shared_ptr<HostTensor> tv : tvs)

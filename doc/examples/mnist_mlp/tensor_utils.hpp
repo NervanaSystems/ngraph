@@ -91,9 +91,8 @@ std::ostream& operator<<(std::ostream& s, const ngraph::Shape& shape)
 class TensorDumper
 {
 protected:
-    TensorDumper(
-        const std::string& name,
-        const std::shared_ptr<ngraph::runtime::Tensor>& tensor)
+    TensorDumper(const std::string& name,
+                 const std::shared_ptr<ngraph::runtime::Tensor>& tensor)
         : m_name(name)
         , m_tensor(tensor)
     {

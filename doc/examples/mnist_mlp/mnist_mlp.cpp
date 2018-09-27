@@ -34,9 +34,8 @@
 
 using namespace ngraph;
 
-size_t
-    accuracy_count(const std::shared_ptr<runtime::Tensor>& t_softmax,
-                   const std::shared_ptr<runtime::Tensor>& t_Y)
+size_t accuracy_count(const std::shared_ptr<runtime::Tensor>& t_softmax,
+                      const std::shared_ptr<runtime::Tensor>& t_Y)
 {
     const Shape& softmax_shape = t_softmax->get_shape();
     size_t batch_size = softmax_shape.at(0);

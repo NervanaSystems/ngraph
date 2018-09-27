@@ -35,12 +35,12 @@ class ngraph::runtime::HostTensor : public ngraph::runtime::Tensor
 {
 public:
     HostTensor(const ngraph::element::Type& element_type,
-                   const Shape& shape,
-                   const std::string& name = "external");
+               const Shape& shape,
+               const std::string& name = "external");
     HostTensor(const ngraph::element::Type& element_type,
-                   const Shape& shape,
-                   void* memory_pointer,
-                   const std::string& name = "external");
+               const Shape& shape,
+               void* memory_pointer,
+               const std::string& name = "external");
     virtual ~HostTensor() override;
 
     char* get_data_ptr();

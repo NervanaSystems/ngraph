@@ -1339,10 +1339,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
     return true;
 }
 
-bool runtime::intelgpu::IntelGPUBackend::call(
-    shared_ptr<Function> func,
-    const vector<shared_ptr<runtime::Tensor>>& outputs,
-    const vector<shared_ptr<runtime::Tensor>>& inputs)
+bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
+                                              const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                              const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     validate_call(func, outputs, inputs);
 

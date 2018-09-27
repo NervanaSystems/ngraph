@@ -65,8 +65,7 @@ public:
     }
 
     ~HybridBackend() {}
-    shared_ptr<runtime::Tensor> create_tensor(const element::Type& element_type,
-                                                  const Shape& shape)
+    shared_ptr<runtime::Tensor> create_tensor(const element::Type& element_type, const Shape& shape)
     {
         return get_cached_backend(Placement::INTERPRETER)->create_tensor(element_type, shape);
     }
