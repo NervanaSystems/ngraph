@@ -17,6 +17,7 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <stdexcept>  
 
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/gpu/cublas_emitter.hpp"
@@ -29,6 +30,7 @@
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
+using namespace std;
 
 runtime::gpu::CUBLASEmitter::CUBLASEmitter(GPUPrimitiveEmitter* emitter, GPURuntimeContext* ctx)
     : m_primitive_emitter(emitter)
