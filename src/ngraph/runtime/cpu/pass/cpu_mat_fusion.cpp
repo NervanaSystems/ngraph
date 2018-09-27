@@ -58,104 +58,6 @@ static std::shared_ptr<pattern::Matcher>
     return std::make_shared<pattern::Matcher>(add_bias);
 }
 
-/*bool runtime::cpu::pass::CPURnnMatFusion_v2::run_on_function(std::shared_ptr<Function> function)
-{
-    bool modify_graph = false;
-    auto data_pred = [](std::shared_ptr<Node> n) {
-        return std::dynamic_pointer_cast<op::Parameter>(n) != nullptr;
-    };
-    auto weights_pred = [](std::shared_ptr<Node> n) {
-        return std::dynamic_pointer_cast<op::Reshape>(n) != nullptr;
-    };
-    auto data_param = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 50}, data_pred);
-    auto skip = std::make_shared<pattern::op::Skip>(data_param, pattern::has_class<op::Reshape>());
-    auto W = std::make_shared<pattern::op::Label>(element::f32, Shape{50, 400}, weights_pred);
-    auto dot = std::make_shared<op::Dot>(skip, W);
-    auto broadcast_pred = [](std::shared_ptr<Node> n) {
-        return std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr;
-    };
-    auto bias_broadcast =
-        std::make_shared<pattern::op::Label>(element::f32, Shape{10, 400}, broadcast_pred);
-    auto add_bias = std::make_shared<op::Add>(dot, bias_broadcast);
-
-    auto dot_matcher = std::make_shared<pattern::Matcher>(add_bias);
-    std::map<std::shared_ptr<Node>, NodeVector> map_weights_to_pattern;
-    std::map<std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>, NodeVector>
-        map_weights_bias_to_data;
-
-    for (auto n : function->get_ordered_ops())
-    {
-        if (dot_matcher->match(n))
-        {
-            auto matched_weight = dot_matcher->get_pattern_map()[W]->get_argument(0);
-            auto matched_data = dot_matcher->get_pattern_map()[data_param];
-            auto matched_bias = dot_matcher->get_pattern_map()[bias_broadcast]->get_argument(0);
-            map_weights_to_pattern[matched_weight].push_back(dot_matcher->get_match_root());
-            map_weights_bias_to_data[std::make_pair(matched_weight, matched_bias)].push_back(
-                matched_data);
-        }
-    }
-    // fuse the input vector to a matrix
-    for (auto& it : map_weights_bias_to_data)
-    {
-        auto weights = it.first.first;
-        auto bias = it.first.second;
-
-        if (map_weights_to_pattern[weights].size() !=
-            map_weights_bias_to_data[std::make_pair(weights, bias)].size())
-        {
-            throw ngraph_error(
-                "number of input data param's doesnt match the number of matched pattern root "
-                "nodes");
-        }
-        auto& data_param_nodes = it.second;
-        // now concat the parameter hashed to the same weights
-        auto concated_data = std::make_shared<op::Concat>(data_param_nodes, 0);
-
-        auto& data_shape = concated_data->get_shape();
-        auto data_order = ngraph::get_default_order(concated_data->get_shape());
-        auto& w_shape = weights->get_shape();
-
-        if (w_shape.size() != 2)
-        {
-            throw ngraph_error("weights shape for linear transformation of input must be 2D");
-        }
-
-        // insert rehape on the concated data to make it 2D, if its 3D
-        std::shared_ptr<Node> input_reshape_node = nullptr;
-        if (data_shape.size() == 3)
-        {
-            input_reshape_node = std::make_shared<op::Reshape>(
-                concated_data, data_order, Shape{data_shape[0] * data_shape[1], data_shape[2]});
-        }
-        auto new_input_node = data_shape.size() == 2 ? concated_data : input_reshape_node;
-        auto w_reshape_node =
-            std::make_shared<op::Reshape>(weights, AxisVector{1, 0}, Shape{w_shape[1], w_shape[0]});
-        auto new_dot = std::make_shared<op::Dot>(new_input_node, w_reshape_node);
-        auto bias_broadcast_node =
-            std::make_shared<op::Broadcast>(bias, new_dot->get_shape(), AxisSet{0});
-        auto new_add_bias = std::make_shared<op::Add>(new_dot, bias_broadcast_node);
-
-        // now slice the new_add and feed the corrsponding root nodes
-        auto batch_size = new_add_bias->get_shape()[0] / data_param_nodes.size();
-        auto shape_axis_1 = new_add_bias->get_shape()[1];
-        size_t start_index = 0;
-        size_t end_index = batch_size;
-        for (auto& matched_root_node : map_weights_to_pattern[weights])
-        {
-            auto slice_node = std::make_shared<op::Slice>(
-                new_add_bias, Coordinate{start_index, 0}, Coordinate{end_index, shape_axis_1});
-            start_index += batch_size;
-            end_index += batch_size;
-            NGRAPH_DEBUG << "Replacing op " << matched_root_node->get_name() << " with "
-                         << slice_node->get_name() << std::endl;
-            function->replace_node(matched_root_node, slice_node);
-        }
-        modify_graph = true;
-    }
-    return modify_graph;
-}*/
-
 static std::shared_ptr<Node> construct_data_pattern(std::shared_ptr<pattern::op::Label> data_slice)
 {
     auto reshape_slice =
@@ -182,7 +84,7 @@ static std::shared_ptr<Node>
     return dot_label + bias_broadcast;
 }
 
-bool runtime::cpu::pass::CPURnnMatFusion_v1::run_on_function(std::shared_ptr<Function> function)
+bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Function> function)
 {
     bool modify_graph = false;
 
@@ -296,7 +198,7 @@ bool runtime::cpu::pass::CPURnnMatFusion_v1::run_on_function(std::shared_ptr<Fun
         }
     }
 
-    auto callback_matcher_v2 = [&]() -> bool {
+    auto callback_matcher_v2 = [&]() -> void {
         // fuse the input vector to a matrix
         for (auto& it : map_weights_bias_to_data)
         {
@@ -355,10 +257,9 @@ bool runtime::cpu::pass::CPURnnMatFusion_v1::run_on_function(std::shared_ptr<Fun
             }
             modify_graph = true;
         }
-        return modify_graph;
     };
 
-    auto callback_matcher_v1 = [&]() -> bool {
+    auto callback_matcher_v1 = [&]() -> void {
 
         // Expecting input data shape D=[x, y, z], weights W=[u, v], bias B = [w]
         // where y is the time step. We are computing R=dot(D,W)=[x,y,v]. We can reshape D to D'=[x*y, z], then we have dot(D',W), result
@@ -408,17 +309,11 @@ bool runtime::cpu::pass::CPURnnMatFusion_v1::run_on_function(std::shared_ptr<Fun
             }
             modify_graph = true;
         }
-        return modify_graph;
     };
 
-    if (!map_weights_to_pattern.empty())
-    {
-        return callback_matcher_v2();
-    }
-    else
-    {
-        return callback_matcher_v1();
-    }
+    callback_matcher_v2();
+    callback_matcher_v1();
+    return modify_graph;
 }
 
 #define TI(x) std::type_index(typeid(x))

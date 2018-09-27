@@ -1082,7 +1082,7 @@ std::vector<shared_ptr<runtime::TensorView>>
     if (enable_pass)
     {
         pass::Manager pass_manager;
-        pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion_v1>();
+        pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
         pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
             runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
         pass_manager.run_passes(func);
@@ -1141,7 +1141,7 @@ TEST(cpu_fusion, rnn_matrix_fusion_eval_pass)
 TEST(cpu_fusion, rnn_fusion_from_json_model)
 {
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion_v1>();
+    pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
         runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
     const string json_path =
@@ -2857,7 +2857,7 @@ TEST(cpu_fusion, fuse_rnn_input_across_time_steps)
 {
     auto func = create_rnn_input_linear_transformation_function(10);
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion_v1>();
+    pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.run_passes(func);
     size_t ref_matmulbias_count = 1;
