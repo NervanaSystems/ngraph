@@ -126,6 +126,29 @@ void swim(descriptor::Input* input, std::shared_ptr<op::Reshape> reshape)
     }
 }
 
+static void convert_binary_to_default_order(
+    std::shared_ptr<Node> binary,
+    descriptor::Input& input,
+    std::shared_ptr<Node> right,
+    std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<op::Reshape>>& reorders)
+{
+    auto left = input.get_output().get_node();
+    auto perm_to_def =
+        ngraph::get_permutation_to_default_order(reorders.at(right)->get_input_order());
+    auto new_shape = apply_permutation(left->get_shape(), perm_to_def);
+    NGRAPH_DEBUG << "right = " << ngraph::vector_to_string(right->get_shape()) << ", "
+                 << right->get_name();
+    auto new_reshape = std::make_shared<op::Reshape>(left, perm_to_def, new_shape);
+    NGRAPH_DEBUG << "left : About to swim " << describe_reshape(new_reshape) << " up to "
+                 << left->get_name();
+    //this should now insert and swim reshape on right
+    swim(&input, new_reshape);
+    delete_reshape(reorders.at(right));
+    auto new_binary = binary->copy_with_new_args(binary->get_arguments());
+    ngraph::replace_node(binary, new_binary);
+    reorders[new_binary] = reorders.at(right);
+}
+
 bool ngraph::runtime::cpu::pass::CPUReshapeSinking::run_on_function(
     std::shared_ptr<ngraph::Function> f)
 {
@@ -180,38 +203,13 @@ bool ngraph::runtime::cpu::pass::CPUReshapeSinking::run_on_function(
             else if (reorders.at(left)->get_input_order() ==
                      ngraph::get_default_order(left->get_shape()))
             {
-                auto perm_to_def =
-                    ngraph::get_permutation_to_default_order(reorders.at(right)->get_input_order());
-                auto new_shape = apply_permutation(left->get_shape(), perm_to_def);
-                NGRAPH_DEBUG << "right = " << ngraph::vector_to_string(right->get_shape()) << ", "
-                             << right->get_name();
-                auto new_reshape = std::make_shared<op::Reshape>(left, perm_to_def, new_shape);
-                NGRAPH_DEBUG << "left : About to swim " << describe_reshape(new_reshape)
-                             << " up to " << left->get_name();
-                //this should now insert and swim reshape on right
-                swim(&binary->get_inputs().at(0), new_reshape);
-                delete_reshape(reorders.at(right));
-                auto new_binary = binary->copy_with_new_args(binary->get_arguments());
-                ngraph::replace_node(binary, new_binary);
-                reorders[new_binary] = reorders.at(right); //create_default_reshape(new_binary);
+                convert_binary_to_default_order(
+                    binary, binary->get_inputs().at(0), right, reorders);
             }
             else if (reorders.at(right)->get_input_order() ==
                      ngraph::get_default_order(right->get_shape()))
             {
-                auto perm_to_def =
-                    ngraph::get_permutation_to_default_order(reorders.at(left)->get_input_order());
-                auto new_shape = apply_permutation(right->get_shape(), perm_to_def);
-                NGRAPH_DEBUG << "left = " << ngraph::vector_to_string(left->get_shape())
-                             << left->get_name();
-                auto new_reshape = std::make_shared<op::Reshape>(right, perm_to_def, new_shape);
-                NGRAPH_DEBUG << "right : About to swim " << describe_reshape(new_reshape)
-                             << " up to " << right->get_name();
-                //this should now insert and swim reshape on right
-                swim(&binary->get_inputs().at(1), new_reshape);
-                delete_reshape(reorders.at(left));
-                auto new_binary = binary->copy_with_new_args(binary->get_arguments());
-                ngraph::replace_node(binary, new_binary);
-                reorders[new_binary] = reorders.at(left); //create_default_reshape(new_binary);
+                convert_binary_to_default_order(binary, binary->get_inputs().at(1), left, reorders);
             }
             else
             {
