@@ -418,7 +418,8 @@ private:
         case OP_TYPEID::Constant:
         {
             const op::Constant* c = static_cast<const op::Constant*>(&node);
-            reference::constant<T>(c->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+            reference::constant<T>(
+                c->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
         case OP_TYPEID::Convert:
@@ -427,58 +428,69 @@ private:
             element::Type type = node.get_element_type();
             if (type == element::boolean)
             {
-                reference::convert<T>(
-                    args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<char>(), out[0]->get_element_count());
+                reference::convert<T>(args[0]->get_data_ptr<T>(),
+                                      out[0]->get_data_ptr<char>(),
+                                      out[0]->get_element_count());
             }
             else if (type == element::f32)
             {
-                reference::convert<T>(
-                    args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<float>(), out[0]->get_element_count());
+                reference::convert<T>(args[0]->get_data_ptr<T>(),
+                                      out[0]->get_data_ptr<float>(),
+                                      out[0]->get_element_count());
             }
             else if (type == element::f64)
             {
-                reference::convert<T>(
-                    args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<double>(), out[0]->get_element_count());
+                reference::convert<T>(args[0]->get_data_ptr<T>(),
+                                      out[0]->get_data_ptr<double>(),
+                                      out[0]->get_element_count());
             }
             else if (type == element::i8)
             {
-                reference::convert<T>(
-                    args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<int8_t>(), out[0]->get_element_count());
+                reference::convert<T>(args[0]->get_data_ptr<T>(),
+                                      out[0]->get_data_ptr<int8_t>(),
+                                      out[0]->get_element_count());
             }
             else if (type == element::i16)
             {
-                reference::convert<T>(
-                    args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<int16_t>(), out[0]->get_element_count());
+                reference::convert<T>(args[0]->get_data_ptr<T>(),
+                                      out[0]->get_data_ptr<int16_t>(),
+                                      out[0]->get_element_count());
             }
             else if (type == element::i32)
             {
-                reference::convert<T>(
-                    args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<int32_t>(), out[0]->get_element_count());
+                reference::convert<T>(args[0]->get_data_ptr<T>(),
+                                      out[0]->get_data_ptr<int32_t>(),
+                                      out[0]->get_element_count());
             }
             else if (type == element::i64)
             {
-                reference::convert<T>(
-                    args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<int64_t>(), out[0]->get_element_count());
+                reference::convert<T>(args[0]->get_data_ptr<T>(),
+                                      out[0]->get_data_ptr<int64_t>(),
+                                      out[0]->get_element_count());
             }
             else if (type == element::u8)
             {
-                reference::convert<T>(
-                    args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<uint8_t>(), out[0]->get_element_count());
+                reference::convert<T>(args[0]->get_data_ptr<T>(),
+                                      out[0]->get_data_ptr<uint8_t>(),
+                                      out[0]->get_element_count());
             }
             else if (type == element::u16)
             {
-                reference::convert<T>(
-                    args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<uint16_t>(), out[0]->get_element_count());
+                reference::convert<T>(args[0]->get_data_ptr<T>(),
+                                      out[0]->get_data_ptr<uint16_t>(),
+                                      out[0]->get_element_count());
             }
             else if (type == element::u32)
             {
-                reference::convert<T>(
-                    args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<uint32_t>(), out[0]->get_element_count());
+                reference::convert<T>(args[0]->get_data_ptr<T>(),
+                                      out[0]->get_data_ptr<uint32_t>(),
+                                      out[0]->get_element_count());
             }
             else if (type == element::u64)
             {
-                reference::convert<T>(
-                    args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<uint64_t>(), out[0]->get_element_count());
+                reference::convert<T>(args[0]->get_data_ptr<T>(),
+                                      out[0]->get_data_ptr<uint64_t>(),
+                                      out[0]->get_element_count());
             }
             else
             {
