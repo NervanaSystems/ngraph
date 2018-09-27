@@ -21,53 +21,53 @@
 using namespace ngraph;
 using namespace std;
 
-const Shape& runtime::TensorView::get_shape() const
+const Shape& runtime::Tensor::get_shape() const
 {
     return m_descriptor->get_shape();
 }
 
-Strides runtime::TensorView::get_strides() const
+Strides runtime::Tensor::get_strides() const
 {
     return m_descriptor->get_tensor_layout()->get_strides();
 }
 
-const element::Type& runtime::TensorView::get_element_type() const
+const element::Type& runtime::Tensor::get_element_type() const
 {
     return m_descriptor->get_element_type();
 }
 
-shared_ptr<descriptor::layout::TensorLayout> runtime::TensorView::get_tensor_layout() const
+shared_ptr<descriptor::layout::TensorLayout> runtime::Tensor::get_tensor_layout() const
 {
     return m_descriptor->get_tensor_layout();
 }
 
-void runtime::TensorView::set_tensor_layout(
+void runtime::Tensor::set_tensor_layout(
     const shared_ptr<descriptor::layout::TensorLayout>& layout)
 {
     m_descriptor->set_tensor_layout(layout);
 }
 
-size_t runtime::TensorView::get_element_count() const
+size_t runtime::Tensor::get_element_count() const
 {
     return get_tensor_layout()->get_size();
 }
 
-size_t runtime::TensorView::get_size_in_bytes() const
+size_t runtime::Tensor::get_size_in_bytes() const
 {
     return get_tensor_layout()->get_size() * get_element_type().size();
 }
 
-const std::string& runtime::TensorView::get_name() const
+const std::string& runtime::Tensor::get_name() const
 {
     return m_descriptor->get_name();
 }
 
-bool runtime::TensorView::get_stale() const
+bool runtime::Tensor::get_stale() const
 {
     return m_stale;
 }
 
-void runtime::TensorView::set_stale(bool val)
+void runtime::Tensor::set_stale(bool val)
 {
     m_stale = val;
 }

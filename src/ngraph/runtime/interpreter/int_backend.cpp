@@ -46,13 +46,13 @@ extern "C" void delete_backend(runtime::Backend* backend)
     delete backend;
 }
 
-shared_ptr<runtime::TensorView>
+shared_ptr<runtime::Tensor>
     runtime::interpreter::INTBackend::create_tensor(const element::Type& type, const Shape& shape)
 {
     return make_shared<runtime::HostTensorView>(type, shape, "external");
 }
 
-shared_ptr<runtime::TensorView> runtime::interpreter::INTBackend::create_tensor(
+shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor(
     const element::Type& type, const Shape& shape, void* memory_pointer)
 {
     return make_shared<runtime::HostTensorView>(type, shape, memory_pointer, "external");
@@ -80,8 +80,8 @@ bool runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
 }
 
 bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
-                                            const vector<shared_ptr<runtime::TensorView>>& outputs,
-                                            const vector<shared_ptr<runtime::TensorView>>& inputs)
+                                            const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                            const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     validate_call(function, outputs, inputs);
 
@@ -107,7 +107,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     }
 
     // map function params -> HostTensorView
-    unordered_map<descriptor::TensorView*, shared_ptr<runtime::HostTensorView>> tensor_map;
+    unordered_map<descriptor::Tensor*, shared_ptr<runtime::HostTensorView>> tensor_map;
     size_t input_count = 0;
     for (auto param : function->get_parameters())
     {
@@ -126,7 +126,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         {
             throw ngraph_error("One of function's outputs isn't op::Result");
         }
-        descriptor::TensorView* tv = output->get_output_tensor_ptr(0).get();
+        descriptor::Tensor* tv = output->get_output_tensor_ptr(0).get();
         tensor_map.insert({tv, func_outputs[output_count]});
     }
 
@@ -143,7 +143,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         vector<shared_ptr<runtime::HostTensorView>> op_inputs;
         for (const descriptor::Input& input : op->get_inputs())
         {
-            descriptor::TensorView* tv = input.get_output().get_tensor_ptr().get();
+            descriptor::Tensor* tv = input.get_output().get_tensor_ptr().get();
             op_inputs.push_back(tensor_map.at(tv));
         }
 
@@ -151,7 +151,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         vector<shared_ptr<runtime::HostTensorView>> op_outputs;
         for (size_t i = 0; i < op->get_output_size(); ++i)
         {
-            descriptor::TensorView* tv = op->get_output_tensor_ptr(i).get();
+            descriptor::Tensor* tv = op->get_output_tensor_ptr(i).get();
             shared_ptr<runtime::HostTensorView> htv;
             auto it = tensor_map.find(tv);
             if (it == tensor_map.end())

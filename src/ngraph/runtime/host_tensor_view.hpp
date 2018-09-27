@@ -31,7 +31,7 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::HostTensorView : public ngraph::runtime::TensorView
+class ngraph::runtime::HostTensorView : public ngraph::runtime::Tensor
 {
 public:
     HostTensorView(const ngraph::element::Type& element_type,

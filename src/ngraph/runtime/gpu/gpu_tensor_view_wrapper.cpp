@@ -22,7 +22,7 @@ using namespace std;
 using namespace ngraph;
 
 runtime::gpu::GPU_TensorViewWrapper::GPU_TensorViewWrapper(
-    const shared_ptr<descriptor::TensorView>& tv, const string& alias)
+    const shared_ptr<descriptor::Tensor>& tv, const string& alias)
     : m_tensor(tv)
     , m_alias(alias)
 {

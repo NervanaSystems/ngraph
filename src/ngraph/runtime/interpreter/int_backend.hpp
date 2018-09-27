@@ -142,17 +142,17 @@ namespace ngraph
 class ngraph::runtime::interpreter::INTBackend : public Backend
 {
 public:
-    std::shared_ptr<TensorView>
+    std::shared_ptr<Tensor>
         create_tensor(const element::Type& type, const Shape& shape, void* memory_pointer) override;
 
-    std::shared_ptr<TensorView> create_tensor(const element::Type& type,
+    std::shared_ptr<Tensor> create_tensor(const element::Type& type,
                                               const Shape& shape) override;
 
     bool compile(std::shared_ptr<Function> function) override;
 
     bool call(std::shared_ptr<Function> function,
-              const std::vector<std::shared_ptr<TensorView>>& outputs,
-              const std::vector<std::shared_ptr<TensorView>>& intputs) override;
+              const std::vector<std::shared_ptr<Tensor>>& outputs,
+              const std::vector<std::shared_ptr<Tensor>>& intputs) override;
 
     void set_nan_check(std::shared_ptr<Function> func, bool);
 
@@ -629,16 +629,16 @@ private:
         {
             std::shared_ptr<Function> function = node.get_functions()[0];
 
-            std::vector<std::shared_ptr<runtime::TensorView>> outputs;
+            std::vector<std::shared_ptr<runtime::Tensor>> outputs;
             for (auto tv : out)
             {
-                outputs.push_back(std::static_pointer_cast<runtime::TensorView>(tv));
+                outputs.push_back(std::static_pointer_cast<runtime::Tensor>(tv));
             }
 
-            std::vector<std::shared_ptr<runtime::TensorView>> inputs;
+            std::vector<std::shared_ptr<runtime::Tensor>> inputs;
             for (auto tv : args)
             {
-                inputs.push_back(std::static_pointer_cast<runtime::TensorView>(tv));
+                inputs.push_back(std::static_pointer_cast<runtime::Tensor>(tv));
             }
 
             call(function, outputs, inputs);

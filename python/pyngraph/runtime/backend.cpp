@@ -31,7 +31,7 @@ void regclass_pyngraph_runtime_Backend(py::module m)
     backend.def_static("create", &ngraph::runtime::Backend::create);
     backend.def_static("get_registered_devices", &ngraph::runtime::Backend::get_registered_devices);
     backend.def("create_tensor",
-                (std::shared_ptr<ngraph::runtime::TensorView>(ngraph::runtime::Backend::*)(
+                (std::shared_ptr<ngraph::runtime::Tensor>(ngraph::runtime::Backend::*)(
                     const ngraph::element::Type&, const ngraph::Shape&)) &
                     ngraph::runtime::Backend::create_tensor);
     backend.def("compile",
@@ -40,8 +40,8 @@ void regclass_pyngraph_runtime_Backend(py::module m)
     backend.def("call",
                 (void (ngraph::runtime::Backend::*)(
                     std::shared_ptr<ngraph::Function>,
-                    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>&,
-                    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>&)) &
+                    const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>&,
+                    const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>&)) &
                     ngraph::runtime::Backend::call);
     backend.def("remove_compiled_function",
                 (void (ngraph::runtime::Backend::*)(std::shared_ptr<ngraph::Function>)) &

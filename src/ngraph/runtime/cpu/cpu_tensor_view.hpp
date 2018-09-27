@@ -30,7 +30,7 @@ namespace ngraph
     {
         namespace cpu
         {
-            class CPUTensorView : public ngraph::runtime::TensorView
+            class CPUTensorView : public ngraph::runtime::Tensor
             {
             public:
                 CPUTensorView(const ngraph::element::Type& element_type,
