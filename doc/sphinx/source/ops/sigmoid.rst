@@ -8,6 +8,15 @@ Sigmoid
 
    Sigmoid  // Elementwise sigmoid operation
 
+
+Description
+===========
+
+Produces a single output tensor of the same element type and shape as
+``arg,`` where the value at each coordinate of ``output`` is the
+sigmoid of ``arg`` at the same coordinate.
+
+
 Inputs
 ------
 
@@ -31,11 +40,9 @@ Mathematical Definition
 
 .. math::
 
-   \mathtt{output}_{i_0, \ldots, i_{n-1}} =
-   \begin{cases}
-   0&\text{if }\mathtt{arg}_{i_0, \ldots, i_{n-1}} \le 0 \\
-   \mathtt{arg}_{i_0, \ldots, i_{n-1}}&\text{otherwise}
-   \end{cases}
+   \mathtt{output}_{i_0, \ldots, i_{n-1}} = \sigma(\mathtt{arg}_{i_0,
+   \ldots, i_{n-1}})
+
 
 C++ Interface
 =============
