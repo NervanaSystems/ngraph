@@ -1258,7 +1258,7 @@ void runtime::intelgpu::do_one_hot_operation(cldnn::topology& topology,
             size_t current_input = 0;
             string buffer;
             const size_t output_shape_size = output_shape.size();
-            for (uint j = 0; j < output_shape_size; j++)
+            for (uint j = 0; j < output_shape_size; ++j)
             {
                 if (j == one_hot_axis)
                 {
@@ -1462,7 +1462,7 @@ void runtime::intelgpu::do_arg_max_min_operation(cldnn::topology& topology,
     size_t current_input = 0;
     string dims_buffer;
     const size_t input_shape_size = input_shape.size();
-    for (uint j = 0; j < input_shape_size; j++)
+    for (uint j = 0; j < input_shape_size; ++j)
     {
         if (j == reduction_axis)
         {
