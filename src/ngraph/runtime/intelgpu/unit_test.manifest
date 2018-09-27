@@ -3,6 +3,7 @@ argmin_trivial
 avg_pool_2d_2channel_2image_padded_only_above
 avg_pool_3d
 backwards_batch_norm_three_outputs
+backwards_exp
 backwards_dot_scalar_tensor
 backwards_dot_tensor3_tensor3
 backwards_dot_tensor_scalar
@@ -23,6 +24,10 @@ lrn
 max_pool_3d
 numeric_double_inf
 numeric_double_nan
+quantize
+quantize_axes
+quantize_int8
+quantize_clamp
 reduce_3d_to_vector
 reduce_matrix_cols_zero
 reduce_matrix_columns
