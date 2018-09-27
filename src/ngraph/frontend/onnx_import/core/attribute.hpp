@@ -16,7 +16,11 @@
 
 #pragma once
 
+#ifdef ONNX_ML
+#include <onnx-ml.pb.h>
+#else
 #include <onnx.pb.h>
+#endif
 #include "ngraph/except.hpp"
 #include "tensor.hpp"
 

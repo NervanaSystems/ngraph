@@ -15,7 +15,11 @@
 //*****************************************************************************
 
 #include <memory>
+#ifdef ONNX_ML
+#include <onnx-ml.pb.h>
+#else
 #include <onnx.pb.h>
+#endif
 
 #include "ngraph/op/convert.hpp"
 #include "ngraph/type/element_type.hpp"
