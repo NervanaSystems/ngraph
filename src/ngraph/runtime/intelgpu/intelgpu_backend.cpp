@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+
 #include <CPP/activation.hpp>
 #include <CPP/activation_grad.hpp>
 #include <CPP/arg_max_min.hpp>
@@ -1239,6 +1240,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         case OP_TYPEID::ArgMax:
         {
             arguments_check(op, 1, 1);
+
             const shared_ptr<op::ArgMax> arg_max_op = static_pointer_cast<op::ArgMax>(op);
             const size_t reduction_axis = arg_max_op->get_reduction_axis();
             const element::Type& index_elem_type = arg_max_op->get_element_type();
@@ -1268,6 +1270,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         case OP_TYPEID::ArgMin:
         {
             arguments_check(op, 1, 1);
+
             const shared_ptr<op::ArgMin> arg_min_op = static_pointer_cast<op::ArgMin>(op);
             const size_t reduction_axis = arg_min_op->get_reduction_axis();
             const element::Type& index_elem_type = arg_min_op->get_element_type();
@@ -1297,6 +1300,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         case OP_TYPEID::LRN:
         {
             arguments_check(op, 1, 1);
+
             const shared_ptr<op::LRN> lrn_op = static_pointer_cast<op::LRN>(op);
 
             const cldnn::lrn lrn(get_output_name(op),
