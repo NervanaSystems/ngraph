@@ -43,10 +43,11 @@ namespace ngraph
                 {
                     Coordinate scale_offset_coord = project(input_coord, axes);
 
-                    output[input_transform.index(input_coord)] = static_cast<REAL>(
-                        (input[input_transform.index(input_coord)] -
-                         offset[scale_offset_transform.index(scale_offset_coord)]) *
-                        scale[scale_offset_transform.index(scale_offset_coord)]);
+                    output[input_transform.index(input_coord)] =
+                        static_cast<REAL>(
+                            (input[input_transform.index(input_coord)] -
+                             offset[scale_offset_transform.index(scale_offset_coord)])) *
+                        scale[scale_offset_transform.index(scale_offset_coord)];
                 }
             }
         }
