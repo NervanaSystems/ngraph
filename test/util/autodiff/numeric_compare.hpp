@@ -61,7 +61,7 @@ bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Backend>& b
     auto results_sym =
         ngraph::autodiff::backprop_derivative<T>(backend, g, args, g->get_parameters());
 
-    // Cast to HostTensorView for comparision
+    // Cast to HostTensor for comparision
     std::vector<std::shared_ptr<ngraph::runtime::Tensor>> interpreter_results_sym;
     for (auto result : results_sym)
     {
@@ -146,7 +146,7 @@ bool autodiff_numeric_compare_selective(
 
     auto results_sym = ngraph::autodiff::backprop_derivative<T>(backend, g, args, g_indep_params);
 
-    // Cast to HostTensorView for comparision
+    // Cast to HostTensor for comparision
     std::vector<std::shared_ptr<ngraph::runtime::Tensor>> interpreter_results_sym;
     for (auto result : results_sym)
     {

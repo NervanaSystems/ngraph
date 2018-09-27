@@ -27,7 +27,7 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/assign_placement.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/runtime/host_tensor_view.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/util.hpp"
 #include "util/ndarray.hpp"
 #include "util/test_tools.hpp"

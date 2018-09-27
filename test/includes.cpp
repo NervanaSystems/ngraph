@@ -184,7 +184,7 @@ TEST(DISABLED_include, complete)
                                     // "ngraph/runtime/gpu/gpu_tensor_view.hpp",
                                     // "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp",
                                     // "ngraph/runtime/gpu/gpu_util.hpp",
-                                    "ngraph/runtime/host_tensor_view.hpp",
+                                    "ngraph/runtime/host_tensor.hpp",
                                     "ngraph/runtime/interpreter/int_backend.hpp",
                                     "ngraph/runtime/interpreter/int_call_frame.hpp",
                                     "ngraph/runtime/interpreter/int_external_function.hpp",
