@@ -89,7 +89,32 @@ namespace ngraph
                     quant_util.push_back(scale);
                 }
 
-                float get_scale(const ngraph::Node* node);
+                template <typename OP>
+                float get_scale(const ngraph::Node* node)
+                {
+                    auto qconvolution = static_cast<const OP*>(node);
+                    float min_out_value;
+                    float max_out_value;
+                    quantization_range_for_multiplication<uint8_t, int8_t, int32_t>(
+                        qconvolution->get_input_min(),
+                        qconvolution->get_input_max(),
+                        qconvolution->get_filter_min(),
+                        qconvolution->get_filter_max(),
+                        &min_out_value,
+                        &max_out_value);
+                    const float max_abs32 =
+                        std::max(std::abs(min_out_value), std::abs(max_out_value));
+                    const float max_abs8 =
+                        std::max(std::abs(qconvolution->get_freezed_output_min()),
+                                 std::abs(qconvolution->get_freezed_output_max()));
+                    // Output is signed int.
+                    // s32 = f32 * std::pow(2, 31)/ max_abs32;
+                    // s8 = f32 * std::pow(2, 7)/ max_abs8;
+                    // s8 = s32 * std::pow(2, -24) * max_abs32 / max_abs8;
+                    const float scale = static_cast<float>(
+                        (std::pow(2, -24) * static_cast<double>(max_abs32 / max_abs8)));
+                    return scale;
+                }
             }
         }
     }

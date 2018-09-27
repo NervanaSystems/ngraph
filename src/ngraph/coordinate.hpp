@@ -73,21 +73,37 @@ namespace ngraph
         }
     };
 
-    // Removes some values from a vector of axis values
     template <typename AXIS_VALUES>
-    AXIS_VALUES project(const AXIS_VALUES& axis_values, const AxisSet& deleted_axes)
+    AXIS_VALUES project(const AXIS_VALUES& axis_values, const AxisSet& axes)
     {
         AXIS_VALUES result;
 
         for (size_t i = 0; i < axis_values.size(); i++)
         {
-            if (deleted_axes.find(i) == deleted_axes.end())
+            if (axes.find(i) != axes.end())
             {
                 result.push_back(axis_values[i]);
             }
         }
 
         return result;
+    }
+
+    // Removes some values from a vector of axis values
+    template <typename AXIS_VALUES>
+    AXIS_VALUES reduce(const AXIS_VALUES& axis_values, const AxisSet& deleted_axes)
+    {
+        AxisSet axes;
+
+        for (size_t i = 0; i < axis_values.size(); i++)
+        {
+            if (deleted_axes.find(i) == deleted_axes.end())
+            {
+                axes.insert(i);
+            }
+        }
+
+        return project(axis_values, axes);
     }
 
     // TODO: check validity, i.e. that the new axis indices are all < axis_values.size()+num_new_axes.
