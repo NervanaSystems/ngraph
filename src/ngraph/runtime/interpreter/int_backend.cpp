@@ -210,7 +210,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         {
             for (auto it = tensor_map.begin(); it != tensor_map.end(); ++it)
             {
-                if (it->second->get_tensor().get_name() == t->get_name())
+                if (it->second->get_name() == t->get_name())
                 {
                     tensor_map.erase(it);
                     break;
