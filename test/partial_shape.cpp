@@ -69,6 +69,27 @@ TEST(partial_shape, dim_construction_undetermined)
     ASSERT_FALSE(dim.is_determined());
 }
 
+TEST(partial_shape, dim_construction_size_t_max)
+{
+    EXPECT_ANY_THROW({ Dimension d{std::numeric_limits<size_t>::max()}; });
+}
+
+TEST(partial_shape, dim_conversion_determined)
+{
+    Dimension d{42};
+    size_t s{d};
+    ASSERT_EQ(s, 42);
+}
+
+TEST(partial_shape, dim_conversion_undetermined)
+{
+    EXPECT_ANY_THROW({
+        size_t s{Dimension::undetermined()};
+
+        s = 0; // Silence compiler warning about unused s
+    });
+}
+
 TEST(partial_shape, rank_construction_determined)
 {
     Rank r{4};

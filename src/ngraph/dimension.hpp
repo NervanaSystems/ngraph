@@ -31,28 +31,40 @@ namespace ngraph
     {
     public:
         /// \brief Constructs a known dimension.
+        ///
+        ///        Requires that size_t != std::numeric_limits<size_t>::max(). If that condition
+        ///        does not hold, throws std::invalid_argument.
         Dimension(size_t dimension)
             : m_dimension(dimension)
         {
+            if (dimension == s_undetermined_val)
+            {
+                throw std::invalid_argument(
+                    "Cannot convert std::numeric_limits<size_t>::max() to Dimension");
+            }
         }
 
         /// \brief Constructs an unknown dimension.
-        Dimension()
-            : m_dimension(s_undetermined_val)
-        {
-        }
-
+        Dimension() { m_dimension = s_undetermined_val; }
         /// \brief Returns true if this dimension is determined.
         bool is_determined() const { return m_dimension != s_undetermined_val; }
-        /// \brief Converts this dimension to size_t. If the dimension is undetermined, return
-        ///        value is implementation-dependent.
-        explicit operator size_t() const { return m_dimension; }
+        /// \brief Converts this dimension to size_t. If the dimension is undetermined, throws
+        ///        std::invalid_argument.
+        explicit operator size_t() const
+        {
+            if (!is_determined())
+            {
+                throw std::invalid_argument("Cannot convert unknown dimension to size_t");
+            }
+            return m_dimension;
+        }
+
         /// \brief Tests whether "this" is possibly equal to s.
         bool possibly_eq(const Dimension& d) const { return !(*this != d); }
         /// \brief Tests whether "this" is possibly not equal to s.
         bool possibly_neq(const Dimension& d) const { return !(*this == d); }
         /// \brief Constructs an unknown dimension.
-        static Dimension undetermined() { return s_undetermined_val; }
+        static Dimension undetermined() { return Dimension(); }
         friend bool operator==(const Dimension& d1, const Dimension& d2);
         friend bool operator!=(const Dimension& d1, const Dimension& d2);
 
