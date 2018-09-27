@@ -2870,7 +2870,7 @@ TEST(cpu_fusion, rnn_input_fusion_inter_vs_cpu)
     shared_ptr<Function> cpu_func = create_rnn_input_linear_transformation_function(10);
     shared_ptr<Function> int_func = create_rnn_input_linear_transformation_function(10);
 
-    test::Uniform<float> rng(0.0f, 1.0f);
+    test::Uniform<float> rng(-10.0f, 10.0f);
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : int_func->get_parameters())
     {
