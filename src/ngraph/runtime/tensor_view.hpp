@@ -59,11 +59,11 @@ namespace ngraph
             const element::Type& get_element_type() const;
 
             /// \brief Get number of elements in the tensor
-            /// \return size
+            /// \return number of elements in the tensor
             size_t get_element_count() const;
 
             /// \brief Get the size in bytes of the tensor
-            /// \return size
+            /// \return number of bytes in tensor's allocation
             size_t get_size_in_bytes() const;
 
             /// \brief Get tensor's unique name
