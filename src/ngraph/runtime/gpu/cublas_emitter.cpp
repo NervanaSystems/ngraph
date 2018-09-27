@@ -40,7 +40,7 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
                                               const Shape& arg0_shape,
                                               const Shape& arg1_shape,
                                               const Shape& out_shape,
-                                              size_t reductionAxesCount)
+                                              size_t reduction_axes)
 {
     std::stringstream ss;
     ss << "dot_op"
@@ -95,20 +95,101 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
         // m_primitive_emitter->cache(hash, primitive_index);
         return getPrimitiveIndex(dot, hash);
     }
-
-    if ()
+    // case that can be treat as dot1d
+    if ((arg0_shape.size() == arg1_shape.size()) && (arg0_shape.size() == reduction_axes))
     {
+        for (int i = 0; i < arg0_shape.size(); i++)
+        {
+            if (arg0_shape[i] != arg1_shape[i])
+            {
+                throw invalid_argument("arg0 and arg1 shape does not match for dot.");
+            }
+        }
 
-    
+        dot.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
+            CUBLAS_SAFE_CALL(cublasSdot(*m_ctx->cublas_handle,
+                                        shape_size(arg0_shape),
+                                        static_cast<const float*>(inputs[0]),
+                                        1,
+                                        static_cast<const float*>(inputs[1]),
+                                        1,
+                                        static_cast<float*>(outputs[0])));
+
+            debug_sync();
+        }});
+
+        return getPrimitiveIndex(dot, hash);
     }
-     else if
-     {
 
-     }
-
-    else
+    // matrix vector
+    if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1) && (reduction_axes == 1))
     {
+        dot.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
+            const float alpha = 1.0;
+            const float beta = 0;
 
+            CUBLAS_SAFE_CALL(cublasSetPointerMode(*m_ctx->cublas_handle, CUBLAS_POINTER_MODE_HOST));
+            CUBLAS_SAFE_CALL(cublasSgemv(*m_ctx->cublas_handle,
+                                         CUBLAS_OP_T,
+                                         arg0_shape[1],
+                                         arg0_shape[0],
+                                         &alpha,
+                                         static_cast<const float*>(inputs[0]),
+                                         arg0_shape[1],
+                                         static_cast<const float*>(inputs[1]),
+                                         1,
+                                         &beta,
+                                         static_cast<float*>(outputs[0]),
+                                         1));
+            CUBLAS_SAFE_CALL(
+                cublasSetPointerMode(*m_ctx->cublas_handle, CUBLAS_POINTER_MODE_DEVICE));
+
+            debug_sync();
+        }});
+
+        return getPrimitiveIndex(dot, hash);
+    }
+
+    size_t num_of_axes_for_m = arg0_shape.size() - reduction_axes;
+    size_t num_of_axes_for_n = arg1_shape.size() - reduction_axes;
+    size_t num_of_axes_for_k = reduction_axes;
+    size_t m = 1;
+    size_t n = 1;
+    size_t k = 1;
+
+    // check if input and output size correct
+    // check and calculate k for arg0 and arg1
+    size_t arg0_k_idx = num_of_axes_for_m; // first axe in arg0 for k
+    size_t arg1_k_idx = 0;                 // first axe in arg1 for k
+    for (size_t i = 0; i < num_of_axes_for_k; i++)
+    {
+        k *= arg0_shape[arg0_k_idx];
+        if (arg0_shape[arg0_k_idx++] != arg1_shape[arg1_k_idx++])
+        {
+            throw invalid_argument("arg0 and arg1 shape does not match for dot.");
+        }
+    }
+    // check and calculate m for arg0 and out
+    size_t arg0_m_idx = 0; // first axe in arg0 for m
+    size_t out_m_idx = 0;  // first axe in out for m
+    for (size_t i = 0; i < num_of_axes_for_m; i++)
+    {
+        m *= arg0_shape[arg0_m_idx];
+        if (arg0_shape[arg0_m_idx++] != out_shape[out_m_idx++])
+        {
+            throw invalid_argument("arg0 and output shape does not match for dot.");
+        }
+    }
+    // check and calculate n for arg1 and out
+    size_t arg1_n_idx = num_of_axes_for_k; // first axe in arg1 for n
+    size_t out_n_idx = num_of_axes_for_m;  // first axe in arg1 for n
+    for (size_t i = 0; i < num_of_axes_for_n; i++)
+    {
+        n *= arg1_shape[arg1_n_idx];
+        if (arg1_shape[arg1_n_idx++] != out_shape[out_n_idx++])
+        {
+            throw invalid_argument("arg1 and output shape does not match for dot.");
+        }
     }
 }
 

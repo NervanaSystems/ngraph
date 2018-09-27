@@ -50,7 +50,7 @@ namespace ngraph
                                  const Shape& input_tensor_shape_0,
                                  const Shape& input_tensor_shape_1,
                                  const Shape& output_tensor_shape,
-                                 size_t reductionAxesCount);
+                                 size_t reduction_axes);
 
                 void debug_sync();
                 void sync();
