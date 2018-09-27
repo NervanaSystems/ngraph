@@ -17,7 +17,7 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
-#include <stdexcept>  
+#include <stdexcept>
 
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/gpu/cublas_emitter.hpp"
@@ -80,8 +80,6 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
             debug_sync();
         }});
 
-        // primitive_index = this->m_primitive_emitter->insert(std::move(dot));
-        // m_primitive_emitter->cache(hash, primitive_index);
         return getPrimitiveIndex(dot, hash);
     }
 
@@ -93,8 +91,6 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
             debug_sync();
         }});
 
-        // primitive_index = this->m_primitive_emitter->insert(std::move(dot));
-        // m_primitive_emitter->cache(hash, primitive_index);
         return getPrimitiveIndex(dot, hash);
     }
     // case that can be treat as dot1d
@@ -202,12 +198,17 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
         CUBLAS_SAFE_CALL(cublasSgemm(*m_ctx->cublas_handle,
                                      CUBLAS_OP_N,
                                      CUBLAS_OP_N,
-                                     n, m, k,
+                                     n,
+                                     m,
+                                     k,
                                      &alpha,
-                                     static_cast<const float*>(inputs[1]), n,
-                                     static_cast<const float*>(inputs[0]), k,
+                                     static_cast<const float*>(inputs[1]),
+                                     n,
+                                     static_cast<const float*>(inputs[0]),
+                                     k,
                                      &beta,
-                                     static_cast<float*>(outputs[0]), n));
+                                     static_cast<float*>(outputs[0]),
+                                     n));
         CUBLAS_SAFE_CALL(cublasSetPointerMode(*m_ctx->cublas_handle, CUBLAS_POINTER_MODE_DEVICE));
 
         debug_sync();
