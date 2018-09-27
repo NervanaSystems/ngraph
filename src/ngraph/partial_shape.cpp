@@ -86,14 +86,12 @@ bool PartialShape::compatible(const PartialShape& s) const
     {
         return false;
     }
-    // If we know both the ranks and they are equal, we check each component elementwise. We are
-    // compatible iff the shapes are elementwise compatible.
+    // If we know both the ranks and they are equal, then *this and s are compatible iff they
+    // are elementwise compatible everywhere.
     else
     {
-        for (size_t i = 0; i < size_t(s.rank()); i++)
+        for (size_t i = 0; i < size_t(rank()); i++)
         {
-            // If we don't know that these two corresponding elements are equal, we don't know
-            // that s1 and s2 are equal.
             if (!m_dimensions[i].compatible(s.m_dimensions[i]))
             {
                 return false;
