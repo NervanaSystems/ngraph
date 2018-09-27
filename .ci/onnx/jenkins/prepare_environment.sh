@@ -42,11 +42,12 @@ function build_ngraph() {
                 rm -rf "${ngraph_directory}/ngraph_dist"
             ;;
             UPDATE)
-                git pull
+                git checkout master
+                git pull origin master
             ;;
             USE_CACHED)
                 check_cached_ngraph
-                if [[ -n $(ls /home/ngraph/build 2> /dev/null) ]]; then 
+                if [[ -n $(ls /home/ngraph/build 2> /dev/null) ]]; then
                     cp -Rf "${NGRAPH_CACHE_DIR}/ngraph/build" "${ngraph_directory}/ngraph/" || return 1
                 else 
                     return 1
