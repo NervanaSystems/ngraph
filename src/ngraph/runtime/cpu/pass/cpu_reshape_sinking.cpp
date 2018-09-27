@@ -1,0 +1,262 @@
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
+
+#include "cpu_reshape_sinking.hpp"
+#include <algorithm>
+#include <iostream>
+#include <numeric>
+#include <unordered_set>
+#include "cpu_collapse_dims.hpp"
+#include "ngraph/descriptor/input.hpp"
+#include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/convolution.hpp"
+#include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/reshape.hpp"
+#include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
+#include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/util.hpp"
+
+using namespace ngraph;
+
+extern template ngraph::AxisVector
+    ngraph::apply_permutation<ngraph::AxisVector>(ngraph::AxisVector input,
+                                                  ngraph::AxisVector order);
+
+extern template ngraph::Shape ngraph::apply_permutation<ngraph::Shape>(ngraph::Shape input,
+                                                                       ngraph::AxisVector order);
+
+static std::shared_ptr<op::Reshape> combine_reshapes(std::shared_ptr<op::Reshape> r1,
+                                                     std::shared_ptr<op::Reshape> r2)
+{
+    auto default_order = ngraph::get_default_order(r1->get_shape());
+    auto perm_r1 = apply_permutation(default_order, r1->get_input_order());
+    auto perm_r2 = apply_permutation(perm_r1, r2->get_input_order());
+    auto rreshape = std::make_shared<op::Reshape>(r2->get_argument(0), perm_r2, r2->get_shape());
+    return rreshape;
+}
+
+static void
+    insert_reshape(std::shared_ptr<Node> target, std::shared_ptr<Node> reshape, size_t input_index)
+{
+    auto arg = target->get_inputs().at(input_index).get_output().get_node();
+    auto new_reshape = reshape->copy_with_new_args({arg});
+    target->get_inputs().at(input_index).replace_output(new_reshape->get_outputs().at(0));
+}
+
+std::string describe_reshape(std::shared_ptr<Node> node)
+{
+    std::stringstream ss;
+    auto reshape = std::dynamic_pointer_cast<op::Reshape>(node);
+    ss << reshape->get_name()
+       << " ( axis order = " << ngraph::vector_to_string(reshape->get_input_order())
+       << " , shape = " << vector_to_string(reshape->get_shape()) << " ) "
+       << " , child = " << reshape->get_argument(0)->get_name();
+
+    return ss.str();
+}
+
+static void delete_reshape(std::shared_ptr<Node> reshape)
+{
+    NGRAPH_DEBUG << "Removing reshape " << reshape->get_name();
+    if (!reshape->get_users().empty())
+    {
+        ngraph::replace_node(reshape, reshape->get_argument(0));
+    }
+}
+
+static std::shared_ptr<op::Reshape> create_default_reshape(std::shared_ptr<Node> n)
+{
+    auto default_order = ngraph::get_default_order(n->get_shape());
+    auto default_reshape = std::make_shared<op::Reshape>(n, default_order, n->get_shape());
+    return default_reshape;
+}
+
+struct Swimmer
+{
+    descriptor::Input* input;
+    std::shared_ptr<op::Reshape> reshape;
+};
+
+void swim(descriptor::Input* input, std::shared_ptr<op::Reshape> reshape)
+{
+    Swimmer sw{input, reshape};
+    std::list<Swimmer> work_queue;
+    work_queue.push_back(sw);
+
+    //TODO: if we support more ops (especially, with >1 args)
+    //we will need to keep track of nodes we visited and their reshapes
+
+    while (work_queue.size() > 0)
+    {
+        auto csw = work_queue.front();
+        work_queue.pop_front();
+        auto n = csw.input->get_output().get_node();
+        NGRAPH_DEBUG << "Processing (swimming) " << n->get_name();
+        if (auto unary = std::dynamic_pointer_cast<op::util::UnaryElementwiseArithmetic>(n))
+        {
+            Swimmer nsw{&unary->get_inputs().at(0), csw.reshape};
+            work_queue.push_back(nsw);
+            NGRAPH_DEBUG << "Propagating reshape " << describe_reshape(csw.reshape) << " for "
+                         << n->get_name() << " to " << unary->get_argument(0);
+        }
+        //TODO: Add cases to push through Reshape and BinaryElementwiseArithmetic
+        else
+        {
+            //materialize
+            auto new_reshape = csw.reshape->copy_with_new_args({n});
+            NGRAPH_DEBUG << "Materializing new reshape " << describe_reshape(new_reshape);
+            csw.input->replace_output(new_reshape->get_outputs().at(0));
+        }
+    }
+}
+
+bool ngraph::runtime::cpu::pass::CPUReshapeSinking::run_on_function(
+    std::shared_ptr<ngraph::Function> f)
+{
+    std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<op::Reshape>> reorders;
+    for (auto n : f->get_ordered_ops())
+    {
+        NGRAPH_DEBUG << "Processing node " << n->get_name();
+        if (auto reshape = std::dynamic_pointer_cast<op::Reshape>(n))
+        {
+            auto orig_reshape = reorders.at(n->get_argument(0));
+            if (!reshape->get_is_transpose())
+            {
+                NGRAPH_DEBUG << "Materializing " << describe_reshape(orig_reshape)
+                             << " for reshape " << reshape->get_name();
+                insert_reshape(reshape, orig_reshape, 0);
+                delete_reshape(orig_reshape);
+                reorders[reshape] = create_default_reshape(reshape);
+            }
+            else
+            {
+                //combine both reshapes
+                auto new_reshape = combine_reshapes(orig_reshape, reshape);
+                //remove original reshape now it's combined with a new one
+                //should be safe to remove an already detached node
+                delete_reshape(orig_reshape);
+                //replace reshape with combined one
+                ngraph::replace_node(reshape, new_reshape);
+                reorders[new_reshape] = new_reshape;
+                NGRAPH_DEBUG << "Combining " << describe_reshape(orig_reshape) << " and"
+                             << describe_reshape(reshape) << " into  "
+                             << describe_reshape(new_reshape);
+            }
+        }
+        else if (auto unary = std::dynamic_pointer_cast<op::util::UnaryElementwiseArithmetic>(n))
+        {
+            auto arg_reshape = reorders.at(n->get_argument(0));
+            NGRAPH_DEBUG << "Propagating " << describe_reshape(arg_reshape) << " for "
+                         << n->get_name();
+            reorders[n] = reorders[n->get_argument(0)];
+        }
+        else if (auto binary = std::dynamic_pointer_cast<op::util::BinaryElementwiseArithmetic>(n))
+        {
+            auto left = n->get_argument(0);
+            auto right = n->get_argument(1);
+
+            if (reorders.at(left)->get_input_order() == reorders.at(right)->get_input_order())
+            {
+                NGRAPH_DEBUG << "Propagating " << describe_reshape(reorders.at(left)) << " for "
+                             << n->get_name();
+                reorders[n] = reorders.at(left);
+            }
+            else if (reorders.at(left)->get_input_order() ==
+                     ngraph::get_default_order(left->get_shape()))
+            {
+                auto perm_to_def =
+                    ngraph::get_permutation_to_default_order(reorders.at(right)->get_input_order());
+                auto new_shape = apply_permutation(left->get_shape(), perm_to_def);
+                NGRAPH_DEBUG << "right = " << ngraph::vector_to_string(right->get_shape()) << ", "
+                             << right->get_name();
+                auto new_reshape = std::make_shared<op::Reshape>(left, perm_to_def, new_shape);
+                NGRAPH_DEBUG << "left : About to swim " << describe_reshape(new_reshape)
+                             << " up to " << left->get_name();
+                //this should now insert and swim reshape on right
+                swim(&binary->get_inputs().at(0), new_reshape);
+                delete_reshape(reorders.at(right));
+                auto new_binary = binary->copy_with_new_args(binary->get_arguments());
+                ngraph::replace_node(binary, new_binary);
+                reorders[new_binary] = reorders.at(right); //create_default_reshape(new_binary);
+            }
+            else if (reorders.at(right)->get_input_order() ==
+                     ngraph::get_default_order(right->get_shape()))
+            {
+                auto perm_to_def =
+                    ngraph::get_permutation_to_default_order(reorders.at(left)->get_input_order());
+                auto new_shape = apply_permutation(right->get_shape(), perm_to_def);
+                NGRAPH_DEBUG << "left = " << ngraph::vector_to_string(left->get_shape())
+                             << left->get_name();
+                auto new_reshape = std::make_shared<op::Reshape>(right, perm_to_def, new_shape);
+                NGRAPH_DEBUG << "right : About to swim " << describe_reshape(new_reshape)
+                             << " up to " << right->get_name();
+                //this should now insert and swim reshape on right
+                swim(&binary->get_inputs().at(1), new_reshape);
+                delete_reshape(reorders.at(left));
+                auto new_binary = binary->copy_with_new_args(binary->get_arguments());
+                ngraph::replace_node(binary, new_binary);
+                reorders[new_binary] = reorders.at(left); //create_default_reshape(new_binary);
+            }
+            else
+            {
+                NGRAPH_DEBUG << "Materializing both reshapes for " << binary->get_name();
+                NGRAPH_DEBUG << "Left = " << describe_reshape(reorders.at(left));
+                NGRAPH_DEBUG << "Right = " << describe_reshape(reorders.at(right));
+                delete_reshape(reorders.at(left));
+                delete_reshape(reorders.at(right));
+                insert_reshape(binary, reorders.at(left), 0);
+                insert_reshape(binary, reorders.at(right), 1);
+            }
+        }
+        else if (auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(n))
+        {
+            reorders[goe] = create_default_reshape(goe);
+        }
+        else
+        {
+            //skip multiple output nodes and deal with GOEs exclusively
+            if (n->get_outputs().size() > 1)
+            {
+                continue;
+            }
+            //TODO: multiple outputs
+            for (size_t i = 0; i < n->get_arguments().size(); i++)
+            {
+                //materialize all pending reshapes, flush pending reshapes
+                auto arg = n->get_argument(i);
+                if (reorders.count(arg) != 0)
+                {
+                    NGRAPH_DEBUG << "Materializing " << describe_reshape(reorders.at(arg))
+                                 << " for " << arg->get_name();
+                    delete_reshape(reorders.at(arg));
+                    insert_reshape(n, reorders.at(arg), i);
+                    //no swimming up
+                }
+            }
+            reorders[n] = create_default_reshape(n);
+        }
+    }
+
+    //fix wrong shape info wholesale
+    for (auto n : f->get_ordered_ops())
+    {
+        n->validate_and_infer_types();
+    }
+    return true;
+}
