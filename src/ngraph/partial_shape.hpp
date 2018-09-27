@@ -67,16 +67,16 @@ namespace ngraph
         ///        PartialShape::undetermined().
         PartialShape append(const PartialShape& other);
 
-        /// \brief Tests whether "this" is possibly equal to s.
-        bool possibly_eq(const PartialShape& s) const { return !(*this != s); }
-        /// \brief Tests whether "this" is possibly not equal to s.
-        bool possibly_neq(const PartialShape& s) const { return !(*this == s); }
         /// \brief Returns the undetermined shape.
         static PartialShape undetermined() { return PartialShape(false, {}); }
+        /// \brief Returns true if *this is compatible with s.
+        ///
+        ///        Two dimensions are compatible if one or both of them is undetermined, or if
+        ///        they are both determined and equal.
+        bool compatible(const PartialShape& s) const;
+
         friend std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
         friend PartialShape operator+(const PartialShape& s1, const PartialShape& s2);
-        friend bool operator==(const PartialShape& s1, const PartialShape& s2);
-        friend bool operator!=(const PartialShape& s1, const PartialShape& s2);
 
     private:
         // Private constructor so PartialShape::undetermined() can construct an undetermined shape.
@@ -101,19 +101,6 @@ namespace ngraph
     ///        If s1 and s2 both have determined rank, and their ranks are equal,
     ///           returns a new shape whose ith dimension is s1[i] + s2[i].
     PartialShape operator+(const PartialShape& s1, const PartialShape& s2);
-
-    /// \brief Tests whether two partial shapes are necessarily equal.
-    ///
-    ///        Returns true if s1 and s2's ranks are determined and equal, AND s1 and s2's
-    ///        dimensions are elementwise determined and equal everywhere.
-    bool operator==(const PartialShape& s1, const PartialShape& s2);
-
-    /// \brief Tests whether two partial shapes are necessarily unequal.
-    ///
-    ///        Returns true if s1 and s2's ranks are determined and not equal; else, false if s1
-    ///        and s2's ranks are not both determined; else, true if s1 and s2's dimensions are
-    ///        elementwise determined and not equal somewhere.
-    bool operator!=(const PartialShape& s1, const PartialShape& s2);
 
     /// \brief Inserts a human-readable representation of "shape" into "str".
     std::ostream& operator<<(std::ostream& str, const PartialShape& shape);

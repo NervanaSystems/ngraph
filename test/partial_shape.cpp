@@ -27,7 +27,7 @@ TEST(partial_shape, ps_construction_empty)
     ASSERT_TRUE(ps.rank_is_determined());
     ASSERT_TRUE(ps.rank().is_determined());
     ASSERT_TRUE(ps.is_complete());
-    ASSERT_EQ(ps.rank(), 0);
+    ASSERT_EQ(size_t(ps.rank()), 0);
 }
 
 TEST(partial_shape, ps_construction_undetermined)
@@ -44,7 +44,7 @@ TEST(partial_shape, ps_construction_incomplete)
     ASSERT_TRUE(ps.rank_is_determined());
     ASSERT_TRUE(ps.rank().is_determined());
     ASSERT_FALSE(ps.is_complete());
-    ASSERT_EQ(ps.rank(), 3);
+    ASSERT_EQ(size_t(ps.rank()), 3);
 }
 
 TEST(partial_shape, ps_construction_complete)
@@ -53,7 +53,7 @@ TEST(partial_shape, ps_construction_complete)
     ASSERT_TRUE(ps.rank_is_determined());
     ASSERT_TRUE(ps.rank().is_determined());
     ASSERT_TRUE(ps.is_complete());
-    ASSERT_EQ(ps.rank(), 4);
+    ASSERT_EQ(size_t(ps.rank()), 4);
 }
 
 TEST(partial_shape, dim_construction_determined)
@@ -103,136 +103,86 @@ TEST(partial_shape, rank_construction_undetermined)
     ASSERT_FALSE(r.is_determined());
 }
 
-TEST(partial_shape, dim_equal_left_undetermined)
+TEST(partial_shape, dim_compatible_left_undetermined)
 {
     Dimension d1{Dimension::undetermined()};
     Dimension d2{3};
 
-    ASSERT_FALSE(d1 == d2);
-    ASSERT_TRUE(d1.possibly_eq(d2));
+    ASSERT_TRUE(d1.compatible(d2));
 }
 
-TEST(partial_shape, dim_not_equal_left_undetermined)
-{
-    Dimension d1{Dimension::undetermined()};
-    Dimension d2{3};
-
-    ASSERT_FALSE(d1 != d2);
-    ASSERT_TRUE(d1.possibly_neq(d2));
-}
-
-TEST(partial_shape, dim_equal_right_undetermined)
+TEST(partial_shape, dim_compatible_right_undetermined)
 {
     Dimension d1{3};
     Dimension d2{Dimension::undetermined()};
 
-    ASSERT_FALSE(d1 == d2);
-    ASSERT_TRUE(d1.possibly_eq(d2));
+    ASSERT_TRUE(d1.compatible(d2));
 }
 
-TEST(partial_shape, dim_not_equal_right_undetermined)
-{
-    Dimension d1{3};
-    Dimension d2{Dimension::undetermined()};
-
-    ASSERT_FALSE(d1 != d2);
-    ASSERT_TRUE(d1.possibly_neq(d2));
-}
-
-TEST(partial_shape, dim_equal_both_undetermined)
+TEST(partial_shape, dim_compatible_both_undetermined)
 {
     Dimension d1{Dimension::undetermined()};
     Dimension d2{Dimension::undetermined()};
 
-    ASSERT_FALSE(d1 == d2);
-    ASSERT_TRUE(d1.possibly_eq(d2));
+    ASSERT_TRUE(d1.compatible(d2));
 }
 
-TEST(partial_shape, dim_not_equal_both_undetermined)
-{
-    Dimension d1{Dimension::undetermined()};
-    Dimension d2{Dimension::undetermined()};
-
-    ASSERT_FALSE(d1 != d2);
-    ASSERT_TRUE(d1.possibly_neq(d2));
-}
-
-TEST(partial_shape, dim_equal_both_determined)
+TEST(partial_shape, dim_compatible_both_determined)
 {
     Dimension d1{3};
     Dimension d2{8};
     Dimension d3{3};
 
-    ASSERT_FALSE(d1 == d2);
-    ASSERT_FALSE(d1.possibly_eq(d2));
-    ASSERT_TRUE(d1 == d3);
-    ASSERT_TRUE(d1.possibly_eq(d3));
+    ASSERT_FALSE(d1.compatible(d2));
+    ASSERT_TRUE(d1.compatible(d3));
 }
 
-TEST(partial_shape, dim_not_equal_both_determined)
-{
-    Dimension d1{3};
-    Dimension d2{8};
-    Dimension d3{3};
-
-    ASSERT_TRUE(d1 != d2);
-    ASSERT_TRUE(d1.possibly_neq(d2));
-    ASSERT_FALSE(d1 != d3);
-    ASSERT_FALSE(d1.possibly_neq(d3));
-}
-
-TEST(partial_shape, shapes_equal_both_rank_undetermined)
+TEST(partial_shape, shapes_compatible_both_rank_undetermined)
 {
     PartialShape ps1{PartialShape::undetermined()};
     PartialShape ps2{PartialShape::undetermined()};
 
-    ASSERT_FALSE(ps1 == ps2);
-    ASSERT_TRUE(ps1.possibly_eq(ps2));
+    ASSERT_TRUE(ps1.compatible(ps2));
 }
 
-TEST(partial_shape, shapes_equal_left_rank_undetermined)
+TEST(partial_shape, shapes_compatible_left_rank_undetermined)
 {
     PartialShape ps1{3};
     PartialShape ps2{PartialShape::undetermined()};
 
-    ASSERT_FALSE(ps1 == ps2);
-    ASSERT_TRUE(ps1.possibly_eq(ps2));
+    ASSERT_TRUE(ps1.compatible(ps2));
 }
 
-TEST(partial_shape, shapes_equal_right_rank_undetermined)
+TEST(partial_shape, shapes_compatible_right_rank_undetermined)
 {
     PartialShape ps1{PartialShape::undetermined()};
     PartialShape ps2{4};
 
-    ASSERT_FALSE(ps1 == ps2);
-    ASSERT_TRUE(ps1.possibly_eq(ps2));
+    ASSERT_TRUE(ps1.compatible(ps2));
 }
 
-TEST(partial_shape, shapes_equal_both_partial_all_known_equal)
+TEST(partial_shape, shapes_compatible_both_partial_all_known_equal)
 {
     PartialShape ps1{2, Dimension::undetermined(), 3, Dimension::undetermined(), 5};
     PartialShape ps2{2, Dimension::undetermined(), Dimension::undetermined(), 4, 5};
 
-    ASSERT_FALSE(ps1 == ps2);
-    ASSERT_TRUE(ps1.possibly_eq(ps2));
+    ASSERT_TRUE(ps1.compatible(ps2));
 }
 
-TEST(partial_shape, shapes_equal_both_partial_some_known_unequal)
+TEST(partial_shape, shapes_compatible_both_partial_some_known_unequal)
 {
     PartialShape ps1{2, Dimension::undetermined(), 3, Dimension::undetermined(), 5};
     PartialShape ps2{1, Dimension::undetermined(), Dimension::undetermined(), 4, 5};
 
-    ASSERT_FALSE(ps1 == ps2);
-    ASSERT_FALSE(ps1.possibly_eq(ps2));
+    ASSERT_FALSE(ps1.compatible(ps2));
 }
 
-TEST(partial_shape, shapes_equal_both_complete_different_rank)
+TEST(partial_shape, shapes_compatible_both_complete_different_rank)
 {
     PartialShape ps1{2, 4, 6, 8};
     PartialShape ps2{2, 4, 6, 8, 10};
 
-    ASSERT_FALSE(ps1 == ps2);
-    ASSERT_FALSE(ps1.possibly_eq(ps2));
+    ASSERT_FALSE(ps1.compatible(ps2));
 }
 
 TEST(partial_shape, shapes_equal_both_complete_same_rank_same_dims)
@@ -240,8 +190,7 @@ TEST(partial_shape, shapes_equal_both_complete_same_rank_same_dims)
     PartialShape ps1{2, 4, 6, 8};
     PartialShape ps2{2, 4, 6, 8};
 
-    ASSERT_TRUE(ps1 == ps2);
-    ASSERT_TRUE(ps1.possibly_eq(ps2));
+    ASSERT_TRUE(ps1.compatible(ps2));
 }
 
 TEST(partial_shape, shapes_equal_both_complete_same_rank_different_dims)
@@ -249,78 +198,5 @@ TEST(partial_shape, shapes_equal_both_complete_same_rank_different_dims)
     PartialShape ps1{2, 4, 6, 8};
     PartialShape ps2{2, 4, 3, 8};
 
-    ASSERT_FALSE(ps1 == ps2);
-    ASSERT_FALSE(ps1.possibly_eq(ps2));
-}
-
-TEST(partial_shape, shapes_not_equal_both_rank_undetermined)
-{
-    PartialShape ps1{PartialShape::undetermined()};
-    PartialShape ps2{PartialShape::undetermined()};
-
-    ASSERT_FALSE(ps1 != ps2);
-    ASSERT_TRUE(ps1.possibly_neq(ps2));
-}
-
-TEST(partial_shape, shapes_not_equal_left_rank_undetermined)
-{
-    PartialShape ps1{3};
-    PartialShape ps2{PartialShape::undetermined()};
-
-    ASSERT_FALSE(ps1 != ps2);
-    ASSERT_TRUE(ps1.possibly_neq(ps2));
-}
-
-TEST(partial_shape, shapes_not_equal_right_rank_undetermined)
-{
-    PartialShape ps1{PartialShape::undetermined()};
-    PartialShape ps2{4};
-
-    ASSERT_FALSE(ps1 != ps2);
-    ASSERT_TRUE(ps1.possibly_neq(ps2));
-}
-
-TEST(partial_shape, shapes_not_equal_both_partial_all_known_equal)
-{
-    PartialShape ps1{2, Dimension::undetermined(), 3, Dimension::undetermined(), 5};
-    PartialShape ps2{2, Dimension::undetermined(), Dimension::undetermined(), 4, 5};
-
-    ASSERT_FALSE(ps1 != ps2);
-    ASSERT_TRUE(ps1.possibly_neq(ps2));
-}
-
-TEST(partial_shape, shapes_not_equal_both_partial_some_known_unequal)
-{
-    PartialShape ps1{2, Dimension::undetermined(), 3, Dimension::undetermined(), 5};
-    PartialShape ps2{1, Dimension::undetermined(), Dimension::undetermined(), 4, 5};
-
-    ASSERT_TRUE(ps1 != ps2);
-    ASSERT_TRUE(ps1.possibly_neq(ps2));
-}
-
-TEST(partial_shape, shapes_not_equal_both_complete_different_rank)
-{
-    PartialShape ps1{2, 4, 6, 8};
-    PartialShape ps2{2, 4, 6, 8, 10};
-
-    ASSERT_TRUE(ps1 != ps2);
-    ASSERT_TRUE(ps1.possibly_neq(ps2));
-}
-
-TEST(partial_shape, shapes_not_equal_both_complete_same_rank_same_dims)
-{
-    PartialShape ps1{2, 4, 6, 8};
-    PartialShape ps2{2, 4, 6, 8};
-
-    ASSERT_FALSE(ps1 != ps2);
-    ASSERT_FALSE(ps1.possibly_neq(ps2));
-}
-
-TEST(partial_shape, shapes_not_equal_both_complete_same_rank_different_dims)
-{
-    PartialShape ps1{2, 4, 6, 8};
-    PartialShape ps2{2, 4, 3, 8};
-
-    ASSERT_TRUE(ps1 != ps2);
-    ASSERT_TRUE(ps1.possibly_neq(ps2));
+    ASSERT_FALSE(ps1.compatible(ps2));
 }

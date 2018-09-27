@@ -59,15 +59,11 @@ namespace ngraph
             return m_dimension;
         }
 
-        /// \brief Tests whether "this" is possibly equal to s.
-        bool possibly_eq(const Dimension& d) const { return !(*this != d); }
-        /// \brief Tests whether "this" is possibly not equal to s.
-        bool possibly_neq(const Dimension& d) const { return !(*this == d); }
+        /// \brief Returns true if the dimensions are compatible, i.e. if one of the dimensions
+        ///        is undetermined, or both dimensions are determined and equal.
+        bool compatible(const Dimension& d) const;
         /// \brief Constructs an unknown dimension.
         static Dimension undetermined() { return Dimension(); }
-        friend bool operator==(const Dimension& d1, const Dimension& d2);
-        friend bool operator!=(const Dimension& d1, const Dimension& d2);
-
     private:
         // The actual numerical value of the dimension. s_undetermined_val is a special case,
         // representing an unknown dimension.
@@ -85,16 +81,4 @@ namespace ngraph
     ///        If d1 and d2 are both known, returns size_t(d1)+size_t(d2). Otherwise, returns
     ///        Dimension::undetermined().
     Dimension operator+(const Dimension& d1, const Dimension& d2);
-
-    /// \brief Equality operator for dimensions.
-    ///
-    ///        If d1 and d2 are both known, returns size_t(d1)==size_t(d2). Otherwise, returns
-    ///        false.
-    bool operator==(const Dimension& d1, const Dimension& d2);
-
-    /// \brief Inequality operator for dimensions.
-    ///
-    ///        If d1 and d2 are both known, returns size_t(d1)!=size_t(d2). Otherwise, returns
-    ///        false.
-    bool operator!=(const Dimension& d1, const Dimension& d2);
 }

@@ -39,12 +39,7 @@ Dimension ngraph::operator+(const Dimension& d1, const Dimension& d2)
                                                      : Dimension::undetermined());
 }
 
-bool ngraph::operator==(const Dimension& d1, const Dimension& d2)
+bool Dimension::compatible(const Dimension& d) const
 {
-    return (d1.is_determined() && d2.is_determined() && size_t(d1) == size_t(d2));
-}
-
-bool ngraph::operator!=(const Dimension& d1, const Dimension& d2)
-{
-    return (d1.is_determined() && d2.is_determined() && size_t(d1) != size_t(d2));
+    return (!is_determined() || !d.is_determined() || m_dimension == size_t(d));
 }

@@ -37,7 +37,7 @@ PartialShape ngraph::operator+(const PartialShape& s1, const PartialShape& s2)
         return PartialShape::undetermined();
     }
 
-    if (s1.rank() != s2.rank())
+    if (!s1.rank().compatible(s2.rank()))
     {
         throw std::invalid_argument("rank mismatch");
     }
@@ -74,59 +74,33 @@ std::ostream& ngraph::operator<<(std::ostream& str, const PartialShape& shape)
     }
 }
 
-bool ngraph::operator==(const PartialShape& s1, const PartialShape& s2)
+bool PartialShape::compatible(const PartialShape& s) const
 {
-    // If we don't know that the ranks are equal, we don't know that s1 and s2 are equal.
-    if (s1.rank().possibly_neq(s2.rank()))
+    // If we don't know *this's rank, or we don't know s's rank, they are compatible.
+    if (!rank_is_determined() || !s.rank_is_determined())
+    {
+        return true;
+    }
+    // If we do know *this's rank and s's rank, and they are unequal, they are incompatible.
+    else if (size_t(rank()) != size_t(s.rank()))
     {
         return false;
     }
-    // If we do know that the ranks are equal, we check each component elementwise.
+    // If we know both the ranks and they are equal, we check each component elementwise. We are
+    // compatible iff the shapes are elementwise compatible.
     else
     {
-        for (size_t i = 0; i < size_t(s1.rank()); i++)
+        for (size_t i = 0; i < size_t(s.rank()); i++)
         {
             // If we don't know that these two corresponding elements are equal, we don't know
             // that s1 and s2 are equal.
-            if (s1.m_dimensions[i].possibly_neq(s2.m_dimensions[i]))
+            if (!m_dimensions[i].compatible(s.m_dimensions[i]))
             {
                 return false;
             }
         }
         // If we are still here, we know that s1 and s2 have the same rank and are elementwise
-        // necessarily equal everywhere.
+        // compatible everywhere.
         return true;
-    }
-}
-
-bool ngraph::operator!=(const PartialShape& s1, const PartialShape& s2)
-{
-    // If we know that the ranks are unequal, we know s1 and s2 are unequal.
-    if (s1.rank() != s2.rank())
-    {
-        return true;
-    }
-    // If we do not know that the ranks are unequal, and we do not know that they are equal,
-    // then one of s1 or s2 has undetermined rank, and we do not know that s1 and s2 are unequal.
-    else if (s1.rank().possibly_neq(s2.rank()))
-    {
-        return false;
-    }
-    // If we do know that the ranks are equal, we check each component elementwise.
-    else
-    {
-        for (size_t i = 0; i < size_t(s1.rank()); i++)
-        {
-            // If we know that these two corresponding elemenats are not equal, we know that s1
-            // and s2 are not equal.
-            if (s1.m_dimensions[i] != s2.m_dimensions[i])
-            {
-                return true;
-            }
-        }
-        // If we are still here, then we know that s1 and s2 have the same rank, but there is
-        // nowhere that we know that s1 and s2 are elementwise unequal. Therefore we do not know
-        // that s1 and s2 are unequal.
-        return false;
     }
 }
