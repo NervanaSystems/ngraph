@@ -222,7 +222,7 @@ private:
             reference::allreduce<T>(args[0]->get_data_ptr<T>(),
                                     out[0]->get_data_ptr<T>(),
                                     args[0]->get_element_type(),
-                                    static_cast<int>(args[0]->size()));
+                                    static_cast<int>(args[0]->get_element_count()));
 #endif
             break;
         }
