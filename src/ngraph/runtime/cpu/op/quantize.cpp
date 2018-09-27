@@ -17,11 +17,11 @@
 #include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/op/constant.hpp"
 
-ngraph::op::Quantize::Quantize(std::shared_ptr<Node> input,
-                               std::shared_ptr<Node> min,
-                               std::shared_ptr<Node> max,
-                               const element::Type& type)
-    : Op("Quantize", check_single_output_args({input, min, max}))
+ngraph::op::QuantizeCPU::QuantizeCPU(std::shared_ptr<Node> input,
+                                     std::shared_ptr<Node> min,
+                                     std::shared_ptr<Node> max,
+                                     const element::Type& type)
+    : Op("QuantizeCPU", check_single_output_args({input, min, max}))
     , m_element_type(type)
 {
     constructor_validate_and_infer_types();
@@ -66,12 +66,12 @@ ngraph::op::Quantize::Quantize(std::shared_ptr<Node> input,
 }
 
 std::shared_ptr<ngraph::Node>
-    ngraph::op::Quantize::copy_with_new_args(const NodeVector& new_args) const
+    ngraph::op::QuantizeCPU::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 3)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return std::make_shared<Quantize>(
+    return std::make_shared<QuantizeCPU>(
         new_args.at(0), new_args.at(1), new_args.at(2), m_element_type);
 }

@@ -97,7 +97,7 @@ void init_real_tv(shared_ptr<runtime::TensorView> tv, T min, T max)
 
 static void random_init(shared_ptr<runtime::TensorView> tv)
 {
-    element::Type et = tv->get_tensor().get_element_type();
+    element::Type et = tv->get_element_type();
     if (et == element::boolean)
     {
         init_int_tv<char>(tv, 0, 1);
@@ -218,7 +218,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
                     const shared_ptr<runtime::HostTensorView>& data = arg_data[arg_index];
                     arg->write(data->get_data_ptr(),
                                0,
-                               data->get_size() * data->get_element_type().size());
+                               data->get_element_count() * data->get_element_type().size());
                 }
             }
         }
@@ -229,8 +229,9 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
             {
                 const shared_ptr<runtime::HostTensorView>& data = result_data[result_index];
                 const shared_ptr<runtime::TensorView>& result = results[result_index];
-                result->read(
-                    data->get_data_ptr(), 0, data->get_size() * data->get_element_type().size());
+                result->read(data->get_data_ptr(),
+                             0,
+                             data->get_element_count() * data->get_element_type().size());
             }
         }
     }

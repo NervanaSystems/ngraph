@@ -46,30 +46,58 @@ namespace ngraph
             virtual ~TensorView() {}
             TensorView& operator=(const TensorView&) = default;
 
-            virtual std::shared_ptr<const ngraph::descriptor::Tensor> get_descriptor() const;
-
-            virtual std::shared_ptr<descriptor::Tensor> get_descriptor();
-
+            /// \brief Get tensor shape
+            /// \return const reference to a Shape
             const ngraph::Shape& get_shape() const;
+
+            /// \brief Get tensor strides
+            /// \return Strides
             ngraph::Strides get_strides() const;
+
+            /// \brief Get tensor element type
+            /// \return element::Type
+            const element::Type& get_element_type() const;
+
+            /// \brief Get number of elements in the tensor
+            /// \return number of elements in the tensor
             size_t get_element_count() const;
-            const ngraph::descriptor::Tensor& get_tensor() const;
 
-            std::shared_ptr<ngraph::descriptor::layout::TensorLayout> get_tensor_layout() const;
+            /// \brief Get the size in bytes of the tensor
+            /// \return number of bytes in tensor's allocation
+            size_t get_size_in_bytes() const;
 
-            bool get_stale() { return m_stale; }
-            void set_stale(bool val) { m_stale = val; }
+            /// \brief Get tensor's unique name
+            /// \return tensor's name
+            const std::string& get_name() const;
+
+            /// \brief Get tensor layout
+            /// \return tensor layout
+            std::shared_ptr<descriptor::layout::TensorLayout> get_tensor_layout() const;
+
+            /// \brief Set tensor layout
+            /// \param layout Layout to set
+            void set_tensor_layout(const std::shared_ptr<descriptor::layout::TensorLayout>& layout);
+
+            /// \brief Get the stale value of the tensor. A tensor is stale if it's data is
+            /// changed.
+            /// \return true if there is new data in this tensor
+            bool get_stale() const;
+
+            /// \brief Set the stale value of the tensor. A tensor is stale if it's data is
+            /// changed.
+            void set_stale(bool val);
+
             /// \brief Write bytes directly into the tensor
             /// \param p Pointer to source of data
-            /// \param tensor_offset Offset into tensor storage to begin writing. Must be element-aligned.
+            /// \param offset Offset into tensor storage to begin writing. Must be element-aligned.
             /// \param n Number of bytes to write, must be integral number of elements.
-            virtual void write(const void* p, size_t tensor_offset, size_t n) = 0;
+            virtual void write(const void* p, size_t offset, size_t n) = 0;
 
             /// \brief Read bytes directly from the tensor
             /// \param p Pointer to destination for data
-            /// \param tensor_offset Offset into tensor storage to begin reading. Must be element-aligned.
+            /// \param offset Offset into tensor storage to begin writing. Must be element-aligned.
             /// \param n Number of bytes to read, must be integral number of elements.
-            virtual void read(void* p, size_t tensor_offset, size_t n) const = 0;
+            virtual void read(void* p, size_t offset, size_t n) const = 0;
 
         protected:
             std::shared_ptr<ngraph::descriptor::Tensor> m_descriptor;
