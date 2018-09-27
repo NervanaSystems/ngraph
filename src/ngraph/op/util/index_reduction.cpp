@@ -27,6 +27,7 @@ op::util::IndexReduction::IndexReduction(const std::string& node_type,
                                          const element::Type& index_element_type)
     : Op(node_type, check_single_output_args({arg}))
     , m_axis(axis)
+    , m_index_element_type(index_element_type)
 {
     constructor_validate_and_infer_types();
     auto rank = arg->get_shape().size();
