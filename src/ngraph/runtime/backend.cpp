@@ -71,10 +71,10 @@ void runtime::Backend::validate_call(shared_ptr<const Function> function,
 
     for (size_t i = 0; i < input_parameters.size(); i++)
     {
-        if (input_parameters[i]->get_element_type() != inputs[i]->get_tensor().get_element_type())
+        if (input_parameters[i]->get_element_type() != inputs[i]->get_element_type())
         {
             stringstream ss;
-            ss << "Input " << i << " type '" << inputs[i]->get_tensor().get_element_type()
+            ss << "Input " << i << " type '" << inputs[i]->get_element_type()
                << "' does not match Parameter type '" << input_parameters[i]->get_element_type()
                << "'";
             throw runtime_error(ss.str());
@@ -91,10 +91,10 @@ void runtime::Backend::validate_call(shared_ptr<const Function> function,
 
     for (size_t i = 0; i < function->get_output_size(); i++)
     {
-        if (function->get_output_element_type(i) != outputs[i]->get_tensor().get_element_type())
+        if (function->get_output_element_type(i) != outputs[i]->get_element_type())
         {
             stringstream ss;
-            ss << "Output " << i << " type '" << outputs[i]->get_tensor().get_element_type()
+            ss << "Output " << i << " type '" << outputs[i]->get_element_type()
                << "' does not match Result type '" << function->get_output_element_type(i) << "'";
             throw runtime_error(ss.str());
         }

@@ -131,7 +131,7 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
             return false;
         }
         auto native_md = mkldnn_utils::create_blocked_mkldnn_md(
-            this->get_shape(), cpu_tvl->get_strides(), this->get_descriptor()->get_element_type());
+            this->get_shape(), cpu_tvl->get_strides(), this->get_element_type());
         if (mkldnn_utils::compare_mkldnn_mds(cpu_tvl->get_mkldnn_md(), native_md))
         {
             return false;
@@ -144,7 +144,7 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
         auto tensor_shape = this->get_shape();
         auto input_desc = cpu_tvl->get_mkldnn_md();
         auto output_desc = mkldnn_utils::create_blocked_mkldnn_md(
-            this->get_shape(), cpu_tvl->get_strides(), this->get_descriptor()->get_element_type());
+            this->get_shape(), cpu_tvl->get_strides(), this->get_element_type());
 
         memory input{{input_desc, mkldnn_utils::global_cpu_engine}, aligned_buffer};
         memory output{{output_desc, mkldnn_utils::global_cpu_engine}, target};
@@ -157,9 +157,4 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
         const char* source = get_data_ptr();
         memcpy(target, &source[tensor_offset], n);
     }
-}
-
-size_t runtime::cpu::CPUTensorView::get_size() const
-{
-    return get_element_count();
 }
