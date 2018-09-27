@@ -202,6 +202,7 @@ const string& runtime::gpu::GPU_ExternalFunction::get_pch_header_source()
 #include <cuda_runtime.h>
 #include <cudnn.h>
 
+#include "ngraph/runtime/gpu/cuda_error_check.hpp"
 #include "ngraph/runtime/gpu/gpu_invoke.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
