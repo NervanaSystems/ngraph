@@ -100,6 +100,7 @@ option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     option(NGRAPH_USE_SYSTEM_PROTOBUF "Use system provided Protobuf shared object" FALSE)
     option(NGRAPH_ONNXIFI_ENABLE "Enable ONNX Interface for Framework Integration" TRUE)
+    option(NGRAPH_ONNX_ML "Build ONNX with ONNX_ML enabled" FALSE)
 endif()
 
 #-----------------------------------------------------------------------------------------------
