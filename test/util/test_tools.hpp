@@ -24,7 +24,7 @@
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
 #include "ngraph/serializer.hpp"
 
 namespace ngraph

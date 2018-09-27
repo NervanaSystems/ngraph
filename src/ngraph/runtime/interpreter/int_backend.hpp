@@ -122,7 +122,7 @@
 #include "ngraph/runtime/reference/tan.hpp"
 #include "ngraph/runtime/reference/tanh.hpp"
 #include "ngraph/runtime/reference/topk.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/runtime/reference/allreduce.hpp"

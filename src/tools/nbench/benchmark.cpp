@@ -20,8 +20,8 @@
 #include "ngraph/file_util.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
+#include "ngraph/runtime/tensor.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 

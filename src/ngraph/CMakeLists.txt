@@ -140,7 +140,7 @@ set (SRC
     runtime/backend.cpp
     runtime/backend_manager.cpp
     runtime/host_tensor_view.cpp
-    runtime/tensor_view.cpp
+    runtime/tensor.cpp
     serializer.cpp
     shape.cpp
     strides.cpp

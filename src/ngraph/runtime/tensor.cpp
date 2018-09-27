@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/type/element_type.hpp"
 

@@ -19,7 +19,7 @@
 #include <CPP/engine.hpp>
 #include <CPP/memory.hpp>
 
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
 
 namespace ngraph
 {

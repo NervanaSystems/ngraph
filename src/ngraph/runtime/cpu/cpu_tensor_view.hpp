@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
 #include "ngraph/type/element_type.hpp"
 
 // This define is a workaround for gcc on centos and is required for aligned()

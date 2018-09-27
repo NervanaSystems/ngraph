@@ -246,7 +246,7 @@ TEST(DISABLED_include, complete)
                                     "ngraph/runtime/reference/tan.hpp",
                                     "ngraph/runtime/reference/tanh.hpp",
                                     "ngraph/runtime/manager.hpp",
-                                    "ngraph/runtime/tensor_view.hpp",
+                                    "ngraph/runtime/tensor.hpp",
                                     "ngraph/serializer.hpp",
                                     "ngraph/shape.hpp",
                                     "ngraph/strides.hpp",

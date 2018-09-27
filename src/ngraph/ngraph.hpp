@@ -128,6 +128,6 @@
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"

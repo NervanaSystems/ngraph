@@ -23,7 +23,7 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
 
 namespace ngraph
 {
