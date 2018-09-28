@@ -20,6 +20,7 @@
 
 #include "ngraph/dimension.hpp"
 #include "ngraph/rank.hpp"
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
@@ -46,6 +47,10 @@ namespace ngraph
             : PartialShape(true, init)
         {
         }
+
+        /// \brief Constructs a PartialShape from a Shape. The constructed PartialShape will have
+        ///        determined rank, and all dimensions determined.
+        PartialShape(const Shape& shape);
 
         /// \brief Returns true if the shape has determined rank.
         bool rank_is_determined() const { return m_rank_is_determined; }
@@ -74,6 +79,11 @@ namespace ngraph
         ///        Two dimensions are compatible if one or both of them is undetermined, or if
         ///        they are both determined and equal.
         bool compatible(const PartialShape& s) const;
+
+        /// \brief Converts a PartialShape with rank and all dimensions determined to a Shape.
+        ///        Throws std::invalid_argument if the PartialShape has undetermined rank or any
+        ///        undetermined dimensions.
+        Shape to_shape() const;
 
         friend std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
         friend PartialShape operator+(const PartialShape& s1, const PartialShape& s2);

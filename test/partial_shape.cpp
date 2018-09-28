@@ -200,3 +200,66 @@ TEST(partial_shape, shapes_equal_both_complete_same_rank_different_dims)
 
     ASSERT_FALSE(ps1.compatible(ps2));
 }
+
+TEST(partial_shape, from_shape)
+{
+    Shape s{2, 4, 6, 8};
+    PartialShape ps1{s};
+
+    // TODO(amprocte): No way to examine contents of ps1 yet.
+    ASSERT_TRUE(ps1.is_complete());
+    ASSERT_TRUE(ps1.rank_is_determined());
+    ASSERT_EQ(size_t(ps1.rank()), s.size());
+}
+
+TEST(partial_shape, to_shape_complete)
+{
+    PartialShape ps{2, 4, 6, 8};
+    Shape s{ps.to_shape()};
+
+    ASSERT_EQ(s, (Shape{2, 4, 6, 8}));
+}
+
+TEST(partial_shape, to_shape_dims_undetermined)
+{
+    PartialShape ps{2, 4, Dimension::undetermined(), 8};
+    ASSERT_THROW({ ps.to_shape(); }, std::invalid_argument);
+}
+
+TEST(partial_shape, to_shape_rank_undetermined)
+{
+    PartialShape ps{PartialShape::undetermined()};
+    ASSERT_THROW({ ps.to_shape(); }, std::invalid_argument);
+}
+
+TEST(partial_shape, tensor_descriptor_from_shape)
+{
+    descriptor::Tensor t{element::i32, Shape{1, 2, 3}, "Ankeny"};
+
+    ASSERT_EQ(t.get_shape(), (Shape{1, 2, 3}));
+    ASSERT_EQ(size_t(t.get_partial_shape().rank()), 3);
+}
+
+TEST(partial_shape, tensor_descriptor_from_complete_partial_shape)
+{
+    descriptor::Tensor t{element::i32, PartialShape{1, 2, 3}, "Burnside"};
+
+    ASSERT_EQ(t.get_shape(), (Shape{1, 2, 3}));
+    ASSERT_EQ(size_t(t.get_partial_shape().rank()), 3);
+}
+
+TEST(partial_shape, tensor_descriptor_from_incomplete_partial_shape)
+{
+    descriptor::Tensor t{element::i32, PartialShape{1, Dimension::undetermined(), 3}, "Couch"};
+
+    ASSERT_EQ(size_t(t.get_partial_shape().rank()), 3);
+    ASSERT_THROW({ t.get_shape(); }, std::invalid_argument);
+}
+
+TEST(partial_shape, tensor_descriptor_from_rankless_partial_shape)
+{
+    descriptor::Tensor t{element::i32, PartialShape::undetermined(), "Davis"};
+
+    ASSERT_FALSE(t.get_partial_shape().rank().is_determined());
+    ASSERT_THROW({ t.get_shape(); }, std::invalid_argument);
+}
