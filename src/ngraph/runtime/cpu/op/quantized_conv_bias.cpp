@@ -61,8 +61,9 @@ op::QuantizedConvolutionBias::QuantizedConvolutionBias(
                                    qconv->get_argument(1)->get_shape(),
                                    bias->get_shape());
 
+    auto output_et = with_relu ? element::u8 : element::i8;
     set_output_size(3);
-    set_output_type(0, qconv->get_element_type(), qconv->get_shape());
+    set_output_type(0, output_et, qconv->get_shape());
     set_output_type(1, element::f32, Shape{1});
     set_output_type(2, element::f32, Shape{1});
 }
@@ -128,9 +129,10 @@ op::QuantizedConvolutionBias::QuantizedConvolutionBias(
 
     util::validate_convbias_shapes(data_batch_shape, filters_shape, bias->get_shape());
 
+    auto output_et = with_relu ? element::u8 : element::i8;
     set_output_size(3);
     set_output_type(0,
-                    element::i8,
+                    output_et,
                     util::infer_convolution_output_shape(this,
                                                          data_batch_shape,
                                                          filters_shape,

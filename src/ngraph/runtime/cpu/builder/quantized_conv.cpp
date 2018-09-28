@@ -40,7 +40,7 @@ namespace ngraph
                     auto& functors = external_function->get_functors();
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                    auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                    auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
                     auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
                     auto& out2_tensor = external_function->get_tensor_data(out[2].get_name());
 
@@ -57,7 +57,7 @@ namespace ngraph
                         CPURuntimeContext* ctx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out0_tensor);
                         *(static_cast<float*>(out1_tensor)) = min_freezed_output;
                         *(static_cast<float*>(out2_tensor)) = max_freezed_output;
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
@@ -80,7 +80,7 @@ namespace ngraph
                     auto& functors = external_function->get_functors();
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                    auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                    auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
                     auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
                     auto& out2_tensor = external_function->get_tensor_data(out[2].get_name());
 
@@ -97,7 +97,7 @@ namespace ngraph
                         CPURuntimeContext* ctx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out0_tensor);
                         *(static_cast<float*>(out1_tensor)) = min_freezed_output;
                         *(static_cast<float*>(out2_tensor)) = max_freezed_output;
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
@@ -122,7 +122,7 @@ namespace ngraph
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                     auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
-                    auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                    auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
                     auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
                     auto& out2_tensor = external_function->get_tensor_data(out[2].get_name());
 
@@ -140,7 +140,7 @@ namespace ngraph
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out0_tensor);
                         *(static_cast<float*>(out1_tensor)) = min_freezed_output;
                         *(static_cast<float*>(out2_tensor)) = max_freezed_output;
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
