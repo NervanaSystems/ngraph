@@ -48,8 +48,7 @@ namespace ngraph
         {
         }
 
-        /// \brief Constructs a PartialShape from a Shape. The constructed PartialShape will have
-        ///        determined rank, and all dimensions determined.
+        /// \brief Constructs a complete PartialShape from a Shape.
         PartialShape(const Shape& shape);
 
         /// \brief Returns true if the shape has determined rank.
@@ -80,9 +79,9 @@ namespace ngraph
         ///        they are both determined and equal.
         bool compatible(const PartialShape& s) const;
 
-        /// \brief Converts a PartialShape with rank and all dimensions determined to a Shape.
-        ///        Throws std::invalid_argument if the PartialShape has undetermined rank or any
-        ///        undetermined dimensions.
+        /// \brief Converts a complete PartialShape to a Shape.
+        ///
+        ///        Throws std::invalid_argument if the PartialShape is incomplete.
         Shape to_shape() const;
 
         friend std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
