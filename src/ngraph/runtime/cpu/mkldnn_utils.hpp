@@ -62,6 +62,12 @@ namespace ngraph
                                         const mkldnn::memory::desc& rhs);
                 bool is_mkldnn_filter_format(mkldnn::memory::format fmt);
                 bool is_mkldnn_blocked_data_format(mkldnn::memory::format fmt);
+                std::unordered_set<std::type_index>& get_op_registry();
+                std::map<element::Type, const mkldnn::memory::data_type>&
+                    get_mkldnn_data_type_map();
+                std::map<element::Type, const std::string>& get_mkldnn_data_type_string_map();
+                std::map<mkldnn::memory::format, const std::string>& get_mkldnn_format_string_map();
+                std::set<mkldnn::memory::format>& get_filter_formats();
             }
         }
     }
