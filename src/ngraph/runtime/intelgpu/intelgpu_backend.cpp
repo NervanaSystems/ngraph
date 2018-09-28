@@ -1315,6 +1315,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         }
         case OP_TYPEID::AllReduce:
         case OP_TYPEID::FunctionCall:
+        case OP_TYPEID::Dequantize:
         case OP_TYPEID::Quantize:
         case OP_TYPEID::Reduce:
         case OP_TYPEID::ReduceWindow:
