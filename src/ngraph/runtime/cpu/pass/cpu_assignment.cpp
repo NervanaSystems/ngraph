@@ -733,12 +733,12 @@ namespace ngraph
                 }
 
                 template <>
-                void CPUAssignment::ASSIGN_DECL(ngraph::op::Dequantize)
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::DequantizeCPU)
                 {
                     if (node->get_input_element_type(0) == element::u8 ||
                         node->get_input_element_type(0) == element::i8)
                     {
-                        auto dequantize = static_cast<op::Dequantize*>(node);
+                        auto dequantize = static_cast<op::DequantizeCPU*>(node);
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
@@ -852,8 +852,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ReplaceSlice>},
     {TI(ngraph::op::ConvolutionAdd),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionAdd>},
-    {TI(ngraph::op::Dequantize),
-     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Dequantize>},
+    {TI(ngraph::op::DequantizeCPU),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::DequantizeCPU>},
     {TI(ngraph::op::QuantizedConvolutionRelu),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedConvolutionRelu>},
 };

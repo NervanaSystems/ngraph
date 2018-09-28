@@ -2862,7 +2862,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Dequantize)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::DequantizeCPU)
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -2883,7 +2883,7 @@ namespace ngraph
                 }
                 else
                 {
-                    throw ngraph_error("unsupported parameters for DequantizeOp");
+                    throw ngraph_error("unsupported parameters for DequantizeCPUOp");
                 }
             }
 
