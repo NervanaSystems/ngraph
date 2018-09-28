@@ -163,26 +163,26 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     cout.imbue(locale(""));
     cout << "compile time: " << timer.get_milliseconds() << "ms" << endl;
 
-    vector < shared_ptr < runtime::HostTensorrg_data;
+    vector<shared_ptr<runtime::HostTensor>> arg_data;
     vector<shared_ptr<runtime::Tensor>> args;
     vector<bool> args_cacheable;
     for (shared_ptr<op::Parameter> param : f->get_parameters())
     {
         auto tensor = backend->create_tensor(param->get_element_type(), param->get_shape());
         auto tensor_data =
-            make_shared<runtime::HostTensorram->get_element_type(), param->get_shape());
+            make_shared<runtime::HostTensor>(param->get_element_type(), param->get_shape());
         random_init(tensor);
         args.push_back(tensor);
         arg_data.push_back(tensor_data);
         args_cacheable.push_back(param->get_cacheable());
     }
-    vector < shared_ptr < runtime::HostTensoresult_data;
+    vector<shared_ptr<runtime::HostTensor>> result_data;
     vector<shared_ptr<runtime::Tensor>> results;
     for (shared_ptr<Node> out : f->get_results())
     {
         auto result = backend->create_tensor(out->get_element_type(), out->get_shape());
         auto tensor_data =
-            make_shared<runtime::HostTensort->get_element_type(), out->get_shape());
+            make_shared<runtime::HostTensor>(out->get_element_type(), out->get_shape());
         results.push_back(result);
         result_data.push_back(tensor_data);
     }
@@ -214,7 +214,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
                 const shared_ptr<runtime::Tensor>& arg = args[arg_index];
                 if (arg->get_stale())
                 {
-                    const shared_ptr < runtime::HostTensorata = arg_data[arg_index];
+                    const shared_ptr<runtime::HostTensor>& data = arg_data[arg_index];
                     arg->write(data->get_data_ptr(),
                                0,
                                data->get_element_count() * data->get_element_type().size());
@@ -226,7 +226,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
         {
             for (size_t result_index = 0; result_index < results.size(); result_index++)
             {
-                const shared_ptr < runtime::HostTensorata = result_data[result_index];
+                const shared_ptr<runtime::HostTensor>& data = result_data[result_index];
                 const shared_ptr<runtime::Tensor>& result = results[result_index];
                 result->read(data->get_data_ptr(),
                              0,
