@@ -349,19 +349,19 @@ void ngraph::pass::ConstantFolding::construct_constant_binary()
         else if (type == element::i8)
         {
             replace_node(m.get_match_root(),
-                         make_constant_binary<int>(a_match, b_match, binary_match));
+                         make_constant_binary<int8_t>(a_match, b_match, binary_match));
             return true;
         }
         else if (type == element::f32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_binary<int>(a_match, b_match, binary_match));
+                         make_constant_binary<float>(a_match, b_match, binary_match));
             return true;
         }
         else if (type == element::f64)
         {
             replace_node(m.get_match_root(),
-                         make_constant_binary<int>(a_match, b_match, binary_match));
+                         make_constant_binary<double>(a_match, b_match, binary_match));
             return true;
         }
 
