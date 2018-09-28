@@ -46,9 +46,9 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
 {
     std::stringstream ss;
     ss << "dot_op"
-       << "_dtype_" << dtype.c_type_string();
+       << "_dtype_" << dtype.c_type_string() << "_reduction_axes_count_" << reduction_axes;
     std::string hash = ss.str() + "_i_" + join(arg0_shape, "_") + "_i_" + join(arg1_shape, "_") +
-                       "_o_" + join(out_shape, "_") + "_reduction_axes_count_" + reduction_axes;
+                       "_o_" + join(out_shape, "_");
 
     size_t primitive_index = m_primitive_emitter->lookup(hash);
     if (primitive_index != std::numeric_limits<size_t>::max())
