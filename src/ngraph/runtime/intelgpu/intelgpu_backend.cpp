@@ -658,8 +658,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             {
                 do_equal_propagation(topology, get_input_name(op), get_output_name(op));
             }
-            else if (get_input_shape(op).empty() ||
-                     (get_input_shape(op).size() == 1 && get_input_shape(op).at(0) == 1))
+            else if (get_input_type(op) != element::i32 && get_input_type(op) != element::i64 &&
+                     ((get_input_shape(op).size() == 1 && get_input_shape(op).at(0) == 1) ||
+                      get_input_shape(op).empty()))
             {
                 const cldnn::tensor output_tensor_size =
                     intelgpu_space::create_cldnn_tensor(get_output_shape(op));

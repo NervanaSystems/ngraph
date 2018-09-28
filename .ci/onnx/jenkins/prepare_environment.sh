@@ -16,37 +16,56 @@
 # otherwise. Any license under such intellectual property rights must be express
 # and approved by Intel in writing.
 
-
-PATTERN='[-a-zA-Z0-9_]*='
-for i in "$@"
-do
-    case $i in
-        --help*)
-            printf "Following parameters are available:
-    
-            --help  displays this message
-            --ngraph-branch ngraph branch name to build
-            "
-            exit 0
-        ;;
-        --ngraph-branch=*)
-            NGRAPH_BRANCH=`echo $i | sed "s/${PATTERN}//"`
-        ;;
-    esac
-done
-
 set -x
+set -e
+
+NGRAPH_CACHE_DIR="/home"
+
+function check_cached_ngraph() {
+    # if no ngraph in /home - clone
+    if [ ! -e "${NGRAPH_CACHE_DIR}/ngraph" ]; then
+        cd /home/
+        git clone --single-branch https://github.com/NervanaSystems/ngraph -b master
+    fi
+}
 
 function build_ngraph() {
     # directory containing ngraph repo
     local ngraph_directory="$1"
+    local func_parameters="$2"
+    cd "${ngraph_directory}/ngraph"
+    for parameter in $func_parameters
+    do
+        case $parameter in
+            REBUILD)
+                rm -rf "${ngraph_directory}/ngraph/build"
+                rm -rf "${ngraph_directory}/ngraph_dist"
+            ;;
+            UPDATE)
+                git checkout master
+                git pull origin master
+            ;;
+            USE_CACHED)
+                check_cached_ngraph
+                if [[ -n $(ls /home/ngraph/build 2> /dev/null) ]]; then
+                    cp -Rf "${NGRAPH_CACHE_DIR}/ngraph/build" "${ngraph_directory}/ngraph/" || return 1
+                else 
+                    return 1
+                fi
+                for f in $(find ${ngraph_directory}/ngraph/build/ -name 'CMakeCache.txt');
+                do 	
+                    sed -i "s\\${NGRAPH_CACHE_DIR}\\${ngraph_directory}\\g" $f
+                done
+            ;;
+        esac
+    done
     cd "${ngraph_directory}/ngraph"
     mkdir -p ./build
     cd ./build
-    cmake ../ -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="${ngraph_directory}/ngraph_dist"
-    rm "${ngraph_directory}"/ngraph/python/dist/ngraph*.whl
-    make -j $(lscpu --parse=CORE | grep -v '#' | sort | uniq | wc -l)
-    make install
+    cmake ../ -DNGRAPH_TOOLS_ENABLE=FALSE -DNGRAPH_UNIT_TEST_ENABLE=FALSE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="${ngraph_directory}/ngraph_dist" || return 1
+    rm -f "${ngraph_directory}"/ngraph/python/dist/ngraph*.whl
+    make -j $(lscpu --parse=CORE | grep -v '#' | sort | uniq | wc -l) || return 1
+    make install || return 1
     cd "${ngraph_directory}/ngraph/python"
     if [ ! -d ./pybind11 ]; then
         git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
@@ -54,29 +73,14 @@ function build_ngraph() {
     export PYBIND_HEADERS_PATH="${ngraph_directory}/ngraph/python/pybind11"
     export NGRAPH_CPP_BUILD_PATH="${ngraph_directory}/ngraph_dist"
     python3 setup.py bdist_wheel
+    return 0
 }
 
-# Clone and build nGraph master 
-cd /home
-if [ -e ./ngraph ]; then
-    cd ./ngraph
-    if [[ $(git pull) != *"Already up-to-date"* ]]; then
-        build_ngraph "/home"
-    fi
-else
-    git clone https://github.com/NervanaSystems/ngraph.git -b master
-    build_ngraph "/home"
+# Copy stored nGraph master and use it to build PR branch
+if ! build_ngraph "/root" "USE_CACHED"; then
+    build_ngraph "${NGRAPH_CACHE_DIR}" "UPDATE REBUILD"
+    build_ngraph "/root" "REBUILD USE_CACHED"
 fi
-
-cp -R /home/ngraph/build /root/ngraph/
-cp -R /home/ngraph_dist /root/
-# Change directory to ngraph cloned initially by CI, which is already on relevant branch
-cd /root/ngraph
-for f in $(find build/ -name 'CMakeCache.txt'); 
-do 
-    sed -i 's/home/root/g' $f
-done
-build_ngraph "/root"
 
 # Copy Onnx models
 if [ -d /home/onnx_models/.onnx ]; then
