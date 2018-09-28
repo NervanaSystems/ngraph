@@ -1,0 +1,54 @@
+.. ---------------------------------------------------------------------------
+.. Copyright 2018 Intel Corporation
+.. Licensed under the Apache License, Version 2.0 (the "License");
+.. you may not use this file except in compliance with the License.
+.. You may obtain a copy of the License at
+..
+..      http://www.apache.org/licenses/LICENSE-2.0
+..
+.. Unless required by applicable law or agreed to in writing, software
+.. distributed under the License is distributed on an "AS IS" BASIS,
+.. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+.. See the License for the specific language governing permissions and
+.. limitations under the License.
+.. ---------------------------------------------------------------------------
+
+# Optimizing MXNet for multiple hardware backends with Intel nGraph
+Intel nGraph is a deep learning compiler project aimed at providing an in-memory abstraction layer for converting mathematical representations of Deep Learning Models into optimized execution on multiple hardware backends. nGraph's goal is to simplify Deep Learning development by providing a common API for framework and hardware developers to jointly optimize Deep Learning models. nGraph provides a mechanism for sharing optimizations on novel hardware across many platforms.
+
+We are excited to annouce that nGraph has been merged into Apache MXNet as an experiemental backend through MXNet's new Subgraph Acceleration API (https://cwiki.apache.org/confluence/display/MXNET/Unified+integration+with+external+backend+libraries). This initial integration brings highly optimized CPU performance to a wide range of MXNet models, especially in inference. Future releases with improve training support and add other hardware backends currently under development, including Nvidia GPU, Intel GPU, and future hardware.
+
+# Tutorial 
+A primary goal in integrating nGraph with MXNet is providing a seamless development and deployment experience to Data Scientists and Machine Learning Engineers. This release supports compiling mxnet with nGraph and it's CPU backend. The software currently supports Linux and MacOS. Future releases will add pip installation, more hardware backends, and Windows support.
+
+## Compiling MXNet with nGraph
+To compile MXNet with nGraph, begin by cloning Apache MXNet from Github:
+
+```
+git clone --recursive https://github.com/apache/incubator-mxnet
+```
+
+To compile run:
+```
+cd incubator-mxnet
+make -j USE_NGRAPH=1
+```
+
+MXNet's build system will automatically download, configure, and build the nGraph library, then link it into libmxnet.so. Once this is complete, we recommend building a python3 virtual environment for testing, and then install mxnet to the virtual environment:
+```
+python3 -m venv .venv
+. .venv/bin/activate
+cd python
+pip install -e .
+cd ../
+```
+
+Congratulations, you're now ready to use nGraph! Building MXNet with nGraph automatically enables nGraph on your model scripts, you don't need to do anything special. If you run into troubles, you can disable nGraph by setting `MXNET_SUBGRAPH_BACKEND=1`. If you do see trouble, please report it and we'll address it as soon as possible.
+
+## Running Resnet-18 Inference
+As an example model, consider nGraph 18. This is what TensorRT did. Do I really want to copy all of the code out of TensorRT?
+
+## Performance Numbers
+Get the numbers from AIBT and make a pretty plot.
+
+# Conclusion
