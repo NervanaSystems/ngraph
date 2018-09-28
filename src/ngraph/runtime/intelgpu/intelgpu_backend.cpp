@@ -161,9 +161,41 @@ static void do_eltwise_operation(cldnn::topology& topology,
 {
     arguments_check(op, 2, 1);
 
-    const cldnn::eltwise op_add(
-        get_output_name(op), {get_input_name(op, 0), get_input_name(op, 1)}, mode);
-    topology.add(op_add);
+    if ((get_input_type(op) == element::i32 || get_input_type(op) == element::i64) &&
+        (mode == cldnn::eltwise_mode::min || mode == cldnn::eltwise_mode::max))
+    {
+        string custom_op;
+
+        if (mode == cldnn::eltwise_mode::min)
+        {
+            custom_op = "min";
+        }
+        else if (mode == cldnn::eltwise_mode::max)
+        {
+            custom_op = "max";
+        }
+        else
+        {
+            custom_op = "not_implemented_operation";
+        }
+
+        runtime::intelgpu::do_eltwise_kernel(topology,
+                                             get_input_name(op, 0),
+                                             get_input_shape(op, 0),
+                                             get_input_type(op, 0),
+                                             get_input_name(op, 1),
+                                             get_input_shape(op, 1),
+                                             get_output_name(op),
+                                             get_output_shape(op),
+                                             get_output_type(op),
+                                             custom_op);
+    }
+    else
+    {
+        const cldnn::eltwise op_add(
+            get_output_name(op), {get_input_name(op, 0), get_input_name(op, 1)}, mode);
+        topology.add(op_add);
+    }
 }
 
 static void do_unary_operation(cldnn::topology& topology,

@@ -1154,6 +1154,53 @@ void runtime::intelgpu::do_logic_kernel(cldnn::topology& topology,
     topology.add(op_logical);
 }
 
+void runtime::intelgpu::do_eltwise_kernel(cldnn::topology& topology,
+                                          const string& input0_name,
+                                          const Shape& input0_shape,
+                                          const element::Type& input0_type,
+                                          const string& input1_name,
+                                          const Shape& input1_shape,
+                                          const string& output_name,
+                                          const Shape& output_shape,
+                                          const element::Type& output_type,
+                                          const string& operation)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string entry_point_name = "eltwise_" + output_name;
+    codegen::CodeWriter writer;
+    vector<size_t> gws;
+
+    gen_func_def(writer,
+                 entry_point_name,
+                 {2, get_opencl_type_name(input0_type)},
+                 {input0_shape, input1_shape},
+                 get_opencl_type_name(output_type),
+                 output_shape);
+
+    writer.block_begin();
+    {
+        // Main loops
+        gws = generate_loops(writer, output_shape, true);
+
+        writer << "output" << access_dims(output_shape) << " = " << operation << "(input0"
+               << access_dims(input0_shape) << ", input1" << access_dims(input1_shape) << ");\n";
+
+        // Closing brackets for main loops
+        generate_loops(writer, output_shape, false);
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_logical(output_name,
+                                                 {input0_name, input1_name},
+                                                 {writer.get_code()},
+                                                 entry_point_name,
+                                                 get_kernel_args(2, 1),
+                                                 "",
+                                                 layout,
+                                                 gws);
+    topology.add(op_logical);
+}
+
 void runtime::intelgpu::do_reverse_operation(cldnn::topology& topology,
                                              const string& input_name,
                                              const Shape& input_shape,
