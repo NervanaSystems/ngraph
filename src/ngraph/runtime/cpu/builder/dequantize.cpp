@@ -31,7 +31,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Dequantize)
+            void Builder::BUILDER_DECL(ngraph::op::DequantizeCPU)
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -56,10 +56,10 @@ namespace ngraph
                 }
                 else
                 {
-                    throw ngraph_error("unsupported parameters for DequantizeOp via DEX");
+                    throw ngraph_error("unsupported parameters for DequantizeCPUOp via DEX");
                 }
             }
-            REGISTER_OP_BUILDER(Dequantize);
+            REGISTER_OP_BUILDER(DequantizeCPU);
         }
     }
 }
