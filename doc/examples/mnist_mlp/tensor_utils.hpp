@@ -37,7 +37,7 @@ template <typename T>
 void randomize(std::function<T()> rand,
                const std::shared_ptr<ngraph::runtime::TensorView>& t)
 {
-    if (t->get_tensor().get_element_type().bitwidth() != 8 * sizeof(T))
+    if (t->get_element_type().bitwidth() != 8 * sizeof(T))
     {
         throw std::invalid_argument(
             "Randomize generator size is not the same as tensor "

@@ -78,6 +78,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/relu.hpp"
@@ -973,6 +974,11 @@ void runtime::gpu::GPU_Emitter::emit_Product(EMIT_ARGS)
         }
     }
     writer.block_end();
+}
+
+void runtime::gpu::GPU_Emitter::emit_Quantize(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)

@@ -67,6 +67,7 @@ Not currently a comprehensive list.
    * :doc:`cosh`
    * :doc:`divide`
    * :doc:`dot`
+   * :doc:`drop_out`
    * :doc:`equal`
    * :doc:`exp`
    * :doc:`floor`
@@ -122,6 +123,7 @@ Not currently a comprehensive list.
    cosh.rst
    divide.rst
    dot.rst
+   drop_out.rst
    equal.rst
    exp.rst
    floor.rst

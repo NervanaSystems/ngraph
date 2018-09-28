@@ -81,6 +81,7 @@ set (SRC
     op/parameter.cpp
     op/power.cpp
     op/product.cpp
+    op/quantize.cpp
     op/reduce.cpp
     op/reduce_window.cpp
     op/relu.cpp
