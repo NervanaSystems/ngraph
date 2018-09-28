@@ -246,6 +246,11 @@ const Shape& Node::get_output_shape(size_t i) const
     return m_outputs.at(i).get_shape();
 }
 
+const PartialShape& Node::get_output_partial_shape(size_t i) const
+{
+    return m_outputs.at(i).get_partial_shape();
+}
+
 const Shape& Node::get_shape() const
 {
     if (get_output_size() != 1)
@@ -305,6 +310,11 @@ const element::Type& Node::get_input_element_type(size_t i) const
 const Shape& Node::get_input_shape(size_t i) const
 {
     return m_inputs.at(i).get_shape();
+}
+
+const PartialShape& Node::get_input_partial_shape(size_t i) const
+{
+    return m_inputs.at(i).get_partial_shape();
 }
 
 bool Node::has_same_type(std::shared_ptr<const Node> node) const
