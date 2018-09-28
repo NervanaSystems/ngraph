@@ -16,12 +16,12 @@
 
 #include <cassert>
 #include <cstdlib>
+#include <cuda.h>
+#include <cuda_runtime.h>
 #include <iostream>
 #include <stddef.h>
 #include <stdio.h>
 #include <string>
-#include <cuda.h>
-#include <cuda_runtime.h>
 
 #include "ngraph/runtime/gpu/cuda_error_check.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
