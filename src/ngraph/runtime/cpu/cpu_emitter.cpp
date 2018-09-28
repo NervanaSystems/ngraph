@@ -225,6 +225,11 @@ namespace ngraph
                 }
 
                 writer.block_begin();
+                writer << R"(std::cout << "MPI_Allreduce(" << )"
+                       << args[0].get_name() << R"( <<", ")"
+                       << " << " << out[0].get_name() << R"( << ", ")"
+                       << " << " << out[0].get_size() << R"( << ")\n ")"
+                       << ";\n";  
                 writer << "MPI_Allreduce(" << args[0].get_name() << ", " << out[0].get_name()
                        << ", " << out[0].get_size() << ", " << data_type
                        << ", MPI_SUM, MPI_COMM_WORLD);\n";
