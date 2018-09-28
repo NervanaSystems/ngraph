@@ -175,7 +175,8 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         switch (type_id)
         {
         case OP_TYPEID::Convert:
-        case OP_TYPEID::Quantize: type = op->get_input_element_type(0); break;
+        case OP_TYPEID::Quantize:
+        case OP_TYPEID::Dequantize: type = op->get_input_element_type(0); break;
         case OP_TYPEID::Equal:
         case OP_TYPEID::Greater:
         case OP_TYPEID::GreaterEq:
