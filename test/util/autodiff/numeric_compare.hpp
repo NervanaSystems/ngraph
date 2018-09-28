@@ -40,11 +40,11 @@ bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Backend>& b
     std::vector<std::shared_ptr<ngraph::runtime::TensorView>> interpreter_args;
     for (auto arg : args)
     {
-        auto interpreter_arg = interpreter_backend->create_tensor(
-            arg->get_tensor().get_element_type(), arg->get_shape());
+        auto interpreter_arg =
+            interpreter_backend->create_tensor(arg->get_element_type(), arg->get_shape());
 
         // TODO: copy_data should not require T. Quick fix here for bool used in `Select`
-        if (arg->get_tensor().get_element_type() == ngraph::element::boolean)
+        if (arg->get_element_type() == ngraph::element::boolean)
         {
             copy_data(interpreter_arg, read_vector<char>(arg));
         }
@@ -113,11 +113,11 @@ bool autodiff_numeric_compare_selective(
     std::vector<std::shared_ptr<ngraph::runtime::TensorView>> interpreter_args;
     for (auto arg : args)
     {
-        auto interpreter_arg = interpreter_backend->create_tensor(
-            arg->get_tensor().get_element_type(), arg->get_shape());
+        auto interpreter_arg =
+            interpreter_backend->create_tensor(arg->get_element_type(), arg->get_shape());
 
         // TODO: copy_data should not require T. Quick fix here for bool used in `Select`
-        if (arg->get_tensor().get_element_type() == ngraph::element::boolean)
+        if (arg->get_element_type() == ngraph::element::boolean)
         {
             copy_data(interpreter_arg, read_vector<char>(arg));
         }

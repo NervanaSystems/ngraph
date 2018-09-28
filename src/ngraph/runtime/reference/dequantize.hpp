@@ -18,6 +18,7 @@
 
 #include <cmath>
 
+#include "ngraph/axis_set.hpp"
 #include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph
@@ -26,28 +27,27 @@ namespace ngraph
     {
         namespace reference
         {
-            template <typename T>
-            void sum(const T* arg,
-                     T* out,
-                     const Shape& in_shape,
-                     const Shape& out_shape,
-                     const AxisSet& reduction_axes)
+            template <typename QUANT, typename REAL>
+            void dequantize(const QUANT* input,
+                            const REAL* scale,
+                            const QUANT* offset,
+                            REAL* output,
+                            const Shape& input_shape,
+                            const Shape& scale_offset_shape,
+                            const AxisSet& axes)
             {
-                CoordinateTransform output_transform(out_shape);
-
-                for (const Coordinate& output_coord : output_transform)
-                {
-                    out[output_transform.index(output_coord)] = 0;
-                }
-
-                CoordinateTransform input_transform(in_shape);
+                CoordinateTransform input_transform(input_shape);
+                CoordinateTransform scale_offset_transform(scale_offset_shape);
 
                 for (const Coordinate& input_coord : input_transform)
                 {
-                    Coordinate output_coord = reduce(input_coord, reduction_axes);
+                    Coordinate scale_offset_coord = project(input_coord, axes);
 
-                    out[output_transform.index(output_coord)] +=
-                        arg[input_transform.index(input_coord)];
+                    output[input_transform.index(input_coord)] =
+                        static_cast<REAL>(
+                            (input[input_transform.index(input_coord)] -
+                             offset[scale_offset_transform.index(scale_offset_coord)])) *
+                        scale[scale_offset_transform.index(scale_offset_coord)];
                 }
             }
         }

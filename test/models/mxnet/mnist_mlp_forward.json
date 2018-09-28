@@ -7,7 +7,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "inputs": [],
                 "name": "Parameter_19",
@@ -24,7 +25,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "inputs": [],
                 "name": "Parameter_18",
@@ -42,7 +44,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "inputs": [],
                 "name": "Parameter_11",
@@ -59,7 +62,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "inputs": [],
                 "name": "Parameter_10",
@@ -77,7 +81,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "inputs": [],
                 "name": "Parameter_3",
@@ -94,7 +99,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "inputs": [],
                 "name": "Parameter_2",
@@ -112,7 +118,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "inputs": [],
                 "name": "Parameter_0",
@@ -132,7 +139,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "inputs": [],
                 "name": "Constant_16",
@@ -4248,7 +4256,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "inputs": [],
                 "name": "Constant_8",
@@ -12463,7 +12472,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "inputs": [
                     "Parameter_19"
@@ -12483,7 +12493,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "input_order": [
                     1,
@@ -12510,7 +12521,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "inputs": [
                     "Parameter_11"
@@ -12530,7 +12542,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "input_order": [
                     1,
@@ -12557,7 +12570,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "inputs": [
                     "Parameter_3"
@@ -12577,7 +12591,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "input_order": [
                     1,
@@ -12601,7 +12616,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "input_order": [
                     0,
@@ -12627,7 +12643,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "inputs": [
                     "Reshape_1",
@@ -12644,7 +12661,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "inputs": [
                     "Dot_5",
@@ -12661,7 +12679,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "inputs": [
                     "Add_7",
@@ -12678,7 +12697,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "inputs": [
                     "Maximum_9",
@@ -12695,7 +12715,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "inputs": [
                     "Dot_13",
@@ -12712,7 +12733,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "inputs": [
                     "Add_15",
@@ -12729,7 +12751,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "inputs": [
                     "Maximum_17",
@@ -12746,7 +12769,8 @@
                     "bitwidth": 32,
                     "c_type_string": "float",
                     "is_real": true,
-                    "is_signed": true
+                    "is_signed": true,
+                    "is_quantized": false
                 },
                 "inputs": [
                     "Dot_21",

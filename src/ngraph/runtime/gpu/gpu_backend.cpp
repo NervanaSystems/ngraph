@@ -82,6 +82,8 @@ runtime::gpu::GPU_Backend::BackendContext::BackendContext()
 
 void runtime::gpu::GPU_Backend::BackendContext::prepare_runtime_context()
 {
+    //set context current each time in case thread changed
+    m_cuda_manager->SetContextCurrent();
     // add pointers to gpu primitives into the gpu runtime context
     m_runtime_context->gpu_primitives = m_primitive_emitter->get_primitives().data();
     m_runtime_context->gpu_memory_primitives = m_primitive_emitter->get_memory_primitives().data();
@@ -94,12 +96,6 @@ runtime::gpu::GPU_Backend::BackendContext::~BackendContext()
     cudnnDestroy(*m_runtime_context->cudnn_handle);
     delete m_runtime_context->cudnn_handle;
     delete m_runtime_context->compiled_kernel_pool;
-}
-
-shared_ptr<runtime::gpu::GPU_CallFrame> runtime::gpu::GPU_Backend::make_call_frame(
-    const shared_ptr<GPU_ExternalFunction>& external_function)
-{
-    return external_function->make_call_frame();
 }
 
 shared_ptr<runtime::TensorView>
@@ -121,19 +117,19 @@ bool runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func)
     {
         instance.m_external_function = make_shared<GPU_ExternalFunction>(func, m_context);
         instance.m_external_function->m_emit_timing = instance.m_performance_counters_enabled;
-        auto cf = instance.m_external_function->make_call_frame();
-        instance.m_call_frame = dynamic_pointer_cast<GPU_CallFrame>(cf);
+        instance.m_external_function->compile();
+        instance.m_compiled_function = instance.m_external_function->m_compiled_function;
     }
     return true;
 }
 
 bool runtime::gpu::GPU_Backend::call(shared_ptr<Function> func,
-                                     const vector<shared_ptr<runtime::TensorView>>& outputs,
-                                     const vector<shared_ptr<runtime::TensorView>>& inputs)
+                                     const vector<shared_ptr<runtime::TensorView>>& output_tvs,
+                                     const vector<shared_ptr<runtime::TensorView>>& input_tvs)
 {
     bool rc = true;
 
-    validate_call(func, outputs, inputs);
+    validate_call(func, output_tvs, input_tvs);
 
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_external_function == nullptr)
@@ -143,7 +139,26 @@ bool runtime::gpu::GPU_Backend::call(shared_ptr<Function> func,
 
     // ensure the GPURuntimeContext primitive pointers are valid
     m_context->prepare_runtime_context();
-    instance.m_call_frame->call(outputs, inputs, m_context->m_runtime_context.get());
+
+    // Device tensors
+    vector<void*> inputs;
+    vector<void*> outputs;
+
+    for (size_t i = 0; i < input_tvs.size(); i++)
+    {
+        shared_ptr<runtime::gpu::GPU_TensorView> tv =
+            static_pointer_cast<runtime::gpu::GPU_TensorView>(input_tvs[i]);
+        inputs.push_back(tv->m_allocated_buffer_pool);
+    }
+    for (size_t i = 0; i < output_tvs.size(); i++)
+    {
+        shared_ptr<runtime::gpu::GPU_TensorView> tv =
+            static_pointer_cast<runtime::gpu::GPU_TensorView>(output_tvs[i]);
+        outputs.push_back(tv->m_allocated_buffer_pool);
+    }
+
+    auto ctx = m_context->m_runtime_context.get();
+    instance.m_compiled_function(inputs.data(), outputs.data(), ctx);
 
     return rc;
 }
