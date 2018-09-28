@@ -15,7 +15,6 @@ backwards_tanh
 batch_norm_one_output
 batch_norm_three_outputs
 divide_by_zero_int32
-dot_matrix_vector_int64
 function_call
 max_pool_3d
 numeric_double_inf
