@@ -68,7 +68,6 @@ namespace ngraph
             size_t m_pool_offset{0};
         };
 
-        using TensorViewPtrs = std::vector<std::shared_ptr<Tensor>>;
         std::ostream& operator<<(std::ostream&, const ngraph::descriptor::Tensor&);
     }
 }
