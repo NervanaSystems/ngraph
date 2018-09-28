@@ -387,11 +387,11 @@ OPTIONS
                 print_results(perf_shape, timing_detail);
             }
         }
-        catch (ngraph::unsupported_op ue)
+        catch (ngraph::unsupported_op& ue)
         {
             cout << "Unsupported op '" << ue.what() << "' in model " << model << endl;
         }
-        catch (exception e)
+        catch (exception& e)
         {
             cout << "Exception caught on '" << model << "'\n" << e.what() << endl;
         }
