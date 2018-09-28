@@ -30,18 +30,17 @@ namespace ngraph
             static size_t alignment = 64;
 
             class GPU_ExternalFunction;
-            class GPU_CallFrame;
             class GPUPrimitiveEmitter;
             struct GPURuntimeContext;
             class CudaContextManager;
+
+            using EntryPoint_t = void(void** inputs, void** outputs, GPURuntimeContext* ctx);
+            using EntryPoint = std::function<EntryPoint_t>;
 
             class GPU_Backend : public Backend
             {
             public:
                 GPU_Backend();
-                std::shared_ptr<ngraph::runtime::gpu::GPU_CallFrame> make_call_frame(
-                    const std::shared_ptr<ngraph::runtime::gpu::GPU_ExternalFunction>&
-                        external_function);
 
                 std::shared_ptr<ngraph::runtime::TensorView>
                     create_tensor(const ngraph::element::Type& element_type,
@@ -82,8 +81,8 @@ namespace ngraph
                 {
                 public:
                     std::shared_ptr<GPU_ExternalFunction> m_external_function;
-                    std::shared_ptr<GPU_CallFrame> m_call_frame;
                     bool m_performance_counters_enabled = false;
+                    EntryPoint m_compiled_function;
                 };
 
                 std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;

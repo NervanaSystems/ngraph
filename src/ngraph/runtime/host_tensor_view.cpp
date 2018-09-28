@@ -99,13 +99,3 @@ void runtime::HostTensorView::read(void* target, size_t tensor_offset, size_t n)
     const char* source = get_data_ptr();
     memcpy(target, &source[tensor_offset], n);
 }
-
-size_t runtime::HostTensorView::get_size() const
-{
-    return get_tensor_layout()->get_size();
-}
-
-const element::Type& runtime::HostTensorView::get_element_type() const
-{
-    return get_tensor_layout()->get_element_type();
-}
