@@ -46,29 +46,80 @@ namespace ngraph
                 auto& arg2_tensor = tensor_data[args[2].get_name()];
                 auto& out_tensor = tensor_data[out[0].get_name()];
 
-                if (out[0].get_element_type() != element::f32)
-                {
-                    throw ngraph_error("Unsupported dequantization element type");
-                }
-                if (args[0].get_element_type() != element::i8)
-                {
-                    throw ngraph_error("Unsupported int element type");
-                }
-
                 auto arg0_shape = args[0].get_shape();
                 auto arg1_shape = args[1].get_shape();
                 auto daxes = dequantize->get_axes();
 
-                functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx) {
-                    ngraph::runtime::reference::dequantize<int8_t>(
-                        static_cast<int8_t*>(arg0_tensor),
-                        static_cast<float*>(arg1_tensor),
-                        static_cast<int8_t*>(arg2_tensor),
-                        static_cast<float*>(out_tensor),
-                        arg0_shape,
-                        arg1_shape,
-                        daxes);
-                };
+                if (args[0].get_element_type() == element::i8)
+                {
+                    if (out[0].get_element_type() == element::f32)
+                    {
+                        functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx) {
+                            ngraph::runtime::reference::dequantize<int8_t>(
+                                static_cast<int8_t*>(arg0_tensor),
+                                static_cast<float*>(arg1_tensor),
+                                static_cast<int8_t*>(arg2_tensor),
+                                static_cast<float*>(out_tensor),
+                                arg0_shape,
+                                arg1_shape,
+                                daxes);
+                        };
+                    }
+                    else if (out[0].get_element_type() == element::f64)
+                    {
+                        functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx) {
+                            ngraph::runtime::reference::dequantize<int8_t>(
+                                static_cast<int8_t*>(arg0_tensor),
+                                static_cast<double*>(arg1_tensor),
+                                static_cast<int8_t*>(arg2_tensor),
+                                static_cast<double*>(out_tensor),
+                                arg0_shape,
+                                arg1_shape,
+                                daxes);
+                        };
+                    }
+                    else
+                    {
+                        throw ngraph_error("Unsupported dequantization element type");
+                    }
+                }
+                else if (args[0].get_element_type() == element::u8)
+                {
+                    if (out[0].get_element_type() == element::f32)
+                    {
+                        functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx) {
+                            ngraph::runtime::reference::dequantize<uint8_t>(
+                                static_cast<uint8_t*>(arg0_tensor),
+                                static_cast<float*>(arg1_tensor),
+                                static_cast<uint8_t*>(arg2_tensor),
+                                static_cast<float*>(out_tensor),
+                                arg0_shape,
+                                arg1_shape,
+                                daxes);
+                        };
+                    }
+                    else if (out[0].get_element_type() == element::f64)
+                    {
+                        functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx) {
+                            ngraph::runtime::reference::dequantize<uint8_t>(
+                                static_cast<uint8_t*>(arg0_tensor),
+                                static_cast<double*>(arg1_tensor),
+                                static_cast<uint8_t*>(arg2_tensor),
+                                static_cast<double*>(out_tensor),
+                                arg0_shape,
+                                arg1_shape,
+                                daxes);
+                        };
+                    }
+                    else
+                    {
+                        throw ngraph_error("Unsupported dequantization element type");
+                    }
+                }
+                else
+                {
+                    throw ngraph_error("Unsupported input element type");
+                }
 
                 functors.emplace_back(functor);
             }
@@ -88,28 +139,80 @@ namespace ngraph
                 auto& arg2_tensor = tensor_data[args[2].get_name()];
                 auto& out_tensor = tensor_data[out[0].get_name()];
 
-                if (out[0].get_element_type() != element::i8)
-                {
-                    throw ngraph_error("Unsupported quantization element type");
-                }
-                if (args[0].get_element_type() != element::f32)
-                {
-                    throw ngraph_error("Unsupported int element type");
-                }
-
                 auto arg0_shape = args[0].get_shape();
                 auto arg1_shape = args[1].get_shape();
                 auto daxes = quantize->get_axes();
 
-                functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx) {
-                    ngraph::runtime::reference::quantize<float>(static_cast<float*>(arg0_tensor),
-                                                                static_cast<float*>(arg1_tensor),
-                                                                static_cast<int8_t*>(arg2_tensor),
-                                                                static_cast<int8_t*>(out_tensor),
-                                                                arg0_shape,
-                                                                arg1_shape,
-                                                                daxes);
-                };
+                if (args[0].get_element_type() == element::f32)
+                {
+                    if (out[0].get_element_type() == element::i8)
+                    {
+                        functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx) {
+                            ngraph::runtime::reference::quantize<float>(
+                                static_cast<float*>(arg0_tensor),
+                                static_cast<float*>(arg1_tensor),
+                                static_cast<int8_t*>(arg2_tensor),
+                                static_cast<int8_t*>(out_tensor),
+                                arg0_shape,
+                                arg1_shape,
+                                daxes);
+                        };
+                    }
+                    else if (out[0].get_element_type() == element::u8)
+                    {
+                        functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx) {
+                            ngraph::runtime::reference::quantize<float>(
+                                static_cast<float*>(arg0_tensor),
+                                static_cast<float*>(arg1_tensor),
+                                static_cast<uint8_t*>(arg2_tensor),
+                                static_cast<uint8_t*>(out_tensor),
+                                arg0_shape,
+                                arg1_shape,
+                                daxes);
+                        };
+                    }
+                    else
+                    {
+                        throw ngraph_error("Unsupported quantization element type");
+                    }
+                }
+                else if (args[0].get_element_type() == element::f64)
+                {
+                    if (out[0].get_element_type() == element::i8)
+                    {
+                        functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx) {
+                            ngraph::runtime::reference::quantize<double>(
+                                static_cast<double*>(arg0_tensor),
+                                static_cast<double*>(arg1_tensor),
+                                static_cast<int8_t*>(arg2_tensor),
+                                static_cast<int8_t*>(out_tensor),
+                                arg0_shape,
+                                arg1_shape,
+                                daxes);
+                        };
+                    }
+                    else if (out[0].get_element_type() == element::u8)
+                    {
+                        functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx) {
+                            ngraph::runtime::reference::quantize<double>(
+                                static_cast<double*>(arg0_tensor),
+                                static_cast<double*>(arg1_tensor),
+                                static_cast<uint8_t*>(arg2_tensor),
+                                static_cast<uint8_t*>(out_tensor),
+                                arg0_shape,
+                                arg1_shape,
+                                daxes);
+                        };
+                    }
+                    else
+                    {
+                        throw ngraph_error("Unsupported quantization element type");
+                    }
+                }
+                else
+                {
+                    throw ngraph_error("Unsupported input element type");
+                }
 
                 functors.emplace_back(functor);
             }
