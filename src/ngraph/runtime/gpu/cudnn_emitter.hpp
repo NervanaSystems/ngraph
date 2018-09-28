@@ -159,6 +159,21 @@ namespace ngraph
                                                      cudnnConvolutionMode_t mode,
                                                      cudnnDataType_t data_type);
 
+                template <typename PERF_TYPE, typename ALGO_TYPE>
+                ALGO_TYPE select_cudnn_algo(const std::vector<PERF_TYPE>& perf_results,
+                                            size_t workspace_byte = std::numeric_limits<size_t>::max()) {
+                    // Determine the fastest acceptable algo regardless of mathType.
+                    for (auto i = 0; i != perf_results.size(); ++i)
+                    {
+                        auto const& result = perf_results[i];
+                        if (result.status == CUDNN_STATUS_SUCCESS &&  result.memory <= workspace_byte)
+                        {
+                            return result.algo;
+                        }
+                    }
+                    return perf_results.at(0).algo;
+                }
+
                 CUDNNDescriptors m_descriptors;
                 CUDNNHostParameters m_host_parameters;
 
