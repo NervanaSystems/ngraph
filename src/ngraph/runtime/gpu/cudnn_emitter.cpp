@@ -946,7 +946,8 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const std::string& dtype,
     int max_algos = 0;
     CUDNN_SAFE_CALL(cudnnGetConvolutionForwardAlgorithmMaxCount(*m_ctx->cudnn_handle, &max_algos));
     std::vector<cudnnConvolutionFwdAlgoPerf_t> results(max_algos);
-    auto cudnn_algo_search = find_algo ? cudnnFindConvolutionForwardAlgorithm : cudnnGetConvolutionForwardAlgorithm_v7;
+    auto cudnn_algo_search =
+        find_algo ? cudnnFindConvolutionForwardAlgorithm : cudnnGetConvolutionForwardAlgorithm_v7;
     CUDNN_SAFE_CALL((*cudnn_algo_search)(*m_ctx->cudnn_handle,
                                          tensor_desc_0,
                                          filter_desc,
@@ -956,7 +957,8 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const std::string& dtype,
                                          &num_algos,
                                          results.data()));
     results.resize(num_algos);
-    auto conv_fwd_algo = select_cudnn_algo<cudnnConvolutionFwdAlgoPerf_t, cudnnConvolutionFwdAlgo_t>(results);
+    auto conv_fwd_algo =
+        select_cudnn_algo<cudnnConvolutionFwdAlgoPerf_t, cudnnConvolutionFwdAlgo_t>(results);
 
     void* alpha = m_host_parameters.allocate_by_datatype(data_type, 1.0);
     void* beta = m_host_parameters.allocate_by_datatype(data_type, 0);
@@ -1022,9 +1024,11 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
 
     int num_algos;
     int max_algos = 0;
-    CUDNN_SAFE_CALL(cudnnGetConvolutionBackwardDataAlgorithmMaxCount(*m_ctx->cudnn_handle, &max_algos));
+    CUDNN_SAFE_CALL(
+        cudnnGetConvolutionBackwardDataAlgorithmMaxCount(*m_ctx->cudnn_handle, &max_algos));
     std::vector<cudnnConvolutionBwdDataAlgoPerf_t> results(max_algos);
-    auto cudnn_algo_search = find_algo ? cudnnFindConvolutionBackwardDataAlgorithm : cudnnGetConvolutionBackwardDataAlgorithm_v7;
+    auto cudnn_algo_search = find_algo ? cudnnFindConvolutionBackwardDataAlgorithm
+                                       : cudnnGetConvolutionBackwardDataAlgorithm_v7;
     CUDNN_SAFE_CALL((*cudnn_algo_search)(*m_ctx->cudnn_handle,
                                          filter_desc,
                                          tensor_desc_0,
@@ -1034,7 +1038,9 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
                                          &num_algos,
                                          results.data()));
     results.resize(num_algos);
-    auto conv_bwd_data_algo = select_cudnn_algo<cudnnConvolutionBwdDataAlgoPerf_t, cudnnConvolutionBwdDataAlgo_t>(results);
+    auto conv_bwd_data_algo =
+        select_cudnn_algo<cudnnConvolutionBwdDataAlgoPerf_t, cudnnConvolutionBwdDataAlgo_t>(
+            results);
 
     void* alpha = m_host_parameters.allocate_by_datatype(data_type, 1.0);
     void* beta = m_host_parameters.allocate_by_datatype(data_type, 0);
@@ -1100,9 +1106,11 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(
 
     int num_algos;
     int max_algos = 0;
-    CUDNN_SAFE_CALL(cudnnGetConvolutionBackwardFilterAlgorithmMaxCount(*m_ctx->cudnn_handle, &max_algos));
+    CUDNN_SAFE_CALL(
+        cudnnGetConvolutionBackwardFilterAlgorithmMaxCount(*m_ctx->cudnn_handle, &max_algos));
     std::vector<cudnnConvolutionBwdFilterAlgoPerf_t> results(max_algos);
-    auto cudnn_algo_search = find_algo ? cudnnFindConvolutionBackwardFilterAlgorithm : cudnnGetConvolutionBackwardFilterAlgorithm_v7;
+    auto cudnn_algo_search = find_algo ? cudnnFindConvolutionBackwardFilterAlgorithm
+                                       : cudnnGetConvolutionBackwardFilterAlgorithm_v7;
     CUDNN_SAFE_CALL((*cudnn_algo_search)(*m_ctx->cudnn_handle,
                                          tensor_desc_0,
                                          tensor_desc_1,
@@ -1112,7 +1120,9 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(
                                          &num_algos,
                                          results.data()));
     results.resize(num_algos);
-    auto conv_bwd_filter_algo = select_cudnn_algo<cudnnConvolutionBwdFilterAlgoPerf_t, cudnnConvolutionBwdFilterAlgo_t>(results);
+    auto conv_bwd_filter_algo =
+        select_cudnn_algo<cudnnConvolutionBwdFilterAlgoPerf_t, cudnnConvolutionBwdFilterAlgo_t>(
+            results);
 
     size_t workspace_size_in_bytes = 0;
     CUDNN_SAFE_CALL(cudnnGetConvolutionBackwardFilterWorkspaceSize(*m_ctx->cudnn_handle,
