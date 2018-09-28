@@ -90,28 +90,20 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
     //--------------------------------------------------------
     // Construct pattern version_1 for RNN input linear transformation
-    auto data_pred = [](std::shared_ptr<Node> n) {
-        return std::dynamic_pointer_cast<op::Slice>(n) != nullptr;
-    };
-    auto data_slice = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 2, 4}, data_pred);
+    auto data_slice = std::make_shared<pattern::op::Label>(
+        element::f32, Shape{1, 2, 4}, pattern::has_class<op::Slice>());
     auto data_pattern = construct_data_pattern(data_slice);
 
-    auto weights_pred = [](std::shared_ptr<Node> n) {
-        return std::dynamic_pointer_cast<op::Reshape>(n) != nullptr;
-    };
-    auto weights_reshape =
-        std::make_shared<pattern::op::Label>(element::f32, Shape{4, 1}, weights_pred);
+    auto weights_reshape = std::make_shared<pattern::op::Label>(
+        element::f32, Shape{4, 1}, pattern::has_class<op::Reshape>());
     auto weights_pattern = construct_weights_pattern(weights_reshape);
 
     // we don't really need a broadcast node but
     // labelling a Broadcast allows us to extract
     // params from all 3 labels in the same fashion
     //(i.e. via get_argument(0))
-    auto broadcast_pred = [](std::shared_ptr<Node> n) {
-        return std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr;
-    };
-    auto bias_broadcast =
-        std::make_shared<pattern::op::Label>(element::f32, Shape{2, 1}, broadcast_pred);
+    auto bias_broadcast = std::make_shared<pattern::op::Label>(
+        element::f32, Shape{2, 1}, pattern::has_class<op::Broadcast>());
     auto bias_pattern = construct_bias_pattern(bias_broadcast);
 
     const size_t NUM_MMB_ARGS = 3;
@@ -129,13 +121,12 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
     //--------------------------------------------------------
     // Construct pattern version_2 for RNN input linear transformation
-    auto input_data_pred = [](std::shared_ptr<Node> n) {
-        return std::dynamic_pointer_cast<op::Parameter>(n) != nullptr;
-    };
-    auto input_data =
-        std::make_shared<pattern::op::Label>(element::f32, Shape{10, 50}, input_data_pred);
-    auto W = std::make_shared<pattern::op::Label>(element::f32, Shape{50, 400}, weights_pred);
-    auto b = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 400}, broadcast_pred);
+    auto input_data = std::make_shared<pattern::op::Label>(
+        element::f32, Shape{10, 50}, pattern::has_class<op::Parameter>());
+    auto W = std::make_shared<pattern::op::Label>(
+        element::f32, Shape{50, 400}, pattern::has_class<op::Reshape>());
+    auto b = std::make_shared<pattern::op::Label>(
+        element::f32, Shape{10, 400}, pattern::has_class<op::Broadcast>());
     std::shared_ptr<pattern::op::Label> labels_v2[] = {input_data, W, b};
     auto matcher_v2 = construct_rnn_input_linear_transformation(labels_v2);
 
@@ -208,24 +199,26 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             if (map_weights_to_pattern[weights].size() !=
                 map_weights_bias_to_data[std::make_pair(weights, bias)].size())
             {
-                throw ngraph_error(
-                    "number of input data param's doesnt match the number of matched pattern root "
-                    "nodes");
+                NGRAPH_DEBUG << "number of input data param's doesnt match the number of matched "
+                                "pattern root "
+                             << "nodes";
+                return;
             }
+            auto& w_shape = weights->get_shape();
+            if (w_shape.size() != 2)
+            {
+                NGRAPH_DEBUG << "weights shape for linear transformation of input is not 2D";
+                return;
+            }
+
             auto& data_param_nodes = it.second;
             // now concat the parameter hashed to the same weights
             auto concated_data = std::make_shared<op::Concat>(data_param_nodes, 0);
 
             auto& data_shape = concated_data->get_shape();
             auto data_order = ngraph::get_default_order(concated_data->get_shape());
-            auto& w_shape = weights->get_shape();
 
-            if (w_shape.size() != 2)
-            {
-                throw ngraph_error("weights shape for linear transformation of input must be 2D");
-            }
-
-            // insert rehape on the concated data to make it 2D, if its 3D
+            // insert reshape on the concated data to make it 2D, if its 3D
             std::shared_ptr<Node> input_reshape_node = nullptr;
             if (data_shape.size() == 3)
             {
@@ -240,7 +233,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
                 std::make_shared<op::Broadcast>(bias, new_dot->get_shape(), AxisSet{0});
             auto new_add_bias = std::make_shared<op::Add>(new_dot, bias_broadcast_node);
 
-            // now slice the new_add and feed the corrsponding root nodes
+            // now slice the new_add and feed the corrosponding root nodes
             auto batch_size = new_add_bias->get_shape()[0] / data_param_nodes.size();
             auto shape_axis_1 = new_add_bias->get_shape()[1];
             size_t start_index = 0;
@@ -311,6 +304,8 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         }
     };
 
+    // Based the matched pattern, this callback's fuse the input across time steps and replaces with
+    // single DOT operation <X0|X1|X2|..... Xt>*W
     callback_matcher_v2();
     callback_matcher_v1();
     return modify_graph;
