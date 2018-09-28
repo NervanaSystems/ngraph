@@ -60,7 +60,7 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
     if (arg0_shape.empty() || arg1_shape.empty())
     {
         auto& second = (arg0_shape.empty() ? arg1_shape : arg0_shape);
-        int count = shape_size(second);
+        size_t count = shape_size(second);
 
         size_t firstIndex = (arg0_shape.empty() ? 0 : 1);
         size_t secondIndex = (arg0_shape.empty() ? 1 : 0);

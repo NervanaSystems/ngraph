@@ -63,6 +63,6 @@ namespace ngraph
                 GPUPrimitiveEmitter* m_primitive_emitter;
                 GPURuntimeContext* m_ctx;
             };
-        } // namespace gpu
-    }     // namespace runtime
-} // namespace ngraph
+        }
+    }
+}
