@@ -82,6 +82,8 @@ runtime::gpu::GPU_Backend::BackendContext::BackendContext()
 
 void runtime::gpu::GPU_Backend::BackendContext::prepare_runtime_context()
 {
+    //set context current each time in case thread changed
+    m_cuda_manager->SetContextCurrent();
     // add pointers to gpu primitives into the gpu runtime context
     m_runtime_context->gpu_primitives = m_primitive_emitter->get_primitives().data();
     m_runtime_context->gpu_memory_primitives = m_primitive_emitter->get_memory_primitives().data();

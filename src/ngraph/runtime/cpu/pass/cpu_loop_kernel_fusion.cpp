@@ -94,7 +94,6 @@ public:
         for (auto e : m_graphs)
         {
             auto& lkg = e.second;
-
             NodeVector member_outputs = ngraph::get_subgraph_outputs(lkg.m_nodes, NodeVector{});
             auto lk = std::make_shared<runtime::cpu::op::LoopKernel>(
                 lkg.m_nodes, member_outputs, lkg.m_inputs);
@@ -213,5 +212,5 @@ bool ngraph::runtime::cpu::pass::CPULoopKernelFusion::run_on_function(
         }
     }
 
-    return !lkc.get_loop_kernels().empty();
+    return !loop_kernels.empty();
 }

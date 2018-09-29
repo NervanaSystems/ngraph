@@ -174,7 +174,9 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         element::Type type;
         switch (type_id)
         {
-        case OP_TYPEID::Convert: type = op->get_input_element_type(0); break;
+        case OP_TYPEID::Convert:
+        case OP_TYPEID::Quantize:
+        case OP_TYPEID::Dequantize: type = op->get_input_element_type(0); break;
         case OP_TYPEID::Equal:
         case OP_TYPEID::Greater:
         case OP_TYPEID::GreaterEq:
@@ -208,7 +210,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         {
             for (auto it = tensor_map.begin(); it != tensor_map.end(); ++it)
             {
-                if (it->second->get_tensor().get_name() == t->get_name())
+                if (it->second->get_name() == t->get_name())
                 {
                     tensor_map.erase(it);
                     break;

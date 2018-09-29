@@ -29,6 +29,7 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
@@ -38,6 +39,7 @@
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/replace_slice.hpp"
@@ -73,6 +75,7 @@
 #include "ngraph/runtime/reference/copy.hpp"
 #include "ngraph/runtime/reference/cos.hpp"
 #include "ngraph/runtime/reference/cosh.hpp"
+#include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/divide.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
 #include "ngraph/runtime/reference/equal.hpp"
@@ -98,6 +101,7 @@
 #include "ngraph/runtime/reference/pad.hpp"
 #include "ngraph/runtime/reference/power.hpp"
 #include "ngraph/runtime/reference/product.hpp"
+#include "ngraph/runtime/reference/quantize.hpp"
 #include "ngraph/runtime/reference/reduce.hpp"
 #include "ngraph/runtime/reference/reduce_window.hpp"
 #include "ngraph/runtime/reference/relu.hpp"
@@ -582,6 +586,40 @@ private:
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
             break;
         }
+        case OP_TYPEID::Dequantize:
+        {
+            const op::Dequantize* dequantize = static_cast<const op::Dequantize*>(&node);
+            auto type = dequantize->get_element_type();
+
+            if (type == element::f32)
+            {
+                reference::dequantize<T>(args[0]->get_data_ptr<T>(),
+                                         args[1]->get_data_ptr<float>(),
+                                         args[2]->get_data_ptr<T>(),
+                                         out[0]->get_data_ptr<float>(),
+                                         args[0]->get_shape(),
+                                         args[1]->get_shape(),
+                                         dequantize->get_axes());
+            }
+            else if (type == element::f64)
+            {
+                reference::dequantize<T>(args[0]->get_data_ptr<T>(),
+                                         args[1]->get_data_ptr<double>(),
+                                         args[2]->get_data_ptr<T>(),
+                                         out[0]->get_data_ptr<double>(),
+                                         args[0]->get_shape(),
+                                         args[1]->get_shape(),
+                                         dequantize->get_axes());
+            }
+            else
+            {
+                std::stringstream ss;
+                ss << "unsupported element type " << type << " op Dequantize";
+                throw std::runtime_error(ss.str());
+            }
+
+            break;
+        }
         case OP_TYPEID::Divide:
         {
             reference::divide<T>(args[0]->get_data_ptr<T>(),
@@ -835,6 +873,40 @@ private:
                                   args[0]->get_shape(),
                                   out[0]->get_shape(),
                                   product->get_reduction_axes());
+            break;
+        }
+        case OP_TYPEID::Quantize:
+        {
+            const op::Quantize* quantize = static_cast<const op::Quantize*>(&node);
+            auto type = quantize->get_element_type();
+
+            if (type == element::u8)
+            {
+                reference::quantize<T>(args[0]->get_data_ptr<T>(),
+                                       args[1]->get_data_ptr<T>(),
+                                       args[2]->get_data_ptr<uint8_t>(),
+                                       out[0]->get_data_ptr<uint8_t>(),
+                                       args[0]->get_shape(),
+                                       args[1]->get_shape(),
+                                       quantize->get_axes());
+            }
+            else if (type == element::i8)
+            {
+                reference::quantize<T>(args[0]->get_data_ptr<T>(),
+                                       args[1]->get_data_ptr<T>(),
+                                       args[2]->get_data_ptr<int8_t>(),
+                                       out[0]->get_data_ptr<int8_t>(),
+                                       args[0]->get_shape(),
+                                       args[1]->get_shape(),
+                                       quantize->get_axes());
+            }
+            else
+            {
+                std::stringstream ss;
+                ss << "unsupported element type " << type << " op Quantize";
+                throw std::runtime_error(ss.str());
+            }
+
             break;
         }
         case OP_TYPEID::Reduce:
