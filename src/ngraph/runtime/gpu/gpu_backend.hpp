@@ -87,14 +87,14 @@ namespace ngraph
                     std::vector<void*> m_outputs;
                 };
 
-                /// \brief Convert a vector of TensorView into a vector of void* where each void*
-                /// points to a TensorView's data buffer.
+                /// \brief Convert a vector of Tensor into a vector of void* where each void*
+                /// points to a Tensor's data buffer.
                 /// \param target Pointer to a pre-allocated array of void* with
                 /// size >= source.size()
-                /// \param source Source vector of TensorViews
+                /// \param source Source vector of Tensors
                 static void
                     initialize_io(void** target,
-                                  const std::vector<std::shared_ptr<runtime::TensorView>>& source);
+                                  const std::vector<std::shared_ptr<runtime::Tensor>>& source);
 
                 std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
                 std::shared_ptr<BackendContext> m_context;
