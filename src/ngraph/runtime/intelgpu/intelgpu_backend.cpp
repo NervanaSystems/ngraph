@@ -47,7 +47,7 @@
 #include "ngraph/runtime/intelgpu/intelgpu_op_convolution.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_softmax.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_tensor.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
 
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
