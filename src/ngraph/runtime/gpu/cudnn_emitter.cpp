@@ -947,10 +947,12 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const std::string& dtype,
     {
         int num_algos;
         int max_algos = 0;
-        CUDNN_SAFE_CALL(cudnnGetConvolutionForwardAlgorithmMaxCount(*m_ctx->cudnn_handle, &max_algos));
+        CUDNN_SAFE_CALL(
+            cudnnGetConvolutionForwardAlgorithmMaxCount(*m_ctx->cudnn_handle, &max_algos));
         std::vector<cudnnConvolutionFwdAlgoPerf_t> results(max_algos);
-        auto cudnn_algo_search =
-            find_algo == algo_search::EXPLICIT ? cudnnFindConvolutionForwardAlgorithm : cudnnGetConvolutionForwardAlgorithm_v7;
+        auto cudnn_algo_search = (find_algo == algo_search::EXPLICIT)
+                                     ? cudnnFindConvolutionForwardAlgorithm
+                                     : cudnnGetConvolutionForwardAlgorithm_v7;
         CUDNN_SAFE_CALL((*cudnn_algo_search)(*m_ctx->cudnn_handle,
                                              tensor_desc_0,
                                              filter_desc,
@@ -1034,8 +1036,9 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
         CUDNN_SAFE_CALL(
             cudnnGetConvolutionBackwardDataAlgorithmMaxCount(*m_ctx->cudnn_handle, &max_algos));
         std::vector<cudnnConvolutionBwdDataAlgoPerf_t> results(max_algos);
-        auto cudnn_algo_search = find_algo == algo_search::EXPLICIT ? cudnnFindConvolutionBackwardDataAlgorithm
-            : cudnnGetConvolutionBackwardDataAlgorithm_v7;
+        auto cudnn_algo_search = (find_algo == algo_search::EXPLICIT)
+                                     ? cudnnFindConvolutionBackwardDataAlgorithm
+                                     : cudnnGetConvolutionBackwardDataAlgorithm_v7;
         CUDNN_SAFE_CALL((*cudnn_algo_search)(*m_ctx->cudnn_handle,
                                              filter_desc,
                                              tensor_desc_0,
@@ -1120,8 +1123,9 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(
         CUDNN_SAFE_CALL(
             cudnnGetConvolutionBackwardFilterAlgorithmMaxCount(*m_ctx->cudnn_handle, &max_algos));
         std::vector<cudnnConvolutionBwdFilterAlgoPerf_t> results(max_algos);
-        auto cudnn_algo_search = find_algo == algo_search::EXPLICIT ? cudnnFindConvolutionBackwardFilterAlgorithm
-            : cudnnGetConvolutionBackwardFilterAlgorithm_v7;
+        auto cudnn_algo_search = (find_algo == algo_search::EXPLICIT)
+                                     ? cudnnFindConvolutionBackwardFilterAlgorithm
+                                     : cudnnGetConvolutionBackwardFilterAlgorithm_v7;
         CUDNN_SAFE_CALL((*cudnn_algo_search)(*m_ctx->cudnn_handle,
                                              tensor_desc_0,
                                              tensor_desc_1,
