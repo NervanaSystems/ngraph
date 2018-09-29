@@ -29,6 +29,7 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
@@ -74,6 +75,7 @@
 #include "ngraph/runtime/reference/copy.hpp"
 #include "ngraph/runtime/reference/cos.hpp"
 #include "ngraph/runtime/reference/cosh.hpp"
+#include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/divide.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
 #include "ngraph/runtime/reference/equal.hpp"
@@ -581,6 +583,40 @@ private:
         {
             reference::cosh<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
+            break;
+        }
+        case OP_TYPEID::Dequantize:
+        {
+            const op::Dequantize* dequantize = static_cast<const op::Dequantize*>(&node);
+            auto type = dequantize->get_element_type();
+
+            if (type == element::f32)
+            {
+                reference::dequantize<T>(args[0]->get_data_ptr<T>(),
+                                         args[1]->get_data_ptr<float>(),
+                                         args[2]->get_data_ptr<T>(),
+                                         out[0]->get_data_ptr<float>(),
+                                         args[0]->get_shape(),
+                                         args[1]->get_shape(),
+                                         dequantize->get_axes());
+            }
+            else if (type == element::f64)
+            {
+                reference::dequantize<T>(args[0]->get_data_ptr<T>(),
+                                         args[1]->get_data_ptr<double>(),
+                                         args[2]->get_data_ptr<T>(),
+                                         out[0]->get_data_ptr<double>(),
+                                         args[0]->get_shape(),
+                                         args[1]->get_shape(),
+                                         dequantize->get_axes());
+            }
+            else
+            {
+                std::stringstream ss;
+                ss << "unsupported element type " << type << " op Dequantize";
+                throw std::runtime_error(ss.str());
+            }
+
             break;
         }
         case OP_TYPEID::Divide:
