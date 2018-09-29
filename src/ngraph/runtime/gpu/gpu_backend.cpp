@@ -23,7 +23,7 @@
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -101,13 +101,13 @@ runtime::gpu::GPU_Backend::BackendContext::~BackendContext()
 shared_ptr<runtime::Tensor>
     runtime::gpu::GPU_Backend::create_tensor(const element::Type& element_type, const Shape& shape)
 {
-    return make_shared<runtime::gpu::GPU_TensorView>(element_type, shape);
+    return make_shared<runtime::gpu::GPUTensor>(element_type, shape);
 }
 
 shared_ptr<runtime::Tensor> runtime::gpu::GPU_Backend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
-    return make_shared<runtime::gpu::GPU_TensorView>(element_type, shape, memory_pointer);
+    return make_shared<runtime::gpu::GPUTensor>(element_type, shape, memory_pointer);
 }
 
 bool runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func)
@@ -130,8 +130,8 @@ void runtime::gpu::GPU_Backend::initialize_io(void** target,
 {
     for (size_t i = 0; i < source.size(); i++)
     {
-        shared_ptr<runtime::gpu::GPU_TensorView> tv =
-            dynamic_pointer_cast<runtime::gpu::GPU_TensorView>(source[i]);
+        shared_ptr<runtime::gpu::GPUTensor> tv =
+            dynamic_pointer_cast<runtime::gpu::GPUTensor>(source[i]);
         if (tv)
         {
             target[i] = tv->m_allocated_buffer_pool;

@@ -20,15 +20,15 @@
 
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-runtime::gpu::GPU_TensorView::GPU_TensorView(const ngraph::element::Type& element_type,
-                                             const Shape& shape,
-                                             void* memory_pointer)
+runtime::gpu::GPUTensor::GPUTensor(const ngraph::element::Type& element_type,
+                                   const Shape& shape,
+                                   void* memory_pointer)
     : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, "external"))
     , m_custom_memory(false)
 {
@@ -47,13 +47,12 @@ runtime::gpu::GPU_TensorView::GPU_TensorView(const ngraph::element::Type& elemen
     }
 }
 
-runtime::gpu::GPU_TensorView::GPU_TensorView(const ngraph::element::Type& element_type,
-                                             const Shape& shape)
-    : GPU_TensorView(element_type, shape, nullptr)
+runtime::gpu::GPUTensor::GPUTensor(const ngraph::element::Type& element_type, const Shape& shape)
+    : GPUTensor(element_type, shape, nullptr)
 {
 }
 
-runtime::gpu::GPU_TensorView::~GPU_TensorView()
+runtime::gpu::GPUTensor::~GPUTensor()
 {
     if (!m_custom_memory && (m_allocated_buffer_pool != nullptr))
     {
@@ -61,12 +60,12 @@ runtime::gpu::GPU_TensorView::~GPU_TensorView()
     }
 }
 
-void runtime::gpu::GPU_TensorView::write(const void* source, size_t tensor_offset, size_t n)
+void runtime::gpu::GPUTensor::write(const void* source, size_t tensor_offset, size_t n)
 {
     CUDA_RT_SAFE_CALL(cudaMemcpy(m_allocated_buffer_pool, source, n, cudaMemcpyHostToDevice));
 }
 
-void runtime::gpu::GPU_TensorView::read(void* target, size_t tensor_offset, size_t n) const
+void runtime::gpu::GPUTensor::read(void* target, size_t tensor_offset, size_t n) const
 {
     CUDA_RT_SAFE_CALL(cudaMemcpy(target, m_allocated_buffer_pool, n, cudaMemcpyDeviceToHost));
 }

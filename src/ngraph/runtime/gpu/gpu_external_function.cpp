@@ -110,7 +110,7 @@
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_layout.hpp"
 #include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
 
@@ -167,8 +167,8 @@ static GPUStaticInitializers s_static_initializers;
 void runtime::gpu::GPU_ExternalFunction::emit_op(GPU_ExternalFunction* external_function,
                                                  codegen::CodeWriter& writer,
                                                  const ngraph::Node* node,
-                                                 const std::vector<GPU_TensorViewWrapper>& args,
-                                                 const std::vector<GPU_TensorViewWrapper>& out)
+                                                 const std::vector<GPUTensorWrapper>& args,
+                                                 const std::vector<GPUTensorWrapper>& out)
 {
     auto emit_function = GPU_Emitter::get_emit_function(*node);
     emit_function(external_function, writer, node, args, out);
@@ -479,21 +479,21 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
 
             for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
             {
-                vector<GPU_TensorViewWrapper> in;
+                vector<GPUTensorWrapper> in;
                 vector<string> node_input_names;
                 vector<string> node_output_names;
                 for (const descriptor::Input& input : node->get_inputs())
                 {
                     const descriptor::Output& output = input.get_output();
                     shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-                    in.push_back(GPU_TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
+                    in.push_back(GPUTensorWrapper(tv, m_variable_name_map[tv->get_name()]));
                     node_input_names.emplace_back(tv->get_name());
                 }
-                vector<GPU_TensorViewWrapper> out;
+                vector<GPUTensorWrapper> out;
                 for (const descriptor::Output& output : node->get_outputs())
                 {
                     shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-                    out.push_back(GPU_TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
+                    out.push_back(GPUTensorWrapper(tv, m_variable_name_map[tv->get_name()]));
                     node_output_names.emplace_back(tv->get_name());
                 }
 
@@ -520,11 +520,11 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                     string func_name =
                         ngraph::pass::CommonFunctionCollection::create_function_name(*it->second);
                     vector<string> names;
-                    for (const GPU_TensorViewWrapper& tv : in)
+                    for (const GPUTensorWrapper& tv : in)
                     {
                         names.push_back(tv.get_name());
                     }
-                    for (const GPU_TensorViewWrapper& tv : out)
+                    for (const GPUTensorWrapper& tv : out)
                     {
                         names.push_back(tv.get_name());
                     }
@@ -659,14 +659,14 @@ string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
     codegen::CodeWriter writer;
     writer << "static void " << function_name << "(";
     writer.indent++;
-    vector<GPU_TensorViewWrapper> in;
+    vector<GPUTensorWrapper> in;
     size_t arg_index = 0;
     set<string> arg_names;
     for (const descriptor::Input& input : node.get_inputs())
     {
         const descriptor::Output& output = input.get_output();
         shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-        GPU_TensorViewWrapper tvw{tv, "_arg" + to_string(arg_index)};
+        GPUTensorWrapper tvw{tv, "_arg" + to_string(arg_index)};
         if (!contains(arg_names, tvw.get_name()))
         {
             arg_names.insert(tvw.get_name());
@@ -679,11 +679,11 @@ string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
         }
         in.push_back(tvw);
     }
-    vector<GPU_TensorViewWrapper> out;
+    vector<GPUTensorWrapper> out;
     for (const descriptor::Output& output : node.get_outputs())
     {
         shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-        GPU_TensorViewWrapper tvw{tv, "_out" + to_string(arg_index)};
+        GPUTensorWrapper tvw{tv, "_out" + to_string(arg_index)};
         if (arg_index++ > 0)
         {
             writer << ",";

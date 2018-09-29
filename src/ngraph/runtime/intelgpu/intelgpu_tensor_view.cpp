@@ -20,7 +20,7 @@
 
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_tensor.hpp"
 
 using namespace ngraph;
 using namespace std;
