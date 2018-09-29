@@ -55,9 +55,6 @@ namespace ngraph
                 void debug_sync();
                 void sync();
 
-                // protected:
-                //     size_t get_primitive_index(std::unique_ptr<gpu::primitive>&, std::string);
-
             private:
                 CUBLASEmitter(GPUPrimitiveEmitter* emitter, GPURuntimeContext* ctx);
                 GPUPrimitiveEmitter* m_primitive_emitter;
