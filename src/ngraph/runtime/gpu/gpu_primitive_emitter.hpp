@@ -56,6 +56,8 @@ namespace ngraph
                 void allocate_primitive_memory() { m_memory_manager.allocate(); }
                 size_t sizeof_device_allocation() { return m_memory_manager.get_allocation_size(); }
                 GPUKernelArgs add_kernel_args() { return GPUKernelArgs(m_host_parameters); }
+                size_t get_primitive_index(std::unique_ptr<gpu::primitive>&, std::string);
+
             private:
                 std::vector<gpu::primitive*> m_gpu_primitives;
                 std::vector<gpu::memory_primitive> m_gpu_mem_primitives;

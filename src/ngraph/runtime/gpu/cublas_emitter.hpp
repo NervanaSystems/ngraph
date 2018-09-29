@@ -47,16 +47,16 @@ namespace ngraph
 
             public:
                 size_t build_dot(const element::Type& dtype,
-                                 const Shape& input_tensor_shape_0,
-                                 const Shape& input_tensor_shape_1,
-                                 const Shape& output_tensor_shape,
+                                 const Shape& arg0_shape,
+                                 const Shape& arg1_shape,
+                                 const Shape& out_shape,
                                  size_t reduction_axes);
 
                 void debug_sync();
                 void sync();
 
-            protected:
-                size_t getPrimitiveIndex(std::unique_ptr<gpu::primitive>&, std::string);
+                // protected:
+                //     size_t get_primitive_index(std::unique_ptr<gpu::primitive>&, std::string);
 
             private:
                 CUBLASEmitter(GPUPrimitiveEmitter* emitter, GPURuntimeContext* ctx);

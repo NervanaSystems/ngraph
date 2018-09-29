@@ -30,7 +30,6 @@
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
-using namespace std;
 
 runtime::gpu::CUBLASEmitter::CUBLASEmitter(GPUPrimitiveEmitter* emitter, GPURuntimeContext* ctx)
     : m_primitive_emitter(emitter)
@@ -80,7 +79,8 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
             debug_sync();
         }});
 
-        return getPrimitiveIndex(dot, hash);
+        // return get_primitive_index(dot, hash);
+        return this->m_primitive_emitter->get_primitive_index(dot, hash);
     }
 
     if (shape_size(arg0_shape) == 0 || shape_size(arg1_shape) == 0)
@@ -91,7 +91,8 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
             debug_sync();
         }});
 
-        return getPrimitiveIndex(dot, hash);
+        // return get_primitive_index(dot, hash);
+        return this->m_primitive_emitter->get_primitive_index(dot, hash);
     }
     // case that can be treat as dot1d
     if ((arg0_shape.size() == arg1_shape.size()) && (arg0_shape.size() == reduction_axes))
@@ -100,13 +101,14 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
         {
             if (arg0_shape[i] != arg1_shape[i])
             {
-                throw invalid_argument("arg0 and arg1 shape does not match for dot.");
+                throw std::invalid_argument("arg0 and arg1 shape does not match for dot.");
             }
         }
 
+        size_t count = shape_size(arg0_shape);
         dot.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
             CUBLAS_SAFE_CALL(cublasSdot(*m_ctx->cublas_handle,
-                                        shape_size(arg0_shape),
+                                        count,
                                         static_cast<const float*>(inputs[0]),
                                         1,
                                         static_cast<const float*>(inputs[1]),
@@ -116,7 +118,8 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
             debug_sync();
         }});
 
-        return getPrimitiveIndex(dot, hash);
+        // return get_primitive_index(dot, hash);
+        return this->m_primitive_emitter->get_primitive_index(dot, hash);
     }
 
     // matrix vector
@@ -145,7 +148,8 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
             debug_sync();
         }});
 
-        return getPrimitiveIndex(dot, hash);
+        // return get_primitive_index(dot, hash);
+        return this->m_primitive_emitter->get_primitive_index(dot, hash);
     }
 
     size_t num_of_axes_for_m = arg0_shape.size() - reduction_axes;
@@ -164,7 +168,7 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
         k *= arg0_shape[arg0_k_idx];
         if (arg0_shape[arg0_k_idx++] != arg1_shape[arg1_k_idx++])
         {
-            throw invalid_argument("arg0 and arg1 shape does not match for dot.");
+            throw std::invalid_argument("arg0 and arg1 shape does not match for dot.");
         }
     }
     // check and calculate m for arg0 and out
@@ -175,7 +179,7 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
         m *= arg0_shape[arg0_m_idx];
         if (arg0_shape[arg0_m_idx++] != out_shape[out_m_idx++])
         {
-            throw invalid_argument("arg0 and output shape does not match for dot.");
+            throw std::invalid_argument("arg0 and output shape does not match for dot.");
         }
     }
     // check and calculate n for arg1 and out
@@ -186,7 +190,7 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
         n *= arg1_shape[arg1_n_idx];
         if (arg1_shape[arg1_n_idx++] != out_shape[out_n_idx++])
         {
-            throw invalid_argument("arg1 and output shape does not match for dot.");
+            throw std::invalid_argument("arg1 and output shape does not match for dot.");
         }
     }
 
@@ -214,7 +218,8 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
         debug_sync();
     }});
 
-    return getPrimitiveIndex(dot, hash);
+    // return get_primitive_index(dot, hash);
+    return this->m_primitive_emitter->get_primitive_index(dot, hash);
 }
 
 void runtime::gpu::CUBLASEmitter::sync()
@@ -231,10 +236,10 @@ void runtime::gpu::CUBLASEmitter::debug_sync()
     return;
 }
 
-size_t runtime::gpu::CUBLASEmitter::getPrimitiveIndex(std::unique_ptr<gpu::primitive>& dot,
-                                                      std::string hash)
-{
-    size_t primitive_index = this->m_primitive_emitter->insert(std::move(dot));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
-}
+// size_t runtime::gpu::CUBLASEmitter::get_primitive_index(std::unique_ptr<gpu::primitive>& dot,
+//                                                       std::string hash)
+// {
+//     size_t primitive_index = this->m_primitive_emitter->insert(std::move(dot));
+//     m_primitive_emitter->cache(hash, primitive_index);
+//     return primitive_index;
+// }

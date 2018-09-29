@@ -75,3 +75,11 @@ void GPUPrimitiveEmitter::cache(const std::string& hash, const size_t& index)
 {
     m_primitive_map.insert({hash, index});
 }
+
+size_t GPUPrimitiveEmitter::get_primitive_index(std::unique_ptr<gpu::primitive>& f,
+                                                std::string hash)
+{
+    size_t primitive_index = this->insert(std::move(f));
+    this->cache(hash, primitive_index);
+    return primitive_index;
+}
