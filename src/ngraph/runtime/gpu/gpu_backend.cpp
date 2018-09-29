@@ -98,13 +98,13 @@ runtime::gpu::GPU_Backend::BackendContext::~BackendContext()
     delete m_runtime_context->compiled_kernel_pool;
 }
 
-shared_ptr<runtime::TensorView>
+shared_ptr<runtime::Tensor>
     runtime::gpu::GPU_Backend::create_tensor(const element::Type& element_type, const Shape& shape)
 {
     return make_shared<runtime::gpu::GPU_TensorView>(element_type, shape);
 }
 
-shared_ptr<runtime::TensorView> runtime::gpu::GPU_Backend::create_tensor(
+shared_ptr<runtime::Tensor> runtime::gpu::GPU_Backend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
     return make_shared<runtime::gpu::GPU_TensorView>(element_type, shape, memory_pointer);
@@ -126,7 +126,7 @@ bool runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func)
 }
 
 void runtime::gpu::GPU_Backend::initialize_io(void** target,
-                                              const vector<shared_ptr<runtime::TensorView>>& source)
+                                              const vector<shared_ptr<runtime::Tensor>>& source)
 {
     for (size_t i = 0; i < source.size(); i++)
     {
@@ -144,8 +144,8 @@ void runtime::gpu::GPU_Backend::initialize_io(void** target,
 }
 
 bool runtime::gpu::GPU_Backend::call(shared_ptr<Function> func,
-                                     const vector<shared_ptr<runtime::TensorView>>& outputs,
-                                     const vector<shared_ptr<runtime::TensorView>>& inputs)
+                                     const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                     const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     bool rc = true;
 

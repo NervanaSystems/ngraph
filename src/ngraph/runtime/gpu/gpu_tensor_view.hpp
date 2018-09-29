@@ -19,7 +19,7 @@
 #include <cuda.h>
 #include <memory>
 
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
 #include "ngraph/type/element_type.hpp"
 
 namespace ngraph
@@ -33,7 +33,7 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::gpu::GPU_TensorView : public ngraph::runtime::TensorView
+class ngraph::runtime::gpu::GPU_TensorView : public ngraph::runtime::Tensor
 {
 public:
     GPU_TensorView(const ngraph::element::Type& element_type, const Shape& shape);
