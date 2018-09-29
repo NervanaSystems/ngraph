@@ -124,7 +124,9 @@ namespace ngraph
             return std::type_index(typeid(*this)) == std::type_index(typeid(*n));
         }
 
-        void set_output_type(size_t i, const element::Type& element_type, const Shape& shape);
+        void set_output_type(size_t i,
+                             const element::Type& element_type,
+                             const PartialShape& pshape);
 
         bool is_parameter() const;
         virtual bool is_output() const;

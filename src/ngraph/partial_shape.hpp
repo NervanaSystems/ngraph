@@ -48,6 +48,19 @@ namespace ngraph
         {
         }
 
+        /// \brief Constructs a PartialShape with determined rank from a vector of Dimensions.
+        PartialShape(const std::vector<Dimension>& dimensions)
+            : m_rank_is_determined(true)
+            , m_dimensions(dimensions)
+        {
+        }
+
+        /// \brief Constructs a complete PartialShape with zero rank.
+        PartialShape()
+            : PartialShape({})
+        {
+        }
+
         /// \brief Constructs a complete PartialShape from a Shape.
         PartialShape(const Shape& shape);
 
@@ -84,6 +97,8 @@ namespace ngraph
         ///        Throws std::invalid_argument if the PartialShape is incomplete.
         Shape to_shape() const;
 
+        /// \brief Index operator for PartialShape.
+        const Dimension& operator[](size_t i) const { return m_dimensions[i]; }
         friend std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
         friend PartialShape operator+(const PartialShape& s1, const PartialShape& s2);
 

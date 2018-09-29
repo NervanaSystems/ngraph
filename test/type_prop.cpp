@@ -6568,3 +6568,28 @@ TEST(type_prop, topk_invalid_k)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, param_partial_rank_undetermined)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape::undetermined());
+
+    auto& pshape = a->get_output_partial_shape(0);
+
+    ASSERT_FALSE(pshape.is_complete());
+    ASSERT_FALSE(pshape.rank().is_determined());
+}
+
+TEST(type_prop, param_partial_rank_determined)
+{
+    auto a =
+        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::undetermined(), 3, 4});
+
+    auto& pshape = a->get_output_partial_shape(0);
+
+    ASSERT_FALSE(pshape.is_complete());
+    EXPECT_EQ(size_t(pshape.rank()), 4);
+    EXPECT_TRUE(pshape[0].is_determined() && size_t(pshape[0]) == 2);
+    EXPECT_FALSE(pshape[1].is_determined());
+    EXPECT_TRUE(pshape[2].is_determined() && size_t(pshape[2]) == 3);
+    EXPECT_TRUE(pshape[3].is_determined() && size_t(pshape[3]) == 4);
+}

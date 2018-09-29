@@ -84,9 +84,9 @@ void Node::validate_and_infer_types()
 {
 }
 
-void Node::set_output_type(size_t i, const element::Type& element_type, const Shape& shape)
+void Node::set_output_type(size_t i, const element::Type& element_type, const PartialShape& pshape)
 {
-    m_outputs.at(i).get_tensor_ptr()->set_tensor_type(element_type, shape);
+    m_outputs.at(i).get_tensor_ptr()->set_tensor_type(element_type, pshape);
 }
 
 std::deque<descriptor::Output>& Node::get_outputs()
