@@ -97,6 +97,10 @@ option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
 option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
 
+if ($ENV{NGRAPH_ONNX_IMPORT_ENABLE})
+	set(NGRAPH_ONNX_IMPORT_ENABLE TRUE CACHE BOOL "Enable ONNX importer" FORCE)
+endif()
+
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     option(NGRAPH_USE_SYSTEM_PROTOBUF "Use system provided Protobuf shared object" FALSE)
     option(NGRAPH_ONNXIFI_ENABLE "Enable ONNX Interface for Framework Integration" TRUE)
