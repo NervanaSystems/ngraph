@@ -14,20 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <algorithm>
-#include <iostream>
-#include <sstream>
 #include <stdexcept>
 
-#include "ngraph/log.hpp"
 #include "ngraph/runtime/gpu/cublas_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_invoke.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
-#include "ngraph/runtime/gpu/gpu_util.hpp"
-#include "ngraph/runtime/gpu/type_info.hpp"
-#include "ngraph/util.hpp"
 
 using namespace ngraph;
 

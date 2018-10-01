@@ -16,15 +16,8 @@
 
 #pragma once
 
-#include <functional>
-#include <memory>
-#include <vector>
 #include <cublas_v2.h>
-#include <cuda.h>
-#include <cuda_runtime.h>
-//#include <cudnn.h>
 
-#include "ngraph/axis_set.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/op/dot.hpp"
