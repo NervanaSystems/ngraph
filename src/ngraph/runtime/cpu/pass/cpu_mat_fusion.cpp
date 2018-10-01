@@ -212,6 +212,14 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             }
 
             auto& data_param_nodes = it.second;
+            // we will not fuse if the batch_size are not same across all inputs of time step
+            for (auto& node : data_param_nodes)
+            {
+                if (shape_size(data_param_nodes[0]->get_shape()) != shape_size(node->get_shape()))
+                {
+                    return;
+                }
+            }
             // now concat the parameter hashed to the same weights
             auto concated_data = std::make_shared<op::Concat>(data_param_nodes, 0);
 
