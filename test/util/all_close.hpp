@@ -59,8 +59,8 @@ namespace ngraph
         /// \param atol Absolute tolerance
         /// Returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
         template <typename T>
-        bool all_close(const std::shared_ptr<ngraph::runtime::TensorView>& a,
-                       const std::shared_ptr<ngraph::runtime::TensorView>& b,
+        bool all_close(const std::shared_ptr<ngraph::runtime::Tensor>& a,
+                       const std::shared_ptr<ngraph::runtime::Tensor>& b,
                        T rtol = 1e-5f,
                        T atol = 1e-8f)
         {
@@ -85,8 +85,8 @@ namespace ngraph
         /// \param atol Absolute tolerance
         /// Returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
         template <typename T>
-        bool all_close(const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& as,
-                       const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& bs,
+        bool all_close(const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& as,
+                       const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& bs,
                        T rtol,
                        T atol)
         {

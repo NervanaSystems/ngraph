@@ -36,7 +36,7 @@ namespace ngraph
 class ngraph::runtime::intelgpu::IntelGPULayout : public ngraph::descriptor::layout::TensorLayout
 {
 public:
-    IntelGPULayout(const ngraph::descriptor::TensorView& tv, const cldnn::layout& layout);
+    IntelGPULayout(const ngraph::descriptor::Tensor& tv, const cldnn::layout& layout);
     ~IntelGPULayout() override {}
     size_t get_index_offset(const std::vector<size_t>& indices) override;
 

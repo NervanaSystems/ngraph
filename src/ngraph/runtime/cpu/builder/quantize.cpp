@@ -29,11 +29,11 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Quantize)
+            void Builder::BUILDER_DECL(ngraph::op::QuantizeCPU)
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto quantize = static_cast<const ngraph::op::Quantize*>(node);
+                    auto quantize = static_cast<const ngraph::op::QuantizeCPU*>(node);
                     auto& functors = external_function->get_functors();
                     auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
@@ -65,10 +65,10 @@ namespace ngraph
                 }
                 else
                 {
-                    throw ngraph_error("Unsupported parameters for QuantizeOp via DEX");
+                    throw ngraph_error("Unsupported parameters for QuantizeCPUOp via DEX");
                 }
             }
-            REGISTER_OP_BUILDER(Quantize);
+            REGISTER_OP_BUILDER(QuantizeCPU);
         }
     }
 }

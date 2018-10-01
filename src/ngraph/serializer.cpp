@@ -39,6 +39,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
@@ -67,6 +68,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/relu.hpp"
@@ -205,12 +207,14 @@ static element::Type read_element_type(const json& j)
     size_t bitwidth = 0;
     bool is_real = false;
     bool is_signed = false;
+    bool is_quantized = false;
     string c_type_string = "";
     if (j.is_object())
     {
         bitwidth = j.at("bitwidth").get<size_t>();
         is_real = j.at("is_real").get<bool>();
         is_signed = j.at("is_signed").get<bool>();
+        is_quantized = j.at("is_quantized").get<bool>();
         c_type_string = j.at("c_type_string").get<string>();
     }
     else
@@ -223,12 +227,13 @@ static element::Type read_element_type(const json& j)
                 bitwidth = t->bitwidth();
                 is_real = t->is_real();
                 is_signed = t->is_signed();
+                is_quantized = t->is_quantized();
                 c_type_string = t->c_type_string();
                 break;
             }
         }
     }
-    return element::Type(bitwidth, is_real, is_signed, c_type_string);
+    return element::Type(bitwidth, is_real, is_signed, is_quantized, c_type_string);
 }
 
 void ngraph::serialize(const string& path, shared_ptr<ngraph::Function> func, size_t indent)
@@ -674,6 +679,13 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Cosh>(args[0]);
                 break;
             }
+            case OP_TYPEID::Dequantize:
+            {
+                auto type = read_element_type(node_js.at("type"));
+                auto axes = node_js.at("axes").get<set<size_t>>();
+                node = make_shared<op::Dequantize>(args[0], args[1], args[2], type, axes);
+                break;
+            }
             case OP_TYPEID::Divide:
             {
                 node = make_shared<op::Divide>(args[0], args[1]);
@@ -888,6 +900,14 @@ static shared_ptr<ngraph::Function>
             {
                 auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
                 node = make_shared<op::Product>(args[0], reduction_axes);
+                break;
+            }
+            case OP_TYPEID::Quantize:
+            {
+                auto type = read_element_type(node_js.at("type"));
+                auto axes = node_js.at("axes").get<set<size_t>>();
+                auto round_mode = node_js.at("round_mode").get<op::Quantize::RoundMode>();
+                node = make_shared<op::Quantize>(args[0], args[1], args[2], type, axes, round_mode);
                 break;
             }
             case OP_TYPEID::Reduce:
@@ -1305,6 +1325,13 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::Cosh: { break;
     }
+    case OP_TYPEID::Dequantize:
+    {
+        auto tmp = dynamic_cast<const op::Dequantize*>(&n);
+        node["type"] = write_element_type(tmp->get_element_type());
+        node["axes"] = tmp->get_axes();
+        break;
+    }
     case OP_TYPEID::Divide: { break;
     }
     case OP_TYPEID::Dot:
@@ -1423,6 +1450,14 @@ static json write(const Node& n, bool binary_constant_data)
         break;
     }
     case OP_TYPEID::Power: { break;
+    }
+    case OP_TYPEID::Quantize:
+    {
+        auto tmp = dynamic_cast<const op::Quantize*>(&n);
+        node["type"] = write_element_type(tmp->get_element_type());
+        node["axes"] = tmp->get_axes();
+        node["round_mode"] = tmp->get_round_mode();
+        break;
     }
     case OP_TYPEID::Reduce:
     {
