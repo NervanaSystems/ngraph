@@ -1229,14 +1229,16 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
                                                    const Prop& direction,
                                                    const Shape& tensor_shape,
                                                    const Shape& param_shape,
-                                                   double epsilon)
+                                                   double epsilon,
+                                                   bool global_stats)
 {
     // Assumes NC{d1...dN} format
     std::stringstream ss;
     ss.precision(std::numeric_limits<double>::digits10 + 2);
 
     ss << "bn_op" << bn_op << "_dtype_" << dtype << "_dir" << static_cast<int>(direction) << "_ts"
-       << join(tensor_shape, "_") << "_ps" << join(param_shape, "_") << "_eps" << epsilon;
+       << join(tensor_shape, "_") << "_ps" << join(param_shape, "_") << "_eps" << epsilon << "_g"
+       << global_stats;
     std::string hash = ss.str();
     std::replace(hash.begin(), hash.end(), '.', '_');
 
@@ -1300,6 +1302,8 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
         void* bias_factor = m_host_parameters.allocate_by_datatype(data_type, (m - 1) / m);
         batchnorm.reset(new gpu::primitive{
             [=, &op_desc, &tensor_desc, &derived_param_desc](void** inputs, void** outputs) {
+                auto mean = (global_stats ? inputs[3] : outputs[1]);
+                auto variance = (global_stats ? inputs[4] : outputs[2]);
                 CUDNN_SAFE_CALL(cudnnBatchNormalizationForwardTraining(*m_ctx->cudnn_handle,
                                                                        bn_op,
                                                                        alpha,
@@ -1312,8 +1316,8 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
                                                                        inputs[0],
                                                                        inputs[1],
                                                                        exp_avg_factor,
-                                                                       outputs[1],
-                                                                       outputs[2],
+                                                                       mean,
+                                                                       variance,
                                                                        epsilon,
                                                                        NULL,
                                                                        NULL));
@@ -1324,13 +1328,13 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
                                               op_desc,
                                               beta,
                                               derived_param_desc,
-                                              outputs[2],
+                                              variance,
                                               beta,
                                               derived_param_desc,
-                                              outputs[2],
+                                              variance,
                                               bias_factor,
                                               derived_param_desc,
-                                              outputs[2]));
+                                              variance));
                 debug_sync();
             }});
         break;

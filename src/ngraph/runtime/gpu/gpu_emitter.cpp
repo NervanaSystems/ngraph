@@ -1323,10 +1323,12 @@ namespace ngraph
                 auto& cudnn_emitter =
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
 
+                bool global_stats = false;
                 CUDNNEmitter::Prop direction;
-                if (batchnorm->get_training_flag() && args.size() == 3)
+                if (batchnorm->get_training_flag())
                 {
                     direction = CUDNNEmitter::Prop::Forward;
+                    global_stats = (batchnorm->get_arguments().size() == 5);
                 }
                 else
                 {
@@ -1338,7 +1340,8 @@ namespace ngraph
                                                             direction,
                                                             args[2].get_shape(),
                                                             args[0].get_shape(),
-                                                            batchnorm->get_eps_value());
+                                                            batchnorm->get_eps_value(),
+                                                            global_stats);
 
                 writer.block_begin();
                 {
