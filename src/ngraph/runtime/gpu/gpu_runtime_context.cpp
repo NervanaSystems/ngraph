@@ -15,24 +15,24 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
+#include "ngraph/runtime/gpu/gpu_util.hpp"
 
 using namespace ngraph;
-using namespace ngraph::runtime::gpu;
 
-extern "C" void ngraph::runtime::gpu::start_stopwatch(GPURuntimeContext* ctx, size_t idx)
+extern "C" void runtime::gpu::start_stopwatch(GPURuntimeContext* ctx, size_t idx)
 {
     ctx->stopwatch_pool->get(idx).start();
 }
 
-extern "C" void ngraph::runtime::gpu::stop_stopwatch(GPURuntimeContext* ctx, size_t idx)
+extern "C" void runtime::gpu::stop_stopwatch(GPURuntimeContext* ctx, size_t idx)
 {
     ctx->stopwatch_pool->get(idx).stop();
 }
-extern "C" size_t ngraph::runtime::gpu::count_stopwatch(GPURuntimeContext* ctx, size_t idx)
+extern "C" size_t runtime::gpu::count_stopwatch(GPURuntimeContext* ctx, size_t idx)
 {
     return ctx->stopwatch_pool->get(idx).get_call_count();
 }
-extern "C" size_t ngraph::runtime::gpu::us_stopwatch(GPURuntimeContext* ctx, size_t idx)
+extern "C" size_t runtime::gpu::us_stopwatch(GPURuntimeContext* ctx, size_t idx)
 {
     return ctx->stopwatch_pool->get(idx).get_total_microseconds();
 }
