@@ -119,7 +119,7 @@ static void random_init(shared_ptr<runtime::Tensor> tv)
     }
     else if (et == element::i32)
     {
-        init_int_tv<int32_t>(tv, -1, 1);
+        init_int_tv<int32_t>(tv, 0, 1);
     }
     else if (et == element::i64)
     {
