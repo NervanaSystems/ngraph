@@ -1,0 +1,53 @@
+# Remember that the last applicable rule for any given file is the only one
+# that applies (if I am reading the docs correctly).
+
+# Default rule: @diyessi gets everything.
+*                                   @diyessi
+
+/cmake/                             @rkimballn1 @silee2
+
+/.ci/                               @crlishka
+/.ci/travis/                        @postrational
+/.ci/onnx/                          @postrational
+/contrib/docker/                    @crlishka
+/.travis.yml                        @postrational
+
+/.clang-format                      @rkimballn1
+/.gitattributes                     @rkimballn1
+/.gitignore                         @rkimballn1
+/VERSION.in                         @rkimballn1 @silee2
+
+/doc/                               @indie
+/README.md                          @indie
+/changes.md                         @indie @diyessi
+/INSTALL.md                         @indie
+/CONTRIB.md                         @indie
+
+/licenses/                          @diyessi @kimjanik @crlishka
+/LICENSE                            @diyessi @kimjanik @crlishka
+
+/python/                            @postrational
+
+/src/resource/                      @rkimballn1
+/src/tools/                         @rkimballn1
+/src/ngraph/autodiff/               @diyessi
+/src/ngraph/builder/                @mbrookhart
+/src/ngraph/codegen/                @rkimballn1
+/src/ngraph/frontend/               @postrational
+/src/ngraph/op/                     @diyessi @aprocter
+/src/ngraph/pass/                   @Krovatkin
+/src/ngraph/pattern/                @Krovatkin
+/src/ngraph/runtime/                @rkimballn1 @Krovatkin
+/src/ngraph/runtime/cpu/            @jbobba
+/src/ngraph/runtime/gpu/            @rkimballn1
+/src/ngraph/runtime/intelgpu/       @shssf
+/src/ngraph/runtime/interpreter/    @rkimballn1
+/src/ngraph/runtime/reference/      @aprocter
+/src/ngraph/type/                   @diyessi
+/src/ngraph/serializer.*pp          @rkimballn1
+
+# Putting this last so it's not overridden by directory rules
+CMakeLists.txt                      @rkimballn1 @silee2
+
+# Putting this last to make sure nothing else overrides.
+/CODEOWNERS                         @diyessi
