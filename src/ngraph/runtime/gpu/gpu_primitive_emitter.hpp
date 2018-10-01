@@ -15,13 +15,10 @@
 //*****************************************************************************
 
 #pragma once
-#include <functional>
-#include <unordered_map>
 
 #include "ngraph/runtime/gpu/cublas_emitter.hpp"
 #include "ngraph/runtime/gpu/cuda_emitter.hpp"
 #include "ngraph/runtime/gpu/cudnn_emitter.hpp"
-
 #include "ngraph/runtime/gpu/gpu_kernel_args.hpp"
 #include "ngraph/runtime/gpu/gpu_memory_manager.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
@@ -32,9 +29,6 @@ namespace ngraph
     {
         namespace gpu
         {
-            class CUDAEmitter;
-            class CUDNNEmitter;
-            class CUBLASEmitter;
             class GPUPrimitiveEmitter
             {
             public:
