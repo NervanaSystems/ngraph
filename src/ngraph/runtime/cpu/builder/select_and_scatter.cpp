@@ -18,7 +18,7 @@
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/reference/select_and_scatter.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
 
 using namespace std;
 using namespace ngraph;
