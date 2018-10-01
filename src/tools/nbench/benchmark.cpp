@@ -19,9 +19,8 @@
 #include "benchmark.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/host_tensor_view.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/tensor.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
@@ -31,7 +30,7 @@ using namespace ngraph;
 static default_random_engine s_random_engine;
 
 template <typename T>
-void init_int_tv(shared_ptr<runtime::TensorView> tv, T min, T max)
+void init_int_tv(shared_ptr<runtime::Tensor> tv, T min, T max)
 {
     size_t size = tv->get_element_count();
     uniform_int_distribution<T> dist(min, max);
@@ -44,7 +43,7 @@ void init_int_tv(shared_ptr<runtime::TensorView> tv, T min, T max)
 }
 
 template <>
-void init_int_tv<char>(shared_ptr<runtime::TensorView> tv, char min, char max)
+void init_int_tv<char>(shared_ptr<runtime::Tensor> tv, char min, char max)
 {
     size_t size = tv->get_element_count();
     uniform_int_distribution<int16_t> dist(static_cast<short>(min), static_cast<short>(max));
@@ -57,7 +56,7 @@ void init_int_tv<char>(shared_ptr<runtime::TensorView> tv, char min, char max)
 }
 
 template <>
-void init_int_tv<int8_t>(shared_ptr<runtime::TensorView> tv, int8_t min, int8_t max)
+void init_int_tv<int8_t>(shared_ptr<runtime::Tensor> tv, int8_t min, int8_t max)
 {
     size_t size = tv->get_element_count();
     uniform_int_distribution<int16_t> dist(static_cast<short>(min), static_cast<short>(max));
@@ -70,7 +69,7 @@ void init_int_tv<int8_t>(shared_ptr<runtime::TensorView> tv, int8_t min, int8_t 
 }
 
 template <>
-void init_int_tv<uint8_t>(shared_ptr<runtime::TensorView> tv, uint8_t min, uint8_t max)
+void init_int_tv<uint8_t>(shared_ptr<runtime::Tensor> tv, uint8_t min, uint8_t max)
 {
     size_t size = tv->get_element_count();
     uniform_int_distribution<int16_t> dist(static_cast<short>(min), static_cast<short>(max));
@@ -83,7 +82,7 @@ void init_int_tv<uint8_t>(shared_ptr<runtime::TensorView> tv, uint8_t min, uint8
 }
 
 template <typename T>
-void init_real_tv(shared_ptr<runtime::TensorView> tv, T min, T max)
+void init_real_tv(shared_ptr<runtime::Tensor> tv, T min, T max)
 {
     size_t size = tv->get_element_count();
     uniform_real_distribution<T> dist(min, max);
@@ -95,7 +94,7 @@ void init_real_tv(shared_ptr<runtime::TensorView> tv, T min, T max)
     tv->write(vec.data(), 0, vec.size() * sizeof(T));
 }
 
-static void random_init(shared_ptr<runtime::TensorView> tv)
+static void random_init(shared_ptr<runtime::Tensor> tv)
 {
     element::Type et = tv->get_element_type();
     if (et == element::boolean)
@@ -120,7 +119,7 @@ static void random_init(shared_ptr<runtime::TensorView> tv)
     }
     else if (et == element::i32)
     {
-        init_int_tv<int32_t>(tv, -1, 1);
+        init_int_tv<int32_t>(tv, 0, 1);
     }
     else if (et == element::i64)
     {
@@ -164,26 +163,26 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     cout.imbue(locale(""));
     cout << "compile time: " << timer.get_milliseconds() << "ms" << endl;
 
-    vector<shared_ptr<runtime::HostTensorView>> arg_data;
-    vector<shared_ptr<runtime::TensorView>> args;
+    vector<shared_ptr<runtime::HostTensor>> arg_data;
+    vector<shared_ptr<runtime::Tensor>> args;
     vector<bool> args_cacheable;
     for (shared_ptr<op::Parameter> param : f->get_parameters())
     {
         auto tensor = backend->create_tensor(param->get_element_type(), param->get_shape());
         auto tensor_data =
-            make_shared<runtime::HostTensorView>(param->get_element_type(), param->get_shape());
+            make_shared<runtime::HostTensor>(param->get_element_type(), param->get_shape());
         random_init(tensor);
         args.push_back(tensor);
         arg_data.push_back(tensor_data);
         args_cacheable.push_back(param->get_cacheable());
     }
-    vector<shared_ptr<runtime::HostTensorView>> result_data;
-    vector<shared_ptr<runtime::TensorView>> results;
+    vector<shared_ptr<runtime::HostTensor>> result_data;
+    vector<shared_ptr<runtime::Tensor>> results;
     for (shared_ptr<Node> out : f->get_results())
     {
         auto result = backend->create_tensor(out->get_element_type(), out->get_shape());
         auto tensor_data =
-            make_shared<runtime::HostTensorView>(out->get_element_type(), out->get_shape());
+            make_shared<runtime::HostTensor>(out->get_element_type(), out->get_shape());
         results.push_back(result);
         result_data.push_back(tensor_data);
     }
@@ -212,10 +211,10 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
         {
             for (size_t arg_index = 0; arg_index < args.size(); arg_index++)
             {
-                const shared_ptr<runtime::TensorView>& arg = args[arg_index];
+                const shared_ptr<runtime::Tensor>& arg = args[arg_index];
                 if (arg->get_stale())
                 {
-                    const shared_ptr<runtime::HostTensorView>& data = arg_data[arg_index];
+                    const shared_ptr<runtime::HostTensor>& data = arg_data[arg_index];
                     arg->write(data->get_data_ptr(),
                                0,
                                data->get_element_count() * data->get_element_type().size());
@@ -227,8 +226,8 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
         {
             for (size_t result_index = 0; result_index < results.size(); result_index++)
             {
-                const shared_ptr<runtime::HostTensorView>& data = result_data[result_index];
-                const shared_ptr<runtime::TensorView>& result = results[result_index];
+                const shared_ptr<runtime::HostTensor>& data = result_data[result_index];
+                const shared_ptr<runtime::Tensor>& result = results[result_index];
                 result->read(data->get_data_ptr(),
                              0,
                              data->get_element_count() * data->get_element_type().size());
