@@ -146,6 +146,7 @@ Contents
    framework-integration-guides.rst
    frameworks/index.rst
    fusion/index.rst
+   shared/index.rst
    programmable/index.rst
    distr/index.rst
    python_api/index.rst

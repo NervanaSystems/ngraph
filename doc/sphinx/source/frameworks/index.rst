@@ -86,8 +86,9 @@ updates.
 .. [#1] Benchmarking performance of DL systems is a young discipline; it is a
    good idea to be vigilant for results based on atypical distortions in the 
    configuration parameters. Every topology is different, and performance 
-   changes can be attributed to multiple causes. Also watch out for the word "theoretical" in comparisons; actual performance should not be 
-   compared to theoretical performance.     
+   changes can be attributed to multiple causes. Also watch out for the 
+   word "theoretical" in comparisons; actual performance should not be compared 
+   to theoretical performance.     
 
 
 .. _ngraph tensorflow bridge: http://ngraph.nervanasys.com/docs/latest/framework-integration-guides.html#tensorflow

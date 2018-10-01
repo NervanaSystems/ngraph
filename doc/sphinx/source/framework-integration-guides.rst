@@ -28,7 +28,9 @@ MXNet\* bridge
 #. (Optional) For experimental or alternative approaches to distributed training
    methodologies, including data parallel training, see the MXNet-relevant sections
    of the docs on :doc:`distr/index` and :doc:`How to <howto/index>` topics like
-   :doc:`howto/distribute-train`. 
+   :doc:`howto/distribute-train`.
+
+#. To start working with MXNet's `Confluence` API see the :doc:`frameworks/mxnet_tutorial`.
 
 
 .. _tensorflow_intg:

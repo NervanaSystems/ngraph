@@ -61,7 +61,7 @@ Supported platforms
 
 
 * Intel® Architecture Processors (CPUs), 
-* Intel® Nervana™ Neural Network Processor™ (NNPs), and 
+* Intel® Nervana™ Neural Network Processor (NNPs), and 
 * NVIDIA\* CUDA (GPUs). 
 
 We built the first-generation of the Intel Nervana™ NNP family of processors 
