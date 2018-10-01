@@ -48,7 +48,7 @@ set(SRC
     zero_dim_tensor_elimination.cpp
 )
 
-if (NGRAPH_ONNX_IMPORT_ENABLE)
+if (NGRAPH_ONNX_IMPORT_FLAG)
     list(APPEND SRC onnx_import.cpp)
     if (NGRAPH_ONNXIFI_ENABLE)
         list(APPEND SRC onnxifi.cpp)
