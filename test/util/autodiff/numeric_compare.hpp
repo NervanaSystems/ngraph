@@ -28,7 +28,7 @@ template <typename T>
 bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Backend>& backend,
                               std::shared_ptr<ngraph::Function> f,
                               std::shared_ptr<ngraph::Function> g,
-                              const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& args,
+                              const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& args,
                               T rtol,
                               T atol)
 {
@@ -37,7 +37,7 @@ bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Backend>& b
     // Use INTERPRETER to compute numerical derivatives
     auto interpreter_backend = ngraph::runtime::Backend::create("INTERPRETER");
 
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> interpreter_args;
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> interpreter_args;
     for (auto arg : args)
     {
         auto interpreter_arg =
@@ -61,8 +61,8 @@ bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Backend>& b
     auto results_sym =
         ngraph::autodiff::backprop_derivative<T>(backend, g, args, g->get_parameters());
 
-    // Cast to HostTensorView for comparision
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> interpreter_results_sym;
+    // Cast to HostTensor for comparision
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> interpreter_results_sym;
     for (auto result : results_sym)
     {
         auto interpreter_result =
@@ -77,7 +77,7 @@ bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Backend>& b
 template <typename T>
 bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Backend>& backend,
                               std::function<std::shared_ptr<ngraph::Function>()> make_graph,
-                              const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& args,
+                              const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& args,
                               T rtol,
                               T atol)
 {
@@ -89,7 +89,7 @@ bool autodiff_numeric_compare_selective(
     const std::shared_ptr<ngraph::runtime::Backend>& backend,
     std::shared_ptr<ngraph::Function> f,
     std::shared_ptr<ngraph::Function> g,
-    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& args,
+    const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& args,
     T rtol,
     T atol,
     const std::vector<bool>& indep_param_mask)
@@ -110,7 +110,7 @@ bool autodiff_numeric_compare_selective(
 
     auto interpreter_backend = ngraph::runtime::Backend::create("INTERPRETER");
 
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> interpreter_args;
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> interpreter_args;
     for (auto arg : args)
     {
         auto interpreter_arg =
@@ -146,8 +146,8 @@ bool autodiff_numeric_compare_selective(
 
     auto results_sym = ngraph::autodiff::backprop_derivative<T>(backend, g, args, g_indep_params);
 
-    // Cast to HostTensorView for comparision
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> interpreter_results_sym;
+    // Cast to HostTensor for comparision
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> interpreter_results_sym;
     for (auto result : results_sym)
     {
         auto interpreter_result =
@@ -163,7 +163,7 @@ template <typename T>
 bool autodiff_numeric_compare_selective(
     const std::shared_ptr<ngraph::runtime::Backend>& backend,
     std::function<std::shared_ptr<ngraph::Function>()> make_graph,
-    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& args,
+    const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& args,
     T rtol,
     T atol,
     const std::vector<bool>& indep_param_mask)
