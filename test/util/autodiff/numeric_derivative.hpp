@@ -33,10 +33,10 @@ namespace ngraph
         /// \param indep_params parameters with respect to which to compute derivatives
         /// \returns vector of dy/dvar, where each dy/dvar's shape is concat(y.shape(), var.shape())
         template <typename T>
-        std::vector<std::shared_ptr<runtime::TensorView>>
+        std::vector<std::shared_ptr<runtime::Tensor>>
             numeric_derivative(const std::shared_ptr<runtime::Backend>& backend,
                                const std::shared_ptr<Function>& f,
-                               const std::vector<std::shared_ptr<runtime::TensorView>>& args,
+                               const std::vector<std::shared_ptr<runtime::Tensor>>& args,
                                T delta,
                                const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
         {
@@ -45,7 +45,7 @@ namespace ngraph
             auto params = f->get_parameters();
 
             // Results for each derivative, shape Y|X_i
-            std::vector<std::shared_ptr<runtime::TensorView>> results;
+            std::vector<std::shared_ptr<runtime::Tensor>> results;
 
             for (auto param : indep_params)
             {
@@ -59,7 +59,7 @@ namespace ngraph
             auto ref_y = backend->create_tensor<T>(y_shape);
 
             backend->call_with_validate(
-                f, std::vector<std::shared_ptr<ngraph::runtime::TensorView>>{ref_y}, args);
+                f, std::vector<std::shared_ptr<ngraph::runtime::Tensor>>{ref_y}, args);
             auto ref_vec = read_vector<T>(ref_y);
 
             // inc_y will hold f(x+dx) values

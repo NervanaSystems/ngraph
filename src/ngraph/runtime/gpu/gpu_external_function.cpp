@@ -402,7 +402,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
             shared_ptr<descriptor::Tensor> tv = op->get_output_tensor_ptr();
             output_names.insert(tv->get_name());
         }
-        set<descriptor::TensorView*> constants;
+        set<descriptor::Tensor*> constants;
         for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
         {
             if (dynamic_cast<ngraph::op::Constant*>(node.get()))
