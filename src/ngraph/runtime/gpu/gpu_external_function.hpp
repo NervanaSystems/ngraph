@@ -32,7 +32,6 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
-#include "ngraph/runtime/gpu/gpu_call_frame.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
 
@@ -48,12 +47,10 @@ namespace ngraph
         namespace gpu
         {
             class GPU_Emitter;
-            class GPU_CallFrame;
             struct GPURuntimeContext;
 
-            class GPU_ExternalFunction : public std::enable_shared_from_this<GPU_ExternalFunction>
+            class GPU_ExternalFunction
             {
-                friend class GPU_CallFrame;
                 friend class GPU_Backend;
 
             public:
@@ -62,7 +59,6 @@ namespace ngraph
                                      bool release_function = true);
                 ~GPU_ExternalFunction();
 
-                std::shared_ptr<ngraph::runtime::gpu::GPU_CallFrame> make_call_frame();
                 std::unique_ptr<runtime::gpu::GPURuntimeContext>& ctx();
                 const std::unique_ptr<GPUPrimitiveEmitter>& get_primitive_emitter() const
                 {

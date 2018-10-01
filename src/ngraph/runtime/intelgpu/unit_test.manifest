@@ -1,5 +1,3 @@
-argmax_trivial
-argmin_trivial
 avg_pool_2d_2channel_2image_padded_only_above
 avg_pool_3d
 backwards_batch_norm_three_outputs
@@ -19,10 +17,13 @@ batch_norm_three_outputs
 divide_by_zero_int32
 dot_matrix_vector_int64
 function_call
-lrn
 max_pool_3d
 numeric_double_inf
 numeric_double_nan
+quantize
+quantize_axes
+quantize_int8
+quantize_clamp
 reduce_3d_to_vector
 reduce_matrix_cols_zero
 reduce_matrix_columns

@@ -71,7 +71,7 @@ TEST(partial_shape, dim_construction_undetermined)
 
 TEST(partial_shape, dim_construction_size_t_max)
 {
-    EXPECT_ANY_THROW({ Dimension d{std::numeric_limits<size_t>::max()}; });
+    EXPECT_ANY_THROW({ Dimension d{Dimension::s_undetermined_val}; });
 }
 
 TEST(partial_shape, dim_conversion_determined)

@@ -1258,7 +1258,7 @@ void runtime::intelgpu::do_one_hot_operation(cldnn::topology& topology,
             size_t current_input = 0;
             string buffer;
             const size_t output_shape_size = output_shape.size();
-            for (uint j = 0; j < output_shape_size; j++)
+            for (uint j = 0; j < output_shape_size; ++j)
             {
                 if (j == one_hot_axis)
                 {
@@ -1438,4 +1438,85 @@ void runtime::intelgpu::do_custom_eltwise_operation(cldnn::topology& topology,
                                                         layout,
                                                         gws);
     topology.add(op_custom_eltwise);
+}
+
+void runtime::intelgpu::do_arg_max_min_operation(cldnn::topology& topology,
+                                                 const string& input_name,
+                                                 const Shape& input_shape,
+                                                 const element::Type& input_type,
+                                                 const string& output_name,
+                                                 const Shape& output_shape,
+                                                 const element::Type& output_type,
+                                                 const size_t reduction_axis,
+                                                 const bool is_max)
+{
+    const string operation_name = is_max ? "max" : "min";
+    const string entry_point_name = "op_arg_" + operation_name + "_" + output_name;
+    codegen::CodeWriter writer;
+    vector<size_t> gws;
+
+    const string operation_sign = is_max ? " > " : " < ";
+    const string infinity = is_max ? "-INFINITY" : "INFINITY";
+    const string var_name = operation_name + "_val";
+
+    size_t current_input = 0;
+    string dims_buffer;
+    const size_t input_shape_size = input_shape.size();
+    for (uint j = 0; j < input_shape_size; ++j)
+    {
+        if (j == reduction_axis)
+        {
+            dims_buffer += "[i]";
+        }
+        else
+        {
+            dims_buffer += "[i" + to_string(current_input) + "]";
+            ++current_input;
+        }
+    }
+
+    gen_func_def(writer,
+                 entry_point_name,
+                 {get_opencl_type_name(input_type)},
+                 {input_shape},
+                 get_opencl_type_name(output_type),
+                 output_shape);
+
+    writer.block_begin();
+    {
+        gws = generate_loops(writer, output_shape, true);
+
+        writer << get_opencl_type_name(output_type) << " " << var_name << " = " << infinity
+               << ";\n";
+        writer << "uint index = -1;\n";
+
+        writer << "for (uint i = 0; i < " << input_shape.at(reduction_axis) << "; ++i)\n";
+        writer.block_begin();
+        {
+            writer << "if(i == 0 || input0" << dims_buffer << operation_sign << var_name << ")\n";
+            writer.block_begin();
+            {
+                writer << var_name << " = input0" << dims_buffer << ";\n";
+                writer << "index = i;\n";
+            }
+            writer.block_end();
+        }
+        writer.block_end();
+
+        writer << "output" << access_dims(output_shape) << " = index;\n";
+
+        generate_loops(writer, output_shape, false);
+    }
+    writer.block_end();
+
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const cldnn::custom_gpu_primitive op_arg_max_min(output_name,
+                                                     {input_name},
+                                                     {writer.get_code()},
+                                                     entry_point_name,
+                                                     get_kernel_args(1, 1),
+                                                     "",
+                                                     layout,
+                                                     gws);
+    topology.add(op_arg_max_min);
 }

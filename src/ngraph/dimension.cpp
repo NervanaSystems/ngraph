@@ -16,10 +16,24 @@
 
 #include <iostream>
 #include <limits>
+#include <sstream>
 
 #include "ngraph/dimension.hpp"
 
 using namespace ngraph;
+
+Dimension::Dimension(size_t dimension)
+    : m_dimension(dimension)
+{
+    if (dimension == s_undetermined_val)
+    {
+        std::stringstream ss;
+        ss << "Cannot convert the value 0x" << std::uppercase << std::hex << s_undetermined_val
+           << " to Dimension: this value is used internally to represent an undetermined "
+              "dimension.";
+        throw std::invalid_argument(ss.str());
+    }
+}
 
 std::ostream& ngraph::operator<<(std::ostream& str, const Dimension& dimension)
 {
