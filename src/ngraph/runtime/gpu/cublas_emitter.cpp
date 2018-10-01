@@ -73,16 +73,6 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
         return this->m_primitive_emitter->get_primitive_index(dot, hash);
     }
 
-    if (shape_size(arg0_shape) == 0 || shape_size(arg1_shape) == 0)
-    {
-        size_t elemSize = shape_size(out_shape) * dtype.size();
-        dot.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
-            runtime::gpu::cuda_memset(outputs[0], 0, elemSize);
-            debug_sync();
-        }});
-
-        return this->m_primitive_emitter->get_primitive_index(dot, hash);
-    }
     // case that can be treat as dot1d
     if ((arg0_shape.size() == arg1_shape.size()) && (arg0_shape.size() == reduction_axes))
     {

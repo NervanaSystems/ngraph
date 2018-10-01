@@ -520,14 +520,24 @@ void runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
 
     writer.block_begin();
     {
-        auto& cublas_emitter = external_function->get_primitive_emitter()->get_cublas_emitter();
+        // set output to 0 if input size is 0
+        if (args[0].get_size() == 0 || args[1].get_size() == 0)
+        {
+            writer << "runtime::gpu::cuda_memset(" << out[0].get_name() << ", 0, "
+                   << out[0].get_size() << " * " << out[0].get_element_type().size() << ");\n";
+        }
 
-        auto index = cublas_emitter->build_dot(
-            out[0].get_element_type(), arg0_shape, arg1_shape, out_shape, reduction_axes_count);
+        else
+        {
+            auto& cublas_emitter = external_function->get_primitive_emitter()->get_cublas_emitter();
 
-        writer << "void* input[] = {" << node_names(args) << "};\n";
-        writer << "void* output[] = {" << node_names(out) << "};\n";
-        writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+            auto index = cublas_emitter->build_dot(
+                out[0].get_element_type(), arg0_shape, arg1_shape, out_shape, reduction_axes_count);
+
+            writer << "void* input[] = {" << node_names(args) << "};\n";
+            writer << "void* output[] = {" << node_names(out) << "};\n";
+            writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+        }
     }
     writer.block_end();
 }
