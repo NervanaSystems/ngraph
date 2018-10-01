@@ -18,9 +18,9 @@
 
 #include <cublas_v2.h>
 
+#include "ngraph/op/dot.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/shape.hpp"
-#include "ngraph/op/dot.hpp"
 
 namespace ngraph
 {

@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <limits>
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
+#include <limits>
 
 using namespace ngraph;
 using namespace ngraph::runtime::gpu;
