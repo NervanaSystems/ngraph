@@ -44,7 +44,7 @@ namespace ngraph
             Tensor(const element::Type& element_type, const Shape& shape, const std::string& name);
 
             const std::string& get_name() const { return m_name; }
-            void set_tensor_view_type(const element::Type& element_type, const Shape& shape);
+            void set_tensor_type(const element::Type& element_type, const Shape& shape);
 
             const element::Type& get_element_type() const { return m_element_type; }
             const Shape& get_shape() const { return m_shape; }
@@ -68,9 +68,6 @@ namespace ngraph
             size_t m_pool_offset{0};
         };
 
-        using TensorView = Tensor;
-
-        using TensorViewPtrs = std::vector<std::shared_ptr<Tensor>>;
         std::ostream& operator<<(std::ostream&, const ngraph::descriptor::Tensor&);
     }
 }

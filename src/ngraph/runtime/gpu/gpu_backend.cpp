@@ -82,6 +82,8 @@ runtime::gpu::GPU_Backend::BackendContext::BackendContext()
 
 void runtime::gpu::GPU_Backend::BackendContext::prepare_runtime_context()
 {
+    //set context current each time in case thread changed
+    m_cuda_manager->SetContextCurrent();
     // add pointers to gpu primitives into the gpu runtime context
     m_runtime_context->gpu_primitives = m_primitive_emitter->get_primitives().data();
     m_runtime_context->gpu_memory_primitives = m_primitive_emitter->get_memory_primitives().data();
@@ -96,19 +98,13 @@ runtime::gpu::GPU_Backend::BackendContext::~BackendContext()
     delete m_runtime_context->compiled_kernel_pool;
 }
 
-shared_ptr<runtime::gpu::GPU_CallFrame> runtime::gpu::GPU_Backend::make_call_frame(
-    const shared_ptr<GPU_ExternalFunction>& external_function)
-{
-    return external_function->make_call_frame();
-}
-
-shared_ptr<runtime::TensorView>
+shared_ptr<runtime::Tensor>
     runtime::gpu::GPU_Backend::create_tensor(const element::Type& element_type, const Shape& shape)
 {
     return make_shared<runtime::gpu::GPU_TensorView>(element_type, shape);
 }
 
-shared_ptr<runtime::TensorView> runtime::gpu::GPU_Backend::create_tensor(
+shared_ptr<runtime::Tensor> runtime::gpu::GPU_Backend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
     return make_shared<runtime::gpu::GPU_TensorView>(element_type, shape, memory_pointer);
@@ -121,15 +117,35 @@ bool runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func)
     {
         instance.m_external_function = make_shared<GPU_ExternalFunction>(func, m_context);
         instance.m_external_function->m_emit_timing = instance.m_performance_counters_enabled;
-        auto cf = instance.m_external_function->make_call_frame();
-        instance.m_call_frame = dynamic_pointer_cast<GPU_CallFrame>(cf);
+        instance.m_external_function->compile();
+        instance.m_compiled_function = instance.m_external_function->m_compiled_function;
+        instance.m_inputs.resize(func->get_parameters().size());
+        instance.m_outputs.resize(func->get_output_size());
     }
     return true;
 }
 
+void runtime::gpu::GPU_Backend::initialize_io(void** target,
+                                              const vector<shared_ptr<runtime::Tensor>>& source)
+{
+    for (size_t i = 0; i < source.size(); i++)
+    {
+        shared_ptr<runtime::gpu::GPU_TensorView> tv =
+            dynamic_pointer_cast<runtime::gpu::GPU_TensorView>(source[i]);
+        if (tv)
+        {
+            target[i] = tv->m_allocated_buffer_pool;
+        }
+        else
+        {
+            throw invalid_argument("Tensors passed to GPU backend must be GPU Tensors");
+        }
+    }
+}
+
 bool runtime::gpu::GPU_Backend::call(shared_ptr<Function> func,
-                                     const vector<shared_ptr<runtime::TensorView>>& outputs,
-                                     const vector<shared_ptr<runtime::TensorView>>& inputs)
+                                     const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                     const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     bool rc = true;
 
@@ -143,7 +159,13 @@ bool runtime::gpu::GPU_Backend::call(shared_ptr<Function> func,
 
     // ensure the GPURuntimeContext primitive pointers are valid
     m_context->prepare_runtime_context();
-    instance.m_call_frame->call(outputs, inputs, m_context->m_runtime_context.get());
+
+    // Device tensors
+    initialize_io(instance.m_inputs.data(), inputs);
+    initialize_io(instance.m_outputs.data(), outputs);
+
+    auto ctx = m_context->m_runtime_context.get();
+    instance.m_compiled_function(instance.m_inputs.data(), instance.m_outputs.data(), ctx);
 
     return rc;
 }

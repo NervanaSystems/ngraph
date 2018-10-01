@@ -23,6 +23,6 @@ void regmodule_pyngraph_runtime(py::module m)
 {
     py::module m_runtime =
         m.def_submodule("runtime", "Package ngraph.impl.runtime wraps ngraph::runtime");
-    regclass_pyngraph_runtime_TensorView(m_runtime);
+    regclass_pyngraph_runtime_Tensor(m_runtime);
     regclass_pyngraph_runtime_Backend(m_runtime);
 }
