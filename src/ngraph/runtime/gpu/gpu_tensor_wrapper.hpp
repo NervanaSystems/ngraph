@@ -27,16 +27,15 @@ namespace ngraph
     {
         namespace gpu
         {
-            class GPU_TensorViewWrapper;
+            class GPUTensorWrapper;
         }
     }
 }
 
-class ngraph::runtime::gpu::GPU_TensorViewWrapper
+class ngraph::runtime::gpu::GPUTensorWrapper
 {
 public:
-    GPU_TensorViewWrapper(const std::shared_ptr<descriptor::Tensor>&,
-                          const std::string& alias = "");
+    GPUTensorWrapper(const std::shared_ptr<descriptor::Tensor>&, const std::string& alias = "");
 
     size_t get_size() const;
     const Shape& get_shape() const;
