@@ -34,6 +34,7 @@ set(SRC
     main.cpp
     nop_elimination.cpp
     op.cpp
+    partial_shape.cpp
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
