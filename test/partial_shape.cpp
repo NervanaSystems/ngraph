@@ -360,7 +360,125 @@ TEST(partial_shape, partial_shape_same_scheme_scalar)
     ASSERT_TRUE((PartialShape{}.same_scheme(PartialShape{})));
 }
 
-TEST(partial_shape, adam_needs_to_write_tests_for_the_merge_functions)
+TEST(partial_shape, dim_merge_both_undetermined)
 {
-    throw std::runtime_error("Adam needs to write tests for the shape/dimension merge functions.");
+    Dimension d;
+    ASSERT_TRUE(Dimension::merge(d, Dimension::undetermined(), Dimension::undetermined()));
+    ASSERT_FALSE(d.is_determined());
+}
+
+TEST(partial_shape, dim_merge_left_undetermined)
+{
+    Dimension d;
+    ASSERT_TRUE(Dimension::merge(d, Dimension::undetermined(), 3));
+    ASSERT_TRUE(d.is_determined());
+    ASSERT_EQ(size_t(d), 3);
+}
+
+TEST(partial_shape, dim_merge_right_undetermined)
+{
+    Dimension d;
+    ASSERT_TRUE(Dimension::merge(d, 3, Dimension::undetermined()));
+    ASSERT_TRUE(d.is_determined());
+    ASSERT_EQ(size_t(d), 3);
+}
+
+TEST(partial_shape, dim_merge_both_determined_equal)
+{
+    Dimension d;
+    ASSERT_TRUE(Dimension::merge(d, 3, 3));
+    ASSERT_TRUE(d.is_determined());
+    ASSERT_EQ(size_t(d), 3);
+}
+
+TEST(partial_shape, dim_merge_both_determined_unequal)
+{
+    Dimension d = 163;
+    ASSERT_FALSE(Dimension::merge(d, 3, 4));
+    ASSERT_TRUE(d.is_determined());
+    ASSERT_EQ(size_t(d), 163);
+}
+
+TEST(partial_shape, partial_shape_merge_both_undetermined)
+{
+    PartialShape s1{PartialShape::undetermined()};
+    const PartialShape s2{PartialShape::undetermined()};
+    ASSERT_TRUE(PartialShape::merge_into(s1, s2));
+    ASSERT_FALSE(s1.rank().is_determined());
+}
+
+TEST(partial_shape, partial_shape_merge_left_undetermined_right_incomplete)
+{
+    PartialShape s1{PartialShape::undetermined()};
+    const PartialShape s2{1, 2, Dimension::undetermined()};
+    ASSERT_TRUE(PartialShape::merge_into(s1, s2));
+    ASSERT_TRUE(s1.same_scheme(PartialShape{1, 2, Dimension::undetermined()}));
+}
+
+TEST(partial_shape, partial_shape_merge_left_undetermined_right_complete)
+{
+    PartialShape s1{PartialShape::undetermined()};
+    const PartialShape s2{1, 2, 3};
+    ASSERT_TRUE(PartialShape::merge_into(s1, s2));
+    ASSERT_TRUE(s1.same_scheme(PartialShape{1, 2, 3}));
+}
+
+TEST(partial_shape, partial_shape_merge_left_incomplete_right_undetermined)
+{
+    PartialShape s1{1, 2, Dimension::undetermined()};
+    const PartialShape s2{PartialShape::undetermined()};
+    ASSERT_TRUE(PartialShape::merge_into(s1, s2));
+    ASSERT_TRUE(s1.same_scheme(PartialShape{1, 2, Dimension::undetermined()}));
+}
+
+TEST(partial_shape, partial_shape_merge_left_complete_right_undetermined)
+{
+    PartialShape s1{1, 2, 3};
+    const PartialShape s2{PartialShape::undetermined()};
+    ASSERT_TRUE(PartialShape::merge_into(s1, s2));
+    ASSERT_TRUE(s1.same_scheme(PartialShape{1, 2, 3}));
+}
+
+TEST(partial_shape, partial_shape_merge_both_incomplete_consistent)
+{
+    PartialShape s1{1, Dimension::undetermined(), 3, Dimension::undetermined()};
+    const PartialShape s2{1, 2, Dimension::undetermined(), Dimension::undetermined()};
+    ASSERT_TRUE(PartialShape::merge_into(s1, s2));
+    ASSERT_TRUE(s1.same_scheme(PartialShape{1, 2, 3, Dimension::undetermined()}));
+}
+
+TEST(partial_shape, partial_shape_merge_both_incomplete_same_rank_inconsistent)
+{
+    PartialShape s1{1, Dimension::undetermined(), 3, Dimension::undetermined()};
+    const PartialShape s2{2, 2, Dimension::undetermined(), Dimension::undetermined()};
+    ASSERT_FALSE(PartialShape::merge_into(s1, s2));
+}
+
+TEST(partial_shape, partial_shape_merge_both_incomplete_different_rank)
+{
+    PartialShape s1{1, Dimension::undetermined(), 3, Dimension::undetermined()};
+    const PartialShape s2{1, 2, Dimension::undetermined()};
+    ASSERT_FALSE(PartialShape::merge_into(s1, s2));
+}
+
+TEST(partial_shape, partial_shape_merge_both_complete_consistent)
+{
+    PartialShape s1{1, 2, 3};
+    const PartialShape s2{1, 2, 3};
+    ASSERT_TRUE(PartialShape::merge_into(s1, s2));
+    ASSERT_TRUE(s1.same_scheme(PartialShape{1, 2, 3}));
+}
+
+TEST(partial_shape, partial_shape_merge_both_complete_inconsistent)
+{
+    PartialShape s1{1, 2, 3};
+    const PartialShape s2{1, 2, 4};
+    ASSERT_FALSE(PartialShape::merge_into(s1, s2));
+}
+
+TEST(partial_shape, partial_shape_merge_both_complete_different_rank)
+{
+    PartialShape s1{1, 2, 3};
+    const PartialShape s2{1, 2, 3, 4};
+    ASSERT_FALSE(PartialShape::merge_into(s1, s2));
 }
