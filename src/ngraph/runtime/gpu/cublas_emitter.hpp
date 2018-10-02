@@ -39,7 +39,8 @@ namespace ngraph
                                  const Shape& arg0_shape,
                                  const Shape& arg1_shape,
                                  const Shape& out_shape,
-                                 size_t reduction_axes);
+                                 size_t reduction_axes,
+                                 const Node* node);
 
                 void debug_sync();
                 void sync();
@@ -48,6 +49,9 @@ namespace ngraph
                 CUBLASEmitter(GPUPrimitiveEmitter* emitter, GPURuntimeContext* ctx);
                 GPUPrimitiveEmitter* m_primitive_emitter;
                 GPURuntimeContext* m_ctx;
+                std::string get_error_string(std::vector<std::string>& arg_names,
+                                             std::vector<Shape>& shapes,
+                                             const Node* node);
             };
         }
     }

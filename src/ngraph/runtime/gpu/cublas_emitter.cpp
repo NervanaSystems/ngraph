@@ -14,11 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <stdexcept>
-
 #include "ngraph/runtime/gpu/cublas_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
+#include "ngraph/util.hpp"
 
 using namespace ngraph;
 
@@ -32,7 +31,8 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
                                               const Shape& arg0_shape,
                                               const Shape& arg1_shape,
                                               const Shape& out_shape,
-                                              size_t reduction_axes)
+                                              size_t reduction_axes,
+                                              const Node* node)
 {
     std::stringstream ss;
     ss << "dot_op"
@@ -79,7 +79,9 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
         {
             if (arg0_shape[i] != arg1_shape[i])
             {
-                throw std::invalid_argument("arg0 and arg1 shape does not match for dot.");
+                std::vector<std::string> arg_vec{"arg0", "arg1"};
+                std::vector<Shape> shape_vec{arg0_shape, arg1_shape};
+                throw std::invalid_argument(get_error_string(arg_vec, shape_vec, node));
             }
         }
 
@@ -141,12 +143,15 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
         // check and calculate k for arg0 and arg1
         size_t arg0_k_idx = axes_for_m_count; // first axe in arg0 for k
         size_t arg1_k_idx = 0;                // first axe in arg1 for k
+
         for (size_t i = 0; i < axes_for_k_count; i++)
         {
             k *= arg0_shape[arg0_k_idx];
             if (arg0_shape[arg0_k_idx++] != arg1_shape[arg1_k_idx++])
             {
-                throw std::invalid_argument("arg0 and arg1 shape does not match for dot.");
+                std::vector<std::string> arg_vec{"arg0", "arg1"};
+                std::vector<Shape> shape_vec{arg0_shape, arg1_shape};
+                throw std::invalid_argument(get_error_string(arg_vec, shape_vec, node));
             }
         }
         // check and calculate m for arg0 and out
@@ -157,7 +162,9 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
             m *= arg0_shape[arg0_m_idx];
             if (arg0_shape[arg0_m_idx++] != out_shape[out_m_idx++])
             {
-                throw std::invalid_argument("arg0 and output shape does not match for dot.");
+                std::vector<std::string> arg_vec{"arg0", "output"};
+                std::vector<Shape> shape_vec{arg0_shape, out_shape};
+                throw std::invalid_argument(get_error_string(arg_vec, shape_vec, node));
             }
         }
         // check and calculate n for arg1 and out
@@ -168,7 +175,9 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
             n *= arg1_shape[arg1_n_idx];
             if (arg1_shape[arg1_n_idx++] != out_shape[out_n_idx++])
             {
-                throw std::invalid_argument("arg1 and output shape does not match for dot.");
+                std::vector<std::string> arg_vec{"arg1", "output"};
+                std::vector<Shape> shape_vec{arg1_shape, out_shape};
+                throw std::invalid_argument(get_error_string(arg_vec, shape_vec, node));
             }
         }
 
@@ -214,4 +223,15 @@ void runtime::gpu::CUBLASEmitter::debug_sync()
     CUDA_RT_SAFE_CALL(cudaDeviceSynchronize());
 #endif
     return;
+}
+
+std::string runtime::gpu::CUBLASEmitter::get_error_string(std::vector<std::string>& arg_names,
+                                                          std::vector<Shape>& shapes,
+                                                          const Node* node)
+{
+    std::stringstream ss_err;
+    ss_err << ngraph::join(arg_names) << " with " << ngraph::join(shapes)
+           << " respectively, at Node " << node->get_name() << ", do not match for dot op";
+
+    return ss_err.str();
 }

@@ -531,8 +531,12 @@ void runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
         {
             auto& cublas_emitter = external_function->get_primitive_emitter()->get_cublas_emitter();
 
-            auto index = cublas_emitter->build_dot(
-                out[0].get_element_type(), arg0_shape, arg1_shape, out_shape, reduction_axes_count);
+            auto index = cublas_emitter->build_dot(out[0].get_element_type(),
+                                                   arg0_shape,
+                                                   arg1_shape,
+                                                   out_shape,
+                                                   reduction_axes_count,
+                                                   node);
 
             writer << "void* input[] = {" << node_names(args) << "};\n";
             writer << "void* output[] = {" << node_names(out) << "};\n";
