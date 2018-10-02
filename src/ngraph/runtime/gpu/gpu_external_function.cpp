@@ -238,9 +238,9 @@ void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
         m_writer << "// Declare debug timers\n";
         vector<string> names;
         size_t index = 0;
-        for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
+        for (const auto& p : m_function_ordered_ops)
         {
-            for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
+            for (shared_ptr<Node> node : p.second)
             {
                 if (!node->is_parameter() && !node->is_constant())
                 {
@@ -293,9 +293,9 @@ void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
 void runtime::gpu::GPU_ExternalFunction::emit_constant_declarations()
 {
     m_writer << "// Declare all constants\n";
-    for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
+    for (const auto& p : m_function_ordered_ops)
     {
-        for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
+        for (shared_ptr<Node> node : p.second)
         {
             const op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
             if (c)
@@ -321,9 +321,9 @@ void runtime::gpu::GPU_ExternalFunction::emit_constant_declarations()
         m_writer << "if(is_constant_mem_ptr_null)\n";
         m_writer.block_begin();
         {
-            for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
+            for (const auto& p : m_function_ordered_ops)
             {
-                for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
+                for (shared_ptr<Node> node : p.second)
                 {
                     const op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
                     if (c)
@@ -346,10 +346,10 @@ void runtime::gpu::GPU_ExternalFunction::emit_constant_declarations()
 void runtime::gpu::GPU_ExternalFunction::emit_function_declarations()
 {
     m_writer << "// Declare all functions\n";
-    for (shared_ptr<Function> f : m_pass_manager.get_state().get_functions())
+    for (const auto& p : m_function_ordered_ops)
     {
-        m_writer << "extern \"C\" void " << f->get_name() << "(void** inputs, void** outputs, "
-                 << "gpu::GPURuntimeContext* ctx);\n";
+        m_writer << "extern \"C\" void " << p.first->get_name() << "(void** inputs, "
+                 << "void** outputs, gpu::GPURuntimeContext* ctx);\n";
     }
     m_writer << "\n";
 }
@@ -394,8 +394,9 @@ void runtime::gpu::GPU_ExternalFunction::emit_temp_mem_pool_allocation(
 
 void runtime::gpu::GPU_ExternalFunction::emit_functions()
 {
-    for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
+    for (const auto& p : m_function_ordered_ops)
     {
+        auto current_function = p.first;
         set<string> output_names;
         for (shared_ptr<Node> op : current_function->get_results())
         {
@@ -551,17 +552,18 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 
     m_function_name = m_function->get_name();
 
-    m_pass_manager.register_pass<ngraph::pass::LikeReplacement>();
-    m_pass_manager
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<ngraph::pass::LikeReplacement>();
+    pass_manager
         .register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();
 
-    m_pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
-    m_pass_manager.register_pass<ngraph::pass::Liveness>();
+    pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
+    pass_manager.register_pass<ngraph::pass::Liveness>();
 
-    m_pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
+    pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
 
     GPUAllocator allocator = m_shared_context->m_primitive_emitter->get_memory_allocator();
-    m_pass_manager.register_pass<runtime::gpu::pass::TensorMemoryReservation>(
+    pass_manager.register_pass<runtime::gpu::pass::TensorMemoryReservation>(
         allocator, m_tensor_memory_buffers);
 
     std::string common_function_string;
@@ -569,15 +571,15 @@ void runtime::gpu::GPU_ExternalFunction::compile()
                          this,
                          placeholders::_1,
                          placeholders::_2);
-    m_pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
+    pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
         femitter, m_node_function_map, common_function_string);
 
     string dump_filename = file_util::path_join(s_output_dir, m_function_name + "_ops.txt");
-    m_pass_manager.register_pass<ngraph::pass::DumpSorted>(dump_filename);
+    pass_manager.register_pass<ngraph::pass::DumpSorted>(dump_filename);
 
-    m_pass_manager.run_passes(m_function);
+    pass_manager.run_passes(m_function);
 
-    for (shared_ptr<Function> current_function : m_pass_manager.get_state().get_functions())
+    for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
         m_function_ordered_ops.emplace(current_function, current_function->get_ordered_ops());
     }
