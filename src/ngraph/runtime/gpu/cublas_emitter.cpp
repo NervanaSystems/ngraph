@@ -69,7 +69,7 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
             debug_sync();
         }});
 
-        primitive_index = this->m_primitive_emitter->get_primitive_index(dot, hash);
+        primitive_index = this->m_primitive_emitter->cache_primitive(dot, hash);
     }
 
     // case that can be treat as dot1d
@@ -98,7 +98,7 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
             debug_sync();
         }});
 
-        primitive_index = this->m_primitive_emitter->get_primitive_index(dot, hash);
+        primitive_index = this->m_primitive_emitter->cache_primitive(dot, hash);
     }
 
     // matrix vector
@@ -127,7 +127,7 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
             debug_sync();
         }});
 
-        primitive_index = this->m_primitive_emitter->get_primitive_index(dot, hash);
+        primitive_index = this->m_primitive_emitter->cache_primitive(dot, hash);
     }
 
     else
@@ -205,7 +205,7 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
 
             debug_sync();
         }});
-        primitive_index = this->m_primitive_emitter->get_primitive_index(dot, hash);
+        primitive_index = this->m_primitive_emitter->cache_primitive(dot, hash);
     }
 
     return primitive_index;

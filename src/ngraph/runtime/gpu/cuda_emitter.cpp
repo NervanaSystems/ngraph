@@ -164,7 +164,7 @@ size_t runtime::gpu::CUDAEmitter::build_concat(const std::vector<std::string>& d
         debug_sync();
     }});
 
-    return this->m_primitive_emitter->get_primitive_index(kernel_launch, hash.str());
+    return this->m_primitive_emitter->cache_primitive(kernel_launch, hash.str());
 }
 
 size_t runtime::gpu::CUDAEmitter::build_onehot(const std::array<std::string, 2>& dtypes,
@@ -232,7 +232,7 @@ size_t runtime::gpu::CUDAEmitter::build_onehot(const std::array<std::string, 2>&
             debug_sync();
         }});
 
-    return this->m_primitive_emitter->get_primitive_index(kernel_launch, hash);
+    return this->m_primitive_emitter->cache_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDAEmitter::build_reverse(const std::array<std::string, 2>& dtypes,
@@ -303,7 +303,7 @@ size_t runtime::gpu::CUDAEmitter::build_reverse(const std::array<std::string, 2>
         debug_sync();
     }});
 
-    return this->m_primitive_emitter->get_primitive_index(kernel_launch, hash);
+    return this->m_primitive_emitter->cache_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDAEmitter::build_pad(const std::array<std::string, 2>& dtypes,
@@ -467,7 +467,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const std::array<std::string, 2>& dt
         }});
     }
 
-    return this->m_primitive_emitter->get_primitive_index(pad, hash);
+    return this->m_primitive_emitter->cache_primitive(pad, hash);
 }
 
 size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string, 2>& dtypes,
@@ -556,7 +556,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string
             debug_sync();
         }});
 
-    return this->m_primitive_emitter->get_primitive_index(pad_dynamic, hash);
+    return this->m_primitive_emitter->cache_primitive(pad_dynamic, hash);
 }
 
 size_t runtime::gpu::CUDAEmitter::build_reshape(const std::array<std::string, 2>& dtypes,
@@ -640,7 +640,7 @@ size_t runtime::gpu::CUDAEmitter::build_reshape(const std::array<std::string, 2>
             debug_sync();
         }});
 
-    return this->m_primitive_emitter->get_primitive_index(kernel_launch, hash);
+    return this->m_primitive_emitter->cache_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDAEmitter::build_reshape_2d(const std::array<std::string, 2>& dtypes,
@@ -726,7 +726,7 @@ size_t runtime::gpu::CUDAEmitter::build_reshape_2d(const std::array<std::string,
             debug_sync();
         }});
 
-    return this->m_primitive_emitter->get_primitive_index(kernel_launch, hash);
+    return this->m_primitive_emitter->cache_primitive(kernel_launch, hash);
 }
 size_t runtime::gpu::CUDAEmitter::build_reshape_3d(const std::array<std::string, 2>& dtypes,
                                                    NVShape input_shape,
@@ -816,7 +816,7 @@ size_t runtime::gpu::CUDAEmitter::build_reshape_3d(const std::array<std::string,
             debug_sync();
         }});
 
-    return this->m_primitive_emitter->get_primitive_index(kernel_launch, hash);
+    return this->m_primitive_emitter->cache_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDAEmitter::build_slice(const std::array<std::string, 2>& dtypes,
@@ -903,7 +903,7 @@ size_t runtime::gpu::CUDAEmitter::build_slice(const std::array<std::string, 2>& 
         debug_sync();
     }});
 
-    return this->m_primitive_emitter->get_primitive_index(kernel_launch, hash);
+    return this->m_primitive_emitter->cache_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDAEmitter::build_reverse_sequence(const std::array<std::string, 3>& dtypes,
@@ -984,7 +984,7 @@ size_t runtime::gpu::CUDAEmitter::build_reverse_sequence(const std::array<std::s
         debug_sync();
     }});
 
-    return this->m_primitive_emitter->get_primitive_index(kernel_launch, hash);
+    return this->m_primitive_emitter->cache_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const std::array<std::string, 2>& dtypes,
@@ -1042,7 +1042,7 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const std::array<std::string
             debug_sync();
         }});
 
-    return this->m_primitive_emitter->get_primitive_index(pool, hash);
+    return this->m_primitive_emitter->cache_primitive(pool, hash);
 }
 
 pooling_op_shape
@@ -1228,7 +1228,7 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const std::array<std::string, 2
             debug_sync();
         }});
 
-    return this->m_primitive_emitter->get_primitive_index(pool, hash);
+    return this->m_primitive_emitter->cache_primitive(pool, hash);
 }
 
 size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const std::vector<std::string>& dtypes,
@@ -1302,7 +1302,7 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const std::vector<std
             debug_sync();
         }});
 
-    return this->m_primitive_emitter->get_primitive_index(ew, hash);
+    return this->m_primitive_emitter->cache_primitive(ew, hash);
 }
 
 size_t runtime::gpu::CUDAEmitter::build_primitive(const op::MaxPool* node)
@@ -1398,7 +1398,7 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::MaxPool* node)
             }
         }});
 
-    return this->m_primitive_emitter->get_primitive_index(kernel_launch, hash);
+    return this->m_primitive_emitter->cache_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDAEmitter::build_softmax_divide(const std::vector<std::string>& dtypes,
@@ -1472,7 +1472,7 @@ size_t runtime::gpu::CUDAEmitter::build_softmax_divide(const std::vector<std::st
             debug_sync();
         }});
 
-    return this->m_primitive_emitter->get_primitive_index(pool, hash);
+    return this->m_primitive_emitter->cache_primitive(pool, hash);
 }
 
 size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::string>& dtypes,
@@ -1574,7 +1574,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::stri
             debug_sync();
         }});
 
-    return this->m_primitive_emitter->get_primitive_index(reduce, hash);
+    return this->m_primitive_emitter->cache_primitive(reduce, hash);
 }
 
 size_t runtime::gpu::CUDAEmitter::build_reduce_to_scalar(const std::vector<std::string>& dtypes,
@@ -1650,7 +1650,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_scalar(const std::vector<std::
             debug_sync();
         }});
 
-    return this->m_primitive_emitter->get_primitive_index(reduce, hash);
+    return this->m_primitive_emitter->cache_primitive(reduce, hash);
 }
 
 size_t runtime::gpu::CUDAEmitter::build_reduce_to_scalar_acc(const std::vector<std::string>& dtypes,
@@ -1717,7 +1717,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_scalar_acc(const std::vector<s
                                           0));
         }});
 
-    return this->m_primitive_emitter->get_primitive_index(reduce_acc, hash);
+    return this->m_primitive_emitter->cache_primitive(reduce_acc, hash);
 }
 
 size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& dtypes,
@@ -2016,7 +2016,7 @@ size_t
             debug_sync();
         }});
 
-    return this->m_primitive_emitter->get_primitive_index(ew_collective, hash);
+    return this->m_primitive_emitter->cache_primitive(ew_collective, hash);
 }
 
 size_t runtime::gpu::CUDAEmitter::build_reduce_window(const OpName op_name,
@@ -2129,7 +2129,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window(const OpName op_name,
 
     }});
 
-    return this->m_primitive_emitter->get_primitive_index(f, hash);
+    return this->m_primitive_emitter->cache_primitive(f, hash);
 }
 
 size_t runtime::gpu::CUDAEmitter::build_broadcast(const std::array<std::string, 2>& dtypes,
@@ -2229,7 +2229,7 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const std::array<std::string, 
             debug_sync();
         }});
 
-    return this->m_primitive_emitter->get_primitive_index(broadcast, hash);
+    return this->m_primitive_emitter->cache_primitive(broadcast, hash);
 }
 
 size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Convolution* node)
@@ -2354,7 +2354,7 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Convolution* node)
                                   std::vector<void*>{outputs[0]}.data());
         }});
 
-    return this->m_primitive_emitter->get_primitive_index(kernel_launch, hash);
+    return this->m_primitive_emitter->cache_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDAEmitter::build_primitive(const op::ReplaceSlice* node, bool in_place_op)
