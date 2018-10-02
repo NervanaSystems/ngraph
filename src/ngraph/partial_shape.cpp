@@ -109,6 +109,34 @@ bool PartialShape::compatible(const PartialShape& s) const
     }
 }
 
+bool PartialShape::same_scheme(const PartialShape& s) const
+{
+    if (!rank().is_determined() && !s.rank().is_determined())
+    {
+        return true;
+    }
+    else if (rank().is_determined() && s.rank().is_determined())
+    {
+        if (size_t(rank()) != size_t(s.rank()))
+        {
+            return false;
+        }
+
+        bool success = true;
+
+        for (size_t i = 0; i < size_t(rank()); i++)
+        {
+            success &= (*this)[i].same_scheme(s[i]);
+        }
+
+        return success;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 Shape PartialShape::to_shape() const
 {
     if (!is_complete())
@@ -117,4 +145,33 @@ Shape PartialShape::to_shape() const
     }
 
     return Shape(m_dimensions.begin(), m_dimensions.end());
+}
+
+bool PartialShape::merge_into(PartialShape& dst, const PartialShape& src)
+{
+    if (!dst.rank().is_determined())
+    {
+        dst = src;
+        return true;
+    }
+    else if (!src.rank().is_determined())
+    {
+        // No change to dst.
+        return true;
+    }
+    else if (size_t(dst.rank()) != size_t(src.rank()))
+    {
+        // Mismatching and determined ranks, cannot merge.
+        return false;
+    }
+    else
+    {
+        // Ranks are both determined and match.
+        bool success = true;
+        for (size_t i = 0; i < size_t(dst.rank()); i++)
+        {
+            success &= Dimension::merge(dst[i], dst[i], src[i]);
+        }
+        return success;
+    }
 }

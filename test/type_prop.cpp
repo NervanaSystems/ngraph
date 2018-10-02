@@ -476,9 +476,7 @@ void test_binary(std::string node_type,
         }
         catch (const NodeValidationError& error)
         {
-            EXPECT_HAS_SUBSTRING(
-                error.what(),
-                std::string("Argument 0 shape Shape{2, 4} differs in shape from argument 1"));
+            EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument shapes are inconsistent."));
         }
         catch (...)
         {
@@ -572,9 +570,7 @@ void test_binary_logical(std::string node_type,
         }
         catch (const NodeValidationError& error)
         {
-            EXPECT_HAS_SUBSTRING(
-                error.what(),
-                std::string("Argument 0 shape Shape{2, 4} differs in shape from argument 1"));
+            EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument shapes are inconsistent."));
         }
         catch (...)
         {
@@ -6592,4 +6588,235 @@ TEST(type_prop, param_partial_rank_determined)
     EXPECT_FALSE(pshape[1].is_determined());
     EXPECT_TRUE(pshape[2].is_determined() && size_t(pshape[2]) == 3);
     EXPECT_TRUE(pshape[3].is_determined() && size_t(pshape[3]) == 4);
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_both_undetermined)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape::undetermined());
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape::undetermined());
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_FALSE(add->get_output_partial_shape(0).rank().is_determined());
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_left_undetermined_right_complete)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape::undetermined());
+    auto b = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_TRUE(add->get_output_partial_shape(0).is_complete());
+    ASSERT_EQ(add->get_shape(), (Shape{1, 2, 3}));
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_left_complete_right_undetermined)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape::undetermined());
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_TRUE(add->get_output_partial_shape(0).is_complete());
+    ASSERT_EQ(add->get_shape(), (Shape{1, 2, 3}));
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_left_incomplete_right_undetermined)
+{
+    auto a =
+        make_shared<op::Parameter>(element::f32, PartialShape{1, Dimension::undetermined(), 3});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape::undetermined());
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_TRUE(add->get_output_partial_shape(0).rank().is_determined());
+    ASSERT_FALSE(add->get_output_partial_shape(0).is_complete());
+    ASSERT_TRUE(add->get_output_partial_shape(0).same_scheme(
+        PartialShape{1, Dimension::undetermined(), 3}));
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_left_undetermined_right_incomplete)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape::undetermined());
+    auto b =
+        make_shared<op::Parameter>(element::f32, PartialShape{1, Dimension::undetermined(), 3});
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_TRUE(add->get_output_partial_shape(0).rank().is_determined());
+    ASSERT_FALSE(add->get_output_partial_shape(0).is_complete());
+    ASSERT_TRUE(add->get_output_partial_shape(0).same_scheme(
+        PartialShape{1, Dimension::undetermined(), 3}));
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_left_incomplete_right_incomplete_result_complete)
+{
+    auto a =
+        make_shared<op::Parameter>(element::f32, PartialShape{1, Dimension::undetermined(), 3});
+    auto b =
+        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::undetermined()});
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_TRUE(add->get_output_partial_shape(0).is_complete());
+    ASSERT_EQ(add->get_shape(), (Shape{1, 2, 3}));
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_left_incomplete_right_incomplete_result_incomplete)
+{
+    auto a = make_shared<op::Parameter>(
+        element::f32, PartialShape{1, Dimension::undetermined(), Dimension::undetermined()});
+    auto b =
+        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::undetermined()});
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_TRUE(add->get_output_partial_shape(0).rank().is_determined());
+    ASSERT_FALSE(add->get_output_partial_shape(0).is_complete());
+    ASSERT_TRUE(add->get_output_partial_shape(0).same_scheme(
+        PartialShape{1, 2, Dimension::undetermined()}));
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_left_complete_right_incomplete)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, 3});
+    auto b =
+        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::undetermined()});
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_TRUE(add->get_output_partial_shape(0).is_complete());
+    ASSERT_EQ(add->get_shape(), (Shape{1, 2, 3}));
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_left_incomplete_right_complete)
+{
+    auto a =
+        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::undetermined()});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, 3});
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_TRUE(add->get_output_partial_shape(0).is_complete());
+    ASSERT_EQ(add->get_shape(), (Shape{1, 2, 3}));
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_left_incomplete_inconsistent)
+{
+    auto a =
+        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::undetermined()});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 3, 3});
+
+    try
+    {
+        auto add = make_shared<op::Add>(a, b);
+        FAIL() << "Inconsistent partial shapes not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_right_incomplete_inconsistent)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{1, 3, 3});
+    auto b =
+        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::undetermined()});
+
+    try
+    {
+        auto add = make_shared<op::Add>(a, b);
+        FAIL() << "Inconsistent partial shapes not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_both_incomplete_inconsistent)
+{
+    auto a =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::undetermined(), 3, 3});
+    auto b =
+        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::undetermined()});
+
+    try
+    {
+        auto add = make_shared<op::Add>(a, b);
+        FAIL() << "Inconsistent partial shapes not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_left_incomplete_different_rank)
+{
+    auto a =
+        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::undetermined()});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, 3, 4});
+
+    try
+    {
+        auto add = make_shared<op::Add>(a, b);
+        FAIL() << "Inconsistent partial shapes not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_right_incomplete_different_rank)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, 3, 4});
+    auto b =
+        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::undetermined()});
+
+    try
+    {
+        auto add = make_shared<op::Add>(a, b);
+        FAIL() << "Inconsistent partial shapes not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_both_incomplete_different_rank)
+{
+    auto a =
+        make_shared<op::Parameter>(element::f32, PartialShape{1, Dimension::undetermined(), 3, 4});
+    auto b =
+        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::undetermined()});
+
+    try
+    {
+        auto add = make_shared<op::Add>(a, b);
+        FAIL() << "Inconsistent partial shapes not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }

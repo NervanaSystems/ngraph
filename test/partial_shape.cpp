@@ -263,3 +263,104 @@ TEST(partial_shape, tensor_descriptor_from_rankless_partial_shape)
     ASSERT_FALSE(t.get_partial_shape().rank().is_determined());
     ASSERT_THROW({ t.get_shape(); }, std::invalid_argument);
 }
+
+TEST(partial_shape, dim_same_scheme_both_undetermined)
+{
+    ASSERT_TRUE(Dimension::undetermined().same_scheme(Dimension::undetermined()));
+}
+
+TEST(partial_shape, dim_same_scheme_left_undetermined)
+{
+    ASSERT_FALSE(Dimension::undetermined().same_scheme(6));
+}
+
+TEST(partial_shape, dim_same_scheme_right_undetermined)
+{
+    ASSERT_FALSE(Dimension(6).same_scheme(Dimension::undetermined()));
+}
+
+TEST(partial_shape, dim_same_scheme_both_determined_same)
+{
+    ASSERT_TRUE(Dimension(6).same_scheme(Dimension(6)));
+}
+
+TEST(partial_shape, dim_same_scheme_both_determined_different)
+{
+    ASSERT_FALSE(Dimension(6).same_scheme(Dimension(7)));
+}
+
+TEST(partial_shape, partial_shape_same_scheme_both_undetermined)
+{
+    ASSERT_TRUE(PartialShape::undetermined().same_scheme(PartialShape::undetermined()));
+}
+
+TEST(partial_shape, partial_shape_same_scheme_left_undetermined_right_incomplete)
+{
+    ASSERT_FALSE(
+        PartialShape::undetermined().same_scheme(PartialShape{1, Dimension::undetermined(), 3}));
+}
+
+TEST(partial_shape, partial_shape_same_scheme_left_undetermined_right_complete)
+{
+    ASSERT_FALSE(PartialShape::undetermined().same_scheme(PartialShape{1, 2, 3}));
+}
+
+TEST(partial_shape, partial_shape_same_scheme_right_undetermined_left_incomplete)
+{
+    ASSERT_FALSE(
+        (PartialShape{1, Dimension::undetermined(), 3}.same_scheme(PartialShape::undetermined())));
+}
+
+TEST(partial_shape, partial_shape_same_scheme_right_undetermined_left_complete)
+{
+    ASSERT_FALSE((PartialShape{1, 2, 3}.same_scheme(PartialShape::undetermined())));
+}
+
+TEST(partial_shape, partial_shape_same_scheme_both_complete_different_rank)
+{
+    ASSERT_FALSE((PartialShape{1, 2, 3}.same_scheme(PartialShape{1, 2, 3, 4})));
+}
+
+TEST(partial_shape, partial_shape_same_scheme_both_incomplete_different_rank)
+{
+    ASSERT_FALSE((PartialShape{1, Dimension::undetermined(), 3}.same_scheme(
+        PartialShape{1, Dimension::undetermined(), 3, 4})));
+}
+
+TEST(partial_shape, partial_shape_same_scheme_both_complete_same_rank_different_dims)
+{
+    ASSERT_FALSE((PartialShape{1, 2, 3}.same_scheme(PartialShape{1, 3, 3})));
+}
+
+TEST(partial_shape, partial_shape_same_scheme_both_incomplete_same_rank_different_dims)
+{
+    ASSERT_FALSE((PartialShape{1, 2, Dimension::undetermined()}.same_scheme(
+        PartialShape{1, 3, Dimension::undetermined()})));
+}
+
+TEST(partial_shape, partial_shape_same_scheme_both_incomplete_same_rank_compatible_not_same)
+{
+    ASSERT_FALSE((PartialShape{1, 2, Dimension::undetermined()}.same_scheme(
+        PartialShape{1, Dimension::undetermined(), 3})));
+}
+
+TEST(partial_shape, partial_shape_same_scheme_both_incomplete_same_rank_compatible_same)
+{
+    ASSERT_TRUE((PartialShape{1, 2, Dimension::undetermined()}.same_scheme(
+        PartialShape{1, 2, Dimension::undetermined()})));
+}
+
+TEST(partial_shape, partial_shape_same_scheme_both_complete_same_rank_same_dims)
+{
+    ASSERT_TRUE((PartialShape{1, 2, 3}.same_scheme(PartialShape{1, 2, 3})));
+}
+
+TEST(partial_shape, partial_shape_same_scheme_scalar)
+{
+    ASSERT_TRUE((PartialShape{}.same_scheme(PartialShape{})));
+}
+
+TEST(partial_shape, adam_needs_to_write_tests_for_the_merge_functions)
+{
+    throw std::runtime_error("Adam needs to write tests for the shape/dimension merge functions.");
+}

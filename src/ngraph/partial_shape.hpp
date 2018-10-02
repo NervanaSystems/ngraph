@@ -88,9 +88,17 @@ namespace ngraph
         static PartialShape undetermined() { return PartialShape(false, {}); }
         /// \brief Returns true if *this is compatible with s.
         ///
-        ///        Two dimensions are compatible if one or both of them is undetermined, or if
-        ///        they are both determined and equal.
+        ///        Two shapes are compatible if one or both of them has undetermined rank, or if
+        ///        they both have determined and equal rank, and their dimensions are elementwise
+        ///        compatible (see Dimension::compatible()).
         bool compatible(const PartialShape& s) const;
+
+        /// \brief Returns true if *this has the same scheme as s.
+        ///
+        ///        Two shapes have the same scheme if they both have undetermined rank, or if they
+        ///        both have determined and equal rank, and their dimensions have the same scheme
+        ///        elementwise (see Dimension::same_scheme()).
+        bool same_scheme(const PartialShape& s) const;
 
         /// \brief Converts a complete PartialShape to a Shape.
         ///
@@ -99,8 +107,12 @@ namespace ngraph
 
         /// \brief Index operator for PartialShape.
         const Dimension& operator[](size_t i) const { return m_dimensions[i]; }
+        /// \brief Index operator for PartialShape.
+        Dimension& operator[](size_t i) { return m_dimensions[i]; }
         friend std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
         friend PartialShape operator+(const PartialShape& s1, const PartialShape& s2);
+
+        static bool merge_into(PartialShape& dst, const PartialShape& src);
 
     private:
         // Private constructor so PartialShape::undetermined() can construct an undetermined shape.

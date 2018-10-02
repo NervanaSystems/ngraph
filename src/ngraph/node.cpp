@@ -406,8 +406,10 @@ const NodeVector& ngraph::check_single_output_args(const NodeVector& args)
 
 void Node::validate_and_infer_elementwise(element::Type result_type)
 {
+    // TODO(amprocte): Extend the "all-consistent" check to the element type as well.
     const element::Type& element_type = get_input_element_type(0);
-    const Shape& shape = get_input_shape(0);
+
+    PartialShape pshape = get_input_partial_shape(0);
     if (get_input_size() > 1)
     {
         for (size_t i = 1; i < get_input_size(); ++i)
@@ -417,12 +419,14 @@ void Node::validate_and_infer_elementwise(element::Type result_type)
                 << " differs in element type from argument " << i << " " << *get_argument(i)
                 << " element type " << get_input_element_type(i);
 
-            NODE_VALIDATION_ASSERT(this, get_input_shape(i) == shape)
-                << "Argument 0 shape " << shape << " differs in shape from argument " << i << " "
-                << *get_argument(i) << " shape " << get_input_shape(i);
+            // TODO(amprocte): we need more info on what the arg shapes are. Perhaps this should
+            // be produced by NODE_VALIDATION_ASSERT itself.
+            NODE_VALIDATION_ASSERT(this,
+                                   PartialShape::merge_into(pshape, get_input_partial_shape(i)))
+                << "Argument shapes are inconsistent.";
         }
     }
-    set_output_type(0, result_type, shape);
+    set_output_type(0, result_type, pshape);
 }
 
 void Node::validate_and_infer_elementwise_arithmetic()

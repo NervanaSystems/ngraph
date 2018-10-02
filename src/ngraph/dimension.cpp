@@ -57,3 +57,26 @@ bool Dimension::compatible(const Dimension& d) const
 {
     return (!is_determined() || !d.is_determined() || m_dimension == size_t(d));
 }
+
+bool Dimension::merge(Dimension& dst, const Dimension d1, const Dimension d2)
+{
+    if (!d1.is_determined())
+    {
+        dst = d2;
+        return true;
+    }
+    else if (!d2.is_determined())
+    {
+        dst = d1;
+        return true;
+    }
+    else if (size_t(d1) != size_t(d2))
+    {
+        return false;
+    }
+    else
+    {
+        dst = d1;
+        return true;
+    }
+}
