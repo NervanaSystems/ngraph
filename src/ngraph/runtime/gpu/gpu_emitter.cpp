@@ -1579,7 +1579,7 @@ void runtime::gpu::GPU_Emitter::emit_TopK(EMIT_ARGS)
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-string runtime::gpu::GPU_Emitter::node_names(const vector<GPU_TensorViewWrapper>& args,
+string runtime::gpu::GPU_Emitter::node_names(const vector<GPUTensorWrapper>& args,
                                              initializer_list<int> arg_indexes)
 {
     vector<string> names;

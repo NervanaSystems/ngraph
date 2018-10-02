@@ -33,12 +33,12 @@
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
 
 #define EMIT_ARGS                                                                                  \
     runtime::gpu::GPU_ExternalFunction *external_function, codegen::CodeWriter &writer,            \
-        const Node *node, const std::vector<runtime::gpu::GPU_TensorViewWrapper> &args,            \
-        const std::vector<runtime::gpu::GPU_TensorViewWrapper> &out
+        const Node *node, const std::vector<runtime::gpu::GPUTensorWrapper> &args,                 \
+        const std::vector<runtime::gpu::GPUTensorWrapper> &out
 
 namespace ngraph
 {
