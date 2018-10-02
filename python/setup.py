@@ -225,7 +225,7 @@ package_dir={'ngraph': PYNGRAPH_SOURCE_DIR + "/ngraph",
              'ngraph.impl.op.util': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/op/util",
              'ngraph.impl.passes': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/passes",
              'ngraph.impl.runtime': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/runtime"}
-packages = ['ngraph', 'ngraph.utils', 'ngraph.impl', 'ngraph.impl.op', 
+packages = ['ngraph', 'ngraph.utils', 'ngraph.impl', 'ngraph.impl.op',
             'ngraph.impl.op.util', 'ngraph.impl.passes', 'ngraph.impl.runtime']
 
 sources = [PYNGRAPH_SOURCE_DIR + "/" + source for source in sources]

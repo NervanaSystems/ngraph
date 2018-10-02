@@ -184,7 +184,7 @@ set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NG
 target_link_libraries(ngraph PUBLIC libjson)
 target_compile_definitions(ngraph PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
 
-if (NGRAPH_ONNX_IMPORT_FLAG)
+if (NGRAPH_ONNX_IMPORT_ENABLE)
     add_dependencies(ngraph onnx_import)
 endif()
 
@@ -214,7 +214,7 @@ if (NOT WIN32)
     target_link_libraries(ngraph PUBLIC dl pthread)
 endif()
 
-if (NGRAPH_ONNX_IMPORT_FLAG)
+if (NGRAPH_ONNX_IMPORT_ENABLE)
     target_sources(ngraph PRIVATE $<TARGET_OBJECTS:onnx_import_interface>)
     target_link_libraries(ngraph PRIVATE onnx_import)
 endif()
