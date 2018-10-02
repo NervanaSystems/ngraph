@@ -82,6 +82,9 @@ if ! build_ngraph "/root" "USE_CACHED"; then
     build_ngraph "/root" "REBUILD USE_CACHED"
 fi
 
+# Add env variable to use ONNX
+echo "NGRAPH_ONNX_IMPORT_ENABLE=TRUE" >> /etc/environment
+
 # Copy Onnx models
 if [ -d /home/onnx_models/.onnx ]; then
     rsync -avhz /home/onnx_models/.onnx /root/ngraph-onnx/
