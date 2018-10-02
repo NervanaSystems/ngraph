@@ -20,11 +20,11 @@
 #include <list>
 #include <memory>
 
-#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
 #include "ngraph/serializer.hpp"
 
 namespace ngraph
@@ -37,18 +37,18 @@ bool validate_list(const std::list<std::shared_ptr<ngraph::Node>>& nodes);
 std::shared_ptr<ngraph::Function> make_test_graph();
 
 template <typename T>
-void copy_data(std::shared_ptr<ngraph::runtime::TensorView> tv, const std::vector<T>& data)
+void copy_data(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>& data)
 {
     size_t data_size = data.size() * sizeof(T);
     tv->write(data.data(), 0, data_size);
 }
 
 template <typename T>
-std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::TensorView> tv)
+std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
 {
-    if (ngraph::element::from<T>() != tv->get_tensor_view_layout()->get_element_type())
+    if (ngraph::element::from<T>() != tv->get_tensor_layout()->get_element_type())
     {
-        throw std::invalid_argument("read_vector type must match TensorView type");
+        throw std::invalid_argument("read_vector type must match Tensor type");
     }
     size_t element_count = ngraph::shape_size(tv->get_shape());
     size_t size = element_count * sizeof(T);
@@ -57,10 +57,10 @@ std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::TensorView> tv)
     return rc;
 }
 
-std::vector<float> read_float_vector(std::shared_ptr<ngraph::runtime::TensorView> tv);
+std::vector<float> read_float_vector(std::shared_ptr<ngraph::runtime::Tensor> tv);
 
 template <typename T>
-void write_vector(std::shared_ptr<ngraph::runtime::TensorView> tv, const std::vector<T>& values)
+void write_vector(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>& values)
 {
     tv->write(values.data(), 0, values.size() * sizeof(T));
 }
@@ -95,10 +95,10 @@ size_t count_ops_of_type(std::shared_ptr<ngraph::Function> f)
     return count;
 }
 
-template <typename T>
-std::vector<std::vector<T>> execute(const std::shared_ptr<ngraph::Function>& function,
-                                    std::vector<std::vector<T>> args,
-                                    const std::string& backend_id)
+template <typename T, typename T1 = T>
+std::vector<std::vector<T1>> execute(const std::shared_ptr<ngraph::Function>& function,
+                                     std::vector<std::vector<T>> args,
+                                     const std::string& backend_id)
 {
     auto backend = ngraph::runtime::Backend::create(backend_id);
 
@@ -109,7 +109,7 @@ std::vector<std::vector<T>> execute(const std::shared_ptr<ngraph::Function>& fun
         throw ngraph::ngraph_error("number of parameters and arguments don't match");
     }
 
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> arg_tensors(args.size());
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> arg_tensors(args.size());
     for (size_t i = 0; i < args.size(); i++)
     {
         auto t = backend->create_tensor(parms.at(i)->get_element_type(), parms.at(i)->get_shape());
@@ -118,7 +118,7 @@ std::vector<std::vector<T>> execute(const std::shared_ptr<ngraph::Function>& fun
     }
 
     auto results = function->get_results();
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> result_tensors(results.size());
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> result_tensors(results.size());
 
     for (size_t i = 0; i < results.size(); i++)
     {
@@ -128,10 +128,10 @@ std::vector<std::vector<T>> execute(const std::shared_ptr<ngraph::Function>& fun
 
     backend->call_with_validate(function, result_tensors, arg_tensors);
 
-    std::vector<std::vector<T>> result_vectors;
+    std::vector<std::vector<T1>> result_vectors;
     for (auto rt : result_tensors)
     {
-        result_vectors.push_back(read_vector<T>(rt));
+        result_vectors.push_back(read_vector<T1>(rt));
     }
     return result_vectors;
 }

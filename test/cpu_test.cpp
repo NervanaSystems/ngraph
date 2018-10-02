@@ -60,7 +60,7 @@ TEST(cpu_test, unhandled_op)
     auto unhandled = make_shared<UnhandledOp>(A);
     auto f = make_shared<Function>(unhandled, op::ParameterVector{A});
     auto backend = runtime::Backend::create("CPU");
-    ASSERT_THROW(backend->compile(f), ngraph_error);
+    ASSERT_THROW(backend->compile(f), unsupported_op);
 }
 
 TEST(cpu_test, trivial_in_place_relu)
@@ -110,10 +110,10 @@ TEST(cpu_test, abc_tbb)
     auto backend = runtime::Backend::create("CPU");
 
     // Create some tensors for input/output
-    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::TensorView> c = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::TensorView> result = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> c = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shape);
 
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());

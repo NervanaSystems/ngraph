@@ -196,6 +196,24 @@ void ngraph::runtime::cpu::kernel::emit_replace_slice(codegen::CodeWriter& write
     emit_pointwise_copy(writer, element_type, arg1, out, input_transform, output_transform);
 }
 
+void ngraph::runtime::cpu::kernel::emit_replace_slice_inplace(
+    codegen::CodeWriter& writer,
+    const string& element_type,
+    const string& arg0, // replacement context
+    const string& arg1, // replacement value
+    const Shape& arg1_shape,
+    const Shape& arg0_shape,
+    const Coordinate& lower_bounds,
+    const Coordinate& upper_bounds,
+    const Strides& strides)
+{
+    // Step 1: Overwrite the slice for replacement.
+    CoordinateTransform input_transform(arg1_shape);
+    CoordinateTransform output_transform(arg0_shape, lower_bounds, upper_bounds, strides);
+
+    emit_pointwise_copy(writer, element_type, arg1, arg0, input_transform, output_transform);
+}
+
 void ngraph::runtime::cpu::kernel::emit_slice(codegen::CodeWriter& writer,
                                               const string& element_type,
                                               const string& arg0, // replacement context

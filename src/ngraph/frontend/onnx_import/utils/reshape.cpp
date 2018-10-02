@@ -26,6 +26,7 @@
 #include "ngraph/shape.hpp"
 
 #include "exceptions.hpp"
+#include "utils/common.hpp"
 #include "utils/reshape.hpp"
 
 namespace ngraph
@@ -39,35 +40,28 @@ namespace ngraph
             {
                 auto data_shape = node->get_shape();
 
-                size_t first_dim_size = 1;
-                size_t last_dim_size = 1;
-
                 //  First dimension of output tensor is the product of [d_0, ... d_{axis-1}] dimensions of input tensor.
                 //  The last dimension is the product of the rest of input tensor dimensions: [d_{axis}, ..., d_n]
-                for (auto index = 0; index < data_shape.size(); ++index)
-                {
-                    last_dim_size *= data_shape.at(index);
-                    if (index < axis)
-                    {
-                        first_dim_size = last_dim_size;
-                    }
-                }
+                size_t first_dim_size = std::accumulate(std::begin(data_shape),
+                                                        std::next(std::begin(data_shape), axis),
+                                                        1UL,
+                                                        std::multiplies<std::size_t>());
 
-                last_dim_size /= first_dim_size;
-
-                // Generate an increasing sequence (0,1,2,3..) as input_order for Reshape
-                std::vector<size_t> input_order(data_shape.size());
-                std::iota(std::begin(input_order), std::end(input_order), 0);
+                size_t last_dim_size = std::accumulate(std::next(std::begin(data_shape), axis),
+                                                       std::end(data_shape),
+                                                       1UL,
+                                                       std::multiplies<std::size_t>());
 
                 return std::make_shared<ngraph::op::Reshape>(
-                    node, AxisVector{input_order}, Shape{first_dim_size, last_dim_size});
+                    node,
+                    get_default_axis_vector(data_shape.size()),
+                    Shape{first_dim_size, last_dim_size});
             }
 
             AxisVector get_default_axis_vector(std::size_t data_shape_size, std::size_t start_value)
             {
-                AxisVector axis_vector(data_shape_size);
-                std::iota(std::begin(axis_vector), std::end(axis_vector), start_value);
-                return axis_vector;
+                return AxisVector{
+                    common::get_monotonic_range<std::size_t>(data_shape_size, start_value)};
             }
 
             std::vector<std::size_t> infer_dimensions(const std::string& node_name,
@@ -82,18 +76,12 @@ namespace ngraph
                 {
                     if (inferred_dims.at(idx) == 0)
                     {
-                        if (idx < input_shape.size())
-                        {
-                            inferred_dims.at(idx) = input_shape.at(idx);
-                        }
-                        else
-                        {
-                            throw error::parameter::Value(
-                                "Reshape",
-                                node_name,
-                                "can not copy dimension from the input data shape since requested "
-                                "index is out of range.");
-                        }
+                        NGRAPH_ASSERT(idx < input_shape.size())
+                            << "Node " << node_name
+                            << " cannot copy dimension from the input data shape because "
+                               "requested index is out of range.";
+
+                        inferred_dims.at(idx) = input_shape.at(idx);
                     }
                 }
 
@@ -105,14 +93,10 @@ namespace ngraph
                 if (neg_value_it != std::end(inferred_dims))
                 {
                     // only single '-1' value is allowed
-                    if (std::find(std::next(neg_value_it), std::end(inferred_dims), -1) !=
-                        std::end(inferred_dims))
-                    {
-                        throw error::parameter::Value("Reshape",
-                                                      node_name,
-                                                      "more than one dimension is set to (-1). "
-                                                      "Only one dimension value can be inferred.");
-                    }
+                    NGRAPH_ASSERT(std::find(std::next(neg_value_it), std::end(inferred_dims), -1) ==
+                                  std::end(inferred_dims))
+                        << "Node " << node_name << " more than one dimension is set to (-1). "
+                        << "Only one dimension value can be inferred.";
 
                     // Set dimension value to 1 temporarily to be able to calculate its value.
                     *neg_value_it = 1;
@@ -133,7 +117,7 @@ namespace ngraph
             }
 
             std::shared_ptr<ngraph::Node> reorder_axes(const std::shared_ptr<ngraph::Node>& node,
-                                                       std::vector<size_t> axes_order = {})
+                                                       std::vector<std::size_t> axes_order = {})
             {
                 Shape out_shape = node->get_shape();
                 if (axes_order.empty())

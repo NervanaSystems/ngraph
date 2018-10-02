@@ -51,12 +51,9 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
                     auto input = &node->get_inputs().at(oi_pair.input).get_tensor();
                     auto input_node = node->get_inputs().at(oi_pair.input).get_output().get_node();
 
-                    // an input tensor can be reused if this is the last use or
-                    // an op isn't destructive (i.e. Reshape(DimShuffle))
-                    if ((node->liveness_free_list.count(input) != 0 &&
-                         node->liveness_new_list.count(output) != 0) ||
-                        (!oi_pair.destructive && !input_node->is_parameter() &&
-                         !input_node->is_constant()))
+                    // an input tensor can be reused if this is the last use
+                    if (node->liveness_free_list.count(input) != 0 &&
+                        node->liveness_new_list.count(output) != 0)
                     {
                         in_place_outputs.insert({output, input});
                         reused_inputs.insert(input);
@@ -70,7 +67,6 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
             size_t offset = in_place_outputs.count(tensor)
                                 ? in_place_outputs.at(tensor)->get_pool_offset()
                                 : mm.allocate(tensor->size());
-
             tensor->set_pool_offset(offset);
         }
 

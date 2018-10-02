@@ -171,6 +171,10 @@
     {                                                                                              \
         PARTIAL_SELECT_RANK(KV, float, R, K);                                                      \
     }                                                                                              \
+    else if (ET == element::f64)                                                                   \
+    {                                                                                              \
+        PARTIAL_SELECT_RANK(KV, double, R, K);                                                     \
+    }                                                                                              \
     else if (ET == element::i8)                                                                    \
     {                                                                                              \
         PARTIAL_SELECT_RANK(KV, int8_t, R, K);                                                     \
@@ -220,8 +224,8 @@
     {                                                                                              \
         __register_##OP##_builder()                                                                \
         {                                                                                          \
-            build_dispatcher.insert({type_index(typeid(ngraph::op::OP)),                           \
-                                     &runtime::cpu::Builder::build<ngraph::op::OP>});              \
+            GetGlobalBuildDispatcher().insert({type_index(typeid(ngraph::op::OP)),                 \
+                                               &runtime::cpu::Builder::build<ngraph::op::OP>});    \
         }                                                                                          \
     } __register_##OP##_builder_instance;
 
@@ -239,7 +243,7 @@ namespace ngraph
 
             using BuildOpMap = std::unordered_map<std::type_index, BuildOpFunction>;
 
-            extern BuildOpMap build_dispatcher;
+            BuildOpMap& GetGlobalBuildDispatcher();
 
             class Builder
             {
@@ -250,7 +254,8 @@ namespace ngraph
                                   const std::vector<TensorViewWrapper>& args,
                                   const std::vector<TensorViewWrapper>& out)
                 {
-                    throw std::runtime_error("Unimplemented op in CPU builder");
+                    throw unsupported_op("Unimplemented op '" + node->description() +
+                                         "' in CPU builder");
                 }
 
                 static void nop(CPU_ExternalFunction* external_function,

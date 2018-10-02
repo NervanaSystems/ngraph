@@ -84,31 +84,6 @@ namespace ngraph
         return rc;
     }
 
-    template <typename U, typename T>
-    bool contains_key(const U& container, const T& obj)
-    {
-        bool rc = false;
-        for (auto o : container)
-        {
-            if (o.first == obj)
-            {
-                rc = true;
-                break;
-            }
-        }
-        return rc;
-    }
-
-    template <typename U, typename T>
-    void remove_from(U& container, const T& obj)
-    {
-        auto it = container.find(obj);
-        if (it != container.end())
-        {
-            container.erase(it);
-        }
-    }
-
     size_t hash_combine(const std::vector<size_t>& list);
     void dump(std::ostream& out, const void*, size_t);
 

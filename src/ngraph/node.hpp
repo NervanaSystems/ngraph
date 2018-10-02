@@ -132,6 +132,8 @@ namespace ngraph
         virtual bool is_commutative() { return false; }
         size_t get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
+        virtual std::ostream& write_short_description(std::ostream&) const;
+        virtual std::ostream& write_long_description(std::ostream&) const;
 
         // TODO: Deprecate
         std::deque<descriptor::Input>& get_inputs() { return m_inputs; }
@@ -143,6 +145,16 @@ namespace ngraph
         // Deprecated
         // TODO: Remove from unit tests.
         const std::deque<descriptor::Output>& get_outputs() const;
+
+        /// Get control dependencies registered on the node
+        const std::set<std::shared_ptr<Node>>& get_control_dependencies() const;
+
+        void add_control_dependency(std::shared_ptr<Node> node);
+
+        void remove_control_dependency(std::shared_ptr<Node> node)
+        {
+            m_control_dependencies.erase(node);
+        }
 
         /// Returns the number of outputs on the for the node.
         size_t get_output_size() const;
@@ -166,10 +178,10 @@ namespace ngraph
         descriptor::Tensor& get_output_tensor() const;
 
         /// Returns the tensor view of output i
-        std::shared_ptr<descriptor::TensorView> get_output_tensor_view(size_t i) const;
+        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr(size_t i) const;
 
         /// Checks that there is exactly one output and returns its tensor view.
-        std::shared_ptr<descriptor::TensorView> get_output_tensor_view() const;
+        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr() const;
 
         /// Returns the set of inputs using output i
         const std::set<descriptor::Input*>& get_output_inputs(size_t i) const;
@@ -216,6 +228,7 @@ namespace ngraph
         /// Use instance ids for comparison instead of memory addresses to improve determinism
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
     protected:
+        std::set<std::shared_ptr<Node>> m_control_dependencies;
         void set_output_size(size_t n);
 
         std::string m_node_type;
@@ -240,6 +253,25 @@ namespace ngraph
             : AssertionFailure(what)
         {
         }
+    };
+
+    class NodeDescription
+    {
+    public:
+        NodeDescription(const Node& node, bool is_short)
+            : m_node(node)
+            , m_is_short(is_short)
+        {
+        }
+
+        friend std::ostream& operator<<(std::ostream& out, const NodeDescription node_description)
+        {
+            return node_description.m_is_short
+                       ? node_description.m_node.write_short_description(out)
+                       : node_description.m_node.write_long_description(out);
+        }
+        const Node& m_node;
+        bool m_is_short;
     };
 
     void check_new_args_count(const Node* node, const NodeVector& new_args);

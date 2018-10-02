@@ -16,11 +16,11 @@
 
 #include <numeric>
 
-#include "unsqueeze.hpp"
-
 #include "ngraph/op/reshape.hpp"
+#include "utils/reshape.hpp"
 
 #include "exceptions.hpp"
+#include "unsqueeze.hpp"
 
 namespace ngraph
 {
@@ -34,24 +34,18 @@ namespace ngraph
                 auto data = inputs.at(0);
                 auto data_shape = data->get_shape();
                 auto axes = node.get_attribute_value<std::vector<int64_t>>("axes");
-                if (axes.empty())
-                {
-                    throw error::parameter::Value(
-                        "Unsqueeze", node.get_name(), "axes attribute is mandatory.");
-                }
-                std::sort(std::begin(axes), std::end(axes), std::greater<int64_t>());
 
-                // Generate an increasing sequence (0,1,2,3..) as input_order for Reshape
-                AxisVector input_order(data_shape.size());
-                std::iota(std::begin(input_order), std::end(input_order), 0);
+                ASSERT_VALID_ARGUMENT(node, !axes.empty()) << "'axes' attribute is mandatory.";
+
+                std::sort(std::begin(axes), std::end(axes), std::less<int64_t>());
+
+                AxisVector input_order{reshape::get_default_axis_vector(data_shape.size())};
 
                 for (auto axis : axes)
                 {
-                    if ((axis < 0) || (axis > data_shape.size()))
-                    {
-                        throw error::parameter::Value(
-                            "Unsqueeze", node.get_name(), "provided axes attribute is not valid.");
-                    }
+                    ASSERT_VALID_ARGUMENT(node, axis >= 0 && axis <= data_shape.size())
+                        << "provided 'axes' attribute is not valid.";
+
                     data_shape.insert(std::next(std::begin(data_shape), axis), 1);
                 }
 

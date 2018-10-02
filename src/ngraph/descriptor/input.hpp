@@ -59,10 +59,10 @@ namespace ngraph
 
         protected:
             /// \return the tensor view for the connected output
-            std::shared_ptr<const TensorView> get_tensor_view() const;
+            std::shared_ptr<const Tensor> get_tensor_ptr() const;
 
             /// \return the tensor view for the connected output
-            std::shared_ptr<TensorView> get_tensor_view();
+            std::shared_ptr<Tensor> get_tensor_ptr();
 
         public:
             /// \return the shape of the connected output

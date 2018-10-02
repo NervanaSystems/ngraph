@@ -18,7 +18,7 @@
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/reference/select_and_scatter.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -82,7 +82,8 @@ namespace ngraph
                     char output;
                     inputs.emplace_back(backend->create_tensor(element::f32, Shape{}, &x));
                     inputs.emplace_back(backend->create_tensor(element::f32, Shape{}, &y));
-                    outputs.emplace_back(backend->create_tensor(element::f32, Shape{}, &output));
+                    outputs.emplace_back(
+                        backend->create_tensor(element::boolean, Shape{}, &output));
                     select_external_function->make_call_frame()->call(outputs, inputs);
                     return output;
                 };

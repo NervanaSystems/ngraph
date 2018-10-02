@@ -40,7 +40,7 @@ backends.
    Other, Not yet, Ask
 
 
-Regardless of the framework, after the :doc:`../install`, a good place to start 
+Regardless of the framework, after the :doc:`../buildlb`, a good place to start 
 usually involves making the libraries available to the framework. On Linux\* 
 systems, that command tends to looks something like: 
 
