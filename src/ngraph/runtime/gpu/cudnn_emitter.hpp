@@ -126,6 +126,16 @@ namespace ngraph
                                        const Shape& param_shape,
                                        double epsilon);
 
+                size_t build_lrn(const cudnnLRNMode_t& lrn_op,
+                                 const std::string& dtype,
+                                 const Prop& direction,
+                                 const Shape& input_shape,
+                                 const Shape& output_shape,
+                                 const double lrn_alpha,
+                                 const double lrn_beta,
+                                 const double lrn_bias,
+                                 const size_t lrn_size);
+
                 size_t build_softmax(const cudnnSoftmaxAlgorithm_t& algorithm,
                                      const cudnnSoftmaxMode_t& mode,
                                      const std::string& dtype,
