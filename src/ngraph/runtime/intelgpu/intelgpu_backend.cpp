@@ -278,14 +278,14 @@ runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()
     ocl_engine = make_shared<cldnn::engine>();
 }
 
-shared_ptr<runtime::TensorView>
+shared_ptr<runtime::Tensor>
     runtime::intelgpu::IntelGPUBackend::create_tensor(const element::Type& element_type,
                                                       const Shape& shape)
 {
     return make_shared<runtime::intelgpu::IntelGPUTensorView>(element_type, shape, *ocl_engine);
 }
 
-shared_ptr<runtime::TensorView> runtime::intelgpu::IntelGPUBackend::create_tensor(
+shared_ptr<runtime::Tensor> runtime::intelgpu::IntelGPUBackend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
     return make_shared<runtime::intelgpu::IntelGPUTensorView>(
@@ -1373,10 +1373,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
     return true;
 }
 
-bool runtime::intelgpu::IntelGPUBackend::call(
-    shared_ptr<Function> func,
-    const vector<shared_ptr<runtime::TensorView>>& outputs,
-    const vector<shared_ptr<runtime::TensorView>>& inputs)
+bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
+                                              const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                              const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     validate_call(func, outputs, inputs);
 

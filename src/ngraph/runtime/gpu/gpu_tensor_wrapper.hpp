@@ -16,10 +16,35 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
-#include "pyngraph/runtime/backend.hpp"
-#include "pyngraph/runtime/tensor.hpp"
+#include <memory>
 
-namespace py = pybind11;
+#include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/type/element_type.hpp"
 
-void regmodule_pyngraph_runtime(py::module m);
+namespace ngraph
+{
+    namespace runtime
+    {
+        namespace gpu
+        {
+            class GPUTensorWrapper;
+        }
+    }
+}
+
+class ngraph::runtime::gpu::GPUTensorWrapper
+{
+public:
+    GPUTensorWrapper(const std::shared_ptr<descriptor::Tensor>&, const std::string& alias = "");
+
+    size_t get_size() const;
+    const Shape& get_shape() const;
+    Strides get_strides() const;
+    const element::Type& get_element_type() const;
+    const std::string& get_name() const;
+    const std::string& get_type() const;
+
+private:
+    std::shared_ptr<descriptor::Tensor> m_tensor;
+    std::string m_alias;
+};
