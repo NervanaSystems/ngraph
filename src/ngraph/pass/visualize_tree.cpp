@@ -117,8 +117,8 @@ std::string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
     {
         // The types of the Outputs of a multi-output op
         // will be printed for its corresponding `GetOutputElement`s
-        ss << " " << (node->get_outputs().size() != 1) ? std::string("[skipped]")
-                                                       : node->get_element_type().c_type_string();
+        ss << " " << ((node->get_outputs().size() != 1) ? std::string("[skipped]")
+                                                        : node->get_element_type().c_type_string());
     }
 
     const Node& n = *node;
