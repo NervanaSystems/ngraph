@@ -1,5 +1,5 @@
 # Remember that the last applicable rule for any given file is the only one
-# that applies (if I am reading the docs correctly).
+# that applies.
 
 # Default rule: @diyessi gets everything.
 *                                   @diyessi

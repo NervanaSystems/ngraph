@@ -18,6 +18,7 @@
 
 #include <limits>
 #include <stddef.h>
+#include <stdexcept>
 
 namespace ngraph
 {
