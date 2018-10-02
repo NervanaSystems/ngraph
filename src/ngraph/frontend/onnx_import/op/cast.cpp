@@ -50,7 +50,7 @@ namespace ngraph
                 case onnx::TensorProto_DataType_UINT16: elem_type = element::u16; break;
                 case onnx::TensorProto_DataType_UINT32: elem_type = element::u32; break;
                 case onnx::TensorProto_DataType_UINT64: elem_type = element::u64; break;
-                case onnx::TensorProto_DataType_UNDEFINED: elem_type = element::unspecified; break;
+                case onnx::TensorProto_DataType_UNDEFINED: elem_type = element::undetermined; break;
                 default: ASSERT_IS_SUPPORTED(node, false) << "unsupported type";
                 }
 

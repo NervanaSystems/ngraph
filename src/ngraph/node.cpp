@@ -75,7 +75,7 @@ void Node::set_output_size(size_t n)
     for (size_t i = m_outputs.size(); i < n; ++i)
     {
         auto tensor_descriptor = make_shared<descriptor::Tensor>(
-            element::unspecified, Shape(), get_name() + "_" + to_string(i));
+            element::undetermined, PartialShape::undetermined(), get_name() + "_" + to_string(i));
         m_outputs.emplace_back(this, i, tensor_descriptor);
     }
 }
@@ -406,27 +406,26 @@ const NodeVector& ngraph::check_single_output_args(const NodeVector& args)
 
 void Node::validate_and_infer_elementwise(element::Type result_type)
 {
-    // TODO(amprocte): Extend the "all-consistent" check to the element type as well.
-    const element::Type& element_type = get_input_element_type(0);
-
+    element::Type element_type = get_input_element_type(0);
     PartialShape pshape = get_input_partial_shape(0);
+
     if (get_input_size() > 1)
     {
         for (size_t i = 1; i < get_input_size(); ++i)
         {
-            NODE_VALIDATION_ASSERT(this, get_input_element_type(i) == element_type)
-                << "Argument 0 element type " << element_type
-                << " differs in element type from argument " << i << " " << *get_argument(i)
-                << " element type " << get_input_element_type(i);
+            // TODO(amprocte): we need more info on what the arg shapes/types are. Perhaps this
+            // should be produced by NODE_VALIDATION_ASSERT itself.
 
-            // TODO(amprocte): we need more info on what the arg shapes are. Perhaps this should
-            // be produced by NODE_VALIDATION_ASSERT itself.
+            NODE_VALIDATION_ASSERT(
+                this, element::Type::merge(element_type, element_type, get_input_element_type(i)))
+                << "Argument element types are inconsistent.";
+
             NODE_VALIDATION_ASSERT(this,
                                    PartialShape::merge_into(pshape, get_input_partial_shape(i)))
                 << "Argument shapes are inconsistent.";
         }
     }
-    set_output_type(0, result_type, pshape);
+    set_output_type(0, result_type.is_determined() ? result_type : element_type, pshape);
 }
 
 void Node::validate_and_infer_elementwise_arithmetic()

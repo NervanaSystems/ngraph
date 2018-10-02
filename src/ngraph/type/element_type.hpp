@@ -33,7 +33,7 @@ namespace ngraph
     {
         class Type;
 
-        extern const Type unspecified;
+        extern const Type undetermined;
         extern const Type boolean;
         extern const Type f32;
         extern const Type f64;
@@ -61,6 +61,7 @@ namespace ngraph
             const std::string& c_type_string() const;
             size_t size() const;
             size_t hash() const;
+            bool is_determined() const { return (*this != undetermined); }
             bool is_real() const { return m_is_real; }
             bool is_signed() const { return m_is_signed; }
             bool is_quantized() const { return m_is_quantized; }
@@ -73,12 +74,32 @@ namespace ngraph
 
             /// Returns true if the type is floating point, else false.
             bool get_is_real() const { return m_is_real; }
+            /// \brief Merges two element types t1 and t2, writing the result into dst and
+            ///        returning true if successful, else returning false.
+            ///
+            ///        To "merge" two element types t1 and t2 is to find the least restrictive
+            ///        element type t that is no more restrictive than t1 and t2, if t exists.
+            ///        More simply:
+            ///
+            ///           merge(dst,element::Type::undetermined,t)
+            ///              writes t to dst and returns true
+            ///
+            ///           merge(dst,t,element::Type::undetermined)
+            ///              writes t to dst and returns true
+            ///
+            ///           merge(dst,t1,t2) where t1, t2 both determined and equal
+            ///              writes t1 to dst and returns true
+            ///
+            ///           merge(dst,t1,t2) where t1, t2 both determined and unequal
+            ///              does nothing to dst, and returns false
+            static bool merge(element::Type& dst, const element::Type& t1, const element::Type& t2);
+
         private:
             size_t m_bitwidth{0};
             bool m_is_real{false};
             bool m_is_signed{false};
             bool m_is_quantized{false};
-            std::string m_cname{"unspecified"};
+            std::string m_cname{"undetermined"};
         };
 
         template <typename T>

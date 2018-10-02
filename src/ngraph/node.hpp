@@ -97,7 +97,7 @@ namespace ngraph
         void validate_and_infer_elementwise(element::Type result_type);
         void validate_and_infer_elementwise()
         {
-            validate_and_infer_elementwise(get_input_element_type(0));
+            validate_and_infer_elementwise(element::undetermined);
         }
         void validate_and_infer_elementwise_arithmetic();
         void validate_and_infer_elementwise_logical();

@@ -476,7 +476,7 @@ void test_binary(std::string node_type,
         }
         catch (const NodeValidationError& error)
         {
-            EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument shapes are inconsistent."));
+            EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument shapes are inconsistent"));
         }
         catch (...)
         {
@@ -495,10 +495,8 @@ void test_binary(std::string node_type,
         }
         catch (const NodeValidationError& error)
         {
-            EXPECT_HAS_SUBSTRING(
-                error.what(),
-                std::string("Argument 0 element type element::Type{32, 1, "
-                            "1, 0, \"float\"} differs in element type from argument 1"));
+            EXPECT_HAS_SUBSTRING(error.what(),
+                                 std::string("Argument element types are inconsistent"));
         }
         catch (...)
         {
@@ -570,7 +568,7 @@ void test_binary_logical(std::string node_type,
         }
         catch (const NodeValidationError& error)
         {
-            EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument shapes are inconsistent."));
+            EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument shapes are inconsistent"));
         }
         catch (...)
         {
@@ -589,10 +587,8 @@ void test_binary_logical(std::string node_type,
         }
         catch (const NodeValidationError& error)
         {
-            EXPECT_HAS_SUBSTRING(
-                error.what(),
-                std::string("Argument 0 element type element::Type{8, 0, 1, 0, \"char\"} "
-                            "differs in element type from argument 1"));
+            EXPECT_HAS_SUBSTRING(error.what(),
+                                 std::string("Argument element types are inconsistent"));
         }
         catch (...)
         {
@@ -6819,4 +6815,31 @@ TEST(type_prop, binary_elementwise_arithmetic_both_incomplete_different_rank)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_both_et_undetermined)
+{
+    auto a = make_shared<op::Parameter>(element::undetermined, Shape{1, 2, 3, 4});
+    auto b = make_shared<op::Parameter>(element::undetermined, Shape{1, 2, 3, 4});
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_FALSE(add->get_output_element_type(0).is_determined());
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_left_et_undetermined)
+{
+    auto a = make_shared<op::Parameter>(element::undetermined, Shape{1, 2, 3, 4});
+    auto b = make_shared<op::Parameter>(element::u32, Shape{1, 2, 3, 4});
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_EQ(add->get_output_element_type(0), element::u32);
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_right_et_undetermined)
+{
+    auto a = make_shared<op::Parameter>(element::i64, Shape{1, 2, 3, 4});
+    auto b = make_shared<op::Parameter>(element::undetermined, Shape{1, 2, 3, 4});
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_EQ(add->get_output_element_type(0), element::i64);
 }

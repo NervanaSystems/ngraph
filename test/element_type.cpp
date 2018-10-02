@@ -84,3 +84,42 @@ TEST(element_type, size)
         EXPECT_EQ(2, t1.size());
     }
 }
+
+TEST(element_type, merge_both_undetermined)
+{
+    element::Type t;
+    ASSERT_TRUE(element::Type::merge(t, element::undetermined, element::undetermined));
+    ASSERT_FALSE(t.is_determined());
+}
+
+TEST(element_type, merge_left_undetermined)
+{
+    element::Type t;
+    ASSERT_TRUE(element::Type::merge(t, element::undetermined, element::u64));
+    ASSERT_TRUE(t.is_determined());
+    ASSERT_EQ(t, element::u64);
+}
+
+TEST(element_type, merge_right_undetermined)
+{
+    element::Type t;
+    ASSERT_TRUE(element::Type::merge(t, element::i16, element::undetermined));
+    ASSERT_TRUE(t.is_determined());
+    ASSERT_EQ(t, element::i16);
+}
+
+TEST(element_type, merge_both_determined_equal)
+{
+    element::Type t;
+    ASSERT_TRUE(element::Type::merge(t, element::f64, element::f64));
+    ASSERT_TRUE(t.is_determined());
+    ASSERT_EQ(t, element::f64);
+}
+
+TEST(element_type, merge_both_determined_unequal)
+{
+    element::Type t = element::f32;
+    ASSERT_FALSE(element::Type::merge(t, element::i8, element::i16));
+    ASSERT_TRUE(t.is_determined());
+    ASSERT_EQ(t, element::f32);
+}
