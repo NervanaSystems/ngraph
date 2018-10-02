@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-runtime::intelgpu::IntelGPULayout::IntelGPULayout(const descriptor::TensorView& tv,
+runtime::intelgpu::IntelGPULayout::IntelGPULayout(const descriptor::Tensor& tv,
                                                   const cldnn::layout& layout)
     : TensorLayout(tv)
     , cldnn_layout(layout)
@@ -128,8 +128,17 @@ cldnn::layout runtime::intelgpu::IntelGPULayout::create_cldnn_layout(
     const ngraph::element::Type& element_type, const Shape& element_shape)
 {
     const cldnn::format::type format = cldnn::format::bfyx;
-    const cldnn::data_types data_type = get_cldnn_type(element_type);
     const cldnn::tensor tensor = create_cldnn_tensor(element_shape);
+    cldnn::data_types data_type;
+
+    if ((element_type == ngraph::element::i16) || (element_type == ngraph::element::u16))
+    {
+        data_type = cldnn::data_types::f16;
+    }
+    else
+    {
+        data_type = get_cldnn_type(element_type);
+    }
 
     return cldnn::layout(data_type, format, tensor);
 }

@@ -152,6 +152,7 @@
 #include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv.hpp"
+#include "ngraph/runtime/cpu/op/quantized_conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
@@ -198,15 +199,15 @@ runtime::cpu::CPU_ExternalFunction::~CPU_ExternalFunction()
 {
 }
 
-#if !defined(NGRAPH_DEX_ONLY)
-
-static const string s_output_dir = "cpu_codegen";
-
 class StaticInitializers
 {
 public:
     StaticInitializers(string directory) { ngraph::file_util::remove_directory(directory); }
 };
+
+#if !defined(NGRAPH_DEX_ONLY)
+
+static const string s_output_dir = "cpu_codegen";
 
 static string emit_string_array(const vector<string>& s, size_t max_line_length)
 {
@@ -299,8 +300,8 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Ceiling), &runtime::cpu::CPU_Emitter::emit<op::Ceiling>},
     {TI(ngraph::op::Sqrt), &runtime::cpu::CPU_Emitter::emit<op::Sqrt>},
     {TI(ngraph::op::Convolution), &runtime::cpu::CPU_Emitter::emit<op::Convolution>},
-    {TI(ngraph::op::Quantize), &runtime::cpu::CPU_Emitter::emit<op::Quantize>},
-    {TI(ngraph::op::Dequantize), &runtime::cpu::CPU_Emitter::emit<op::Dequantize>},
+    {TI(ngraph::op::QuantizeCPU), &runtime::cpu::CPU_Emitter::emit<op::QuantizeCPU>},
+    {TI(ngraph::op::DequantizeCPU), &runtime::cpu::CPU_Emitter::emit<op::DequantizeCPU>},
     {TI(ngraph::op::ConvolutionBackpropFilters),
      &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropFilters>},
     {TI(ngraph::op::ConvolutionBackpropData),
@@ -310,6 +311,8 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::ConvolutionRelu), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionRelu>},
     {TI(ngraph::op::QuantizedConvolution),
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolution>},
+    {TI(ngraph::op::QuantizedConvolutionRelu),
+     &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolutionRelu>},
     {TI(ngraph::op::ConvolutionBiasAdd), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBiasAdd>},
     // conv+bias backprop for data share the same implementation as ConvolutionBackpropData
     {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
@@ -371,32 +374,6 @@ static void
            << "\", (" << ctype << "*)" << out[0].get_name() << ", " << out[0].get_size() << ");\n";
     writer.indent--;
     writer << "}\n";
-}
-
-void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Manager& pass_manager)
-{
-    pass_manager.register_pass<ngraph::pass::LikeReplacement>();
-    pass_manager.register_pass<ngraph::pass::NopElimination>();
-    // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
-    // failing mxnet unit tests.
-    // pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
-    // pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    // pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
-    // pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<ngraph::pass::CoreFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUHorizontalFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
-    NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
-    pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi, false);
-    pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
-    pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
-    pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
-    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
-    pass_manager.get_state().set_visualize_tree_ops_map(runtime::cpu::get_visualize_tree_ops_map());
 }
 
 void runtime::cpu::CPU_ExternalFunction::compile()
@@ -562,7 +539,7 @@ using namespace ngraph::runtime;
             if (c)
             {
                 m_active_constants.push_back(node);
-                shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_ptr();
+                shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
                 string type = tv->get_element_type().c_type_string();
                 writer << "static " << type << "* " << tv->get_name() << " = ((" << type << "*)("
                        << c->get_data_ptr() << "));\n";
@@ -588,15 +565,15 @@ using namespace ngraph::runtime;
         set<string> output_names;
         for (shared_ptr<Node> op : current_function->get_results())
         {
-            shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_ptr();
+            shared_ptr<descriptor::Tensor> tv = op->get_output_tensor_ptr();
             output_names.insert(tv->get_name());
         }
-        set<descriptor::TensorView*> constants;
+        set<descriptor::Tensor*> constants;
         for (shared_ptr<Node> node : ordered_ops)
         {
             if (dynamic_cast<ngraph::op::Constant*>(node.get()))
             {
-                shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_ptr();
+                shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
                 constants.insert(tv.get());
             }
         }
@@ -630,7 +607,7 @@ using namespace ngraph::runtime;
                 for (const descriptor::Input& input : node->get_inputs())
                 {
                     const descriptor::Output& output = input.get_output();
-                    shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
+                    shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                     tensor_index_map.insert({tv->get_name(), tensor_index++});
                 }
             }
@@ -690,7 +667,7 @@ using namespace ngraph::runtime;
         {
             for (size_t i = 0; i < param->get_output_size(); ++i)
             {
-                shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_ptr(i);
+                shared_ptr<descriptor::Tensor> tv = param->get_output_tensor_ptr(i);
                 const element::Type& et = tv->get_element_type();
                 string type = et.c_type_string();
                 stringstream ss;
@@ -707,7 +684,7 @@ using namespace ngraph::runtime;
         for (size_t i = 0; i < current_function->get_output_size(); ++i)
         {
             shared_ptr<Node> op = current_function->get_output_op(i);
-            shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_ptr();
+            shared_ptr<descriptor::Tensor> tv = op->get_output_tensor_ptr();
             string type = tv->get_element_type().c_type_string();
             stringstream ss;
             ss << "((" << type << "*)(outputs[" << i << "]))";
@@ -721,7 +698,7 @@ using namespace ngraph::runtime;
             auto input_node = res->get_inputs().at(0).get_output().get_node();
             if (!input_node->is_constant() && !input_node->is_parameter())
             {
-                shared_ptr<descriptor::TensorView> itv =
+                shared_ptr<descriptor::Tensor> itv =
                     res->get_inputs().at(0).get_output().get_tensor_ptr();
                 auto output_name = ss.str();
                 m_variable_name_map[itv->get_name()] = ss.str();
@@ -746,14 +723,14 @@ using namespace ngraph::runtime;
             for (const descriptor::Input& input : node->get_inputs())
             {
                 const descriptor::Output& output = input.get_output();
-                shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
+                shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                 in.push_back(TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
                 node_input_names.emplace_back(tv->get_name());
             }
             vector<TensorViewWrapper> out;
             for (const descriptor::Output& output : node->get_outputs())
             {
-                shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
+                shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                 out.push_back(TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
                 node_output_names.emplace_back(tv->get_name());
             }
@@ -807,7 +784,7 @@ using namespace ngraph::runtime;
                 for (const descriptor::Input& input : node->get_inputs())
                 {
                     const descriptor::Output& output = input.get_output();
-                    shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
+                    shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                     auto input_name = tv->get_name();
 
                     if (output.get_node()->is_parameter())
@@ -1015,7 +992,34 @@ using namespace ngraph::runtime;
     }
 }
 
-#endif
+#endif // !defined(NGRAPH_DEX_ONLY)
+
+void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Manager& pass_manager)
+{
+    pass_manager.register_pass<ngraph::pass::LikeReplacement>();
+    pass_manager.register_pass<ngraph::pass::NopElimination>();
+    // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
+    // failing mxnet unit tests.
+    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
+    // pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
+    pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+    pass_manager.register_pass<ngraph::pass::CoreFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUHorizontalFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
+    NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
+    pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi, false);
+    pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
+    pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
+    pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
+    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
+    pass_manager.get_state().set_visualize_tree_ops_map(runtime::cpu::get_visualize_tree_ops_map());
+}
 
 bool runtime::cpu::CPU_ExternalFunction::computes_result(Node* node)
 {
@@ -1215,7 +1219,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
     {
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
-            shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_ptr(i);
+            shared_ptr<descriptor::Tensor> tv = param->get_output_tensor_ptr(i);
             function_input_index.emplace_back(
                 tensor_data[tv->get_name()], arg_index, tensor_stale[tv->get_name()]);
             m_tensor_roles[tv->get_name()] = CPUTensorRole::INPUT;
@@ -1228,7 +1232,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
     for (size_t i = 0; i < m_function->get_output_size(); ++i)
     {
         shared_ptr<Node> op = m_function->get_output_op(i);
-        shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_ptr();
+        shared_ptr<descriptor::Tensor> tv = op->get_output_tensor_ptr();
         function_output_index.emplace_back(tensor_data[tv->get_name()], i);
         m_tensor_roles[tv->get_name()] = CPUTensorRole::OUTPUT;
 
@@ -1239,7 +1243,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         auto input_node = res->get_inputs().at(0).get_output().get_node();
         if (!input_node->is_constant() && !input_node->is_parameter())
         {
-            shared_ptr<descriptor::TensorView> itv =
+            shared_ptr<descriptor::Tensor> itv =
                 res->get_inputs().at(0).get_output().get_tensor_ptr();
             function_output_index.emplace_back(tensor_data[itv->get_name()], i);
             m_tensor_roles[itv->get_name()] = CPUTensorRole::OUTPUT;
@@ -1267,7 +1271,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         for (const descriptor::Input& input : node->get_inputs())
         {
             const descriptor::Output& output = input.get_output();
-            shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
+            shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
             in.push_back(TensorViewWrapper(tv, tv->get_name()));
             in_names.push_back(tv->get_name());
         }
@@ -1276,7 +1280,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
 
         for (const descriptor::Output& output : node->get_outputs())
         {
-            shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
+            shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
             out.push_back(TensorViewWrapper(tv, tv->get_name()));
             out_names.push_back(tv->get_name());
         }
@@ -1376,7 +1380,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
             for (const descriptor::Input& input : node->get_inputs())
             {
                 const descriptor::Output& output = input.get_output();
-                shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
+                shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                 temp << &tensor_data[tv->get_name()];
                 node_inputs.push_back(tv->get_name() + "(" + temp.str() + ")");
                 temp.str("");
@@ -1384,7 +1388,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
 
             for (const descriptor::Output& output : node->get_outputs())
             {
-                shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
+                shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                 temp << &tensor_data[tv->get_name()];
                 node_outputs.push_back(tv->get_name() + "(" + temp.str() + ")");
                 temp.str("");
@@ -1668,7 +1672,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
     for (const descriptor::Input& input : node.get_inputs())
     {
         const descriptor::Output& output = input.get_output();
-        shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
+        shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
         TensorViewWrapper tvw{tv, "_arg" + to_string(arg_index)};
         if (!contains(arg_names, tvw.get_name()))
         {
@@ -1685,7 +1689,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
     vector<TensorViewWrapper> out;
     for (const descriptor::Output& output : node.get_outputs())
     {
-        shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
+        shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
         TensorViewWrapper tvw{tv, "_out" + to_string(arg_index)};
         if (arg_index++ > 0)
         {

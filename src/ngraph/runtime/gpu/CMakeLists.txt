@@ -23,7 +23,6 @@ set(SRC
     cudnn_emitter.cpp
     cublas_emitter.cpp
     gpu_backend.cpp
-    gpu_call_frame.cpp
     gpu_cuda_context_manager.cpp
     gpu_cuda_function_builder.cpp
     gpu_cuda_function_pool.cpp
@@ -35,8 +34,8 @@ set(SRC
 	gpu_memory_manager.cpp
     gpu_primitive_emitter.cpp
     gpu_runtime_context.cpp
-    gpu_tensor_view_wrapper.cpp
-    gpu_tensor_view.cpp
+    gpu_tensor_wrapper.cpp
+    gpu_tensor.cpp
     gpu_util.cpp
     type_info.cpp
     pass/gpu_layout.cpp

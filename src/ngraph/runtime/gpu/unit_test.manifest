@@ -52,3 +52,10 @@ topk_3d_max_one
 topk_3d_min_all
 topk_3d_min_partial
 topk_3d_min_one
+quantize
+quantize_axes
+quantize_int8
+quantize_clamp
+dequantize
+dequantize_axes
+dequantize_int8

@@ -49,6 +49,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
@@ -78,6 +79,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/relu.hpp"
@@ -506,6 +508,11 @@ void runtime::gpu::GPU_Emitter::emit_Divide(EMIT_ARGS)
     emit_elementwise<ngraph::op::Divide>(external_function, writer, node, args, out);
 }
 
+void runtime::gpu::GPU_Emitter::emit_Dequantize(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 void runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
 {
     if (out[0].get_size() == 0)
@@ -857,6 +864,11 @@ void runtime::gpu::GPU_Emitter::emit_Product(EMIT_ARGS)
         }
     }
     writer.block_end();
+}
+
+void runtime::gpu::GPU_Emitter::emit_Quantize(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
@@ -1451,7 +1463,7 @@ void runtime::gpu::GPU_Emitter::emit_TopK(EMIT_ARGS)
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-string runtime::gpu::GPU_Emitter::node_names(const vector<GPU_TensorViewWrapper>& args,
+string runtime::gpu::GPU_Emitter::node_names(const vector<GPUTensorWrapper>& args,
                                              initializer_list<int> arg_indexes)
 {
     vector<string> names;

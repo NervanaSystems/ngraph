@@ -383,6 +383,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
 
     size_t idx_workspace = std::numeric_limits<size_t>::max();
     size_t pad_dynamic_index = std::numeric_limits<size_t>::max();
+    bool can_find_algo = true;
     if (pad_required || is_deconvolution)
     {
         input_shape_padded = runtime::gpu::get_padded_shape(
@@ -405,6 +406,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
         // asymetric padding has been applied, zero out padding vectors to
         // ensure cudnn does not assume padding
         std::fill(padding_below.begin(), padding_below.end(), 0);
+        // padding will make find_algorithm for convolution get wrong result
+        can_find_algo = false;
     }
 
     size_t conv_index = build_convolution(dtype,
@@ -413,7 +416,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
                                           output_shape,
                                           window_movement_strides,
                                           window_dilation_strides,
-                                          padding_below);
+                                          padding_below,
+                                          can_find_algo);
 
     std::unique_ptr<gpu::primitive> kernel_launch(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
@@ -504,6 +508,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
     size_t idx_workspace = std::numeric_limits<size_t>::max();
     size_t pad_dynamic_index = std::numeric_limits<size_t>::max();
     size_t slice_index = std::numeric_limits<size_t>::max();
+    bool can_find_algo = true;
     if (pad_required || is_deconvolution)
     {
         output_shape_padded =
@@ -530,6 +535,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
         // asymetric padding has been applied, zero out padding vectors to
         // ensure cudnn does not assume padding
         std::fill(padding_below.begin(), padding_below.end(), 0);
+        // padding will make find_algorithm for convolution get wrong result
+        can_find_algo = false;
     }
 
     size_t conv_index = build_convolution_backward_data(output_type,
@@ -538,7 +545,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
                                                         output_shape_padded,
                                                         window_movement_strides,
                                                         window_dilation_strides,
-                                                        padding_below);
+                                                        padding_below,
+                                                        can_find_algo);
 
     std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](void** inputs,
                                                                          void** outputs) mutable {
@@ -619,6 +627,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
 
     size_t idx_workspace = std::numeric_limits<size_t>::max();
     size_t pad_dynamic_index = std::numeric_limits<size_t>::max();
+    bool can_find_algo = true;
     if (pad_required || is_deconvolution)
     {
         input_shape_padded = runtime::gpu::get_padded_shape(
@@ -639,6 +648,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
         // asymetric padding has been applied, zero out padding vectors to
         // ensure cudnn does not assume padding
         std::fill(padding_below.begin(), padding_below.end(), 0);
+        // padding will make find_algorithm for convolution get wrong result
+        can_find_algo = false;
     }
 
     size_t conv_index = build_convolution_backward_filter(output_type,
@@ -647,7 +658,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
                                                           filter_shape,
                                                           window_movement_strides,
                                                           window_dilation_strides,
-                                                          padding_below);
+                                                          padding_below,
+                                                          can_find_algo);
 
     std::unique_ptr<gpu::primitive> kernel_launch(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
@@ -901,7 +913,8 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const std::string& dtype,
                                                      const Shape& output_tensor_shape,
                                                      const Strides& window_movement_strides,
                                                      const Strides& window_dilation_strides,
-                                                     const Shape& padding_below)
+                                                     const Shape& padding_below,
+                                                     const bool find_algo)
 {
     cudnnDataType_t data_type = get_cudnn_datatype(dtype);
     const cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
@@ -914,7 +927,20 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const std::string& dtype,
     auto& filter_desc = get_cudnn_filter_descriptor(input_filter_shape, data_type, tensor_format);
     auto& conv_desc = get_cudnn_convolution_descriptor(
         padding_below, window_movement_strides, window_dilation_strides, mode, data_type);
-    const cudnnConvolutionFwdAlgo_t conv_fwd_algo = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM;
+
+    cudnnConvolutionFwdAlgo_t conv_fwd_algo = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM;
+    if (find_algo)
+    {
+        CUDNN_SAFE_CALL(cudnnGetConvolutionForwardAlgorithm(*m_ctx->cudnn_handle,
+                                                            tensor_desc_0,
+                                                            filter_desc,
+                                                            conv_desc,
+                                                            tensor_desc_1,
+                                                            CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
+                                                            /*memoryLimitInBytes=*/0,
+                                                            &conv_fwd_algo));
+    }
+
     void* alpha = m_host_parameters.allocate_by_datatype(data_type, 1.0);
     void* beta = m_host_parameters.allocate_by_datatype(data_type, 0);
 
@@ -962,7 +988,8 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
     const Shape& output_tensor_shape,
     const Strides& window_movement_strides,
     const Strides& window_dilation_strides,
-    const Shape& padding_below)
+    const Shape& padding_below,
+    const bool find_algo)
 {
     const cudnnDataType_t data_type = get_cudnn_datatype(dtype);
     const cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
@@ -975,7 +1002,20 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
     auto& filter_desc = get_cudnn_filter_descriptor(input_filter_shape, data_type, tensor_format);
     auto& conv_desc = get_cudnn_convolution_descriptor(
         padding_below, window_movement_strides, window_dilation_strides, mode, data_type);
-    const cudnnConvolutionBwdDataAlgo_t conv_bwd_data_algo = CUDNN_CONVOLUTION_BWD_DATA_ALGO_0;
+    cudnnConvolutionBwdDataAlgo_t conv_bwd_data_algo = CUDNN_CONVOLUTION_BWD_DATA_ALGO_0;
+    if (find_algo)
+    {
+        CUDNN_SAFE_CALL(
+            cudnnGetConvolutionBackwardDataAlgorithm(*m_ctx->cudnn_handle,
+                                                     filter_desc,
+                                                     tensor_desc_0,
+                                                     conv_desc,
+                                                     tensor_desc_1,
+                                                     CUDNN_CONVOLUTION_BWD_DATA_PREFER_FASTEST,
+                                                     0,
+                                                     &conv_bwd_data_algo));
+    }
+
     void* alpha = m_host_parameters.allocate_by_datatype(data_type, 1.0);
     void* beta = m_host_parameters.allocate_by_datatype(data_type, 0);
 
@@ -1023,7 +1063,8 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(
     const Shape& output_filter_shape,
     const Strides& window_movement_strides,
     const Strides& window_dilation_strides,
-    const Shape& padding_below)
+    const Shape& padding_below,
+    const bool find_algo)
 {
     const cudnnDataType_t data_type = get_cudnn_datatype(dtype);
     const cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
@@ -1036,9 +1077,19 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(
     auto& filter_desc = get_cudnn_filter_descriptor(output_filter_shape, data_type, tensor_format);
     auto& conv_desc = get_cudnn_convolution_descriptor(
         padding_below, window_movement_strides, window_dilation_strides, mode, data_type);
-    const cudnnConvolutionBwdFilterAlgo_t conv_bwd_filter_algo =
-        CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0;
-
+    cudnnConvolutionBwdFilterAlgo_t conv_bwd_filter_algo = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0;
+    if (find_algo)
+    {
+        CUDNN_SAFE_CALL(
+            cudnnGetConvolutionBackwardFilterAlgorithm(*m_ctx->cudnn_handle,
+                                                       tensor_desc_0,
+                                                       tensor_desc_1,
+                                                       conv_desc,
+                                                       filter_desc,
+                                                       CUDNN_CONVOLUTION_BWD_FILTER_PREFER_FASTEST,
+                                                       0,
+                                                       &conv_bwd_filter_algo));
+    }
     size_t workspace_size_in_bytes = 0;
     CUDNN_SAFE_CALL(cudnnGetConvolutionBackwardFilterWorkspaceSize(*m_ctx->cudnn_handle,
                                                                    tensor_desc_0,
