@@ -37,8 +37,7 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
     std::stringstream ss;
     ss << "dot_op"
        << "_dtype_" << dtype.c_type_string() << "_reduction_axes_count_" << reduction_axes;
-    std::string hash = ss.str() + "_i_" + join(arg0_shape, "_") + "_i_" + join(arg1_shape, "_") +
-                       "_o_" + join(out_shape, "_");
+    std::string hash = ss.str() + "_i_" + join(arg0_shape, "_") + "_i_" + join(arg1_shape, "_");
 
     size_t primitive_index = m_primitive_emitter->lookup(hash);
     if (primitive_index != std::numeric_limits<size_t>::max())
@@ -131,18 +130,18 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
 
     else
     {
-        size_t num_of_axes_for_m = arg0_shape.size() - reduction_axes;
-        size_t num_of_axes_for_n = arg1_shape.size() - reduction_axes;
-        size_t num_of_axes_for_k = reduction_axes;
+        size_t axes_for_m_count = arg0_shape.size() - reduction_axes;
+        size_t axes_for_n_count = arg1_shape.size() - reduction_axes;
+        size_t axes_for_k_count = reduction_axes;
         size_t m = 1;
         size_t n = 1;
         size_t k = 1;
 
         // check if input and output size correct
         // check and calculate k for arg0 and arg1
-        size_t arg0_k_idx = num_of_axes_for_m; // first axe in arg0 for k
-        size_t arg1_k_idx = 0;                 // first axe in arg1 for k
-        for (size_t i = 0; i < num_of_axes_for_k; i++)
+        size_t arg0_k_idx = axes_for_m_count; // first axe in arg0 for k
+        size_t arg1_k_idx = 0;                // first axe in arg1 for k
+        for (size_t i = 0; i < axes_for_k_count; i++)
         {
             k *= arg0_shape[arg0_k_idx];
             if (arg0_shape[arg0_k_idx++] != arg1_shape[arg1_k_idx++])
@@ -153,7 +152,7 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
         // check and calculate m for arg0 and out
         size_t arg0_m_idx = 0; // first axe in arg0 for m
         size_t out_m_idx = 0;  // first axe in out for m
-        for (size_t i = 0; i < num_of_axes_for_m; i++)
+        for (size_t i = 0; i < axes_for_m_count; i++)
         {
             m *= arg0_shape[arg0_m_idx];
             if (arg0_shape[arg0_m_idx++] != out_shape[out_m_idx++])
@@ -162,9 +161,9 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
             }
         }
         // check and calculate n for arg1 and out
-        size_t arg1_n_idx = num_of_axes_for_k; // first axe in arg1 for n
-        size_t out_n_idx = num_of_axes_for_m;  // first axe in arg1 for n
-        for (size_t i = 0; i < num_of_axes_for_n; i++)
+        size_t arg1_n_idx = axes_for_k_count; // first axe in arg1 for n
+        size_t out_n_idx = axes_for_m_count;  // first axe in arg1 for n
+        for (size_t i = 0; i < axes_for_n_count; i++)
         {
             n *= arg1_shape[arg1_n_idx];
             if (arg1_shape[arg1_n_idx++] != out_shape[out_n_idx++])
