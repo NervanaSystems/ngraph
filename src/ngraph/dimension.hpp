@@ -52,6 +52,8 @@ namespace ngraph
             return m_dimension;
         }
 
+        /// \brief Returns true if *this and dim are both undetermined, or if they are both
+        ///        determined and equal; otherwise, returns false.
         bool same_scheme(const Dimension& dim) const
         {
             return (!is_determined() && !dim.is_determined()) ||
@@ -61,6 +63,13 @@ namespace ngraph
         /// \brief Merge two dimensions together. Returns true, and writes the merged dimension
         ///        to dst, if the merge is successful. Returns false, and leaves dst unchanged,
         ///        if the merge is unsuccessful.
+        ///
+        ///        If d1 is undetermined, merge(d,d1,d2) writes d2 to d and returns true.
+        ///        If d2 is undetermined, merge(d,d1,d2) writes d1 to d and returns true.
+        ///        If d1 and d2 are determined and equal, merge(d,d1,d2) writes d1 to d
+        ///           and returns true.
+        ///        If d1 and d2 are both determined and unequal, merge(d,d1,d2) leaves d unchanged
+        ///           and returns false.
         static bool merge(Dimension& dst, const Dimension d1, const Dimension d2);
 
         /// \brief Returns true if the dimensions are compatible, i.e. if one of the dimensions

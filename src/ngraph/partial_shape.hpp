@@ -112,6 +112,26 @@ namespace ngraph
         friend std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
         friend PartialShape operator+(const PartialShape& s1, const PartialShape& s2);
 
+        /// \brief Merges src into dst, returning true on success and false on failure. If false
+        ///        is returned, the effect on dst is unspecified.
+        ///
+        ///        To "merge" two partial shapes s1 and s2 is to find the most permissive partial
+        ///        shape s that is no more permissive than s1 or s2, if s exists. For example:
+        ///
+        ///        merge(?,?) -> ?
+        ///        merge(?,{?,?}) -> {?,?}
+        ///        merge({1,2,3,4},?) -> {1,2,3,4}
+        ///        merge({1,2},{1,?}) -> {1,2}
+        ///        merge({1,2,?,?},{1,?,3,?}) -> {1,2,3,?}
+        ///        merge({1,2,3},{1,2,3}) -> {1,2,3}
+        ///
+        ///        merge({1,?},{2,?}) fails [dimension 0 constraints are inconsistent]
+        ///        merge({?,?},{?,?,?}) fails [ranks are inconsistent]
+        ///
+        ///        This function (merge_into) performs the "merge" operation described above on
+        ///        dst and src, but overwrites dst with the result and returns true if merging is
+        ///        successful; if merging is unsuccessful, the function returns false and may make
+        ///        unspecified changes to dst.
         static bool merge_into(PartialShape& dst, const PartialShape& src);
 
     private:
