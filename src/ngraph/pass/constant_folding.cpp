@@ -331,7 +331,7 @@ void ngraph::pass::ConstantFolding::construct_constant_binary()
         auto pattern_map = m.get_pattern_map();
 
         auto a_match = dynamic_pointer_cast<op::Constant>(pattern_map[a]);
-        auto b_match = dynamic_pointer_cast<op::Constant>(pattern_map[a]);
+        auto b_match = dynamic_pointer_cast<op::Constant>(pattern_map[b]);
         auto binary_match = m.get_match_root();
 
         if (!is_supported_binary_op(binary_match))
