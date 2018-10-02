@@ -35,7 +35,7 @@ namespace ngraph
             class LayoutDescriptor : public ngraph::descriptor::layout::TensorLayout
             {
             public:
-                LayoutDescriptor(const ngraph::descriptor::TensorView& tv);
+                LayoutDescriptor(const ngraph::descriptor::Tensor& tv);
                 ~LayoutDescriptor() override {}
                 virtual size_t get_allocated_size() override { return m_buffer_size; }
                 size_t get_offset() const { return m_offset; }

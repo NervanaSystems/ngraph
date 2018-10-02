@@ -175,7 +175,7 @@ the three parameters and the return value.
 Each tensor is a shared pointer to a :term:`Tensorview`, which is the interface 
 backends implement for tensor use. When there are no more references to the 
 tensor view, it will be freed when convenient for the backend. See the 
-:doc:`../programmable/index` documentation for details on ``TensorView``.
+:doc:`../programmable/index` documentation for details on ``Tensor``.
 
 
 .. _initialize_inputs:
@@ -189,7 +189,7 @@ Next we need to copy some data into the tensors.
    :language: cpp
    :lines: 48-55
 
-The ``runtime::TensorView`` interface has ``write`` and ``read`` methods for 
+The ``runtime::Tensor`` interface has ``write`` and ``read`` methods for 
 copying data to/from the tensor.
 
 .. _invoke_cmp:

@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-runtime::intelgpu::IntelGPULayout::IntelGPULayout(const descriptor::TensorView& tv,
+runtime::intelgpu::IntelGPULayout::IntelGPULayout(const descriptor::Tensor& tv,
                                                   const cldnn::layout& layout)
     : TensorLayout(tv)
     , cldnn_layout(layout)

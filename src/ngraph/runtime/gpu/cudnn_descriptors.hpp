@@ -20,6 +20,7 @@
 
 #include <cudnn.h>
 
+#include "ngraph/runtime/gpu/cuda_error_check.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 
 namespace ngraph

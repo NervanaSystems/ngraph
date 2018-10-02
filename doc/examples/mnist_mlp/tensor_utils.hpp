@@ -22,7 +22,7 @@
 #include <ngraph/ngraph.hpp>
 
 // Make a runtime tensor for a node output
-std::shared_ptr<ngraph::runtime::TensorView> make_output_tensor(
+std::shared_ptr<ngraph::runtime::Tensor> make_output_tensor(
     const std::shared_ptr<ngraph::runtime::Backend>& backend,
     const std::shared_ptr<ngraph::Node>& node,
     size_t output_pos)
@@ -35,9 +35,9 @@ std::shared_ptr<ngraph::runtime::TensorView> make_output_tensor(
 // Initialize a tensor from a random generator
 template <typename T>
 void randomize(std::function<T()> rand,
-               const std::shared_ptr<ngraph::runtime::TensorView>& t)
+               const std::shared_ptr<ngraph::runtime::Tensor>& t)
 {
-    if (t->get_tensor().get_element_type().bitwidth() != 8 * sizeof(T))
+    if (t->get_element_type().bitwidth() != 8 * sizeof(T))
     {
         throw std::invalid_argument(
             "Randomize generator size is not the same as tensor "
@@ -54,7 +54,7 @@ void randomize(std::function<T()> rand,
 
 // Get a scalar value from a tensor, optionally at an element offset
 template <typename T>
-T get_scalar(const std::shared_ptr<ngraph::runtime::TensorView>& t,
+T get_scalar(const std::shared_ptr<ngraph::runtime::Tensor>& t,
              size_t element_offset = 0)
 {
     T result;
@@ -64,7 +64,7 @@ T get_scalar(const std::shared_ptr<ngraph::runtime::TensorView>& t,
 
 // Set a scalar value in a tensor, optionally at an element offset
 template <typename T>
-void set_scalar(const std::shared_ptr<ngraph::runtime::TensorView>& t,
+void set_scalar(const std::shared_ptr<ngraph::runtime::Tensor>& t,
                 T value,
                 size_t element_offset = 0)
 {
@@ -91,9 +91,8 @@ std::ostream& operator<<(std::ostream& s, const ngraph::Shape& shape)
 class TensorDumper
 {
 protected:
-    TensorDumper(
-        const std::string& name,
-        const std::shared_ptr<ngraph::runtime::TensorView>& tensor)
+    TensorDumper(const std::string& name,
+                 const std::shared_ptr<ngraph::runtime::Tensor>& tensor)
         : m_name(name)
         , m_tensor(tensor)
     {
@@ -102,7 +101,7 @@ protected:
 public:
     virtual ~TensorDumper() {}
     const std::string& get_name() const { return m_name; }
-    std::shared_ptr<ngraph::runtime::TensorView> get_tensor() const
+    std::shared_ptr<ngraph::runtime::Tensor> get_tensor() const
     {
         return m_tensor;
     }
@@ -110,7 +109,7 @@ public:
 
 protected:
     std::string m_name;
-    std::shared_ptr<ngraph::runtime::TensorView> m_tensor;
+    std::shared_ptr<ngraph::runtime::Tensor> m_tensor;
 };
 
 std::ostream& operator<<(std::ostream& s, const TensorDumper& td)
@@ -123,7 +122,7 @@ class MinMax : public TensorDumper
 {
 public:
     MinMax(const std::string& name,
-           const std::shared_ptr<ngraph::runtime::TensorView>& tensor)
+           const std::shared_ptr<ngraph::runtime::Tensor>& tensor)
         : TensorDumper(name, tensor)
     {
         size_t n = m_tensor->get_element_count();
@@ -153,14 +152,14 @@ class DumpTensor : public TensorDumper
 {
 public:
     DumpTensor(const std::string& name,
-               const std::shared_ptr<ngraph::runtime::TensorView>& tensor)
+               const std::shared_ptr<ngraph::runtime::Tensor>& tensor)
         : TensorDumper(name, tensor)
     {
     }
 
     std::ostream& dump(std::ostream& s) const override
     {
-        std::shared_ptr<ngraph::runtime::TensorView> t{get_tensor()};
+        std::shared_ptr<ngraph::runtime::Tensor> t{get_tensor()};
         const ngraph::Shape& shape = t->get_shape();
         s << "Tensor<" << get_name() << ": ";
         for (size_t i = 0; i < shape.size(); ++i)

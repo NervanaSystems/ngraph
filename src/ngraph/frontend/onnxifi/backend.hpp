@@ -23,7 +23,7 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
 
 namespace ngraph
 {
@@ -53,16 +53,16 @@ namespace ngraph
             }
 
             bool call(const std::shared_ptr<Function>& function,
-                      const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
-                      const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) const
+                      const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                      const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) const
             {
                 return get().call(function, outputs, inputs);
             }
 
             bool call_with_validate(
                 const std::shared_ptr<Function>& function,
-                const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
-                const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) const
+                const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) const
             {
                 return get().call_with_validate(function, outputs, inputs);
             }
