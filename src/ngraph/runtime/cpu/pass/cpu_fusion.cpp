@@ -1462,7 +1462,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_folded_batch_nor
             auto mean_gamma = std::make_shared<op::Multiply>(
                 std::make_shared<op::Subtract>(pattern_map[bias], pattern_map[mean]),
                 pattern_map[gamma]);
-            auto new_biases = std::make_shared<op::Subtract>(
+            auto new_biases = std::make_shared<op::Add>(
                 pattern_map[beta], std::make_shared<op::Divide>(mean_gamma, sqrt_var_eps));
             auto weight_scaling = std::make_shared<op::Divide>(pattern_map[gamma], sqrt_var_eps);
             auto new_weights = std::make_shared<op::Multiply>(

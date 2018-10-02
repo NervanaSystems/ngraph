@@ -1670,15 +1670,15 @@ TEST(cpu_fusion, conv_batch_norm_folding)
 
 TEST(cpu_fusion, convbias_batch_norm_folding)
 {
-    Shape shape_input{1, 8, 3, 3};
-    Shape shape_weights{2, 8, 1, 1};
+    Shape shape_input{2, 8, 5, 5};
+    Shape shape_weights{2, 8, 2, 2};
     Shape shape_norm{2};
 
     auto make_function = [shape_input, shape_weights, shape_norm]() {
         auto input = std::make_shared<op::Parameter>(element::f32, shape_input);
         auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
         auto bias = std::make_shared<op::Parameter>(element::f32, Shape{2});
-        double eps = 0.001;
+        double eps = 1.01;
         auto gamma = std::make_shared<op::Parameter>(element::f32, shape_norm);
         auto beta = std::make_shared<op::Parameter>(element::f32, shape_norm);
         auto mean = std::make_shared<op::Parameter>(element::f32, shape_norm);
@@ -1686,16 +1686,16 @@ TEST(cpu_fusion, convbias_batch_norm_folding)
         auto conv = std::make_shared<op::Convolution>(input, weights, Strides{1, 1}, Strides{1, 1});
         auto convbias =
             conv + std::make_shared<op::Broadcast>(bias, conv->get_shape(), AxisSet{0, 2, 3});
-        auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, conv, mean, var);
-        auto f = make_shared<Function>(NodeVector{bn},
-                                       op::ParameterVector{input, weights, gamma, beta, mean, var});
+        auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, convbias, mean, var);
+        auto f = make_shared<Function>(
+            NodeVector{bn}, op::ParameterVector{input, weights, bias, gamma, beta, mean, var});
         return f;
     };
 
     auto int_f = make_function();
     auto cpu_f = make_function();
 
-    test::Uniform<float> rng(-100.0f, 100.0f);
+    test::Uniform<float> rng(1.0f, 100.0f);
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
     {
@@ -1706,7 +1706,7 @@ TEST(cpu_fusion, convbias_batch_norm_folding)
 
     auto int_results = execute(int_f, args, "INTERPRETER");
     auto cpu_results = execute(cpu_f, args, "CPU");
-    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0), 1.0e-4f, 1.0e-4f));
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
 TEST(cpu_fusion, conv_affine_folding)
@@ -1784,16 +1784,17 @@ TEST(cpu_fusion, convbias_affine_folding)
             conv + std::make_shared<op::Broadcast>(bias, conv->get_shape(), AxisSet{0, 2, 3});
         auto out = std::make_shared<op::Add>(
             std::make_shared<op::Multiply>(
-                conv, std::make_shared<op::Broadcast>(a, conv->get_shape(), AxisSet{0, 2, 3})),
+                convbias, std::make_shared<op::Broadcast>(a, conv->get_shape(), AxisSet{0, 2, 3})),
             std::make_shared<op::Broadcast>(b, conv->get_shape(), AxisSet{0, 2, 3}));
-        auto f = make_shared<Function>(NodeVector{out}, op::ParameterVector{input, weights, a, b});
+        auto f =
+            make_shared<Function>(NodeVector{out}, op::ParameterVector{input, weights, bias, a, b});
         return f;
     };
 
     auto int_f = make_function();
     auto cpu_f = make_function();
 
-    test::Uniform<float> rng(-300.0f, 100.0f);
+    test::Uniform<float> rng(20.0f, 300.0f);
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
     {
@@ -1804,7 +1805,7 @@ TEST(cpu_fusion, convbias_affine_folding)
 
     auto int_results = execute(int_f, args, "INTERPRETER");
     auto cpu_results = execute(cpu_f, args, "CPU");
-    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0), 1.0e-4f, 1.0e-4f));
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
 TEST(cpu_fusion, group_convolution_fusion)
