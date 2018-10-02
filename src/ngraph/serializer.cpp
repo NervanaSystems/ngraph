@@ -182,7 +182,7 @@ static PartialShape read_partial_shape(const json& j)
         std::vector<Dimension> dims(j.size());
         for (size_t i = 0; i < j.size(); i++)
         {
-            if (j.is_null())
+            if (j[i].is_null())
             {
                 dims[i] = Dimension::undetermined();
             }
