@@ -199,7 +199,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
             debug_sync();
         }});
 
-    return this->m_primitive_emitter->cache_primitive(reduce, hash);
+    return this->m_primitive_emitter->register_primitive(reduce, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_tensor_op(const cudnnOpTensorOp_t& tensor_op,
@@ -249,7 +249,7 @@ size_t runtime::gpu::CUDNNEmitter::build_tensor_op(const cudnnOpTensorOp_t& tens
             debug_sync();
         }});
 
-    return this->m_primitive_emitter->cache_primitive(tensor, hash);
+    return this->m_primitive_emitter->register_primitive(tensor, hash);
 }
 
 cudnnFilterDescriptor_t& runtime::gpu::CUDNNEmitter::get_cudnn_filter_descriptor(
@@ -434,7 +434,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
             }
         }});
 
-    return this->m_primitive_emitter->cache_primitive(kernel_launch, hash);
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackpropData* node)
@@ -561,7 +561,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
         }
     }});
 
-    return this->m_primitive_emitter->cache_primitive(kernel_launch, hash);
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackpropFilters* node)
@@ -668,7 +668,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
             }
         }});
 
-    return this->m_primitive_emitter->cache_primitive(kernel_launch, hash);
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
@@ -774,7 +774,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
             }
         }});
 
-    return this->m_primitive_emitter->cache_primitive(kernel_launch, hash);
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Max* node)
@@ -833,7 +833,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Max* node)
         }});
     }
 
-    return this->m_primitive_emitter->cache_primitive(kernel_launch, hash);
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Min* node)
@@ -892,7 +892,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Min* node)
         }});
     }
 
-    return this->m_primitive_emitter->cache_primitive(kernel_launch, hash);
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_convolution(const std::string& dtype,
@@ -1205,7 +1205,7 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t& pool_
     }
     }
 
-    return this->m_primitive_emitter->cache_primitive(pool, hash);
+    return this->m_primitive_emitter->register_primitive(pool, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& bn_op,
@@ -1349,7 +1349,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
     }
     }
 
-    return this->m_primitive_emitter->cache_primitive(batchnorm, hash);
+    return this->m_primitive_emitter->register_primitive(batchnorm, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_softmax(const cudnnSoftmaxAlgorithm_t& algorithm,
@@ -1417,7 +1417,7 @@ size_t runtime::gpu::CUDNNEmitter::build_softmax(const cudnnSoftmaxAlgorithm_t& 
     }
     }
 
-    return this->m_primitive_emitter->cache_primitive(softmax, hash);
+    return this->m_primitive_emitter->register_primitive(softmax, hash);
 }
 
 void runtime::gpu::CUDNNEmitter::sync()

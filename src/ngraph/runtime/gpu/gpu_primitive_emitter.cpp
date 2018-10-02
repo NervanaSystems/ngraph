@@ -14,8 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include <limits>
+
+#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 
 using namespace ngraph;
 using namespace ngraph::runtime::gpu;
@@ -76,8 +77,7 @@ void GPUPrimitiveEmitter::cache(const std::string& hash, const size_t& index)
     m_primitive_map.insert({hash, index});
 }
 
-size_t GPUPrimitiveEmitter::cache_primitive(std::unique_ptr<gpu::primitive>& f,
-                                                std::string hash)
+size_t GPUPrimitiveEmitter::register_primitive(std::unique_ptr<gpu::primitive>& f, std::string hash)
 {
     size_t primitive_index = this->insert(std::move(f));
     this->cache(hash, primitive_index);
