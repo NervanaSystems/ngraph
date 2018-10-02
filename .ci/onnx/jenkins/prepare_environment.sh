@@ -72,6 +72,7 @@ function build_ngraph() {
     fi
     export PYBIND_HEADERS_PATH="${ngraph_directory}/ngraph/python/pybind11"
     export NGRAPH_CPP_BUILD_PATH="${ngraph_directory}/ngraph_dist"
+    export NGRAPH_ONNX_IMPORT_ENABLE="TRUE"
     python3 setup.py bdist_wheel
     return 0
 }
@@ -81,9 +82,6 @@ if ! build_ngraph "/root" "USE_CACHED"; then
     build_ngraph "${NGRAPH_CACHE_DIR}" "UPDATE REBUILD"
     build_ngraph "/root" "REBUILD USE_CACHED"
 fi
-
-# Add env variable to use ONNX
-echo "NGRAPH_ONNX_IMPORT_ENABLE=TRUE" >> /etc/environment
 
 # Copy Onnx models
 if [ -d /home/onnx_models/.onnx ]; then
