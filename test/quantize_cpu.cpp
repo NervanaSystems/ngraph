@@ -175,7 +175,7 @@ void DequantizeTest(int input, float min, float max, float expected_output)
     auto A = make_shared<op::Parameter>(element::from<T>(), shape_a);
     auto B = op::Constant::create(element::f32, Shape{}, {min});
     auto C = op::Constant::create(element::f32, Shape{}, {max});
-    auto r = make_shared<op::Dequantize>(A, B, C, element::from<T>());
+    auto r = make_shared<op::DequantizeCPU>(A, B, C, element::from<T>());
     auto f = make_shared<Function>(r, op::ParameterVector{A});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
