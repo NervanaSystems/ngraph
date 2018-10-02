@@ -112,6 +112,15 @@ std::string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
                                                       : vector_to_string(node->get_shape()));
     }
 
+    static const auto nvtot = std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
+    if (nvtot != nullptr)
+    {
+        // The types of the Outputs of a multi-output op
+        // will be printed for its corresponding `GetOutputElement`s
+        ss << " " << (node->get_outputs().size() != 1) ? std::string("[skipped]")
+                                                       : node->get_element_type().c_type_string();
+    }
+
     const Node& n = *node;
     auto eh = m_ops_to_details.find(TI(n));
     if (eh != m_ops_to_details.end())
