@@ -14,41 +14,41 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-runtime::gpu::GPU_TensorViewWrapper::GPU_TensorViewWrapper(const shared_ptr<descriptor::Tensor>& tv,
-                                                           const string& alias)
+runtime::gpu::GPUTensorWrapper::GPUTensorWrapper(const shared_ptr<descriptor::Tensor>& tv,
+                                                 const string& alias)
     : m_tensor(tv)
     , m_alias(alias)
 {
 }
 
-size_t runtime::gpu::GPU_TensorViewWrapper::get_size() const
+size_t runtime::gpu::GPUTensorWrapper::get_size() const
 {
     return m_tensor->get_tensor_layout()->get_size();
 }
 
-const Shape& runtime::gpu::GPU_TensorViewWrapper::get_shape() const
+const Shape& runtime::gpu::GPUTensorWrapper::get_shape() const
 {
     return m_tensor->get_tensor_layout()->get_shape();
 }
 
-Strides runtime::gpu::GPU_TensorViewWrapper::get_strides() const
+Strides runtime::gpu::GPUTensorWrapper::get_strides() const
 {
     return m_tensor->get_tensor_layout()->get_strides();
 }
 
-const element::Type& runtime::gpu::GPU_TensorViewWrapper::get_element_type() const
+const element::Type& runtime::gpu::GPUTensorWrapper::get_element_type() const
 {
     return m_tensor->get_tensor_layout()->get_element_type();
 }
 
-const std::string& runtime::gpu::GPU_TensorViewWrapper::get_name() const
+const std::string& runtime::gpu::GPUTensorWrapper::get_name() const
 {
     if (m_alias.empty())
     {
@@ -60,7 +60,7 @@ const std::string& runtime::gpu::GPU_TensorViewWrapper::get_name() const
     }
 }
 
-const std::string& runtime::gpu::GPU_TensorViewWrapper::get_type() const
+const std::string& runtime::gpu::GPUTensorWrapper::get_type() const
 {
     return get_element_type().c_type_string();
 }
