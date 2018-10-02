@@ -33,8 +33,8 @@ set(SRC
 	gpu_memory_manager.cpp
     gpu_primitive_emitter.cpp
     gpu_runtime_context.cpp
-    gpu_tensor_view_wrapper.cpp
-    gpu_tensor_view.cpp
+    gpu_tensor_wrapper.cpp
+    gpu_tensor.cpp
     gpu_util.cpp
     type_info.cpp
     pass/gpu_layout.cpp

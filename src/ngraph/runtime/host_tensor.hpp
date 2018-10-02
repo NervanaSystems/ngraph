@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
 #include "ngraph/type/element_type.hpp"
 
 namespace ngraph
@@ -27,21 +27,21 @@ namespace ngraph
     {
         static size_t alignment = 64;
 
-        class HostTensorView;
+        class HostTensor;
     }
 }
 
-class ngraph::runtime::HostTensorView : public ngraph::runtime::TensorView
+class ngraph::runtime::HostTensor : public ngraph::runtime::Tensor
 {
 public:
-    HostTensorView(const ngraph::element::Type& element_type,
-                   const Shape& shape,
-                   const std::string& name = "external");
-    HostTensorView(const ngraph::element::Type& element_type,
-                   const Shape& shape,
-                   void* memory_pointer,
-                   const std::string& name = "external");
-    virtual ~HostTensorView() override;
+    HostTensor(const ngraph::element::Type& element_type,
+               const Shape& shape,
+               const std::string& name = "external");
+    HostTensor(const ngraph::element::Type& element_type,
+               const Shape& shape,
+               void* memory_pointer,
+               const std::string& name = "external");
+    virtual ~HostTensor() override;
 
     char* get_data_ptr();
     const char* get_data_ptr() const;
@@ -71,9 +71,9 @@ public:
     void read(void* p, size_t tensor_offset, size_t n) const override;
 
 private:
-    HostTensorView(const HostTensorView&) = delete;
-    HostTensorView(HostTensorView&&) = delete;
-    HostTensorView& operator=(const HostTensorView&) = delete;
+    HostTensor(const HostTensor&) = delete;
+    HostTensor(HostTensor&&) = delete;
+    HostTensor& operator=(const HostTensor&) = delete;
 
     char* m_allocated_buffer_pool;
     char* m_aligned_buffer_pool;
