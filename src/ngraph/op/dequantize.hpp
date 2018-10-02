@@ -16,27 +16,36 @@
 
 #pragma once
 
-#include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/axis_set.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise hyperbolic tangent operation.
-        class Tanh : public util::UnaryElementwiseArithmetic
+        class Dequantize : public ngraph::op::Op
         {
         public:
-            /// \brief Constructs a hyperbolic tangent operation.
-            ///
-            /// \param arg Node that produces the input tensor.
-            Tanh(const std::shared_ptr<Node>& arg);
+            Dequantize(std::shared_ptr<Node> input,
+                       std::shared_ptr<Node> scale,
+                       std::shared_ptr<Node> offset,
+                       const ngraph::element::Type& type,
+                       const ngraph::AxisSet& axes);
+
+            void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            const ngraph::AxisSet& get_axes() const { return m_axes; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
+
+        private:
+            ngraph::element::Type m_type;
+            ngraph::AxisSet m_axes;
         };
     }
 }

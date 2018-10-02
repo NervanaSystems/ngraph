@@ -171,7 +171,7 @@ namespace ngraph
                 void handle_output_alias(
                     codegen::CodeWriter& writer,
                     const Node&,
-                    const std::unordered_map<descriptor::TensorView*, std::vector<size_t>>&);
+                    const std::unordered_map<descriptor::Tensor*, std::vector<size_t>>&);
 
                 bool is_functionally_identical(
                     const Node&,
