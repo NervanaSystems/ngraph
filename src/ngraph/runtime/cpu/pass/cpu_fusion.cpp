@@ -741,7 +741,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
     auto beta_shape = Shape{2};
     auto beta = std::make_shared<pattern::op::Label>(element::f32, beta_shape);
     double eps = 0.001;
-    auto shape_r = Shape{1, 2, 2, 2};
     auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, input);
     auto goe = std::make_shared<op::GetOutputElement>(bn, 0);
     auto prelu = std::make_shared<op::Relu>(goe);
@@ -811,7 +810,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
     auto beta_shape = Shape{2};
     auto beta = std::make_shared<pattern::op::Label>(element::f32, beta_shape);
     double eps = 0.001;
-    auto shape_r = Shape{1, 2, 2, 2};
     auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var);
     auto prelu = std::make_shared<op::Relu>(bn);
 
@@ -1407,8 +1405,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
 void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_folded_batch_norm()
 {
     Shape shape{2, 2, 1, 1};
-    auto input = std::make_shared<pattern::op::Label>(element::f32, shape);
-    auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 2, 1, 1});
+    auto filters = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 2, 1, 1});
     auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{2});
 
     auto pconv = std::make_shared<op::ConvolutionBias>(input,
@@ -1419,16 +1417,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_folded_batch_nor
                                                        CoordinateDiff{0, 0},
                                                        CoordinateDiff{0, 0},
                                                        Strides{1, 1});
-    auto mean_shape = Shape{2};
-    auto mean = std::make_shared<pattern::op::Label>(element::f32, mean_shape);
-    auto var_shape = Shape{2};
-    auto var = std::make_shared<pattern::op::Label>(element::f32, var_shape);
-    auto gamma_shape = Shape{2};
-    auto gamma = std::make_shared<pattern::op::Label>(element::f32, gamma_shape);
-    auto beta_shape = Shape{2};
-    auto beta = std::make_shared<pattern::op::Label>(element::f32, beta_shape);
+
+    auto mean = std::make_shared<pattern::op::Label>(element::f32, Shape{2});
+    auto var = std::make_shared<pattern::op::Label>(element::f32, Shape{2});
+    auto gamma = std::make_shared<pattern::op::Label>(element::f32, Shape{2});
+    auto beta = std::make_shared<pattern::op::Label>(element::f32, Shape{2});
     double eps = 0.001;
-    auto shape_r = Shape{1, 2, 2, 2};
     auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, pconv, mean, var);
 
     ngraph::pattern::graph_rewrite_callback callback =
