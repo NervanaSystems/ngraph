@@ -32,7 +32,7 @@ computation composed of basic building blocks which we call
 optimal semantically equivalent groups of kernels for the backend(s)
 in use. Thus, we expect that adding of new Core ops should be
 infrequent and that most functionality instead gets added with new
-functions that build sub-graphs from existing core ops.
+functions that build sub-graphs from existing core ops. 
 
 
 Coding style
@@ -259,4 +259,5 @@ it is automatically enforced and reduces merge conflicts.
        int* z;
 
 
-.. _`Apache 2`: https://www.apache.org/licenses/LICENSE-2.0
+.. _Apache 2: https://www.apache.org/licenses/LICENSE-2.0
+.. _repo wiki: 

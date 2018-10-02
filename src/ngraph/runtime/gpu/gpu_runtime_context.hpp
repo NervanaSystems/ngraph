@@ -16,12 +16,13 @@
 
 #pragma once
 
+#include <cublas_v2.h>
+#include <cudnn.h>
 #include <string>
 #include <unordered_map>
 
 #include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_function_pool.hpp"
-#include "ngraph/runtime/gpu/gpu_util.hpp"
 
 namespace ngraph
 {
@@ -29,8 +30,10 @@ namespace ngraph
     {
         namespace gpu
         {
-            typedef std::function<void(void**, void**)> primitive;
-            typedef std::function<void*(void)> memory_primitive;
+            class StopWatchPool;
+
+            using primitive = std::function<void(void**, void**)>;
+            using memory_primitive = std::function<void*(void)>;
 
             extern "C" {
             struct GPURuntimeContext
