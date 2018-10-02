@@ -14,6 +14,9 @@ backwards_slice
 backwards_tanh
 batch_norm_one_output
 batch_norm_three_outputs
+dequantize
+dequantize_axes
+dequantize_int8
 divide_by_zero_int32
 function_call
 max_pool_3d
@@ -21,8 +24,8 @@ numeric_double_inf
 numeric_double_nan
 quantize
 quantize_axes
-quantize_int8
 quantize_clamp
+quantize_int8
 reduce_3d_to_vector
 reduce_matrix_cols_zero
 reduce_matrix_columns
@@ -49,8 +52,8 @@ reverse_sequence_n2c3h4w2
 reverse_sequence_n4c3h2w2
 reverse_sequence_n4d2c3h2w2
 select_and_scatter_3d_without_overlap
-select_and_scatter_with_overlap
 select_and_scatter_without_overlap
+select_and_scatter_with_overlap
 topk_1d_max_all
 topk_1d_max_one
 topk_1d_max_partial
