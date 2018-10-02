@@ -47,4 +47,4 @@ ENV PYBIND_HEADERS_PATH /root/ngraph/python/pybind11
 RUN df -k
 
 # Test nGraph and nGraph Python API
-CMD cd /root/ngraph/build && make unit-test-check ; cd /root/ngraph/python && tox
+CMD cd /root/ngraph/build && make unit-test-check ; cd /root/ngraph/python && NGRAPH_ONNX_IMPORT_ENABLE=TRUE tox
