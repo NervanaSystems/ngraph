@@ -724,10 +724,12 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
         input_shape_padded =
             runtime::gpu::get_padded_shape(input_shape, padding_below, padding_above, {});
         padded_size = shape_size(input_shape_padded);
+        //currntly we set this to float point only, need to add other datatype support later
         float pad_value = std::numeric_limits<float>::lowest();
         std::vector<float> temp(padded_size, pad_value);
         GPUAllocator allocator = m_primitive_emitter->get_memory_allocator();
-        idx_workspace = allocator.reserve_argspace(temp.data(), padded_size * 4);
+        idx_workspace = allocator.reserve_argspace(temp.data(),
+                                                   padded_size * args[0].get_element_type().size());
 
         auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
         pad_index = cuda_emitter->build_pad_dynamic({{input_type, output_type}},
