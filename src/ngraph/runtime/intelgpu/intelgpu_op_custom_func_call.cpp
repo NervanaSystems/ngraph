@@ -21,8 +21,6 @@
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_func_call.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
 
-#include "ngraph/util.hpp"
-
 using namespace std;
 using namespace ngraph;
 
