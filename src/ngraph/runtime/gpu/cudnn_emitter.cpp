@@ -348,8 +348,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
     std::stringstream ss;
     ss << "convolution_op_" << dtype << "_i" << join(input_shape, "_") << "_w"
        << join(filter_shape, "_") << "_o" << join(output_shape, "_") << "_ws"
-       << join(window_movement_strides, "_") << "_wd" << join(window_dilation_strides, "_") << "_p"
-       << join(padding_below_diff, "_");
+       << join(window_movement_strides, "_") << "_wd" << join(window_dilation_strides, "_") << "_pb"
+       << join(padding_below_diff, "_") << "_pa" << join(padding_above_diff, "_");
     std::string hash = ss.str();
 
     // check if the requested kernel is already an inserted primitive
