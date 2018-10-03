@@ -211,6 +211,14 @@ size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
     return primitive_index;
 }
 
+size_t runtime::gpu::CUBLASEmitter::build_argmax(const element::Type& dtype,
+                                                 const Shape& arg0_shape,
+                                                 const Shape& out_shape,
+                                                 size_t axis,
+                                                 const Node* node)
+{
+}
+
 void runtime::gpu::CUBLASEmitter::sync()
 {
     CUDA_RT_SAFE_CALL(cudaDeviceSynchronize());
