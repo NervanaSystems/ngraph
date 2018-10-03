@@ -76,6 +76,7 @@ cpio::Header cpio::Header::read(istream& stream)
         {
             throw runtime_error("CPIO magic error");
         }
+        rc.magic = 0x71C7;
         rc.dev = read_u16(stream, true);
         rc.ino = read_u16(stream, true);
         rc.mode = read_u16(stream, true);
@@ -93,6 +94,7 @@ cpio::Header cpio::Header::read(istream& stream)
         {
             throw runtime_error("CPIO magic error");
         }
+        rc.magic = 0x71C7;
         rc.dev = read_u16(stream);
         rc.ino = read_u16(stream);
         rc.mode = read_u16(stream);
