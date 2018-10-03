@@ -5207,6 +5207,8 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
               read_vector<float>(result));
 }
 
+//this test cover the case with multiple image and pad which does not covered 
+//one bug been found on GPU side is covered by this test
 NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image_pad)
 {
     Shape shape_a{2, 2, 4, 4};
