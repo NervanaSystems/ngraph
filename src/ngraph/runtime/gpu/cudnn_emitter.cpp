@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+
 #include <algorithm>
 #include <iostream>
 #include <sstream>
@@ -198,9 +199,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
             debug_sync();
         }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(reduce));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(reduce, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_tensor_op(const cudnnOpTensorOp_t& tensor_op,
@@ -250,9 +249,7 @@ size_t runtime::gpu::CUDNNEmitter::build_tensor_op(const cudnnOpTensorOp_t& tens
             debug_sync();
         }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(tensor));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(tensor, hash);
 }
 
 cudnnFilterDescriptor_t& runtime::gpu::CUDNNEmitter::get_cudnn_filter_descriptor(
@@ -440,9 +437,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
                 gpu::invoke_primitive(m_ctx, conv_index, inputs, outputs);
             }
         }});
-    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackpropData* node)
@@ -573,9 +569,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
         }
     }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackpropFilters* node)
@@ -686,9 +680,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
             }
         }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
@@ -794,9 +786,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
             }
         }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Max* node)
@@ -855,9 +845,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Max* node)
         }});
     }
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Min* node)
@@ -916,9 +904,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Min* node)
         }});
     }
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_convolution(const std::string& dtype,
@@ -1270,9 +1256,7 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t& pool_
     }
     }
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(pool));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(pool, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& bn_op,
@@ -1416,9 +1400,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
     }
     }
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(batchnorm));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(batchnorm, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_lrn(const cudnnLRNMode_t& lrn_op,
@@ -1550,9 +1532,7 @@ size_t runtime::gpu::CUDNNEmitter::build_softmax(const cudnnSoftmaxAlgorithm_t& 
     }
     }
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(softmax));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(softmax, hash);
 }
 
 void runtime::gpu::CUDNNEmitter::sync()
