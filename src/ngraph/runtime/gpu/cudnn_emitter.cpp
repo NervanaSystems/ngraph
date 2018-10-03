@@ -1462,8 +1462,7 @@ size_t runtime::gpu::CUDNNEmitter::build_lrn(const cudnnLRNMode_t& lrn_op,
         debug_sync();
     }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(lrn));
-    m_primitive_emitter->cache(hash, primitive_index);
+    primitive_index = this->m_primitive_emitter->register_primitive(lrn, hash);
     return primitive_index;
 }
 
