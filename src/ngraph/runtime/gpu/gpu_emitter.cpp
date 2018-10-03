@@ -163,7 +163,7 @@ void runtime::gpu::GPU_Emitter::emit_And(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_ArgMax(EMIT_ARGS)
 {
-    //throw unsupported_op("Unsupported op '" + node->description() + "'");
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 void runtime::gpu::GPU_Emitter::emit_ArgMin(EMIT_ARGS)

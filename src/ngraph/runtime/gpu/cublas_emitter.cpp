@@ -217,6 +217,8 @@ size_t runtime::gpu::CUBLASEmitter::build_argmax(const element::Type& dtype,
                                                  size_t axis,
                                                  const Node* node)
 {
+    size_t primitive_index = 0;
+    return primitive_index;
 }
 
 void runtime::gpu::CUBLASEmitter::sync()
