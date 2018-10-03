@@ -40,7 +40,6 @@ namespace ngraph
                 CoordinateTransform scale_offset_transform(scale_offset_shape);
 
                 std::cout << "DQ = <";
-
                 for (const Coordinate& input_coord : input_transform)
                 {
                     Coordinate scale_offset_coord = project(input_coord, axes);
@@ -53,7 +52,6 @@ namespace ngraph
 
                     std::cout << output[input_transform.index(input_coord)] << ", ";
                 }
-
                 std::cout << ">" << std::endl;
             }
         }
