@@ -1455,22 +1455,31 @@ size_t runtime::gpu::CUDNNEmitter::build_lrn(const cudnnLRNMode_t& lrn_op,
     void* beta = m_host_parameters.allocate_by_datatype(data_type, 0);
 
     // emit lrn operation
-    std::unique_ptr<gpu::primitive> lrn(
-        new gpu::primitive{[=, &lrn_descriptor, &output_desc](void** inputs, void** outputs) {
-            CUDNN_SAFE_CALL(
-                cudnnSetLRNDescriptor(lrn_descriptor, lrn_size, lrn_alpha, lrn_beta, lrn_bias));
-            CUDNN_SAFE_CALL(cudnnLRNCrossChannelForward(*m_ctx->cudnn_handle,
-                                                        lrn_descriptor,
-                                                        lrn_op,
-                                                        alpha,
-                                                        input_desc,
-                                                        inputs[0],
-                                                        beta,
-                                                        output_desc,
-                                                        outputs[0]));
-            debug_sync();
-        }});
-    
+    std::unique_ptr<gpu::primitive> lrn(new gpu::primitive{[&lrn_descriptor,
+                                                            &input_desc,
+                                                            &output_desc,
+                                                            this,
+                                                            lrn_op,
+                                                            lrn_alpha,
+                                                            lrn_beta,
+                                                            lrn_bias,
+                                                            lrn_size,
+                                                            alpha,
+                                                            beta](void** inputs, void** outputs) {
+        CUDNN_SAFE_CALL(
+            cudnnSetLRNDescriptor(lrn_descriptor, lrn_size, lrn_alpha, lrn_beta, lrn_bias));
+        CUDNN_SAFE_CALL(cudnnLRNCrossChannelForward(*m_ctx->cudnn_handle,
+                                                    lrn_descriptor,
+                                                    lrn_op,
+                                                    alpha,
+                                                    input_desc,
+                                                    inputs[0],
+                                                    beta,
+                                                    output_desc,
+                                                    outputs[0]));
+        debug_sync();
+    }});
+
     primitive_index = this->m_primitive_emitter->insert(std::move(lrn));
     m_primitive_emitter->cache(hash, primitive_index);
     return primitive_index;
