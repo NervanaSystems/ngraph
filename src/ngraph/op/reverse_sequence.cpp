@@ -38,6 +38,11 @@ op::ReverseSequence::ReverseSequence(const std::shared_ptr<Node> arg,
 
 void op::ReverseSequence::validate_and_infer_types()
 {
+    if (validate_punt_if_incomplete())
+    {
+        return;
+    }
+
     NODE_VALIDATION_ASSERT(this, get_input_shape(1).size() == 1)
         << "Sequence indices must be a 1-dimensional tensor (sequence indices shape: "
         << get_input_shape(1) << ").";

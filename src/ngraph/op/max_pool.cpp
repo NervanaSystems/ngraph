@@ -45,6 +45,11 @@ op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
 // at this juncture.
 void op::MaxPool::validate_and_infer_types()
 {
+    if (validate_punt_if_incomplete())
+    {
+        return;
+    }
+
     auto& arg_shape = get_input_shape(0);
 
     if (0 == m_window_movement_strides.size() && arg_shape.size() > 2)
@@ -204,6 +209,11 @@ op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
 
 void op::MaxPoolBackprop::validate_and_infer_types()
 {
+    if (validate_punt_if_incomplete())
+    {
+        return;
+    }
+
     NODE_VALIDATION_ASSERT(this, get_input_element_type(0) == get_input_element_type(1))
         << "Data input and delta element types do not match (data input element type: "
         << get_input_element_type(0) << ", delta element type: " << get_input_element_type(1)

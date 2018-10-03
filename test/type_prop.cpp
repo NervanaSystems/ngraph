@@ -6843,3 +6843,21 @@ TEST(type_prop, binary_elementwise_arithmetic_right_et_undetermined)
 
     ASSERT_EQ(add->get_output_element_type(0), element::i64);
 }
+
+//
+// This is testing a temporary hack for ops that do not yet support partial-shape validation.
+// The graph we construct here is bogus, but because there is some partiality in the input shapes,
+// it should still pass validation but set the output shape and element types to be undetermined.
+//
+TEST(type_prop, validate_punt_if_incomplete)
+{
+    auto a = make_shared<op::Parameter>(element::i64, Shape{1, 2, 3, 4});
+    auto b =
+        make_shared<op::Parameter>(element::u32, PartialShape{1, Dimension::undetermined(), 3});
+    auto c = make_shared<op::Parameter>(element::i32, Shape{1, 8, 3});
+    auto concat = make_shared<op::Concat>(NodeVector{a, b, c}, /*concatenation axis=*/1234);
+
+    ASSERT_EQ(concat->get_output_size(), 1);
+    ASSERT_FALSE(concat->get_output_partial_shape(0).rank().is_determined());
+    ASSERT_FALSE(concat->get_output_element_type(0).is_determined());
+}

@@ -47,6 +47,11 @@ op::Dot::Dot(const shared_ptr<Node>& arg0,
 
 void op::Dot::validate_and_infer_types()
 {
+    if (validate_punt_if_incomplete())
+    {
+        return;
+    }
+
     auto& input_0 = get_inputs().at(0);
     auto& input_1 = get_inputs().at(1);
 

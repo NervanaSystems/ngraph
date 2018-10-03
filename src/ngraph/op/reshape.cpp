@@ -35,6 +35,11 @@ op::Reshape::Reshape(const shared_ptr<Node>& arg,
 
 void op::Reshape::validate_and_infer_types()
 {
+    if (validate_punt_if_incomplete())
+    {
+        return;
+    }
+
     auto& input = get_inputs().at(0);
     auto input_shape = input.get_shape();
     auto input_rank = input_shape.size();

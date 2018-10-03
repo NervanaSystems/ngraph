@@ -29,6 +29,11 @@ op::util::ArithmeticReduction::ArithmeticReduction(const std::string& node_type,
 
 void op::util::ArithmeticReduction::validate_and_infer_types()
 {
+    if (validate_punt_if_incomplete())
+    {
+        return;
+    }
+
     auto input_shape = get_input_shape(0);
 
     for (auto axis : m_reduction_axes)

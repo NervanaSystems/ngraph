@@ -35,6 +35,11 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
 
 void ngraph::op::BatchNorm::validate_and_infer_types()
 {
+    if (validate_punt_if_incomplete())
+    {
+        return;
+    }
+
     m_bn_input_shape = get_input_shape(INPUT);
     NODE_VALIDATION_ASSERT(this, m_bn_input_shape.size() >= 2)
         << "Input argument must have rank of at least 2 (input argument shape: " << m_bn_input_shape
@@ -158,6 +163,11 @@ ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
 
 void ngraph::op::BatchNormBackprop::validate_and_infer_types()
 {
+    if (validate_punt_if_incomplete())
+    {
+        return;
+    }
+
     set_output_size(3);
 
     NODE_VALIDATION_ASSERT(this, get_input_shape(INPUT).size() == 4)

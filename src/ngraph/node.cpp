@@ -443,3 +443,27 @@ void Node::validate_and_infer_elementwise_logical()
         << get_input_element_type(0) << ".";
     validate_and_infer_elementwise(get_input_element_type(0));
 }
+
+bool Node::validate_punt_if_incomplete()
+{
+    bool any_undetermined = false;
+
+    for (auto& input : m_inputs)
+    {
+        any_undetermined |= !(input.get_partial_shape().is_complete());
+        any_undetermined |= !(input.get_element_type().is_determined());
+    }
+
+    if (any_undetermined)
+    {
+        for (size_t i = 0; i < get_output_size(); i++)
+        {
+            set_output_type(i, element::undetermined, PartialShape::undetermined());
+        }
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
