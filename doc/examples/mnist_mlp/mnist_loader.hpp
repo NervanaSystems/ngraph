@@ -113,9 +113,9 @@ protected:
     size_t m_batch_size;
     MNistImageLoader m_image_loader;
     MNistLabelLoader m_label_loader;
-    std::int32_t m_items;
-    size_t m_pos{0};
-    size_t m_epoch{0};
+    int32_t m_items;
+    size_t m_pos;
+    size_t m_epoch;
     std::unique_ptr<float[]> m_image_floats;
     std::unique_ptr<float[]> m_label_floats;
     size_t m_image_sample_size;

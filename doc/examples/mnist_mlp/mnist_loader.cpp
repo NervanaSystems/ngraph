@@ -138,6 +138,10 @@ MNistDataLoader::MNistDataLoader(size_t batch_size,
     : m_batch_size(batch_size)
     , m_image_loader(image)
     , m_label_loader(label)
+    , m_items{0}
+    , m_pos{0}
+    , m_epoch{0}
+    , m_image_sample_size{0}
 {
 }
 
