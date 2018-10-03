@@ -1448,8 +1448,8 @@ size_t runtime::gpu::CUDNNEmitter::build_lrn(const cudnnLRNMode_t& lrn_op,
                                                             lrn_size,
                                                             alpha,
                                                             beta](void** inputs, void** outputs) {
-        CUDNN_SAFE_CALL(
-            cudnnSetLRNDescriptor(lrn_descriptor, lrn_size, lrn_alpha, lrn_beta, lrn_bias));
+        CUDNN_SAFE_CALL(cudnnSetLRNDescriptor(
+            lrn_descriptor, static_cast<unsigned int>(lrn_size), lrn_alpha, lrn_beta, lrn_bias));
         CUDNN_SAFE_CALL(cudnnLRNCrossChannelForward(*m_ctx->cudnn_handle,
                                                     lrn_descriptor,
                                                     lrn_op,
