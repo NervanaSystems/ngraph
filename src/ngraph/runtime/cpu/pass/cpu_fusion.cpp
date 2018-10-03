@@ -1404,7 +1404,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
 
 void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_folded_batch_norm()
 {
-    Shape shape{2, 2, 1, 1};
     auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 2, 1, 1});
     auto filters = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 2, 1, 1});
     auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{2});
