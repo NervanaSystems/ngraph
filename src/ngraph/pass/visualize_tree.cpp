@@ -103,7 +103,7 @@ std::string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
 
     ss << " label=\"" << node->get_name();
 
-    static const auto nvtos = std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES");
+    static const char* nvtos = std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES");
     if (nvtos != nullptr)
     {
         // The shapes of the Outputs of a multi-output op
@@ -112,7 +112,7 @@ std::string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
                                                       : vector_to_string(node->get_shape()));
     }
 
-    static const auto nvtot = std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
+    static const char* nvtot = std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
     if (nvtot != nullptr)
     {
         // The types of the Outputs of a multi-output op
