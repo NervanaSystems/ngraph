@@ -30,7 +30,7 @@ set(ONNX_VERSION 1.3.0)
 set(ONNX_GIT_REPO_URL https://github.com/onnx/onnx.git)
 set(ONNX_GIT_BRANCH rel-${ONNX_VERSION})
 
-if (NGRAPH_ONNX_ML)
+if (NGRAPH_ONNX_ML_ENABLE)
     set(ONNX_ML TRUE)
 else()
     set(ONNX_ML FALSE)

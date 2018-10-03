@@ -145,7 +145,7 @@ set_property(TARGET onnx_import_interface PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_include_directories(onnx_import_interface PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
     ${NGRAPH_INCLUDE_PATH} ${Protobuf_INCLUDE_DIR})
 
-if (NGRAPH_ONNX_ML)
+if (NGRAPH_ONNX_ML_ENABLE)
     target_compile_definitions(onnx_import_interface PRIVATE ONNX_ML)
     target_compile_definitions(onnx_import PRIVATE ONNX_ML)
 endif()
