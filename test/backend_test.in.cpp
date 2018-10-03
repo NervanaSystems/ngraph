@@ -9761,6 +9761,39 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize)
               read_vector<output_c_type>(y));
 }
 
+// Q(126) = 63
+NGRAPH_TEST(${BACKEND_NAME}, quantize_bug)
+{
+    Shape input_shape{1};
+    Shape scale_offset_shape;
+    AxisSet quantization_axes;
+
+    auto input_type = element::f32;
+    auto output_type = element::u8;
+
+    typedef float input_c_type;
+    typedef uint8_t output_c_type;
+
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto X = make_shared<op::Parameter>(input_type, input_shape);
+    auto scale = op::Constant::create(input_type, scale_offset_shape, {2.00787});
+    auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
+    auto quantize =
+        make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
+    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto x = backend->create_tensor(input_type, input_shape);
+    auto y = backend->create_tensor(output_type, input_shape);
+
+    copy_data(x, vector<input_c_type>{126});
+
+    backend->call_with_validate(f, {y}, {x});
+    EXPECT_EQ((vector<output_c_type>{63}),
+              read_vector<output_c_type>(y));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, dequantize)
 {
     Shape input_shape{4, 3};
@@ -9792,6 +9825,35 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize)
     backend->call_with_validate(f, {y}, {x});
     EXPECT_EQ((vector<output_c_type>{0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12}),
               read_vector<output_c_type>(y));
+}
+
+// DQ(63) ~= 126.496
+NGRAPH_TEST(${BACKEND_NAME}, dequantize_bug)
+{
+    Shape input_shape{1};
+    Shape scale_offset_shape;
+    AxisSet quantization_axes;
+
+    auto input_type = element::u8;
+    auto output_type = element::f32;
+
+    typedef uint8_t input_c_type;
+    typedef float output_c_type;
+
+    auto X = make_shared<op::Parameter>(input_type, input_shape);
+    auto scale = op::Constant::create(output_type, scale_offset_shape, {2.00787});
+    auto offset = op::Constant::create(input_type, scale_offset_shape, {0});
+    auto dequantize = make_shared<op::Dequantize>(X, scale, offset, output_type, quantization_axes);
+    auto f = make_shared<Function>(dequantize, op::ParameterVector{X});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto x = backend->create_tensor(input_type, input_shape);
+    auto y = backend->create_tensor(output_type, input_shape);
+
+    copy_data(x, vector<input_c_type>{63});
+
+    backend->call_with_validate(f, {y}, {x});
+    EXPECT_TRUE(test::all_close(vector<output_c_type>{126.496}, read_vector<output_c_type>(y)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, quantize_axes)
