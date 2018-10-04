@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+
 #include <algorithm>
 #include <iostream>
 #include <sstream>
@@ -198,9 +199,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
             debug_sync();
         }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(reduce));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(reduce, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_tensor_op(const cudnnOpTensorOp_t& tensor_op,
@@ -250,9 +249,7 @@ size_t runtime::gpu::CUDNNEmitter::build_tensor_op(const cudnnOpTensorOp_t& tens
             debug_sync();
         }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(tensor));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(tensor, hash);
 }
 
 cudnnFilterDescriptor_t& runtime::gpu::CUDNNEmitter::get_cudnn_filter_descriptor(
@@ -440,9 +437,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
                 gpu::invoke_primitive(m_ctx, conv_index, inputs, outputs);
             }
         }});
-    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackpropData* node)
@@ -573,9 +569,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
         }
     }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackpropFilters* node)
@@ -686,9 +680,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
             }
         }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
@@ -720,38 +712,37 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
 
     /// assymetric padding detection
     bool pad_required = false;
-    auto shape_to_pool =
-        runtime::gpu::get_padded_shape(input_shape, padding_below, padding_above, {});
-    if (shape_to_pool != input_shape)
-    {
-        pad_required = true;
-    }
+    auto input_shape_padded = input_shape;
 
-    pad_required = pad_required && (padding_below != padding_above);
+    size_t padded_size;
     // asymetric padding
     size_t idx_workspace = std::numeric_limits<size_t>::max();
     size_t pad_index = std::numeric_limits<size_t>::max();
-    if (pad_required)
+    if (padding_below != padding_above)
     {
-        auto temp_size = shape_size(shape_to_pool) * args[0].get_element_type().size();
+        Shape padding_interior(padding_below.size(), 1);
+        input_shape_padded =
+            runtime::gpu::get_padded_shape(input_shape, padding_below, padding_above, {});
+        padded_size = shape_size(input_shape_padded);
+        //currntly we set this to float point only, need to add other datatype support later
+        float pad_value = std::numeric_limits<float>::lowest();
+        std::vector<float> temp(padded_size, pad_value);
         GPUAllocator allocator = m_primitive_emitter->get_memory_allocator();
-        idx_workspace = allocator.reserve_workspace(temp_size);
-
-        auto pad_value = TypeInfo::Get(args[0].get_element_type())->lowest();
+        idx_workspace = allocator.reserve_argspace(temp.data(),
+                                                   padded_size * args[0].get_element_type().size());
 
         auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
-        pad_index = cuda_emitter->build_pad({{input_type, output_type}},
-                                            input_shape,
-                                            shape_to_pool,
-                                            padding_below,
-                                            padding_above,
-                                            Shape{},
-                                            pad_value);
+        pad_index = cuda_emitter->build_pad_dynamic({{input_type, output_type}},
+                                                    input_shape,
+                                                    input_shape_padded,
+                                                    padding_below,
+                                                    padding_interior);
 
         // asymetric padding has been applied, zero out padding vectors to
         // ensure cuDNN does not assume padding during pooling
         std::fill(padding_below.begin(), padding_below.end(), 0);
         std::fill(padding_above.begin(), padding_above.end(), 0);
+        pad_required = true;
     }
 
     /// end asymmetric padding detection
@@ -759,7 +750,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
     size_t max_pool_index = build_pooling(CUDNN_POOLING_MAX,
                                           output_type,
                                           CUDNNEmitter::Prop::Forward,
-                                          shape_to_pool,
+                                          input_shape_padded,
                                           result_shape,
                                           node->get_window_movement_strides(),
                                           node->get_window_shape(),
@@ -768,18 +759,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
 
     std::unique_ptr<gpu::primitive> kernel_launch(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-            if (idx_workspace != std::numeric_limits<size_t>::max() &&
-                pad_index != std::numeric_limits<size_t>::max())
+            if (pad_required)
             {
-                // void* pad_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, idx_workspace);
-                // gpu::invoke_primitive(m_ctx,
-                //                       pad_dynamic_index,
-                //                       std::vector<void*>{inputs[0]}.data(),
-                //                       std::vector<void*>{pad_buffer}.data());
-
-                // gpu::invoke_primitive(
-                //     m_ctx, conv_index, std::vector<void*>{pad_buffer, inputs[1]}.data(), outputs);
-
                 void* pad_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, idx_workspace);
                 gpu::invoke_primitive(m_ctx,
                                       pad_index,
@@ -794,9 +775,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
             }
         }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Max* node)
@@ -855,9 +834,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Max* node)
         }});
     }
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Min* node)
@@ -916,9 +893,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Min* node)
         }});
     }
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_convolution(const std::string& dtype,
@@ -1270,9 +1245,7 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t& pool_
     }
     }
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(pool));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(pool, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& bn_op,
@@ -1416,9 +1389,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
     }
     }
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(batchnorm));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(batchnorm, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_softmax(const cudnnSoftmaxAlgorithm_t& algorithm,
@@ -1486,9 +1457,7 @@ size_t runtime::gpu::CUDNNEmitter::build_softmax(const cudnnSoftmaxAlgorithm_t& 
     }
     }
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(softmax));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(softmax, hash);
 }
 
 void runtime::gpu::CUDNNEmitter::sync()
