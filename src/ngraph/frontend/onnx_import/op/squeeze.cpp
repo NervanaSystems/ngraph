@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <cstddef>
 #include <functional>
 #include <iterator>
 #include <numeric>
@@ -38,7 +39,7 @@ namespace ngraph
                 NodeVector inputs{node.get_ng_inputs()};
                 auto data = inputs.at(0);
                 auto data_shape = data->get_shape();
-                auto axes = node.get_attribute_value<std::vector<uint64_t>>("axes", {});
+                auto axes = node.get_attribute_value<std::vector<std::size_t>>("axes", {});
                 AxisVector input_order{reshape::get_default_axis_vector(data_shape.size())};
 
                 // Default behaviour is to squeeze all single dimension axes.
@@ -56,8 +57,8 @@ namespace ngraph
                 }
                 else
                 {
-                    std::set<uint64_t, std::greater<uint64_t>> unique_axes(std::begin(axes),
-                                                                           std::end(axes));
+                    std::set<std::size_t, std::greater<std::size_t>> unique_axes(std::begin(axes),
+                                                                                 std::end(axes));
                     for (uint64_t axis : unique_axes)
                     {
                         ASSERT_VALID_ARGUMENT(node, data_shape.at(axis) == 1)
