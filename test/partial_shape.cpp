@@ -206,10 +206,13 @@ TEST(partial_shape, from_shape)
     Shape s{2, 4, 6, 8};
     PartialShape ps1{s};
 
-    // TODO(amprocte): No way to examine contents of ps1 yet.
-    ASSERT_TRUE(ps1.is_complete());
     ASSERT_TRUE(ps1.rank_is_determined());
     ASSERT_EQ(size_t(ps1.rank()), s.size());
+    ASSERT_TRUE(ps1.is_complete());
+    ASSERT_EQ(size_t(ps1[0]), 2);
+    ASSERT_EQ(size_t(ps1[1]), 4);
+    ASSERT_EQ(size_t(ps1[2]), 6);
+    ASSERT_EQ(size_t(ps1[3]), 8);
 }
 
 TEST(partial_shape, to_shape_complete)
@@ -238,6 +241,7 @@ TEST(partial_shape, tensor_descriptor_from_shape)
 
     ASSERT_EQ(t.get_shape(), (Shape{1, 2, 3}));
     ASSERT_EQ(size_t(t.get_partial_shape().rank()), 3);
+    ASSERT_TRUE(t.get_partial_shape().same_scheme(PartialShape{1, 2, 3}));
 }
 
 TEST(partial_shape, tensor_descriptor_from_complete_partial_shape)
@@ -246,6 +250,7 @@ TEST(partial_shape, tensor_descriptor_from_complete_partial_shape)
 
     ASSERT_EQ(t.get_shape(), (Shape{1, 2, 3}));
     ASSERT_EQ(size_t(t.get_partial_shape().rank()), 3);
+    ASSERT_TRUE(t.get_partial_shape().same_scheme(PartialShape{1, 2, 3}));
 }
 
 TEST(partial_shape, tensor_descriptor_from_incomplete_partial_shape)
@@ -254,6 +259,7 @@ TEST(partial_shape, tensor_descriptor_from_incomplete_partial_shape)
 
     ASSERT_EQ(size_t(t.get_partial_shape().rank()), 3);
     ASSERT_THROW({ t.get_shape(); }, std::invalid_argument);
+    ASSERT_TRUE(t.get_partial_shape().same_scheme(PartialShape{1, Dimension::undetermined(), 3}));
 }
 
 TEST(partial_shape, tensor_descriptor_from_rankless_partial_shape)
@@ -262,6 +268,7 @@ TEST(partial_shape, tensor_descriptor_from_rankless_partial_shape)
 
     ASSERT_FALSE(t.get_partial_shape().rank().is_determined());
     ASSERT_THROW({ t.get_shape(); }, std::invalid_argument);
+    ASSERT_TRUE(t.get_partial_shape().same_scheme(PartialShape::undetermined()));
 }
 
 TEST(partial_shape, dim_same_scheme_both_undetermined)
