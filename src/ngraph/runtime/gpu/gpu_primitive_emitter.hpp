@@ -15,9 +15,8 @@
 //*****************************************************************************
 
 #pragma once
-#include <functional>
-#include <unordered_map>
 
+#include "ngraph/runtime/gpu/cublas_emitter.hpp"
 #include "ngraph/runtime/gpu/cuda_emitter.hpp"
 #include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_args.hpp"
@@ -30,8 +29,6 @@ namespace ngraph
     {
         namespace gpu
         {
-            class CUDAEmitter;
-            class CUDNNEmitter;
             class GPUPrimitiveEmitter
             {
             public:
@@ -39,6 +36,7 @@ namespace ngraph
                 GPUPrimitiveEmitter(const std::unique_ptr<GPURuntimeContext>& ctx);
                 std::unique_ptr<CUDAEmitter>& get_cuda_emitter();
                 std::unique_ptr<CUDNNEmitter>& get_cudnn_emitter();
+                std::unique_ptr<CUBLASEmitter>& get_cublas_emitter();
                 std::vector<gpu::primitive*>& get_primitives() { return m_gpu_primitives; }
                 std::vector<gpu::memory_primitive>& get_memory_primitives()
                 {
@@ -52,6 +50,8 @@ namespace ngraph
                 void allocate_primitive_memory() { m_memory_manager.allocate(); }
                 size_t sizeof_device_allocation() { return m_memory_manager.get_allocation_size(); }
                 GPUKernelArgs add_kernel_args() { return GPUKernelArgs(m_host_parameters); }
+                size_t register_primitive(std::unique_ptr<gpu::primitive>&, std::string);
+
             private:
                 std::vector<gpu::primitive*> m_gpu_primitives;
                 std::vector<gpu::memory_primitive> m_gpu_mem_primitives;
@@ -61,6 +61,7 @@ namespace ngraph
                 std::shared_ptr<GPUHostParameters> m_host_parameters;
                 std::unique_ptr<CUDAEmitter> m_cuda_emitter;
                 std::unique_ptr<CUDNNEmitter> m_cudnn_emitter;
+                std::unique_ptr<CUBLASEmitter> m_cublas_emitter;
             };
         }
     }
