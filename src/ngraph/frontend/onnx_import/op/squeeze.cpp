@@ -57,7 +57,7 @@ namespace ngraph
                 else
                 {
                     std::set<uint64_t, std::greater<uint64_t>> unique_axes(std::begin(axes),
-                                                                             std::end(axes));
+                                                                           std::end(axes));
                     for (uint64_t axis : unique_axes)
                     {
                         ASSERT_VALID_ARGUMENT(node, data_shape.at(axis) == 1)
