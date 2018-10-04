@@ -288,15 +288,14 @@ void runtime::gpu::GPU_Emitter::emit_BatchNorm(EMIT_ARGS)
     bool global_stats = false;
     CUDNNEmitter::Prop direction;
     if (batchnorm->get_training_flag())
-        if (batchnorm->get_training_flag() && args.size() == 3)
-        {
-            direction = CUDNNEmitter::Prop::Forward;
-            global_stats = (batchnorm->get_arguments().size() == 5);
-        }
-        else
-        {
-            direction = CUDNNEmitter::Prop::Inference;
-        }
+    {
+        direction = CUDNNEmitter::Prop::Forward;
+        global_stats = (batchnorm->get_arguments().size() == 5);
+    }
+    else
+    {
+        direction = CUDNNEmitter::Prop::Inference;
+    }
 
     auto index = cudnn_emitter->build_batchnorm(CUDNN_BATCHNORM_SPATIAL,
                                                 out[0].get_type(),
