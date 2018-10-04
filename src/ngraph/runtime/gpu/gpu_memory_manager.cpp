@@ -97,11 +97,19 @@ void runtime::gpu::GPUMemoryManager::allocate()
 size_t runtime::gpu::GPUMemoryManager::queue_for_transfer(const void* data, size_t size)
 {
     // if the current allocation will overflow the host buffer
-    if (m_buffer_offset + size > m_buffered_mem.size())
+    size_t new_size = m_buffer_offset + size;
+    size_t buffer_size = m_buffered_mem.size();
+    bool need_resize = false;
+    while (buffer_size < new_size)
     {
         // add more space to the managed buffer
-        size_t new_size = m_buffered_mem.size() / initial_buffer_size + 1;
-        m_buffered_mem.resize(new_size);
+        buffer_size <<= 1;
+        need_resize = true;
+    }
+
+    if (need_resize)
+    {
+        m_buffered_mem.resize(buffer_size);
     }
 
     size_t offset = m_buffer_offset;

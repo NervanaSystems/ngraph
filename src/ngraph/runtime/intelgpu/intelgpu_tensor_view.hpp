@@ -19,7 +19,7 @@
 #include <CPP/engine.hpp>
 #include <CPP/memory.hpp>
 
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
 
 namespace ngraph
 {
@@ -32,7 +32,7 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::intelgpu::IntelGPUTensorView : public ngraph::runtime::TensorView
+class ngraph::runtime::intelgpu::IntelGPUTensorView : public ngraph::runtime::Tensor
 {
 public:
     IntelGPUTensorView(const element::Type& element_type,

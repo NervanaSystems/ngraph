@@ -1776,7 +1776,7 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::Dequantize)
+                void CPULayout::LAYOUT_DECL(ngraph::op::DequantizeCPU)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
@@ -1785,12 +1785,12 @@ namespace ngraph
                     }
                     else
                     {
-                        throw ngraph_error("Dequantized op is only supported in MKLDNN for now.");
+                        throw ngraph_error("DequantizeCPU op is only supported in MKLDNN for now.");
                     }
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::Quantize)
+                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizeCPU)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
@@ -1799,7 +1799,7 @@ namespace ngraph
                     }
                     else
                     {
-                        throw ngraph_error("Quantized op is only supported in MKLDNN for now.");
+                        throw ngraph_error("QuantizeCPU op is only supported in MKLDNN for now.");
                     }
                 }
             }
@@ -1865,9 +1865,10 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::BoundedRelu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BoundedRelu>},
     {TI(ngraph::op::ConvolutionAdd),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionAdd>},
-    {TI(ngraph::op::Dequantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Dequantize>},
+    {TI(ngraph::op::DequantizeCPU),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::DequantizeCPU>},
     {TI(ngraph::op::Slice), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Slice>},
-    {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Quantize>},
+    {TI(ngraph::op::QuantizeCPU), &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizeCPU>},
     {TI(ngraph::op::QuantizedConvolutionRelu),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionRelu>},
 };

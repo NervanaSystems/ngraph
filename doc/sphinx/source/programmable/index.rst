@@ -26,10 +26,10 @@ framework developer to develop a custom UI or API.
 
 
 
-TensorView
-===========
+Tensor
+=======
 
-.. doxygenclass:: ngraph::runtime::TensorView
+.. doxygenclass:: ngraph::runtime::Tensor
    :project: ngraph
    :members:
 
