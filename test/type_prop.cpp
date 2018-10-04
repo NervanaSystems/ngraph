@@ -4241,6 +4241,12 @@ TEST(type_prop, reverse_sequence_seq_len_size_equal_to_batch_dim)
     }
 }
 
+TEST(type_prop, reverse_sequence_partial)
+{
+    FAIL() << "Adam needs to write some unit tests for partial-shape/type propagation for "
+              "ReverseSequence";
+}
+
 TEST(type_prop, reduce_window_deduce_1d)
 {
     auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16});
