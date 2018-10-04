@@ -1417,7 +1417,8 @@ size_t runtime::gpu::CUDNNEmitter::build_lrn(const cudnnLRNMode_t& lrn_op,
     // or if it already exists in the primitive list
     std::stringstream ss;
     ss << "lrn_op_" << lrn_op << "_dtype_" << dtype << "_dir" << static_cast<int>(direction) << "_i"
-       << join(input_shape, "_") << "_o" << join(output_shape, "_");
+       << join(input_shape, "_") << "_o" << join(output_shape, "_") << "_alpha_" << lrn_alpha
+       << "_beta_" << lrn_beta << "_bias_" << lrn_bias << "_size_" << lrn_size;
     std::string hash = ss.str();
 
     // check if the requested kernel is already an inserted primitive
@@ -1433,34 +1434,26 @@ size_t runtime::gpu::CUDNNEmitter::build_lrn(const cudnnLRNMode_t& lrn_op,
     auto& output_desc = tensor_descriptor_from_shape(output_shape, data_type, tensor_format);
 
     auto& lrn_descriptor = m_descriptors.build<cudnnLRNDescriptor_t>();
+    CUDNN_SAFE_CALL(cudnnSetLRNDescriptor(
+        lrn_descriptor, static_cast<unsigned int>(lrn_size), lrn_alpha, lrn_beta, lrn_bias));
     void* alpha = m_host_parameters.allocate_by_datatype(data_type, 1.0);
     void* beta = m_host_parameters.allocate_by_datatype(data_type, 0);
 
     // emit lrn operation
-    std::unique_ptr<gpu::primitive> lrn(new gpu::primitive{[&lrn_descriptor,
-                                                            &input_desc,
-                                                            &output_desc,
-                                                            this,
-                                                            lrn_op,
-                                                            lrn_alpha,
-                                                            lrn_beta,
-                                                            lrn_bias,
-                                                            lrn_size,
-                                                            alpha,
-                                                            beta](void** inputs, void** outputs) {
-        CUDNN_SAFE_CALL(cudnnSetLRNDescriptor(
-            lrn_descriptor, static_cast<unsigned int>(lrn_size), lrn_alpha, lrn_beta, lrn_bias));
-        CUDNN_SAFE_CALL(cudnnLRNCrossChannelForward(*m_ctx->cudnn_handle,
-                                                    lrn_descriptor,
-                                                    lrn_op,
-                                                    alpha,
-                                                    input_desc,
-                                                    inputs[0],
-                                                    beta,
-                                                    output_desc,
-                                                    outputs[0]));
-        debug_sync();
-    }});
+    std::unique_ptr<gpu::primitive> lrn(
+        new gpu::primitive{[&lrn_descriptor, &input_desc, &output_desc, this, lrn_op, alpha, beta](
+            void** inputs, void** outputs) {
+            CUDNN_SAFE_CALL(cudnnLRNCrossChannelForward(*m_ctx->cudnn_handle,
+                                                        lrn_descriptor,
+                                                        lrn_op,
+                                                        alpha,
+                                                        input_desc,
+                                                        inputs[0],
+                                                        beta,
+                                                        output_desc,
+                                                        outputs[0]));
+            debug_sync();
+        }});
 
     primitive_index = this->m_primitive_emitter->register_primitive(lrn, hash);
     return primitive_index;
