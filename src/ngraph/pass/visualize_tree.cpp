@@ -166,7 +166,10 @@ void pass::VisualizeTree::render() const
         ss << "dot -T" << get_file_ext() << " " << tmp_file << " -o " << m_name;
         auto cmd = ss.str();
         auto stream = popen(cmd.c_str(), "r");
-        pclose(stream);
+        if (stream)
+        {
+            pclose(stream);
+        }
 
         remove(tmp_file.c_str());
     }
