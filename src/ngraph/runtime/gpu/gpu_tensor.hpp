@@ -19,7 +19,7 @@
 #include <cuda.h>
 #include <memory>
 
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
 #include "ngraph/type/element_type.hpp"
 
 namespace ngraph
@@ -28,19 +28,17 @@ namespace ngraph
     {
         namespace gpu
         {
-            class GPU_TensorView;
+            class GPUTensor;
         }
     }
 }
 
-class ngraph::runtime::gpu::GPU_TensorView : public ngraph::runtime::TensorView
+class ngraph::runtime::gpu::GPUTensor : public ngraph::runtime::Tensor
 {
 public:
-    GPU_TensorView(const ngraph::element::Type& element_type, const Shape& shape);
-    GPU_TensorView(const ngraph::element::Type& element_type,
-                   const Shape& shape,
-                   void* memory_pointer);
-    virtual ~GPU_TensorView();
+    GPUTensor(const ngraph::element::Type& element_type, const Shape& shape);
+    GPUTensor(const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer);
+    virtual ~GPUTensor();
 
     /// \brief Write bytes directly into the tensor
     /// \param p Pointer to source of data
