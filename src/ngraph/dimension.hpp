@@ -80,6 +80,23 @@ namespace ngraph
         /// \brief Constant for the value used internally to represent an unknown dimension.
         static const size_t s_undetermined_val{std::numeric_limits<size_t>::max()};
 
+        friend Dimension operator+(const Dimension& d1, const Dimension& d2);
+        friend Dimension operator*(const Dimension& d1, const Dimension& d2);
+
+        Dimension& operator+=(const Dimension& d1)
+        {
+            Dimension cur_val = *this;
+            *this = cur_val + d1;
+            return *this;
+        }
+
+        Dimension& operator*=(const Dimension& d1)
+        {
+            Dimension cur_val = *this;
+            *this = cur_val * d1;
+            return *this;
+        }
+
     private:
         // The actual numerical value of the dimension. s_undetermined_val is a special case,
         // representing an unknown dimension.
@@ -94,4 +111,10 @@ namespace ngraph
     ///        If d1 and d2 are both known, returns size_t(d1)+size_t(d2). Otherwise, returns
     ///        Dimension::undetermined().
     Dimension operator+(const Dimension& d1, const Dimension& d2);
+
+    /// \brief Multiplication operator for dimensions.
+    ///
+    ///        If d1 and d2 are both known, returns size_t(d1)*size_t(d2). Otherwise, if d1 or
+    ///        d2 is determined and 0, returns 0, Otherwise, returns Dimension::undetermined().
+    Dimension operator*(const Dimension& d1, const Dimension& d2);
 }

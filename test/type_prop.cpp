@@ -1233,6 +1233,117 @@ TEST(type_prop, reshape_deduce_wrong_output_shape)
     }
 }
 
+//
+// Input shape rank unknown, so we should set the desired output shape if the axis vector is not
+// known invalid (invalid means it's not a permutation of {0,...,n-1} for any n).
+//
+TEST(type_prop, reshape_partial_rank_undetermined_axisvector_ok)
+{
+    auto param = make_shared<op::Parameter>(element::f32, PartialShape::undetermined());
+    auto r = make_shared<op::Reshape>(param, AxisVector{2, 1, 0, 3}, Shape{3, 1, 8, 2});
+    ASSERT_EQ(r->get_element_type(), element::f32);
+    ASSERT_TRUE(r->get_output_partial_shape(0).is_complete());
+    ASSERT_EQ(r->get_shape(), (Shape{3, 1, 8, 2}));
+}
+
+TEST(type_prop, reshape_partial_rank_undetermined_axisvector_not_ok)
+{
+    auto param = make_shared<op::Parameter>(element::f32, PartialShape::undetermined());
+    try
+    {
+        auto r = make_shared<op::Reshape>(param, AxisVector{2, 1, 0, 4}, Shape{3, 1, 8, 2});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect malformed AxisVector (input shape rank undetermined)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Input axis order is not a permutation of argument's axis indices"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+//
+// Input shape rank known but input shape is incomplete, so should set desired output shape if the
+// axis vector is consistent with the known rank.
+//
+TEST(type_prop, reshape_partial_rank_determined_axisvector_ok)
+{
+    auto param_shape = PartialShape{
+        Dimension::undetermined(), 6, Dimension::undetermined(), Dimension::undetermined()};
+    auto param = make_shared<op::Parameter>(element::f32, param_shape);
+    auto r = make_shared<op::Reshape>(param, AxisVector{2, 1, 0, 3}, Shape{3, 1, 8, 2});
+    ASSERT_EQ(r->get_element_type(), element::f32);
+    ASSERT_TRUE(r->get_output_partial_shape(0).is_complete());
+    ASSERT_EQ(r->get_shape(), (Shape{3, 1, 8, 2}));
+}
+
+TEST(type_prop, reshape_partial_rank_determined_axisvector_not_ok)
+{
+    auto param_shape = PartialShape{
+        Dimension::undetermined(), 6, Dimension::undetermined(), Dimension::undetermined()};
+    auto param = make_shared<op::Parameter>(element::f32, param_shape);
+    try
+    {
+        auto r = make_shared<op::Reshape>(param, AxisVector{2, 1, 0}, Shape{3, 1, 8, 2});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect AxisVector inconsistent with rank (partial shape)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Input axis order is not a permutation of argument's axis indices"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+//
+// Input shape rank known but input shape is incomplete _but_ necessarily has zero elements, so
+// should set desired output shape only if it also has zero elements.
+//
+TEST(type_prop, reshape_partial_rank_determined_partial_but_zero_ok)
+{
+    auto param_shape = PartialShape{
+        Dimension::undetermined(), 0, Dimension::undetermined(), Dimension::undetermined()};
+    auto param = make_shared<op::Parameter>(element::f32, PartialShape::undetermined());
+    auto r = make_shared<op::Reshape>(param, AxisVector{2, 1, 0, 3}, Shape{3, 1, 0, 2});
+    ASSERT_EQ(r->get_element_type(), element::f32);
+    ASSERT_TRUE(r->get_output_partial_shape(0).is_complete());
+    ASSERT_EQ(r->get_shape(), (Shape{3, 1, 0, 2}));
+}
+
+TEST(type_prop, reshape_partial_rank_determined_partial_but_zero_not_ok)
+{
+    auto param_shape = PartialShape{
+        Dimension::undetermined(), 0, Dimension::undetermined(), Dimension::undetermined()};
+    auto param = make_shared<op::Parameter>(element::f32, param_shape);
+    try
+    {
+        auto r = make_shared<op::Reshape>(param, AxisVector{2, 1, 0}, Shape{3, 1, 8, 2});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect inconsistent output shape with known-zero-element partial input "
+                  "shape";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Input axis order is not a permutation of argument's axis indices"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, slice_deduce_vector)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{6});

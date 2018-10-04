@@ -489,3 +489,87 @@ TEST(partial_shape, partial_shape_merge_both_complete_different_rank)
     const PartialShape s2{1, 2, 3, 4};
     ASSERT_FALSE(PartialShape::merge_into(s1, s2));
 }
+
+TEST(partial_shape, dim_pluseq_left_undetermined)
+{
+    Dimension d1{Dimension::undetermined()};
+    Dimension d2{2};
+
+    d1 += d2;
+
+    ASSERT_FALSE(d1.is_determined());
+}
+
+TEST(partial_shape, dim_pluseq_right_undetermined)
+{
+    Dimension d1{2};
+    Dimension d2{Dimension::undetermined()};
+
+    d1 += d2;
+
+    ASSERT_FALSE(d1.is_determined());
+}
+
+TEST(partial_shape, dim_pluseq_both_determined)
+{
+    Dimension d1{3};
+    Dimension d2{2};
+
+    d1 += d2;
+
+    ASSERT_TRUE(d1.is_determined());
+    ASSERT_EQ(size_t(d1), 5);
+}
+
+TEST(partial_shape, dim_timeseq_left_undetermined_right_nonzero)
+{
+    Dimension d1{Dimension::undetermined()};
+    Dimension d2{2};
+
+    d1 *= d2;
+
+    ASSERT_FALSE(d1.is_determined());
+}
+
+TEST(partial_shape, dim_timeseq_left_undetermined_right_zero)
+{
+    Dimension d1{Dimension::undetermined()};
+    Dimension d2{0};
+
+    d1 *= d2;
+
+    ASSERT_TRUE(d1.is_determined());
+    ASSERT_EQ(size_t(d1), 0);
+}
+
+TEST(partial_shape, dim_timeseq_right_undetermined_left_nonzero)
+{
+    Dimension d1{2};
+    Dimension d2{Dimension::undetermined()};
+
+    d1 *= d2;
+
+    ASSERT_FALSE(d1.is_determined());
+}
+
+TEST(partial_shape, dim_timeseq_right_undetermined_left_zero)
+{
+    Dimension d1{0};
+    Dimension d2{Dimension::undetermined()};
+
+    d1 *= d2;
+
+    ASSERT_TRUE(d1.is_determined());
+    ASSERT_EQ(size_t(d1), 0);
+}
+
+TEST(partial_shape, dim_timeseq_both_determined)
+{
+    Dimension d1{3};
+    Dimension d2{2};
+
+    d1 *= d2;
+
+    ASSERT_TRUE(d1.is_determined());
+    ASSERT_EQ(size_t(d1), 6);
+}
