@@ -152,6 +152,7 @@
 #include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv.hpp"
+#include "ngraph/runtime/cpu/op/quantized_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -308,6 +309,8 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropData>},
     {TI(ngraph::op::GroupConvolution), &runtime::cpu::CPU_Emitter::emit<op::GroupConvolution>},
     {TI(ngraph::op::ConvolutionBias), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBias>},
+    {TI(ngraph::op::QuantizedConvolutionBias),
+     &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolutionBias>},
     {TI(ngraph::op::ConvolutionRelu), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionRelu>},
     {TI(ngraph::op::QuantizedConvolution),
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolution>},
@@ -1000,10 +1003,10 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
     // failing mxnet unit tests.
-    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    // pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    // pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
+    // pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
     // pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
     pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
