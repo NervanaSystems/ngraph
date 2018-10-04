@@ -26,7 +26,9 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
@@ -87,6 +89,18 @@ static std::shared_ptr<op::Reshape> create_default_reshape(std::shared_ptr<Node>
     return default_reshape;
 }
 
+static AxisSet get_quantization_axes_in_default_order(std::shared_ptr<op::Reshape> arg_reshape,
+                                                      const AxisSet& old_axis_set)
+{
+    auto perm_to_def = ngraph::get_permutation_to_default_order(arg_reshape->get_input_order());
+    AxisSet axis_set;
+    for (auto axis : old_axis_set)
+    {
+        axis_set.insert(perm_to_def.at(axis));
+    }
+    return axis_set;
+}
+
 struct Swimmer
 {
     descriptor::Input* input;
@@ -144,18 +158,24 @@ static void convert_binary_to_default_order(
     //this should now insert and swim reshape on right
     swim(&input, new_reshape);
     delete_reshape(reorders.at(right));
-    auto new_binary = binary->copy_with_new_args(binary->get_arguments());
-    ngraph::replace_node(binary, new_binary);
-    reorders[new_binary] = reorders.at(right);
+    reorders[binary] = reorders.at(right);
 }
 
 bool ngraph::runtime::cpu::pass::CPUReshapeSinking::run_on_function(
     std::shared_ptr<ngraph::Function> f)
 {
     std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<op::Reshape>> reorders;
+    NodeVector results;
+
     for (auto n : f->get_ordered_ops())
     {
         NGRAPH_DEBUG << "Processing node " << n->get_name();
+
+        if (n->is_output())
+        {
+            results.push_back(n);
+        }
+
         if (auto reshape = std::dynamic_pointer_cast<op::Reshape>(n))
         {
             auto orig_reshape = reorders.at(n->get_argument(0));
@@ -226,6 +246,35 @@ bool ngraph::runtime::cpu::pass::CPUReshapeSinking::run_on_function(
         {
             reorders[goe] = create_default_reshape(goe);
         }
+        else if (auto quantize = std::dynamic_pointer_cast<op::Quantize>(n))
+        {
+            auto arg_reshape = reorders.at(n->get_argument(0));
+            AxisSet axes_in_def_order =
+                get_quantization_axes_in_default_order(arg_reshape, quantize->get_axes());
+            auto new_quantize = std::make_shared<op::Quantize>(quantize->get_argument(0),
+                                                               quantize->get_argument(1),
+                                                               quantize->get_argument(2),
+                                                               quantize->get_element_type(),
+                                                               axes_in_def_order,
+                                                               quantize->get_round_mode());
+
+            ngraph::replace_node(quantize, new_quantize);
+            reorders[new_quantize] = arg_reshape;
+        }
+        else if (auto dequantize = std::dynamic_pointer_cast<op::Dequantize>(n))
+        {
+            auto arg_reshape = reorders.at(n->get_argument(0));
+            AxisSet axes_in_def_order =
+                get_quantization_axes_in_default_order(arg_reshape, dequantize->get_axes());
+            auto new_dequantize = std::make_shared<op::Dequantize>(dequantize->get_argument(0),
+                                                                   dequantize->get_argument(1),
+                                                                   dequantize->get_argument(2),
+                                                                   dequantize->get_element_type(),
+                                                                   axes_in_def_order);
+
+            ngraph::replace_node(dequantize, new_dequantize);
+            reorders[new_dequantize] = arg_reshape;
+        }
         else
         {
             //skip multiple output nodes and deal with GOEs exclusively
@@ -249,6 +298,13 @@ bool ngraph::runtime::cpu::pass::CPUReshapeSinking::run_on_function(
             }
             reorders[n] = create_default_reshape(n);
         }
+    }
+
+    //make sure shapes are always materialized before results
+    for (auto r : results)
+    {
+        NGRAPH_ASSERT(r->get_shape() == r->get_argument(0)->get_shape() &&
+                      r->get_element_type() == r->get_argument(0)->get_element_type());
     }
 
     //fix wrong shape info wholesale
