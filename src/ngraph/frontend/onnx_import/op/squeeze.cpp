@@ -14,7 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <functional>
+#include <iterator>
 #include <numeric>
+#include <set>
 #include <vector>
 
 #include "ngraph/axis_vector.hpp"
@@ -36,25 +39,32 @@ namespace ngraph
                 auto data = inputs.at(0);
                 auto data_shape = data->get_shape();
                 auto axes = node.get_attribute_value<std::vector<uint64_t>>("axes", {});
-
-                if (axes.empty())
-                {
-                    for (auto index = 0; index < data_shape.size(); ++index)
-                    {
-                        if (data_shape.at(index) == 1)
-                        {
-                            axes.push_back(index);
-                        }
-                    }
-                }
-
-                std::sort(std::begin(axes), std::end(axes), std::greater<uint64_t>());
-
                 AxisVector input_order{reshape::get_default_axis_vector(data_shape.size())};
 
-                for (auto axis : axes)
+                // Default behaviour is to squeeze all single dimension axes.
+                if (axes.empty())
                 {
-                    data_shape.erase(std::next(std::begin(data_shape), axis));
+                    for (auto it = std::begin(data_shape); it != std::end(data_shape);)
+                    {
+                        if (*it == 1)
+                        {
+                            data_shape.erase(it);
+                            continue;
+                        }
+                        ++it;
+                    }
+                }
+                else
+                {
+                    std::set<uint64_t, std::greater<uint64_t>> unique_axes(std::begin(axes),
+                                                                             std::end(axes));
+                    for (uint64_t axis : unique_axes)
+                    {
+                        ASSERT_VALID_ARGUMENT(node, data_shape.at(axis) == 1)
+                            << "provided axis value is invalid. Only single dimension axes may "
+                               "be removed.";
+                        data_shape.erase(std::next(std::begin(data_shape), axis));
+                    }
                 }
 
                 return {std::make_shared<ngraph::op::Reshape>(data, input_order, data_shape)};
