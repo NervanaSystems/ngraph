@@ -37,8 +37,8 @@ namespace ngraph
 class ngraph::runtime::gpu::pass::TensorMemoryReservation : public ngraph::pass::FunctionPass
 {
 public:
-    TensorMemoryReservation(std::weak_ptr<ngraph::runtime::gpu::GPUAllocator> allocator,
-                            std::weak_ptr<std::unordered_map<std::string, size_t>> buffers)
+    TensorMemoryReservation(GPUAllocator& allocator,
+                            std::unordered_map<std::string, size_t>& buffers)
         : ngraph::pass::FunctionPass()
         , m_allocator(allocator)
         , m_memory_buffers(buffers)
@@ -48,6 +48,6 @@ public:
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 
 private:
-    std::weak_ptr<ngraph::runtime::gpu::GPUAllocator> m_allocator;
-    std::weak_ptr<std::unordered_map<std::string, size_t>> m_memory_buffers;
+    GPUAllocator& m_allocator;
+    std::unordered_map<std::string, size_t>& m_memory_buffers;
 };

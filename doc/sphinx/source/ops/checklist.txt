@@ -1,0 +1,14 @@
+checklist.txt
+
+1. Add classes for the op to src/ngraph/op
+2. Add the op to src/ngraph/op/op_tbl.hpp
+3. Add a reference kernel to src/runtime/reference
+4. Add a call to the reference kernel to src/interpreter/int_backend.hpp
+5. Add the header for the op class to src/ngraph/ngraph.hpp
+6. Add serializer *and* deserializer support to src/ngraph/serializer.cpp
+7. Add type propagation tests to test/type_prop.cpp
+8. Add execution tests to test/backend_test.in.cpp
+9. Update unit test manifests for non-INTERPRETER backends (CPU, GPU, INTELGPU) to exclude your new execution tests
+  (Or, if you know what you're doing, update those backends to support your new op.)
+10. Add .rst files documenting the op to doc/sphinx/source/ops
+11. Add links to your new doc files to doc/sphinx/source/ops/index.rst

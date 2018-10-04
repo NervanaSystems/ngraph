@@ -88,7 +88,7 @@ def PrepareEnvironment(configurationMaps) {
         UTILS.PropagateStatus("Run_docker_containers", configMap["dockerContainerName"])
         sh """
             docker cp ${CI_ROOT}/utils/docker.sh ${configMap["dockerContainerName"]}:/home
-            docker exec ${configMap["dockerContainerName"]} bash -c "/root/${CI_ROOT}/prepare_environment.sh --ngraph-branch=$ghprbSourceBranch"
+            docker exec ${configMap["dockerContainerName"]} bash -c "/root/${CI_ROOT}/prepare_environment.sh"
         """
     }
     UTILS.CreateStage("Prepare_environment", prepareEnvironmentMethod, configurationMaps)
