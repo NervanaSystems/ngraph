@@ -27,13 +27,9 @@ op::AllReduce::AllReduce(const shared_ptr<Node>& arg)
 
 void op::AllReduce::validate_and_infer_types()
 {
-    if (validate_punt_if_incomplete())
-    {
-        return;
-    }
-
     NODE_VALIDATION_ASSERT(this,
-                           get_input_element_type(0) == element::f32 ||
+                           !get_input_element_type(0).is_determined() ||
+                               get_input_element_type(0) == element::f32 ||
                                get_input_element_type(0) == element::f64)
         << "Only element types f32 and f64 are supported (argument element type: "
         << get_input_element_type(0) << ").";
