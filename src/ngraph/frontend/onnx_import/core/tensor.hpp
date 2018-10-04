@@ -21,7 +21,11 @@
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 
+#ifdef ONNX_ML
+#include <onnx-ml.pb.h>
+#else
 #include <onnx.pb.h>
+#endif
 
 namespace ngraph
 {
