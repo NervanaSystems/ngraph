@@ -36,6 +36,22 @@ string runtime::intelgpu::get_opencl_type_name(const element::Type& ngraph_type)
     {
         return "int";
     }
+    else if (ngraph_type == ngraph::element::i16)
+    {
+        return "short";
+    }
+    else if (ngraph_type == ngraph::element::u16)
+    {
+        return "ushort";
+    }
+    else if (ngraph_type == ngraph::element::i8)
+    {
+        return "char";
+    }
+    else if (ngraph_type == ngraph::element::u8)
+    {
+        return "uchar";
+    }
     else
     {
         return ngraph_type.c_type_string();
