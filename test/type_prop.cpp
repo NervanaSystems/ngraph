@@ -4107,6 +4107,52 @@ TEST(type_prop, reverse_3d_deduce_oob)
     }
 }
 
+//
+// If the input rank is undetermined, we should pass unconditionally.
+//
+TEST(type_prop, reverse_partial_undetermined)
+{
+    auto param = make_shared<op::Parameter>(element::f32, PartialShape::undetermined());
+    auto rev = make_shared<op::Reverse>(param, AxisSet{0, 2, 1776, 90909});
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_FALSE(rev->get_output_partial_shape(0).rank().is_determined());
+}
+
+//
+// If the input rank is undetermined, we should pass if the axis indices are in bounds.
+//
+TEST(type_prop, reverse_partial_incomplete_axes_ok)
+{
+    PartialShape param_shape{Dimension::undetermined(), Dimension::undetermined(), 2, 3};
+    auto param = make_shared<op::Parameter>(element::f32, param_shape);
+    auto rev = make_shared<op::Reverse>(param, AxisSet{0, 2});
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_TRUE(rev->get_output_partial_shape(0).same_scheme(param_shape));
+}
+
+TEST(type_prop, reverse_partial_incomplete_axes_oob)
+{
+    PartialShape param_shape{Dimension::undetermined(), Dimension::undetermined(), 2, 3};
+    auto param = make_shared<op::Parameter>(element::f32, param_shape);
+    try
+    {
+        auto rev = make_shared<op::Reverse>(param, AxisSet{0, 4, 2});
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Axis out of bounds not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Reverse axis (4) is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, reverse_sequence_1_dim)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2});
