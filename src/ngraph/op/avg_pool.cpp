@@ -39,7 +39,7 @@ op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
 
 void op::AvgPool::validate_and_infer_types()
 {
-    if (validate_punt_if_incomplete())
+    if (validate_punt_if_dynamic())
     {
         return;
     }
@@ -245,7 +245,7 @@ op::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
 
 void op::AvgPoolBackprop::validate_and_infer_types()
 {
-    if (validate_punt_if_incomplete())
+    if (validate_punt_if_dynamic())
     {
         return;
     }

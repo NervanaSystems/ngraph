@@ -40,7 +40,7 @@ op::Broadcast::Broadcast(const shared_ptr<Node>& arg,
 
 void op::Broadcast::validate_and_infer_types()
 {
-    if (validate_punt_if_incomplete())
+    if (validate_punt_if_dynamic())
     {
         return;
     }

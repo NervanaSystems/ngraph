@@ -24,16 +24,16 @@
 
 namespace ngraph
 {
-    /// \brief Class representing a shape that may only be partially known.
+    /// \brief Class representing a shape that may be partially or totally dynamic.
     ///
     /// XXX: THIS CLASS IS EXPERIMENTAL AND THE ENTIRE DESIGN IS SUBJECT TO CHANGE.
     ///
     /// A PartialShape may have:
     ///
-    /// \li Unknown rank. (Informal notation: `?`)
-    /// \li Known rank, but unknown dimensions on some or all axes.
+    /// \li Dynamic rank. (Informal notation: `?`)
+    /// \li Static rank, but dynamic dimensions on some or all axes.
     ///     (Informal notation examples: `{1,2,?,4}`, `{?,?,?}`)
-    /// \li Known rank, and known dimensions on all axes.
+    /// \li Static rank, and dynamic dimensions on all axes.
     ///     (Informal notation examples: `{1,2,3,4}`, `{6}`, `{}`)
     class PartialShape
     {
@@ -61,23 +61,29 @@ namespace ngraph
         {
         }
 
-        /// \brief Constructs a complete PartialShape with zero rank (the shape of a scalar).
+        /// \brief Constructs a static PartialShape with zero rank (the shape of a scalar).
         PartialShape()
             : PartialShape({})
         {
         }
 
-        /// \brief Constructs a complete PartialShape from a Shape.
+        /// \brief Constructs a static PartialShape from a Shape.
         /// \param shape The Shape to convert into PartialShape.
         PartialShape(const Shape& shape);
 
-        /// \brief Check if this shape is complete.
-        /// \return `true` if this shape is complete, else `false`.
+        /// \brief Check if this shape is static.
+        /// \return `true` if this shape is static, else `false`.
         ///
-        /// A shape is considered complete if it has known rank, and all dimensions of the shape
+        /// A shape is considered static if it has static rank, and all dimensions of the shape
         /// are static.
-        bool is_complete() const;
+        bool is_static() const;
 
+        /// \brief Check if this shape is dynamic.
+        /// \return `false` if this shape is static, else `true`.
+        ///
+        /// A shape is considered static if it has static rank, and all dimensions of the shape
+        /// are static.
+        bool is_dynamic() const { return !is_static(); }
         /// \brief Get the rank of the shape.
         /// \return The rank of the shape. This will be Rank::dynamic() if the rank of
         ///         the shape is dynamic.
@@ -106,9 +112,9 @@ namespace ngraph
         ///     `s1[i]` represents the same scheme as `s2[i]` (see Dimension::same_scheme()).
         bool same_scheme(const PartialShape& s) const;
 
-        /// \brief Convert a complete PartialShape to a Shape, if possible.
+        /// \brief Convert a static PartialShape to a Shape.
         /// \return A new Shape `s` where `s[i] = size_t((*this)[i])`.
-        /// \throws std::invalid_argument If this PartialShape is incomplete.
+        /// \throws std::invalid_argument If this PartialShape is dynamic.
         Shape to_shape() const;
 
         /// \brief Index operator for PartialShape.

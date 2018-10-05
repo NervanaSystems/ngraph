@@ -32,7 +32,7 @@ op::Result::Result(const shared_ptr<Node>& arg)
 
 void op::Result::validate_and_infer_types()
 {
-    if (validate_punt_if_incomplete())
+    if (validate_punt_if_dynamic())
     {
         return;
     }

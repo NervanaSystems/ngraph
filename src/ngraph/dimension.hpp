@@ -97,7 +97,7 @@ namespace ngraph
 
     private:
         // The actual numerical value of the dimension. s_dynamic_val is a special case,
-        // representing an unknown dimension.
+        // representing a dynamic dimension.
         size_t m_dimension;
     };
 
@@ -112,7 +112,7 @@ namespace ngraph
     /// \brief Addition operator for dimensions.
     /// \param d1 Left operand for addition.
     /// \param d2 Right operand for addition.
-    /// \return Dimension::dynamic() if `d1` or `d2` is unknown; else, a static dimension
-    ///         with value `size_t(d1)+size_t(d2)`.
+    /// \return Dimension::dynamic() if either of `d1` or `d2` is dynamic; else, a static
+    ///         dimension with value `size_t(d1)+size_t(d2)`.
     Dimension operator+(const Dimension& d1, const Dimension& d2);
 }

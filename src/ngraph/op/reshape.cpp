@@ -35,7 +35,7 @@ op::Reshape::Reshape(const shared_ptr<Node>& arg,
 
 void op::Reshape::validate_and_infer_types()
 {
-    if (validate_punt_if_incomplete())
+    if (validate_punt_if_dynamic())
     {
         return;
     }

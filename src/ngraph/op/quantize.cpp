@@ -36,7 +36,7 @@ op::Quantize::Quantize(shared_ptr<Node> input,
 
 void op::Quantize::validate_and_infer_types()
 {
-    if (validate_punt_if_incomplete())
+    if (validate_punt_if_dynamic())
     {
         return;
     }

@@ -244,7 +244,7 @@ op::Convolution::Convolution(const shared_ptr<Node>& data_batch,
 
 void op::Convolution::validate_and_infer_types()
 {
-    if (validate_punt_if_incomplete())
+    if (validate_punt_if_dynamic())
     {
         return;
     }
@@ -434,7 +434,7 @@ op::ConvolutionBackpropData::ConvolutionBackpropData(const Shape& data_batch_sha
 
 void op::ConvolutionBackpropData::validate_and_infer_types()
 {
-    if (validate_punt_if_incomplete())
+    if (validate_punt_if_dynamic())
     {
         return;
     }
@@ -606,7 +606,7 @@ op::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
 
 void op::ConvolutionBackpropFilters::validate_and_infer_types()
 {
-    if (validate_punt_if_incomplete())
+    if (validate_punt_if_dynamic())
     {
         return;
     }

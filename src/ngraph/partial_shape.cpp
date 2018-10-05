@@ -28,7 +28,7 @@ PartialShape::PartialShape(const Shape& shape)
     m_dimensions.assign(shape.begin(), shape.end());
 }
 
-bool ngraph::PartialShape::is_complete() const
+bool ngraph::PartialShape::is_static() const
 {
     return m_rank_is_static && std::all_of(m_dimensions.begin(),
                                            m_dimensions.end(),
@@ -138,9 +138,9 @@ bool PartialShape::same_scheme(const PartialShape& s) const
 
 Shape PartialShape::to_shape() const
 {
-    if (!is_complete())
+    if (is_dynamic())
     {
-        throw std::invalid_argument("to_shape was called on an incomplete shape.");
+        throw std::invalid_argument("to_shape was called on a dynamic shape.");
     }
 
     return Shape(m_dimensions.begin(), m_dimensions.end());

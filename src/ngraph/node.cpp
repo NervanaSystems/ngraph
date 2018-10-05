@@ -444,14 +444,14 @@ void Node::validate_and_infer_elementwise_logical()
     validate_and_infer_elementwise(get_input_element_type(0));
 }
 
-bool Node::validate_punt_if_incomplete()
+bool Node::validate_punt_if_dynamic()
 {
     bool any_dynamic = false;
 
     for (auto& input : m_inputs)
     {
-        any_dynamic |= !(input.get_partial_shape().is_complete());
-        any_dynamic |= !(input.get_element_type().is_static());
+        any_dynamic |= input.get_partial_shape().is_dynamic();
+        any_dynamic |= input.get_element_type().is_dynamic();
     }
 
     if (any_dynamic)

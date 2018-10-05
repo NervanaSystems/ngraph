@@ -29,7 +29,7 @@ op::util::ArithmeticReduction::ArithmeticReduction(const std::string& node_type,
 
 void op::util::ArithmeticReduction::validate_and_infer_types()
 {
-    if (validate_punt_if_incomplete())
+    if (validate_punt_if_dynamic())
     {
         return;
     }

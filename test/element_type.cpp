@@ -89,7 +89,7 @@ TEST(element_type, merge_both_dynamic)
 {
     element::Type t;
     ASSERT_TRUE(element::Type::merge(t, element::dynamic, element::dynamic));
-    ASSERT_FALSE(t.is_static());
+    ASSERT_TRUE(t.is_dynamic());
 }
 
 TEST(element_type, merge_left_dynamic)
