@@ -184,7 +184,6 @@ namespace ngraph
                     select_cudnn_algo(const std::vector<PERF_TYPE>& perf_results,
                                       size_t workspace_byte = std::numeric_limits<size_t>::max())
                 {
-                    // Determine the fastest acceptable algo regardless of mathType.
                     for (auto i = 0; i != perf_results.size(); ++i)
                     {
                         auto const& result = perf_results[i];
