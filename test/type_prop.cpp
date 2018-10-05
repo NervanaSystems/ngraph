@@ -6836,7 +6836,7 @@ TEST(type_prop, binary_elementwise_arithmetic_right_et_dynamic)
 // The graph we construct here is bogus, but because there is some partiality in the input shapes,
 // it should still pass validation but set the output shape and element types to be dynamic.
 //
-TEST(type_prop, validate_punt_if_incomplete)
+TEST(type_prop, validate_punt_if_dynamic)
 {
     auto a = make_shared<op::Parameter>(element::i64, Shape{1, 2, 3, 4});
     auto b = make_shared<op::Parameter>(element::u32, PartialShape{1, Dimension::dynamic(), 3});
