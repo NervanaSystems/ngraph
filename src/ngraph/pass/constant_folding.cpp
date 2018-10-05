@@ -279,6 +279,11 @@ void ngraph::pass::ConstantFolding::construct_constant_dequantize()
 
         auto type = constant_match->get_element_type();
 
+        if (dequant_match->get_element_type() != element::f32)
+        {
+            return false;
+        }
+
         if (type == element::u8)
         {
             replace_node(m.get_match_root(),
