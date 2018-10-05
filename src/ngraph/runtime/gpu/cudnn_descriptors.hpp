@@ -136,6 +136,20 @@ namespace ngraph
                 }
             };
 
+#if CUDNN_VERSION >= 7200
+            template <>
+            struct cudnn_descriptor<cudnnRNNDataDescriptor_t>
+            {
+                static void create(cudnnRNNDataDescriptor_t& desc)
+                {
+                    CUDNN_SAFE_CALL(cudnnCreateRNNDataDescriptor(&desc));
+                }
+                static void destroy(cudnnRNNDataDescriptor_t& desc)
+                {
+                    CUDNN_SAFE_CALL_NO_THROW(cudnnDestroyRNNDataDescriptor(desc));
+                }
+            };
+#endif
             template <>
             struct cudnn_descriptor<cudnnPoolingDescriptor_t>
             {

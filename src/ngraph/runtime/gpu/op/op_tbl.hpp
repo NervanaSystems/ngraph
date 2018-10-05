@@ -14,26 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
-#include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
-
-namespace ngraph
-{
-    namespace op
-    {
-        /// \brief Elementwise sign operation.
-        ///
-        class Sign : public util::UnaryElementwiseArithmetic
-        {
-        public:
-            /// \brief Constructs an elementwise sign operation.
-            ///
-            /// \param arg Node that produces the input tensor.
-            Sign(const std::shared_ptr<Node>& arg);
-
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
-    }
-}
+#include "ngraph/op/op_tbl.hpp"
+#if CUDNN_VERSION >= 7200
+NGRAPH_OP(Rnn, ngraph::op::gpu)
+#endif
