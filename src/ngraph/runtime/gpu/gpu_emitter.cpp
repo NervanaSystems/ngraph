@@ -807,11 +807,12 @@ void runtime::gpu::GPU_Emitter::emit_Pad(EMIT_ARGS)
 
         auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
 
-        auto pad_index = cuda_emitter->build_pad_dynamic({{args[0].get_type(), args[1].get_type(), out[0].get_type()}},
-                                                         input_shape,
-                                                         output_shape,
-                                                         padding_below,
-                                                         padding_interior);
+        auto pad_index = cuda_emitter->build_pad_dynamic(
+            {{args[0].get_type(), args[1].get_type(), out[0].get_type()}},
+            input_shape,
+            output_shape,
+            padding_below,
+            padding_interior);
         writer << "void* input[] = {" << node_names(args) << "};\n";
         writer << "void* output[] = {" << node_names(out) << "};\n";
         writer << "gpu::invoke_primitive(ctx, " << pad_index << ", input, output);\n";

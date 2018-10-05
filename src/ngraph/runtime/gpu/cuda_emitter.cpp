@@ -330,8 +330,6 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::vector<std::strin
         return primitive_index;
     }
 
-
-
     NVShape pad_below(input_shape.size(), 0);
     NVShape pad_interior(input_shape.size(), 1);
 
@@ -359,8 +357,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::vector<std::strin
     }
     else
     {
-        args.add_placeholder(dtypes.front(), "in")
-            .add_placeholder(dtypes.back(), "out");
+        args.add_placeholder(dtypes.front(), "in").add_placeholder(dtypes.back(), "out");
         nthreads = static_cast<uint32_t>(shape_size(input_shape));
     }
 
@@ -397,18 +394,17 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::vector<std::strin
     // create the launch primitive
     std::unique_ptr<gpu::primitive> pad_dynamic(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-                if (dtypes.size() == 3)
-                {
-                    args.resolve_placeholder(0, &inputs[0])
-                        .resolve_placeholder(1, &inputs[1])
-                        .resolve_placeholder(2, &outputs[0]);
-                }
-                else
-                {
-                    args.resolve_placeholder(0, &inputs[0])
-                        .resolve_placeholder(1, &outputs[0]);
-                }
-                void** args_list = args.get_argument_list();
+            if (dtypes.size() == 3)
+            {
+                args.resolve_placeholder(0, &inputs[0])
+                    .resolve_placeholder(1, &inputs[1])
+                    .resolve_placeholder(2, &outputs[0]);
+            }
+            else
+            {
+                args.resolve_placeholder(0, &inputs[0]).resolve_placeholder(1, &outputs[0]);
+            }
+            void** args_list = args.get_argument_list();
 
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                           aligned_grid_size_x,

@@ -638,11 +638,10 @@ void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
     writer.block_end();
 }
 
-void runtime::gpu::CudaKernelBuilder::get_pad_op(
-    codegen::CodeWriter& writer,
-    const std::string& name,
-    GPUKernelArgs& args,
-    size_t rank)
+void runtime::gpu::CudaKernelBuilder::get_pad_op(codegen::CodeWriter& writer,
+                                                 const std::string& name,
+                                                 GPUKernelArgs& args,
+                                                 size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -672,11 +671,10 @@ void runtime::gpu::CudaKernelBuilder::get_pad_op(
     writer.block_end();
 }
 
-void runtime::gpu::CudaKernelBuilder::get_pad_fill_op(
-    codegen::CodeWriter& writer,
-    const std::string& name,
-    GPUKernelArgs& args,
-    size_t rank)
+void runtime::gpu::CudaKernelBuilder::get_pad_fill_op(codegen::CodeWriter& writer,
+                                                      const std::string& name,
+                                                      GPUKernelArgs& args,
+                                                      size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -693,13 +691,15 @@ void runtime::gpu::CudaKernelBuilder::get_pad_fill_op(
             {
                 if (i != 0)
                 {
-                    writer << "output_pixel %= output_strides" << i-1 << ";\n";
+                    writer << "output_pixel %= output_strides" << i - 1 << ";\n";
                 }
-                writer << "input_dil = output_pixel / output_strides" << i << " - padding_below" << i <<";\n";
+                writer << "input_dil = output_pixel / output_strides" << i << " - padding_below"
+                       << i << ";\n";
 
                 writer << "input = input_dil / (padding_interior" << i << " + 1);\n";
                 writer << "input_dil %= (padding_interior" << i << " + 1);\n";
-                writer << "in_bounds = in_bounds && (input >= 0) && (input < input_shape" << i << ") && (input_dil == 0);\n";
+                writer << "in_bounds = in_bounds && (input >= 0) && (input < input_shape" << i
+                       << ") && (input_dil == 0);\n";
                 writer << "input_pixel += input * input_strides" << i << ";\n";
             }
             writer << "out[tid] = (in_bounds) ? in[input_pixel] : *pad;\n";

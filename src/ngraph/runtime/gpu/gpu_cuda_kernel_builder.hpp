@@ -131,14 +131,14 @@ namespace ngraph
                                               const std::vector<std::string>& data_types);
 
                 static void get_pad_op(codegen::CodeWriter& writer,
-                                               const std::string& name,
-                                               GPUKernelArgs& args,
-                                               size_t rank);
+                                       const std::string& name,
+                                       GPUKernelArgs& args,
+                                       size_t rank);
 
                 static void get_pad_fill_op(codegen::CodeWriter& writer,
-                                                const std::string& name,
-                                                GPUKernelArgs& args,
-                                                size_t rank);
+                                            const std::string& name,
+                                            GPUKernelArgs& args,
+                                            size_t rank);
 
                 static void get_ew_collective_op(codegen::CodeWriter& writer,
                                                  const std::string& name,
