@@ -147,7 +147,6 @@ template <typename T>
 static bool collapse_reduction(std::shared_ptr<Node> n)
 {
     bool replaced = false;
-
     auto node = std::dynamic_pointer_cast<T>(n).get();
     auto input_shape = node->get_argument(0)->get_shape();
     auto output_shape = node->get_shape();
@@ -182,9 +181,9 @@ static bool collapse_reduction(std::shared_ptr<Node> n)
 
     if (replaced)
     {
-        std::cout << "CollapseDims: Replaced arithmetic reduction " << input_shape << " "
-                  << operated_axes << " " << output_shape << " with " << Shape(cshape.fshape) << " "
-                  << AxisSet(cshape.axis_set) << " " << Shape(cshape.rshape) << std::endl;
+        NGRAPH_DEBUG << "CollapseDims: Replaced arithmetic reduction " << input_shape << " "
+                     << operated_axes << " " << output_shape << " with " << Shape(cshape.fshape)
+                     << " " << AxisSet(cshape.axis_set) << " " << Shape(cshape.rshape);
     }
     return replaced;
 }
