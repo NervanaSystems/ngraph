@@ -104,7 +104,7 @@ namespace ngraph
                                                          const bool find_algo = false);
 
                 size_t build_reduce_forward(const cudnnReduceTensorOp_t& reduce_op,
-                                            const std::string& dtype,
+                                            const element::Type& dtype,
                                             const Shape& input_shape,
                                             const AxisSet& reduction_axes,
                                             const ReductionMode& reduction_mode);
@@ -138,11 +138,6 @@ namespace ngraph
                                      const std::string& dtype,
                                      const Prop& direction,
                                      const Shape& tensor_shape);
-
-                // size_t build_argmax_argmin(const cudnnReduceTensorOp_t& reduce_op,
-                //                            const std::string& dtype,
-                //                            const Shape& input_shape,
-                //                            const size_t reduction_axes);
 
                 void debug_sync();
                 void sync();

@@ -184,7 +184,7 @@ void runtime::gpu::GPU_Emitter::emit_ArgMax_ArgMin(EMIT_ARGS, cudnnReduceTensorO
     auto argmax = static_cast<const ngraph::op::ArgMax*>(node);
     std::vector<size_t> axes{argmax->get_reduction_axis()};
     auto axis_set = AxisSet(axes);
-    
+
     CUDNNEmitter::ReductionMode reduction_mode = CUDNNEmitter::ReductionMode::ArgMax_ArgMin;
 
     writer.block_begin();
@@ -192,7 +192,7 @@ void runtime::gpu::GPU_Emitter::emit_ArgMax_ArgMin(EMIT_ARGS, cudnnReduceTensorO
         auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
 
         auto index = cudnn_emitter->build_reduce_forward(
-            reduce_mode, args[0].get_type(), args[0].get_shape(), axis_set, reduction_mode);
+            reduce_mode, args[0].get_element_type(), args[0].get_shape(), axis_set, reduction_mode);
 
         writer << "void* input[] = {" << node_names(args) << "};\n";
         writer << "void* output[] = {" << node_names(out) << "};\n";
@@ -884,7 +884,7 @@ void runtime::gpu::GPU_Emitter::emit_Product(EMIT_ARGS)
                 auto& cudnn_emitter =
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
                 auto index = cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_MUL,
-                                                                 out[0].get_type(),
+                                                                 out[0].get_element_type(),
                                                                  args[0].get_shape(),
                                                                  product->get_reduction_axes(),
                                                                  reduction_mode);
@@ -983,7 +983,7 @@ void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
                 auto reduce_index =
                     cudnn_emitter->build_reduce_forward(reduce_tensor_op,
-                                                        out[0].get_type(),
+                                                        out[0].get_element_type(),
                                                         args[0].get_shape(),
                                                         reduce_op->get_reduction_axes(),
                                                         reduction_mode);

@@ -85,8 +85,6 @@ namespace ngraph
                 /// \ return returns a string containing "arg0_name, arg1_name, etc."
                 static std::string node_names(const std::vector<GPUTensorWrapper>& args,
                                               std::initializer_list<int> arg_indexes = {});
-
-                // void emit_ArgMax_ArgMin(EMIT_ARGS, cudnnReduceTensorOp_t);
             };
 
             Shape get_padded_shape(const Shape& input_shape,
