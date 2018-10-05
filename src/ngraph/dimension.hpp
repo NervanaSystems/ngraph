@@ -100,6 +100,7 @@ namespace ngraph
     /// \brief Insert a human-readable representation of a dimension into an output stream.
     /// \param str The output stream targeted for insertion.
     /// \param dimension The dimension to be inserted into `str`.
+    /// \return A reference to `str` after insertion.
     ///
     /// Inserts the string `?` if `dimension` is undetermined; else inserts `size_t(dimension)`.
     std::ostream& operator<<(std::ostream& str, const Dimension& dimension);
