@@ -7024,3 +7024,9 @@ TEST(type_prop, validate_punt_if_incomplete)
     ASSERT_FALSE(concat->get_output_partial_shape(0).rank().is_determined());
     ASSERT_FALSE(concat->get_output_element_type(0).is_determined());
 }
+
+TEST(type_prop, arithmetic_reduction_partial)
+{
+    FAIL() << "Adam needs to write some unit tests for partial-shape/type propagation for "
+              "ArithmeticReduction";
+}

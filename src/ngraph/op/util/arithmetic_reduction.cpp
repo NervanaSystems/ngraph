@@ -29,29 +29,32 @@ op::util::ArithmeticReduction::ArithmeticReduction(const std::string& node_type,
 
 void op::util::ArithmeticReduction::validate_and_infer_types()
 {
-    if (validate_punt_if_incomplete())
+    auto input_shape = get_input_partial_shape(0);
+    auto input_rank = input_shape.rank();
+
+    PartialShape result_shape{PartialShape::undetermined()};
+
+    if (input_rank.is_determined())
     {
-        return;
-    }
+        std::vector<Dimension> dims;
 
-    auto input_shape = get_input_shape(0);
-
-    for (auto axis : m_reduction_axes)
-    {
-        NODE_VALIDATION_ASSERT(this, axis < input_shape.size())
-            << "Reduction axis (" << axis << ") is out of bounds "
-            << "(argument shape: " << input_shape << ", reduction axes: " << m_reduction_axes
-            << ")";
-    }
-
-    Shape result_shape;
-
-    for (size_t i = 0; i < input_shape.size(); i++)
-    {
-        if (m_reduction_axes.count(i) == 0)
+        for (auto axis : m_reduction_axes)
         {
-            result_shape.push_back(input_shape.at(i));
+            NODE_VALIDATION_ASSERT(this, axis < size_t(input_rank))
+                << "Reduction axis (" << axis << ") is out of bounds "
+                << "(argument shape: " << input_shape << ", reduction axes: " << m_reduction_axes
+                << ")";
         }
+
+        for (size_t i = 0; i < size_t(input_rank); i++)
+        {
+            if (m_reduction_axes.count(i) == 0)
+            {
+                dims.push_back(input_shape[i]);
+            }
+        }
+
+        result_shape = PartialShape(dims);
     }
 
     set_output_type(0, get_input_element_type(0), result_shape);
