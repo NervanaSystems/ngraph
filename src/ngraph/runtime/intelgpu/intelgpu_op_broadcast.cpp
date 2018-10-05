@@ -138,7 +138,7 @@ void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
         else
         {
             // corner case with scalar
-            if (output_shape.empty() || (!output_shape.empty() && (output_shape.at(0) == 1)))
+            if (output_shape.empty() || (!output_shape.empty() && (shape_size(output_shape) == 1)))
             {
                 return do_sum_to_scalar_operation(topology,
                                                   input_name,

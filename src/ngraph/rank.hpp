@@ -14,38 +14,16 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <iostream>
-#include <tuple>
+#pragma once
 
-int count()
+#include "ngraph/dimension.hpp"
+
+namespace ngraph
 {
-    static int counter = 0;
-    return counter++;
-}
-
-std::tuple<int, int> stateless_count(int counter)
-{
-    return std::tuple<int, int>(counter, counter + 1);
-}
-
-int main()
-{
-    std::cout << "State: " << count() << ", " << count() << std::endl;
-
-    std::cout << "Stateless: ";
-    int counter = 0;
-    {
-        auto r(stateless_count(counter));
-        counter = std::get<1>(r);
-        std::cout << std::get<0>(r);
-    }
-    std::cout << ", ";
-    {
-        auto r(stateless_count(counter));
-        counter = std::get<1>(r);
-        std::cout << std::get<0>(r);
-    }
-    std::cout << std::endl;
-
-    return 0;
+    /// \brief Alias for "Dimension". Should be used to when the value represents the number of
+    ///        axes in a shape-like object, rather than the size of one dimension in a shape-like
+    ///        object.
+    ///
+    /// XXX: THIS TYPE IS EXPERIMENTAL AND THE ENTIRE DESIGN IS SUBJECT TO CHANGE.
+    using Rank = Dimension;
 }

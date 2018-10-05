@@ -22,18 +22,41 @@ using namespace ngraph;
 using namespace std;
 
 descriptor::Tensor::Tensor(const element::Type& element_type,
-                           const Shape& shape,
+                           const PartialShape& pshape,
                            const std::string& name)
     : m_element_type(element_type)
-    , m_shape(shape)
+    , m_shape(pshape.is_complete() ? pshape.to_shape() : Shape{})
+    , m_partial_shape(pshape)
     , m_name(name)
 {
 }
 
-void descriptor::Tensor::set_tensor_type(const element::Type& element_type, const Shape& shape)
+void descriptor::Tensor::set_tensor_type(const element::Type& element_type,
+                                         const PartialShape& pshape)
 {
-    m_shape = shape;
+    if (pshape.is_complete())
+    {
+        m_shape = pshape.to_shape();
+    }
+    else
+    {
+        m_shape = Shape{};
+    }
+    m_partial_shape = pshape;
     m_element_type = element_type;
+}
+
+const Shape& descriptor::Tensor::get_shape() const
+{
+    if (m_partial_shape.is_complete())
+    {
+        return m_shape;
+    }
+    else
+    {
+        throw std::invalid_argument(
+            "get_shape was called on a descriptor::Tensor with incomplete shape");
+    }
 }
 
 void descriptor::Tensor::set_pool_offset(size_t offset)
