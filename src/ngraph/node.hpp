@@ -95,18 +95,14 @@ namespace ngraph
         void constructor_validate_and_infer_types();
 
         void validate_and_infer_elementwise(element::Type result_type);
-        void validate_and_infer_elementwise()
-        {
-            validate_and_infer_elementwise(element::undetermined);
-        }
+        void validate_and_infer_elementwise() { validate_and_infer_elementwise(element::dynamic); }
         void validate_and_infer_elementwise_arithmetic();
         void validate_and_infer_elementwise_logical();
 
         // Temporary hack while partial shape propagation is being implemented. If any input has
-        // incomplete shape or undetermined element type, sets all outputs to have a shape of
-        // undetermined rank and undetermined element type. Ops where we haven't yet implemented
-        // partial shape propagation can add this boilerplate at the top of their
-        // validate_and_infer_types():
+        // incomplete shape or dynamic element type, sets all outputs to have a shape of dynamic
+        // rank and dynamic element type. Ops where we haven't yet implemented partial shape
+        // propagation can add this boilerplate at the top of their validate_and_infer_types():
         //
         //   if (validate_punt_if_incomplete())
         //   {

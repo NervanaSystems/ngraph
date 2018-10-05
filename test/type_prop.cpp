@@ -6561,43 +6561,42 @@ TEST(type_prop, topk_invalid_k)
     }
 }
 
-TEST(type_prop, param_partial_rank_undetermined)
+TEST(type_prop, param_partial_rank_dynamic)
 {
-    auto a = make_shared<op::Parameter>(element::f32, PartialShape::undetermined());
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
 
     auto& pshape = a->get_output_partial_shape(0);
 
     ASSERT_FALSE(pshape.is_complete());
-    ASSERT_FALSE(pshape.rank().is_determined());
+    ASSERT_FALSE(pshape.rank().is_static());
 }
 
-TEST(type_prop, param_partial_rank_determined)
+TEST(type_prop, param_partial_rank_static)
 {
-    auto a =
-        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::undetermined(), 3, 4});
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 3, 4});
 
     auto& pshape = a->get_output_partial_shape(0);
 
     ASSERT_FALSE(pshape.is_complete());
     EXPECT_EQ(size_t(pshape.rank()), 4);
-    EXPECT_TRUE(pshape[0].is_determined() && size_t(pshape[0]) == 2);
-    EXPECT_FALSE(pshape[1].is_determined());
-    EXPECT_TRUE(pshape[2].is_determined() && size_t(pshape[2]) == 3);
-    EXPECT_TRUE(pshape[3].is_determined() && size_t(pshape[3]) == 4);
+    EXPECT_TRUE(pshape[0].is_static() && size_t(pshape[0]) == 2);
+    EXPECT_FALSE(pshape[1].is_static());
+    EXPECT_TRUE(pshape[2].is_static() && size_t(pshape[2]) == 3);
+    EXPECT_TRUE(pshape[3].is_static() && size_t(pshape[3]) == 4);
 }
 
-TEST(type_prop, binary_elementwise_arithmetic_both_undetermined)
+TEST(type_prop, binary_elementwise_arithmetic_both_dynamic)
 {
-    auto a = make_shared<op::Parameter>(element::f32, PartialShape::undetermined());
-    auto b = make_shared<op::Parameter>(element::f32, PartialShape::undetermined());
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto add = make_shared<op::Add>(a, b);
 
-    ASSERT_FALSE(add->get_output_partial_shape(0).rank().is_determined());
+    ASSERT_FALSE(add->get_output_partial_shape(0).rank().is_static());
 }
 
-TEST(type_prop, binary_elementwise_arithmetic_left_undetermined_right_complete)
+TEST(type_prop, binary_elementwise_arithmetic_left_dynamic_right_complete)
 {
-    auto a = make_shared<op::Parameter>(element::f32, PartialShape::undetermined());
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto b = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     auto add = make_shared<op::Add>(a, b);
 
@@ -6605,48 +6604,44 @@ TEST(type_prop, binary_elementwise_arithmetic_left_undetermined_right_complete)
     ASSERT_EQ(add->get_shape(), (Shape{1, 2, 3}));
 }
 
-TEST(type_prop, binary_elementwise_arithmetic_left_complete_right_undetermined)
+TEST(type_prop, binary_elementwise_arithmetic_left_complete_right_dynamic)
 {
     auto a = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
-    auto b = make_shared<op::Parameter>(element::f32, PartialShape::undetermined());
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto add = make_shared<op::Add>(a, b);
 
     ASSERT_TRUE(add->get_output_partial_shape(0).is_complete());
     ASSERT_EQ(add->get_shape(), (Shape{1, 2, 3}));
 }
 
-TEST(type_prop, binary_elementwise_arithmetic_left_incomplete_right_undetermined)
+TEST(type_prop, binary_elementwise_arithmetic_left_incomplete_right_dynamic)
 {
-    auto a =
-        make_shared<op::Parameter>(element::f32, PartialShape{1, Dimension::undetermined(), 3});
-    auto b = make_shared<op::Parameter>(element::f32, PartialShape::undetermined());
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{1, Dimension::dynamic(), 3});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto add = make_shared<op::Add>(a, b);
 
-    ASSERT_TRUE(add->get_output_partial_shape(0).rank().is_determined());
+    ASSERT_TRUE(add->get_output_partial_shape(0).rank().is_static());
     ASSERT_FALSE(add->get_output_partial_shape(0).is_complete());
-    ASSERT_TRUE(add->get_output_partial_shape(0).same_scheme(
-        PartialShape{1, Dimension::undetermined(), 3}));
+    ASSERT_TRUE(
+        add->get_output_partial_shape(0).same_scheme(PartialShape{1, Dimension::dynamic(), 3}));
 }
 
-TEST(type_prop, binary_elementwise_arithmetic_left_undetermined_right_incomplete)
+TEST(type_prop, binary_elementwise_arithmetic_left_dynamic_right_incomplete)
 {
-    auto a = make_shared<op::Parameter>(element::f32, PartialShape::undetermined());
-    auto b =
-        make_shared<op::Parameter>(element::f32, PartialShape{1, Dimension::undetermined(), 3});
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, Dimension::dynamic(), 3});
     auto add = make_shared<op::Add>(a, b);
 
-    ASSERT_TRUE(add->get_output_partial_shape(0).rank().is_determined());
+    ASSERT_TRUE(add->get_output_partial_shape(0).rank().is_static());
     ASSERT_FALSE(add->get_output_partial_shape(0).is_complete());
-    ASSERT_TRUE(add->get_output_partial_shape(0).same_scheme(
-        PartialShape{1, Dimension::undetermined(), 3}));
+    ASSERT_TRUE(
+        add->get_output_partial_shape(0).same_scheme(PartialShape{1, Dimension::dynamic(), 3}));
 }
 
 TEST(type_prop, binary_elementwise_arithmetic_left_incomplete_right_incomplete_result_complete)
 {
-    auto a =
-        make_shared<op::Parameter>(element::f32, PartialShape{1, Dimension::undetermined(), 3});
-    auto b =
-        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::undetermined()});
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{1, Dimension::dynamic(), 3});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic()});
     auto add = make_shared<op::Add>(a, b);
 
     ASSERT_TRUE(add->get_output_partial_shape(0).is_complete());
@@ -6656,22 +6651,20 @@ TEST(type_prop, binary_elementwise_arithmetic_left_incomplete_right_incomplete_r
 TEST(type_prop, binary_elementwise_arithmetic_left_incomplete_right_incomplete_result_incomplete)
 {
     auto a = make_shared<op::Parameter>(
-        element::f32, PartialShape{1, Dimension::undetermined(), Dimension::undetermined()});
-    auto b =
-        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::undetermined()});
+        element::f32, PartialShape{1, Dimension::dynamic(), Dimension::dynamic()});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic()});
     auto add = make_shared<op::Add>(a, b);
 
-    ASSERT_TRUE(add->get_output_partial_shape(0).rank().is_determined());
+    ASSERT_TRUE(add->get_output_partial_shape(0).rank().is_static());
     ASSERT_FALSE(add->get_output_partial_shape(0).is_complete());
-    ASSERT_TRUE(add->get_output_partial_shape(0).same_scheme(
-        PartialShape{1, 2, Dimension::undetermined()}));
+    ASSERT_TRUE(
+        add->get_output_partial_shape(0).same_scheme(PartialShape{1, 2, Dimension::dynamic()}));
 }
 
 TEST(type_prop, binary_elementwise_arithmetic_left_complete_right_incomplete)
 {
     auto a = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, 3});
-    auto b =
-        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::undetermined()});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic()});
     auto add = make_shared<op::Add>(a, b);
 
     ASSERT_TRUE(add->get_output_partial_shape(0).is_complete());
@@ -6680,8 +6673,7 @@ TEST(type_prop, binary_elementwise_arithmetic_left_complete_right_incomplete)
 
 TEST(type_prop, binary_elementwise_arithmetic_left_incomplete_right_complete)
 {
-    auto a =
-        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::undetermined()});
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic()});
     auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, 3});
     auto add = make_shared<op::Add>(a, b);
 
@@ -6691,8 +6683,7 @@ TEST(type_prop, binary_elementwise_arithmetic_left_incomplete_right_complete)
 
 TEST(type_prop, binary_elementwise_arithmetic_left_incomplete_inconsistent)
 {
-    auto a =
-        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::undetermined()});
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic()});
     auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 3, 3});
 
     try
@@ -6713,8 +6704,7 @@ TEST(type_prop, binary_elementwise_arithmetic_left_incomplete_inconsistent)
 TEST(type_prop, binary_elementwise_arithmetic_right_incomplete_inconsistent)
 {
     auto a = make_shared<op::Parameter>(element::f32, PartialShape{1, 3, 3});
-    auto b =
-        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::undetermined()});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic()});
 
     try
     {
@@ -6733,10 +6723,8 @@ TEST(type_prop, binary_elementwise_arithmetic_right_incomplete_inconsistent)
 
 TEST(type_prop, binary_elementwise_arithmetic_both_incomplete_inconsistent)
 {
-    auto a =
-        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::undetermined(), 3, 3});
-    auto b =
-        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::undetermined()});
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 3, 3});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic()});
 
     try
     {
@@ -6755,8 +6743,7 @@ TEST(type_prop, binary_elementwise_arithmetic_both_incomplete_inconsistent)
 
 TEST(type_prop, binary_elementwise_arithmetic_left_incomplete_different_rank)
 {
-    auto a =
-        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::undetermined()});
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic()});
     auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, 3, 4});
 
     try
@@ -6777,8 +6764,7 @@ TEST(type_prop, binary_elementwise_arithmetic_left_incomplete_different_rank)
 TEST(type_prop, binary_elementwise_arithmetic_right_incomplete_different_rank)
 {
     auto a = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, 3, 4});
-    auto b =
-        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::undetermined()});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic()});
 
     try
     {
@@ -6797,10 +6783,8 @@ TEST(type_prop, binary_elementwise_arithmetic_right_incomplete_different_rank)
 
 TEST(type_prop, binary_elementwise_arithmetic_both_incomplete_different_rank)
 {
-    auto a =
-        make_shared<op::Parameter>(element::f32, PartialShape{1, Dimension::undetermined(), 3, 4});
-    auto b =
-        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::undetermined()});
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{1, Dimension::dynamic(), 3, 4});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic()});
 
     try
     {
@@ -6817,28 +6801,28 @@ TEST(type_prop, binary_elementwise_arithmetic_both_incomplete_different_rank)
     }
 }
 
-TEST(type_prop, binary_elementwise_arithmetic_both_et_undetermined)
+TEST(type_prop, binary_elementwise_arithmetic_both_et_dynamic)
 {
-    auto a = make_shared<op::Parameter>(element::undetermined, Shape{1, 2, 3, 4});
-    auto b = make_shared<op::Parameter>(element::undetermined, Shape{1, 2, 3, 4});
+    auto a = make_shared<op::Parameter>(element::dynamic, Shape{1, 2, 3, 4});
+    auto b = make_shared<op::Parameter>(element::dynamic, Shape{1, 2, 3, 4});
     auto add = make_shared<op::Add>(a, b);
 
-    ASSERT_FALSE(add->get_output_element_type(0).is_determined());
+    ASSERT_FALSE(add->get_output_element_type(0).is_static());
 }
 
-TEST(type_prop, binary_elementwise_arithmetic_left_et_undetermined)
+TEST(type_prop, binary_elementwise_arithmetic_left_et_dynamic)
 {
-    auto a = make_shared<op::Parameter>(element::undetermined, Shape{1, 2, 3, 4});
+    auto a = make_shared<op::Parameter>(element::dynamic, Shape{1, 2, 3, 4});
     auto b = make_shared<op::Parameter>(element::u32, Shape{1, 2, 3, 4});
     auto add = make_shared<op::Add>(a, b);
 
     ASSERT_EQ(add->get_output_element_type(0), element::u32);
 }
 
-TEST(type_prop, binary_elementwise_arithmetic_right_et_undetermined)
+TEST(type_prop, binary_elementwise_arithmetic_right_et_dynamic)
 {
     auto a = make_shared<op::Parameter>(element::i64, Shape{1, 2, 3, 4});
-    auto b = make_shared<op::Parameter>(element::undetermined, Shape{1, 2, 3, 4});
+    auto b = make_shared<op::Parameter>(element::dynamic, Shape{1, 2, 3, 4});
     auto add = make_shared<op::Add>(a, b);
 
     ASSERT_EQ(add->get_output_element_type(0), element::i64);
@@ -6847,17 +6831,16 @@ TEST(type_prop, binary_elementwise_arithmetic_right_et_undetermined)
 //
 // This is testing a temporary hack for ops that do not yet support partial-shape validation.
 // The graph we construct here is bogus, but because there is some partiality in the input shapes,
-// it should still pass validation but set the output shape and element types to be undetermined.
+// it should still pass validation but set the output shape and element types to be dynamic.
 //
 TEST(type_prop, validate_punt_if_incomplete)
 {
     auto a = make_shared<op::Parameter>(element::i64, Shape{1, 2, 3, 4});
-    auto b =
-        make_shared<op::Parameter>(element::u32, PartialShape{1, Dimension::undetermined(), 3});
+    auto b = make_shared<op::Parameter>(element::u32, PartialShape{1, Dimension::dynamic(), 3});
     auto c = make_shared<op::Parameter>(element::i32, Shape{1, 8, 3});
     auto concat = make_shared<op::Concat>(NodeVector{a, b, c}, /*concatenation axis=*/1234);
 
     ASSERT_EQ(concat->get_output_size(), 1);
-    ASSERT_FALSE(concat->get_output_partial_shape(0).rank().is_determined());
-    ASSERT_FALSE(concat->get_output_element_type(0).is_determined());
+    ASSERT_FALSE(concat->get_output_partial_shape(0).rank().is_static());
+    ASSERT_FALSE(concat->get_output_element_type(0).is_static());
 }

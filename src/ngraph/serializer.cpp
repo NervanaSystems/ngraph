@@ -144,7 +144,7 @@ static string
 
 static json write_dimension(Dimension d)
 {
-    if (d.is_determined())
+    if (d.is_static())
     {
         return size_t(d);
     }
@@ -156,7 +156,7 @@ static json write_dimension(Dimension d)
 
 static json write_partial_shape(const PartialShape& s)
 {
-    if (!s.rank().is_determined())
+    if (s.rank().is_dynamic())
     {
         return nullptr;
     }
@@ -175,7 +175,7 @@ static PartialShape read_partial_shape(const json& j)
 {
     if (j.is_null())
     {
-        return PartialShape::undetermined();
+        return PartialShape::dynamic();
     }
     else
     {
@@ -184,7 +184,7 @@ static PartialShape read_partial_shape(const json& j)
         {
             if (j[i].is_null())
             {
-                dims[i] = Dimension::undetermined();
+                dims[i] = Dimension::dynamic();
             }
             else
             {

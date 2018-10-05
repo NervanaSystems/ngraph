@@ -24,25 +24,22 @@ using namespace ngraph;
 TEST(partial_shape, ps_construction_empty)
 {
     auto ps = PartialShape{};
-    ASSERT_TRUE(ps.rank_is_determined());
-    ASSERT_TRUE(ps.rank().is_determined());
+    ASSERT_TRUE(ps.rank().is_static());
     ASSERT_TRUE(ps.is_complete());
     ASSERT_EQ(size_t(ps.rank()), 0);
 }
 
-TEST(partial_shape, ps_construction_undetermined)
+TEST(partial_shape, ps_construction_dynamic)
 {
-    auto ps = PartialShape::undetermined();
-    ASSERT_FALSE(ps.rank_is_determined());
-    ASSERT_FALSE(ps.rank().is_determined());
+    auto ps = PartialShape::dynamic();
+    ASSERT_FALSE(ps.rank().is_static());
     ASSERT_FALSE(ps.is_complete());
 }
 
 TEST(partial_shape, ps_construction_incomplete)
 {
-    auto ps = PartialShape{2, Dimension::undetermined(), 3};
-    ASSERT_TRUE(ps.rank_is_determined());
-    ASSERT_TRUE(ps.rank().is_determined());
+    auto ps = PartialShape{2, Dimension::dynamic(), 3};
+    ASSERT_TRUE(ps.rank().is_static());
     ASSERT_FALSE(ps.is_complete());
     ASSERT_EQ(size_t(ps.rank()), 3);
 }
@@ -50,84 +47,83 @@ TEST(partial_shape, ps_construction_incomplete)
 TEST(partial_shape, ps_construction_complete)
 {
     auto ps = PartialShape{2, 5, 3, 6};
-    ASSERT_TRUE(ps.rank_is_determined());
-    ASSERT_TRUE(ps.rank().is_determined());
+    ASSERT_TRUE(ps.rank().is_static());
     ASSERT_TRUE(ps.is_complete());
     ASSERT_EQ(size_t(ps.rank()), 4);
 }
 
-TEST(partial_shape, dim_construction_determined)
+TEST(partial_shape, dim_construction_static)
 {
     Dimension dim{3};
     ASSERT_EQ(size_t(dim), 3);
-    ASSERT_TRUE(dim.is_determined());
+    ASSERT_TRUE(dim.is_static());
 }
 
-TEST(partial_shape, dim_construction_undetermined)
+TEST(partial_shape, dim_construction_dynamic)
 {
-    Dimension dim = Dimension::undetermined();
-    ASSERT_FALSE(dim.is_determined());
+    Dimension dim = Dimension::dynamic();
+    ASSERT_FALSE(dim.is_static());
 }
 
 TEST(partial_shape, dim_construction_size_t_max)
 {
-    EXPECT_ANY_THROW({ Dimension d{Dimension::s_undetermined_val}; });
+    EXPECT_ANY_THROW({ Dimension d{Dimension::s_dynamic_val}; });
 }
 
-TEST(partial_shape, dim_conversion_determined)
+TEST(partial_shape, dim_conversion_static)
 {
     Dimension d{42};
     size_t s{d};
     ASSERT_EQ(s, 42);
 }
 
-TEST(partial_shape, dim_conversion_undetermined)
+TEST(partial_shape, dim_conversion_dynamic)
 {
     EXPECT_ANY_THROW({
-        size_t s{Dimension::undetermined()};
+        size_t s{Dimension::dynamic()};
 
         s = 0; // Silence compiler warning about unused s
     });
 }
 
-TEST(partial_shape, rank_construction_determined)
+TEST(partial_shape, rank_construction_static)
 {
     Rank r{4};
     ASSERT_EQ(size_t(r), 4);
-    ASSERT_TRUE(r.is_determined());
+    ASSERT_TRUE(r.is_static());
 }
 
-TEST(partial_shape, rank_construction_undetermined)
+TEST(partial_shape, rank_construction_dynamic)
 {
-    Rank r = Rank::undetermined();
-    ASSERT_FALSE(r.is_determined());
+    Rank r = Rank::dynamic();
+    ASSERT_FALSE(r.is_static());
 }
 
-TEST(partial_shape, dim_compatible_left_undetermined)
+TEST(partial_shape, dim_compatible_left_dynamic)
 {
-    Dimension d1{Dimension::undetermined()};
+    Dimension d1{Dimension::dynamic()};
     Dimension d2{3};
 
     ASSERT_TRUE(d1.compatible(d2));
 }
 
-TEST(partial_shape, dim_compatible_right_undetermined)
+TEST(partial_shape, dim_compatible_right_dynamic)
 {
     Dimension d1{3};
-    Dimension d2{Dimension::undetermined()};
+    Dimension d2{Dimension::dynamic()};
 
     ASSERT_TRUE(d1.compatible(d2));
 }
 
-TEST(partial_shape, dim_compatible_both_undetermined)
+TEST(partial_shape, dim_compatible_both_dynamic)
 {
-    Dimension d1{Dimension::undetermined()};
-    Dimension d2{Dimension::undetermined()};
+    Dimension d1{Dimension::dynamic()};
+    Dimension d2{Dimension::dynamic()};
 
     ASSERT_TRUE(d1.compatible(d2));
 }
 
-TEST(partial_shape, dim_compatible_both_determined)
+TEST(partial_shape, dim_compatible_both_static)
 {
     Dimension d1{3};
     Dimension d2{8};
@@ -137,25 +133,25 @@ TEST(partial_shape, dim_compatible_both_determined)
     ASSERT_TRUE(d1.compatible(d3));
 }
 
-TEST(partial_shape, shapes_compatible_both_rank_undetermined)
+TEST(partial_shape, shapes_compatible_both_rank_dynamic)
 {
-    PartialShape ps1{PartialShape::undetermined()};
-    PartialShape ps2{PartialShape::undetermined()};
+    PartialShape ps1{PartialShape::dynamic()};
+    PartialShape ps2{PartialShape::dynamic()};
 
     ASSERT_TRUE(ps1.compatible(ps2));
 }
 
-TEST(partial_shape, shapes_compatible_left_rank_undetermined)
+TEST(partial_shape, shapes_compatible_left_rank_dynamic)
 {
     PartialShape ps1{3};
-    PartialShape ps2{PartialShape::undetermined()};
+    PartialShape ps2{PartialShape::dynamic()};
 
     ASSERT_TRUE(ps1.compatible(ps2));
 }
 
-TEST(partial_shape, shapes_compatible_right_rank_undetermined)
+TEST(partial_shape, shapes_compatible_right_rank_dynamic)
 {
-    PartialShape ps1{PartialShape::undetermined()};
+    PartialShape ps1{PartialShape::dynamic()};
     PartialShape ps2{4};
 
     ASSERT_TRUE(ps1.compatible(ps2));
@@ -163,16 +159,16 @@ TEST(partial_shape, shapes_compatible_right_rank_undetermined)
 
 TEST(partial_shape, shapes_compatible_both_partial_all_known_equal)
 {
-    PartialShape ps1{2, Dimension::undetermined(), 3, Dimension::undetermined(), 5};
-    PartialShape ps2{2, Dimension::undetermined(), Dimension::undetermined(), 4, 5};
+    PartialShape ps1{2, Dimension::dynamic(), 3, Dimension::dynamic(), 5};
+    PartialShape ps2{2, Dimension::dynamic(), Dimension::dynamic(), 4, 5};
 
     ASSERT_TRUE(ps1.compatible(ps2));
 }
 
 TEST(partial_shape, shapes_compatible_both_partial_some_known_unequal)
 {
-    PartialShape ps1{2, Dimension::undetermined(), 3, Dimension::undetermined(), 5};
-    PartialShape ps2{1, Dimension::undetermined(), Dimension::undetermined(), 4, 5};
+    PartialShape ps1{2, Dimension::dynamic(), 3, Dimension::dynamic(), 5};
+    PartialShape ps2{1, Dimension::dynamic(), Dimension::dynamic(), 4, 5};
 
     ASSERT_FALSE(ps1.compatible(ps2));
 }
@@ -206,7 +202,7 @@ TEST(partial_shape, from_shape)
     Shape s{2, 4, 6, 8};
     PartialShape ps1{s};
 
-    ASSERT_TRUE(ps1.rank_is_determined());
+    ASSERT_TRUE(ps1.rank().is_static());
     ASSERT_EQ(size_t(ps1.rank()), s.size());
     ASSERT_TRUE(ps1.is_complete());
     ASSERT_EQ(size_t(ps1[0]), 2);
@@ -223,15 +219,15 @@ TEST(partial_shape, to_shape_complete)
     ASSERT_EQ(s, (Shape{2, 4, 6, 8}));
 }
 
-TEST(partial_shape, to_shape_dims_undetermined)
+TEST(partial_shape, to_shape_dims_dynamic)
 {
-    PartialShape ps{2, 4, Dimension::undetermined(), 8};
+    PartialShape ps{2, 4, Dimension::dynamic(), 8};
     ASSERT_THROW({ ps.to_shape(); }, std::invalid_argument);
 }
 
-TEST(partial_shape, to_shape_rank_undetermined)
+TEST(partial_shape, to_shape_rank_dynamic)
 {
-    PartialShape ps{PartialShape::undetermined()};
+    PartialShape ps{PartialShape::dynamic()};
     ASSERT_THROW({ ps.to_shape(); }, std::invalid_argument);
 }
 
@@ -255,72 +251,70 @@ TEST(partial_shape, tensor_descriptor_from_complete_partial_shape)
 
 TEST(partial_shape, tensor_descriptor_from_incomplete_partial_shape)
 {
-    descriptor::Tensor t{element::i32, PartialShape{1, Dimension::undetermined(), 3}, "Couch"};
+    descriptor::Tensor t{element::i32, PartialShape{1, Dimension::dynamic(), 3}, "Couch"};
 
     ASSERT_EQ(size_t(t.get_partial_shape().rank()), 3);
     ASSERT_THROW({ t.get_shape(); }, std::invalid_argument);
-    ASSERT_TRUE(t.get_partial_shape().same_scheme(PartialShape{1, Dimension::undetermined(), 3}));
+    ASSERT_TRUE(t.get_partial_shape().same_scheme(PartialShape{1, Dimension::dynamic(), 3}));
 }
 
 TEST(partial_shape, tensor_descriptor_from_rankless_partial_shape)
 {
-    descriptor::Tensor t{element::i32, PartialShape::undetermined(), "Davis"};
+    descriptor::Tensor t{element::i32, PartialShape::dynamic(), "Davis"};
 
-    ASSERT_FALSE(t.get_partial_shape().rank().is_determined());
+    ASSERT_FALSE(t.get_partial_shape().rank().is_static());
     ASSERT_THROW({ t.get_shape(); }, std::invalid_argument);
-    ASSERT_TRUE(t.get_partial_shape().same_scheme(PartialShape::undetermined()));
+    ASSERT_TRUE(t.get_partial_shape().same_scheme(PartialShape::dynamic()));
 }
 
-TEST(partial_shape, dim_same_scheme_both_undetermined)
+TEST(partial_shape, dim_same_scheme_both_dynamic)
 {
-    ASSERT_TRUE(Dimension::undetermined().same_scheme(Dimension::undetermined()));
+    ASSERT_TRUE(Dimension::dynamic().same_scheme(Dimension::dynamic()));
 }
 
-TEST(partial_shape, dim_same_scheme_left_undetermined)
+TEST(partial_shape, dim_same_scheme_left_dynamic)
 {
-    ASSERT_FALSE(Dimension::undetermined().same_scheme(6));
+    ASSERT_FALSE(Dimension::dynamic().same_scheme(6));
 }
 
-TEST(partial_shape, dim_same_scheme_right_undetermined)
+TEST(partial_shape, dim_same_scheme_right_dynamic)
 {
-    ASSERT_FALSE(Dimension(6).same_scheme(Dimension::undetermined()));
+    ASSERT_FALSE(Dimension(6).same_scheme(Dimension::dynamic()));
 }
 
-TEST(partial_shape, dim_same_scheme_both_determined_same)
+TEST(partial_shape, dim_same_scheme_both_static_same)
 {
     ASSERT_TRUE(Dimension(6).same_scheme(Dimension(6)));
 }
 
-TEST(partial_shape, dim_same_scheme_both_determined_different)
+TEST(partial_shape, dim_same_scheme_both_static_different)
 {
     ASSERT_FALSE(Dimension(6).same_scheme(Dimension(7)));
 }
 
-TEST(partial_shape, partial_shape_same_scheme_both_undetermined)
+TEST(partial_shape, partial_shape_same_scheme_both_dynamic)
 {
-    ASSERT_TRUE(PartialShape::undetermined().same_scheme(PartialShape::undetermined()));
+    ASSERT_TRUE(PartialShape::dynamic().same_scheme(PartialShape::dynamic()));
 }
 
-TEST(partial_shape, partial_shape_same_scheme_left_undetermined_right_incomplete)
+TEST(partial_shape, partial_shape_same_scheme_left_dynamic_right_incomplete)
 {
-    ASSERT_FALSE(
-        PartialShape::undetermined().same_scheme(PartialShape{1, Dimension::undetermined(), 3}));
+    ASSERT_FALSE(PartialShape::dynamic().same_scheme(PartialShape{1, Dimension::dynamic(), 3}));
 }
 
-TEST(partial_shape, partial_shape_same_scheme_left_undetermined_right_complete)
+TEST(partial_shape, partial_shape_same_scheme_left_dynamic_right_complete)
 {
-    ASSERT_FALSE(PartialShape::undetermined().same_scheme(PartialShape{1, 2, 3}));
+    ASSERT_FALSE(PartialShape::dynamic().same_scheme(PartialShape{1, 2, 3}));
 }
 
-TEST(partial_shape, partial_shape_same_scheme_right_undetermined_left_incomplete)
+TEST(partial_shape, partial_shape_same_scheme_right_dynamic_left_incomplete)
 {
-    ASSERT_FALSE(
-        (PartialShape{1, Dimension::undetermined(), 3}.same_scheme(PartialShape::undetermined())));
+    ASSERT_FALSE((PartialShape{1, Dimension::dynamic(), 3}.same_scheme(PartialShape::dynamic())));
 }
 
-TEST(partial_shape, partial_shape_same_scheme_right_undetermined_left_complete)
+TEST(partial_shape, partial_shape_same_scheme_right_dynamic_left_complete)
 {
-    ASSERT_FALSE((PartialShape{1, 2, 3}.same_scheme(PartialShape::undetermined())));
+    ASSERT_FALSE((PartialShape{1, 2, 3}.same_scheme(PartialShape::dynamic())));
 }
 
 TEST(partial_shape, partial_shape_same_scheme_both_complete_different_rank)
@@ -330,8 +324,8 @@ TEST(partial_shape, partial_shape_same_scheme_both_complete_different_rank)
 
 TEST(partial_shape, partial_shape_same_scheme_both_incomplete_different_rank)
 {
-    ASSERT_FALSE((PartialShape{1, Dimension::undetermined(), 3}.same_scheme(
-        PartialShape{1, Dimension::undetermined(), 3, 4})));
+    ASSERT_FALSE((PartialShape{1, Dimension::dynamic(), 3}.same_scheme(
+        PartialShape{1, Dimension::dynamic(), 3, 4})));
 }
 
 TEST(partial_shape, partial_shape_same_scheme_both_complete_same_rank_different_dims)
@@ -341,20 +335,20 @@ TEST(partial_shape, partial_shape_same_scheme_both_complete_same_rank_different_
 
 TEST(partial_shape, partial_shape_same_scheme_both_incomplete_same_rank_different_dims)
 {
-    ASSERT_FALSE((PartialShape{1, 2, Dimension::undetermined()}.same_scheme(
-        PartialShape{1, 3, Dimension::undetermined()})));
+    ASSERT_FALSE((PartialShape{1, 2, Dimension::dynamic()}.same_scheme(
+        PartialShape{1, 3, Dimension::dynamic()})));
 }
 
 TEST(partial_shape, partial_shape_same_scheme_both_incomplete_same_rank_compatible_not_same)
 {
-    ASSERT_FALSE((PartialShape{1, 2, Dimension::undetermined()}.same_scheme(
-        PartialShape{1, Dimension::undetermined(), 3})));
+    ASSERT_FALSE((PartialShape{1, 2, Dimension::dynamic()}.same_scheme(
+        PartialShape{1, Dimension::dynamic(), 3})));
 }
 
 TEST(partial_shape, partial_shape_same_scheme_both_incomplete_same_rank_compatible_same)
 {
-    ASSERT_TRUE((PartialShape{1, 2, Dimension::undetermined()}.same_scheme(
-        PartialShape{1, 2, Dimension::undetermined()})));
+    ASSERT_TRUE((PartialShape{1, 2, Dimension::dynamic()}.same_scheme(
+        PartialShape{1, 2, Dimension::dynamic()})));
 }
 
 TEST(partial_shape, partial_shape_same_scheme_both_complete_same_rank_same_dims)
@@ -367,104 +361,104 @@ TEST(partial_shape, partial_shape_same_scheme_scalar)
     ASSERT_TRUE((PartialShape{}.same_scheme(PartialShape{})));
 }
 
-TEST(partial_shape, dim_merge_both_undetermined)
+TEST(partial_shape, dim_merge_both_dynamic)
 {
     Dimension d;
-    ASSERT_TRUE(Dimension::merge(d, Dimension::undetermined(), Dimension::undetermined()));
-    ASSERT_FALSE(d.is_determined());
+    ASSERT_TRUE(Dimension::merge(d, Dimension::dynamic(), Dimension::dynamic()));
+    ASSERT_FALSE(d.is_static());
 }
 
-TEST(partial_shape, dim_merge_left_undetermined)
+TEST(partial_shape, dim_merge_left_dynamic)
 {
     Dimension d;
-    ASSERT_TRUE(Dimension::merge(d, Dimension::undetermined(), 3));
-    ASSERT_TRUE(d.is_determined());
+    ASSERT_TRUE(Dimension::merge(d, Dimension::dynamic(), 3));
+    ASSERT_TRUE(d.is_static());
     ASSERT_EQ(size_t(d), 3);
 }
 
-TEST(partial_shape, dim_merge_right_undetermined)
+TEST(partial_shape, dim_merge_right_dynamic)
 {
     Dimension d;
-    ASSERT_TRUE(Dimension::merge(d, 3, Dimension::undetermined()));
-    ASSERT_TRUE(d.is_determined());
+    ASSERT_TRUE(Dimension::merge(d, 3, Dimension::dynamic()));
+    ASSERT_TRUE(d.is_static());
     ASSERT_EQ(size_t(d), 3);
 }
 
-TEST(partial_shape, dim_merge_both_determined_equal)
+TEST(partial_shape, dim_merge_both_static_equal)
 {
     Dimension d;
     ASSERT_TRUE(Dimension::merge(d, 3, 3));
-    ASSERT_TRUE(d.is_determined());
+    ASSERT_TRUE(d.is_static());
     ASSERT_EQ(size_t(d), 3);
 }
 
-TEST(partial_shape, dim_merge_both_determined_unequal)
+TEST(partial_shape, dim_merge_both_static_unequal)
 {
     Dimension d = 163;
     ASSERT_FALSE(Dimension::merge(d, 3, 4));
-    ASSERT_TRUE(d.is_determined());
+    ASSERT_TRUE(d.is_static());
     ASSERT_EQ(size_t(d), 163);
 }
 
-TEST(partial_shape, partial_shape_merge_both_undetermined)
+TEST(partial_shape, partial_shape_merge_both_dynamic)
 {
-    PartialShape s1{PartialShape::undetermined()};
-    const PartialShape s2{PartialShape::undetermined()};
+    PartialShape s1{PartialShape::dynamic()};
+    const PartialShape s2{PartialShape::dynamic()};
     ASSERT_TRUE(PartialShape::merge_into(s1, s2));
-    ASSERT_FALSE(s1.rank().is_determined());
+    ASSERT_FALSE(s1.rank().is_static());
 }
 
-TEST(partial_shape, partial_shape_merge_left_undetermined_right_incomplete)
+TEST(partial_shape, partial_shape_merge_left_dynamic_right_incomplete)
 {
-    PartialShape s1{PartialShape::undetermined()};
-    const PartialShape s2{1, 2, Dimension::undetermined()};
+    PartialShape s1{PartialShape::dynamic()};
+    const PartialShape s2{1, 2, Dimension::dynamic()};
     ASSERT_TRUE(PartialShape::merge_into(s1, s2));
-    ASSERT_TRUE(s1.same_scheme(PartialShape{1, 2, Dimension::undetermined()}));
+    ASSERT_TRUE(s1.same_scheme(PartialShape{1, 2, Dimension::dynamic()}));
 }
 
-TEST(partial_shape, partial_shape_merge_left_undetermined_right_complete)
+TEST(partial_shape, partial_shape_merge_left_dynamic_right_complete)
 {
-    PartialShape s1{PartialShape::undetermined()};
+    PartialShape s1{PartialShape::dynamic()};
     const PartialShape s2{1, 2, 3};
     ASSERT_TRUE(PartialShape::merge_into(s1, s2));
     ASSERT_TRUE(s1.same_scheme(PartialShape{1, 2, 3}));
 }
 
-TEST(partial_shape, partial_shape_merge_left_incomplete_right_undetermined)
+TEST(partial_shape, partial_shape_merge_left_incomplete_right_dynamic)
 {
-    PartialShape s1{1, 2, Dimension::undetermined()};
-    const PartialShape s2{PartialShape::undetermined()};
+    PartialShape s1{1, 2, Dimension::dynamic()};
+    const PartialShape s2{PartialShape::dynamic()};
     ASSERT_TRUE(PartialShape::merge_into(s1, s2));
-    ASSERT_TRUE(s1.same_scheme(PartialShape{1, 2, Dimension::undetermined()}));
+    ASSERT_TRUE(s1.same_scheme(PartialShape{1, 2, Dimension::dynamic()}));
 }
 
-TEST(partial_shape, partial_shape_merge_left_complete_right_undetermined)
+TEST(partial_shape, partial_shape_merge_left_complete_right_dynamic)
 {
     PartialShape s1{1, 2, 3};
-    const PartialShape s2{PartialShape::undetermined()};
+    const PartialShape s2{PartialShape::dynamic()};
     ASSERT_TRUE(PartialShape::merge_into(s1, s2));
     ASSERT_TRUE(s1.same_scheme(PartialShape{1, 2, 3}));
 }
 
 TEST(partial_shape, partial_shape_merge_both_incomplete_consistent)
 {
-    PartialShape s1{1, Dimension::undetermined(), 3, Dimension::undetermined()};
-    const PartialShape s2{1, 2, Dimension::undetermined(), Dimension::undetermined()};
+    PartialShape s1{1, Dimension::dynamic(), 3, Dimension::dynamic()};
+    const PartialShape s2{1, 2, Dimension::dynamic(), Dimension::dynamic()};
     ASSERT_TRUE(PartialShape::merge_into(s1, s2));
-    ASSERT_TRUE(s1.same_scheme(PartialShape{1, 2, 3, Dimension::undetermined()}));
+    ASSERT_TRUE(s1.same_scheme(PartialShape{1, 2, 3, Dimension::dynamic()}));
 }
 
 TEST(partial_shape, partial_shape_merge_both_incomplete_same_rank_inconsistent)
 {
-    PartialShape s1{1, Dimension::undetermined(), 3, Dimension::undetermined()};
-    const PartialShape s2{2, 2, Dimension::undetermined(), Dimension::undetermined()};
+    PartialShape s1{1, Dimension::dynamic(), 3, Dimension::dynamic()};
+    const PartialShape s2{2, 2, Dimension::dynamic(), Dimension::dynamic()};
     ASSERT_FALSE(PartialShape::merge_into(s1, s2));
 }
 
 TEST(partial_shape, partial_shape_merge_both_incomplete_different_rank)
 {
-    PartialShape s1{1, Dimension::undetermined(), 3, Dimension::undetermined()};
-    const PartialShape s2{1, 2, Dimension::undetermined()};
+    PartialShape s1{1, Dimension::dynamic(), 3, Dimension::dynamic()};
+    const PartialShape s2{1, 2, Dimension::dynamic()};
     ASSERT_FALSE(PartialShape::merge_into(s1, s2));
 }
 

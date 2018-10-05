@@ -30,17 +30,16 @@ PartialShape::PartialShape(const Shape& shape)
 
 bool ngraph::PartialShape::is_complete() const
 {
-    return m_rank_is_determined &&
-           std::all_of(m_dimensions.begin(), m_dimensions.end(), [](const Dimension& d) {
-               return d.is_determined();
-           });
+    return m_rank_is_static && std::all_of(m_dimensions.begin(),
+                                           m_dimensions.end(),
+                                           [](const Dimension& d) { return d.is_static(); });
 }
 
 PartialShape ngraph::operator+(const PartialShape& s1, const PartialShape& s2)
 {
-    if (!s1.rank_is_determined() || !s2.rank_is_determined())
+    if (s1.rank().is_dynamic() || s2.rank().is_dynamic())
     {
-        return PartialShape::undetermined();
+        return PartialShape::dynamic();
     }
 
     if (!s1.rank().compatible(s2.rank()))
@@ -49,7 +48,7 @@ PartialShape ngraph::operator+(const PartialShape& s1, const PartialShape& s2)
     }
 
     PartialShape result{};
-    result.m_rank_is_determined = true;
+    result.m_rank_is_static = true;
     for (size_t i = 0; i < s1.m_dimensions.size(); i++)
     {
         result.m_dimensions.push_back(s1.m_dimensions[i] + s2.m_dimensions[i]);
@@ -59,7 +58,7 @@ PartialShape ngraph::operator+(const PartialShape& s1, const PartialShape& s2)
 
 std::ostream& ngraph::operator<<(std::ostream& str, const PartialShape& shape)
 {
-    if (shape.m_rank_is_determined)
+    if (shape.m_rank_is_static)
     {
         str << "{";
         bool first = true;
@@ -83,7 +82,7 @@ std::ostream& ngraph::operator<<(std::ostream& str, const PartialShape& shape)
 bool PartialShape::compatible(const PartialShape& s) const
 {
     // If we don't know *this's rank, or we don't know s's rank, they are compatible.
-    if (!rank_is_determined() || !s.rank_is_determined())
+    if (!m_rank_is_static || s.rank().is_dynamic())
     {
         return true;
     }
@@ -111,11 +110,11 @@ bool PartialShape::compatible(const PartialShape& s) const
 
 bool PartialShape::same_scheme(const PartialShape& s) const
 {
-    if (!rank().is_determined() && !s.rank().is_determined())
+    if (rank().is_dynamic() && s.rank().is_dynamic())
     {
         return true;
     }
-    else if (rank().is_determined() && s.rank().is_determined())
+    else if (rank().is_static() && s.rank().is_static())
     {
         if (size_t(rank()) != size_t(s.rank()))
         {
@@ -149,24 +148,24 @@ Shape PartialShape::to_shape() const
 
 bool PartialShape::merge_into(PartialShape& dst, const PartialShape& src)
 {
-    if (!dst.rank().is_determined())
+    if (dst.rank().is_dynamic())
     {
         dst = src;
         return true;
     }
-    else if (!src.rank().is_determined())
+    else if (src.rank().is_dynamic())
     {
         // No change to dst.
         return true;
     }
     else if (size_t(dst.rank()) != size_t(src.rank()))
     {
-        // Mismatching and determined ranks, cannot merge.
+        // Mismatching static ranks, cannot merge.
         return false;
     }
     else
     {
-        // Ranks are both determined and match.
+        // Ranks are both static, and they match.
         bool success = true;
         for (size_t i = 0; i < size_t(dst.rank()); i++)
         {

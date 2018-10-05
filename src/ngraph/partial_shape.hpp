@@ -38,25 +38,25 @@ namespace ngraph
     class PartialShape
     {
     public:
-        /// \brief Constructs a shape with determined rank from an initializer list of Dimension.
+        /// \brief Constructs a shape with static rank from an initializer list of Dimension.
         /// \param init The Dimension values for the constructed shape.
         ///
         /// Examples:
         ///
         /// \code{.cpp}
-        /// PartialShape s{2,3,4};                          // rank=3, all dimensions determined
-        /// PartialShape s{};                               // rank=0
-        /// PartialShape s{2,Dimension::undetermined(),3};  // rank=2, dimension 1 undetermined
+        /// PartialShape s{2,3,4};                     // rank=3, all dimensions static
+        /// PartialShape s{};                          // rank=0
+        /// PartialShape s{2,Dimension::dynamic(),3};  // rank=2, dimension 1 dynamic
         /// \endcode
         PartialShape(std::initializer_list<Dimension> init)
             : PartialShape(true, init)
         {
         }
 
-        /// \brief Constructs a PartialShape with determined rank from a vector of Dimension.
+        /// \brief Constructs a PartialShape with static rank from a vector of Dimension.
         /// \param dimensions The Dimension values for the constructed shape.
         PartialShape(const std::vector<Dimension>& dimensions)
-            : m_rank_is_determined(true)
+            : m_rank_is_static(true)
             , m_dimensions(dimensions)
         {
         }
@@ -71,35 +71,28 @@ namespace ngraph
         /// \param shape The Shape to convert into PartialShape.
         PartialShape(const Shape& shape);
 
-        /// \brief Check if this shape has determined rank.
-        /// \return `true` if this shape's rank is determined, else `false`.
-        bool rank_is_determined() const { return m_rank_is_determined; }
         /// \brief Check if this shape is complete.
         /// \return `true` if this shape is complete, else `false`.
         ///
         /// A shape is considered complete if it has known rank, and all dimensions of the shape
-        /// are determined.
+        /// are static.
         bool is_complete() const;
 
         /// \brief Get the rank of the shape.
-        /// \return The rank of the shape. This will be Rank::undetermined() if the rank is
-        ///         undetermined.
-        Rank rank() const
-        {
-            return m_rank_is_determined ? Rank(m_dimensions.size()) : Rank::undetermined();
-        }
-
-        /// \brief Construct a PartialShape with undetermined rank.
-        /// \return A PartialShape with undetermined rank.
-        static PartialShape undetermined() { return PartialShape(false, {}); }
+        /// \return The rank of the shape. This will be Rank::dynamic() if the rank of
+        ///         the shape is dynamic.
+        Rank rank() const { return m_rank_is_static ? Rank(m_dimensions.size()) : Rank::dynamic(); }
+        /// \brief Construct a PartialShape with dynamic rank.
+        /// \return A PartialShape with dynamic rank.
+        static PartialShape dynamic() { return PartialShape(false, {}); }
         /// \brief Check whether this shape is compatible with the argument, i.e., whether it is
         ///        possible to merge them.
         /// \param s The shape to be checked for compatibility with this shape.
         /// \return `true` if this shape is compatible with `s`, else `false`.
         ///
         /// Two shapes are compatible if
-        /// \li one or both of them has undetermined rank, or
-        /// \li both shapes have determined and equal rank, and their dimensions are elementwise
+        /// \li one or both of them has dynamic rank, or
+        /// \li both shapes have dynamic and equal rank, and their dimensions are elementwise
         ///     compatible (see Dimension::compatible()).
         bool compatible(const PartialShape& s) const;
 
@@ -108,8 +101,8 @@ namespace ngraph
         /// \return `true` if this shape represents the same scheme as `s`, else `false`.
         ///
         /// Two shapes `s1` and `s2` represent the same scheme if
-        /// \li they both have undetermined rank, or
-        /// \li they both have determined and equal rank `r`, and for every `i` from `0` to `r-1`,
+        /// \li they both have dynamic rank, or
+        /// \li they both have static and equal rank `r`, and for every `i` from `0` to `r-1`,
         ///     `s1[i]` represents the same scheme as `s2[i]` (see Dimension::same_scheme()).
         bool same_scheme(const PartialShape& s) const;
 
@@ -160,17 +153,18 @@ namespace ngraph
         static bool merge_into(PartialShape& dst, const PartialShape& src);
 
     private:
-        // Private constructor so PartialShape::undetermined() can construct an undetermined shape.
-        PartialShape(bool rank_is_determined, std::initializer_list<Dimension> init)
-            : m_rank_is_determined(rank_is_determined)
+        // Private constructor so PartialShape::dynamic() can construct a shape with
+        // m_rank_is_static set to false.
+        PartialShape(bool rank_is_static, std::initializer_list<Dimension> init)
+            : m_rank_is_static(rank_is_static)
             , m_dimensions(init)
         {
         }
 
-        // True if the shape's rank is determined.
-        bool m_rank_is_determined;
+        // True if the shape's rank is static.
+        bool m_rank_is_static;
 
-        // Shape dimensions. This has no meaning if m_rank_is_determined is false.
+        // Shape dimensions. This has no meaning if m_rank_is_static is false.
         std::vector<Dimension> m_dimensions;
     };
 
@@ -180,30 +174,30 @@ namespace ngraph
     /// \return The result of elementwise adding `s1` to `s2` (see description).
     /// \throws std::invalid_argument If `s1` and `s2` have inconsistent ranks.
     ///
-    /// \li If `s1` or `s2` has undetermined rank, returns PartialShape::undetermined().
-    /// \li If `s1 and `s2` both have determined rank, and their ranks are unequal, throws
+    /// \li If `s1` or `s2` has dynamic rank, returns PartialShape::dynamic().
+    /// \li If `s1 and `s2` both have static rank, and their ranks are unequal, throws
     ///     std::invalid_argument.
-    /// \li If `s1` and `s2` both have determined rank, and their ranks are equal,
+    /// \li If `s1` and `s2` both have static rank, and their ranks are equal,
     ///     returns a new shape whose `i`th dimension is `s1[i] + s2[i]`.
     PartialShape operator+(const PartialShape& s1, const PartialShape& s2);
 
     /// \brief Inserts a human-readable representation of a PartialShape into an output stream.
     /// \param str The output stream targeted for insertion.
-    /// \param dimension The dimension to be inserted into `str`.
+    /// \param shape The shape to be inserted into `str`.
     /// \return A reference to `str` after insertion.
     ///
     /// The output to the stream is in "informal" notation. In other words:
     ///
-    /// \li If `shape` has undetermined rank, inserts the string `?`.
-    /// \li If `shape` has determined rank, inserts the string `{`, then inserts each dimension
+    /// \li If `shape` has dynamic rank, inserts the string `?`.
+    /// \li If `shape` has static rank, inserts the string `{`, then inserts each dimension
     ///     of `shape` into the output stream separated by commas, then inserts `}`.
     ///
     /// Example:
     ///
     /// \code{.cpp}
-    /// PartialShape s1{PartialShape::undetermined()};
+    /// PartialShape s1{PartialShape::dynamic())};
     /// PartialShape s2{};
-    /// PartialShape s3{1,Dimension::undetermined(),2,3};
+    /// PartialShape s3{1,Dimension::dynamic(),2,3};
     /// PartialShape s4{2,3,4};
     /// std::cout << s1 << std::endl
     ///           << s2 << std::endl
@@ -219,6 +213,5 @@ namespace ngraph
     /// {1,?,2,3}
     /// {2,3,4}
     /// \endcode
-
     std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
 }
