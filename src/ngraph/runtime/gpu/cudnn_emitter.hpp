@@ -78,7 +78,8 @@ namespace ngraph
                                          const Shape& output_tensor_shape,
                                          const Strides& window_movement_strides,
                                          const Strides& window_dilation_strides,
-                                         const Shape& padding_below);
+                                         const Shape& padding_below,
+                                         const bool find_algo = false);
 
                 size_t build_convolution_backward_data(const std::string& dtype,
                                                        const Shape& input_filter_shape,
@@ -86,7 +87,8 @@ namespace ngraph
                                                        const Shape& output_tensor_shape,
                                                        const Strides& window_movement_strides,
                                                        const Strides& window_dilation_strides,
-                                                       const Shape& padding_below);
+                                                       const Shape& padding_below,
+                                                       const bool find_algo = false);
 
                 size_t build_convolution_backward_filter(const std::string& dtype,
                                                          const Shape& input_tensor_shape_0,
@@ -94,7 +96,8 @@ namespace ngraph
                                                          const Shape& output_filter_shape,
                                                          const Strides& window_movement_strides,
                                                          const Strides& window_dilation_strides,
-                                                         const Shape& padding_below);
+                                                         const Shape& padding_below,
+                                                         const bool find_algo = false);
 
                 size_t build_reduce_forward(const cudnnReduceTensorOp_t& reduce_op,
                                             const std::string& dtype,
@@ -123,7 +126,8 @@ namespace ngraph
                                        const Prop& direction,
                                        const Shape& tensor_shape,
                                        const Shape& param_shape,
-                                       double epsilon);
+                                       double epsilon,
+                                       bool global_stats = false);
 
                 size_t build_softmax(const cudnnSoftmaxAlgorithm_t& algorithm,
                                      const cudnnSoftmaxMode_t& mode,

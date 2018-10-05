@@ -22,7 +22,7 @@
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
 
 namespace ngraph
 {
@@ -81,7 +81,7 @@ namespace ngraph
                 /// \param arg_indexes a list of indexes into args for which args to include in
                 ///    the output list, so {1, 2} will include args 1 and 2 and skip 0.
                 /// \ return returns a string containing "arg0_name, arg1_name, etc."
-                static std::string node_names(const std::vector<GPU_TensorViewWrapper>& args,
+                static std::string node_names(const std::vector<GPUTensorWrapper>& args,
                                               std::initializer_list<int> arg_indexes = {});
             };
 

@@ -27,7 +27,6 @@ set(SRC
     cpu_tensor_view.cpp
     cpu_tracing.cpp
     cpu_visualize_tree.cpp
-    quantization_util.cpp
     builder/add.cpp
     builder/allreduce.cpp
     builder/avg_pool.cpp
@@ -95,6 +94,8 @@ set(SRC
     op/max_pool_with_indices.cpp
     op/quantized_max_pool.cpp
     op/quantized_avg_pool.cpp
+    op/quantized_conv_relu.cpp
+    op/quantized_conv_bias.cpp
     op/rnn.cpp
     op/sigmoid_mul.cpp
     op/conv_add.cpp

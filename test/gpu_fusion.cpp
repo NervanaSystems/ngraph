@@ -95,18 +95,17 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
                                       op::ParameterVector{src_layer, src_iter, params, state_iter});
     auto backend = runtime::Backend::create("GPU");
 
-    shared_ptr<runtime::TensorView> src_layer_t =
+    shared_ptr<runtime::Tensor> src_layer_t =
         backend->create_tensor(element::f32, src_layer->get_shape());
-    shared_ptr<runtime::TensorView> src_iter_t =
+    shared_ptr<runtime::Tensor> src_iter_t =
         backend->create_tensor(element::f32, src_iter->get_shape());
-    shared_ptr<runtime::TensorView> state_iter_t =
+    shared_ptr<runtime::Tensor> state_iter_t =
         backend->create_tensor(element::f32, state_iter->get_shape());
-    shared_ptr<runtime::TensorView> params_t =
+    shared_ptr<runtime::Tensor> params_t =
         backend->create_tensor(element::f32, params->get_shape());
 
-    shared_ptr<runtime::TensorView> result_ht = backend->create_tensor(element::f32, {10, 100});
-    shared_ptr<runtime::TensorView> result_ct =
-        backend->create_tensor(element::f32, Shape{10, 100});
+    shared_ptr<runtime::Tensor> result_ht = backend->create_tensor(element::f32, {10, 100});
+    shared_ptr<runtime::Tensor> result_ct = backend->create_tensor(element::f32, Shape{10, 100});
 
     copy_data(src_layer_t, vector<float>(1000, 1));
     copy_data(src_iter_t, vector<float>(1000, 1));
@@ -246,29 +245,29 @@ TEST(gpu_fusion, lstm_analytic)
 
     auto backend = runtime::Backend::create("GPU");
 
-    std::shared_ptr<runtime::TensorView> input_xt_t =
+    std::shared_ptr<runtime::Tensor> input_xt_t =
         backend->create_tensor(element::f32, input_xt->get_shape());
     copy_data(input_xt_t, std::vector<float>{1.0});
 
-    std::shared_ptr<runtime::TensorView> weights_i2h_t =
+    std::shared_ptr<runtime::Tensor> weights_i2h_t =
         backend->create_tensor(element::f32, weights_i2h->get_shape());
     copy_data(weights_i2h_t, std::vector<float>{-1.0, -1.0, -1.0, -1.0});
 
-    std::shared_ptr<runtime::TensorView> weights_h2h_t =
+    std::shared_ptr<runtime::Tensor> weights_h2h_t =
         backend->create_tensor(element::f32, weights_h2h->get_shape());
     copy_data(weights_h2h_t, std::vector<float>{-1.0, -1.0, -1.0, -1.0});
 
-    std::shared_ptr<runtime::TensorView> bias_i2h_t =
+    std::shared_ptr<runtime::Tensor> bias_i2h_t =
         backend->create_tensor(element::f32, bias_i2h->get_shape());
     copy_data(bias_i2h_t, std::vector<float>{-1.0, -1.0, -1.0, -1.0});
 
-    std::shared_ptr<runtime::TensorView> bias_h2h_t =
+    std::shared_ptr<runtime::Tensor> bias_h2h_t =
         backend->create_tensor(element::f32, bias_h2h->get_shape());
     copy_data(bias_h2h_t, std::vector<float>{-1.0, -1.0, -1.0, -1.0});
 
-    std::shared_ptr<runtime::TensorView> result_ht =
+    std::shared_ptr<runtime::Tensor> result_ht =
         backend->create_tensor(element::f32, ht->get_shape());
-    std::shared_ptr<runtime::TensorView> result_ct =
+    std::shared_ptr<runtime::Tensor> result_ct =
         backend->create_tensor(element::f32, ct->get_shape());
 
     backend->call_with_validate(f,
@@ -396,7 +395,7 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     auto backend = runtime::Backend::create("GPU");
 
     auto params = f->get_parameters();
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> arg_tensors;
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> arg_tensors;
     for (shared_ptr<op::Parameter> param : params)
     {
         vector<float> tensor_vals(shape_size(param->get_shape()), 1.0f);
@@ -405,9 +404,9 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
         arg_tensors.push_back(tensor);
     }
 
-    std::shared_ptr<runtime::TensorView> result_ht =
+    std::shared_ptr<runtime::Tensor> result_ht =
         backend->create_tensor(element::f32, ht->get_shape());
-    std::shared_ptr<runtime::TensorView> result_ct =
+    std::shared_ptr<runtime::Tensor> result_ct =
         backend->create_tensor(element::f32, ct->get_shape());
 
     backend->call_with_validate(f, {result_ht, result_ct}, arg_tensors);
