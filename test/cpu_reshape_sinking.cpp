@@ -49,6 +49,32 @@
 using namespace ngraph;
 using namespace std;
 
+TEST(cpu_reshape_sinking, edge_splitting)
+{
+    //checks if Reshapes are pushed through op::Abs, but stopped by Sum
+    Shape shape_nhwc{16, 28, 28, 1};
+    Shape shape_nchw{16, 1, 28, 28};
+    auto a = make_shared<op::Parameter>(element::i32, shape_nhwc);
+    auto reshape = make_shared<op::Reshape>(a, AxisVector{0, 3, 1, 2}, shape_nchw);
+    auto absn = make_shared<op::Abs>(reshape);
+    auto absn2 = make_shared<op::Abs>(absn);
+    auto sum = make_shared<op::Sum>(reshape, AxisSet{0, 1, 2, 3});
+    auto func = make_shared<Function>(NodeVector{absn2, sum}, op::ParameterVector{a});
+    pass::Manager pass_manager;
+    //size_t before_count = count_ops_of_type<op::Reshape>(func);
+    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<runtime::cpu::pass::CPUReshapeSinking>();
+    pass_manager.register_pass<pass::ReshapeElimination>();
+    pass_manager.register_pass<pass::CommonSubexpressionElimination>();
+    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    pass_manager.run_passes(func);
+    ASSERT_EQ(func->get_results().at(1)->get_argument(0), sum);
+    auto new_reshape =
+        std::dynamic_pointer_cast<op::Reshape>(func->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_reshape);
+    ASSERT_EQ(new_reshape->get_shape(), shape_nchw);
+}
+
 TEST(cpu_reshape_sinking, mnist_conv)
 {
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "tf_conv_mnist_nhwc.json");
