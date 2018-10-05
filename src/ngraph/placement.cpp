@@ -36,6 +36,7 @@ std::string ngraph::placement_to_string(Placement placement)
     case Placement::GPU: return "GPU";
     case Placement::NNP: return "NNP";
     }
+    throw runtime_error("unhandled placement type");
 }
 
 static Node* take_independent_node_with_placement_priority(

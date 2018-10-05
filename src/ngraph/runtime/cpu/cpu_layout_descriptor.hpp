@@ -46,7 +46,7 @@ namespace ngraph
                 bool operator==(const TensorLayout& other) const override;
 
                 const mkldnn::memory::desc& get_mkldnn_md() const { return m_mkldnn_md; }
-                void set_mkldnn_md(const mkldnn::memory::desc md);
+                void set_mkldnn_md(const mkldnn::memory::desc& md);
                 bool is_mkldnn_layout() const
                 {
                     return m_mkldnn_md.data.format != mkldnn::memory::format::format_undef;
