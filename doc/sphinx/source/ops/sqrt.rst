@@ -40,14 +40,14 @@ Mathematical Definition
 
 .. math::
 
-   \mathtt{output}_{i_0, \ldots, i_{n-1}} = \sqrt(\mathtt{arg}_{i_0, \ldots, i_{n-1}})
+   \mathtt{output}_{i_0, \ldots, i_{n-1}} = \sqrt{\mathtt{arg}_{i_0, \ldots, i_{n-1}}}
 
 Backprop
 ========
 
 .. math::
 
-   \overline{\mathtt{arg}} \leftarrow \frac{\Delta}{2 \mathtt{output}}
+   \overline{\mathtt{arg}} \leftarrow \frac{\Delta}{2\cdot \mathtt{output}}
 
 C++ Interface
 =============
