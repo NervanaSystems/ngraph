@@ -622,15 +622,12 @@ void runtime::gpu::GPU_Emitter::emit_LRN(EMIT_ARGS)
 {
     auto lrn = static_cast<const ngraph::op::LRN*>(node);
     auto& input_shape = args[0].get_shape();
-    auto& result_shape = out[0].get_shape();
 
     auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
 
-    size_t index = cudnn_emitter->build_lrn(CUDNN_LRN_CROSS_CHANNEL_DIM1,
-                                            out[0].get_type(),
+    size_t index = cudnn_emitter->build_lrn(out[0].get_type(),
                                             CUDNNEmitter::Prop::Forward,
                                             input_shape,
-                                            result_shape,
                                             lrn->get_alpha(),
                                             lrn->get_beta(),
                                             lrn->get_bias(),
