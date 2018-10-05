@@ -18,6 +18,7 @@
 
 #include <cmath>
 
+#include "ngraph/assertion.hpp"
 #include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph
