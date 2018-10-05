@@ -419,7 +419,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
 
     size_t idx_workspace = std::numeric_limits<size_t>::max();
     size_t pad_dynamic_index = std::numeric_limits<size_t>::max();
-    auto algo_policy = algo_search::HEURISTIC;
+    auto algo_policy = algo_search::EXPLICIT;
     if (pad_required || is_deconvolution)
     {
         input_shape_padded = runtime::gpu::get_padded_shape(
@@ -544,7 +544,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
     size_t idx_workspace = std::numeric_limits<size_t>::max();
     size_t pad_dynamic_index = std::numeric_limits<size_t>::max();
     size_t slice_index = std::numeric_limits<size_t>::max();
-    auto algo_policy = algo_search::HEURISTIC;
+    auto algo_policy = algo_search::EXPLICIT;
     if (pad_required || is_deconvolution)
     {
         output_shape_padded =
@@ -663,7 +663,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
 
     size_t idx_workspace = std::numeric_limits<size_t>::max();
     size_t pad_dynamic_index = std::numeric_limits<size_t>::max();
-    auto algo_policy = algo_search::HEURISTIC;
+    auto algo_policy = algo_search::EXPLICIT;
     if (pad_required || is_deconvolution)
     {
         input_shape_padded = runtime::gpu::get_padded_shape(
