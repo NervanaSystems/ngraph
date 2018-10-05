@@ -161,6 +161,11 @@ const Shape& Function::get_output_shape(size_t i) const
     return m_results.at(i)->get_shape();
 }
 
+const PartialShape& Function::get_output_partial_shape(size_t i) const
+{
+    return m_results.at(i)->get_output_partial_shape(0);
+}
+
 shared_ptr<Node> Function::get_output_op(size_t i) const
 {
     return m_results.at(i);
