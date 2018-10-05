@@ -214,7 +214,8 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
     {
         size_t indicesSize = shape_size(output_shape) * sizeof(int);
         size_t reduction_output_type_size = dtype.size();
-        size_t reduce_buffer_idx = allocator.reserve_workspace(shape_size(output_shape) * reduction_output_type_size);
+        size_t reduce_buffer_idx =
+            allocator.reserve_workspace(shape_size(output_shape) * reduction_output_type_size);
         reduce.reset(new gpu::primitive{[=, &desc, &input_desc, &output_desc](void** inputs,
                                                                               void** outputs) {
             CUDNN_SAFE_CALL(cudnnSetReduceTensorDescriptor(desc,
