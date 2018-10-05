@@ -96,7 +96,11 @@ Not currently a comprehensive list.
    * :doc:`relu`
    * :doc:`sigmoid`
    * :doc:`sign`
+   * :doc:`sin`
+   * :doc:`sinh`
    * :doc:`softmax`
+   * :doc:`sqrt`
+   * :doc:`tan`
    * :doc:`tanh`
 
 
@@ -156,6 +160,8 @@ Not currently a comprehensive list.
    sin.rst
    sinh.rst
    softmax.rst
+   sqrt.rst
+   tan.rst
    tanh.rst
 
    
