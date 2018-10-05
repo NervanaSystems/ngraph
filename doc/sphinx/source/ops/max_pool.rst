@@ -53,7 +53,7 @@ The input for max pooling is a data batch tensor of shape
 :math:`(N,C,d_1,\dots,d_n)` where :math:`n > 0`, every :math:`d_i >
 0`, and where :math:`N` is the batch size, and :math:`C > 0` is the
 number of channels (sometimes called features).  The dimensions
-:math:`(d_1,\dots,d_n` correspond to the shape of an
+:math:`(d_1,\dots,d_n)` correspond to the shape of an
 :math:`n`-dimensional data item in a batch. For example, where
 :math:`n=2`, the data may represent a two-dimensional image.  It also
 has two attributes:

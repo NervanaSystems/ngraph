@@ -12,7 +12,7 @@ FunctionCall
 Description
 ===========
 
-Calls the specified function on ``args``. The results of the function are the outputs
+Calls the specified function on ``args.`` The results of the function are the outputs
 of the op.
 
 Inputs
