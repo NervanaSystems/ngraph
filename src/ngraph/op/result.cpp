@@ -32,11 +32,6 @@ op::Result::Result(const shared_ptr<Node>& arg)
 
 void op::Result::validate_and_infer_types()
 {
-    if (validate_punt_if_dynamic())
-    {
-        return;
-    }
-
     NODE_VALIDATION_ASSERT(this, get_input_size() == 1) << "Argument has " << get_input_size()
                                                         << " outputs (1 expected).";
 
