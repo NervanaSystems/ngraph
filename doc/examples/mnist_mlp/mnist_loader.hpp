@@ -45,10 +45,10 @@ public:
     uint32_t get_items() { return m_items; }
 protected:
     std::string m_filename;
-    FILE* m_file;
+    FILE* m_file{nullptr};
     uint32_t m_magic;
-    uint32_t m_items;
-    fpos_t m_data_pos;
+    uint32_t m_items{0};
+    fpos_t m_data_pos{0};
 };
 
 class MNistImageLoader : public MNistLoader
@@ -66,8 +66,8 @@ public:
     uint32_t get_rows() { return m_rows; }
     uint32_t get_columns() { return m_columns; }
 protected:
-    uint32_t m_rows;
-    uint32_t m_columns;
+    uint32_t m_rows{0};
+    uint32_t m_columns{0};
 };
 
 class MNistLabelLoader : public MNistLoader

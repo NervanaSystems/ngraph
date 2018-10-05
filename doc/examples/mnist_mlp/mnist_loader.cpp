@@ -22,10 +22,7 @@
 
 MNistLoader::MNistLoader(const std::string& filename, uint32_t magic)
     : m_filename(filename)
-    , m_file{nullptr}
     , m_magic(magic)
-    , m_items(0)
-    , m_data_pos(0)
 {
 }
 
@@ -118,8 +115,6 @@ const char* const MNistImageLoader::TEST{"t10k-images-idx3-ubyte"};
 
 MNistImageLoader::MNistImageLoader(const std::string& file_name)
     : MNistLoader(file_name, magic_value)
-    , m_rows(0)
-    , m_columns(0)
 {
 }
 
