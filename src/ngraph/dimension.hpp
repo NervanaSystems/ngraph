@@ -31,18 +31,19 @@ namespace ngraph
     class Dimension
     {
     public:
-        /// \brief Constructs a known dimension.
-        ///
-        ///        Requires that dimension != s_undetermined_val. If that condition does not hold,
-        ///        throws std::invalid_argument.
+        /// \brief Construct a determined dimension.
+        /// \param dimension Value of the dimension. Must not be equal to
+        ///                  Dimension::s_undetermined_val.
+        /// \throws std::invalid_argument If `dimension` == Dimension::s_undetermined_val.
         Dimension(size_t dimension);
 
-        /// \brief Constructs an unknown dimension.
+        /// \brief Construct an unknown dimension.
         Dimension() { m_dimension = s_undetermined_val; }
-        /// \brief Returns true if this dimension is determined.
+        /// \brief Check whether this dimension is determined.
+        /// \return `true` if the dimension is determined, else `false`.
         bool is_determined() const { return m_dimension != s_undetermined_val; }
-        /// \brief Converts this dimension to size_t. If the dimension is undetermined, throws
-        ///        std::invalid_argument.
+        /// \brief Convert this dimension to `size_t`. This dimension must not be unknown.
+        /// \throws std::invalid_argument If this dimension is undetermined.
         explicit operator size_t() const
         {
             if (!is_determined())
@@ -52,30 +53,40 @@ namespace ngraph
             return m_dimension;
         }
 
-        /// \brief Returns true if *this and dim are both undetermined, or if they are both
-        ///        determined and equal; otherwise, returns false.
+        /// \brief Check whether this dimension represents the same scheme as the argument (both
+        ///        undetermined, or equal).
+        /// \param dim The other dimension to compare this dimension to.
+        /// \return `true` if this dimension and `dim` are both undetermined, or if they are both
+        ///         determined and equal; otherwise, `false`.
         bool same_scheme(const Dimension& dim) const
         {
             return (!is_determined() && !dim.is_determined()) ||
                    (is_determined() && dim.is_determined() && m_dimension == size_t(dim));
         }
 
-        /// \brief Merge two dimensions together. Returns true, and writes the merged dimension
-        ///        to dst, if the merge is successful. Returns false, and leaves dst unchanged,
-        ///        if the merge is unsuccessful.
+        /// \brief Try to merge two Dimension objects together.
+        /// \param[out] dst Reference to write the merged Dimension into.
+        /// \param d1 First dimension to merge.
+        /// \param d2 Second dimension to merge.
+        /// \return `true` if merging succeeds, else `false`.
         ///
-        ///        If d1 is undetermined, merge(d,d1,d2) writes d2 to d and returns true.
-        ///        If d2 is undetermined, merge(d,d1,d2) writes d1 to d and returns true.
-        ///        If d1 and d2 are determined and equal, merge(d,d1,d2) writes d1 to d
-        ///           and returns true.
-        ///        If d1 and d2 are both determined and unequal, merge(d,d1,d2) leaves d unchanged
-        ///           and returns false.
+        /// \li If `d1` is undetermined, writes `d2` to `dst` and returns `true`.
+        /// \li If `d2` is undetermined, writes `d1` to `dst` and returns `true`.
+        /// \li If `d1` and `d2` are determined and equal, writes `d1` to `dst` and returns `true`.
+        /// \li If `d1` and `d2` are both determined and unequal, leaves `dst` unchanged and
+        ///     returns `false`.
         static bool merge(Dimension& dst, const Dimension d1, const Dimension d2);
 
-        /// \brief Returns true if the dimensions are compatible, i.e. if one of the dimensions
-        ///        is undetermined, or both dimensions are determined and equal.
+        /// \brief Check whether this dimension is capable of being merged with the argument
+        ///        dimension.
+        /// \param d The dimension to compare this dimension with.
+        /// \return `true` if this dimension is compatible with `d`, else `false`.
+        ///
+        /// Two dimensions are considered compatible if it is possible to merge them. (See
+        /// Dimension::merge.)
         bool compatible(const Dimension& d) const;
-        /// \brief Constructs an unknown dimension.
+        /// \brief Create an unknown dimension.
+        /// \return An unknown dimension.
         static Dimension undetermined() { return Dimension(); }
         /// \brief Constant for the value used internally to represent an unknown dimension.
         static const size_t s_undetermined_val{std::numeric_limits<size_t>::max()};
@@ -86,12 +97,17 @@ namespace ngraph
         size_t m_dimension;
     };
 
-    /// \brief Inserts a human-readable representation of "dimension" into "str".
+    /// \brief Insert a human-readable representation of a dimension into an output stream.
+    /// \param str The output stream targeted for insertion.
+    /// \param dimension The dimension to be inserted into `str`.
+    ///
+    /// Inserts the string `?` if `dimension` is undetermined; else inserts `size_t(dimension)`.
     std::ostream& operator<<(std::ostream& str, const Dimension& dimension);
 
     /// \brief Addition operator for dimensions.
-    ///
-    ///        If d1 and d2 are both known, returns size_t(d1)+size_t(d2). Otherwise, returns
-    ///        Dimension::undetermined().
+    /// \param d1 Left operand for addition.
+    /// \param d2 Right operand for addition.
+    /// \return Dimension::undetermined() if `d1` or `d2` is unknown; else, a determined dimension
+    ///         with value `size_t(d1)+size_t(d2)`.
     Dimension operator+(const Dimension& d1, const Dimension& d2);
 }
