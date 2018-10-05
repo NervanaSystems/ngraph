@@ -1358,6 +1358,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
             case CPUTensorRole::CONSTANT: return string("CPUTensorRole::CONSTANT");
             case CPUTensorRole::OUTPUT: return string("CPUTensorRole::OUTPUT");
             }
+            throw runtime_error("unhandled CPU tensor role");
         };
 
         //dump the tensor roles to debug manifest
