@@ -1,21 +1,20 @@
-.. softmax.rst:
+.. sign.rst:
 
-#######
-Softmax
-#######
+####
+Sign
+####
 
 .. code-block:: cpp
 
-   Softmax  // Softmax operation
+   Sign  //  Elementwise sign operation
 
 
 Description
 ===========
 
 Produces a tensor of the same element type and shape as ``arg,``
-where the value at each coordinate of ``output`` is the expine of the
-value of the corresponding coordinate of ``arg`` divided by the sum
-of the expine of all coordinates of ``arg`` in the specified ``axes.``
+where the value at each coordinate of ``output`` is the sign (-1, 0, 1)
+of the value at the corresponding coordinate of ``arg.``
 
 Inputs
 ------
@@ -25,14 +24,6 @@ Inputs
 +=================+=========================+================================+
 | ``arg``         | Any                     | Any                            |
 +-----------------+-------------------------+--------------------------------+
-
-Attributes
-----------
-+-----------------+----------------------------------------------------------------+
-| Name            | Description                                                    |
-+=================+================================================================+
-| ``axes``        | The axis positions (0-based) on which to calculate the softmax |
-+-----------------+----------------------------------------------------------------+
 
 Outputs
 -------
@@ -49,12 +40,11 @@ Mathematical Definition
 
 .. math::
 
-   \mathtt{output}_{i} = \frac{\exp(\mathtt{arg}_{i})}{\sum_{j} \exp(\mathtt{arg}_{j})}
-
+   \mathtt{output}_{i_0, \ldots, i_{n-1}} = \mathtt{sgn}(\mathtt{arg}_{i_0, \ldots, i_{n-1}})
 
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Softmax
+.. doxygenclass:: ngraph::op::Sign
    :project: ngraph
-   :members: m_axes
+   :members:
