@@ -75,6 +75,8 @@ namespace ngraph
                     writer.block_end();
                 }
 
+                static void emit_ArgMax_ArgMin(EMIT_ARGS, cudnnReduceTensorOp_t);
+
             private:
                 /// \brief Create a list of node names for each arg in args
                 /// \param args list of tensor arguments
@@ -83,6 +85,8 @@ namespace ngraph
                 /// \ return returns a string containing "arg0_name, arg1_name, etc."
                 static std::string node_names(const std::vector<GPUTensorWrapper>& args,
                                               std::initializer_list<int> arg_indexes = {});
+
+                // void emit_ArgMax_ArgMin(EMIT_ARGS, cudnnReduceTensorOp_t);
             };
 
             Shape get_padded_shape(const Shape& input_shape,

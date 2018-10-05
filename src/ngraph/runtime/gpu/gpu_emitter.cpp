@@ -163,7 +163,20 @@ void runtime::gpu::GPU_Emitter::emit_And(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_ArgMax(EMIT_ARGS)
 {
-    //throw unsupported_op("Unsupported op '" + node->description() + "'");
+    cudnnReduceTensorOp_t reduce_op = CUDNN_REDUCE_TENSOR_MAX;
+    runtime::gpu::GPU_Emitter::emit_ArgMax_ArgMin(
+        external_function, writer, node, args, out, reduce_op);
+}
+
+void runtime::gpu::GPU_Emitter::emit_ArgMin(EMIT_ARGS)
+{
+    cudnnReduceTensorOp_t reduce_op = CUDNN_REDUCE_TENSOR_MIN;
+    runtime::gpu::GPU_Emitter::emit_ArgMax_ArgMin(
+        external_function, writer, node, args, out, reduce_op);
+}
+
+void runtime::gpu::GPU_Emitter::emit_ArgMax_ArgMin(EMIT_ARGS, cudnnReduceTensorOp_t reduce_mode)
+{
     if (out[0].get_size() == 0)
     {
         return;
@@ -171,8 +184,7 @@ void runtime::gpu::GPU_Emitter::emit_ArgMax(EMIT_ARGS)
     auto argmax = static_cast<const ngraph::op::ArgMax*>(node);
     std::vector<size_t> axes{argmax->get_reduction_axis()};
     auto axis_set = AxisSet(axes);
-    const Shape& arg0_shape = args[0].get_shape();
-    cudnnReduceTensorOp_t reduce_op = CUDNN_REDUCE_TENSOR_MAX;
+    
     CUDNNEmitter::ReductionMode reduction_mode = CUDNNEmitter::ReductionMode::ArgMax_ArgMin;
 
     writer.block_begin();
@@ -180,17 +192,13 @@ void runtime::gpu::GPU_Emitter::emit_ArgMax(EMIT_ARGS)
         auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
 
         auto index = cudnn_emitter->build_reduce_forward(
-            reduce_op, out[0].get_type(), args[0].get_shape(), axis_set, reduction_mode);
+            reduce_mode, args[0].get_type(), args[0].get_shape(), axis_set, reduction_mode);
 
         writer << "void* input[] = {" << node_names(args) << "};\n";
         writer << "void* output[] = {" << node_names(out) << "};\n";
         writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
     }
-}
-
-void runtime::gpu::GPU_Emitter::emit_ArgMin(EMIT_ARGS)
-{
-    throw unsupported_op("Unsupported op '" + node->description() + "'");
+    writer.block_end();
 }
 
 void runtime::gpu::GPU_Emitter::emit_Asin(EMIT_ARGS)

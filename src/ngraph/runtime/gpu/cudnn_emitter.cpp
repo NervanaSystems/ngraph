@@ -269,7 +269,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
                                               inputs[0],
                                               beta,
                                               output_desc,
-                                              nullptr));
+                                              inputs[0]));
             debug_sync();
         }});
 
