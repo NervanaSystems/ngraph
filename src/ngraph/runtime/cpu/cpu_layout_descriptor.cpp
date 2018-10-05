@@ -98,7 +98,7 @@ namespace ngraph
                 return true;
             }
 
-            void LayoutDescriptor::set_mkldnn_md(const mkldnn::memory::desc md)
+            void LayoutDescriptor::set_mkldnn_md(const mkldnn::memory::desc& md)
             {
                 m_mkldnn_md = md;
 
