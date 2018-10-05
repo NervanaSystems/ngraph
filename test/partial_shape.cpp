@@ -362,14 +362,14 @@ TEST(partial_shape, partial_shape_same_scheme_scalar)
     ASSERT_TRUE((PartialShape{}.same_scheme(PartialShape{})));
 }
 
-TEST(partial_shape, dim_merge_both_rank_dynamic)
+TEST(partial_shape, dim_merge_both_dynamic)
 {
     Dimension d;
     ASSERT_TRUE(Dimension::merge(d, Dimension::dynamic(), Dimension::dynamic()));
-    ASSERT_TRUE(d.rank().is_dynamic());
+    ASSERT_TRUE(d.is_dynamic());
 }
 
-TEST(partial_shape, dim_merge_left_rank_dynamic)
+TEST(partial_shape, dim_merge_left_dynamic)
 {
     Dimension d;
     ASSERT_TRUE(Dimension::merge(d, Dimension::dynamic(), 3));
@@ -377,7 +377,7 @@ TEST(partial_shape, dim_merge_left_rank_dynamic)
     ASSERT_EQ(size_t(d), 3);
 }
 
-TEST(partial_shape, dim_merge_right_rank_dynamic)
+TEST(partial_shape, dim_merge_right_dynamic)
 {
     Dimension d;
     ASSERT_TRUE(Dimension::merge(d, 3, Dimension::dynamic()));
