@@ -1128,7 +1128,7 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_constant(
                         m_tensor_roles[output_tensor.get_name()] = CPUTensorRole::CONSTANT;
 
                         NGRAPH_DEBUG << " CPU: Forwarding " << input_name << " through "
-                                  << output_tensor.get_name();
+                                     << output_tensor.get_name();
                         stack.push_back(&c_op->get_outputs().at(output_index));
                     }
                 }
