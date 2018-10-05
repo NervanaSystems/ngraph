@@ -47,6 +47,8 @@ namespace ngraph
         {
         }
 
+        ResultVector& operator=(const ResultVector&) = default;
+
         ResultVector() {}
     };
 }
