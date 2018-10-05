@@ -25,7 +25,6 @@
 #include "ngraph/runtime/host_tensor_view.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
-#include "ngraph/op/activate.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -34,7 +33,6 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
-#include "ngraph/op/deactivate.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/generate_mask.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -218,11 +216,6 @@ private:
                                    args[1]->get_data_ptr<T>(),
                                    out[0]->get_data_ptr<T>(),
                                    out[0]->get_element_count());
-        }
-        else if (node_op == "ActivateState")
-        {
-            const op::ActivateState* activate = static_cast<const op::ActivateState*>(&node);
-            activate->get_state()->activate();
         }
         else if (node_op == "ArgMin")
         {
@@ -553,11 +546,6 @@ private:
             reference::cosh<T>(
                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
         }
-        else if (node_op == "DeactivateState")
-        {
-            const op::DeactivateState* deactivate = static_cast<const op::DeactivateState*>(&node);
-            deactivate->get_state()->deactivate();
-        }
         else if (node_op == "Divide")
         {
             reference::divide<T>(args[0]->get_data_ptr<T>(),
@@ -613,6 +601,7 @@ private:
 
             call(function, outputs, inputs);
         }
+        /*
         else if (node_op == "GenerateMask")
         {
             const op::GenerateMask* gm = static_cast<const op::GenerateMask*>(&node);
@@ -624,6 +613,7 @@ private:
                                      gm->get_probability(),
                                      training);
         }
+        */
         else if (node_op == "Greater")
         {
             reference::greater<T>(args[0]->get_data_ptr<T>(),

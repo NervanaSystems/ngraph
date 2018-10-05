@@ -18,6 +18,8 @@
 
 #include <random>
 
+#include "ngraph/state/rng_state"
+
 namespace ngraph
 {
     namespace runtime
@@ -25,11 +27,10 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
-            void generate_mask(
-                T* out, size_t count, unsigned int seed, double probability, bool training)
+            void generate_mask(T* out, size_t count, ngraph::RNGSate* rng_state, bool training)
             {
-                std::mt19937 gen(seed);
-                std::bernoulli_distribution bd(probability);
+                auto& gen = rng_state->get_generator();
+                auto& bd = rng_state->get_distribution();
 
                 for (size_t i = 0; i < count; i++)
                 {

@@ -16,6 +16,9 @@
 
 #pragma once
 
+#include <functional>
+#include <random>
+
 #include "state.hpp"
 
 namespace ngraph
@@ -24,15 +27,25 @@ namespace ngraph
     class RNGState : public State
     {
     public:
-        RNGState()
+        static std::unique_ptr<RNGState> create_rng_state(unsigned int seed, double probability)
+        {
+            auto rng = new RNGState(seed, probability);
+            return std::unique_ptr<RNGState>{rng};
+        }
+
+        RNGState(unsigned int seed, double probability)
             : State()
+            , m_generator(seed)
+            , m_distribution(probability)
         {
         }
         virtual void activate() override;
         virtual void deactivate() override;
-        unsigned int get_seed() const { return m_seed; }
         virtual ~RNGState() {}
+        std::mt19937& get_generator() { return m_generator; }
+        std::bernoulli_distribution& get_distribution() { return m_distribution; }
     protected:
-        unsigned int m_seed = 0;
+        std::mt19937 m_generator;
+        std::bernoulli_distribution m_distribution;
     };
 }

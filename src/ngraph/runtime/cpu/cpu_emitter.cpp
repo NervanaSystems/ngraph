@@ -4478,14 +4478,16 @@ namespace ngraph
                 auto gm = static_cast<const ngraph::op::GenerateMask*>(node);
                 writer.block_begin();
 
-                writer << "ngraph::RNGState* state = reinterpret_cast<ngraph::RNGState*>("
-                       << gm->get_state() << ");\n";
-                writer << "unsigned int seed = state->get_seed();\n";
+                auto index = external_function->m_states.size();
+                external_function->m_states.push_back(
+                    ngraph::RNGState::create_rng_state(gm->get_seed(), gm->get_probability()));
+
+                writer << "ngraph::State* state = ctx->states[" << index << "];\n";
                 writer << "bool training = static_cast<bool>(" << args[0].get_name() << "[0]);\n";
                 writer << "reference::generate_mask(";
                 writer << "            " << out[0].get_name() << ",\n";
                 writer << "            " << out[0].get_size() << ",\n";
-                writer << "            seed, " << gm->get_probability() << ",training);\n";
+                writer << "            state, training);\n";
                 writer.block_end();
             }
 

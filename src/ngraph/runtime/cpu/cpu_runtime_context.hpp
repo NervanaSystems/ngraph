@@ -35,6 +35,8 @@ namespace ngraph
     {
         class AlignedBuffer;
     }
+
+    class State;
 }
 
 namespace ngraph
@@ -59,6 +61,7 @@ namespace ngraph
                 tbb::flow::graph* G;
                 tbb::global_control* c;
                 tbb::task_scheduler_init* init;
+                State* const* states;
             };
             }
         }

@@ -40,6 +40,7 @@
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
+#include "ngraph/state/state.hpp"
 
 namespace ngraph
 {
@@ -137,6 +138,8 @@ namespace ngraph
                 void compile();
 
 #endif
+
+                std::vector<std::unique_ptr<ngraph::State>> m_states;
 
             private:
                 // For non-destructive passthrough kernels, propagate function

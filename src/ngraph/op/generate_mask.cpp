@@ -22,14 +22,8 @@ using namespace ngraph;
 shared_ptr<Node> op::GenerateMask::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    if (new_args.size() == 1)
-    {
-        //GenerateMask(const std::shared_ptr<Node>& training, const std::shared_ptr<Node>& activate, const Shape& shape, const element::Type& element_type, double prob, const std::shared_ptr<RNGState>& state) :
-        return make_shared<GenerateMask>(
-            new_args.at(0), new_args.at(1), m_shape, m_element_type, m_probability, m_state);
-    }
     return make_shared<GenerateMask>(
-        new_args.at(0), m_shape, m_element_type, m_probability, m_state);
+        new_args.at(0), m_shape, m_element_type, m_seed, m_probability);
 }
 
 void ngraph::op::GenerateMask::validate_and_infer_types()
