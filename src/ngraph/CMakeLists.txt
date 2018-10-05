@@ -29,6 +29,7 @@ set (SRC
     descriptor/layout/tensor_layout.cpp
     descriptor/output.cpp
     descriptor/tensor.cpp
+    dimension.cpp
     file_util.cpp
     function.cpp
     log.cpp
@@ -52,6 +53,7 @@ set (SRC
     op/convolution.cpp
     op/cos.cpp
     op/cosh.cpp
+    op/dequantize.cpp
     op/divide.cpp
     op/dot.cpp
     op/equal.cpp
@@ -111,6 +113,7 @@ set (SRC
     op/util/binary_elementwise_logical.cpp
     op/util/index_reduction.cpp
     op/util/unary_elementwise_arithmetic.cpp
+    partial_shape.cpp
     pass/assign_placement.cpp
     pass/algebraic_simplification.cpp
     pass/common_function_collection.cpp
@@ -139,8 +142,8 @@ set (SRC
     runtime/aligned_buffer.cpp
     runtime/backend.cpp
     runtime/backend_manager.cpp
-    runtime/host_tensor_view.cpp
-    runtime/tensor_view.cpp
+    runtime/host_tensor.cpp
+    runtime/tensor.cpp
     serializer.cpp
     shape.cpp
     strides.cpp

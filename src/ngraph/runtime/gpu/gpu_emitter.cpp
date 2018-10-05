@@ -49,6 +49,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
@@ -107,6 +108,7 @@
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/runtime/gpu/op/rnn.hpp"
 #include "ngraph/runtime/gpu/type_info.hpp"
 #include "ngraph/util.hpp"
 
@@ -123,7 +125,7 @@ function<void(EMIT_ARGS)> runtime::gpu::GPU_Emitter::get_emit_function(const Nod
 // ...
 #define NGRAPH_OP(a, b) {type_index(typeid(b::a)), runtime::gpu::GPU_Emitter::emit_##a},
     static const map<type_index, function<void(EMIT_ARGS)>> typeid_map{
-#include "ngraph/op/op_tbl.hpp"
+#include "ngraph/runtime/gpu/op/op_tbl.hpp"
     };
 #undef NGRAPH_OP
     auto it = typeid_map.find(type_index(typeid(node)));
@@ -284,10 +286,12 @@ void runtime::gpu::GPU_Emitter::emit_BatchNorm(EMIT_ARGS)
 
     auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
 
+    bool global_stats = false;
     CUDNNEmitter::Prop direction;
-    if (batchnorm->get_training_flag() && args.size() == 3)
+    if (batchnorm->get_training_flag())
     {
         direction = CUDNNEmitter::Prop::Forward;
+        global_stats = (batchnorm->get_arguments().size() == 5);
     }
     else
     {
@@ -299,7 +303,8 @@ void runtime::gpu::GPU_Emitter::emit_BatchNorm(EMIT_ARGS)
                                                 direction,
                                                 args[2].get_shape(),
                                                 args[0].get_shape(),
-                                                batchnorm->get_eps_value());
+                                                batchnorm->get_eps_value(),
+                                                global_stats);
 
     writer.block_begin();
     {
@@ -507,160 +512,49 @@ void runtime::gpu::GPU_Emitter::emit_Divide(EMIT_ARGS)
     emit_elementwise<ngraph::op::Divide>(external_function, writer, node, args, out);
 }
 
+void runtime::gpu::GPU_Emitter::emit_Dequantize(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 void runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
 {
     if (out[0].get_size() == 0)
     {
         return;
     }
-
-    const ngraph::op::Dot* dot = static_cast<const ngraph::op::Dot*>(node);
+    auto dot = static_cast<const ngraph::op::Dot*>(node);
+    size_t reduction_axes_count = dot->get_reduction_axes_count();
     const Shape& arg0_shape = args[0].get_shape();
     const Shape& arg1_shape = args[1].get_shape();
     const Shape& out_shape = out[0].get_shape();
-    if (arg0_shape.empty() || arg1_shape.empty())
+
+    writer.block_begin();
     {
-        auto& first = (arg0_shape.empty() ? args[0] : args[1]);
-        auto& second = (arg0_shape.empty() ? args[1] : args[0]);
-
-        writer.block_begin();
-        writer << "int count = " << second.get_size() << ";\n";
-        writer << "CUBLAS_SAFE_CALL(cublasScopy("
-               << "*ctx->cublas_handle,"
-               << "count ," << second.get_name() << ","
-               << "1," << out[0].get_name() << ", 1));\n";
-        writer << "CUBLAS_SAFE_CALL(cublasSscal("
-               << "*ctx->cublas_handle,"
-               << "count ," << first.get_name() << "," << out[0].get_name() << ", 1));\n";
-        writer.block_end();
-        return;
-    }
-
-    // set output to 0 if input size is 0
-    if (args[0].get_size() == 0 || args[1].get_size() == 0)
-    {
-        writer.block_begin();
-        writer << "runtime::gpu::cuda_memset(" << out[0].get_name() << ", 0, " << out[0].get_size()
-               << " * " << out[0].get_element_type().size() << ");\n";
-        writer.block_end();
-        return;
-    }
-
-    // case that can be treat as dot1d
-    if ((arg0_shape.size() == arg1_shape.size()) &&
-        (arg0_shape.size() == dot->get_reduction_axes_count()))
-
-    {
-        for (int i = 0; i < arg0_shape.size(); i++)
+        // set output to 0 if input size is 0
+        if (args[0].get_size() == 0 || args[1].get_size() == 0)
         {
-            if (arg0_shape[i] != arg1_shape[i])
-            {
-                throw invalid_argument("arg0 and arg1 shape does not match for dot.");
-            }
-        }
-        writer.block_begin();
-        writer << "CUBLAS_SAFE_CALL(cublasSdot("
-               << "*ctx->cublas_handle," << args[0].get_size() << "," << args[0].get_name() << ","
-               << "1," << args[1].get_name() << ","
-               << "1," << out[0].get_name() << "));\n";
-        writer.block_end();
-    }
-    // matrix vector
-    else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1) &&
-             (dot->get_reduction_axes_count() == 1))
-    {
-        writer.block_begin();
-        writer << "const float alpha = 1.0;\n";
-        writer << "const float beta  = 0;\n";
-        writer << "CUBLAS_SAFE_CALL(cublasSetPointerMode(*ctx->cublas_handle, "
-                  "CUBLAS_POINTER_MODE_HOST));\n";
-        writer << "CUBLAS_SAFE_CALL(cublasSgemv("
-               << "*ctx->cublas_handle,"
-               << "CUBLAS_OP_T," << arg0_shape[1] << "," << arg0_shape[0] << ","
-               << "&alpha," // Alpha
-               << args[0].get_name() << "," << arg0_shape[1] << "," << args[1].get_name() << ","
-               << "1,"
-               << "&beta," // beta
-               << out[0].get_name() << ","
-               << "1));\n";
-        writer << "CUBLAS_SAFE_CALL(cublasSetPointerMode(*ctx->cublas_handle, "
-                  "CUBLAS_POINTER_MODE_DEVICE));\n";
-        writer.block_end();
-    }
-    // cases that can be treat as matrix multiply
-    else
-    {
-        // treat as out[m,n] = arg0[m,k] * arg1[k,n]
-        size_t reduction_axes = dot->get_reduction_axes_count();
-        size_t num_of_axes_for_m = arg0_shape.size() - reduction_axes;
-        size_t num_of_axes_for_n = arg1_shape.size() - reduction_axes;
-        size_t num_of_axes_for_k = reduction_axes;
-        size_t m = 1;
-        size_t n = 1;
-        size_t k = 1;
-
-        // check if input and output size correct
-        // check and calculate k for arg0 and arg1
-        size_t arg0_k_idx = num_of_axes_for_m; // first axe in arg0 for k
-        size_t arg1_k_idx = 0;                 // first axe in arg1 for k
-        for (size_t i = 0; i < num_of_axes_for_k; i++)
-        {
-            k *= arg0_shape[arg0_k_idx];
-            if (arg0_shape[arg0_k_idx++] != arg1_shape[arg1_k_idx++])
-            {
-                throw invalid_argument("arg0 and arg1 shape does not match for dot.");
-            }
-        }
-        // check and calculate m for arg0 and out
-        size_t arg0_m_idx = 0; // first axe in arg0 for m
-        size_t out_m_idx = 0;  // first axe in out for m
-        for (size_t i = 0; i < num_of_axes_for_m; i++)
-        {
-            m *= arg0_shape[arg0_m_idx];
-            if (arg0_shape[arg0_m_idx++] != out_shape[out_m_idx++])
-            {
-                throw invalid_argument("arg0 and output shape does not match for dot.");
-            }
-        }
-        // check and calculate n for arg1 and out
-        size_t arg1_n_idx = num_of_axes_for_k; // first axe in arg1 for n
-        size_t out_n_idx = num_of_axes_for_m;  // first axe in arg1 for n
-        for (size_t i = 0; i < num_of_axes_for_n; i++)
-        {
-            n *= arg1_shape[arg1_n_idx];
-            if (arg1_shape[arg1_n_idx++] != out_shape[out_n_idx++])
-            {
-                throw invalid_argument("arg1 and output shape does not match for dot.");
-            }
+            writer << "runtime::gpu::cuda_memset(" << out[0].get_name() << ", 0, "
+                   << out[0].get_size() << " * " << out[0].get_element_type().size() << ");\n";
         }
 
-        // GEMM Call
-        writer.block_begin();
-        writer << "const float alpha = 1.0;\n";
-        writer << "const float beta  = 0.0;\n";
-        writer << "int m = " << m << ";\n";
-        writer << "int n = " << n << ";\n";
-        writer << "int k = " << k << ";\n";
-        writer << "CUBLAS_SAFE_CALL(cublasSetPointerMode(*ctx->cublas_handle, "
-                  "CUBLAS_POINTER_MODE_HOST));\n";
-        writer << "CUBLAS_SAFE_CALL(cublasSgemm("
-               << "*ctx->cublas_handle,"
-               << "CUBLAS_OP_N,"
-               << "CUBLAS_OP_N,"
-               << "n,"
-               << "m,"
-               << "k,"
-               << "&alpha," // Alpha
-               << args[1].get_name() << ","
-               << "n," << args[0].get_name() << ","
-               << "k,"
-               << "&beta," // beta
-               << out[0].get_name() << ","
-               << "n));\n";
-        writer << "CUBLAS_SAFE_CALL(cublasSetPointerMode(*ctx->cublas_handle, "
-                  "CUBLAS_POINTER_MODE_DEVICE));\n";
-        writer.block_end();
+        else
+        {
+            auto& cublas_emitter = external_function->get_primitive_emitter()->get_cublas_emitter();
+
+            auto index = cublas_emitter->build_dot(out[0].get_element_type(),
+                                                   arg0_shape,
+                                                   arg1_shape,
+                                                   out_shape,
+                                                   reduction_axes_count,
+                                                   node);
+
+            writer << "void* input[] = {" << node_names(args) << "};\n";
+            writer << "void* output[] = {" << node_names(out) << "};\n";
+            writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+        }
     }
+    writer.block_end();
 }
 
 void runtime::gpu::GPU_Emitter::emit_Equal(EMIT_ARGS)
@@ -1404,6 +1298,24 @@ void runtime::gpu::GPU_Emitter::emit_ReverseSequence(EMIT_ARGS)
     writer.block_end();
 }
 
+#if CUDNN_VERSION >= 7200
+void runtime::gpu::GPU_Emitter::emit_Rnn(EMIT_ARGS)
+{
+    auto rnn = static_cast<const ngraph::op::gpu::Rnn*>(node);
+
+    auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
+    size_t index = cudnn_emitter->build_primitive(rnn);
+
+    writer.block_begin();
+    {
+        writer << "void* input[] = {" << node_names(args) << "};\n";
+        writer << "void* output[] = {" << node_names(out) << "};\n";
+        writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+    }
+    writer.block_end();
+}
+#endif
+
 void runtime::gpu::GPU_Emitter::emit_Select(EMIT_ARGS)
 {
     emit_elementwise<ngraph::op::Select>(external_function, writer, node, args, out);
@@ -1573,7 +1485,7 @@ void runtime::gpu::GPU_Emitter::emit_TopK(EMIT_ARGS)
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-string runtime::gpu::GPU_Emitter::node_names(const vector<GPU_TensorViewWrapper>& args,
+string runtime::gpu::GPU_Emitter::node_names(const vector<GPUTensorWrapper>& args,
                                              initializer_list<int> arg_indexes)
 {
     vector<string> names;

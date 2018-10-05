@@ -50,6 +50,7 @@
 #include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv.hpp"
+#include "ngraph/runtime/cpu/op/quantized_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -733,12 +734,12 @@ namespace ngraph
                 }
 
                 template <>
-                void CPUAssignment::ASSIGN_DECL(ngraph::op::Dequantize)
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::DequantizeCPU)
                 {
                     if (node->get_input_element_type(0) == element::u8 ||
                         node->get_input_element_type(0) == element::i8)
                     {
-                        auto dequantize = static_cast<op::Dequantize*>(node);
+                        auto dequantize = static_cast<op::DequantizeCPU*>(node);
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
@@ -784,6 +785,20 @@ namespace ngraph
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
                         quantize->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedConvolutionBias)
+                {
+                    if (node->get_input_element_type(0) == element::u8 &&
+                        node->get_input_element_type(1) == element::i8)
+                    {
+                        auto quantized_conv_bias = static_cast<op::QuantizedConvolutionBias*>(node);
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        quantized_conv_bias->set_op_annotations(op_annotations);
                     }
                 }
             }
@@ -852,10 +867,12 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ReplaceSlice>},
     {TI(ngraph::op::ConvolutionAdd),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionAdd>},
-    {TI(ngraph::op::Dequantize),
-     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Dequantize>},
+    {TI(ngraph::op::DequantizeCPU),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::DequantizeCPU>},
     {TI(ngraph::op::QuantizedConvolutionRelu),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedConvolutionRelu>},
+    {TI(ngraph::op::QuantizedConvolutionBias),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedConvolutionBias>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(

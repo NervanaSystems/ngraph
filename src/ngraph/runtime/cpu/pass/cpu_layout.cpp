@@ -58,6 +58,7 @@
 #include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv.hpp"
+#include "ngraph/runtime/cpu/op/quantized_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -473,6 +474,51 @@ namespace ngraph
                         vector<memory::desc> o_mds;
                         ConvolutionLayout<ngraph::op::ConvolutionBias, true, false>(
                             node, i_mds, o_mds);
+                        node = insert_input_conversions(external_function, node, i_mds);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        set_native_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedConvolutionBias)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::desc> i_mds;
+                        vector<memory::desc> o_mds;
+                        ConvolutionLayout<ngraph::op::QuantizedConvolutionBias, true, false>(
+                            node, i_mds, o_mds);
+
+                        auto min_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 3, false, memory::format::x);
+                        auto max_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 4, false, memory::format::x);
+                        auto min_filter_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 5, false, memory::format::x);
+                        auto max_filter_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 6, false, memory::format::x);
+                        auto min_freezed_output_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 7, false, memory::format::x);
+                        auto max_freezed_output_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 8, false, memory::format::x);
+                        auto min_output_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 1, true, memory::format::x);
+                        auto max_output_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 2, true, memory::format::x);
+
+                        i_mds.push_back(min_input_md);
+                        i_mds.push_back(max_input_md);
+                        i_mds.push_back(min_filter_md);
+                        i_mds.push_back(max_filter_md);
+                        i_mds.push_back(min_freezed_output_md);
+                        i_mds.push_back(max_freezed_output_md);
+                        o_mds.push_back(min_output_md);
+                        o_mds.push_back(max_output_md);
+
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
                     }
@@ -1796,7 +1842,7 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::Dequantize)
+                void CPULayout::LAYOUT_DECL(ngraph::op::DequantizeCPU)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
@@ -1805,7 +1851,7 @@ namespace ngraph
                     }
                     else
                     {
-                        throw ngraph_error("Dequantized op is only supported in MKLDNN for now.");
+                        throw ngraph_error("DequantizeCPU op is only supported in MKLDNN for now.");
                     }
                 }
 
@@ -1885,11 +1931,14 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::BoundedRelu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BoundedRelu>},
     {TI(ngraph::op::ConvolutionAdd),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionAdd>},
-    {TI(ngraph::op::Dequantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Dequantize>},
+    {TI(ngraph::op::DequantizeCPU),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::DequantizeCPU>},
     {TI(ngraph::op::Slice), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Slice>},
     {TI(ngraph::op::QuantizeCPU), &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizeCPU>},
     {TI(ngraph::op::QuantizedConvolutionRelu),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionRelu>},
+    {TI(ngraph::op::QuantizedConvolutionBias),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionBias>},
 };
 
 bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)

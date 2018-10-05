@@ -20,4 +20,4 @@
 
 namespace py = pybind11;
 
-void regclass_pyngraph_runtime_TensorView(py::module m);
+void regclass_pyngraph_runtime_Tensor(py::module m);

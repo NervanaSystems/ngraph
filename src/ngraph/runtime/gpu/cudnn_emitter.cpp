@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+
 #include <algorithm>
 #include <iostream>
 #include <sstream>
@@ -79,6 +80,24 @@ cudnnTensorDescriptor_t& runtime::gpu::CUDNNEmitter::tensor_descriptor_from_shap
             runtime::gpu::cudnn_util::compute_strides(dimensions).data()));
     }
 
+    return desc;
+}
+
+cudnnTensorDescriptor_t& runtime::gpu::CUDNNEmitter::get_nd_tensor_descriptor(
+    const Shape& shape, const cudnnDataType_t data_type, const cudnnTensorFormat_t tensor_format)
+{
+    cudnnTensorDescriptor_t& desc = m_descriptors.build<cudnnTensorDescriptor_t>();
+    std::vector<int> dimensions(shape.size());
+    for (auto i = 0u; i < shape.size(); i++)
+    {
+        dimensions[i] = static_cast<int>(shape[i]);
+    }
+    CUDNN_SAFE_CALL(
+        cudnnSetTensorNdDescriptor(desc,
+                                   data_type,
+                                   static_cast<int>(dimensions.size()),
+                                   dimensions.data(),
+                                   runtime::gpu::cudnn_util::compute_strides(dimensions).data()));
     return desc;
 }
 
@@ -198,9 +217,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
             debug_sync();
         }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(reduce));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(reduce, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_tensor_op(const cudnnOpTensorOp_t& tensor_op,
@@ -250,9 +267,7 @@ size_t runtime::gpu::CUDNNEmitter::build_tensor_op(const cudnnOpTensorOp_t& tens
             debug_sync();
         }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(tensor));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(tensor, hash);
 }
 
 cudnnFilterDescriptor_t& runtime::gpu::CUDNNEmitter::get_cudnn_filter_descriptor(
@@ -286,6 +301,24 @@ cudnnFilterDescriptor_t& runtime::gpu::CUDNNEmitter::get_cudnn_filter_descriptor
                                        /*num_dimensions=*/static_cast<int>(dimensions.size()),
                                        /*dimensions*/ dimensions.data()));
     }
+    return filter_descriptor;
+}
+
+cudnnFilterDescriptor_t& runtime::gpu::CUDNNEmitter::get_nd_filter_descriptor(
+    const Shape& shape, const cudnnDataType_t data_type, const cudnnTensorFormat_t tensor_format)
+{
+    auto& filter_descriptor = m_descriptors.build<cudnnFilterDescriptor_t>();
+    std::vector<int> dimensions(shape.size());
+    for (auto i = 0u; i < shape.size(); i++)
+    {
+        dimensions[i] = static_cast<int>(shape[i]);
+    }
+    CUDNN_SAFE_CALL(
+        cudnnSetFilterNdDescriptor(filter_descriptor,
+                                   /*dataType=*/data_type,
+                                   /*format=*/tensor_format,
+                                   /*num_dimensions=*/static_cast<int>(dimensions.size()),
+                                   /*dimensions*/ dimensions.data()));
     return filter_descriptor;
 }
 
@@ -440,9 +473,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
                 gpu::invoke_primitive(m_ctx, conv_index, inputs, outputs);
             }
         }});
-    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackpropData* node)
@@ -573,9 +605,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
         }
     }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackpropFilters* node)
@@ -686,9 +716,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
             }
         }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
@@ -720,38 +748,37 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
 
     /// assymetric padding detection
     bool pad_required = false;
-    auto shape_to_pool =
-        runtime::gpu::get_padded_shape(input_shape, padding_below, padding_above, {});
-    if (shape_to_pool != input_shape)
-    {
-        pad_required = true;
-    }
+    auto input_shape_padded = input_shape;
 
-    pad_required = pad_required && (padding_below != padding_above);
+    size_t padded_size;
     // asymetric padding
     size_t idx_workspace = std::numeric_limits<size_t>::max();
     size_t pad_index = std::numeric_limits<size_t>::max();
-    if (pad_required)
+    if (padding_below != padding_above)
     {
-        auto temp_size = shape_size(shape_to_pool) * args[0].get_element_type().size();
+        Shape padding_interior(padding_below.size(), 1);
+        input_shape_padded =
+            runtime::gpu::get_padded_shape(input_shape, padding_below, padding_above, {});
+        padded_size = shape_size(input_shape_padded);
+        //currntly we set this to float point only, need to add other datatype support later
+        float pad_value = std::numeric_limits<float>::lowest();
+        std::vector<float> temp(padded_size, pad_value);
         GPUAllocator allocator = m_primitive_emitter->get_memory_allocator();
-        idx_workspace = allocator.reserve_workspace(temp_size);
-
-        auto pad_value = TypeInfo::Get(args[0].get_element_type())->lowest();
+        idx_workspace = allocator.reserve_argspace(temp.data(),
+                                                   padded_size * args[0].get_element_type().size());
 
         auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
-        pad_index = cuda_emitter->build_pad({{input_type, output_type}},
-                                            input_shape,
-                                            shape_to_pool,
-                                            padding_below,
-                                            padding_above,
-                                            Shape{},
-                                            pad_value);
+        pad_index = cuda_emitter->build_pad_dynamic({{input_type, output_type}},
+                                                    input_shape,
+                                                    input_shape_padded,
+                                                    padding_below,
+                                                    padding_interior);
 
         // asymetric padding has been applied, zero out padding vectors to
         // ensure cuDNN does not assume padding during pooling
         std::fill(padding_below.begin(), padding_below.end(), 0);
         std::fill(padding_above.begin(), padding_above.end(), 0);
+        pad_required = true;
     }
 
     /// end asymmetric padding detection
@@ -759,7 +786,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
     size_t max_pool_index = build_pooling(CUDNN_POOLING_MAX,
                                           output_type,
                                           CUDNNEmitter::Prop::Forward,
-                                          shape_to_pool,
+                                          input_shape_padded,
                                           result_shape,
                                           node->get_window_movement_strides(),
                                           node->get_window_shape(),
@@ -768,18 +795,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
 
     std::unique_ptr<gpu::primitive> kernel_launch(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-            if (idx_workspace != std::numeric_limits<size_t>::max() &&
-                pad_index != std::numeric_limits<size_t>::max())
+            if (pad_required)
             {
-                // void* pad_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, idx_workspace);
-                // gpu::invoke_primitive(m_ctx,
-                //                       pad_dynamic_index,
-                //                       std::vector<void*>{inputs[0]}.data(),
-                //                       std::vector<void*>{pad_buffer}.data());
-
-                // gpu::invoke_primitive(
-                //     m_ctx, conv_index, std::vector<void*>{pad_buffer, inputs[1]}.data(), outputs);
-
                 void* pad_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, idx_workspace);
                 gpu::invoke_primitive(m_ctx,
                                       pad_index,
@@ -794,9 +811,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
             }
         }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Max* node)
@@ -855,9 +870,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Max* node)
         }});
     }
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Min* node)
@@ -916,10 +929,239 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Min* node)
         }});
     }
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
+
+#if CUDNN_VERSION >= 7200
+size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
+{
+    auto& args = node->get_inputs();
+    auto& out = node->get_outputs();
+    auto dtype = out[0].get_element_type().c_type_string();
+
+    std::stringstream ss;
+    ss << "rnn_psz" << shape_size(args[2].get_shape());
+    std::string hash = ss.str();
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    uint32_t seq_length = node->get_src_sequence_length();
+    uint32_t batch_size = node->get_batch_size();
+    std::vector<int32_t> sequence_lengths(batch_size, seq_length);
+    cudnnDataType_t data_type = get_cudnn_datatype(dtype);
+    void* pad_value = m_host_parameters.allocate_by_datatype(data_type, 0);
+
+    // determine if LSTM cell is uni/bi-directional
+    cudnnDirectionMode_t cell_dir;
+    int direction = node->get_direction();
+    if (direction == 1)
+    {
+        cell_dir = CUDNN_UNIDIRECTIONAL;
+    }
+    else if (direction == 2)
+    {
+        cell_dir = CUDNN_BIDIRECTIONAL;
+    }
+    else
+    {
+        throw std::runtime_error("Encountered unhandled cudnnDirectionMode_t");
+    }
+
+    // TO DO: add support for projected input layer
+    // In that case, input vectorSize must match recProjSize
+    auto& x_desc = m_descriptors.build<cudnnRNNDataDescriptor_t>();
+    auto& y_desc = m_descriptors.build<cudnnRNNDataDescriptor_t>();
+
+    uint32_t input_size = node->get_src_layer_feature_size() * direction;
+    CUDNN_SAFE_CALL(
+        cudnnSetRNNDataDescriptor(x_desc,
+                                  data_type,
+                                  CUDNN_RNN_DATA_LAYOUT_SEQ_MAJOR_UNPACKED, // TO DO: only unpacked
+                                  seq_length,
+                                  batch_size,
+                                  input_size,
+                                  sequence_lengths.data(),
+                                  pad_value));
+
+    uint32_t hidden_size = node->get_src_iter_feature_size() * direction;
+    CUDNN_SAFE_CALL(cudnnSetRNNDataDescriptor(y_desc,
+                                              data_type,
+                                              CUDNN_RNN_DATA_LAYOUT_SEQ_MAJOR_UNPACKED,
+                                              seq_length,
+                                              batch_size,
+                                              hidden_size,
+                                              sequence_lengths.data(),
+                                              pad_value));
+
+    // TO DO: with rnn projection layers the third dimension of the hidden_shape should be recProjSize
+    cudnnTensorFormat_t format = CUDNN_TENSOR_NCHW;
+    uint32_t num_layers = node->get_num_fused_layers() * direction;
+    Shape hidden_shape{num_layers, batch_size, hidden_size};
+    auto& hx_desc = get_nd_tensor_descriptor(hidden_shape, data_type, format);
+    auto& hy_desc = get_nd_tensor_descriptor(hidden_shape, data_type, format);
+
+    Shape cell_state_shape{num_layers, batch_size, hidden_size};
+    auto& cx_desc = get_nd_tensor_descriptor(cell_state_shape, data_type, format);
+    auto& cy_desc = get_nd_tensor_descriptor(cell_state_shape, data_type, format);
+
+    GPUAllocator allocator = m_primitive_emitter->get_memory_allocator();
+
+    // TO DO: enable fused dropout layers
+    // this will require eager allocation of scratch space which we don't currently support
+    float dropout_prob = 0.0f;
+    size_t dropout_state_size = 0;
+    uint64_t seed;
+    auto& dropout_desc = m_descriptors.build<cudnnDropoutDescriptor_t>();
+    if (dropout_prob > 0.0f)
+    {
+        CUDNN_SAFE_CALL(cudnnDropoutGetStatesSize(*m_ctx->cudnn_handle, &dropout_state_size));
+        seed = 0UL; // TO DO: add random seed
+        // Requires memory allocation for RNG state. Need to test adding this eagerly vs
+        // wrapping the below call into a closure and executing it at RT. Possible failure
+        // vector in the second method as the dropout descriptor is used in the initialization
+        // of the RNN descriptor.
+        CUDNN_SAFE_CALL(cudnnSetDropoutDescriptor(dropout_desc,
+                                                  *m_ctx->cudnn_handle,
+                                                  dropout_prob,
+                                                  nullptr, // device pointer
+                                                  dropout_state_size,
+                                                  seed));
+    }
+
+    // TO DO: support all RNN modes
+    cudnnRNNMode_t mode = CUDNN_LSTM;
+    if (node->get_gates_per_cell() != 4)
+    {
+        throw std::runtime_error("Only LSTMs are currently supported in fused RNN layers");
+    }
+
+    auto& rnn_desc = m_descriptors.build<cudnnRNNDescriptor_t>();
+    cudnnRNNAlgo_t algo = CUDNN_RNN_ALGO_STANDARD;
+    CUDNN_SAFE_CALL(cudnnSetRNNDescriptor(*m_ctx->cudnn_handle,
+                                          rnn_desc,
+                                          hidden_size,
+                                          num_layers,
+                                          dropout_desc,
+                                          CUDNN_LINEAR_INPUT, // TO DO: support CUDNN_SKIP_INPUT
+                                          cell_dir,
+                                          mode,
+                                          algo,
+                                          data_type));
+
+    if (algo == CUDNN_RNN_ALGO_PERSIST_DYNAMIC)
+    {
+        // TO DO: add support for persistant RNN plan
+    }
+
+    // construct descriptor for RNN  parameters
+    auto& temp_input_desc =
+        get_nd_tensor_descriptor(Shape{batch_size, input_size, 1}, data_type, format);
+
+    size_t params_size = 0;
+    CUDNN_SAFE_CALL(cudnnGetRNNParamsSize(
+        *m_ctx->cudnn_handle, rnn_desc, temp_input_desc, &params_size, data_type));
+    auto& w_desc = get_nd_filter_descriptor(Shape{params_size, 1, 1}, data_type, format);
+    size_t w_idx = allocator.reserve_workspace(params_size);
+
+    int num_tensors_per_layer = [&mode] {
+        switch (mode)
+        {
+        case CUDNN_RNN_RELU:
+        case CUDNN_RNN_TANH:
+            return 2; // 1 input + 1 recurrent input
+        case CUDNN_GRU:
+            return 6; // 3 input + 3 recurrent input
+        case CUDNN_LSTM:
+            return 8; // 4 input + 4 recurrent input
+        default: throw std::runtime_error("Encountered unsupported CUDNN RNN mode");
+        }
+    }();
+
+    std::vector<std::pair<int64_t, int64_t>> bias_offsets;
+    std::vector<std::pair<int64_t, int64_t>> weight_offsets;
+    auto& ifilter_desc = m_descriptors.build<cudnnFilterDescriptor_t>();
+    for (int ilayer = 0; ilayer < num_layers; ilayer++)
+    {
+        for (int itensor = 0; itensor < num_tensors_per_layer; itensor++)
+        {
+            for (int kind = 0; kind < 2; kind++)
+            {
+                void* offset = nullptr;
+                CUDNN_SAFE_CALL(((kind == 0) ? cudnnGetRNNLinLayerMatrixParams
+                                             : cudnnGetRNNLinLayerBiasParams)(*m_ctx->cudnn_handle,
+                                                                              rnn_desc,
+                                                                              ilayer,
+                                                                              temp_input_desc,
+                                                                              w_desc,
+                                                                              nullptr,
+                                                                              itensor,
+                                                                              ifilter_desc,
+                                                                              &offset));
+                cudnnDataType_t return_data_type;
+                cudnnTensorFormat_t return_format;
+                std::vector<int> dimensions = {1, 1, 1};
+                int return_rank;
+                CUDNN_SAFE_CALL(cudnnGetFilterNdDescriptor(ifilter_desc,
+                                                           static_cast<int>(dimensions.size()),
+                                                           &return_data_type,
+                                                           &return_format,
+                                                           &return_rank,
+                                                           dimensions.data()));
+                (kind == 0 ? weight_offsets : bias_offsets)
+                    .emplace_back(reinterpret_cast<int64_t>(offset),
+                                  shape_size(dimensions) * args[0].get_element_type().size());
+            }
+        }
+    }
+
+    size_t workspace_size = 0;
+    std::vector<cudnnTensorDescriptor_t> seq_descriptors(seq_length, temp_input_desc);
+    CUDNN_SAFE_CALL(cudnnGetRNNWorkspaceSize(
+        *m_ctx->cudnn_handle, rnn_desc, seq_length, seq_descriptors.data(), &workspace_size));
+
+    size_t workspace_idx = allocator.reserve_workspace(workspace_size);
+
+    auto recurrent_index = num_tensors_per_layer / 2;
+
+    std::unique_ptr<gpu::primitive> kernel_launch(
+        new gpu::primitive{[=](void** inputs, void** outputs) {
+            void* workspace_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
+            CUDNN_SAFE_CALL(cudnnRNNForwardInferenceEx(*m_ctx->cudnn_handle,
+                                                       rnn_desc,
+                                                       x_desc,
+                                                       inputs[0],
+                                                       hx_desc,
+                                                       inputs[1],
+                                                       cx_desc,
+                                                       inputs[3],
+                                                       w_desc,
+                                                       inputs[2],
+                                                       y_desc, // h_i
+                                                       outputs[0],
+                                                       hy_desc, // h_t
+                                                       outputs[1],
+                                                       cy_desc, // c_t
+                                                       outputs[2],
+                                                       NULL,
+                                                       NULL,
+                                                       NULL,
+                                                       NULL,
+                                                       NULL,
+                                                       NULL,
+                                                       NULL,
+                                                       NULL,
+                                                       workspace_ptr,
+                                                       workspace_size));
+            debug_sync();
+        }});
+
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
+}
+#endif
 
 size_t runtime::gpu::CUDNNEmitter::build_convolution(const std::string& dtype,
                                                      const Shape& input_tensor_shape,
@@ -941,31 +1183,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const std::string& dtype,
     auto& filter_desc = get_cudnn_filter_descriptor(input_filter_shape, data_type, tensor_format);
     auto& conv_desc = get_cudnn_convolution_descriptor(
         padding_below, window_movement_strides, window_dilation_strides, mode, data_type);
-
-    cudnnConvolutionFwdAlgo_t conv_fwd_algo = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM;
-    if (find_algo != algo_search::NONE)
-    {
-        int num_algos;
-        int max_algos = 0;
-        CUDNN_SAFE_CALL(
-            cudnnGetConvolutionForwardAlgorithmMaxCount(*m_ctx->cudnn_handle, &max_algos));
-        std::vector<cudnnConvolutionFwdAlgoPerf_t> results(max_algos);
-        auto cudnn_algo_search = (find_algo == algo_search::EXPLICIT)
-                                     ? cudnnFindConvolutionForwardAlgorithm
-                                     : cudnnGetConvolutionForwardAlgorithm_v7;
-        CUDNN_SAFE_CALL((*cudnn_algo_search)(*m_ctx->cudnn_handle,
-                                             tensor_desc_0,
-                                             filter_desc,
-                                             conv_desc,
-                                             tensor_desc_1,
-                                             static_cast<int>(results.size()),
-                                             &num_algos,
-                                             results.data()));
-        results.resize(num_algos);
-        conv_fwd_algo =
-            select_cudnn_algo<cudnnConvolutionFwdAlgoPerf_t, cudnnConvolutionFwdAlgo_t>(results);
-    }
-
+    const cudnnConvolutionFwdAlgo_t conv_fwd_algo = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM;
     void* alpha = m_host_parameters.allocate_by_datatype(data_type, 1.0);
     void* beta = m_host_parameters.allocate_by_datatype(data_type, 0);
 
@@ -1306,9 +1524,7 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t& pool_
     }
     }
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(pool));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(pool, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& bn_op,
@@ -1316,14 +1532,16 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
                                                    const Prop& direction,
                                                    const Shape& tensor_shape,
                                                    const Shape& param_shape,
-                                                   double epsilon)
+                                                   double epsilon,
+                                                   bool global_stats)
 {
     // Assumes NC{d1...dN} format
     std::stringstream ss;
     ss.precision(std::numeric_limits<double>::digits10 + 2);
 
     ss << "bn_op" << bn_op << "_dtype_" << dtype << "_dir" << static_cast<int>(direction) << "_ts"
-       << join(tensor_shape, "_") << "_ps" << join(param_shape, "_") << "_eps" << epsilon;
+       << join(tensor_shape, "_") << "_ps" << join(param_shape, "_") << "_eps" << epsilon << "_g"
+       << global_stats;
     std::string hash = ss.str();
     std::replace(hash.begin(), hash.end(), '.', '_');
 
@@ -1387,6 +1605,8 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
         void* bias_factor = m_host_parameters.allocate_by_datatype(data_type, (m - 1) / m);
         batchnorm.reset(new gpu::primitive{
             [=, &op_desc, &tensor_desc, &derived_param_desc](void** inputs, void** outputs) {
+                auto mean = (global_stats ? inputs[3] : outputs[1]);
+                auto variance = (global_stats ? inputs[4] : outputs[2]);
                 CUDNN_SAFE_CALL(cudnnBatchNormalizationForwardTraining(*m_ctx->cudnn_handle,
                                                                        bn_op,
                                                                        alpha,
@@ -1399,8 +1619,8 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
                                                                        inputs[0],
                                                                        inputs[1],
                                                                        exp_avg_factor,
-                                                                       outputs[1],
-                                                                       outputs[2],
+                                                                       mean,
+                                                                       variance,
                                                                        epsilon,
                                                                        NULL,
                                                                        NULL));
@@ -1411,13 +1631,13 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
                                               op_desc,
                                               beta,
                                               derived_param_desc,
-                                              outputs[2],
+                                              variance,
                                               beta,
                                               derived_param_desc,
-                                              outputs[2],
+                                              variance,
                                               bias_factor,
                                               derived_param_desc,
-                                              outputs[2]));
+                                              variance));
                 debug_sync();
             }});
         break;
@@ -1452,9 +1672,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
     }
     }
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(batchnorm));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(batchnorm, hash);
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_softmax(const cudnnSoftmaxAlgorithm_t& algorithm,
@@ -1522,9 +1740,7 @@ size_t runtime::gpu::CUDNNEmitter::build_softmax(const cudnnSoftmaxAlgorithm_t& 
     }
     }
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(softmax));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(softmax, hash);
 }
 
 void runtime::gpu::CUDNNEmitter::sync()
