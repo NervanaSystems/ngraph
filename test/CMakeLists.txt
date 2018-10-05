@@ -73,7 +73,7 @@ if(NGRAPH_CPU_ENABLE)
 endif()
 
 if(NGRAPH_GPU_ENABLE)
-    set(SRC ${SRC} cudnn.cpp gpu_test.cpp)
+    set(SRC ${SRC} cudnn.cpp gpu_test.cpp gpu_fusion.cpp)
 endif()
 
 foreach(TEST_CONFIG ${UNIT_TEST_CONFIG_LIST})

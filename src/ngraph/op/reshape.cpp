@@ -48,7 +48,7 @@ void op::Reshape::validate_and_infer_types()
     }
 
     // TODO(amprocte): should be possible to move around unknown dims in the input shape.
-    if (input_rank.is_determined())
+    if (input_rank.is_static())
     {
         NODE_VALIDATION_ASSERT(this, m_input_order.size() == size_t(input_rank))
             << "Input axis order is not a permutation of argument's axis indices (axis order: "
@@ -69,7 +69,7 @@ void op::Reshape::validate_and_infer_types()
             input_shape_product *= input_shape[i];
         }
 
-        if (input_shape_product.is_determined())
+        if (input_shape_product.is_static())
         {
             NODE_VALIDATION_ASSERT(this, size_t(input_shape_product) == shape_size(m_output_shape))
                 << "Product of output shape dimensions does not match product of argument shape "

@@ -85,41 +85,41 @@ TEST(element_type, size)
     }
 }
 
-TEST(element_type, merge_both_undetermined)
+TEST(element_type, merge_both_dynamic)
 {
     element::Type t;
-    ASSERT_TRUE(element::Type::merge(t, element::undetermined, element::undetermined));
-    ASSERT_FALSE(t.is_determined());
+    ASSERT_TRUE(element::Type::merge(t, element::dynamic, element::dynamic));
+    ASSERT_TRUE(t.is_dynamic());
 }
 
-TEST(element_type, merge_left_undetermined)
+TEST(element_type, merge_left_dynamic)
 {
     element::Type t;
-    ASSERT_TRUE(element::Type::merge(t, element::undetermined, element::u64));
-    ASSERT_TRUE(t.is_determined());
+    ASSERT_TRUE(element::Type::merge(t, element::dynamic, element::u64));
+    ASSERT_TRUE(t.is_static());
     ASSERT_EQ(t, element::u64);
 }
 
-TEST(element_type, merge_right_undetermined)
+TEST(element_type, merge_right_dynamic)
 {
     element::Type t;
-    ASSERT_TRUE(element::Type::merge(t, element::i16, element::undetermined));
-    ASSERT_TRUE(t.is_determined());
+    ASSERT_TRUE(element::Type::merge(t, element::i16, element::dynamic));
+    ASSERT_TRUE(t.is_static());
     ASSERT_EQ(t, element::i16);
 }
 
-TEST(element_type, merge_both_determined_equal)
+TEST(element_type, merge_both_static_equal)
 {
     element::Type t;
     ASSERT_TRUE(element::Type::merge(t, element::f64, element::f64));
-    ASSERT_TRUE(t.is_determined());
+    ASSERT_TRUE(t.is_static());
     ASSERT_EQ(t, element::f64);
 }
 
-TEST(element_type, merge_both_determined_unequal)
+TEST(element_type, merge_both_static_unequal)
 {
     element::Type t = element::f32;
     ASSERT_FALSE(element::Type::merge(t, element::i8, element::i16));
-    ASSERT_TRUE(t.is_determined());
+    ASSERT_TRUE(t.is_static());
     ASSERT_EQ(t, element::f32);
 }

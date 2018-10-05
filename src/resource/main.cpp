@@ -206,4 +206,5 @@ int main(int argc, char** argv)
         cout.imbue(locale(""));
         cout << "Total size " << total_size << " in " << total_count << " files\n";
     }
+    return 0;
 }

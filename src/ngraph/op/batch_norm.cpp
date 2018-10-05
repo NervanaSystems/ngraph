@@ -35,7 +35,7 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
 
 void ngraph::op::BatchNorm::validate_and_infer_types()
 {
-    if (validate_punt_if_incomplete())
+    if (validate_punt_if_dynamic())
     {
         return;
     }
@@ -163,7 +163,7 @@ ngraph::op::BatchNormBackprop::BatchNormBackprop(double eps,
 
 void ngraph::op::BatchNormBackprop::validate_and_infer_types()
 {
-    if (validate_punt_if_incomplete())
+    if (validate_punt_if_dynamic())
     {
         return;
     }

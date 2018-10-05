@@ -32,9 +32,9 @@ void op::util::ArithmeticReduction::validate_and_infer_types()
     auto input_shape = get_input_partial_shape(0);
     auto input_rank = input_shape.rank();
 
-    PartialShape result_shape{PartialShape::undetermined()};
+    PartialShape result_shape{PartialShape::dynamic()};
 
-    if (input_rank.is_determined())
+    if (input_rank.is_static())
     {
         std::vector<Dimension> dims;
 

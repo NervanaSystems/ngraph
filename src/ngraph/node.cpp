@@ -75,7 +75,7 @@ void Node::set_output_size(size_t n)
     for (size_t i = m_outputs.size(); i < n; ++i)
     {
         auto tensor_descriptor = make_shared<descriptor::Tensor>(
-            element::undetermined, PartialShape::undetermined(), get_name() + "_" + to_string(i));
+            element::dynamic, PartialShape::dynamic(), get_name() + "_" + to_string(i));
         m_outputs.emplace_back(this, i, tensor_descriptor);
     }
 }
@@ -425,7 +425,7 @@ void Node::validate_and_infer_elementwise(element::Type result_type)
                 << "Argument shapes are inconsistent.";
         }
     }
-    set_output_type(0, result_type.is_determined() ? result_type : element_type, pshape);
+    set_output_type(0, result_type.is_static() ? result_type : element_type, pshape);
 }
 
 void Node::validate_and_infer_elementwise_arithmetic()
@@ -444,21 +444,21 @@ void Node::validate_and_infer_elementwise_logical()
     validate_and_infer_elementwise(get_input_element_type(0));
 }
 
-bool Node::validate_punt_if_incomplete()
+bool Node::validate_punt_if_dynamic()
 {
-    bool any_undetermined = false;
+    bool any_dynamic = false;
 
     for (auto& input : m_inputs)
     {
-        any_undetermined |= !(input.get_partial_shape().is_complete());
-        any_undetermined |= !(input.get_element_type().is_determined());
+        any_dynamic |= input.get_partial_shape().is_dynamic();
+        any_dynamic |= input.get_element_type().is_dynamic();
     }
 
-    if (any_undetermined)
+    if (any_dynamic)
     {
         for (size_t i = 0; i < get_output_size(); i++)
         {
-            set_output_type(i, element::undetermined, PartialShape::undetermined());
+            set_output_type(i, element::dynamic, PartialShape::dynamic());
         }
         return true;
     }

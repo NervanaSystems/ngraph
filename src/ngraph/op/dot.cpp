@@ -47,7 +47,7 @@ op::Dot::Dot(const shared_ptr<Node>& arg0,
 
 void op::Dot::validate_and_infer_types()
 {
-    if (validate_punt_if_incomplete())
+    if (validate_punt_if_dynamic())
     {
         return;
     }

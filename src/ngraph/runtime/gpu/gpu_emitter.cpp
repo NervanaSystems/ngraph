@@ -108,6 +108,7 @@
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/runtime/gpu/op/rnn.hpp"
 #include "ngraph/runtime/gpu/type_info.hpp"
 #include "ngraph/util.hpp"
 
@@ -124,7 +125,7 @@ function<void(EMIT_ARGS)> runtime::gpu::GPU_Emitter::get_emit_function(const Nod
 // ...
 #define NGRAPH_OP(a, b) {type_index(typeid(b::a)), runtime::gpu::GPU_Emitter::emit_##a},
     static const map<type_index, function<void(EMIT_ARGS)>> typeid_map{
-#include "ngraph/op/op_tbl.hpp"
+#include "ngraph/runtime/gpu/op/op_tbl.hpp"
     };
 #undef NGRAPH_OP
     auto it = typeid_map.find(type_index(typeid(node)));
@@ -285,10 +286,12 @@ void runtime::gpu::GPU_Emitter::emit_BatchNorm(EMIT_ARGS)
 
     auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
 
+    bool global_stats = false;
     CUDNNEmitter::Prop direction;
-    if (batchnorm->get_training_flag() && args.size() == 3)
+    if (batchnorm->get_training_flag())
     {
         direction = CUDNNEmitter::Prop::Forward;
+        global_stats = (batchnorm->get_arguments().size() == 5);
     }
     else
     {
@@ -300,7 +303,8 @@ void runtime::gpu::GPU_Emitter::emit_BatchNorm(EMIT_ARGS)
                                                 direction,
                                                 args[2].get_shape(),
                                                 args[0].get_shape(),
-                                                batchnorm->get_eps_value());
+                                                batchnorm->get_eps_value(),
+                                                global_stats);
 
     writer.block_begin();
     {
@@ -1293,6 +1297,24 @@ void runtime::gpu::GPU_Emitter::emit_ReverseSequence(EMIT_ARGS)
     writer << "gpu::invoke_primitive(ctx, " << rs_index << ", input, output);\n";
     writer.block_end();
 }
+
+#if CUDNN_VERSION >= 7200
+void runtime::gpu::GPU_Emitter::emit_Rnn(EMIT_ARGS)
+{
+    auto rnn = static_cast<const ngraph::op::gpu::Rnn*>(node);
+
+    auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
+    size_t index = cudnn_emitter->build_primitive(rnn);
+
+    writer.block_begin();
+    {
+        writer << "void* input[] = {" << node_names(args) << "};\n";
+        writer << "void* output[] = {" << node_names(out) << "};\n";
+        writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+    }
+    writer.block_end();
+}
+#endif
 
 void runtime::gpu::GPU_Emitter::emit_Select(EMIT_ARGS)
 {

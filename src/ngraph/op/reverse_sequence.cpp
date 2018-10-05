@@ -41,22 +41,22 @@ void op::ReverseSequence::validate_and_infer_types()
     auto indices_shape = get_input_partial_shape(1);
     auto indices_rank = indices_shape.rank();
 
-    NODE_VALIDATION_ASSERT(this, !indices_rank.is_determined() || size_t(indices_rank) == 1)
+    NODE_VALIDATION_ASSERT(this, indices_rank.is_dynamic() || size_t(indices_rank) == 1)
         << "Sequence indices must be a 1-dimensional tensor (sequence indices shape: "
         << get_input_shape(1) << ").";
 
     auto input_shape = get_input_partial_shape(0);
     auto input_rank = input_shape.rank();
 
-    NODE_VALIDATION_ASSERT(this, !input_rank.is_determined() || m_batch_axis < size_t(input_rank))
+    NODE_VALIDATION_ASSERT(this, input_rank.is_dynamic() || m_batch_axis < size_t(input_rank))
         << "Batch axis index (" << m_batch_axis
         << ") is out of bounds (argument shape: " << input_shape << ").";
 
-    NODE_VALIDATION_ASSERT(this, !input_rank.is_determined() || m_seq_axis < size_t(input_rank))
+    NODE_VALIDATION_ASSERT(this, input_rank.is_dynamic() || m_seq_axis < size_t(input_rank))
         << "Sequence axis index (" << m_seq_axis
         << ") is out of bounds (argument shape: " << input_shape << ").";
 
-    if (input_rank.is_determined() && indices_rank.is_determined())
+    if (input_rank.is_static() && indices_rank.is_static())
     {
         Dimension merged_sequence_length;
 

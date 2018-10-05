@@ -32,7 +32,7 @@ op::Concat::Concat(const NodeVector& args, size_t concatenation_axis)
 
 void op::Concat::validate_and_infer_types()
 {
-    if (validate_punt_if_incomplete())
+    if (validate_punt_if_dynamic())
     {
         return;
     }

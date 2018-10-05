@@ -33,7 +33,7 @@ namespace ngraph
     {
         class Type;
 
-        extern const Type undetermined;
+        extern const Type dynamic;
         extern const Type boolean;
         extern const Type f32;
         extern const Type f64;
@@ -61,7 +61,8 @@ namespace ngraph
             const std::string& c_type_string() const;
             size_t size() const;
             size_t hash() const;
-            bool is_determined() const { return (*this != undetermined); }
+            bool is_static() const { return (*this != dynamic); }
+            bool is_dynamic() const { return !is_static(); }
             bool is_real() const { return m_is_real; }
             bool is_signed() const { return m_is_signed; }
             bool is_quantized() const { return m_is_quantized; }
@@ -81,16 +82,16 @@ namespace ngraph
             ///        element type t that is no more restrictive than t1 and t2, if t exists.
             ///        More simply:
             ///
-            ///           merge(dst,element::Type::undetermined,t)
+            ///           merge(dst,element::Type::dynamic,t)
             ///              writes t to dst and returns true
             ///
-            ///           merge(dst,t,element::Type::undetermined)
+            ///           merge(dst,t,element::Type::dynamic)
             ///              writes t to dst and returns true
             ///
-            ///           merge(dst,t1,t2) where t1, t2 both determined and equal
+            ///           merge(dst,t1,t2) where t1, t2 both static and equal
             ///              writes t1 to dst and returns true
             ///
-            ///           merge(dst,t1,t2) where t1, t2 both determined and unequal
+            ///           merge(dst,t1,t2) where t1, t2 both static and unequal
             ///              does nothing to dst, and returns false
             static bool merge(element::Type& dst, const element::Type& t1, const element::Type& t2);
 
@@ -99,7 +100,7 @@ namespace ngraph
             bool m_is_real{false};
             bool m_is_signed{false};
             bool m_is_quantized{false};
-            std::string m_cname{"undetermined"};
+            std::string m_cname{"dynamic"};
         };
 
         template <typename T>

@@ -21,7 +21,7 @@
 
 using namespace ngraph;
 
-const element::Type element::undetermined(0, false, false, false, "undetermined");
+const element::Type element::dynamic(0, false, false, false, "dynamic");
 const element::Type element::boolean(8, false, true, false, "char");
 const element::Type element::f32(32, true, true, false, "float");
 const element::Type element::f64(64, true, true, false, "double");
@@ -187,12 +187,12 @@ std::ostream& element::operator<<(std::ostream& out, const element::Type& obj)
 
 bool element::Type::merge(element::Type& dst, const element::Type& t1, const element::Type& t2)
 {
-    if (!t1.is_determined())
+    if (t1.is_dynamic())
     {
         dst = t2;
         return true;
     }
-    else if (!t2.is_determined())
+    else if (t2.is_dynamic())
     {
         dst = t1;
         return true;

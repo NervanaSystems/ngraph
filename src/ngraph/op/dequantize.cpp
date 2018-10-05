@@ -34,7 +34,7 @@ op::Dequantize::Dequantize(shared_ptr<Node> input,
 
 void op::Dequantize::validate_and_infer_types()
 {
-    if (validate_punt_if_incomplete())
+    if (validate_punt_if_dynamic())
     {
         return;
     }

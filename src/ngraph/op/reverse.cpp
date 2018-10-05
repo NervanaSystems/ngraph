@@ -35,7 +35,7 @@ void op::Reverse::validate_and_infer_types()
     auto input_shape = get_input_partial_shape(0);
     Dimension input_rank = input_shape.rank();
 
-    if (input_rank.is_determined())
+    if (input_rank.is_static())
     {
         // Make sure all reversed axis indices are valid.
         for (size_t axis : m_reversed_axes)
