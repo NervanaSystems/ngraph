@@ -194,7 +194,8 @@ namespace ngraph
                             return result.algo;
                         }
                     }
-                    throw ngraph_error("No suitable cuDNN algorithm was found for the requested operation.");
+                    throw ngraph_error(
+                        "No suitable cuDNN algorithm was found for the requested operation.");
                 }
 
                 CUDNNDescriptors m_descriptors;
