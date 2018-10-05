@@ -50,14 +50,6 @@ namespace ngraph
                 size_t build_primitive(const op::ReplaceSlice* node, bool in_place_op);
 
             public:
-                size_t build_pad(const std::array<std::string, 2>& dtypes,
-                                 NVShape input_shape,
-                                 NVShape output_shape,
-                                 NVShape pad_below,
-                                 NVShape pad_above,
-                                 NVShape pad_interior,
-                                 const std::string& pad_value = "");
-
                 size_t build_pad_dynamic(const std::vector<std::string>& dtypes,
                                          NVShape input_shape,
                                          NVShape output_shape,
