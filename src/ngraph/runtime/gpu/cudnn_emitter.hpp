@@ -70,6 +70,12 @@ namespace ngraph
                     Backward
                 };
 
+                enum class ReductionMode
+                {
+                    Reduce,
+                    ArgMax_ArgMin
+                };
+
                 size_t build_convolution(const std::string& dtype,
                                          const Shape& input_tensor_shape,
                                          const Shape& input_filter_shape,
@@ -100,7 +106,8 @@ namespace ngraph
                 size_t build_reduce_forward(const cudnnReduceTensorOp_t& reduce_op,
                                             const std::string& dtype,
                                             const Shape& input_shape,
-                                            const AxisSet& reduction_axes);
+                                            const AxisSet& reduction_axes,
+                                            const ReductionMode& reduction_mode);
 
                 size_t build_tensor_op(const cudnnOpTensorOp_t& tensor_op,
                                        const std::string& dtype,
@@ -131,6 +138,11 @@ namespace ngraph
                                      const std::string& dtype,
                                      const Prop& direction,
                                      const Shape& tensor_shape);
+
+                // size_t build_argmax_argmin(const cudnnReduceTensorOp_t& reduce_op,
+                //                            const std::string& dtype,
+                //                            const Shape& input_shape,
+                //                            const size_t reduction_axes);
 
                 void debug_sync();
                 void sync();

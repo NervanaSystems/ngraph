@@ -163,7 +163,29 @@ void runtime::gpu::GPU_Emitter::emit_And(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_ArgMax(EMIT_ARGS)
 {
-    throw unsupported_op("Unsupported op '" + node->description() + "'");
+    //throw unsupported_op("Unsupported op '" + node->description() + "'");
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+    auto argmax = static_cast<const ngraph::op::ArgMax*>(node);
+    std::vector<size_t> axes{argmax->get_reduction_axis()};
+    auto axis_set = AxisSet(axes);
+    const Shape& arg0_shape = args[0].get_shape();
+    cudnnReduceTensorOp_t reduce_op = CUDNN_REDUCE_TENSOR_MAX;
+    CUDNNEmitter::ReductionMode reduction_mode = CUDNNEmitter::ReductionMode::ArgMax_ArgMin;
+
+    writer.block_begin();
+    {
+        auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
+
+        auto index = cudnn_emitter->build_reduce_forward(
+            reduce_op, out[0].get_type(), args[0].get_shape(), axis_set, reduction_mode);
+
+        writer << "void* input[] = {" << node_names(args) << "};\n";
+        writer << "void* output[] = {" << node_names(out) << "};\n";
+        writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+    }
 }
 
 void runtime::gpu::GPU_Emitter::emit_ArgMin(EMIT_ARGS)
@@ -829,6 +851,7 @@ void runtime::gpu::GPU_Emitter::emit_Power(EMIT_ARGS)
 void runtime::gpu::GPU_Emitter::emit_Product(EMIT_ARGS)
 {
     const ngraph::op::Product* product = static_cast<const ngraph::op::Product*>(node);
+    CUDNNEmitter::ReductionMode reduction_mode = CUDNNEmitter::ReductionMode::Reduce;
     writer.block_begin();
     {
         if (out[0].get_size() != 0)
@@ -855,7 +878,8 @@ void runtime::gpu::GPU_Emitter::emit_Product(EMIT_ARGS)
                 auto index = cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_MUL,
                                                                  out[0].get_type(),
                                                                  args[0].get_shape(),
-                                                                 product->get_reduction_axes());
+                                                                 product->get_reduction_axes(),
+                                                                 reduction_mode);
 
                 writer << "void* input[] = {" << node_names(args) << "};\n";
                 writer << "void* output[] = {" << node_names(out) << "};\n";
@@ -945,13 +969,16 @@ void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
                     }
                 }
 
+                CUDNNEmitter::ReductionMode reduction_mode = CUDNNEmitter::ReductionMode::Reduce;
+
                 auto& cudnn_emitter =
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
                 auto reduce_index =
                     cudnn_emitter->build_reduce_forward(reduce_tensor_op,
                                                         out[0].get_type(),
                                                         args[0].get_shape(),
-                                                        reduce_op->get_reduction_axes());
+                                                        reduce_op->get_reduction_axes(),
+                                                        reduction_mode);
 
                 writer << "void* input[] = {" << node_names(args) << "};\n";
                 writer << "void* output[] = {" << node_names(out) << "};\n";

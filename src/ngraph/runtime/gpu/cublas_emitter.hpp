@@ -42,12 +42,6 @@ namespace ngraph
                                  size_t reduction_axes,
                                  const Node* node);
 
-                size_t build_argmax(const element::Type& dtype,
-                                    const Shape& arg0_shape,
-                                    const Shape& out_shape,
-                                    size_t axis,
-                                    const Node* node);
-
                 void debug_sync();
                 void sync();
 
