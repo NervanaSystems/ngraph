@@ -137,7 +137,7 @@ namespace ngraph
     /// \param d1 Left operand for multiplication.
     /// \param d2 Right operand for multiplicaiton.
     /// \return 0 if either of `d1` or `d2` is static and 0; else, Dimension::dynamic() if either
-    ///         `d1` of `d2` is dynamic; else, a static dimension with value
+    ///         of `d1` or `d2` is dynamic; else, a static dimension with value
     ///         `size_t(d1)*size_t(d2)`.
     Dimension operator*(const Dimension& d1, const Dimension& d2);
 }
