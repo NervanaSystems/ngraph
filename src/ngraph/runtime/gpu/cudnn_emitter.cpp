@@ -1065,7 +1065,6 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
     CUDNN_SAFE_CALL(cudnnGetRNNParamsSize(
         *m_ctx->cudnn_handle, rnn_desc, temp_input_desc, &params_size, data_type));
     auto& w_desc = get_nd_filter_descriptor(Shape{params_size, 1, 1}, data_type, format);
-    allocator.reserve_workspace(params_size);
 
     int num_tensors_per_layer = [&mode] {
         switch (mode)
