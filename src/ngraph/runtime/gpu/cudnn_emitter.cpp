@@ -382,7 +382,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
     Shape padding_interior(data_dilation_strides);
 
     size_t idx_workspace = std::numeric_limits<size_t>::max();
-    size_t pad_dynamic_index = std::numeric_limits<size_t>::max();
+    size_t pad_index = std::numeric_limits<size_t>::max();
     bool can_find_algo = true;
     if (pad_required || is_deconvolution)
     {
@@ -395,8 +395,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
         idx_workspace = allocator.reserve_workspace(temp_size, true);
 
         auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
-        pad_dynamic_index =
-            cuda_emitter->build_pad_dynamic({{args[0].get_element_type().c_type_string(),
+        pad_index = cuda_emitter->build_pad({{args[0].get_element_type().c_type_string(),
                                               out[0].get_element_type().c_type_string()}},
                                             input_shape,
                                             input_shape_padded,
@@ -422,11 +421,11 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
     std::unique_ptr<gpu::primitive> kernel_launch(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
             if (idx_workspace != std::numeric_limits<size_t>::max() &&
-                pad_dynamic_index != std::numeric_limits<size_t>::max())
+                pad_index != std::numeric_limits<size_t>::max())
             {
                 void* pad_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, idx_workspace);
                 gpu::invoke_primitive(m_ctx,
-                                      pad_dynamic_index,
+                                      pad_index,
                                       std::vector<void*>{inputs[0]}.data(),
                                       std::vector<void*>{pad_buffer}.data());
                 gpu::invoke_primitive(
@@ -506,7 +505,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
     Shape padding_interior(data_dilation_strides);
 
     size_t idx_workspace = std::numeric_limits<size_t>::max();
-    size_t pad_dynamic_index = std::numeric_limits<size_t>::max();
+    size_t pad_index = std::numeric_limits<size_t>::max();
     size_t slice_index = std::numeric_limits<size_t>::max();
     bool can_find_algo = true;
     if (pad_required || is_deconvolution)
@@ -520,11 +519,11 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
         idx_workspace = allocator.reserve_workspace(temp_size, true);
 
         auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
-        pad_dynamic_index = cuda_emitter->build_pad_dynamic({{input_type, output_type}},
-                                                            output_shape,
-                                                            output_shape_padded,
-                                                            padding_below,
-                                                            padding_interior);
+        pad_index = cuda_emitter->build_pad({{input_type, output_type}},
+                                            output_shape,
+                                            output_shape_padded,
+                                            padding_below,
+                                            padding_interior);
 
         slice_index = cuda_emitter->build_slice({{input_type, output_type}},
                                                 output_shape_padded,
@@ -551,12 +550,12 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
     std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](void** inputs,
                                                                          void** outputs) mutable {
         if (idx_workspace != std::numeric_limits<size_t>::max() &&
-            pad_dynamic_index != std::numeric_limits<size_t>::max() &&
+            pad_index != std::numeric_limits<size_t>::max() &&
             slice_index != std::numeric_limits<size_t>::max())
         {
             void* pad_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, idx_workspace);
             gpu::invoke_primitive(m_ctx,
-                                  pad_dynamic_index,
+                                  pad_index,
                                   std::vector<void*>{inputs[0]}.data(),
                                   std::vector<void*>{pad_buffer}.data());
             gpu::invoke_primitive(m_ctx, conv_index, inputs, std::vector<void*>{pad_buffer}.data());
@@ -626,7 +625,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
     Shape padding_interior(data_dilation_strides);
 
     size_t idx_workspace = std::numeric_limits<size_t>::max();
-    size_t pad_dynamic_index = std::numeric_limits<size_t>::max();
+    size_t pad_index = std::numeric_limits<size_t>::max();
     bool can_find_algo = true;
     if (pad_required || is_deconvolution)
     {
@@ -639,11 +638,11 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
         idx_workspace = allocator.reserve_workspace(temp_size, true);
 
         auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
-        pad_dynamic_index = cuda_emitter->build_pad_dynamic({{input_type, output_type}},
-                                                            input_shape_0,
-                                                            input_shape_padded,
-                                                            padding_below,
-                                                            padding_interior);
+        pad_index = cuda_emitter->build_pad({{input_type, output_type}},
+                                            input_shape_0,
+                                            input_shape_padded,
+                                            padding_below,
+                                            padding_interior);
 
         // asymetric padding has been applied, zero out padding vectors to
         // ensure cudnn does not assume padding
@@ -664,11 +663,11 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
     std::unique_ptr<gpu::primitive> kernel_launch(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
             if (idx_workspace != std::numeric_limits<size_t>::max() &&
-                pad_dynamic_index != std::numeric_limits<size_t>::max())
+                pad_index != std::numeric_limits<size_t>::max())
             {
                 void* pad_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, idx_workspace);
                 gpu::invoke_primitive(m_ctx,
-                                      pad_dynamic_index,
+                                      pad_index,
                                       std::vector<void*>{inputs[0]}.data(),
                                       std::vector<void*>{pad_buffer}.data());
                 gpu::invoke_primitive(
@@ -732,11 +731,11 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
                                                    padded_size * args[0].get_element_type().size());
 
         auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
-        pad_index = cuda_emitter->build_pad_dynamic({{input_type, output_type}},
-                                                    input_shape,
-                                                    input_shape_padded,
-                                                    padding_below,
-                                                    padding_interior);
+        pad_index = cuda_emitter->build_pad({{input_type, output_type}},
+                                            input_shape,
+                                            input_shape_padded,
+                                            padding_below,
+                                            padding_interior);
 
         // asymetric padding has been applied, zero out padding vectors to
         // ensure cuDNN does not assume padding during pooling

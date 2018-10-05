@@ -807,7 +807,7 @@ void runtime::gpu::GPU_Emitter::emit_Pad(EMIT_ARGS)
 
         auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
 
-        auto pad_index = cuda_emitter->build_pad_dynamic(
+        auto pad_index = cuda_emitter->build_pad_fill(
             {{args[0].get_type(), args[1].get_type(), out[0].get_type()}},
             input_shape,
             output_shape,
