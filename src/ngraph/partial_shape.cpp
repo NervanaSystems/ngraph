@@ -22,6 +22,12 @@
 
 using namespace ngraph;
 
+PartialShape::PartialShape(const Shape& shape)
+    : PartialShape(true, {})
+{
+    m_dimensions.assign(shape.begin(), shape.end());
+}
+
 bool ngraph::PartialShape::is_complete() const
 {
     return m_rank_is_determined &&
@@ -101,4 +107,14 @@ bool PartialShape::compatible(const PartialShape& s) const
         // compatible everywhere.
         return true;
     }
+}
+
+Shape PartialShape::to_shape() const
+{
+    if (!is_complete())
+    {
+        throw std::invalid_argument("to_shape was called on an incomplete shape.");
+    }
+
+    return Shape(m_dimensions.begin(), m_dimensions.end());
 }

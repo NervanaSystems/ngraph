@@ -14,38 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <iostream>
-#include <tuple>
-
-int count()
-{
-    static int counter = 0;
-    return counter++;
-}
-
-std::tuple<int, int> stateless_count(int counter)
-{
-    return std::tuple<int, int>(counter, counter + 1);
-}
-
-int main()
-{
-    std::cout << "State: " << count() << ", " << count() << std::endl;
-
-    std::cout << "Stateless: ";
-    int counter = 0;
-    {
-        auto r(stateless_count(counter));
-        counter = std::get<1>(r);
-        std::cout << std::get<0>(r);
-    }
-    std::cout << ", ";
-    {
-        auto r(stateless_count(counter));
-        counter = std::get<1>(r);
-        std::cout << std::get<0>(r);
-    }
-    std::cout << std::endl;
-
-    return 0;
-}
+#include "ngraph/op/op_tbl.hpp"
+#if CUDNN_VERSION >= 7200
+NGRAPH_OP(Rnn, ngraph::op::gpu)
+#endif
