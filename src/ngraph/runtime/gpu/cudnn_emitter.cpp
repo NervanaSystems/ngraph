@@ -1662,6 +1662,58 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
     return this->m_primitive_emitter->register_primitive(batchnorm, hash);
 }
 
+size_t runtime::gpu::CUDNNEmitter::build_lrn(const std::string& dtype,
+                                             const Prop& direction,
+                                             const Shape& io_shape,
+                                             const double lrn_alpha,
+                                             const double lrn_beta,
+                                             const double lrn_bias,
+                                             const size_t lrn_size)
+{
+    // construct hash to determine if kernel needs to be emitted
+    // or if it already exists in the primitive list
+    std::stringstream ss;
+    ss << "lrn_dtype_" << dtype << "_dir" << static_cast<int>(direction) << "_io"
+       << join(io_shape, "_") << "_alpha_" << lrn_alpha << "_beta_" << lrn_beta << "_bias_"
+       << lrn_bias << "_size_" << lrn_size;
+    std::string hash = ss.str();
+
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    cudnnDataType_t data_type = get_cudnn_datatype(dtype);
+    cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
+    auto& io_desc = tensor_descriptor_from_shape(io_shape, data_type, tensor_format);
+
+    auto& lrn_descriptor = m_descriptors.build<cudnnLRNDescriptor_t>();
+    CUDNN_SAFE_CALL(cudnnSetLRNDescriptor(
+        lrn_descriptor, static_cast<unsigned int>(lrn_size), lrn_alpha, lrn_beta, lrn_bias));
+    void* alpha = m_host_parameters.allocate_by_datatype(data_type, 1.0);
+    void* beta = m_host_parameters.allocate_by_datatype(data_type, 0);
+
+    // emit lrn operation
+    std::unique_ptr<gpu::primitive> lrn(new gpu::primitive{
+        [&lrn_descriptor, &io_desc, this, alpha, beta](void** inputs, void** outputs) {
+            CUDNN_SAFE_CALL(cudnnLRNCrossChannelForward(*m_ctx->cudnn_handle,
+                                                        lrn_descriptor,
+                                                        CUDNN_LRN_CROSS_CHANNEL_DIM1,
+                                                        alpha,
+                                                        io_desc,
+                                                        inputs[0],
+                                                        beta,
+                                                        io_desc,
+                                                        outputs[0]));
+            debug_sync();
+        }});
+
+    primitive_index = this->m_primitive_emitter->register_primitive(lrn, hash);
+    return primitive_index;
+}
+
 size_t runtime::gpu::CUDNNEmitter::build_softmax(const cudnnSoftmaxAlgorithm_t& algorithm,
                                                  const cudnnSoftmaxMode_t& mode,
                                                  const std::string& dtype,
