@@ -58,7 +58,7 @@ namespace ngraph
                                  NVShape pad_interior,
                                  const std::string& pad_value = "");
 
-                size_t build_pad_dynamic(const std::array<std::string, 2>& dtypes,
+                size_t build_pad_dynamic(const std::vector<std::string>& dtypes,
                                          NVShape input_shape,
                                          NVShape output_shape,
                                          NVShape padding_below,

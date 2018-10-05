@@ -470,7 +470,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const std::array<std::string, 2>& dt
     return this->m_primitive_emitter->register_primitive(pad, hash);
 }
 
-size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string, 2>& dtypes,
+size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::vector<std::string>& dtypes,
                                                     NVShape input_shape,
                                                     NVShape output_shape,
                                                     NVShape padding_below,
@@ -494,10 +494,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string
         return primitive_index;
     }
 
-    uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
-    // TODO: currently we set it to 64, will add tuning method later
-    uint32_t block_size_x = 64;
-    uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
+
 
     NVShape pad_below(input_shape.size(), 0);
     NVShape pad_interior(input_shape.size(), 1);
@@ -513,10 +510,29 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string
     NVShape input_strides = row_major_strides(input_shape);
     NVShape output_strides = row_major_strides(output_shape);
 
+    uint32_t nthreads;
     auto args = m_primitive_emitter->add_kernel_args();
-    args.add_placeholder(dtypes[0], "in")
-        .add_placeholder(dtypes[1], "out")
-        .add("input_strides", input_strides)
+    if (dtypes.size() == 3)
+    {
+        args.add_placeholder(dtypes.front(), "in")
+            .add_placeholder(dtypes[1], "pad")
+            .add_placeholder(dtypes.back(), "out")
+            .add("input_shape", input_shape);
+
+        nthreads = static_cast<uint32_t>(shape_size(output_shape));
+    }
+    else
+    {
+        args.add_placeholder(dtypes.front(), "in")
+            .add_placeholder(dtypes.back(), "out");
+        nthreads = static_cast<uint32_t>(shape_size(input_shape));
+    }
+
+    // TODO: currently we set it to 64, will add tuning method later
+    uint32_t block_size_x = 64;
+    uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
+
+    args.add("input_strides", input_strides)
         .add("output_strides", output_strides)
         .add("padding_below", pad_below)
         .add("padding_interior", pad_interior)
@@ -531,16 +547,32 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
-        CudaKernelBuilder::get_pad_dynamic_op(writer, kernel_name.str(), args, dtypes, rank);
+        if (dtypes.size() == 3)
+        {
+            CudaKernelBuilder::get_pad_fill_op(writer, kernel_name.str(), args, rank);
+        }
+        else
+        {
+            CudaKernelBuilder::get_pad_op(writer, kernel_name.str(), args, rank);
+        }
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
 
     // create the launch primitive
     std::unique_ptr<gpu::primitive> pad_dynamic(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-            void** args_list = args.resolve_placeholder(0, &inputs[0])
-                                   .resolve_placeholder(1, &outputs[0])
-                                   .get_argument_list();
+                if (dtypes.size() == 3)
+                {
+                    args.resolve_placeholder(0, &inputs[0])
+                        .resolve_placeholder(1, &inputs[1])
+                        .resolve_placeholder(2, &outputs[0]);
+                }
+                else
+                {
+                    args.resolve_placeholder(0, &inputs[0])
+                        .resolve_placeholder(1, &outputs[0]);
+                }
+                void** args_list = args.get_argument_list();
 
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                           aligned_grid_size_x,
