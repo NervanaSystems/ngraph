@@ -616,7 +616,7 @@ void test_binary_logical(std::string node_type,
     };
 
     test_binary_differ_arguments_view_element_types(tv0_2_4_param_0, tv0_2_4_param_2);
-    test_binary_non_bool_arguments_view_element_types(tv0_2_4_param_2, tv0_2_4_param_0);
+    test_binary_differ_arguments_view_element_types(tv0_2_4_param_2, tv0_2_4_param_0);
     test_binary_non_bool_arguments_view_element_types(tv0_2_4_param_2, tv0_2_4_param_3);
 
     auto test_binary_good_arguments = [&](const shared_ptr<Node>& x, const shared_ptr<Node>& y) {
@@ -6846,4 +6846,9 @@ TEST(type_prop, validate_punt_if_dynamic)
     ASSERT_EQ(concat->get_output_size(), 1);
     ASSERT_TRUE(concat->get_output_partial_shape(0).rank().is_dynamic());
     ASSERT_TRUE(concat->get_output_element_type(0).is_dynamic());
+}
+
+TEST(type_prop, fail_tests_wip)
+{
+    FAIL() << "PR is still WIP";
 }

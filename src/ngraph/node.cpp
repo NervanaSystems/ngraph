@@ -208,13 +208,27 @@ std::ostream& Node::write_short_description(std::ostream& out) const
     return out << get_name();
 }
 
+static std::string pretty_element_type(const element::Type& et)
+{
+    if (et.is_dynamic())
+    {
+        return "?";
+    }
+    else
+    {
+        return et.c_type_string();
+    }
+}
+
 std::ostream& Node::write_long_description(std::ostream& out) const
 {
     out << description() << '[' << get_name() << "](";
     string sep = "";
     for (auto arg : get_arguments())
     {
-        out << sep << NodeDescription(*arg, true);
+        out << sep << NodeDescription(*arg, true) << ": "
+            << pretty_element_type(arg->get_output_element_type(0))
+            << arg->get_output_partial_shape(0) << "";
         sep = ", ";
     }
     out << ")";
@@ -413,9 +427,6 @@ void Node::validate_and_infer_elementwise(element::Type result_type)
     {
         for (size_t i = 1; i < get_input_size(); ++i)
         {
-            // TODO(amprocte): we need more info on what the arg shapes/types are. Perhaps this
-            // should be produced by NODE_VALIDATION_ASSERT itself.
-
             NODE_VALIDATION_ASSERT(
                 this, element::Type::merge(element_type, element_type, get_input_element_type(i)))
                 << "Argument element types are inconsistent.";
@@ -430,18 +441,18 @@ void Node::validate_and_infer_elementwise(element::Type result_type)
 
 void Node::validate_and_infer_elementwise_arithmetic()
 {
-    NODE_VALIDATION_ASSERT(this, get_input_element_type(0) != element::boolean)
+    validate_and_infer_elementwise();
+    NODE_VALIDATION_ASSERT(this, get_output_element_type(0) != element::boolean)
         << "Arguments cannot have boolean element type (argument element type: "
-        << get_input_element_type(0) << ").";
-    validate_and_infer_elementwise(get_input_element_type(0));
+        << get_output_element_type(0) << ").";
 }
 
 void Node::validate_and_infer_elementwise_logical()
 {
-    NODE_VALIDATION_ASSERT(this, get_input_element_type(0) == element::boolean)
+    validate_and_infer_elementwise();
+    NODE_VALIDATION_ASSERT(this, get_output_element_type(0) == element::boolean)
         << "Operands for logical operators must have boolean element type but have element type "
-        << get_input_element_type(0) << ".";
-    validate_and_infer_elementwise(get_input_element_type(0));
+        << get_output_element_type(0) << ".";
 }
 
 bool Node::validate_punt_if_dynamic()
