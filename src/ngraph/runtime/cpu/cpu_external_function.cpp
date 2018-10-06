@@ -163,6 +163,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_horizontal_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_post_layout_assignment.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
@@ -395,6 +396,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutAssignment>(this);
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.get_state().set_visualize_tree_ops_map(runtime::cpu::get_visualize_tree_ops_map());
 }
@@ -632,6 +634,42 @@ using namespace ngraph::runtime;
                     const descriptor::Output& output = input.get_output();
                     shared_ptr<descriptor::TensorView> tv = output.get_tensor_ptr();
                     tensor_index_map.insert({tv->get_name(), tensor_index++});
+                }
+            }
+        }
+
+        // concat
+        for (shared_ptr<Node> node : ordered_ops)
+        {
+            if (auto concat = std::dynamic_pointer_cast<ngraph::op::Concat>(node))
+            {
+                if (auto op_annotations = concat->get_op_annotations())
+                {
+                    auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+                    if (in_place_oi_pairs.size() > 0)
+                    {
+                        bool found_last_concat = true;
+                        for (auto user : concat->get_users())
+                        {
+                            if (dynamic_pointer_cast<ngraph::op::Concat>(user))
+                            {
+                                found_last_concat = false;
+                                break;
+                            }
+                        }
+                        if (found_last_concat)
+                        {
+                            for (auto arg : concat->get_arguments())
+                            {
+                                if (auto arg_concat = dynamic_pointer_cast<ngraph::op::Concat>(arg))
+                                {
+                                    NGRAPH_DEBUG << "call propagate_in_place_concat for "
+                                                 << arg->get_name() << std::endl;
+                                    propagate_in_place_concat(arg_concat);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1128,6 +1166,42 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
     } while (propagate_further);
 }
 
+void runtime::cpu::CPU_ExternalFunction::propagate_in_place_concat(
+    shared_ptr<ngraph::op::Concat> concat)
+{
+    std::deque<std::shared_ptr<ngraph::op::Concat>> stack;
+    stack.push_front(concat);
+
+    while (stack.size() > 0)
+    {
+        auto it = stack.front();
+        stack.pop_front();
+        if (auto op_annotations = it->get_op_annotations())
+        {
+            auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+            if (in_place_oi_pairs.size() > 0)
+            {
+                auto output_tensor = &it->get_output_tensor();
+                auto offset = output_tensor->get_pool_offset();
+                for (auto arg : it->get_arguments())
+                {
+                    auto input_node = std::dynamic_pointer_cast<ngraph::op::Op>(arg);
+                    auto input_tensor = &input_node->get_output_tensor();
+                    auto old_offset = input_tensor->get_pool_offset();
+                    input_tensor->set_pool_offset(offset);
+                    NGRAPH_DEBUG << "cpu_external_function: change offset, old offset is "
+                                 << old_offset << ", new offset is " << offset << std::endl;
+                    offset += input_tensor->size();
+                    if (auto arg_concat = std::dynamic_pointer_cast<ngraph::op::Concat>(arg))
+                    {
+                        stack.push_front(arg_concat);
+                    }
+                }
+            }
+        }
+    }
+}
+
 void runtime::cpu::CPU_ExternalFunction::build()
 {
     if (m_is_built)
@@ -1181,6 +1255,43 @@ void runtime::cpu::CPU_ExternalFunction::build()
     }
 
     // Build executor
+
+    // concat
+    for (shared_ptr<Node> node : m_function->get_ordered_ops())
+    {
+        if (auto concat = std::dynamic_pointer_cast<ngraph::op::Concat>(node))
+        {
+            if (auto op_annotations = concat->get_op_annotations())
+            {
+                auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+                if (in_place_oi_pairs.size() > 0)
+                {
+                    bool found_last_concat = true;
+                    for (auto user : concat->get_users())
+                    {
+                        if (dynamic_pointer_cast<ngraph::op::Concat>(user))
+                        {
+                            found_last_concat = false;
+                            break;
+                        }
+                    }
+                    if (found_last_concat)
+                    {
+                        for (auto arg : concat->get_arguments())
+                        {
+                            if (auto arg_concat = dynamic_pointer_cast<ngraph::op::Concat>(arg))
+                            {
+                                NGRAPH_DEBUG << "call propagate_in_place_concat for "
+                                             << arg->get_name() << std::endl;
+                                propagate_in_place_concat(arg_concat);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // Intermediates
     if (m_function->get_temporary_pool_size())
     {

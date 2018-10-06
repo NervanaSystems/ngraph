@@ -36,6 +36,7 @@
 #endif
 
 #include "ngraph/function.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
@@ -157,6 +158,8 @@ namespace ngraph
                 void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
                                                std::string output_name,
                                                bool dex);
+                // For a chain of concat ops, propagate pool offsets
+                void propagate_in_place_concat(std::shared_ptr<ngraph::op::Concat> concat);
                 bool computes_result(Node* node);
 
 #if !defined(NGRAPH_DEX_ONLY)
