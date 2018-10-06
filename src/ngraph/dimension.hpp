@@ -110,11 +110,11 @@ namespace ngraph
 
         /// \brief Add-into operator for Dimension.
         /// \param dim Right operand for addition.
-        /// \return A reference to *this, after updating *this to the value `*this + dim`.
+        /// \return A reference to `*this`, after updating `*this` to the value `*this + dim`.
         Dimension& operator+=(const Dimension& dim) { return (*this = *this + dim); }
         /// \brief Multiply-into operator for Dimension.
         /// \param dim Right operand for multiplication.
-        /// \return A reference to *this, after updating *this to the value `*this * dim`.
+        /// \return A reference to `*this`, after updating `*this` to the value `*this * dim`.
         Dimension& operator*=(const Dimension& dim) { return (*this = *this * dim); }
     private:
         // The actual numerical value of the dimension. s_dynamic_val is a special case,
