@@ -4774,9 +4774,7 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
 // array([ 2938.,  3016.,  3094.,  3172.,  3250.,  7042.,  7264.,  7486.,
 //         7708.,  7930.])
 //
-// Disabled because it doesn't work on CPU yet.
-//
-NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_3d_multi_axis)
+NGRAPH_TEST(${BACKEND_NAME}, dot_3d_multi_axis)
 {
     vector<float> a_data(2 * 3 * 4);
     for (int i = 0; i < 2 * 3 * 4; i++)
@@ -4832,9 +4830,7 @@ NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_3d_multi_axis)
 //          63,  286,  429,  218,   45,   11,   29,  162,   27,  106,  149,
 //         126,   65,   25,   44,    6,   11,  165,  281,   52])
 //
-// Disabled because it doesn't work on CPU yet.
-//
-NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_3d_one_axis_arbitrary)
+NGRAPH_TEST(${BACKEND_NAME}, dot_3d_one_axis_arbitrary)
 {
     vector<float> a_data{6,  61, 2, 3, 5, 21, 75, 23, 23, 0, 23, 2,
                          35, 67, 1, 2, 9, 16, 2,  3,  6,  1, 8,  0};
@@ -4893,9 +4889,7 @@ NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_3d_one_axis_arbitrary)
 //         57576.,  58374.,  59172.,  59970.,  60768.,  61566.,  62364.,
 //         63162.,  63960.])
 //
-// Disabled because it doesn't work on CPU yet.
-//
-NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis)
+NGRAPH_TEST(${BACKEND_NAME}, dot_4d_5d_multi_axis)
 {
     vector<float> a_data(2 * 3 * 3 * 4);
     for (int i = 0; i < 2 * 3 * 3 * 4; i++)
@@ -4954,9 +4948,7 @@ NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis)
 //
 // array([ 251412.,  254040.])
 //
-// Disabled because it doesn't work on CPU yet.
-//
-NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_more)
+NGRAPH_TEST(${BACKEND_NAME}, dot_4d_5d_multi_axis_more)
 {
     vector<float> a_data(2 * 3 * 3 * 4);
     for (int i = 0; i < 2 * 3 * 3 * 4; i++)
