@@ -95,23 +95,27 @@ namespace ngraph
         /// \brief Constant for the value used internally to represent a dynamic dimension.
         static const size_t s_dynamic_val{std::numeric_limits<size_t>::max()};
 
-        friend Dimension operator+(const Dimension& d1, const Dimension& d2);
-        friend Dimension operator*(const Dimension& d1, const Dimension& d2);
+        /// \brief Addition operator for Dimension.
+        /// \param dim Right operand for addition.
+        /// \return Dimension::dynamic() if either of `*this` or `dim` is dynamic; else, a static
+        ///         dimension with value `size_t(*this)+size_t(dim)`.
+        Dimension operator+(const Dimension& dim) const;
 
-        Dimension& operator+=(const Dimension& d1)
-        {
-            Dimension cur_val = *this;
-            *this = cur_val + d1;
-            return *this;
-        }
+        /// \brief Multiplication operator for Dimension.
+        /// \param dim Right operand for multiplicaiton.
+        /// \return 0 if either of `*this` or `dim` is static and 0; else, Dimension::dynamic() if
+        ///         either of `*this` or `dim` is dynamic; else, a static dimension with value
+        ///         `size_t(*this)*size_t(dim)`.
+        Dimension operator*(const Dimension& dim) const;
 
-        Dimension& operator*=(const Dimension& d1)
-        {
-            Dimension cur_val = *this;
-            *this = cur_val * d1;
-            return *this;
-        }
-
+        /// \brief Add-into operator for Dimension.
+        /// \param dim Right operand for addition.
+        /// \return A reference to *this, after updating *this to the value `*this + dim`.
+        Dimension& operator+=(const Dimension& dim) { return (*this = *this + dim); }
+        /// \brief Multiply-into operator for Dimension.
+        /// \param dim Right operand for multiplication.
+        /// \return A reference to *this, after updating *this to the value `*this * dim`.
+        Dimension& operator*=(const Dimension& dim) { return (*this = *this * dim); }
     private:
         // The actual numerical value of the dimension. s_dynamic_val is a special case,
         // representing a dynamic dimension.
@@ -125,19 +129,4 @@ namespace ngraph
     ///
     /// Inserts the string `?` if `dimension` is dynamic; else inserts `size_t(dimension)`.
     std::ostream& operator<<(std::ostream& str, const Dimension& dimension);
-
-    /// \brief Addition operator for dimensions.
-    /// \param d1 Left operand for addition.
-    /// \param d2 Right operand for addition.
-    /// \return Dimension::dynamic() if either of `d1` or `d2` is dynamic; else, a static
-    ///         dimension with value `size_t(d1)+size_t(d2)`.
-    Dimension operator+(const Dimension& d1, const Dimension& d2);
-
-    /// \brief Multiplication operator for dimensions.
-    /// \param d1 Left operand for multiplication.
-    /// \param d2 Right operand for multiplicaiton.
-    /// \return 0 if either of `d1` or `d2` is static and 0; else, Dimension::dynamic() if either
-    ///         of `d1` or `d2` is dynamic; else, a static dimension with value
-    ///         `size_t(d1)*size_t(d2)`.
-    Dimension operator*(const Dimension& d1, const Dimension& d2);
 }
