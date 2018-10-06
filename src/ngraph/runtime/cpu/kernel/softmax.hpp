@@ -21,6 +21,7 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
