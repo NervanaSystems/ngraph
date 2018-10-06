@@ -1065,7 +1065,6 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
     CUDNN_SAFE_CALL(cudnnGetRNNParamsSize(
         *m_ctx->cudnn_handle, rnn_desc, temp_input_desc, &params_size, data_type));
     auto& w_desc = get_nd_filter_descriptor(Shape{params_size, 1, 1}, data_type, format);
-    size_t w_idx = allocator.reserve_workspace(params_size);
 
     int num_tensors_per_layer = [&mode] {
         switch (mode)
@@ -1124,8 +1123,6 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
         *m_ctx->cudnn_handle, rnn_desc, seq_length, seq_descriptors.data(), &workspace_size));
 
     size_t workspace_idx = allocator.reserve_workspace(workspace_size);
-
-    auto recurrent_index = num_tensors_per_layer / 2;
 
     std::unique_ptr<gpu::primitive> kernel_launch(
         new gpu::primitive{[=](void** inputs, void** outputs) {
