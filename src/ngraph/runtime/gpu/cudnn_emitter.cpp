@@ -884,12 +884,11 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Max* node)
     else
     {
         auto& cudnn_emitter = m_primitive_emitter->get_cudnn_emitter();
-        CUDNNEmitter::ReductionMode reduction_mode = CUDNNEmitter::ReductionMode::Reduce;
         auto max_index = cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_MAX,
                                                              output_type,
                                                              input_shape,
                                                              node->get_reduction_axes(),
-                                                             reduction_mode);
+                                                             ReductionMode::Reduce);
         kernel_launch.reset(new gpu::primitive{[=](void** inputs, void** outputs) mutable {
             gpu::invoke_primitive(m_ctx, max_index, inputs, outputs);
         }});
@@ -947,12 +946,11 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Min* node)
     else
     {
         auto& cudnn_emitter = m_primitive_emitter->get_cudnn_emitter();
-        CUDNNEmitter::ReductionMode reduction_mode = CUDNNEmitter::ReductionMode::Reduce;
         auto min_index = cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_MIN,
                                                              output_type,
                                                              input_shape,
                                                              node->get_reduction_axes(),
-                                                             reduction_mode);
+                                                             ReductionMode::Reduce);
         kernel_launch.reset(new gpu::primitive{[=](void** inputs, void** outputs) mutable {
             gpu::invoke_primitive(m_ctx, min_index, inputs, outputs);
         }});

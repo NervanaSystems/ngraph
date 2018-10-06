@@ -1855,9 +1855,11 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Softmax* node)
     auto output_type = out[0].get_element_type().c_type_string();
 
     auto exp_index = build_elementwise<ngraph::op::Exp>({input_type, output_type}, input_shape);
-    CUDNNEmitter::ReductionMode reduction_mode = CUDNNEmitter::ReductionMode::Reduce;
-    auto reduce_index = cudnn_emitter->build_reduce_forward(
-        CUDNN_REDUCE_TENSOR_ADD, out[0].get_element_type(), input_shape, axes, reduction_mode);
+    auto reduce_index = cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_ADD,
+                                                            out[0].get_element_type(),
+                                                            input_shape,
+                                                            axes,
+                                                            CUDNNEmitter::ReductionMode::Reduce);
     size_t divide_index = build_softmax_divide(
         std::vector<std::string>(3, output_type), input_shape, reduced_shape, axes_flag);
 
