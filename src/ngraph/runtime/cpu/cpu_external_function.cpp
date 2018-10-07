@@ -189,7 +189,7 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     , m_function_name(function->get_name())
     , m_is_built(false)
 #if !defined(NGRAPH_DEX_ONLY)
-    , m_direct_execution(std::getenv("NGRAPH_DEX") != nullptr)
+    , m_direct_execution(!std::getenv("NGRAPH_CODEGEN"))
 #else
     , m_direct_execution(true)
 #endif
