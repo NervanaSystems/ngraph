@@ -72,7 +72,7 @@ namespace ngraph
                 bool is_mkldnn_blocked_data_format(mkldnn::memory::format fmt);
 
                 bool use_mkldnn_kernel(const ngraph::Node* node);
-                
+
                 std::unordered_set<std::type_index>& get_op_registry();
                 std::map<element::Type, const mkldnn::memory::data_type>&
                     get_mkldnn_data_type_map();
