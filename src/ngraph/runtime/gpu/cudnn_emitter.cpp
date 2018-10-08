@@ -135,6 +135,11 @@ cudnnDataType_t runtime::gpu::CUDNNEmitter::get_cudnn_datatype(std::string dtype
     return p->second;
 }
 
+cudnnDataType_t runtime::gpu::CUDNNEmitter::get_cudnn_datatype(const element::Type& dtype)
+{
+    return get_cudnn_datatype(dtype.c_type_string());
+}
+
 size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorOp_t& reduce_op,
                                                         const element::Type& dtype,
                                                         const Shape& input_shape,
@@ -142,7 +147,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
                                                         const ReductionMode& reduction_mode)
 {
     std::stringstream ss;
-    ss << "reduce_op_" << reduce_op << "_dtype_" << dtype.c_type_string() << "_reduction_mode_"
+    ss << "_dtype_" << dtype.c_type_string() << "_reduction_mode_"
        << static_cast<int>(reduction_mode) << "_i" << join(input_shape, "_") << "_ra"
        << join(reduction_axes, "_");
     std::string hash = ss.str();
@@ -155,7 +160,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
     }
 
     auto& desc = m_descriptors.build<cudnnReduceTensorDescriptor_t>();
-    cudnnDataType_t data_type = get_cudnn_datatype(dtype.c_type_string());
+    cudnnDataType_t data_type = get_cudnn_datatype(dtype);
     cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
     auto& input_desc = tensor_descriptor_from_shape(input_shape, data_type, tensor_format);
     Shape output_shape = input_shape;
@@ -209,12 +214,11 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
         break;
     }
 
-    case ReductionMode::ArgMax_ArgMin:
+    case ReductionMode::ArgReduce:
     {
-        size_t indicesSize = shape_size(output_shape) * sizeof(int);
-        size_t reduction_output_type_size = dtype.size();
+        size_t indices_size = shape_size(output_shape) * sizeof(int);
         size_t reduce_buffer_idx =
-            allocator.reserve_workspace(shape_size(output_shape) * reduction_output_type_size);
+            allocator.reserve_workspace(shape_size(output_shape) * dtype.size());
         CUDNN_SAFE_CALL(cudnnSetReduceTensorDescriptor(desc,
                                                        reduce_op,
                                                        data_type,
@@ -229,7 +233,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
             CUDNN_SAFE_CALL(cudnnReduceTensor(*m_ctx->cudnn_handle,
                                               desc,
                                               outputs[0],
-                                              indicesSize,
+                                              indices_size,
                                               workspace_ptr,
                                               workspace_size,
                                               alpha,

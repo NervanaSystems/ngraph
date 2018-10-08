@@ -73,7 +73,7 @@ namespace ngraph
                 enum class ReductionMode
                 {
                     Reduce,
-                    ArgMax_ArgMin
+                    ArgReduce
                 };
 
                 size_t build_convolution(const std::string& dtype,
@@ -150,6 +150,7 @@ namespace ngraph
                 void* get_data_by_type(cudnnDataType_t data_type, double value);
 
                 cudnnDataType_t get_cudnn_datatype(std::string dtype);
+                cudnnDataType_t get_cudnn_datatype(const element::Type& dtype);
 
                 cudnnTensorDescriptor_t&
                     tensor_descriptor_from_shape(const Shape& shape,

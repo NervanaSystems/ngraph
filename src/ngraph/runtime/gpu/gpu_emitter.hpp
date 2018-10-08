@@ -75,7 +75,7 @@ namespace ngraph
                     writer.block_end();
                 }
 
-                static void emit_ArgMax_ArgMin(EMIT_ARGS, cudnnReduceTensorOp_t);
+                static void emit_ArgReduce(EMIT_ARGS, cudnnReduceTensorOp_t);
 
             private:
                 /// \brief Create a list of node names for each arg in args

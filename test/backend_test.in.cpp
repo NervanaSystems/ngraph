@@ -9352,6 +9352,7 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_trivial)
     EXPECT_EQ((vector<int>{3, 2, 1}), read_vector<int>(result));
 }
 
+
 NGRAPH_TEST(${BACKEND_NAME}, argmin_4D_axis_3)
 {
     Shape shape{2, 2, 5, 5}; // NCHW ->(0,1,2,3)
@@ -9383,19 +9384,17 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_4D_axis_3)
                                          {2.4f, 0.5f, 0.0f, 3.0f, 0.1f},
                                          {0.0f, 0.5f, 0.4f, 0.8f, 1.0f}},
 
-                                        {{2.0f, 1.0f, 0.0f, 0.0f, 1.0f}, // img 1 ch 1
-                                         {0.0f, 2.0f, 0.0f, 0.0f, 0.0f},
-                                         {1.0f, 1.0f, 2.0f, 0.0f, 2.0f},
-                                         {1.0f, 1.0f, 1.0f, 0.0f, 1.0f},
-                                         {1.0f, 0.0f, 0.0f, 0.0f, 2.0f}}}})
+                                        {{2, 1, 0, 0, 1}, // img 1 ch 1
+                                         {0, 2, 0, 0, 0},
+                                         {1, 1, 2, 0, 2},
+                                         {1, 1, 1, 0, 1},
+                                         {1, 0, 0, 0, 2}}}})
                   .get_vector());
     auto result = backend->create_tensor(element::i32, rshape);
 
     backend->call_with_validate(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<int, 3>({{{0, 4, 1, 1, 3},   // ch0
-                                       {4, 1, 3, 2, 1}},  //
-                                      {{0, 1, 0, 2, 0},   // ch1
-                                       {2, 0, 3, 3, 1}}}) //
+    EXPECT_EQ((test::NDArray<int, 3>({{{3, 1, 0, 0, 1}, {3, 2, 0, 0, 0}},  //ch0
+                                      {{1, 2, 4, 3, 0}, {0, 1, 2, 0, 4}}}) //ch1
                    .get_vector()),
               read_vector<int>(result));
 }
