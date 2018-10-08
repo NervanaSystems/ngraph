@@ -6947,7 +6947,7 @@ TEST(type_prop, logic_arith_compare_partial_et)
     // boo -> boo
     // dyn -> dyn
     //
-    // I believe the behavior should actually be:
+    // TODO(amprocte): I believe the behavior should actually be:
     // int -> !
     // boo -> boo
     // dyn -> boo
