@@ -1678,7 +1678,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
         const descriptor::Output& output = input.get_output();
         shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
         TensorViewWrapper tvw{tv, "_arg" + to_string(arg_index)};
-        if (!contains(arg_names, tvw.get_name()))
+        if (arg_names.find(tvw.get_name()) == arg_names.end())
         {
             arg_names.insert(tvw.get_name());
             if (arg_index++ > 0)

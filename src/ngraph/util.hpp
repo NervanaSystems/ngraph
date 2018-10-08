@@ -69,21 +69,6 @@ namespace ngraph
         return os.str();
     }
 
-    template <typename U, typename T>
-    bool contains(const U& container, const T& obj)
-    {
-        bool rc = false;
-        for (auto o : container)
-        {
-            if (o == obj)
-            {
-                rc = true;
-                break;
-            }
-        }
-        return rc;
-    }
-
     size_t hash_combine(const std::vector<size_t>& list);
     void dump(std::ostream& out, const void*, size_t);
 
