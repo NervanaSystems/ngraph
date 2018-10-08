@@ -6767,6 +6767,61 @@ TEST(type_prop, sum_axis_oob)
     }
 }
 
+TEST(type_prop, sum_partial_rank_dynamic)
+{
+    auto param = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto summation_axes = AxisSet{2385, 0, 4404}; // arbitrary
+    auto sum = make_shared<op::Sum>(param, summation_axes);
+
+    EXPECT_EQ(sum->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(sum->get_output_partial_shape(0).is_dynamic());
+}
+
+TEST(type_prop, sum_partial_rank_static_dynamic_ok_result_static)
+{
+    auto param =
+        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic(), 4, 5});
+    auto summation_axes = AxisSet{2, 3};
+    auto sum = make_shared<op::Sum>(param, summation_axes);
+
+    EXPECT_EQ(sum->get_output_element_type(0), element::f32);
+    EXPECT_EQ(sum->get_shape(), (Shape{1, 2, 5}));
+}
+
+TEST(type_prop, sum_partial_rank_static_dynamic_ok_result_dynamic)
+{
+    auto param = make_shared<op::Parameter>(
+        element::f32, PartialShape{1, 2, Dimension::dynamic(), 4, Dimension::dynamic()});
+    auto summation_axes = AxisSet{2, 3};
+    auto sum = make_shared<op::Sum>(param, summation_axes);
+
+    EXPECT_EQ(sum->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(
+        sum->get_output_partial_shape(0).same_scheme(PartialShape{1, 2, Dimension::dynamic()}));
+}
+
+TEST(type_prop, sum_partial_rank_static_dynamic_axes_oob)
+{
+    auto param = make_shared<op::Parameter>(
+        element::f32, PartialShape{1, 2, Dimension::dynamic(), 4, Dimension::dynamic()});
+    auto summation_axes = AxisSet{2, 5, 1};
+
+    try
+    {
+        auto sum = make_shared<op::Sum>(param, summation_axes);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect out-of-bound axis for sum (rank-static dynamic input)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Reduction axis (5) is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, index_reduction_scalar)
 {
     auto a = make_shared<op::Parameter>(element::f32, Shape{});
@@ -7185,12 +7240,6 @@ TEST(type_prop, validate_punt_if_dynamic)
     ASSERT_EQ(concat->get_output_size(), 1);
     ASSERT_TRUE(concat->get_output_partial_shape(0).rank().is_dynamic());
     ASSERT_TRUE(concat->get_output_element_type(0).is_dynamic());
-}
-
-TEST(type_prop, arithmetic_reduction_partial)
-{
-    FAIL() << "Adam needs to write some unit tests for partial-shape/type propagation for "
-              "ArithmeticReduction";
 }
 
 TEST(type_prop, logic_arith_compare_partial_et)
