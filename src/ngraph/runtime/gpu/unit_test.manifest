@@ -32,11 +32,6 @@ backwards_avgpool_n1_c1_hw4x4
 backwards_avgpool_n2_c2_hw4x4
 max_pool_3d
 avg_pool_3d
-#argmin_trivial
-#argmax_trivial
-#argmax_3D_axis_0
-#argmax_3D_axis_1
-#argmax_3D_axis_2
 topk_1d_max_all
 topk_1d_max_partial
 topk_1d_max_one
