@@ -32,7 +32,6 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Concat)
             {
-
                 auto concat = static_cast<const ngraph::op::Concat*>(node);
                 auto axis = concat->get_concatenation_axis();
 
@@ -98,7 +97,6 @@ namespace ngraph
 
                     size_t concat_dim =
                         (dynamic_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
-                    auto nargs = args.size();
                     auto concat_index =
                         mkldnn_emitter->build_concat(inputs_data_desc, result_desc, concat_dim);
                     auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);

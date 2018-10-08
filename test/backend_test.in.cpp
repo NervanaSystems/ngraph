@@ -704,7 +704,6 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_propagate_2d_tensor)
     EXPECT_EQ((vector<float>{3, 7, 2}), read_vector<float>(result));
 }
 
-
 // from numpy import *
 // a=linspace(1,2*3*4*3*2,2*3*4*3*2)
 // b=linspace(1000+1,1000+2*3*3*3*2,2*3*3*3*2)
