@@ -28,19 +28,17 @@ namespace ngraph
     {
         namespace gpu
         {
-            class GPU_TensorView;
+            class GPUTensor;
         }
     }
 }
 
-class ngraph::runtime::gpu::GPU_TensorView : public ngraph::runtime::Tensor
+class ngraph::runtime::gpu::GPUTensor : public ngraph::runtime::Tensor
 {
 public:
-    GPU_TensorView(const ngraph::element::Type& element_type, const Shape& shape);
-    GPU_TensorView(const ngraph::element::Type& element_type,
-                   const Shape& shape,
-                   void* memory_pointer);
-    virtual ~GPU_TensorView();
+    GPUTensor(const ngraph::element::Type& element_type, const Shape& shape);
+    GPUTensor(const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer);
+    virtual ~GPUTensor();
 
     /// \brief Write bytes directly into the tensor
     /// \param p Pointer to source of data
@@ -57,4 +55,9 @@ public:
     void* m_allocated_buffer_pool = nullptr;
     size_t m_buffer_size;
     bool m_custom_memory;
+
+private:
+    GPUTensor(const GPUTensor&) = delete;
+    GPUTensor(GPUTensor&&) = delete;
+    GPUTensor& operator=(const GPUTensor&) = delete;
 };
