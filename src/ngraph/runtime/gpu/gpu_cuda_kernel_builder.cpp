@@ -443,12 +443,15 @@ void runtime::gpu::CudaKernelBuilder::get_onehot_op(codegen::CodeWriter& writer,
         writer << "if (tid < n)\n";
         writer.block_begin();
         {
-            writer << "int32_t in = static_cast<int32_t>(in[tid]);\n";
-            writer << "if(in >= 0 && in < hot_axis_shape)" writer.block_begin();
-            writer << "uint32_t idx = tid * hot_axis_shape + (hot_axis_stride * in) + tid % "
+            writer << "int32_t in_pixel = static_cast<int32_t>(in[tid]);\n";
+            writer << "if(in_pixel >= 0 && in_pixel < hot_axis_shape)\n";
+            writer.block_begin();
+            {
+            writer << "uint32_t idx = tid / hot_axis_stride * hot_axis_stride * hot_axis_shape + (hot_axis_stride * in_pixel) + tid % "
                       "hot_axis_stride;\n";
             writer << "out[idx] = 1;\n";
-            wirter.block_end();
+            }
+            writer.block_end();
         }
         writer.block_end();
     }
