@@ -39,7 +39,7 @@ namespace ngraph
 // static void emit_Abs(EMIT_ARGS);
 // static void emit_Acos(EMIT_ARGS);
 #define NGRAPH_OP(a, b) static void emit_##a(EMIT_ARGS);
-#include "ngraph/op/op_tbl.hpp"
+#include "ngraph/runtime/gpu/op/op_tbl.hpp"
 #undef NGRAPH_OP
 
                 template <typename T>
