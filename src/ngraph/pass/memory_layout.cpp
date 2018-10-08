@@ -51,9 +51,11 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
                     auto input = &node->get_inputs().at(oi_pair.input).get_tensor();
                     auto input_node = node->get_inputs().at(oi_pair.input).get_output().get_node();
 
-                    // Input can be reused for non-destructive kernel
+                    // Non-parameter, non-constant inputs can be reused for non-destructive kernel
                     // For destructive kernel, this should be the last use
-                    if ((!oi_pair.destructive || node->liveness_free_list.count(input) != 0) &&
+                    if (((!oi_pair.destructive && !input_node->is_parameter() &&
+                          !input_node->is_constant()) ||
+                         node->liveness_free_list.count(input) != 0) &&
                         node->liveness_new_list.count(output) != 0)
                     {
                         in_place_outputs.insert({output, input});
