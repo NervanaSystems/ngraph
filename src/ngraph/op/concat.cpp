@@ -56,11 +56,14 @@ void op::Concat::validate_and_infer_types()
                 << "Argument shapes are inconsistent; they must have the same rank, and must have "
                 << "equal dimension everywhere except on the concatenation axis (axis "
                 << m_concatenation_axis << ").";
-            ;
 
             NODE_VALIDATION_ASSERT(
                 this, element::Type::merge(inputs_et, inputs_et, get_input_element_type(i)))
                 << "Argument element types are inconsistent.";
+        }
+        else
+        {
+            concatenation_axis_output_dim += Dimension::dynamic();
         }
     }
 

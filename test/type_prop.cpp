@@ -331,6 +331,238 @@ TEST(type_prop, concat_deduce_elem_type_mismatch)
     }
 }
 
+TEST(type_prop, concat_partial_et_consistent)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
+    auto param1 = make_shared<op::Parameter>(element::dynamic, Shape{2, 7, 4});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 2, 4});
+    auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 1);
+
+    ASSERT_EQ(c->get_element_type(), element::f32);
+    ASSERT_EQ(c->get_shape(), (Shape{2, 12, 4}));
+}
+
+TEST(type_prop, concat_partial_et_inconsistent)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
+    auto param1 = make_shared<op::Parameter>(element::dynamic, Shape{2, 7, 4});
+    auto param2 = make_shared<op::Parameter>(element::i32, Shape{2, 2, 4});
+    try
+    {
+        auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 1);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Inconsistent element types not detected (some dynamic)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument element types are inconsistent"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, concat_partial_all_rank_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param2 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 1);
+
+    ASSERT_TRUE(c->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, concat_partial_some_rank_dynamic_others_rank_static_dynamic_consistent)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 3});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param2 =
+        make_shared<op::Parameter>(element::f32, PartialShape{2, 3, Dimension::dynamic()});
+    auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 1);
+
+    ASSERT_TRUE(
+        c->get_output_partial_shape(0).same_scheme(PartialShape{2, Dimension::dynamic(), 3}));
+}
+
+TEST(type_prop, concat_partial_some_rank_dynamic_others_rank_static_dynamic_rank_inconsistent)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 3});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param2 =
+        make_shared<op::Parameter>(element::f32, PartialShape{2, 3, Dimension::dynamic(), 4});
+    try
+    {
+        auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 1);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Inconsistent ranks not detected (some args rank-dynamic, some args rank-static "
+                  "dynamic)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Argument shapes are inconsistent; they must have the same rank, and must "
+                        "have equal dimension everywhere except on the concatenation axis"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, concat_partial_some_rank_dynamic_others_rank_static_dynamic_dims_inconsistent)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 3});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param2 =
+        make_shared<op::Parameter>(element::f32, PartialShape{3, 3, Dimension::dynamic()});
+    try
+    {
+        auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 1);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Inconsistent dimensions not detected (some args rank-dynamic, some args "
+                  "rank-static dynamic)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Argument shapes are inconsistent; they must have the same rank, and must "
+                        "have equal dimension everywhere except on the concatenation axis"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop,
+     concat_partial_some_rank_dynamic_others_rank_static_dynamic_dims_intransitively_inconsistent)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 3});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param2 = make_shared<op::Parameter>(
+        element::f32, PartialShape{Dimension::dynamic(), 3, Dimension::dynamic()});
+    auto param3 =
+        make_shared<op::Parameter>(element::f32, PartialShape{3, 3, Dimension::dynamic()});
+    try
+    {
+        auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2, param3}, 1);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Inconsistent dimensions not detected (some args rank-dynamic, some args "
+                  "rank-static dynamic)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Argument shapes are inconsistent; they must have the same rank, and must "
+                        "have equal dimension everywhere except on the concatenation axis"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, concat_partial_some_rank_dynamic_others_rank_static_with_concat_axis_static)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape{2, 2, 3});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param2 =
+        make_shared<op::Parameter>(element::f32, PartialShape{2, 3, Dimension::dynamic()});
+    auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 1);
+
+    ASSERT_TRUE(
+        c->get_output_partial_shape(0).same_scheme(PartialShape{2, Dimension::dynamic(), 3}));
+}
+
+TEST(type_prop,
+     concat_partial_some_rank_dynamic_others_rank_static_with_concat_axis_static_dims_inconsistent)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape{2, 2, 3});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param2 =
+        make_shared<op::Parameter>(element::f32, PartialShape{3, 3, Dimension::dynamic()});
+
+    try
+    {
+        auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 1);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Inconsistent dimensions not detected (some args rank-dynamic, some args "
+                  "rank-static dynamic)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Argument shapes are inconsistent; they must have the same rank, and must "
+                        "have equal dimension everywhere except on the concatenation axis"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, concat_partial_all_static_with_concat_axis_static_compatible_result_static)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape{2, 2, 3});
+    auto param1 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 4, 3});
+    auto param2 =
+        make_shared<op::Parameter>(element::f32, PartialShape{2, 3, Dimension::dynamic()});
+    auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 1);
+
+    ASSERT_EQ(c->get_shape(), (Shape{2, 9, 3}));
+}
+
+TEST(type_prop, concat_partial_all_static_with_concat_axis_static_compatible_result_dynamic)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{2, 2, Dimension::dynamic()});
+    auto param1 = make_shared<op::Parameter>(
+        element::f32, PartialShape{Dimension::dynamic(), 4, Dimension::dynamic()});
+    auto param2 =
+        make_shared<op::Parameter>(element::f32, PartialShape{2, 3, Dimension::dynamic()});
+    auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 1);
+
+    ASSERT_TRUE(
+        c->get_output_partial_shape(0).same_scheme(PartialShape{2, 9, Dimension::dynamic()}));
+}
+
+TEST(type_prop, concat_partial_all_static_with_concat_axis_static_dims_incompatible)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape{2, 2, 3});
+    auto param1 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 4, 3});
+    auto param2 =
+        make_shared<op::Parameter>(element::f32, PartialShape{3, 3, Dimension::dynamic()});
+    try
+    {
+        auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 1);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Inconsistent dimensions not detected (some args rank-dynamic, some args "
+                  "rank-static dynamic)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Argument shapes are inconsistent; they must have the same rank, and must "
+                        "have equal dimension everywhere except on the concatenation axis"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, convert_deduce)
 {
     // Deduce type
