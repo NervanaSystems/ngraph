@@ -109,6 +109,12 @@ namespace ngraph
                     return ops_bridge::get()(node);
                 }
 
+                static bool is_op_type_supported(const std::string& op_type)
+                {
+                    return ops_bridge::get().is_op_type_supported_(op_type);
+
+                }
+
             private:
                 std::map<std::string, std::function<NodeVector(const Node&)>> m_map;
 
@@ -208,6 +214,12 @@ namespace ngraph
                     std::function<NodeVector(const Node&)> factory{it->second};
                     return factory(node);
                 }
+
+                bool is_op_type_supported_(const std::string& op_type) const
+                {
+                    auto it = m_map.find(op_type);
+                    return !(it == m_map.end());
+                }
             };
 
         } // namespace detail
@@ -218,6 +230,12 @@ namespace ngraph
             {
                 return detail::ops_bridge::make_ng_nodes(node);
             }
+
+            bool is_op_type_supported(const std::string& op_type)
+            {
+                return detail::ops_bridge::is_op_type_supported(op_type);
+            }
+
 
         } // namespace ops_bridge
 

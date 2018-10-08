@@ -27,10 +27,7 @@ namespace ngraph
         {
         public:
             Model() = delete;
-            explicit Model(const onnx::ModelProto& model_proto)
-                : m_model_proto{&model_proto}
-            {
-            }
+            explicit Model(const onnx::ModelProto& model_proto);
 
             Model(Model&&) noexcept = default;
             Model(const Model&) = default;
@@ -48,6 +45,8 @@ namespace ngraph
 
         private:
             const onnx::ModelProto* m_model_proto;
+
+            void assert_all_op_types_supported();
         };
 
         inline std::ostream& operator<<(std::ostream& outs, const Model& model)
