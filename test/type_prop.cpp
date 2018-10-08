@@ -4242,10 +4242,185 @@ TEST(type_prop, reverse_sequence_seq_len_size_equal_to_batch_dim)
     }
 }
 
-TEST(type_prop, reverse_sequence_partial)
+TEST(type_prop, reverse_sequence_partial_both_rank_dynamic)
 {
-    FAIL() << "Adam needs to write some unit tests for partial-shape/type propagation for "
-              "ReverseSequence";
+    auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    // Unrealistic values, but they don't matter here.
+    size_t batch_axis = 202;
+    size_t seq_axis = 909;
+    auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+
+    EXPECT_TRUE(rs->get_output_partial_shape(0).is_dynamic());
+    EXPECT_EQ(rs->get_output_element_type(0), element::f32);
+}
+
+TEST(type_prop, reverse_sequence_partial_left_rank_dynamic)
+{
+    auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape{3});
+    // Unrealistic values, but they don't matter here.
+    size_t batch_axis = 202;
+    size_t seq_axis = 909;
+    auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+
+    EXPECT_TRUE(rs->get_output_partial_shape(0).is_dynamic());
+    EXPECT_EQ(rs->get_output_element_type(0), element::f32);
+}
+
+TEST(type_prop, reverse_sequence_partial_right_rank_dynamic)
+{
+    auto data = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 6, 8});
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    size_t batch_axis = 0;
+    size_t seq_axis = 1;
+    auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+
+    EXPECT_TRUE(rs->get_output_partial_shape(0).same_scheme(PartialShape{2, 4, 6, 8}));
+    EXPECT_EQ(rs->get_output_element_type(0), element::f32);
+}
+
+TEST(type_prop, reverse_sequence_partial_both_rank_static_dynamic)
+{
+    auto data = make_shared<op::Parameter>(element::f32,
+                                           PartialShape{Dimension::dynamic(),
+                                                        Dimension::dynamic(),
+                                                        Dimension::dynamic(),
+                                                        Dimension::dynamic()});
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    size_t batch_axis = 0;
+    size_t seq_axis = 1;
+    auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+
+    EXPECT_TRUE(rs->get_output_partial_shape(0).same_scheme(PartialShape{
+        Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()}));
+    EXPECT_EQ(rs->get_output_element_type(0), element::f32);
+}
+
+TEST(type_prop, reverse_sequence_partial_both_rank_static_dynamic_batch_axis_oob)
+{
+    auto data = make_shared<op::Parameter>(element::f32,
+                                           PartialShape{Dimension::dynamic(),
+                                                        Dimension::dynamic(),
+                                                        Dimension::dynamic(),
+                                                        Dimension::dynamic()});
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic()});
+    size_t batch_axis = 4;
+    size_t seq_axis = 1;
+    try
+    {
+        auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+        FAIL() << "Batch axis out of bounds not detected (rank-static dynamic shape)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Batch axis index (4) is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reverse_sequence_partial_both_rank_static_dynamic_sequence_axis_oob)
+{
+    auto data = make_shared<op::Parameter>(element::f32,
+                                           PartialShape{Dimension::dynamic(),
+                                                        Dimension::dynamic(),
+                                                        Dimension::dynamic(),
+                                                        Dimension::dynamic()});
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic()});
+    size_t batch_axis = 1;
+    size_t seq_axis = 4;
+    try
+    {
+        auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+        FAIL() << "Sequence axis out of bounds not detected (rank-static dynamic shape)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Sequence axis index (4) is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop,
+     reverse_sequence_partial_left_rank_static_dynamic_right_static_left_seq_length_dynamic)
+{
+    auto data = make_shared<op::Parameter>(element::f32,
+                                           PartialShape{Dimension::dynamic(),
+                                                        Dimension::dynamic(),
+                                                        Dimension::dynamic(),
+                                                        Dimension::dynamic()});
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape{3});
+    size_t batch_axis = 2;
+    size_t seq_axis = 1;
+    auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+
+    EXPECT_TRUE(rs->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), Dimension::dynamic(), 3, Dimension::dynamic()}));
+    EXPECT_EQ(rs->get_output_element_type(0), element::f32);
+}
+
+TEST(type_prop, reverse_sequence_partial_both_rank_static_dynamic_right_seq_length_dynamic)
+{
+    auto data = make_shared<op::Parameter>(
+        element::f32,
+        PartialShape{Dimension::dynamic(), Dimension::dynamic(), 3, Dimension::dynamic()});
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic()});
+    size_t batch_axis = 2;
+    size_t seq_axis = 1;
+    auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+
+    EXPECT_TRUE(rs->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), Dimension::dynamic(), 3, Dimension::dynamic()}));
+    EXPECT_EQ(rs->get_output_element_type(0), element::f32);
+}
+
+TEST(type_prop,
+     reverse_sequence_partial_left_rank_static_dynamic_right_static_left_seq_length_static)
+{
+    auto data = make_shared<op::Parameter>(
+        element::f32,
+        PartialShape{Dimension::dynamic(), Dimension::dynamic(), 3, Dimension::dynamic()});
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape{3});
+    size_t batch_axis = 2;
+    size_t seq_axis = 1;
+    auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+
+    EXPECT_TRUE(rs->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), Dimension::dynamic(), 3, Dimension::dynamic()}));
+    EXPECT_EQ(rs->get_output_element_type(0), element::f32);
+}
+
+TEST(
+    type_prop,
+    reverse_sequence_partial_left_rank_static_dynamic_right_static_left_seq_length_static_inconsistent)
+{
+    auto data = make_shared<op::Parameter>(
+        element::f32,
+        PartialShape{Dimension::dynamic(), Dimension::dynamic(), 3, Dimension::dynamic()});
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape{4});
+    size_t batch_axis = 2;
+    size_t seq_axis = 1;
+    try
+    {
+        auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+        FAIL() << "Inconsistent sequence length not detected (rank-static dynamic shape)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Sequence length (4) is not equal to batch axis dimension (3)"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }
 
 TEST(type_prop, reduce_window_deduce_1d)
