@@ -30,7 +30,7 @@ MXNet\* bridge
    of the docs on :doc:`distr/index` and :doc:`How to <howto/index>` topics like
    :doc:`howto/distribute-train`.
 
-#. To start working with MXNet's `Confluence` API see the :doc:`frameworks/mxnet_tutorial`.
+#. To start working with MXNet's `Confluence` API see the :doc:`shared/mxnet_tutorial`.
 
 
 .. _tensorflow_intg:

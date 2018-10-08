@@ -1,11 +1,13 @@
-.. shared/mxnet_tutorial.rst
+.. shared/mxnet_tutorial.rst:
 
-Accelerating subgraphs with MXNet and nGraph compiler
-#####################################################
 
-One framework working on advancing shared graph optimizations is Apache MXNet\* 
-with its new `subgraph acceleration API`_, where Intel nGraph has been merged as 
-an experimental backend.  
+Working with subgraphs on MXNet
+################################
+
+One DL framework with advancing efforts on shared graph optimizations is Apache 
+MXNet\*, where Intel nGraph was recently `merged as an experimental backend`_.  
+
+.. TODO :  link to latest on mxnet when they do this instead of linking to PR
 
 The Intel nGraph Compiler provides an in-memory abstraction layer for converting 
 the mathematical representation of a DL model into an optimized-for-execution 
@@ -20,13 +22,13 @@ especially in inference.
 Future releases of the nGraph Library will improve training support and add 
 other hardware backends currently under development, including Nvidia\* GPU, 
 Intel GPU, and custom silicon like the Intel® Nervana™ NNP. Future releases are 
-planned to work with pip installation, and to offer support for the MS Windows\* 
-operating system.
+planned to further simplify installation with ``pip``, and to offer support for 
+the MS Windows\* operating system.
 
 
 
-Tutorial: Compiling MXNet with nGraph and running Resnet-18 Inference
-=====================================================================
+Tutorial: Compiling MXNet with nGraph and running Resnet-50-v2 Inference
+========================================================================
 
 This tutorial supports compiling MXNet with nGraph's CPU backend.
 
@@ -53,15 +55,48 @@ shouldn't need to do anything special. If you run into trouble, you can disable
 nGraph by setting ``MXNET_SUBGRAPH_BACKEND=1``. If you do see trouble, please 
 report it and we'll address it as soon as possible.
 
-Running Resnet-18 Inference
----------------------------
+Running Resnet-50-V2 Inference
+------------------------------
+
+To show a working example, we'll demonstrate how MXNet may be used to run 
+Resnet-50 Inference. For ease, we'll consider the standard MXNet Resnet-50-V2 
+model from the `gluon model zoo`_, and we'll test with latency at ``batch_size=1``. 
+Note that the nGraph-MXNet bridge supports static graphs only (dynamic graphs 
+are in the works); so for this example, we begin by converting the gluon model 
+into a static graph. Also note that any model with a saved checkpoint can be 
+considered a "static graph" in nGraph. For this example, we'll presume that the 
+model has been deemed "trained".   
+
+.. literalinclude:: ../../../examples/subgraph_snippets/mxnet-gluon-example.py
+   :language: python
+   :lines: 17-32
 
 
-.. TODO  copy the Resnet 18 model we're running to the /doc/examples directory and 
-   document it as per previous examples.  
+To load the model into nGraph, we simply bind the symbol into a Executor. 
+
+.. literalinclude:: ../../../examples/subgraph_snippets/mxnet-gluon-example.py
+   :language: python
+   :lines: 34-35
+
+At binding, the MXNet Subgraph API finds nGraph, determines how to partition 
+the graph, and in the case of Resnet, sends the entire graph to nGraph for 
+compilation. This produces a single call to an NNVM ``NGraphSubgraphOp`` embedded 
+with the compiled model. At this point, we can test the model's performance.
+
+  ::
+
+   dry_run = 5
+   num_batches = 100
+   for i in range(dry_run + num_batches):
+       if i == dry_run:
+           start_time = time.time()
+       outputs = model.forward(data=input_data, is_train=False)
+       for output in outputs:
+           output.wait_to_read()
+   print("Average Latency = ", (time.time() - start_time)/num_batches * 1000, "ms")
 
 
-
-
+.. _merged as an experimental backend: https://github.com/apache/incubator-mxnet/pull/12502
+.. _gluon model zoo: https://github.com/apache/incubator-mxnet/blob/master/python/mxnet/gluon/model_zoo/vision/resnet.py#L499
 .. _subgraph acceleration API: https://cwiki.apache.org/confluence/display/MXNET/Unified+integration+with+external+backend+libraries
 .. _nGraph-MXNet: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/NGRAPH_README.md
