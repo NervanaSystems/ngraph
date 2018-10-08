@@ -1671,60 +1671,40 @@ namespace ngraph
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        // pass input format to output
-                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-                        NGRAPH_DEBUG << "input memory format: " << input_md.data.format << "\n";
-                        auto result_format =
-                            static_cast<mkldnn::memory::format>(input_md.data.format);
-
-                        auto slice = static_cast<ngraph::op::Slice*>(node.get());
+                        const ngraph::op::Slice* slice =
+                            static_cast<const ngraph::op::Slice*>(node.get());
                         auto lower_bounds = slice->get_lower_bounds();
-                        if (result_format == mkldnn::memory::nChw16c)
-                        {
-                            // check lower bound of channels
-                            if (lower_bounds[1] % 16 != 0)
-                            {
-                                NGRAPH_DEBUG
-                                    << "slice nChw16c: lower bound of channels not multiple of 16, "
-                                       "set native layout\n";
-                                set_native_layouts(external_function, node);
-                                return;
-                            }
-                        }
-                        else if (result_format == mkldnn::memory::nChw8c)
-                        {
-                            // check lower bound of channels
-                            if (lower_bounds[1] % 8 != 0)
-                            {
-                                NGRAPH_DEBUG
-                                    << "slice nChw8C: lower bound of channels not multiple of 8,"
-                                       "set native layout\n";
-                                set_native_layouts(external_function, node);
-                                return;
-                            }
-                        }
+                        auto result_shape = slice->get_output_shape(0);
 
-                        vector<memory::desc> o_mds;
-                        if (result_format == mkldnn::memory::blocked)
+                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        auto input_pd = mkldnn::memory::primitive_desc(
+                            input_md, runtime::cpu::mkldnn_utils::global_cpu_engine);
+                        auto dims = mkldnn::memory::dims(result_shape.begin(), result_shape.end());
+                        auto offsets =
+                            mkldnn::memory::dims(lower_bounds.begin(), lower_bounds.end());
+
+                        try
                         {
-                            auto cpu_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
-                                node->get_inputs()[0]
-                                    .get_output()
-                                    .get_tensor_ptr()
-                                    ->get_tensor_layout());
-                            auto result_desc =
-                                mkldnn_utils::create_blocked_mkldnn_md(node->get_output_shape(0),
-                                                                       cpu_tvl->get_strides(),
-                                                                       node->get_element_type());
-                            o_mds.push_back(result_desc);
+                            // MKLDNN currently doesn't support views for blocked layouts
+                            // when the dims and offsets are not divisible by the block size
+                            auto view_md = mkldnn::view::primitive_desc(input_pd, dims, offsets)
+                                               .dst_primitive_desc()
+                                               .desc();
+                            vector<memory::desc> o_mds;
+                            o_mds.push_back(view_md);
+                            set_output_layouts(node, o_mds);
                         }
-                        else
+                        catch (const mkldnn::error& e)
                         {
-                            auto result_desc = mkldnn_utils::create_default_mkldnn_md(
-                                node.get(), 0, true, result_format);
-                            o_mds.push_back(result_desc);
+                            if (e.status == mkldnn_unimplemented)
+                            {
+                                set_native_layouts(external_function, node);
+                            }
+                            else
+                            {
+                                throw ngraph_error(e.message);
+                            }
                         }
-                        set_output_layouts(node, o_mds);
                     }
                     else
                     {
