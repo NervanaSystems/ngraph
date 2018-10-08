@@ -34,7 +34,7 @@ void op::Not::validate_and_infer_types()
 
     NODE_VALIDATION_ASSERT(this, args_et.is_dynamic() || args_et == element::boolean)
         << "Operands for logical operators must have boolean element type but have element type "
-        << get_output_element_type(0) << ".";
+        << args_et << ".";
 
     set_output_type(0, element::boolean, args_pshape);
 }
