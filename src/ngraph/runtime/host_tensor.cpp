@@ -18,17 +18,16 @@
 #include <memory>
 
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
-#include "ngraph/runtime/host_tensor_view.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-runtime::HostTensorView::HostTensorView(const ngraph::element::Type& element_type,
-                                        const Shape& shape,
-                                        void* memory_pointer,
-                                        const string& name)
-    : runtime::TensorView(
-          std::make_shared<ngraph::descriptor::TensorView>(element_type, shape, name))
+runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
+                                const Shape& shape,
+                                void* memory_pointer,
+                                const string& name)
+    : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, name))
     , m_allocated_buffer_pool(nullptr)
     , m_aligned_buffer_pool(nullptr)
 
@@ -55,14 +54,14 @@ runtime::HostTensorView::HostTensorView(const ngraph::element::Type& element_typ
     }
 }
 
-runtime::HostTensorView::HostTensorView(const ngraph::element::Type& element_type,
-                                        const Shape& shape,
-                                        const string& name)
-    : HostTensorView(element_type, shape, nullptr, name)
+runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
+                                const Shape& shape,
+                                const string& name)
+    : HostTensor(element_type, shape, nullptr, name)
 {
 }
 
-runtime::HostTensorView::~HostTensorView()
+runtime::HostTensor::~HostTensor()
 {
     if (m_allocated_buffer_pool != nullptr)
     {
@@ -70,17 +69,17 @@ runtime::HostTensorView::~HostTensorView()
     }
 }
 
-char* runtime::HostTensorView::get_data_ptr()
+char* runtime::HostTensor::get_data_ptr()
 {
     return m_aligned_buffer_pool;
 }
 
-const char* runtime::HostTensorView::get_data_ptr() const
+const char* runtime::HostTensor::get_data_ptr() const
 {
     return m_aligned_buffer_pool;
 }
 
-void runtime::HostTensorView::write(const void* source, size_t tensor_offset, size_t n)
+void runtime::HostTensor::write(const void* source, size_t tensor_offset, size_t n)
 {
     if (tensor_offset + n > m_buffer_size)
     {
@@ -90,7 +89,7 @@ void runtime::HostTensorView::write(const void* source, size_t tensor_offset, si
     memcpy(&target[tensor_offset], source, n);
 }
 
-void runtime::HostTensorView::read(void* target, size_t tensor_offset, size_t n) const
+void runtime::HostTensor::read(void* target, size_t tensor_offset, size_t n) const
 {
     if (tensor_offset + n > m_buffer_size)
     {
@@ -98,14 +97,4 @@ void runtime::HostTensorView::read(void* target, size_t tensor_offset, size_t n)
     }
     const char* source = get_data_ptr();
     memcpy(target, &source[tensor_offset], n);
-}
-
-size_t runtime::HostTensorView::get_size() const
-{
-    return get_tensor_layout()->get_size();
-}
-
-const element::Type& runtime::HostTensorView::get_element_type() const
-{
-    return get_tensor_layout()->get_element_type();
 }

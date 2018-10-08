@@ -25,13 +25,13 @@ namespace ngraph
 {
     namespace op
     {
-        class Quantize : public Op
+        class QuantizeCPU : public Op
         {
         public:
-            Quantize(std::shared_ptr<Node> input,
-                     std::shared_ptr<Node> min,
-                     std::shared_ptr<Node> max,
-                     const element::Type& type);
+            QuantizeCPU(std::shared_ptr<Node> input,
+                        std::shared_ptr<Node> min,
+                        std::shared_ptr<Node> max,
+                        const element::Type& type);
             const element::Type& get_quantize_et() const { return m_element_type; }
             float get_input_min() const { return m_input_min; }
             float get_input_max() const { return m_input_max; }

@@ -48,11 +48,11 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
     auto maxpool = make_shared<op::MaxPool>(reshape, window_shape, window_movement_strides);
     auto f = make_shared<Function>(maxpool, op::ParameterVector{A});
 
-    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::i32, maxpool_shape);
+    shared_ptr<runtime::Tensor> ep = backend->create_tensor(element::i32, maxpool_shape);
     vector<int> dataEp(shape_size(maxpool_shape), 4);
 
-    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::i32, shape_a);
-    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::i32, shape_a);
+    shared_ptr<runtime::Tensor> input = backend->create_tensor(element::i32, shape_a);
+    shared_ptr<runtime::Tensor> output = backend->create_tensor(element::i32, shape_a);
 
     vector<int> dataInput{11, 65, 44, 28, 31, 33, 21, 66, 40, 49, 69, 57, 47, 30, 24, 27,
                           13, 56, 46, 60, 61, 41, 25, 42, 48, 53, 51, 43, 59, 58, 29, 71,
@@ -88,11 +88,11 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
     auto maxpool = make_shared<op::MaxPool>(reshape, window_shape, window_movement_strides);
     auto f = make_shared<Function>(maxpool, op::ParameterVector{A});
 
-    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::i32, maxpool_shape);
+    shared_ptr<runtime::Tensor> ep = backend->create_tensor(element::i32, maxpool_shape);
     vector<int> dataEp(shape_size(maxpool_shape), 4);
 
-    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::i32, shape_a);
-    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::i32, shape_a);
+    shared_ptr<runtime::Tensor> input = backend->create_tensor(element::i32, shape_a);
+    shared_ptr<runtime::Tensor> output = backend->create_tensor(element::i32, shape_a);
 
     vector<int> dataInput{58, 15, 51, 35, 18, 47, 31, 32, 52, 21, 36, 38, 57, 54, 25, 45, 23,
                           30, 16, 27, 48, 20, 41, 37, 43, 39, 22, 28, 33, 29, 12, 17, 44, 42,
@@ -129,11 +129,11 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max_pad1x2_2x3
         reshape, window_shape, window_movement_strides, pad_below, pad_above);
     auto f = make_shared<Function>(maxpool, op::ParameterVector{A});
 
-    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::f32, maxpool_shape);
+    shared_ptr<runtime::Tensor> ep = backend->create_tensor(element::f32, maxpool_shape);
     vector<float> dataEp(shape_size(maxpool_shape), 4);
 
-    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::f32, shape_a);
-    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::f32, shape_a);
+    shared_ptr<runtime::Tensor> input = backend->create_tensor(element::f32, shape_a);
+    shared_ptr<runtime::Tensor> output = backend->create_tensor(element::f32, shape_a);
 
     vector<float> dataInput{58, 15, 51, 35, 18, 47, 31, 32, 52, 21, 36, 38, 57, 54, 25, 45, 23,
                             30, 16, 27, 48, 20, 41, 37, 43, 39, 22, 28, 33, 29, 12, 17, 44, 42,
@@ -168,12 +168,12 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
         make_shared<op::AvgPool>(A, window_shape, window_movement_strides, padding, padding, false);
     auto f = make_shared<Function>(avgpool, op::ParameterVector{A});
 
-    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::i32, avgpool_shape);
+    shared_ptr<runtime::Tensor> ep = backend->create_tensor(element::i32, avgpool_shape);
     vector<int> dataEp(shape_size(avgpool_shape), 4);
 
-    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::i32, shape_a);
+    shared_ptr<runtime::Tensor> input = backend->create_tensor(element::i32, shape_a);
 
-    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::i32, shape_a);
+    shared_ptr<runtime::Tensor> output = backend->create_tensor(element::i32, shape_a);
 
     vector<int> dataInput{4, 8, 12, 16};
 
@@ -201,12 +201,12 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw4x4)
     auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
     auto f = make_shared<Function>(avgpool, op::ParameterVector{A});
 
-    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::i32, avgpool_shape);
+    shared_ptr<runtime::Tensor> ep = backend->create_tensor(element::i32, avgpool_shape);
     vector<int> dataEp(shape_size(avgpool_shape), 4);
 
-    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::i32, shape_a);
+    shared_ptr<runtime::Tensor> input = backend->create_tensor(element::i32, shape_a);
 
-    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::i32, shape_a);
+    shared_ptr<runtime::Tensor> output = backend->create_tensor(element::i32, shape_a);
 
     vector<int> dataInput{1, 3, 1, 3, 1, 3, 1, 3, 3, 5, 3, 5, 3, 5, 3, 5};
 
@@ -234,12 +234,12 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4)
     auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
     auto f = make_shared<Function>(avgpool, op::ParameterVector{A});
 
-    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::i32, avgpool_shape);
+    shared_ptr<runtime::Tensor> ep = backend->create_tensor(element::i32, avgpool_shape);
     vector<int> dataEp(shape_size(avgpool_shape), 12);
 
-    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::i32, shape_a);
+    shared_ptr<runtime::Tensor> input = backend->create_tensor(element::i32, shape_a);
 
-    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::i32, shape_a);
+    shared_ptr<runtime::Tensor> output = backend->create_tensor(element::i32, shape_a);
 
     vector<int> dataInput{// i1c1
                           1,
@@ -1563,11 +1563,11 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n4c1h4w4_kh2kw2_sh1sw1)
     auto window_movement_strides = Strides{1, 1};
     auto maxpool = make_shared<op::MaxPool>(A, window_shape, window_movement_strides);
     auto f = make_shared<Function>(maxpool, op::ParameterVector{A});
-    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::f32, maxpool_shape);
+    shared_ptr<runtime::Tensor> ep = backend->create_tensor(element::f32, maxpool_shape);
     vector<float> dataEp(shape_size(maxpool_shape), 4);
 
-    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::f32, shape_a);
-    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::f32, shape_a);
+    shared_ptr<runtime::Tensor> input = backend->create_tensor(element::f32, shape_a);
+    shared_ptr<runtime::Tensor> output = backend->create_tensor(element::f32, shape_a);
 
     vector<float> dataInput{11, 65, 44, 28, 31, 33, 21, 66, 40, 49, 69, 57, 47, 30, 24, 27,
                             13, 56, 46, 60, 61, 41, 25, 42, 48, 53, 51, 43, 59, 58, 29, 71,
@@ -1601,11 +1601,11 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
     auto maxpool = make_shared<op::MaxPool>(A, window_shape, window_movement_strides);
     auto f = make_shared<Function>(maxpool, op::ParameterVector{A});
 
-    shared_ptr<runtime::TensorView> ep = backend->create_tensor(element::f32, maxpool_shape);
+    shared_ptr<runtime::Tensor> ep = backend->create_tensor(element::f32, maxpool_shape);
     vector<float> dataEp(shape_size(maxpool_shape), 4);
 
-    shared_ptr<runtime::TensorView> input = backend->create_tensor(element::f32, shape_a);
-    shared_ptr<runtime::TensorView> output = backend->create_tensor(element::f32, shape_a);
+    shared_ptr<runtime::Tensor> input = backend->create_tensor(element::f32, shape_a);
+    shared_ptr<runtime::Tensor> output = backend->create_tensor(element::f32, shape_a);
 
     vector<float> dataInput{58, 15, 51, 35, 18, 47, 31, 32, 52, 21, 36, 38, 57, 54, 25, 45, 23,
                             30, 16, 27, 48, 20, 41, 37, 43, 39, 22, 28, 33, 29, 12, 17, 44, 42,
@@ -1674,11 +1674,11 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_sequence_n3_c2_h3)
     auto rs = std::make_shared<op::ReverseSequence>(A, B, batch_axis, sequence_axis);
     auto f = make_shared<Function>(rs, op::ParameterVector{A, B});
 
-    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::i32, shape);
-    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::i32, seq_len_shape);
-    shared_ptr<runtime::TensorView> c = backend->create_tensor(element::i32, shape);
-    shared_ptr<runtime::TensorView> da = backend->create_tensor(element::i32, shape);
-    shared_ptr<runtime::TensorView> db = backend->create_tensor(element::i32, seq_len_shape);
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, seq_len_shape);
+    shared_ptr<runtime::Tensor> c = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::Tensor> da = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::Tensor> db = backend->create_tensor(element::i32, seq_len_shape);
 
     // input values don't matter
     vector<int> va(shape_size(shape), 0);
@@ -1713,11 +1713,11 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_sequence_n4d2c3h2w2)
     auto rs = std::make_shared<op::ReverseSequence>(A, B, batch_axis, sequence_axis);
     auto f = make_shared<Function>(rs, op::ParameterVector{A, B});
 
-    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::i32, shape);
-    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::i32, seq_len_shape);
-    shared_ptr<runtime::TensorView> c = backend->create_tensor(element::i32, shape);
-    shared_ptr<runtime::TensorView> da = backend->create_tensor(element::i32, shape);
-    shared_ptr<runtime::TensorView> db = backend->create_tensor(element::i32, seq_len_shape);
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, seq_len_shape);
+    shared_ptr<runtime::Tensor> c = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::Tensor> da = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::Tensor> db = backend->create_tensor(element::i32, seq_len_shape);
 
     // input values don't matter
     vector<int> va(shape_size(shape), 0);
