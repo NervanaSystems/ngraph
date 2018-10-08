@@ -101,7 +101,8 @@ namespace ngraph
                 size_t build_onehot(const std::array<std::string, 2>& dtypes,
                                     NVShape input_shape,
                                     NVShape output_shape,
-                                    size_t one_hot_axis);
+                                    size_t one_hot_axis,
+                                    size_t output_datatype_size);
 
                 size_t build_reverse(const std::array<std::string, 2>& dtypes,
                                      NVShape input_shape,

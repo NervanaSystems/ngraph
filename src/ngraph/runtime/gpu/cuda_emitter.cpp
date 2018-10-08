@@ -170,7 +170,8 @@ size_t runtime::gpu::CUDAEmitter::build_concat(const std::vector<std::string>& d
 size_t runtime::gpu::CUDAEmitter::build_onehot(const std::array<std::string, 2>& dtypes,
                                                NVShape input_shape,
                                                NVShape output_shape,
-                                               size_t one_hot_axis)
+                                               size_t one_hot_axis,
+                                               size_t output_datatype_size)
 {
     std::stringstream kernel_name;
     kernel_name << "onehot_" << join(dtypes, "_");
@@ -206,18 +207,19 @@ size_t runtime::gpu::CUDAEmitter::build_onehot(const std::array<std::string, 2>&
     uint32_t block_size_x = 64;
     uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
 
-    uint32_t repeat_times = static_cast<uint32_t>(output_shape[one_hot_axis]);
-    uint32_t repeat_size = 1;
+    uint32_t hot_axis_shape = static_cast<uint32_t>(output_shape[one_hot_axis]);
+    uint32_t hot_axis_stride = 1;
     for (size_t i = one_hot_axis + 1; i < output_shape.size(); i++)
     {
-        repeat_size *= output_shape[i];
+        hot_axis_stride *= output_shape[i];
     }
-
+    uint32_t output_size = static_cast<uint32_t>(shape_size(output_shape) * output_datatype_size);
     // create the launch primitive
     std::unique_ptr<gpu::primitive> kernel_launch(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
             std::vector<void*> args_list{
-                &inputs[0], &outputs[0], &repeat_size, &repeat_times, &nthreads};
+                &inputs[0], &outputs[0], &hot_axis_stride, &hot_axis_shape, &nthreads};
+            runtime::gpu::cuda_memset(outputs[0], 0, output_size);
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                           aligned_grid_size_x,
                                           1,

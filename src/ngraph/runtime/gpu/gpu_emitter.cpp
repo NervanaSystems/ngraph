@@ -792,13 +792,14 @@ void runtime::gpu::GPU_Emitter::emit_OneHot(EMIT_ARGS)
     auto onehot = static_cast<const ngraph::op::OneHot*>(node);
     auto arg_shape = args[0].get_shape();
     auto result_shape = out[0].get_shape();
+    auto output_datatype_size = out[0].get_element_type().size();
     size_t idx = onehot->get_one_hot_axis();
 
     writer.block_begin();
     {
         auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
         auto index = cuda_emitter->build_onehot(
-            {{args[0].get_type(), out[0].get_type()}}, arg_shape, result_shape, idx);
+            {{args[0].get_type(), out[0].get_type()}}, arg_shape, result_shape, idx, output_datatype_size);
 
         writer.block_begin();
         writer << "void* input[] = {" << node_names(args) << "};\n";
