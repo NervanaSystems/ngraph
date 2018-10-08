@@ -311,6 +311,14 @@ bool runtime::cpu::mkldnn_utils::is_perm_sorted(const Strides& a, const AxisVect
 mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md(
     const Shape& dims, const Strides& strides, const ngraph::element::Type type)
 {
+    if (dims.size() > TENSOR_MAX_DIMS || strides.size() > TENSOR_MAX_DIMS)
+    {
+        throw ngraph_error("In create_blocked_mkldnn_md: Dimensions (dims, stride): (" +
+                           std::to_string(dims.size()) + ", " + std::to_string(strides.size()) +
+                           ") exceed maximum supported by MKLDNN " +
+                           std::to_string(TENSOR_MAX_DIMS));
+    }
+
     memory::dims dim(dims.begin(), dims.end());
     memory::dims stride(strides.begin(), strides.end());
     memory::data_type dtype = get_mkldnn_data_type(type);
