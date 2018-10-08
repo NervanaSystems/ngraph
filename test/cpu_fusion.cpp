@@ -1306,6 +1306,7 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
+#if 0
 TEST(cpu_fusion, loop_kernel_one_input_one_output)
 {
     Shape shapeA{2, 2};
@@ -1496,6 +1497,9 @@ TEST(cpu_fusion, loop_kernel_copy_with_new_args)
     EXPECT_EQ(read_vector<int>(r2), read_vector<int>(copy_r2));
     EXPECT_EQ(read_vector<int>(r3), read_vector<int>(copy_r3));
 }
+
+#endif
+
 static std::shared_ptr<ngraph::Function> make_forward_function()
 {
     Shape shape_a{10, 3, 28, 28};
@@ -2057,6 +2061,8 @@ TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
     }
 }
 
+#if 0
+
 TEST(cpu_fusion, loop_kernel_fusion_multiple_groups_pruned)
 {
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -2248,6 +2254,8 @@ TEST(cpu_fusion, loop_kernel_fusion_one_group)
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }
+
+#endif
 
 TEST(cpu_fusion, sigmoid_multiply_fusion)
 {

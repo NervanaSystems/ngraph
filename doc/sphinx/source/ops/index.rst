@@ -95,7 +95,12 @@ Not currently a comprehensive list.
    * :doc:`product`
    * :doc:`relu`
    * :doc:`sigmoid`
+   * :doc:`sign`
+   * :doc:`sin`
+   * :doc:`sinh`
    * :doc:`softmax`
+   * :doc:`sqrt`
+   * :doc:`tan`
    * :doc:`tanh`
 
 
@@ -151,7 +156,12 @@ Not currently a comprehensive list.
    product.rst
    relu.rst
    sigmoid.rst
+   sign.rst
+   sin.rst
+   sinh.rst
    softmax.rst
+   sqrt.rst
+   tan.rst
    tanh.rst
 
    

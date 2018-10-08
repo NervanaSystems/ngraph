@@ -61,6 +61,9 @@ namespace ngraph
         /// Return the shape of element i
         const Shape& get_output_shape(size_t i) const;
 
+        /// Return the partial shape of element i
+        const PartialShape& get_output_partial_shape(size_t i) const;
+
         /// Return the function parameters
         const op::ParameterVector& get_parameters() const { return m_parameters; }
         /// Return a list of function's outputs
