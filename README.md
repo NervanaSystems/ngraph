@@ -81,3 +81,4 @@ to improve the Library:
 [build-status-badge]: https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master
 [develop-without-lockin]: doc/sphinx/source/graphics/develop-without-lockin.png "Develop on any part of the stack wtihout lockin"
 [Movidius]:https://www.movidius.com/solutions/vision-processing-unit
+
