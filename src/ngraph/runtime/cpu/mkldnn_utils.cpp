@@ -319,6 +319,12 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md(
                            std::to_string(TENSOR_MAX_DIMS));
     }
 
+    if (dims.size() != strides.size())
+    {
+        throw ngraph_error("In create_blocked_mkldnn_md: Rank mismatch between shape and strides " +
+                           std::to_string(dims.size()) + " " + std::to_string(strides.size()));
+    }
+
     memory::dims dim(dims.begin(), dims.end());
     memory::dims stride(strides.begin(), strides.end());
     memory::data_type dtype = get_mkldnn_data_type(type);
