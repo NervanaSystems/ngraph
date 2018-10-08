@@ -798,8 +798,11 @@ void runtime::gpu::GPU_Emitter::emit_OneHot(EMIT_ARGS)
     writer.block_begin();
     {
         auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
-        auto index = cuda_emitter->build_onehot(
-            {{args[0].get_type(), out[0].get_type()}}, arg_shape, result_shape, idx, output_datatype_size);
+        auto index = cuda_emitter->build_onehot({{args[0].get_type(), out[0].get_type()}},
+                                                arg_shape,
+                                                result_shape,
+                                                idx,
+                                                output_datatype_size);
 
         writer.block_begin();
         writer << "void* input[] = {" << node_names(args) << "};\n";
