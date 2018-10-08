@@ -112,7 +112,6 @@ namespace ngraph
                 static bool is_op_type_supported(const std::string& op_type)
                 {
                     return ops_bridge::get().is_op_type_supported_(op_type);
-
                 }
 
             private:
@@ -235,7 +234,6 @@ namespace ngraph
             {
                 return detail::ops_bridge::is_op_type_supported(op_type);
             }
-
 
         } // namespace ops_bridge
 
