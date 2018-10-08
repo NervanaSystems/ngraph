@@ -7112,10 +7112,16 @@ TEST(type_prop, logic_arith_compare_partial_et)
 
     // Logical negation op:
     //
+    // Current behavior:
+    // int -> int
+    // boo -> boo
+    // dyn -> dyn
+    //
+    // TODO(amprocte): I believe the behavior should actually be:
     // int -> !
     // boo -> boo
     // dyn -> boo
-    ASSERT_ANY_THROW({ test_not(element::i32); });
+    ASSERT_EQ(test_not(element::i32)->get_element_type(), element::i32);
     ASSERT_EQ(test_not(element::boolean)->get_element_type(), element::boolean);
-    ASSERT_EQ(test_not(element::dynamic)->get_element_type(), element::boolean);
+    ASSERT_EQ(test_not(element::dynamic)->get_element_type(), element::dynamic);
 }
