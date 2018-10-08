@@ -243,7 +243,10 @@ TEST(type_prop, concat_deduce_wrong_rank)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Not all arguments have the same rank"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Argument shapes are inconsistent; they must have the same rank, and must "
+                        "have equal dimension everywhere except on the concatenation axis"));
     }
     catch (...)
     {
@@ -264,8 +267,10 @@ TEST(type_prop, concat_deduce_wrong_shape)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Dimensions of argument 2 do not match for axis 2"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Argument shapes are inconsistent; they must have the same rank, and must "
+                        "have equal dimension everywhere except on the concatenation axis"));
     }
     catch (...)
     {
@@ -286,9 +291,7 @@ TEST(type_prop, concat_deduce_axis_oob)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Concatenation axis (3) is out of bounds (inputs have rank 3)"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Concatenation axis (3) is out of bounds"));
     }
     catch (...)
     {
@@ -320,8 +323,7 @@ TEST(type_prop, concat_deduce_elem_type_mismatch)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Not all arguments have the same element type"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument element types are inconsistent"));
     }
     catch (...)
     {
