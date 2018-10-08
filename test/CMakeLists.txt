@@ -58,23 +58,28 @@ endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
     set(SRC ${SRC} backend_debug_api.cpp builder.cpp backend_api.cpp)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
     set(SRC ${SRC} core_fusion.cpp quantize_cpu.cpp)
-endif()
-
-add_subdirectory(models)
-add_subdirectory(files)
-add_subdirectory(util)
-
-if(NGRAPH_CPU_ENABLE)
     set(SRC ${SRC} backend_performance.cpp cpu_fusion.cpp cpu_test.cpp)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
 endif()
 
 if(NGRAPH_GPU_ENABLE)
     set(SRC ${SRC} cudnn.cpp gpu_test.cpp gpu_fusion.cpp)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
 endif()
+
+# if (NGRAPH_INTELGPU_ENABLE)
+#     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTELGPU)
+# endif()
+
+add_subdirectory(models)
+add_subdirectory(files)
+add_subdirectory(util)
 
 # backend specific test files must meet the following requirements:
 # 1) The must be named <name>.in.cpp
@@ -90,12 +95,7 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
     set(MULTI_TEST_SRC ${MULTI_TEST_SRC} distributed.in.cpp)
 endif()
 
-foreach(TEST_CONFIG ${UNIT_TEST_CONFIG_LIST})
-    string(FIND ${TEST_CONFIG} "@" OFFSET)
-    string(SUBSTRING ${TEST_CONFIG} 0 ${OFFSET} BACKEND_NAME)
-    math(EXPR OFFSET ${OFFSET}+1)
-    string(SUBSTRING ${TEST_CONFIG} ${OFFSET} -1 MANIFEST)
-
+foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
     # Some---but not all---autodiff tests go through multiple iterations with
     # different random seeds. On the CPU backend this is currently very slow
     # because the autodiff tests recompile with each iteration. That behavior
