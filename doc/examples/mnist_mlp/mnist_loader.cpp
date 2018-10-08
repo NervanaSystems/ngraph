@@ -54,6 +54,7 @@ namespace
 {
     float inv_2_8 = 1.0f / 256.0f;
 }
+
 void MNistLoader::read_scaled(float* loc, size_t n)
 {
     for (size_t i = 0; i < n; ++i)

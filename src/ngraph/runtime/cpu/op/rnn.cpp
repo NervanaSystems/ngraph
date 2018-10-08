@@ -47,14 +47,14 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
              std::shared_ptr<Node> weights_layer,
              std::shared_ptr<Node> weights_iter,
              std::shared_ptr<Node> bias,
-             const int num_timesteps,
-             const int num_gates_per_cell,
-             const int src_sequence_length,
-             const int src_layer_feature_size,
-             const int src_iter_feature_size,
-             const int num_cell_states,
-             const int direction,
-             const int num_fused_layers)
+             size_t num_timesteps,
+             size_t num_gates_per_cell,
+             size_t src_sequence_length,
+             size_t src_layer_feature_size,
+             size_t src_iter_feature_size,
+             size_t num_cell_states,
+             size_t direction,
+             size_t num_fused_layers)
     : Op("Rnn", check_single_output_args({src_layer, src_iter, weights_layer, weights_iter, bias}))
     , m_num_timesteps(num_timesteps)
     , m_num_gates_per_cell(num_gates_per_cell)
@@ -79,7 +79,7 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
 
     if (src_layer->get_shape().size() == 2)
     {
-        m_batch_size = static_cast<int>(src_layer->get_shape()[0] / num_timesteps);
+        m_batch_size = src_layer->get_shape()[0] / m_num_timesteps;
     }
     else
     {
@@ -110,11 +110,9 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
     set_output_size(2);
     set_output_type(0,
                     src_layer->get_element_type(),
-                    Shape{static_cast<unsigned long>(m_direction * m_num_timesteps * m_batch_size),
-                          static_cast<unsigned long>(m_src_iter_feature_size)});
+                    Shape{(m_direction * m_num_timesteps * m_batch_size), m_src_iter_feature_size});
     set_output_type(1,
                     src_layer->get_element_type(),
-                    Shape{static_cast<unsigned long>(m_num_cell_states * m_direction *
-                                                     m_num_fused_layers * m_batch_size),
-                          static_cast<unsigned long>(m_src_iter_feature_size)});
+                    Shape{(m_num_cell_states * m_direction * m_num_fused_layers * m_batch_size),
+                          m_src_iter_feature_size});
 }

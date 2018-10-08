@@ -138,6 +138,14 @@ namespace ngraph
                                        double epsilon,
                                        bool global_stats = false);
 
+                size_t build_lrn(const std::string& dtype,
+                                 const Prop& direction,
+                                 const Shape& io_shape,
+                                 const double lrn_alpha,
+                                 const double lrn_beta,
+                                 const double lrn_bias,
+                                 const size_t lrn_size);
+
                 size_t build_softmax(const cudnnSoftmaxAlgorithm_t& algorithm,
                                      const cudnnSoftmaxMode_t& mode,
                                      const std::string& dtype,
