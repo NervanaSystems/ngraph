@@ -76,20 +76,25 @@ if(NGRAPH_GPU_ENABLE)
     set(SRC ${SRC} cudnn.cpp gpu_test.cpp gpu_fusion.cpp)
 endif()
 
+# backend specific test files must meet the following requirements:
+# 1) The must be named <name>.in.cpp
+# 2) They must be in the test/backend directory
+# All such files are configured via cmake which replaces all instances of cmake variables
+# such as ${BACKEND_NAME} with their values, such as CPU, GPU, or INTERPRETER.
+set(MULTI_TEST_SRC
+    autodiff.in.cpp
+    backend_test.in.cpp
+    convolution_test.in.cpp
+)
+if(NGRAPH_DISTRIBUTED_ENABLE)
+    set(MULTI_TEST_SRC ${MULTI_TEST_SRC} distributed.in.cpp)
+endif()
+
 foreach(TEST_CONFIG ${UNIT_TEST_CONFIG_LIST})
     string(FIND ${TEST_CONFIG} "@" OFFSET)
     string(SUBSTRING ${TEST_CONFIG} 0 ${OFFSET} BACKEND_NAME)
     math(EXPR OFFSET ${OFFSET}+1)
     string(SUBSTRING ${TEST_CONFIG} ${OFFSET} -1 MANIFEST)
-
-    configure_file(backend_test.in.cpp backend_test_${BACKEND_NAME}.cpp)
-    configure_file(convolution_test.in.cpp convolution_test_${BACKEND_NAME}.cpp)
-    set(SRC ${CMAKE_CURRENT_BINARY_DIR}/backend_test_${BACKEND_NAME}.cpp ${SRC})
-    set(SRC ${CMAKE_CURRENT_BINARY_DIR}/convolution_test_${BACKEND_NAME}.cpp ${SRC})
-    if(NGRAPH_DISTRIBUTED_ENABLE)
-        configure_file(distributed.cpp distributed_${BACKEND_NAME}.cpp)
-        set(SRC ${CMAKE_CURRENT_BINARY_DIR}/distributed_${BACKEND_NAME}.cpp  ${SRC})
-    endif()
 
     # Some---but not all---autodiff tests go through multiple iterations with
     # different random seeds. On the CPU backend this is currently very slow
@@ -102,8 +107,11 @@ foreach(TEST_CONFIG ${UNIT_TEST_CONFIG_LIST})
         set(TEST_LOOPS 2)
     endif()
 
-    configure_file(autodiff.in.cpp autodiff_${BACKEND_NAME}.cpp)
-    set(SRC ${CMAKE_CURRENT_BINARY_DIR}/autodiff_${BACKEND_NAME}.cpp ${SRC})
+    foreach(TEST_SRC ${MULTI_TEST_SRC})
+        string(REPLACE ".in." "_${BACKEND_NAME}." TARGET_NAME ${TEST_SRC})
+        configure_file(backend/${TEST_SRC} ${TARGET_NAME})
+        set(SRC ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} ${SRC})
+    endforeach()
 
     message(STATUS "Adding unit test for backend ${BACKEND_NAME}")
 endforeach()
