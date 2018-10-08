@@ -32,6 +32,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -303,6 +304,13 @@ bool ngraph::runtime::cpu::pass::CPUReshapeSinking::run_on_function(
     //make sure shapes are always materialized before results
     for (auto r : results)
     {
+        if (r->get_shape() != r->get_argument(0)->get_shape() ||
+            r->get_element_type() != r->get_argument(0)->get_element_type())
+        {
+            std::cout << "GRAPH :\n";
+            std::cout << ngraph::serialize(f, 4) << std::endl;
+        }
+
         NGRAPH_ASSERT(r->get_shape() == r->get_argument(0)->get_shape() &&
                       r->get_element_type() == r->get_argument(0)->get_element_type());
     }
