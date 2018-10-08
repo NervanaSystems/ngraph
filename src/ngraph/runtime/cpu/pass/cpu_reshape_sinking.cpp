@@ -18,7 +18,9 @@
 #include <algorithm>
 #include <iostream>
 #include <numeric>
+#include <set>
 #include <unordered_set>
+
 #include "cpu_collapse_dims.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/graph_util.hpp"
@@ -32,7 +34,6 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
-#include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -83,6 +84,13 @@ static void delete_reshape(std::shared_ptr<Node> reshape)
     }
 }
 
+static void mark_reshape_for_deletion(std::shared_ptr<Node> reshape,
+                                      std::set<std::shared_ptr<Node>>& reshapes_to_delete)
+{
+    NGRAPH_DEBUG << "Marking reshape " << reshape->get_name() << " for deletion";
+    reshapes_to_delete.insert(reshape);
+}
+
 static std::shared_ptr<op::Reshape> create_default_reshape(std::shared_ptr<Node> n)
 {
     auto default_order = ngraph::get_default_order(n->get_shape());
@@ -90,6 +98,7 @@ static std::shared_ptr<op::Reshape> create_default_reshape(std::shared_ptr<Node>
     return default_reshape;
 }
 
+//compute an axis order that converts the given axis order to default
 static AxisSet get_quantization_axes_in_default_order(std::shared_ptr<op::Reshape> arg_reshape,
                                                       const AxisSet& old_axis_set)
 {
@@ -108,6 +117,12 @@ struct Swimmer
     std::shared_ptr<op::Reshape> reshape;
 };
 
+//Swim is used to push/"swim" reshapes towards paramaters.
+//This is typically done for binary ops when
+//one operand is in nchw, while  the other one is nhwc
+//we prefer nchw since a lot of ngraph ops require this format,
+//so keeping things in nchw allows us to eliminate as many reshapes
+//as possible
 void swim(descriptor::Input* input, std::shared_ptr<op::Reshape> reshape)
 {
     Swimmer sw{input, reshape};
@@ -116,7 +131,6 @@ void swim(descriptor::Input* input, std::shared_ptr<op::Reshape> reshape)
 
     //TODO: if we support more ops (especially, with >1 args)
     //we will need to keep track of nodes we visited and their reshapes
-
     while (work_queue.size() > 0)
     {
         auto csw = work_queue.front();
@@ -141,11 +155,16 @@ void swim(descriptor::Input* input, std::shared_ptr<op::Reshape> reshape)
     }
 }
 
+//convert_binary_to_default_order is used when one of the arguments
+//of a binary op isn't in the default format (i.e. nhwc instead of nchw)
+//We have to normalize this other argument to nchw by swimming nchw towards parameters
+//as far as we can
 static void convert_binary_to_default_order(
     std::shared_ptr<Node> binary,
     descriptor::Input& input,
     std::shared_ptr<Node> right,
-    std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<op::Reshape>>& reorders)
+    std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<op::Reshape>>& reorders,
+    std::set<std::shared_ptr<Node>>& reshapes_to_delete)
 {
     auto left = input.get_output().get_node();
     auto perm_to_def =
@@ -158,20 +177,29 @@ static void convert_binary_to_default_order(
                  << left->get_name();
     //this should now insert and swim reshape on right
     swim(&input, new_reshape);
-    delete_reshape(reorders.at(right));
+    mark_reshape_for_deletion(reorders.at(right), reshapes_to_delete);
     reorders[binary] = reorders.at(right);
 }
 
+//The goal of ReshapeSinking is to remove
+//round-trip reshapes(i.e. nhwc->nchw(nchw-only-op)->nhwc)
+//around nchw-only-op (e.g.Convolution, Batchnorm, Avg/MaxPool)
+//This is achieved by both **sinking**, propagating reshapes
+//through ops towards op::Results,
+//or **swimming** Reshapes up towards op::Parameter
+//For each op type we support we can either combine
+//two reshapes by replacing the existing Reshape,
+//materialize pending reshapes if they can't be propagated through op
 bool ngraph::runtime::cpu::pass::CPUReshapeSinking::run_on_function(
     std::shared_ptr<ngraph::Function> f)
 {
     std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<op::Reshape>> reorders;
     NodeVector results;
+    std::set<std::shared_ptr<Node>> reshapes_to_delete;
 
     for (auto n : f->get_ordered_ops())
     {
         NGRAPH_DEBUG << "Processing node " << n->get_name();
-
         if (n->is_output())
         {
             results.push_back(n);
@@ -185,7 +213,7 @@ bool ngraph::runtime::cpu::pass::CPUReshapeSinking::run_on_function(
                 NGRAPH_DEBUG << "Materializing " << describe_reshape(orig_reshape)
                              << " for reshape " << reshape->get_name();
                 insert_reshape(reshape, orig_reshape, 0);
-                delete_reshape(orig_reshape);
+                mark_reshape_for_deletion(orig_reshape, reshapes_to_delete);
                 reorders[reshape] = create_default_reshape(reshape);
             }
             else
@@ -194,7 +222,7 @@ bool ngraph::runtime::cpu::pass::CPUReshapeSinking::run_on_function(
                 auto new_reshape = combine_reshapes(orig_reshape, reshape);
                 //remove original reshape now it's combined with a new one
                 //should be safe to remove an already detached node
-                delete_reshape(orig_reshape);
+                mark_reshape_for_deletion(orig_reshape, reshapes_to_delete);
                 //replace reshape with combined one
                 ngraph::replace_node(reshape, new_reshape);
                 reorders[new_reshape] = new_reshape;
@@ -225,20 +253,21 @@ bool ngraph::runtime::cpu::pass::CPUReshapeSinking::run_on_function(
                      ngraph::get_default_order(left->get_shape()))
             {
                 convert_binary_to_default_order(
-                    binary, binary->get_inputs().at(0), right, reorders);
+                    binary, binary->get_inputs().at(0), right, reorders, reshapes_to_delete);
             }
             else if (reorders.at(right)->get_input_order() ==
                      ngraph::get_default_order(right->get_shape()))
             {
-                convert_binary_to_default_order(binary, binary->get_inputs().at(1), left, reorders);
+                convert_binary_to_default_order(
+                    binary, binary->get_inputs().at(1), left, reorders, reshapes_to_delete);
             }
             else
             {
                 NGRAPH_DEBUG << "Materializing both reshapes for " << binary->get_name();
                 NGRAPH_DEBUG << "Left = " << describe_reshape(reorders.at(left));
                 NGRAPH_DEBUG << "Right = " << describe_reshape(reorders.at(right));
-                delete_reshape(reorders.at(left));
-                delete_reshape(reorders.at(right));
+                mark_reshape_for_deletion(reorders.at(left), reshapes_to_delete);
+                mark_reshape_for_deletion(reorders.at(right), reshapes_to_delete);
                 insert_reshape(binary, reorders.at(left), 0);
                 insert_reshape(binary, reorders.at(right), 1);
             }
@@ -292,7 +321,7 @@ bool ngraph::runtime::cpu::pass::CPUReshapeSinking::run_on_function(
                 {
                     NGRAPH_DEBUG << "Materializing " << describe_reshape(reorders.at(arg))
                                  << " for " << arg->get_name();
-                    delete_reshape(reorders.at(arg));
+                    mark_reshape_for_deletion(reorders.at(arg), reshapes_to_delete);
                     insert_reshape(n, reorders.at(arg), i);
                     //no swimming up
                 }
@@ -301,18 +330,18 @@ bool ngraph::runtime::cpu::pass::CPUReshapeSinking::run_on_function(
         }
     }
 
+    //purge all the reshapes we either sunk or swam.
+    for (auto r : reshapes_to_delete)
+    {
+        delete_reshape(r);
+    }
+
     //make sure shapes are always materialized before results
     for (auto r : results)
     {
-        if (r->get_shape() != r->get_argument(0)->get_shape() ||
-            r->get_element_type() != r->get_argument(0)->get_element_type())
-        {
-            std::cout << "GRAPH :\n";
-            std::cout << ngraph::serialize(f, 4) << std::endl;
-        }
-
         NGRAPH_ASSERT(r->get_shape() == r->get_argument(0)->get_shape() &&
-                      r->get_element_type() == r->get_argument(0)->get_element_type());
+                      r->get_element_type() == r->get_argument(0)->get_element_type())
+            << " op::Result = " << *r << ", Arg = " << *r->get_argument(0);
     }
 
     //fix wrong shape info wholesale
