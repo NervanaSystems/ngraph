@@ -14,7 +14,7 @@ Description
 
 Produces tensor of the same element type and shape as the two inputs,
 where the value at each coordinate of ``output`` is ``1`` (true) if
-``arg0`` is equal to ``arg1``, ``0`` otherwise.
+``arg0`` is equal to ``arg1,`` ``0`` otherwise.
 
 
 Inputs

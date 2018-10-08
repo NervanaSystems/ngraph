@@ -148,7 +148,7 @@ void ngraph::pass::ReshapeElimination::construct_dot_transpose_pattern()
         NGRAPH_DEBUG << "In callback for construct_dot_transpose_pattern against node = "
                      << m.get_match_root()->get_name();
 
-        auto mtranspose = std::dynamic_pointer_cast<op::Reshape>(m.get_match_root());
+        auto mtranspose = std::static_pointer_cast<op::Reshape>(m.get_match_root());
         // this also checks the rank
         if (mtranspose->get_input_order() != AxisVector{1, 0})
         {
