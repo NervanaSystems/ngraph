@@ -6848,7 +6848,104 @@ TEST(type_prop, validate_punt_if_dynamic)
     ASSERT_TRUE(concat->get_output_element_type(0).is_dynamic());
 }
 
-TEST(type_prop, fail_tests_wip)
+TEST(type_prop, logic_arith_compare_partial_et)
 {
-    FAIL() << "PR is still WIP";
+    auto test_logic = [](element::Type et0, element::Type et1) -> std::shared_ptr<Node> {
+        auto param0 = std::make_shared<op::Parameter>(et0, Shape{1, 2, 3});
+        auto param1 = std::make_shared<op::Parameter>(et1, Shape{1, 2, 3});
+        return std::make_shared<op::And>(param0, param1);
+    };
+
+    auto test_arith = [](element::Type et0, element::Type et1) -> std::shared_ptr<Node> {
+        auto param0 = std::make_shared<op::Parameter>(et0, Shape{1, 2, 3});
+        auto param1 = std::make_shared<op::Parameter>(et1, Shape{1, 2, 3});
+        return std::make_shared<op::Add>(param0, param1);
+    };
+
+    auto test_compare = [](element::Type et0, element::Type et1) -> std::shared_ptr<Node> {
+        auto param0 = std::make_shared<op::Parameter>(et0, Shape{1, 2, 3});
+        auto param1 = std::make_shared<op::Parameter>(et1, Shape{1, 2, 3});
+        return std::make_shared<op::Greater>(param0, param1);
+    };
+
+    auto test_not = [](element::Type et) -> std::shared_ptr<Node> {
+        auto param = std::make_shared<op::Parameter>(et, Shape{1, 2, 3});
+        return std::make_shared<op::Not>(param);
+    };
+
+    // Logical ops:
+    //
+    // int int -> !
+    // int boo -> !
+    // int dyn -> !
+    // boo int -> !
+    // boo boo -> boo
+    // boo dyn -> boo
+    // dyn int -> !
+    // dyn boo -> boo
+    // dyn dyn -> boo
+    ASSERT_ANY_THROW({ test_logic(element::i32, element::i32); });
+    ASSERT_ANY_THROW({ test_logic(element::i32, element::boolean); });
+    ASSERT_ANY_THROW({ test_logic(element::i32, element::dynamic); });
+    ASSERT_ANY_THROW({ test_logic(element::boolean, element::i32); });
+    ASSERT_EQ(test_logic(element::boolean, element::boolean)->get_element_type(), element::boolean);
+    ASSERT_EQ(test_logic(element::boolean, element::dynamic)->get_element_type(), element::boolean);
+    ASSERT_ANY_THROW({ test_logic(element::dynamic, element::i32); });
+    ASSERT_EQ(test_logic(element::dynamic, element::boolean)->get_element_type(), element::boolean);
+    ASSERT_EQ(test_logic(element::dynamic, element::dynamic)->get_element_type(), element::boolean);
+
+    // Arith ops:
+    //
+    // int int -> int
+    // int boo -> !
+    // int dyn -> int
+    // boo int -> !
+    // boo boo -> !
+    // boo dyn -> !
+    // dyn int -> int
+    // dyn boo -> !
+    // dyn dyn -> dyn
+    ASSERT_EQ(test_arith(element::i32, element::i32)->get_element_type(), element::i32);
+    ASSERT_ANY_THROW({ test_arith(element::i32, element::boolean); });
+    ASSERT_EQ(test_arith(element::i32, element::dynamic)->get_element_type(), element::i32);
+    ASSERT_ANY_THROW({ test_arith(element::boolean, element::i32); });
+    ASSERT_ANY_THROW({ test_arith(element::boolean, element::boolean); });
+    ASSERT_ANY_THROW({ test_arith(element::boolean, element::dynamic); });
+    ASSERT_EQ(test_arith(element::dynamic, element::i32)->get_element_type(), element::i32);
+    ASSERT_ANY_THROW({ test_arith(element::dynamic, element::boolean); });
+    ASSERT_EQ(test_arith(element::dynamic, element::dynamic)->get_element_type(), element::dynamic);
+
+    // Comparison ops:
+    //
+    // int int -> boo
+    // int boo -> !
+    // int dyn -> boo
+    // boo int -> !
+    // boo boo -> boo
+    // boo dyn -> boo
+    // dyn int -> boo
+    // dyn boo -> boo
+    // dyn dyn -> boo
+    ASSERT_EQ(test_compare(element::i32, element::i32)->get_element_type(), element::boolean);
+    ASSERT_ANY_THROW({ test_compare(element::i32, element::boolean); });
+    ASSERT_EQ(test_compare(element::i32, element::dynamic)->get_element_type(), element::boolean);
+    ASSERT_ANY_THROW({ test_compare(element::boolean, element::i32); });
+    ASSERT_EQ(test_compare(element::boolean, element::boolean)->get_element_type(),
+              element::boolean);
+    ASSERT_EQ(test_compare(element::boolean, element::dynamic)->get_element_type(),
+              element::boolean);
+    ASSERT_EQ(test_compare(element::dynamic, element::i32)->get_element_type(), element::boolean);
+    ASSERT_EQ(test_compare(element::dynamic, element::boolean)->get_element_type(),
+              element::boolean);
+    ASSERT_EQ(test_compare(element::dynamic, element::dynamic)->get_element_type(),
+              element::boolean);
+
+    // Logical negation op:
+    //
+    // int -> !
+    // boo -> boo
+    // dyn -> boo
+    ASSERT_ANY_THROW({ test_not(element::i32); });
+    ASSERT_EQ(test_not(element::boolean)->get_element_type(), element::boolean);
+    ASSERT_EQ(test_not(element::dynamic)->get_element_type(), element::boolean);
 }

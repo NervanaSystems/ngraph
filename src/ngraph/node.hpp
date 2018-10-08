@@ -22,6 +22,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <tuple>
 #include <typeindex>
 #include <unordered_map>
 #include <unordered_set>
@@ -94,8 +95,7 @@ namespace ngraph
         // Called in constructors during transition
         void constructor_validate_and_infer_types();
 
-        void validate_and_infer_elementwise(element::Type result_type);
-        void validate_and_infer_elementwise() { validate_and_infer_elementwise(element::dynamic); }
+        std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args();
         void validate_and_infer_elementwise_arithmetic();
         void validate_and_infer_elementwise_logical();
 

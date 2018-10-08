@@ -418,7 +418,7 @@ const NodeVector& ngraph::check_single_output_args(const NodeVector& args)
     return args;
 }
 
-void Node::validate_and_infer_elementwise(element::Type result_type)
+std::tuple<element::Type, PartialShape> Node::validate_and_infer_elementwise_args()
 {
     element::Type element_type = get_input_element_type(0);
     PartialShape pshape = get_input_partial_shape(0);
@@ -436,23 +436,33 @@ void Node::validate_and_infer_elementwise(element::Type result_type)
                 << "Argument shapes are inconsistent.";
         }
     }
-    set_output_type(0, result_type.is_static() ? result_type : element_type, pshape);
+
+    return std::make_tuple(element_type, pshape);
 }
 
 void Node::validate_and_infer_elementwise_arithmetic()
 {
-    validate_and_infer_elementwise();
-    NODE_VALIDATION_ASSERT(this, get_output_element_type(0) != element::boolean)
-        << "Arguments cannot have boolean element type (argument element type: "
-        << get_output_element_type(0) << ").";
+    auto args_et_pshape = validate_and_infer_elementwise_args();
+    element::Type& args_et = std::get<0>(args_et_pshape);
+    PartialShape& args_pshape = std::get<1>(args_et_pshape);
+
+    NODE_VALIDATION_ASSERT(this, args_et.is_dynamic() || args_et != element::boolean)
+        << "Arguments cannot have boolean element type (argument element type: " << args_et << ").";
+
+    set_output_type(0, args_et, args_pshape);
 }
 
 void Node::validate_and_infer_elementwise_logical()
 {
-    validate_and_infer_elementwise();
-    NODE_VALIDATION_ASSERT(this, get_output_element_type(0) == element::boolean)
+    auto args_et_pshape = validate_and_infer_elementwise_args();
+    element::Type& args_et = std::get<0>(args_et_pshape);
+    PartialShape& args_pshape = std::get<1>(args_et_pshape);
+
+    NODE_VALIDATION_ASSERT(this, args_et.is_dynamic() || args_et == element::boolean)
         << "Operands for logical operators must have boolean element type but have element type "
-        << get_output_element_type(0) << ".";
+        << args_et << ".";
+
+    set_output_type(0, element::boolean, args_pshape);
 }
 
 bool Node::validate_punt_if_dynamic()
