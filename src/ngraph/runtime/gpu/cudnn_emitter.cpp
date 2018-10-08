@@ -181,16 +181,15 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
     {
     case ReductionMode::Reduce:
     {
+        CUDNN_SAFE_CALL(cudnnSetReduceTensorDescriptor(desc,
+                                                       reduce_op,
+                                                       data_type,
+                                                       CUDNN_NOT_PROPAGATE_NAN,
+                                                       CUDNN_REDUCE_TENSOR_NO_INDICES,
+                                                       CUDNN_32BIT_INDICES));
         // emit reduce operation
         reduce.reset(new gpu::primitive{
             [=, &desc, &input_desc, &output_desc](void** inputs, void** outputs) {
-                CUDNN_SAFE_CALL(cudnnSetReduceTensorDescriptor(desc,
-                                                               reduce_op,
-                                                               data_type,
-                                                               CUDNN_NOT_PROPAGATE_NAN,
-                                                               CUDNN_REDUCE_TENSOR_NO_INDICES,
-                                                               CUDNN_32BIT_INDICES));
-
                 void* workspace_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
                 CUDNN_SAFE_CALL(cudnnReduceTensor(*m_ctx->cudnn_handle,
                                                   desc,
@@ -216,14 +215,15 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
         size_t reduction_output_type_size = dtype.size();
         size_t reduce_buffer_idx =
             allocator.reserve_workspace(shape_size(output_shape) * reduction_output_type_size);
+        CUDNN_SAFE_CALL(cudnnSetReduceTensorDescriptor(desc,
+                                                       reduce_op,
+                                                       data_type,
+                                                       CUDNN_NOT_PROPAGATE_NAN,
+                                                       CUDNN_REDUCE_TENSOR_FLATTENED_INDICES,
+                                                       CUDNN_32BIT_INDICES));
         reduce.reset(new gpu::primitive{[=, &desc, &input_desc, &output_desc](void** inputs,
                                                                               void** outputs) {
-            CUDNN_SAFE_CALL(cudnnSetReduceTensorDescriptor(desc,
-                                                           reduce_op,
-                                                           data_type,
-                                                           CUDNN_NOT_PROPAGATE_NAN,
-                                                           CUDNN_REDUCE_TENSOR_FLATTENED_INDICES,
-                                                           CUDNN_32BIT_INDICES));
+
             void* workspace_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
             void* reduce_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, reduce_buffer_idx);
             CUDNN_SAFE_CALL(cudnnReduceTensor(*m_ctx->cudnn_handle,
