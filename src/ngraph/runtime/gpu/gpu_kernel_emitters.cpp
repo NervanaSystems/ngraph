@@ -24,7 +24,7 @@
 using namespace ngraph;
 
 void runtime::gpu::kernel::emit_memset(codegen::CodeWriter& writer,
-                                       const GPU_TensorViewWrapper& dst,
+                                       const GPUTensorWrapper& dst,
                                        int value,
                                        size_t buffer_size)
 {
@@ -37,8 +37,8 @@ void runtime::gpu::kernel::emit_memset(codegen::CodeWriter& writer,
 }
 
 void runtime::gpu::kernel::emit_memcpyDtD(codegen::CodeWriter& writer,
-                                          const GPU_TensorViewWrapper& dst,
-                                          const GPU_TensorViewWrapper& src,
+                                          const GPUTensorWrapper& dst,
+                                          const GPUTensorWrapper& src,
                                           size_t buffer_size)
 {
     if (buffer_size == 0)
@@ -192,8 +192,8 @@ void runtime::gpu::kernel::emit_cudnnTensorNdDescriptor(codegen::CodeWriter& wri
 }
 
 void runtime::gpu::kernel::emit_cudnnReduceTensor(codegen::CodeWriter& writer,
-                                                  const GPU_TensorViewWrapper& in,
-                                                  const GPU_TensorViewWrapper& out,
+                                                  const GPUTensorWrapper& in,
+                                                  const GPUTensorWrapper& out,
                                                   const std::string& reduce_op,
                                                   const std::string& data_type,
                                                   const std::string& nan_prop,

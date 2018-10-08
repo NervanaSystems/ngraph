@@ -16,36 +16,14 @@
 
 #pragma once
 
-#include <memory>
-
-#include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/type/element_type.hpp"
+#include "ngraph/dimension.hpp"
 
 namespace ngraph
 {
-    namespace runtime
-    {
-        namespace gpu
-        {
-            class GPU_TensorViewWrapper;
-        }
-    }
+    /// \brief Alias for "Dimension". Should be used to when the value represents the number of
+    ///        axes in a shape-like object, rather than the size of one dimension in a shape-like
+    ///        object.
+    ///
+    /// XXX: THIS TYPE IS EXPERIMENTAL AND THE ENTIRE DESIGN IS SUBJECT TO CHANGE.
+    using Rank = Dimension;
 }
-
-class ngraph::runtime::gpu::GPU_TensorViewWrapper
-{
-public:
-    GPU_TensorViewWrapper(const std::shared_ptr<descriptor::Tensor>&,
-                          const std::string& alias = "");
-
-    size_t get_size() const;
-    const Shape& get_shape() const;
-    Strides get_strides() const;
-    const element::Type& get_element_type() const;
-    const std::string& get_name() const;
-    const std::string& get_type() const;
-
-private:
-    std::shared_ptr<descriptor::Tensor> m_tensor;
-    std::string m_alias;
-};

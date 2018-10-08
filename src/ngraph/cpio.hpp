@@ -21,6 +21,9 @@
 #include <string>
 #include <vector>
 
+// The CPIO file format can be found at
+// https://www.mkssoftware.com/docs/man4/cpio.4.asp
+
 namespace ngraph
 {
     namespace cpio

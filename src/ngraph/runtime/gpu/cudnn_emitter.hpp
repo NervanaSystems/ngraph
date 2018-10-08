@@ -35,6 +35,7 @@
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
+#include "ngraph/runtime/gpu/op/rnn.hpp"
 
 namespace ngraph
 {
@@ -61,6 +62,7 @@ namespace ngraph
                 size_t build_primitive(const op::MaxPool* node);
                 size_t build_primitive(const op::Max* node);
                 size_t build_primitive(const op::Min* node);
+                size_t build_primitive(const op::gpu::Rnn* node);
 
             public:
                 enum class Prop
@@ -76,7 +78,8 @@ namespace ngraph
                                          const Shape& output_tensor_shape,
                                          const Strides& window_movement_strides,
                                          const Strides& window_dilation_strides,
-                                         const Shape& padding_below);
+                                         const Shape& padding_below,
+                                         const bool find_algo = false);
 
                 size_t build_convolution_backward_data(const std::string& dtype,
                                                        const Shape& input_filter_shape,
@@ -84,7 +87,8 @@ namespace ngraph
                                                        const Shape& output_tensor_shape,
                                                        const Strides& window_movement_strides,
                                                        const Strides& window_dilation_strides,
-                                                       const Shape& padding_below);
+                                                       const Shape& padding_below,
+                                                       const bool find_algo = false);
 
                 size_t build_convolution_backward_filter(const std::string& dtype,
                                                          const Shape& input_tensor_shape_0,
@@ -92,7 +96,8 @@ namespace ngraph
                                                          const Shape& output_filter_shape,
                                                          const Strides& window_movement_strides,
                                                          const Strides& window_dilation_strides,
-                                                         const Shape& padding_below);
+                                                         const Shape& padding_below,
+                                                         const bool find_algo = false);
 
                 size_t build_reduce_forward(const cudnnReduceTensorOp_t& reduce_op,
                                             const std::string& dtype,
@@ -121,7 +126,16 @@ namespace ngraph
                                        const Prop& direction,
                                        const Shape& tensor_shape,
                                        const Shape& param_shape,
-                                       double epsilon);
+                                       double epsilon,
+                                       bool global_stats = false);
+
+                size_t build_lrn(const std::string& dtype,
+                                 const Prop& direction,
+                                 const Shape& io_shape,
+                                 const double lrn_alpha,
+                                 const double lrn_beta,
+                                 const double lrn_bias,
+                                 const size_t lrn_size);
 
                 size_t build_softmax(const cudnnSoftmaxAlgorithm_t& algorithm,
                                      const cudnnSoftmaxMode_t& mode,
@@ -145,10 +159,18 @@ namespace ngraph
                     tensor_descriptor_from_shape(const Shape& shape,
                                                  const cudnnDataType_t data_type,
                                                  const cudnnTensorFormat_t tensor_format);
+                cudnnTensorDescriptor_t&
+                    get_nd_tensor_descriptor(const Shape& shape,
+                                             const cudnnDataType_t data_type,
+                                             const cudnnTensorFormat_t tensor_format);
                 cudnnFilterDescriptor_t&
                     get_cudnn_filter_descriptor(const Shape& shape,
                                                 const cudnnDataType_t data_type,
                                                 const cudnnTensorFormat_t tensor_format);
+                cudnnFilterDescriptor_t&
+                    get_nd_filter_descriptor(const Shape& shape,
+                                             const cudnnDataType_t data_type,
+                                             const cudnnTensorFormat_t tensor_format);
                 cudnnConvolutionDescriptor_t&
                     get_cudnn_convolution_descriptor(const Shape& padding,
                                                      const Strides& window_movement_strides,

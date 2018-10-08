@@ -124,7 +124,10 @@ pass::MemoryManager::MemoryManager(size_t alignment, bool disable_memory_reuse)
     , m_scheme{disable_memory_reuse ? allocation_scheme::NO_REUSE : allocation_scheme::FIRST_FIT}
     , m_max_allocated{0}
 {
-    // assert(m_base_offset % m_alignment == 0);
+    if (m_alignment == 0)
+    {
+        throw invalid_argument("Memory alignment must be > 0");
+    }
     m_node_list.emplace_back(numeric_limits<size_t>::max(), block_state::FREE);
 }
 

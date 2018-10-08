@@ -33,6 +33,8 @@
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv.hpp"
+#include "ngraph/runtime/cpu/op/quantized_conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/quantized_conv_relu.hpp"
 #include "ngraph/runtime/cpu/quantization_util.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
@@ -106,14 +108,31 @@ namespace ngraph
                                                  const ngraph::CoordinateDiff& padding_above,
                                                  const mkldnn::post_ops& pops = mkldnn::post_ops());
 
-                size_t build_quantized_convolution(const mkldnn::memory::desc& input_data_desc,
-                                                   const mkldnn::memory::desc& weights_desc,
-                                                   const mkldnn::memory::desc& result_desc,
-                                                   const ngraph::Strides& strides,
-                                                   const ngraph::Strides& dilation_strides,
-                                                   const ngraph::CoordinateDiff& padding_below,
-                                                   const ngraph::CoordinateDiff& padding_above,
-                                                   const float scale);
+                size_t
+                    build_quantized_convolution(const mkldnn::memory::desc& input_data_desc,
+                                                const mkldnn::memory::desc& weights_desc,
+                                                const mkldnn::memory::desc& result_desc,
+                                                const ngraph::Strides& strides,
+                                                const ngraph::Strides& dilation_strides,
+                                                const ngraph::CoordinateDiff& padding_below,
+                                                const ngraph::CoordinateDiff& padding_above,
+                                                const float scale,
+                                                const mkldnn::post_ops& pops = mkldnn::post_ops());
+
+                /**
+                 * QuantizedConvolution + bias forward
+                 */
+                size_t
+                    build_quantized_convolution(const mkldnn::memory::desc& input_data_desc,
+                                                const mkldnn::memory::desc& weights_desc,
+                                                const mkldnn::memory::desc& bias_desc,
+                                                const mkldnn::memory::desc& result_desc,
+                                                const ngraph::Strides& strides,
+                                                const ngraph::Strides& dilation_strides,
+                                                const ngraph::CoordinateDiff& padding_below,
+                                                const ngraph::CoordinateDiff& padding_above,
+                                                const float scale,
+                                                const mkldnn::post_ops& pops = mkldnn::post_ops());
 
                 template <typename OP>
                 size_t build_convolution(const ngraph::Node* node,
@@ -170,6 +189,16 @@ namespace ngraph
                         {
                             return true;
                         }
+                        if (dynamic_cast<const ngraph::op::QuantizedConvolutionRelu*>(node))
+                        {
+                            return true;
+                        }
+                        if (dynamic_cast<const ngraph::op::QuantizedConvolutionBias*>(node))
+                        {
+                            return (dynamic_cast<const ngraph::op::QuantizedConvolutionBias*>(node))
+                                ->with_relu();
+                        }
+
                         return false;
                     };
 
@@ -198,7 +227,8 @@ namespace ngraph
                     }
                     else if (std::is_same<OP, ngraph::op::QuantizedConvolution>())
                     {
-                        const float scale = quantization_util::get_scale(node);
+                        const float scale =
+                            quantization_util::get_scale<ngraph::op::QuantizedConvolution>(node);
                         return build_quantized_convolution(
                             data_desc,
                             weights_desc,
@@ -207,7 +237,43 @@ namespace ngraph
                             window_dilation_strides_adjusted,
                             convolution->get_padding_below(),
                             convolution->get_padding_above(),
-                            scale);
+                            scale,
+                            ops);
+                    }
+                    else if (std::is_same<OP, ngraph::op::QuantizedConvolutionRelu>())
+                    {
+                        const float scale =
+                            quantization_util::get_scale<ngraph::op::QuantizedConvolutionRelu>(
+                                node);
+                        return build_quantized_convolution(
+                            data_desc,
+                            weights_desc,
+                            result_desc,
+                            convolution->get_window_movement_strides(),
+                            window_dilation_strides_adjusted,
+                            convolution->get_padding_below(),
+                            convolution->get_padding_above(),
+                            scale,
+                            ops);
+                    }
+                    else if (std::is_same<OP, ngraph::op::QuantizedConvolutionBias>())
+                    {
+                        // conv+bias = cvt_to_int8(scale*(dst + bias))
+                        const float scale =
+                            quantization_util::get_scale<ngraph::op::QuantizedConvolutionBias>(
+                                node);
+                        auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+                        return build_quantized_convolution(
+                            data_desc,
+                            weights_desc,
+                            bias_desc,
+                            result_desc,
+                            convolution->get_window_movement_strides(),
+                            window_dilation_strides_adjusted,
+                            convolution->get_padding_below(),
+                            convolution->get_padding_above(),
+                            scale,
+                            ops);
                     }
                     else
                     {
