@@ -74,9 +74,9 @@ namespace ngraph
                         {
                             // check if we can do in place concat
                             auto concat_count = 0;
-                            for (auto input : output.get_inputs())
+                            for (auto output_input : output.get_inputs())
                             {
-                                auto user = input->get_node();
+                                auto user = output_input->get_node();
                                 if (std::dynamic_pointer_cast<op::Concat>(user))
                                 {
                                     concat_count++;
