@@ -163,3 +163,37 @@ TEST(constant_folding, constant_pad_interior)
     vector<int> padded_values{777, 111, 111, 111, 888};
     ASSERT_EQ(padded_values, values_out);
 }
+
+TEST(constant_folding, const_dequantize)
+{
+    Shape input_shape{12};
+    Shape scale_offset_shape;
+    AxisSet quantization_axes;
+
+    auto quant_type = element::u8;
+    auto output_type = element::f32;
+    typedef float output_c_type;
+
+    vector<uint8_t> values_in{1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7};
+    auto constant = op::Constant::create(quant_type, input_shape, values_in);
+    auto scale = op::Constant::create(output_type, scale_offset_shape, {2});
+    auto offset = op::Constant::create(quant_type, scale_offset_shape, {1});
+    auto dequantize =
+        make_shared<op::Dequantize>(constant, scale, offset, output_type, quantization_axes);
+    auto f = make_shared<Function>(dequantize, op::ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Dequantize>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<output_c_type>();
+
+    vector<output_c_type> values_dequantize{0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12};
+    ASSERT_EQ(values_dequantize, values_out);
+}
