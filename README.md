@@ -79,4 +79,5 @@ to improve the Library:
 [ngraph-ecosystem]: doc/sphinx/source/graphics/ngraph-ecosystem.png "nGraph Ecosystem"
 [build-status]: https://travis-ci.org/NervanaSystems/ngraph/branches
 [build-status-badge]: https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master
-[Movidius]: https://www.movidius.com/solutions/vision-processing-unit
+[develop-without-lockin]: doc/sphinx/source/graphics/develop-without-lockin.png "Develop on any part of the stack wtihout lockin"
+[Movidius]:https://www.movidius.com/solutions/vision-processing-unit
