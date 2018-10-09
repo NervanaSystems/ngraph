@@ -33,8 +33,7 @@ class ngraph::pass::ConstantFolding : public ngraph::pass::GraphRewrite
         RESHAPE,
         BROADCAST,
         PAD,
-        UNARY,
-        BINARY
+        DEQUANTIZE
     };
 
 public:
@@ -46,6 +45,7 @@ public:
         construct_constant_pad();
         construct_constant_unary();
         construct_constant_binary();
+        construct_constant_dequantize();
     }
 
     //this allows to specify the order in which matchers will be run
@@ -62,6 +62,7 @@ public:
             case CFTransformations::PAD: construct_constant_pad(); break;
             case CFTransformations::UNARY: construct_constant_unary(); break;
             case CFTransformations::BINARY: construct_constant_binary(); break;
+            case CFTransformations::DEQUANTIZE: construct_constant_dequantize(); break;
             }
         }
     }
@@ -70,6 +71,10 @@ private:
     void construct_constant_reshape();
     void construct_constant_broadcast();
     void construct_constant_pad();
+<<<<<<< HEAD
     void construct_constant_unary();
     void construct_constant_binary();
+=======
+    void construct_constant_dequantize();
+>>>>>>> origin/master
 };

@@ -21,6 +21,7 @@ include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS})
 set(SRC
     cuda_emitter.cpp
     cudnn_emitter.cpp
+    cublas_emitter.cpp
     gpu_backend.cpp
     gpu_cuda_context_manager.cpp
     gpu_cuda_function_builder.cpp
@@ -40,6 +41,8 @@ set(SRC
     pass/gpu_layout.cpp
     pass/tensor_memory_reservation.cpp
     gpu_kernel_args.cpp
+    pass/gpu_rnn_fusion.cpp
+    op/rnn.cpp
     )
 
 if (NGRAPH_GPU_ENABLE)

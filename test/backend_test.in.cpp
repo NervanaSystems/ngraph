@@ -2431,6 +2431,24 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_int32_float32)
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, convert_uint16_float32)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::u16, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::Convert>(A, element::f32), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u16, shape);
+    copy_data(a, vector<uint16_t>{1, 2, 3, 4});
+    auto result = backend->create_tensor(element::f32, shape);
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, convert_int32_bool)
 {
     Shape shape{2, 2};
@@ -5189,6 +5207,65 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
               read_vector<float>(result));
 }
 
+//this test cover the case with multiple image and with asymetric pad
+//one bug been found on GPU side is covered by this test
+NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image_asym_pad)
+{
+    Shape shape_a{2, 2, 4, 4};
+    Shape window_shape{3, 3};
+    auto window_movement_strides = Strides{2, 2};
+    Shape padding_below{0, 0};
+    Shape padding_above{1, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_r{2, 2, 2, 2};
+    auto f = make_shared<Function>(
+        make_shared<op::MaxPool>(
+            A, window_shape, window_movement_strides, padding_below, padding_above),
+        op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>({{{{0, 1, 0, 2}, // img 0 chan 0
+                                         {0, 3, 2, 0},
+                                         {2, 0, 0, 0},
+                                         {0, 2, 1, 0}},
+
+                                        {{0, 0, 0, 2}, // img 0 chan 1
+                                         {0, 2, 3, 0},
+                                         {2, 0, 1, 0},
+                                         {2, 0, 0, 0}}},
+
+                                       {{{0, 2, 1, 1}, // img 1 chan 0
+                                         {0, 0, 2, 0},
+                                         {0, 0, 1, 2},
+                                         {0, 0, 0, 0}},
+
+                                        {{2, 1, 0, 0}, // img 1 chan 1
+                                         {0, 2, 0, 0},
+                                         {1, 1, 2, 0},
+                                         {1, 0, 0, 0}}}})
+                  .get_vector());
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((test::NDArray<float, 4>({{{{3, 2}, // img 0 chan 0
+                                          {2, 1}},
+
+                                         {{3, 3}, // img 0 chan 1
+                                          {2, 1}}},
+
+                                        {{{2, 2}, // img 1 chan 0
+                                          {1, 2}},
+
+                                         {{2, 2}, // img 1 chan 1
+                                          {2, 2}}}})
+                   .get_vector()),
+              read_vector<float>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_overpadded)
 {
     Shape shape_a{1, 1, 5, 5};
@@ -7418,6 +7495,86 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
 
     backend->call_with_validate(f, {result}, {a, b});
     EXPECT_EQ(expected, read_vector<float>(result));
+}
+
+// This test covers the case with multiple image and with asymetric pad
+// bug has been found on nvGPU side now covered by this test
+NGRAPH_TEST(${BACKEND_NAME}, pad_2channel_2image_asym)
+{
+    Shape shape_a{2, 2, 4, 4};
+    auto window_movement_strides = Strides{2, 2};
+    Shape padding_below{0, 0, 0, 0};
+    Shape padding_above{0, 0, 2, 2};
+    Shape padding_interior{0, 0, 0, 0};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{2, 2, 6, 6};
+    auto f = make_shared<Function>(
+        make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
+        op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>({{{{0, 1, 0, 2}, // img 0 chan 0
+                                         {0, 3, 2, 0},
+                                         {2, 0, 0, 0},
+                                         {0, 2, 1, 0}},
+
+                                        {{0, 0, 0, 2}, // img 0 chan 1
+                                         {0, 2, 3, 0},
+                                         {2, 0, 1, 0},
+                                         {2, 0, 0, 0}}},
+
+                                       {{{0, 2, 1, 1}, // img 1 chan 0
+                                         {0, 0, 2, 0},
+                                         {0, 0, 1, 2},
+                                         {0, 0, 0, 0}},
+
+                                        {{2, 1, 0, 0}, // img 1 chan 1
+                                         {0, 2, 0, 0},
+                                         {1, 1, 2, 0},
+                                         {1, 0, 0, 0}}}})
+                  .get_vector());
+
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, vector<float>{42});
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call_with_validate(f, {result}, {a, b});
+    EXPECT_EQ((test::NDArray<float, 4>({{{{0, 1, 0, 2, 42, 42}, // img 0 chan 0
+                                          {0, 3, 2, 0, 42, 42},
+                                          {2, 0, 0, 0, 42, 42},
+                                          {0, 2, 1, 0, 42, 42},
+                                          {42, 42, 42, 42, 42, 42},
+                                          {42, 42, 42, 42, 42, 42}},
+
+                                         {{0, 0, 0, 2, 42, 42}, // img 1 chan 0
+                                          {0, 2, 3, 0, 42, 42},
+                                          {2, 0, 1, 0, 42, 42},
+                                          {2, 0, 0, 0, 42, 42},
+                                          {42, 42, 42, 42, 42, 42},
+                                          {42, 42, 42, 42, 42, 42}}},
+
+                                        {{{0, 2, 1, 1, 42, 42}, // img 1 chan 0
+                                          {0, 0, 2, 0, 42, 42},
+                                          {0, 0, 1, 2, 42, 42},
+                                          {0, 0, 0, 0, 42, 42},
+                                          {42, 42, 42, 42, 42, 42},
+                                          {42, 42, 42, 42, 42, 42}},
+
+                                         {{2, 1, 0, 0, 42, 42}, // img 1 chan 1
+                                          {0, 2, 0, 0, 42, 42},
+                                          {1, 1, 2, 0, 42, 42},
+                                          {1, 0, 0, 0, 42, 42},
+                                          {42, 42, 42, 42, 42, 42},
+                                          {42, 42, 42, 42, 42, 42}}}})
+                   .get_vector()),
+              read_vector<float>(result));
 }
 
 // Trivial case with no reduced axes.

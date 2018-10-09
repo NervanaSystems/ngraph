@@ -22,6 +22,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
@@ -35,6 +36,7 @@
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/add.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
+#include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/divide.hpp"
 #include "ngraph/runtime/reference/maximum.hpp"
 #include "ngraph/runtime/reference/minimum.hpp"
@@ -454,4 +456,76 @@ void ngraph::pass::ConstantFolding::construct_constant_unary()
 
     auto reshape_matcher = make_shared<pattern::Matcher>(uea, constant_unary_callback);
     this->add_matcher(reshape_matcher);
+}
+
+template <class QUANT, class REAL>
+shared_ptr<op::Constant> make_constant_dequantize(shared_ptr<op::Constant> constant,
+                                                  shared_ptr<op::Dequantize> dequant,
+                                                  shared_ptr<op::Constant> scale,
+                                                  shared_ptr<op::Constant> offset)
+{
+    auto out_shape = constant->get_shape();
+    vector<REAL> out_vec(shape_size(out_shape));
+
+    runtime::reference::dequantize<QUANT, REAL>(constant->get_vector<QUANT>().data(),
+                                                scale->get_vector<REAL>().data(),
+                                                offset->get_vector<QUANT>().data(),
+                                                out_vec.data(),
+                                                constant->get_shape(),
+                                                scale->get_shape(),
+                                                dequant->get_axes());
+
+    return make_shared<op::Constant>(dequant->get_element_type(), out_shape, out_vec);
+}
+
+void ngraph::pass::ConstantFolding::construct_constant_dequantize()
+{
+    auto constant_label =
+        make_shared<pattern::op::Label>(element::u8, Shape{2}, pattern::has_class<op::Constant>());
+    auto dq_scale = op::Constant::create(element::f32, Shape{}, {1});
+    auto dq_offset = op::Constant::create(element::u8, Shape{}, {1});
+    auto dequant_op =
+        make_shared<op::Dequantize>(constant_label, dq_scale, dq_offset, element::f32, AxisSet{});
+    auto dequant = make_shared<pattern::op::Label>(dequant_op, nullptr, NodeVector{dequant_op});
+
+    auto constant_dequantize_callback = [constant_label, dequant](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_dequantize_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto constant_match = dynamic_pointer_cast<op::Constant>(pattern_map[constant_label]);
+        auto dequant_match = pattern_map[dequant];
+        auto dequantize_op = dynamic_pointer_cast<op::Dequantize>(dequant_match);
+        auto args = dequant_match->get_arguments();
+        auto scale = dynamic_pointer_cast<op::Constant>(args[1]);
+        auto offset = dynamic_pointer_cast<op::Constant>(args[2]);
+
+        auto type = constant_match->get_element_type();
+
+        if (dequant_match->get_element_type() != element::f32)
+        {
+            return false;
+        }
+
+        if (type == element::u8)
+        {
+            replace_node(m.get_match_root(),
+                         make_constant_dequantize<uint8_t, float>(
+                             constant_match, dequantize_op, scale, offset));
+            return true;
+        }
+        else if (type == element::i8)
+        {
+            replace_node(m.get_match_root(),
+                         make_constant_dequantize<int8_t, float>(
+                             constant_match, dequantize_op, scale, offset));
+            return true;
+        }
+
+        return false;
+    };
+
+    auto dequantize_matcher = make_shared<pattern::Matcher>(dequant, constant_dequantize_callback);
+    this->add_matcher(dequantize_matcher);
 }

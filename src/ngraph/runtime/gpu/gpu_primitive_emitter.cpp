@@ -16,7 +16,6 @@
 
 #include <limits>
 
-#include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 
 using namespace ngraph;
@@ -27,6 +26,7 @@ GPUPrimitiveEmitter::GPUPrimitiveEmitter()
     , m_host_parameters(new GPUHostParameters)
     , m_cuda_emitter(new CUDAEmitter(this, nullptr))
     , m_cudnn_emitter(new CUDNNEmitter(this, nullptr, nullptr))
+    , m_cublas_emitter(new CUBLASEmitter(this, nullptr))
 {
 }
 
@@ -35,6 +35,7 @@ GPUPrimitiveEmitter::GPUPrimitiveEmitter(const std::unique_ptr<GPURuntimeContext
     , m_host_parameters(new GPUHostParameters)
     , m_cuda_emitter(new CUDAEmitter(this, ctx.get()))
     , m_cudnn_emitter(new CUDNNEmitter(this, ctx.get(), this->m_host_parameters))
+    , m_cublas_emitter(new CUBLASEmitter(this, ctx.get()))
 
 {
 }
@@ -46,6 +47,11 @@ std::unique_ptr<CUDAEmitter>& GPUPrimitiveEmitter::get_cuda_emitter()
 std::unique_ptr<CUDNNEmitter>& GPUPrimitiveEmitter::get_cudnn_emitter()
 {
     return m_cudnn_emitter;
+}
+
+std::unique_ptr<CUBLASEmitter>& GPUPrimitiveEmitter::get_cublas_emitter()
+{
+    return m_cublas_emitter;
 }
 size_t GPUPrimitiveEmitter::insert(std::unique_ptr<gpu::primitive>&& f)
 {
@@ -69,4 +75,11 @@ size_t GPUPrimitiveEmitter::lookup(std::string hash)
 void GPUPrimitiveEmitter::cache(const std::string& hash, const size_t& index)
 {
     m_primitive_map.insert({hash, index});
+}
+
+size_t GPUPrimitiveEmitter::register_primitive(std::unique_ptr<gpu::primitive>& f, std::string hash)
+{
+    size_t primitive_index = this->insert(std::move(f));
+    this->cache(hash, primitive_index);
+    return primitive_index;
 }

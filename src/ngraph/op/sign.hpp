@@ -24,19 +24,6 @@ namespace ngraph
     {
         /// \brief Elementwise sign operation.
         ///
-        /// Maps each element of the input tensor to -1 (if it is negative), 0 (if it is zero), or 1 (if it is positive).
-        ///
-        /// ## Inputs
-        ///
-        /// |       | Type                              | Description                                     |
-        /// | ----- | --------------------------------- | ----------------------------------------------- |
-        /// | `arg` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and numeric element type. |
-        ///
-        /// ## Output
-        ///
-        /// | Type                   | Description                                                                          |
-        /// | ---------------------- | ------------------------------------------------------------------------------------ |
-        /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \text{sgn}(\texttt{arg}[i_1,\dots,i_n])\f$ |
         class Sign : public util::UnaryElementwiseArithmetic
         {
         public:
