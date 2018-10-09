@@ -23,6 +23,7 @@ set(SRC
     intelgpu_op_custom_kernels.cpp
     intelgpu_op_convolution.cpp
     intelgpu_op_softmax.cpp
+    intelgpu_op_custom_func_call.cpp
     code_writer.cpp
 )
 
