@@ -104,7 +104,7 @@ namespace ngraph
                                                          const bool find_algo = false);
 
                 size_t build_reduce_forward(const cudnnReduceTensorOp_t& reduce_op,
-                                            const element::Type& dtype,
+                                            const std::vector<element::Type>& dtypes,
                                             const Shape& input_shape,
                                             const AxisSet& reduction_axes,
                                             const ReductionMode& reduction_mode);

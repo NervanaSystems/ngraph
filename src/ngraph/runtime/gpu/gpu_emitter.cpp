@@ -185,12 +185,14 @@ void runtime::gpu::GPU_Emitter::emit_ArgReduce(EMIT_ARGS, cudnnReduceTensorOp_t 
     std::vector<size_t> axes{argmax->get_reduction_axis()};
     auto axis_set = AxisSet(axes);
 
+    std::vector<element::Type> dtypes{args[0].get_element_type(), out[0].get_element_type()};
+
     writer.block_begin();
     {
         auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
 
         auto index = cudnn_emitter->build_reduce_forward(reduce_mode,
-                                                         args[0].get_element_type(),
+                                                         dtypes,
                                                          args[0].get_shape(),
                                                          axis_set,
                                                          CUDNNEmitter::ReductionMode::ArgReduce);
@@ -882,11 +884,13 @@ void runtime::gpu::GPU_Emitter::emit_Product(EMIT_ARGS)
             // descriptors for tensors  with <= 4 dimensions
             else
             {
+                std::vector<element::Type> dtypes{args[0].get_element_type(),
+                                                  out[0].get_element_type()};
                 auto& cudnn_emitter =
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
                 auto index =
                     cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_MUL,
-                                                        out[0].get_element_type(),
+                                                        dtypes,
                                                         args[0].get_shape(),
                                                         product->get_reduction_axes(),
                                                         CUDNNEmitter::ReductionMode::Reduce);
@@ -978,12 +982,13 @@ void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
                         reduce_tensor_op = f_ptr->second;
                     }
                 }
-
+                std::vector<element::Type> dtypes{args[0].get_element_type(),
+                                                  out[0].get_element_type()};
                 auto& cudnn_emitter =
                     external_function->get_primitive_emitter()->get_cudnn_emitter();
                 auto reduce_index =
                     cudnn_emitter->build_reduce_forward(reduce_tensor_op,
-                                                        out[0].get_element_type(),
+                                                        dtypes,
                                                         args[0].get_shape(),
                                                         reduce_op->get_reduction_axes(),
                                                         CUDNNEmitter::ReductionMode::Reduce);

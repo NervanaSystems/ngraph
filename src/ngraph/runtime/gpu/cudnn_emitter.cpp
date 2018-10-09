@@ -141,13 +141,15 @@ cudnnDataType_t runtime::gpu::CUDNNEmitter::get_cudnn_datatype(const element::Ty
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorOp_t& reduce_op,
-                                                        const element::Type& dtype,
+                                                        const std::vector<element::Type>& dtypes,
                                                         const Shape& input_shape,
                                                         const AxisSet& reduction_axes,
                                                         const ReductionMode& reduction_mode)
 {
+    auto input_type = dtypes[0];
+    auto output_type = dtypes[1];
     std::stringstream ss;
-    ss << "_dtype_" << dtype.c_type_string() << "_reduction_mode_"
+    ss << "reduce_" << reduce_op << input_type.c_type_string() << "_reduction_mode_"
        << static_cast<int>(reduction_mode) << "_i" << join(input_shape, "_") << "_ra"
        << join(reduction_axes, "_");
     std::string hash = ss.str();
@@ -160,7 +162,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
     }
 
     auto& desc = m_descriptors.build<cudnnReduceTensorDescriptor_t>();
-    cudnnDataType_t data_type = get_cudnn_datatype(dtype);
+    cudnnDataType_t data_type = get_cudnn_datatype(input_type);
     cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
     auto& input_desc = tensor_descriptor_from_shape(input_shape, data_type, tensor_format);
     Shape output_shape = input_shape;
@@ -216,9 +218,15 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
 
     case ReductionMode::ArgReduce:
     {
-        size_t indices_size = shape_size(output_shape) * sizeof(int);
-        size_t reduce_buffer_idx =
-            allocator.reserve_workspace(shape_size(output_shape) * dtype.size());
+        if (output_type != element::i32)
+        {
+            std::stringstream ss_er;
+            ss_er << "Unsupported Type: Only uint32 supported for indices in op ArgReduce ";
+            throw std::invalid_argument(ss_er.str());
+        }
+
+        size_t indices_size = shape_size(output_shape) * output_type.size();
+        size_t reduce_buffer_idx = allocator.reserve_workspace(input_type.size());
         CUDNN_SAFE_CALL(cudnnSetReduceTensorDescriptor(desc,
                                                        reduce_op,
                                                        data_type,
@@ -887,9 +895,10 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Max* node)
     }
     else
     {
+        std::vector<element::Type> dtypes{args[0].get_element_type(), out[0].get_element_type()};
         auto& cudnn_emitter = m_primitive_emitter->get_cudnn_emitter();
         auto max_index = cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_MAX,
-                                                             output_type,
+                                                             dtypes,
                                                              input_shape,
                                                              node->get_reduction_axes(),
                                                              ReductionMode::Reduce);
@@ -949,9 +958,10 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Min* node)
     }
     else
     {
+        std::vector<element::Type> dtypes{args[0].get_element_type(), out[0].get_element_type()};
         auto& cudnn_emitter = m_primitive_emitter->get_cudnn_emitter();
         auto min_index = cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_MIN,
-                                                             output_type,
+                                                             dtypes,
                                                              input_shape,
                                                              node->get_reduction_axes(),
                                                              ReductionMode::Reduce);
