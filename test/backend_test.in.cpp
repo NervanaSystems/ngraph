@@ -9359,9 +9359,7 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_4D_axis_3)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
         make_shared<Function>(make_shared<op::ArgMin>(A, 3, element::i32), op::ParameterVector{A});
-
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(a,
@@ -9370,30 +9368,28 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_4D_axis_3)
                                          {2.0f, 0.0f, 2.2f, 0.2f, 1.4f},
                                          {2.9f, 0.0f, 1.52f, 1.2f, 2.22f},
                                          {5.0f, 2.0f, 1.0f, 0.5f, 0.85f}},
-
                                         {{0.25f, 0.02f, 0.02f, 2.2f, 0.001f}, // img 0 ch 1
                                          {1.0f, 0.2f, 3.0f, 0.25f, 1.14f},
                                          {2.25f, 10.1f, 1.0f, 0.02f, 2.22f},
                                          {3.2f, 1.002f, 0.001f, 0.2f, 6.0f},
                                          {2.0f, 0.0f, 0.0f, 0.0f, 0.0f}}},
-
                                        {{{0.0f, 2.2f, 1.2f, 1.6f, 0.2f}, // img 1 ch 0
                                          {0.01f, 0.0f, 0.22f, 0.02f, 1.1f},
                                          {0.01f, 0.5f, 1.6f, 0.2f, 3.2f},
                                          {2.4f, 0.5f, 0.0f, 3.0f, 0.1f},
                                          {0.0f, 0.5f, 0.4f, 0.8f, 1.0f}},
-
-                                        {{2, 1, 0, 0, 1}, // img 1 ch 1
-                                         {0, 2, 0, 0, 0},
-                                         {1, 1, 2, 0, 2},
-                                         {1, 1, 1, 0, 1},
-                                         {1, 0, 0, 0, 2}}}})
+                                        {{2.0f, 1.0f, 0.0f, 0.0f, 1.0f}, // img 1 ch 1
+                                         {0.0f, 2.0f, 0.0f, 0.0f, 0.0f},
+                                         {1.0f, 1.0f, 2.0f, 0.0f, 2.0f},
+                                         {1.0f, 1.0f, 1.0f, 0.0f, 1.0f},
+                                         {1.0f, 0.0f, 0.0f, 0.0f, 2.0f}}}})
                   .get_vector());
     auto result = backend->create_tensor(element::i32, rshape);
-
     backend->call_with_validate(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<int, 3>({{{3, 1, 0, 0, 1}, {3, 2, 0, 0, 0}},  //ch0
-                                      {{1, 2, 4, 3, 0}, {0, 1, 2, 0, 4}}}) //ch1
+    EXPECT_EQ((test::NDArray<int, 3>({{{0, 4, 1, 1, 3},   // ch0
+                                       {4, 1, 3, 2, 1}},  //
+                                      {{0, 1, 0, 2, 0},   // ch1
+                                       {2, 0, 3, 3, 1}}}) //
                    .get_vector()),
               read_vector<int>(result));
 }
@@ -9488,9 +9484,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_3D_axis_1) // Along Height
     auto result = backend->create_tensor(element::i32, rshape);
 
     backend->call_with_validate(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<int, 2>({{1, 1},  //r0
-                                      {1, 3},  //r1
-                                      {3, 3}}) //r2
+    EXPECT_EQ((test::NDArray<int, 2>({{1, 1}, //
+                                      {1, 3}, //
+                                      {3, 3}})
                    .get_vector()),
               read_vector<int>(result));
 }
@@ -9526,9 +9522,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_3D_axis_2) // Along Width
     auto result = backend->create_tensor(element::i32, rshape);
 
     backend->call_with_validate(f, {result}, {a});
-    EXPECT_EQ((test::NDArray<int, 2>({{0, 0, 1, 1},  //r0
-                                      {1, 0, 0, 1},  //r1
-                                      {0, 0, 0, 0}}) //r2
+    EXPECT_EQ((test::NDArray<int, 2>({{0, 0, 1, 1},  //
+                                      {1, 0, 0, 1},  //
+                                      {0, 0, 0, 0}}) //
                    .get_vector()),
               read_vector<int>(result));
 }
