@@ -34,6 +34,7 @@ set(SRC
     main.cpp
     nop_elimination.cpp
     op.cpp
+    partial_shape.cpp
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
@@ -72,7 +73,7 @@ if(NGRAPH_CPU_ENABLE)
 endif()
 
 if(NGRAPH_GPU_ENABLE)
-    set(SRC ${SRC} cudnn.cpp gpu_test.cpp)
+    set(SRC ${SRC} cudnn.cpp gpu_test.cpp gpu_fusion.cpp)
 endif()
 
 foreach(TEST_CONFIG ${UNIT_TEST_CONFIG_LIST})
