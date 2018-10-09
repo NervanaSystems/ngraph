@@ -177,7 +177,8 @@ size_t runtime::gpu::CUDAEmitter::build_onehot(const std::array<std::string, 2>&
     kernel_name << "onehot_" << join(dtypes, "_");
 
     std::string hash = kernel_name.str() + "_i_" + join(input_shape, "_") + "_o_" +
-                       join(output_shape, "_") + std::to_string(one_hot_axis);
+                       join(output_shape, "_") + std::to_string(one_hot_axis) +
+                       std::to_string(ouput_datatype_size);
     // For backwards compatability we currently use two unordered maps
     // 1. one looks up the compiled cuda kernel (CudaFunctionPool)
     // 2. the other looks to see if this kernel is already in the primitive list
