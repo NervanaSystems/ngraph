@@ -40,7 +40,6 @@ op::Broadcast::Broadcast(const shared_ptr<Node>& arg,
 
 void op::Broadcast::validate_and_infer_types()
 {
-    // TODO(amprocte): update infer_shape() to accept/infer dynamic inputs.
     infer_shape();
 
     for (auto axis : m_broadcast_axes)
