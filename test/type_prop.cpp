@@ -1420,7 +1420,8 @@ TEST(type_prop, slice_deduce_vector_invalid_strides)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(), std::string("Rank of strides (2) does not match rank of argument (1)"));
+            error.what(), std::string("Ranks of lower bounds (Coordinate{0}), upper bounds "
+                                      "(Coordinate{7}) and strides (Strides{1, 2}) do not match"));
     }
     catch (...)
     {
@@ -1522,8 +1523,8 @@ TEST(type_prop, slice_deduce_matrix_lower_missing)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Rank of lower bounds (1) does not match rank of argument (2)"));
+            error.what(), std::string("Ranks of lower bounds (Coordinate{0}), upper bounds "
+                                      "(Coordinate{5, 5}) and strides (Strides{1}) do not match"));
     }
     catch (...)
     {
@@ -1543,8 +1544,8 @@ TEST(type_prop, slice_deduce_matrix_upper_missing)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Rank of upper bounds (1) does not match rank of argument (2)"));
+            error.what(), std::string("Ranks of lower bounds (Coordinate{0, 0}), upper bounds "
+                                      "(Coordinate{5}) and strides (Strides{1, 1}) do not match"));
     }
     catch (...)
     {
@@ -1563,9 +1564,9 @@ TEST(type_prop, slice_deduce_matrix_lower_extra)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Rank of lower bounds (3) does not match rank of argument (2)"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Ranks of lower bounds (Coordinate{0, 0, "
+                                                       "0}), upper bounds (Coordinate{5, 5}) and "
+                                                       "strides (Strides{1, 1, 1}) do not match"));
     }
     catch (...)
     {
@@ -1584,9 +1585,9 @@ TEST(type_prop, slice_deduce_matrix_upper_extra)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Rank of upper bounds (3) does not match rank of argument (2)"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Ranks of lower bounds (Coordinate{0, 0}), "
+                                                       "upper bounds (Coordinate{5, 5, 5}) and "
+                                                       "strides (Strides{1, 1}) do not match"));
     }
     catch (...)
     {
