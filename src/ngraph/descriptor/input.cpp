@@ -84,6 +84,11 @@ const Shape& Input::get_shape() const
     return m_output->get_shape();
 }
 
+const PartialShape& Input::get_partial_shape() const
+{
+    return m_output->get_partial_shape();
+}
+
 const element::Type& Input::get_element_type() const
 {
     return m_output->get_element_type();
