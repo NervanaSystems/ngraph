@@ -4774,9 +4774,7 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
 // array([ 2938.,  3016.,  3094.,  3172.,  3250.,  7042.,  7264.,  7486.,
 //         7708.,  7930.])
 //
-// Disabled because it doesn't work on CPU yet.
-//
-NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_3d_multi_axis)
+NGRAPH_TEST(${BACKEND_NAME}, dot_3d_multi_axis)
 {
     vector<float> a_data(2 * 3 * 4);
     for (int i = 0; i < 2 * 3 * 4; i++)
@@ -4832,9 +4830,7 @@ NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_3d_multi_axis)
 //          63,  286,  429,  218,   45,   11,   29,  162,   27,  106,  149,
 //         126,   65,   25,   44,    6,   11,  165,  281,   52])
 //
-// Disabled because it doesn't work on CPU yet.
-//
-NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_3d_one_axis_arbitrary)
+NGRAPH_TEST(${BACKEND_NAME}, dot_3d_one_axis_arbitrary)
 {
     vector<float> a_data{6,  61, 2, 3, 5, 21, 75, 23, 23, 0, 23, 2,
                          35, 67, 1, 2, 9, 16, 2,  3,  6,  1, 8,  0};
@@ -4893,9 +4889,7 @@ NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_3d_one_axis_arbitrary)
 //         57576.,  58374.,  59172.,  59970.,  60768.,  61566.,  62364.,
 //         63162.,  63960.])
 //
-// Disabled because it doesn't work on CPU yet.
-//
-NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis)
+NGRAPH_TEST(${BACKEND_NAME}, dot_4d_5d_multi_axis)
 {
     vector<float> a_data(2 * 3 * 3 * 4);
     for (int i = 0; i < 2 * 3 * 3 * 4; i++)
@@ -4954,9 +4948,7 @@ NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis)
 //
 // array([ 251412.,  254040.])
 //
-// Disabled because it doesn't work on CPU yet.
-//
-NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_more)
+NGRAPH_TEST(${BACKEND_NAME}, dot_4d_5d_multi_axis_more)
 {
     vector<float> a_data(2 * 3 * 3 * 4);
     for (int i = 0; i < 2 * 3 * 3 * 4; i++)
@@ -5203,6 +5195,65 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
                                           {2, 2, 2},
                                           {2, 2, 2},
                                           {1, 1, 2}}}})
+                   .get_vector()),
+              read_vector<float>(result));
+}
+
+//this test cover the case with multiple image and with asymetric pad
+//one bug been found on GPU side is covered by this test
+NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image_asym_pad)
+{
+    Shape shape_a{2, 2, 4, 4};
+    Shape window_shape{3, 3};
+    auto window_movement_strides = Strides{2, 2};
+    Shape padding_below{0, 0};
+    Shape padding_above{1, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_r{2, 2, 2, 2};
+    auto f = make_shared<Function>(
+        make_shared<op::MaxPool>(
+            A, window_shape, window_movement_strides, padding_below, padding_above),
+        op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>({{{{0, 1, 0, 2}, // img 0 chan 0
+                                         {0, 3, 2, 0},
+                                         {2, 0, 0, 0},
+                                         {0, 2, 1, 0}},
+
+                                        {{0, 0, 0, 2}, // img 0 chan 1
+                                         {0, 2, 3, 0},
+                                         {2, 0, 1, 0},
+                                         {2, 0, 0, 0}}},
+
+                                       {{{0, 2, 1, 1}, // img 1 chan 0
+                                         {0, 0, 2, 0},
+                                         {0, 0, 1, 2},
+                                         {0, 0, 0, 0}},
+
+                                        {{2, 1, 0, 0}, // img 1 chan 1
+                                         {0, 2, 0, 0},
+                                         {1, 1, 2, 0},
+                                         {1, 0, 0, 0}}}})
+                  .get_vector());
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((test::NDArray<float, 4>({{{{3, 2}, // img 0 chan 0
+                                          {2, 1}},
+
+                                         {{3, 3}, // img 0 chan 1
+                                          {2, 1}}},
+
+                                        {{{2, 2}, // img 1 chan 0
+                                          {1, 2}},
+
+                                         {{2, 2}, // img 1 chan 1
+                                          {2, 2}}}})
                    .get_vector()),
               read_vector<float>(result));
 }
@@ -7436,6 +7487,86 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
 
     backend->call_with_validate(f, {result}, {a, b});
     EXPECT_EQ(expected, read_vector<float>(result));
+}
+
+// This test covers the case with multiple image and with asymetric pad
+// bug has been found on nvGPU side now covered by this test
+NGRAPH_TEST(${BACKEND_NAME}, pad_2channel_2image_asym)
+{
+    Shape shape_a{2, 2, 4, 4};
+    auto window_movement_strides = Strides{2, 2};
+    Shape padding_below{0, 0, 0, 0};
+    Shape padding_above{0, 0, 2, 2};
+    Shape padding_interior{0, 0, 0, 0};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{2, 2, 6, 6};
+    auto f = make_shared<Function>(
+        make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
+        op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>({{{{0, 1, 0, 2}, // img 0 chan 0
+                                         {0, 3, 2, 0},
+                                         {2, 0, 0, 0},
+                                         {0, 2, 1, 0}},
+
+                                        {{0, 0, 0, 2}, // img 0 chan 1
+                                         {0, 2, 3, 0},
+                                         {2, 0, 1, 0},
+                                         {2, 0, 0, 0}}},
+
+                                       {{{0, 2, 1, 1}, // img 1 chan 0
+                                         {0, 0, 2, 0},
+                                         {0, 0, 1, 2},
+                                         {0, 0, 0, 0}},
+
+                                        {{2, 1, 0, 0}, // img 1 chan 1
+                                         {0, 2, 0, 0},
+                                         {1, 1, 2, 0},
+                                         {1, 0, 0, 0}}}})
+                  .get_vector());
+
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, vector<float>{42});
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call_with_validate(f, {result}, {a, b});
+    EXPECT_EQ((test::NDArray<float, 4>({{{{0, 1, 0, 2, 42, 42}, // img 0 chan 0
+                                          {0, 3, 2, 0, 42, 42},
+                                          {2, 0, 0, 0, 42, 42},
+                                          {0, 2, 1, 0, 42, 42},
+                                          {42, 42, 42, 42, 42, 42},
+                                          {42, 42, 42, 42, 42, 42}},
+
+                                         {{0, 0, 0, 2, 42, 42}, // img 1 chan 0
+                                          {0, 2, 3, 0, 42, 42},
+                                          {2, 0, 1, 0, 42, 42},
+                                          {2, 0, 0, 0, 42, 42},
+                                          {42, 42, 42, 42, 42, 42},
+                                          {42, 42, 42, 42, 42, 42}}},
+
+                                        {{{0, 2, 1, 1, 42, 42}, // img 1 chan 0
+                                          {0, 0, 2, 0, 42, 42},
+                                          {0, 0, 1, 2, 42, 42},
+                                          {0, 0, 0, 0, 42, 42},
+                                          {42, 42, 42, 42, 42, 42},
+                                          {42, 42, 42, 42, 42, 42}},
+
+                                         {{2, 1, 0, 0, 42, 42}, // img 1 chan 1
+                                          {0, 2, 0, 0, 42, 42},
+                                          {1, 1, 2, 0, 42, 42},
+                                          {1, 0, 0, 0, 42, 42},
+                                          {42, 42, 42, 42, 42, 42},
+                                          {42, 42, 42, 42, 42, 42}}}})
+                   .get_vector()),
+              read_vector<float>(result));
 }
 
 // Trivial case with no reduced axes.

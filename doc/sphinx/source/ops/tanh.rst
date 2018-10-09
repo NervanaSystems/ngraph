@@ -47,7 +47,7 @@ Backprop
 
 .. math::
 
-   \overline{\mathtt{arg}} \leftarrow \Delta\ (1 - \texttt{output}^2)
+   \overline{\mathtt{arg}} \leftarrow \Delta\ (1 - \mathtt{output}^2)
 
 
 C++ Interface
