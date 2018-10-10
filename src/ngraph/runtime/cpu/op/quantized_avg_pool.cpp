@@ -27,9 +27,9 @@ op::QuantizedAvgPool::QuantizedAvgPool(const shared_ptr<Node>& arg,
                                        const Shape& padding_below,
                                        const Shape& padding_above,
                                        bool include_padding_in_avg_computation,
-                                       const shared_ptr<Node> min,
-                                       const shared_ptr<Node> max)
-    : Op("QuantizedAvgPool", check_single_output_args({arg, min, max}))
+                                       const shared_ptr<Node> scale,
+                                       const shared_ptr<Node> offset)
+    : Op("QuantizedAvgPool", check_single_output_args({arg, scale, offset}))
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
@@ -43,15 +43,15 @@ op::QuantizedAvgPool::QuantizedAvgPool(const shared_ptr<Node>& arg,
         throw ngraph_error("Dequantization supported only for i8/u8!");
     }
 
-    if (min->get_element_type() != max->get_element_type())
+    if (scale->get_element_type() != offset->get_element_type())
     {
-        throw ngraph_error("Min's element type isn't equal to max's!");
+        throw ngraph_error("Scale's element type isn't equal to offset'!");
     }
 
-    if (!(std::dynamic_pointer_cast<op::Constant>(min) &&
-          std::dynamic_pointer_cast<op::Constant>(max)))
+    if (!(std::dynamic_pointer_cast<op::Constant>(scale) &&
+          std::dynamic_pointer_cast<op::Constant>(offset)))
     {
-        throw ngraph_error("Min and max have to be constants!");
+        throw ngraph_error("Scale and offset have to be constants!");
     }
 }
 

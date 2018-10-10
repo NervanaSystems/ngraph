@@ -43,11 +43,9 @@
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
-#include "ngraph/runtime/cpu/op/dequantize.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
-#include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv_bias.hpp"
@@ -734,26 +732,14 @@ namespace ngraph
                 }
 
                 template <>
-                void CPUAssignment::ASSIGN_DECL(ngraph::op::DequantizeCPU)
-                {
-                    if (node->get_input_element_type(0) == element::u8 ||
-                        node->get_input_element_type(0) == element::i8)
-                    {
-                        auto dequantize = static_cast<op::DequantizeCPU*>(node);
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        dequantize->set_op_annotations(op_annotations);
-                    }
-                }
-
-                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedConvolution)
                 {
+                    auto quantized_conv = static_cast<op::QuantizedConvolution*>(node);
+
                     if (node->get_input_element_type(0) == element::u8 &&
-                        node->get_input_element_type(1) == element::i8)
+                        node->get_input_element_type(1) == element::i8 &&
+                        quantized_conv->get_offset() == 0)
                     {
-                        auto quantized_conv = static_cast<op::QuantizedConvolution*>(node);
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
@@ -764,10 +750,12 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedConvolutionRelu)
                 {
+                    auto quantized_conv_relu = static_cast<op::QuantizedConvolutionRelu*>(node);
+
                     if (node->get_input_element_type(0) == element::u8 &&
-                        node->get_input_element_type(1) == element::i8)
+                        node->get_input_element_type(1) == element::i8 &&
+                        quantized_conv_relu->get_offset() == 0)
                     {
-                        auto quantized_conv_relu = static_cast<op::QuantizedConvolutionRelu*>(node);
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
@@ -776,25 +764,14 @@ namespace ngraph
                 }
 
                 template <>
-                void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizeCPU)
-                {
-                    if (node->get_input_element_type(0) == element::f32)
-                    {
-                        auto quantize = static_cast<op::QuantizeCPU*>(node);
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        quantize->set_op_annotations(op_annotations);
-                    }
-                }
-
-                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedConvolutionBias)
                 {
+                    auto quantized_conv_bias = static_cast<op::QuantizedConvolutionBias*>(node);
+
                     if (node->get_input_element_type(0) == element::u8 &&
-                        node->get_input_element_type(1) == element::i8)
+                        node->get_input_element_type(1) == element::i8 &&
+                        quantized_conv_bias->get_offset() == 0)
                     {
-                        auto quantized_conv_bias = static_cast<op::QuantizedConvolutionBias*>(node);
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
@@ -861,14 +838,10 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedAvgPool>},
     {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Softmax>},
     {TI(ngraph::op::Slice), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Slice>},
-    {TI(ngraph::op::QuantizeCPU),
-     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizeCPU>},
     {TI(ngraph::op::ReplaceSlice),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ReplaceSlice>},
     {TI(ngraph::op::ConvolutionAdd),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionAdd>},
-    {TI(ngraph::op::DequantizeCPU),
-     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::DequantizeCPU>},
     {TI(ngraph::op::QuantizedConvolutionRelu),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedConvolutionRelu>},
     {TI(ngraph::op::QuantizedConvolutionBias),

@@ -50,16 +50,15 @@ namespace ngraph
                         mkldnn_emitter->build_convolution<ngraph::op::QuantizedConvolution>(
                             node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
-                    float min_freezed_output = qconvolution->get_freezed_output_min();
-                    float max_freezed_output = qconvolution->get_freezed_output_max();
+                    float scale = qconvolution->get_scale();
+                    float offset = qconvolution->get_offset();
 
-                    auto functor = [&, conv_index, min_freezed_output, max_freezed_output](
-                        CPURuntimeContext* ctx) {
+                    auto functor = [&, conv_index, scale, offset](CPURuntimeContext* ctx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out0_tensor);
-                        *(static_cast<float*>(out1_tensor)) = min_freezed_output;
-                        *(static_cast<float*>(out2_tensor)) = max_freezed_output;
+                        *(static_cast<float*>(out1_tensor)) = scale;
+                        *(static_cast<float*>(out2_tensor)) = offset;
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
                     };
                     functors.emplace_back(functor);
@@ -90,16 +89,15 @@ namespace ngraph
                         mkldnn_emitter->build_convolution<ngraph::op::QuantizedConvolutionRelu>(
                             node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
-                    float min_freezed_output = qconvolution_relu->get_freezed_output_min();
-                    float max_freezed_output = qconvolution_relu->get_freezed_output_max();
+                    float scale = qconvolution_relu->get_scale();
+                    float offset = qconvolution_relu->get_offset();
 
-                    auto functor = [&, conv_index, min_freezed_output, max_freezed_output](
-                        CPURuntimeContext* ctx) {
+                    auto functor = [&, conv_index, scale, offset](CPURuntimeContext* ctx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out0_tensor);
-                        *(static_cast<float*>(out1_tensor)) = min_freezed_output;
-                        *(static_cast<float*>(out2_tensor)) = max_freezed_output;
+                        *(static_cast<float*>(out1_tensor)) = scale;
+                        *(static_cast<float*>(out2_tensor)) = offset;
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
                     };
                     functors.emplace_back(functor);
@@ -132,17 +130,16 @@ namespace ngraph
                         mkldnn_emitter->build_convolution<ngraph::op::QuantizedConvolutionBias>(
                             node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
-                    float min_freezed_output = qconvolution_bias->get_freezed_output_min();
-                    float max_freezed_output = qconvolution_bias->get_freezed_output_max();
+                    float scale = qconvolution_bias->get_scale();
+                    float offset = qconvolution_bias->get_offset();
 
-                    auto functor = [&, conv_index, min_freezed_output, max_freezed_output](
-                        CPURuntimeContext* ctx) {
+                    auto functor = [&, conv_index, scale, offset](CPURuntimeContext* ctx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out0_tensor);
-                        *(static_cast<float*>(out1_tensor)) = min_freezed_output;
-                        *(static_cast<float*>(out2_tensor)) = max_freezed_output;
+                        *(static_cast<float*>(out1_tensor)) = scale;
+                        *(static_cast<float*>(out2_tensor)) = offset;
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
                     };
                     functors.emplace_back(functor);

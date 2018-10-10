@@ -40,8 +40,6 @@ set(SRC
     builder/convert_layout.cpp
     builder/quantized_conv.cpp
     builder/convolution.cpp
-    builder/dequantize.cpp
-    builder/quantize.cpp
     builder/dot.cpp
     builder/function_call.cpp
     builder/lstm.cpp
@@ -86,8 +84,6 @@ set(SRC
     op/conv_relu.cpp
     op/quantized_conv.cpp
     op/convert_layout.cpp
-    op/dequantize.cpp
-    op/quantize.cpp
     op/loop_kernel.cpp
     op/lstm.cpp
     op/matmul_bias.cpp
