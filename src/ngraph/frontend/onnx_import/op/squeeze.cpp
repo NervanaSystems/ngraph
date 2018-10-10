@@ -45,7 +45,8 @@ namespace ngraph
                 // Default behaviour is to squeeze all single dimension axes.
                 if (axes.empty())
                 {
-                    for (auto it = std::begin(data_shape); it != std::end(data_shape);)
+                    auto it = std::begin(data_shape);
+                    while (it != std::end(data_shape))
                     {
                         if (*it == 1)
                         {
