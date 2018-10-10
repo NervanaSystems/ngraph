@@ -89,7 +89,6 @@ namespace ngraph
 
     protected:
         /// Throws if the node is invalid.
-        virtual void validate_and_infer_types();
 
         // Called in constructors during transition
         void constructor_validate_and_infer_types();
@@ -107,6 +106,7 @@ namespace ngraph
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
     public:
+        virtual void validate_and_infer_types();
         // Called after transition
         void delayed_validate_and_infer_types();
 
