@@ -17,7 +17,6 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
-//#include "ngraph/op/conv_bias.hpp"
 #include "ngraph/op/quantized_conv.hpp"
 
 namespace ngraph

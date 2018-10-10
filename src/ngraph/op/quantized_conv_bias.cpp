@@ -16,7 +16,6 @@
 
 #include <numeric>
 
-//#include "conv_bias.hpp"
 #include "quantized_conv_bias.hpp"
 
 #include "ngraph/op/constant.hpp"
@@ -26,34 +25,6 @@
 
 using namespace std;
 using namespace ngraph;
-
-/*
-op::QuantizedConvolutionBias::QuantizedConvolutionBias(
-    const shared_ptr<op::QuantizedConvolution>& qconv,
-    const shared_ptr<Node>& bias,
-    const bool with_relu)
-    : Op("QuantizedConvolutionBias",
-         check_single_output_args(
-             {qconv->get_argument(0), qconv->get_argument(1), bias, qconv->get_argument(2)}))
-    , m_window_movement_strides(qconv->get_window_movement_strides())
-    , m_window_dilation_strides(qconv->get_window_dilation_strides())
-    , m_padding_below(qconv->get_padding_below())
-    , m_padding_above(qconv->get_padding_above())
-    , m_data_dilation_strides(qconv->get_data_dilation_strides())
-    , m_with_relu(with_relu)
-{
-    constructor_validate_and_infer_types();
-
-    this->m_scale = qconv->get_scale();
-
-    util::validate_convbias_shapes(qconv->get_argument(0)->get_shape(),
-                                   qconv->get_argument(1)->get_shape(),
-                                   bias->get_shape());
-
-    auto output_et = with_relu ? element::u8 : element::i8;
-    set_output_type(0, output_et, qconv->get_shape());
-}
-*/
 
 op::QuantizedConvolutionBias::QuantizedConvolutionBias(const shared_ptr<Node>& data_batch,
                                                        const shared_ptr<Node>& filters,

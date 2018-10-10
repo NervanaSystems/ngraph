@@ -24,26 +24,6 @@
 using namespace std;
 using namespace ngraph;
 
-/*
-op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(
-    const std::shared_ptr<op::QuantizedConvolution>& qconv)
-    : Op("QuantizedConvolutionRelu",
-         check_single_output_args(
-             {qconv->get_argument(0), qconv->get_argument(1), qconv->get_argument(2)}))
-    , m_window_movement_strides(qconv->get_window_movement_strides())
-    , m_window_dilation_strides(qconv->get_window_dilation_strides())
-    , m_padding_below(qconv->get_padding_below())
-    , m_padding_above(qconv->get_padding_above())
-    , m_data_dilation_strides(qconv->get_data_dilation_strides())
-{
-    constructor_validate_and_infer_types();
-
-    this->m_scale = qconv->get_scale();
-
-    set_output_type(0, element::u8, qconv->get_shape());
-}
-*/
-
 op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(const std::shared_ptr<Node>& data_batch,
                                                        const std::shared_ptr<Node>& filters,
                                                        const Strides& window_movement_strides,
