@@ -82,16 +82,11 @@ set(SRC
     op/group_conv.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
-    op/quantized_conv.cpp
     op/convert_layout.cpp
     op/loop_kernel.cpp
     op/lstm.cpp
     op/matmul_bias.cpp
     op/max_pool_with_indices.cpp
-    op/quantized_max_pool.cpp
-    op/quantized_avg_pool.cpp
-    op/quantized_conv_relu.cpp
-    op/quantized_conv_bias.cpp
     op/rnn.cpp
     op/sigmoid_mul.cpp
     op/conv_add.cpp

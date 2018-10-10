@@ -16,17 +16,18 @@
 
 #include <numeric>
 
-#include "conv_bias.hpp"
+//#include "conv_bias.hpp"
 #include "quantized_conv_bias.hpp"
 
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
-#include "ngraph/runtime/cpu/op/quantized_conv.hpp"
+#include "ngraph/op/quantized_conv.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
+/*
 op::QuantizedConvolutionBias::QuantizedConvolutionBias(
     const shared_ptr<op::QuantizedConvolution>& qconv,
     const shared_ptr<Node>& bias,
@@ -52,6 +53,7 @@ op::QuantizedConvolutionBias::QuantizedConvolutionBias(
     auto output_et = with_relu ? element::u8 : element::i8;
     set_output_type(0, output_et, qconv->get_shape());
 }
+*/
 
 op::QuantizedConvolutionBias::QuantizedConvolutionBias(const shared_ptr<Node>& data_batch,
                                                        const shared_ptr<Node>& filters,
@@ -80,7 +82,8 @@ op::QuantizedConvolutionBias::QuantizedConvolutionBias(const shared_ptr<Node>& d
     float scale_val = *(static_cast<float const*>(scale_const_op->get_data_ptr()));
     this->m_scale = scale_val;
 
-    util::validate_convbias_shapes(data_batch_shape, filters_shape, bias->get_shape());
+    // TODO: call ngraph util
+    // util::validate_convbias_shapes(data_batch_shape, filters_shape, bias->get_shape());
 
     auto output_et = with_relu ? element::u8 : element::i8;
     set_output_type(0,

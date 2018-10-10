@@ -15,7 +15,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
+#include "ngraph/op/quantized_max_pool.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"

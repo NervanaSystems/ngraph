@@ -18,12 +18,13 @@
 
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
-#include "ngraph/runtime/cpu/op/quantized_conv_relu.hpp"
+#include "ngraph/op/quantized_conv_relu.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
+/*
 op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(
     const std::shared_ptr<op::QuantizedConvolution>& qconv)
     : Op("QuantizedConvolutionRelu",
@@ -41,6 +42,7 @@ op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(
 
     set_output_type(0, element::u8, qconv->get_shape());
 }
+*/
 
 op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(const std::shared_ptr<Node>& data_batch,
                                                        const std::shared_ptr<Node>& filters,
