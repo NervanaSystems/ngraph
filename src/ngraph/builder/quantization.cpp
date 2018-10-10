@@ -43,7 +43,6 @@ namespace ngraph
         {
             // TODO: make a builder to calculate
             auto scale = op::Constant::create(element::f32, Shape{}, {1});
-            auto offset = op::Constant::create(element::f32, Shape{}, {0});
 
             return make_shared<op::QuantizedAvgPool>(arg,
                                                      window_shape,
@@ -51,8 +50,7 @@ namespace ngraph
                                                      padding_below,
                                                      padding_above,
                                                      include_padding_in_avg_computation,
-                                                     scale,
-                                                     offset);
+                                                     scale);
         }
 
         std::shared_ptr<Node>
@@ -74,7 +72,6 @@ namespace ngraph
         {
             // TODO: make a builder to calculate
             auto scale = op::Constant::create(element::f32, Shape{}, {1});
-            auto offset = op::Constant::create(element::f32, Shape{}, {0});
 
             return make_shared<op::QuantizedConvolutionBias>(data_batch,
                                                              filters,
@@ -84,8 +81,7 @@ namespace ngraph
                                                              padding_below,
                                                              padding_above,
                                                              data_dilation_strides,
-                                                             scale,
-                                                             offset);
+                                                             scale);
         }
 
         std::shared_ptr<Node>
@@ -105,7 +101,6 @@ namespace ngraph
         {
             // TODO: make a builder to calculate
             auto scale = op::Constant::create(element::f32, Shape{}, {1});
-            auto offset = op::Constant::create(element::f32, Shape{}, {0});
 
             return make_shared<op::QuantizedConvolutionRelu>(data_batch,
                                                              filters,
@@ -114,8 +109,7 @@ namespace ngraph
                                                              padding_below,
                                                              padding_above,
                                                              data_dilation_strides,
-                                                             scale,
-                                                             offset);
+                                                             scale);
         }
 
         std::shared_ptr<Node>
@@ -135,7 +129,6 @@ namespace ngraph
         {
             // TODO: make a builder to calculate
             auto scale = op::Constant::create(element::f32, Shape{}, {1});
-            auto offset = op::Constant::create(element::f32, Shape{}, {0});
 
             return make_shared<op::QuantizedConvolution>(data_batch,
                                                          filters,
@@ -144,8 +137,7 @@ namespace ngraph
                                                          padding_below,
                                                          padding_above,
                                                          data_dilation_strides,
-                                                         scale,
-                                                         offset);
+                                                         scale);
         }
 
         std::shared_ptr<Node> ScaledQuantizedMaxPool(const std::shared_ptr<Node>& arg,
@@ -158,15 +150,13 @@ namespace ngraph
         {
             // TODO: make a builder to calculate
             auto scale = op::Constant::create(element::f32, Shape{}, {1});
-            auto offset = op::Constant::create(element::f32, Shape{}, {0});
 
             return make_shared<op::QuantizedMaxPool>(arg,
                                                      window_shape,
                                                      window_movement_strides,
                                                      padding_below,
                                                      padding_above,
-                                                     scale,
-                                                     offset);
+                                                     scale);
         }
     }
 }
