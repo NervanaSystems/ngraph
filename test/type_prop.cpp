@@ -454,6 +454,232 @@ TEST(type_prop, dot_deduce_reduction_axes_size_mismatch)
     }
 }
 
+TEST(type_prop, dot_partial_both_rank_dynamic_axis_count_implicit)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto d = make_shared<op::Dot>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, dot_partial_both_rank_dynamic_axis_count_explicit)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto d = make_shared<op::Dot>(param0, param1, /*reduction axis count=*/1234);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, dot_partial_left_rank_dynamic_right_rank_static_dynamic_axis_count_implicit)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    auto d = make_shared<op::Dot>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, dot_partial_left_rank_dynamic_right_rank_static_dynamic_axis_count_explicit_ok)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    auto d = make_shared<op::Dot>(param0, param1, /* reduction axis count=*/3);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop,
+     dot_partial_left_rank_dynamic_right_rank_static_dynamic_axis_count_explicit_too_many)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    try
+    {
+        auto d = make_shared<op::Dot>(param0, param1, /* reduction axis count=*/4);
+        FAIL()
+            << "Too many reduction axes not detected (rank-dynamic/rank-static dynamic operands)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Reduction axes count (4) is too large");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dot_partial_left_rank_static_dynamic_right_rank_dynamic_axis_count_implicit)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto d = make_shared<op::Dot>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, dot_partial_left_rank_static_dynamic_right_rank_dynamic_axis_count_explicit_ok)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto d = make_shared<op::Dot>(param0, param1, /* reduction axis count=*/3);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop,
+     dot_partial_left_rank_static_dynamic_right_rank_dynamic_axis_count_explicit_too_many)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    try
+    {
+        auto d = make_shared<op::Dot>(param0, param1, /* reduction axis count=*/4);
+        FAIL()
+            << "Too many reduction axes not detected (rank-dynamic/rank-static dynamic operands)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Reduction axes count (4) is too large");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop,
+     dot_partial_left_rank_static_dynamic_right_rank_static_dynamic_axis_count_implicit_1_ok)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 2});
+    auto param1 = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), 4, Dimension::dynamic(), 5});
+    auto d = make_shared<op::Dot>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), 2, Dimension::dynamic(), 4, Dimension::dynamic(), 5}));
+}
+
+TEST(type_prop,
+     dot_partial_left_rank_static_dynamic_right_rank_static_dynamic_axis_count_implicit_0_ok)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape{});
+    auto param1 = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), 4, Dimension::dynamic(), 5});
+    auto d = make_shared<op::Dot>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).same_scheme(
+        PartialShape{2, Dimension::dynamic(), 4, Dimension::dynamic(), 5}));
+}
+
+TEST(
+    type_prop,
+    dot_partial_left_rank_static_dynamic_right_rank_static_dynamic_axis_count_explicit_too_many_for_left)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    auto param1 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3, 5, 6});
+    try
+    {
+        auto d = make_shared<op::Dot>(param0, param1, /* reduction axis count=*/4);
+        FAIL() << "Too many reduction axes not detected (rank-static dynamic/rank-static dynamic "
+                  "operands)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Reduction axes count (4) is too large");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(
+    type_prop,
+    dot_partial_left_rank_static_dynamic_right_rank_static_dynamic_axis_count_explicit_too_many_for_right)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3, 5, 6});
+    auto param1 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    try
+    {
+        auto d = make_shared<op::Dot>(param0, param1, /* reduction axis count=*/4);
+        FAIL() << "Too many reduction axes not detected (rank-static dynamic/rank-static dynamic "
+                  "operands)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Reduction axes count (4) is too large");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(
+    type_prop,
+    dot_partial_left_rank_static_dynamic_right_rank_static_dynamic_axis_count_explicit_too_many_for_both)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    auto param1 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    try
+    {
+        auto d = make_shared<op::Dot>(param0, param1, /* reduction axis count=*/4);
+        FAIL() << "Too many reduction axes not detected (rank-static dynamic/rank-static dynamic "
+                  "operands)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Reduction axes count (4) is too large");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dot_partial_left_et_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto d = make_shared<op::Dot>(param0, param1, /* reduction axis count=*/3);
+
+    ASSERT_EQ(d->get_output_element_type(0), element::f32);
+}
+
+TEST(type_prop, dot_partial_right_et_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto d = make_shared<op::Dot>(param0, param1, /* reduction axis count=*/3);
+
+    ASSERT_EQ(d->get_output_element_type(0), element::i32);
+}
+
+TEST(type_prop, dot_partial_both_et_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto d = make_shared<op::Dot>(param0, param1, /* reduction axis count=*/3);
+
+    ASSERT_EQ(d->get_output_element_type(0), element::dynamic);
+}
+
 //
 // Tests for binary elementwise ops.
 //
