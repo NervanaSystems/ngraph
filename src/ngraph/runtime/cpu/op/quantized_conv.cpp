@@ -30,9 +30,8 @@ op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& data_batc
                                                const CoordinateDiff& padding_below,
                                                const CoordinateDiff& padding_above,
                                                const Strides& data_dilation_strides,
-                                               const std::shared_ptr<Node> scale,
-                                               const std::shared_ptr<Node> offset)
-    : Op("QuantizedConvolution", check_single_output_args({data_batch, filters, scale, offset}))
+                                               const std::shared_ptr<Node> scale)
+    : Op("QuantizedConvolution", check_single_output_args({data_batch, filters, scale}))
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -47,14 +46,10 @@ op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& data_batc
     auto& filters_shape = filters->get_shape();
 
     auto scale_const_op = std::static_pointer_cast<ngraph::op::Constant>(scale);
-    auto offset_const_op = std::static_pointer_cast<ngraph::op::Constant>(offset);
     float scale_val = *(static_cast<float const*>(scale_const_op->get_data_ptr()));
-    float offset_val = *(static_cast<float const*>(offset_const_op->get_data_ptr()));
 
     this->m_scale = scale_val;
-    this->m_offset = offset_val;
 
-    set_output_size(3);
     set_output_type(0,
                     element::i8,
                     util::infer_convolution_output_shape(this,
@@ -72,12 +67,10 @@ op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& data_batc
                                                          0, /* batch_axis_result,            */
                                                          1  /* output_channel_axis_result,   */
                                                          ));
-    set_output_type(1, element::f32, Shape{1});
-    set_output_type(2, element::f32, Shape{1});
 }
 shared_ptr<Node> op::QuantizedConvolution::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 4)
+    if (new_args.size() != 3)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
@@ -88,6 +81,5 @@ shared_ptr<Node> op::QuantizedConvolution::copy_with_new_args(const NodeVector& 
                                                      get_padding_below(),
                                                      get_padding_above(),
                                                      get_data_dilation_strides(),
-                                                     new_args.at(2),
-                                                     new_args.at(3)));
+                                                     new_args.at(2)));
 }

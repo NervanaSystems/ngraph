@@ -38,8 +38,7 @@ namespace ngraph
                              const Strides& window_movement_strides,
                              const Shape& padding_below,
                              const Shape& padding_above,
-                             const std::shared_ptr<Node> scale,
-                             const std::shared_ptr<Node> offset);
+                             const std::shared_ptr<Node> scale);
             void validate_and_infer_types() override;
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

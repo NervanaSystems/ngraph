@@ -37,8 +37,7 @@ namespace ngraph
                                      const CoordinateDiff& padding_below,
                                      const CoordinateDiff& padding_above,
                                      const Strides& data_dilation_strides,
-                                     const std::shared_ptr<Node> scale,
-                                     const std::shared_ptr<Node> offset);
+                                     const std::shared_ptr<Node> scale);
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
@@ -46,7 +45,6 @@ namespace ngraph
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
             float get_scale() const { return m_scale; }
-            float get_offset() const { return m_offset; }
             std::shared_ptr<Node> get_filters() { return get_argument(1); }
             std::shared_ptr<Node> get_data_batch() { return get_argument(0); }
             virtual std::shared_ptr<Node>
@@ -59,7 +57,6 @@ namespace ngraph
             CoordinateDiff m_padding_above;
             Strides m_data_dilation_strides;
             float m_scale;
-            float m_offset;
         };
     }
 }

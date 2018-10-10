@@ -27,9 +27,8 @@ op::QuantizedAvgPool::QuantizedAvgPool(const shared_ptr<Node>& arg,
                                        const Shape& padding_below,
                                        const Shape& padding_above,
                                        bool include_padding_in_avg_computation,
-                                       const shared_ptr<Node> scale,
-                                       const shared_ptr<Node> offset)
-    : Op("QuantizedAvgPool", check_single_output_args({arg, scale, offset}))
+                                       const shared_ptr<Node> scale)
+    : Op("QuantizedAvgPool", check_single_output_args({arg, scale}))
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
@@ -43,15 +42,9 @@ op::QuantizedAvgPool::QuantizedAvgPool(const shared_ptr<Node>& arg,
         throw ngraph_error("Dequantization supported only for i8/u8!");
     }
 
-    if (scale->get_element_type() != offset->get_element_type())
+    if (!(std::dynamic_pointer_cast<op::Constant>(scale)))
     {
-        throw ngraph_error("Scale's element type isn't equal to offset'!");
-    }
-
-    if (!(std::dynamic_pointer_cast<op::Constant>(scale) &&
-          std::dynamic_pointer_cast<op::Constant>(offset)))
-    {
-        throw ngraph_error("Scale and offset have to be constants!");
+        throw ngraph_error("Scale has to be constant!");
     }
 }
 
@@ -211,11 +204,7 @@ void op::QuantizedAvgPool::validate_and_infer_types()
     result_shape[1] = channel_count;
     copy(output_item_shape.begin(), output_item_shape.end(), result_shape.begin() + 2);
 
-    set_output_size(3);
     set_output_type(0, get_input_element_type(0), result_shape);
-    //TODO(nbpatel): Change to Shape{} once the mkldnn version is updated
-    set_output_type(1, element::f32, Shape{1});
-    set_output_type(2, element::f32, Shape{1});
 }
 
 shared_ptr<Node> op::QuantizedAvgPool::copy_with_new_args(const NodeVector& new_args) const
@@ -227,6 +216,5 @@ shared_ptr<Node> op::QuantizedAvgPool::copy_with_new_args(const NodeVector& new_
                                          m_padding_below,
                                          m_padding_above,
                                          m_include_padding_in_avg_computation,
-                                         new_args.at(1),
-                                         new_args.at(2));
+                                         new_args.at(1));
 }

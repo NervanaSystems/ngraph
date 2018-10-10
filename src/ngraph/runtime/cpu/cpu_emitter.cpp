@@ -2676,10 +2676,6 @@ namespace ngraph
                            << ", " << args[1].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
                            << ", " << out[0].get_name() << ");\n";
-                    writer << "*(" << out[1].get_name() << ") = " << qconvolution_relu->get_scale()
-                           << ";\n";
-                    writer << "*(" << out[2].get_name() << ") = " << qconvolution_relu->get_offset()
-                           << ";\n";
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(conv_index) << ");\n";
                 }
@@ -2707,10 +2703,6 @@ namespace ngraph
                            << ", " << args[1].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
                            << ", " << out[0].get_name() << ");\n";
-                    writer << "*(" << out[1].get_name() << ") = " << qconvolution->get_scale()
-                           << ";\n";
-                    writer << "*(" << out[2].get_name() << ") = " << qconvolution->get_offset()
-                           << ";\n";
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(conv_index) << ");\n";
                 }
@@ -2947,10 +2939,6 @@ namespace ngraph
                            << ", " << args[2].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
                            << ", " << out[0].get_name() << ");\n";
-                    writer << "*(" << out[1].get_name() << ") = " << qconvolution_bias->get_scale()
-                           << ";\n";
-                    writer << "*(" << out[2].get_name() << ") = " << qconvolution_bias->get_offset()
-                           << ";\n";
 
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(qconv_index) << ");\n";
@@ -3136,18 +3124,15 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    vector<float> quant_util;
-                    mkldnn_emitter->build_quantized_max_pool(node, quant_util);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(quant_util[2]);
+                    size_t qmax_pool_index = mkldnn_emitter->build_quantized_max_pool(node);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(qmax_pool_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
                            << ", " << out[0].get_name() << ");\n";
-                    writer << "*(" << out[1].get_name() << ") = " << quant_util[0] << ";\n";
-                    writer << "*(" << out[2].get_name() << ") = " << quant_util[1] << ";\n";
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(quant_util[2]) << ");\n";
+                           << to_string(qmax_pool_index) << ");\n";
                 }
                 else
                 {
@@ -3160,17 +3145,14 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    vector<float> quant_util;
-                    mkldnn_emitter->build_quantized_avg_pool(node, quant_util);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(quant_util[2]);
+                    size_t qavg_pool_index = mkldnn_emitter->build_quantized_avg_pool(node);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(qavg_pool_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
                            << ", " << out[0].get_name() << ");\n";
-                    writer << "*(" << out[1].get_name() << ") = " << quant_util[0] << ";\n";
-                    writer << "*(" << out[2].get_name() << ") = " << quant_util[1] << ";\n";
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(quant_util[2]) << ");\n";
+                           << to_string(qavg_pool_index) << ");\n";
                 }
                 else
                 {

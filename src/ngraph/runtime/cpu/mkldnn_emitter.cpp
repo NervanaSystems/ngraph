@@ -122,8 +122,7 @@ size_t MKLDNNEmitter::build_memory_primitive(const mkldnn::memory::desc& desc)
     return index;
 }
 
-void MKLDNNEmitter::build_quantized_max_pool(const ngraph::Node* node,
-                                             std::vector<float>& quant_util)
+size_t MKLDNNEmitter::build_quantized_max_pool(const ngraph::Node* node)
 {
     auto qmax_pool = static_cast<const ngraph::op::QuantizedMaxPool*>(node);
     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
@@ -135,19 +134,10 @@ void MKLDNNEmitter::build_quantized_max_pool(const ngraph::Node* node,
                                                          qmax_pool->get_window_shape(),
                                                          qmax_pool->get_padding_below(),
                                                          qmax_pool->get_padding_above());
-    auto scale_const_op =
-        std::static_pointer_cast<ngraph::op::Constant>(qmax_pool->get_argument(1));
-    auto offset_const_op =
-        std::static_pointer_cast<ngraph::op::Constant>(qmax_pool->get_argument(2));
-    float scale = *(static_cast<float const*>(scale_const_op->get_data_ptr()));
-    float offset = *(static_cast<float const*>(offset_const_op->get_data_ptr()));
-    quant_util.push_back(scale);
-    quant_util.push_back(offset);
-    quant_util.push_back(qmax_pool_index);
+    return qmax_pool_index;
 }
 
-void MKLDNNEmitter::build_quantized_avg_pool(const ngraph::Node* node,
-                                             std::vector<float>& quant_util)
+size_t MKLDNNEmitter::build_quantized_avg_pool(const ngraph::Node* node)
 {
     auto qavg_pool = static_cast<const ngraph::op::QuantizedAvgPool*>(node);
     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
@@ -162,15 +152,7 @@ void MKLDNNEmitter::build_quantized_avg_pool(const ngraph::Node* node,
                                     qavg_pool->get_window_shape(),
                                     qavg_pool->get_padding_below(),
                                     qavg_pool->get_padding_above());
-    auto scale_const_op =
-        std::static_pointer_cast<ngraph::op::Constant>(qavg_pool->get_argument(1));
-    auto offset_const_op =
-        std::static_pointer_cast<ngraph::op::Constant>(qavg_pool->get_argument(2));
-    float scale = *(static_cast<float const*>(scale_const_op->get_data_ptr()));
-    float offset = *(static_cast<float const*>(offset_const_op->get_data_ptr()));
-    quant_util.push_back(scale);
-    quant_util.push_back(offset);
-    quant_util.push_back(qavg_pool_index);
+    return qavg_pool_index;
 }
 
 mkldnn::memory::format MKLDNNEmitter::query_convolution_forward_weight_format(

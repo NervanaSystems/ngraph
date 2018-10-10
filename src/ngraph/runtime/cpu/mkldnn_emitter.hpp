@@ -589,11 +589,9 @@ namespace ngraph
                                           const mkldnn::memory::desc& result_desc,
                                           float alpha);
 
-                void build_quantized_max_pool(const ngraph::Node* node,
-                                              std::vector<float>& quant_util);
+                size_t build_quantized_max_pool(const ngraph::Node* node);
 
-                void build_quantized_avg_pool(const ngraph::Node* node,
-                                              std::vector<float>& quant_util);
+                size_t build_quantized_avg_pool(const ngraph::Node* node);
 
             private:
                 std::vector<mkldnn::primitive*> m_mkldnn_primitives;

@@ -27,10 +27,8 @@ using namespace ngraph;
 op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(
     const std::shared_ptr<op::QuantizedConvolution>& qconv)
     : Op("QuantizedConvolutionRelu",
-         check_single_output_args({qconv->get_argument(0),
-                                   qconv->get_argument(1),
-                                   qconv->get_argument(2),
-                                   qconv->get_argument(3)}))
+         check_single_output_args(
+             {qconv->get_argument(0), qconv->get_argument(1), qconv->get_argument(2)}))
     , m_window_movement_strides(qconv->get_window_movement_strides())
     , m_window_dilation_strides(qconv->get_window_dilation_strides())
     , m_padding_below(qconv->get_padding_below())
@@ -40,12 +38,8 @@ op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(
     constructor_validate_and_infer_types();
 
     this->m_scale = qconv->get_scale();
-    this->m_offset = qconv->get_offset();
 
-    set_output_size(3);
     set_output_type(0, element::u8, qconv->get_shape());
-    set_output_type(1, element::f32, Shape{1});
-    set_output_type(2, element::f32, Shape{1});
 }
 
 op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(const std::shared_ptr<Node>& data_batch,
@@ -55,9 +49,8 @@ op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(const std::shared_ptr<Nod
                                                        const CoordinateDiff& padding_below,
                                                        const CoordinateDiff& padding_above,
                                                        const Strides& data_dilation_strides,
-                                                       const std::shared_ptr<Node> scale,
-                                                       const std::shared_ptr<Node> offset)
-    : Op("QuantizedConvolutionRelu", check_single_output_args({data_batch, filters, scale, offset}))
+                                                       const std::shared_ptr<Node> scale)
+    : Op("QuantizedConvolutionRelu", check_single_output_args({data_batch, filters, scale}))
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -70,13 +63,9 @@ op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(const std::shared_ptr<Nod
     auto& filters_shape = filters->get_shape();
 
     auto scale_const_op = std::static_pointer_cast<ngraph::op::Constant>(scale);
-    auto offset_const_op = std::static_pointer_cast<ngraph::op::Constant>(offset);
     float scale_val = *(static_cast<float const*>(scale_const_op->get_data_ptr()));
-    float offset_val = *(static_cast<float const*>(offset_const_op->get_data_ptr()));
     this->m_scale = scale_val;
-    this->m_offset = offset_val;
 
-    set_output_size(3);
     set_output_type(0,
                     element::u8,
                     util::infer_convolution_output_shape(this,
@@ -94,15 +83,12 @@ op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(const std::shared_ptr<Nod
                                                          0, /* batch_axis_result,            */
                                                          1  /* output_channel_axis_result,   */
                                                          ));
-
-    set_output_type(1, element::f32, Shape{1});
-    set_output_type(2, element::f32, Shape{1});
 }
 
 std::shared_ptr<Node>
     op::QuantizedConvolutionRelu::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 4)
+    if (new_args.size() != 3)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
@@ -114,6 +100,5 @@ std::shared_ptr<Node>
                                                               get_padding_below(),
                                                               get_padding_above(),
                                                               get_data_dilation_strides(),
-                                                              new_args.at(2),
-                                                              new_args.at(3)));
+                                                              new_args.at(2)));
 }

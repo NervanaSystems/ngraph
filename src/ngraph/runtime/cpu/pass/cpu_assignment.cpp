@@ -737,8 +737,7 @@ namespace ngraph
                     auto quantized_conv = static_cast<op::QuantizedConvolution*>(node);
 
                     if (node->get_input_element_type(0) == element::u8 &&
-                        node->get_input_element_type(1) == element::i8 &&
-                        quantized_conv->get_offset() == 0)
+                        node->get_input_element_type(1) == element::i8)
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -753,8 +752,7 @@ namespace ngraph
                     auto quantized_conv_relu = static_cast<op::QuantizedConvolutionRelu*>(node);
 
                     if (node->get_input_element_type(0) == element::u8 &&
-                        node->get_input_element_type(1) == element::i8 &&
-                        quantized_conv_relu->get_offset() == 0)
+                        node->get_input_element_type(1) == element::i8)
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -769,8 +767,7 @@ namespace ngraph
                     auto quantized_conv_bias = static_cast<op::QuantizedConvolutionBias*>(node);
 
                     if (node->get_input_element_type(0) == element::u8 &&
-                        node->get_input_element_type(1) == element::i8 &&
-                        quantized_conv_bias->get_offset() == 0)
+                        node->get_input_element_type(1) == element::i8)
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();

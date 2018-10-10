@@ -41,8 +41,6 @@ namespace ngraph
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
-                    auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
-                    auto& out2_tensor = external_function->get_tensor_data(out[2].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
 
@@ -50,15 +48,11 @@ namespace ngraph
                         mkldnn_emitter->build_convolution<ngraph::op::QuantizedConvolution>(
                             node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
-                    float scale = qconvolution->get_scale();
-                    float offset = qconvolution->get_offset();
 
-                    auto functor = [&, conv_index, scale, offset](CPURuntimeContext* ctx) {
+                    auto functor = [&, conv_index](CPURuntimeContext* ctx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out0_tensor);
-                        *(static_cast<float*>(out1_tensor)) = scale;
-                        *(static_cast<float*>(out2_tensor)) = offset;
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
                     };
                     functors.emplace_back(functor);
@@ -80,8 +74,6 @@ namespace ngraph
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
-                    auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
-                    auto& out2_tensor = external_function->get_tensor_data(out[2].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
 
@@ -89,15 +81,11 @@ namespace ngraph
                         mkldnn_emitter->build_convolution<ngraph::op::QuantizedConvolutionRelu>(
                             node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
-                    float scale = qconvolution_relu->get_scale();
-                    float offset = qconvolution_relu->get_offset();
 
-                    auto functor = [&, conv_index, scale, offset](CPURuntimeContext* ctx) {
+                    auto functor = [&, conv_index](CPURuntimeContext* ctx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out0_tensor);
-                        *(static_cast<float*>(out1_tensor)) = scale;
-                        *(static_cast<float*>(out2_tensor)) = offset;
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
                     };
                     functors.emplace_back(functor);
@@ -121,8 +109,6 @@ namespace ngraph
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                     auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
-                    auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
-                    auto& out2_tensor = external_function->get_tensor_data(out[2].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
 
@@ -130,16 +116,12 @@ namespace ngraph
                         mkldnn_emitter->build_convolution<ngraph::op::QuantizedConvolutionBias>(
                             node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
-                    float scale = qconvolution_bias->get_scale();
-                    float offset = qconvolution_bias->get_offset();
 
-                    auto functor = [&, conv_index, scale, offset](CPURuntimeContext* ctx) {
+                    auto functor = [&, conv_index](CPURuntimeContext* ctx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out0_tensor);
-                        *(static_cast<float*>(out1_tensor)) = scale;
-                        *(static_cast<float*>(out2_tensor)) = offset;
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
                     };
                     functors.emplace_back(functor);
