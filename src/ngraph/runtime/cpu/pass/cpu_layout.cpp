@@ -1437,7 +1437,8 @@ namespace ngraph
                             skip_input_reorder = true;
                         }
                         // Temporarily disable until we fix issues with ONNX unit tests
-                        else if (0 && can_be_squeezed(reshape, input_md, squeezed_axis))
+                        /*
+                        else if (can_be_squeezed(reshape, input_md, squeezed_axis))
                         {
                             auto output_md =
                                 mkldnn_utils::squeeze_blocked_md(input_md, squeezed_axis);
@@ -1445,8 +1446,7 @@ namespace ngraph
                             skip_reshape = true;
                             skip_input_reorder = true;
                         }
-                        // Temporarily disable until we fix issues with ONNX unit tests
-                        else if (0 && can_be_expanded(reshape, input_md, expanded_axis))
+                        else if (can_be_expanded(reshape, input_md, expanded_axis))
                         {
                             auto output_md =
                                 mkldnn_utils::expand_blocked_md(input_md, expanded_axis);
@@ -1454,6 +1454,7 @@ namespace ngraph
                             skip_reshape = true;
                             skip_input_reorder = true;
                         }
+                        */
                         else
                         {
                             if (!reshape->get_is_transpose())
