@@ -1289,7 +1289,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         }
 
         m_op_attrs.emplace_back(node->description(), out_names, in_names);
-
+        op_names.push_back(node->get_name());
         handler->second(this, node.get(), in, out);
 
         bool disable_caching = computes_result(node.get()) || possibly_overwritten(node.get());
@@ -1524,6 +1524,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         }
         else
         {
+            std::advance(functor, ctx->pc);
             for (const auto& p : enables)
             {
                 if (p(ctx) || ctx->first_iteration)
@@ -1534,7 +1535,15 @@ void runtime::cpu::CPU_ExternalFunction::build()
                     {
                         start_ts = cpu::Clock::now();
                     }
+
                     (*functor)(ctx);
+
+                    ctx->pc++;
+                    if (ctx->breakpoints.count(ctx->pc))
+                    {
+                        break;
+                    }
+
                     if (runtime::cpu::IsTracingEnabled())
                     {
                         ctx->op_durations[profiler_count++] =
@@ -1554,7 +1563,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
             }
         }
         ctx->first_iteration = false;
-
         if (runtime::cpu::IsTracingEnabled())
         {
             assert(m_op_attrs.size() == profiler_count);

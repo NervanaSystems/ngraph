@@ -81,6 +81,7 @@ namespace ngraph
             class CPU_ExternalFunction : public std::enable_shared_from_this<CPU_ExternalFunction>
             {
                 friend class CPU_Backend;
+                friend class CPU_CallFrame;
 
             public:
                 enum class CPUTensorRole
@@ -217,6 +218,7 @@ namespace ngraph
                 std::string m_function_name;
 
                 std::list<std::function<void(CPURuntimeContext*)>> functors;
+                std::vector<std::string> op_names;
                 std::list<std::function<bool(CPURuntimeContext*)>> enables;
                 std::list<std::pair<std::function<bool(CPURuntimeContext*)>, std::string>>
                     enable_nodename_list;

@@ -87,6 +87,24 @@ bool runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func)
     return true;
 }
 
+std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
+    runtime::cpu::CPU_Backend::get_call_frame(std::shared_ptr<Function> func)
+{
+    bool rc = true;
+    FunctionInstance& instance = m_function_map[func];
+    if (instance.m_external_function == nullptr)
+    {
+        rc = compile(func);
+    }
+
+    if (!rc)
+    {
+        throw ngraph_error("couldn't compile a function");
+    }
+
+    return instance.m_call_frame;
+}
+
 bool runtime::cpu::CPU_Backend::call(shared_ptr<Function> func,
                                      const vector<shared_ptr<runtime::Tensor>>& outputs,
                                      const vector<shared_ptr<runtime::Tensor>>& inputs)

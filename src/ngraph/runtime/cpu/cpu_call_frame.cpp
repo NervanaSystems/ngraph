@@ -79,6 +79,68 @@ void runtime::cpu::CPU_CallFrame::call(
     }
 }
 
+bool runtime::cpu::CPU_CallFrame::step(
+    const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
+    const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
+{
+    if (ctx->pc >= m_external_function->op_names.size())
+    {
+        return false;
+    }
+    //auto old_pc = ctx->pc;
+    //ctx->breakpoints.erase(old_pc);
+    //call
+    //ctx->breakpoints.insert(old_pc);
+    ctx->breakpoints.insert(ctx->pc + 1);
+    call(output_tvs, input_tvs);
+    ctx->breakpoints.erase(ctx->pc);
+    return true;
+}
+
+void runtime::cpu::CPU_CallFrame::run(
+    const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
+    const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
+{
+    ctx->pc = 0;
+    call(output_tvs, input_tvs);
+}
+
+bool runtime::cpu::CPU_CallFrame::add_breakpoint(std::shared_ptr<Node> op)
+{
+    auto i_pos = std::find(
+        m_external_function->op_names.begin(), m_external_function->op_names.end(), op->get_name());
+    if (i_pos != m_external_function->op_names.end())
+    {
+        auto pc = static_cast<size_t>(std::distance(m_external_function->op_names.begin(), i_pos));
+        ctx->breakpoints.insert(pc);
+        return true;
+    }
+    return false;
+}
+
+bool runtime::cpu::CPU_CallFrame::delete_breakpoint(std::shared_ptr<Node> op)
+{
+    auto i_pos = std::find(
+        m_external_function->op_names.begin(), m_external_function->op_names.end(), op->get_name());
+    if (i_pos != m_external_function->op_names.end())
+    {
+        auto pc = static_cast<size_t>(std::distance(m_external_function->op_names.begin(), i_pos));
+        ctx->breakpoints.erase(pc);
+        return true;
+    }
+    return false;
+}
+
+void* runtime::cpu::CPU_CallFrame::inspect(const std::string& tensor_descriptor_name)
+{
+    return m_external_function->tensor_data.at(tensor_descriptor_name);
+}
+
+void* runtime::cpu::CPU_CallFrame::inspect(std::shared_ptr<Node> op, size_t output_index)
+{
+    return m_external_function->tensor_data.at(op->get_name() + "_" + to_string(output_index));
+}
+
 void runtime::cpu::CPU_CallFrame::propagate_layouts(
     const std::vector<std::shared_ptr<runtime::Tensor>>& tvs,
     const LayoutDescriptorPtrs& layouts) const
@@ -103,6 +165,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
 {
     ctx = new CPURuntimeContext;
 
+    ctx->pc = 0;
     ctx->op_durations = nullptr;
     if (runtime::cpu::IsTracingEnabled())
     {

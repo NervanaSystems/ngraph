@@ -18,6 +18,7 @@
 
 #include <functional>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "ngraph/function.hpp"
@@ -51,6 +52,19 @@ namespace ngraph
                 /// Tuples will be expanded into their tensor views to build the call frame.
                 void call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+
+                void run(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                         const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+
+                bool step(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                          const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+
+                bool add_breakpoint(std::shared_ptr<Node> op);
+                bool delete_breakpoint(std::shared_ptr<Node> op);
+
+                void* inspect(const std::string& tensor_descriptor_name);
+
+                void* inspect(std::shared_ptr<Node> op, size_t output_index = 0);
 
                 void propagate_layouts(const std::vector<std::shared_ptr<runtime::Tensor>>& tvs,
                                        const LayoutDescriptorPtrs& layouts) const;
