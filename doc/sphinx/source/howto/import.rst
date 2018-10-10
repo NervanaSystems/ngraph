@@ -69,6 +69,7 @@ skip ahead to the next section, :ref:`install_ngonnx`.
       $ git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
       $ export PYBIND_HEADERS_PATH=$PWD/pybind11
       $ export NGRAPH_CPP_BUILD_PATH=~/ngraph_dist
+      $ export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib/:$LD_LIBRARY_PATH
       $ python3 setup.py bdist_wheel
       $ cd .. python3 -m venv onnx
       $ cd onnx/
