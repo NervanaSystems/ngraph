@@ -364,7 +364,6 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
     auto matcher = std::make_shared<pattern::Matcher>(conv, nullptr);
 
     NGRAPH_DEBUG << "In simplify_concat (group convolution) for " << n->get_name();
-    std::cout << "In simplify_concat (group convolution) for " << n->get_name() << std::endl;
 
     std::shared_ptr<Node> data;
     std::shared_ptr<Node> weights;
@@ -378,7 +377,6 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
     if (concat->get_concatenation_axis() != CHANNEL)
     {
         NGRAPH_DEBUG << "concatenating on an axis different from channel";
-        std::cout << "concatenating on an axis different from channel\n";
         return {nullptr};
     }
 
@@ -387,7 +385,6 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
         if (!matcher->match(arg))
         {
             NGRAPH_DEBUG << arg->get_name() << " doesn't match";
-            std::cout << arg->get_name() << " doesn't match\n";
             return {nullptr};
         }
 
@@ -395,13 +392,11 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
 
         if (arg->get_input_shape(0).size() != 4)
         {
-            std::cout << arg->get_name() << " convolution data's rank isn't equal to 4\n";
             NGRAPH_DEBUG << "convolution data's rank isn't equal to 4";
             return {nullptr};
         }
         if (!is_trivial_convolution(std::dynamic_pointer_cast<op::Convolution>(arg)))
         {
-            std::cout << arg->get_name() << " isn't trivial convolution\n";
             NGRAPH_DEBUG << arg->get_name() << " isn't trivial convolution";
             return {nullptr};
         }
@@ -537,17 +532,11 @@ bool runtime::cpu::pass::CPUBatchFusion::run_on_function(std::shared_ptr<Functio
             auto fused_node = fuse_batch_dot(n);
             if (fused_node)
             {
-                NGRAPH_DEBUG << "Replacing " << n->get_name() << " with fuse_batch_dot "
-                             << fused_node->get_name();
                 func->replace_node(n, fused_node);
                 modified = true;
             }
             else if (auto fused_conv = fuse_group_convolution(n))
             {
-                NGRAPH_DEBUG << "Replacing " << n->get_name() << " with fuse_group_convolution "
-                             << fused_conv->get_name();
-                std::cout << "Replacing " << n->get_name() << " with " << fused_conv->get_name()
-                          << std::endl;
                 func->replace_node(n, fused_conv);
                 modified = true;
             }

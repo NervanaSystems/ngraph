@@ -38,14 +38,17 @@ runtime::cpu::CPU_CallFrame::~CPU_CallFrame()
     cleanup_runtime_context();
 }
 
-void runtime::cpu::CPU_CallFrame::call(
+void runtime::cpu::CPU_CallFrame::inner_call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
 {
     vector<void*> inputs;
     vector<void*> outputs;
 
-    propagate_layouts(output_tvs, m_external_function->get_result_layout_descriptors());
+    if (ctx->pc == 0)
+    {
+        propagate_layouts(output_tvs, m_external_function->get_result_layout_descriptors());
+    }
 
     for (size_t i = 0; i < input_tvs.size(); i++)
     {
@@ -87,22 +90,19 @@ bool runtime::cpu::CPU_CallFrame::step(
     {
         return false;
     }
-    //auto old_pc = ctx->pc;
-    //ctx->breakpoints.erase(old_pc);
-    //call
-    //ctx->breakpoints.insert(old_pc);
+
     ctx->breakpoints.insert(ctx->pc + 1);
-    call(output_tvs, input_tvs);
+    inner_call(output_tvs, input_tvs);
     ctx->breakpoints.erase(ctx->pc);
     return true;
 }
 
-void runtime::cpu::CPU_CallFrame::run(
+void runtime::cpu::CPU_CallFrame::call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
 {
     ctx->pc = 0;
-    call(output_tvs, input_tvs);
+    inner_call(output_tvs, input_tvs);
 }
 
 bool runtime::cpu::CPU_CallFrame::add_breakpoint(std::shared_ptr<Node> op)

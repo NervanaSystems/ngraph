@@ -144,7 +144,7 @@ TEST(debugger, add_breakpoint)
         std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
 
     cf->add_breakpoint(neg);
-    cf->run({result}, {a, b});
+    cf->call({result}, {a, b});
     ASSERT_EQ(*static_cast<int*>(cf->inspect(add)), -777);
     ASSERT_EQ(*static_cast<int*>(cf->inspect(absn)), 777);
     cf->step({result}, {a, b});
@@ -183,7 +183,7 @@ TEST(debugger, delete_breakpoint)
     cf->delete_breakpoint(add);
     cf->delete_breakpoint(absn);
     cf->delete_breakpoint(neg);
-    cf->run({result}, {a, b});
+    cf->call({result}, {a, b});
     ASSERT_EQ(*static_cast<int*>(cf->inspect(add)), -777);
     ASSERT_EQ(*static_cast<int*>(cf->inspect(absn)), 777);
     ASSERT_EQ(*static_cast<int*>(cf->inspect(neg)), -777);
@@ -221,5 +221,5 @@ TEST(debugger, while_stepping)
     ASSERT_EQ(*static_cast<int*>(cf->inspect(add)), -777);
     ASSERT_EQ(*static_cast<int*>(cf->inspect(absn)), 777);
     ASSERT_EQ(*static_cast<int*>(cf->inspect(neg)), -777);
-    cf->run({result}, {a, b});
+    cf->call({result}, {a, b});
 }

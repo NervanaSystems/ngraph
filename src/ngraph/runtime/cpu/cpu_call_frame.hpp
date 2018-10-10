@@ -50,19 +50,15 @@ namespace ngraph
                 /// \brief Invoke the function with values matching the signature of the function.
                 ///
                 /// Tuples will be expanded into their tensor views to build the call frame.
+
                 void call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
-
-                void run(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                         const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
                 bool step(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
                 bool add_breakpoint(std::shared_ptr<Node> op);
                 bool delete_breakpoint(std::shared_ptr<Node> op);
-
-                void* inspect(const std::string& tensor_descriptor_name);
 
                 void* inspect(std::shared_ptr<Node> op, size_t output_index = 0);
 
@@ -76,6 +72,11 @@ namespace ngraph
                 CPU_CallFrame(const CPU_CallFrame&) = delete;
                 CPU_CallFrame(CPU_CallFrame&&) = delete;
                 CPU_CallFrame& operator=(const CPU_CallFrame&) = delete;
+
+                void* inspect(const std::string& tensor_descriptor_name);
+
+                void inner_call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                                const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
                 std::shared_ptr<CPU_ExternalFunction> m_external_function;
                 EntryPoint m_compiled_function;
