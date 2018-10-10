@@ -1720,7 +1720,7 @@ TEST(type_prop, slice_partial_arg_rank_static_dynamic_attribs_rank_mismatches_ar
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Input rank for slice does not match the "
+                             std::string("Input rank does not match the "
                                          "rank of the lower bounds (Coordinate{1, 2, "
                                          "3, 4}), upper bounds (Coordinate{1, 3, 5, "
                                          "7}), and strides (Strides{1, 1, 1, 2})"));
@@ -1894,7 +1894,8 @@ TEST(type_prop, replace_slice_deduce_vector_invalid_strides)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(), std::string("Rank of strides (2) does not match rank of argument (1)"));
+            error.what(), std::string("Ranks of lower bounds (Coordinate{0}), upper bounds "
+                                      "(Coordinate{7}) and strides (Strides{1, 2}) do not match"));
     }
     catch (...)
     {
@@ -1957,9 +1958,10 @@ TEST(type_prop, replace_slice_deduce_matrix_slice_shape_mismatch)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Shape of replacement tensor (Shape{3, 6}) does not match "
-                                         "the slice shape (Shape{4, 6})"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Shape of replacement tensor ({3,6}) does not match the slice shape ({4,6})"));
     }
     catch (...)
     {
@@ -1983,7 +1985,7 @@ TEST(type_prop, replace_slice_deduce_matrix_slice_shape_mismatch_strided)
         EXPECT_HAS_SUBSTRING(
             error.what(),
             std::string(
-                "Shape of replacement tensor (Shape{4, 6}) does not match the slice shape"));
+                "Shape of replacement tensor ({4,6}) does not match the slice shape ({4,3})"));
     }
     catch (...)
     {
@@ -2092,8 +2094,8 @@ TEST(type_prop, replace_slice_deduce_matrix_lower_missing)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Rank of lower bounds (1) does not match rank of argument (2)"));
+            error.what(), std::string("Ranks of lower bounds (Coordinate{0}), upper bounds "
+                                      "(Coordinate{5, 5}) and strides (Strides{1}) do not match"));
     }
     catch (...)
     {
@@ -2114,8 +2116,8 @@ TEST(type_prop, replace_slice_deduce_matrix_upper_missing)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Rank of upper bounds (1) does not match rank of argument (2)"));
+            error.what(), std::string("Ranks of lower bounds (Coordinate{0, 0}), upper bounds "
+                                      "(Coordinate{5}) and strides (Strides{1, 1}) do not match"));
     }
     catch (...)
     {
@@ -2136,9 +2138,9 @@ TEST(type_prop, replace_slice_deduce_matrix_lower_extra)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Rank of lower bounds (3) does not match rank of argument (2)"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Ranks of lower bounds (Coordinate{0, 0, "
+                                                       "0}), upper bounds (Coordinate{5, 5}) and "
+                                                       "strides (Strides{1, 1, 1}) do not match"));
     }
     catch (...)
     {
@@ -2159,9 +2161,9 @@ TEST(type_prop, replace_slice_deduce_matrix_upper_extra)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Rank of upper bounds (3) does not match rank of argument (2)"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Ranks of lower bounds (Coordinate{0, 0}), "
+                                                       "upper bounds (Coordinate{5, 5, 5}) and "
+                                                       "strides (Strides{1, 1}) do not match"));
     }
     catch (...)
     {
