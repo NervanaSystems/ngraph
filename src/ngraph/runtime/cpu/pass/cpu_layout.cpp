@@ -1533,7 +1533,18 @@ namespace ngraph
                     }
                     else
                     {
-                        set_native_layouts(external_function, node);
+                        if (mkldnn_utils::get_input_mkldnn_md(node.get(), 0).data.format ==
+                            mkldnn_format_undef)
+                        {
+                            set_native_layouts(external_function, node);
+                        }
+                        else
+                        {
+                            auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                            vector<memory::desc> o_mds;
+                            o_mds.push_back(input_md);
+                            set_output_layouts(node, o_mds);
+                        }
                     }
                 }
 

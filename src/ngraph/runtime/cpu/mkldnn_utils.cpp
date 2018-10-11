@@ -545,11 +545,12 @@ memory::desc runtime::cpu::mkldnn_utils::expand_blocked_md(const memory::desc& i
             }
             else
             {
-                md.layout_desc.blocking.strides[1][j] = 0;
+                md.layout_desc.blocking.strides[1][0] =
+                    in.data.layout_desc.blocking.strides[0][in.data.ndims - 1];
                 size_t nelems = 1;
                 for (size_t idx = 0; idx < in.data.ndims; idx++)
                     nelems *= in.data.dims[idx];
-                md.layout_desc.blocking.strides[0][j] = nelems;
+                md.layout_desc.blocking.strides[0][0] = nelems;
             }
         }
         else
