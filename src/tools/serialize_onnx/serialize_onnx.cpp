@@ -64,13 +64,14 @@ int main(int argc, char** argv)
     }
 
     ifstream f(input);
-    if (f)
+    if (f.is_open())
     {
         shared_ptr<ngraph::Function> function = ngraph::onnx_import::import_onnx_function(input);
 
         ngraph::stopwatch timer;
         timer.start();
         ngraph::serialize(output, function, 2);
+        timer.stop();
         cout << "serialize took   " << timer.get_milliseconds() << "ms\n";
     }
     else

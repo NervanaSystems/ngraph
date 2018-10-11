@@ -16,5 +16,4 @@
 
 add_executable(serialize_onnx serialize_onnx.cpp)
 add_dependencies(serialize_onnx ngraph)
-add_dependencies(serialize_onnx onnx_import_interface)
 target_link_libraries(serialize_onnx ngraph)
