@@ -89,7 +89,7 @@ bool runtime::hybrid::HYBRIDBackend::call(shared_ptr<Function> function,
     validate_call(function, outputs, inputs);
 
     compile(function);
-    FunctionInstance& instance = m_function_map[function];
+    // FunctionInstance& instance = m_function_map[function];
 
     // // convert inputs to HostTensorView
     // vector<shared_ptr<runtime::HostTensorView>> func_inputs;
