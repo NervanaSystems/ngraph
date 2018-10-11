@@ -9986,7 +9986,6 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize)
     backend->call_with_validate(f, {y}, {x});
     EXPECT_EQ((vector<output_c_type>{1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7}),
               read_vector<output_c_type>(y));
-    NGRAPH_INFO;
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, dequantize)

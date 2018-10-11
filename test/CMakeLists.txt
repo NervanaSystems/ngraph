@@ -83,7 +83,7 @@ add_subdirectory(util)
 
 # backend specific test files must meet the following requirements:
 # 1) The must be named <name>.in.cpp
-# 2) They must be in the test/backend directory
+# 2) They must be in the test directory
 # All such files are configured via cmake which replaces all instances of cmake variables
 # such as ${BACKEND_NAME} with their values, such as CPU, GPU, or INTERPRETER.
 set(MULTI_TEST_SRC
