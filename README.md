@@ -1,5 +1,8 @@
 # nGraph Library [![Build Status][build-status-badge]][build-status]
 
+## Release Notes 
+
+See the [Release Notes] for recent changes.
 
 Welcome to the open-source repository for the Intel® nGraph™ Library. Our code 
 base provides a Compiler and runtime suite of tools (APIs) designed to give 
@@ -24,18 +27,30 @@ whatever scenario you need.
 nGraph provides both  a C++ API for framework developers and a Python API which 
 can run inference on models imported from ONNX. 
 
+
+|  Framework     | bridge available? | ONNX support?  |
+|----------------|-------------------|----------------|
+| TensorFlow*    | yes               | yes            |
+| MXNet*         | yes               | yes            |
+| PaddlePaddle   | yes               | yes            |   
+| PyTorch*       | not required      | yes            |
+| Chainer*       | not required      | yes            |
+| CNTK*          | not required      | yes            |
+| Caffe2*        | not rquired       | yes            |
+
+
+| Backend                                       | current support   | future support |
+|-----------------------------------------------|-------------------|----------------|
+| Intel® Architecture CPU                       | yes               | yes            |
+| Intel® Nervana™ Neural Network Processor (NNP)| yes               | yes            |
+| Intel [Movidius™ Myriad™ 2] VPUs              | coming soon       | yes            |
+| Intel® Architecture GPUs                      | via PlaidML       | yes            |
+| AMD* GPUs                                     | via PlaidML       | yes            |
+| NVIDIA* GPUs                                  | via PlaidML       | some           | 
+| Field Programmable Gate Arrays (FPGA)         | no                | yes            |
+
+
 ![nGraph ecosystem][ngraph-ecosystem]
-
-
-|Framework   | bridge available? | ONNX support?  |
-|------------|-------------------|----------------|
-| neon       | yes               | yes            |
-| MXNet*     | yes               | yes            |
-| TensorFlow*| yes               | yes            |
-| PyTorch*   | not yet           | yes            |
-| Chainer*   | not yet           | yes            |
-| CNTK*      | not yet           | yes            |
-| Caffe2*    | not yet           | yes            |
 
 
 ## Documentation
@@ -72,12 +87,13 @@ to improve the Library:
 
 [install]: http://ngraph.nervanasys.com/docs/latest/buildlb.html
 [framework integration guides]: http://ngraph.nervanasys.com/docs/latest/framework-integration-guides.html
+[release notes]: http://ngraph.nervanasys.com/docs/latest/project/release-notes.html
 [Github issues]: https://github.com/NervanaSystems/ngraph/issues
 [contrib guide]: http://ngraph.nervanasys.com/docs/latest/project/code-contributor-README.html
 [pull request]: https://github.com/NervanaSystems/ngraph/pulls
 [how to import]: http://ngraph.nervanasys.com/docs/latest/howto/import.html
-[ngraph-ecosystem]: doc/sphinx/source/graphics/ngraph-ecosystem.png "nGraph Ecosystem"
+[ngraph-ecosystem]: doc/sphinx/source/graphics/599px-Intel-ngraph-ecosystem.png "nGraph Ecosystem"
 [build-status]: https://travis-ci.org/NervanaSystems/ngraph/branches
 [build-status-badge]: https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master
 [develop-without-lockin]: doc/sphinx/source/graphics/develop-without-lockin.png "Develop on any part of the stack wtihout lockin"
-[Movidius]:https://www.movidius.com/solutions/vision-processing-unit
+[Movidius™ Myriad™ 2]:https://www.movidius.com/solutions/vision-processing-unit
