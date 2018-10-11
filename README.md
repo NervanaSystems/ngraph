@@ -33,10 +33,10 @@ See the [Release Notes] for recent changes.
 | TensorFlow*    | yes               | yes            |
 | MXNet*         | yes               | yes            |
 | PaddlePaddle   | yes               | yes            |   
-| PyTorch*       | not required      | yes            |
-| Chainer*       | not required      | yes            |
-| CNTK*          | not required      | yes            |
-| Caffe2*        | not rquired       | yes            |
+| PyTorch*       | no                | yes            |
+| Chainer*       | no                | yes            |
+| CNTK*          | no                | yes            |
+| Caffe2*        | no                | yes            |
 
 
 | Backend                                       | current support   | future support |

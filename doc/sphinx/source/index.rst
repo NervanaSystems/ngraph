@@ -72,8 +72,8 @@ Python-based API. See the `ngraph onnx companion tool`_ to get started.
    TensorFlow, Yes, Yes
    MXNet, Yes, Yes
    PaddlePaddle, Coming Soon, Yes
-   PyTorch, via ONNX, Yes
-   CNTK, via ONNX, Yes
+   PyTorch, No, Yes
+   CNTK, No, Yes
    Other, Custom, Custom
 
 

@@ -12,5 +12,3 @@ API Changes
 
 .. literalinclude:: ../../../../changes.md
 
-
-
