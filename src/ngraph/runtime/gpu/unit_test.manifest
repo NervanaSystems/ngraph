@@ -29,8 +29,6 @@ backwards_maxpool_n2_c1_hw5_3x3_str2_max
 backwards_avgpool_n1_c1_hw2x2
 backwards_avgpool_n1_c1_hw4x4
 backwards_avgpool_n2_c2_hw4x4
-max_pool_3d
-avg_pool_3d
 argmin_trivial
 argmax_trivial
 topk_1d_max_all
