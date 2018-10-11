@@ -83,6 +83,7 @@ add_subdirectory(util)
 # backend specific test files must meet the following requirements:
 # 1) The must be named <name>.in.cpp
 # 2) They must be in the test directory
+# 3) add the line `static string s_manifest = "${MANIFEST}";` to your cpp file
 # All such files are configured via cmake which replaces all instances of cmake variables
 # such as ${BACKEND_NAME} with their values, such as CPU, GPU, or INTERPRETER.
 set(MULTI_TEST_SRC
@@ -105,6 +106,9 @@ foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
     else()
         set(TEST_LOOPS 2)
     endif()
+
+    string(TOLOWER ${BACKEND_NAME} BACKEND_DIR)
+    set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
 
     foreach(TEST_SRC ${MULTI_TEST_SRC})
         string(REPLACE ".in." "_${BACKEND_NAME}." TARGET_NAME ${TEST_SRC})
