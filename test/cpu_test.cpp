@@ -195,8 +195,6 @@ TEST(cpu_test, mkldnn_layouts)
     EXPECT_EQ(vector<float>{expected_result}, rv);
 }
 
-// Temporarily disable until we fix issues with ONNX unit tests
-#if 0
 TEST(cpu_test, reshape_squeeze)
 {
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -359,4 +357,3 @@ TEST(cpu_test, reshape_expand_squeeze)
     }
     EXPECT_LE(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 4);
 }
-#endif

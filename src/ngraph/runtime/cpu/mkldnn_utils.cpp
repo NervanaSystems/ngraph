@@ -529,7 +529,7 @@ memory::desc runtime::cpu::mkldnn_utils::expand_blocked_md(const memory::desc& i
     size_t k = 0;
     for (size_t i = 0, j = 0; j < md.ndims; j++)
     {
-        if (j == axis_list[k])
+        if (k < axis_list.size() && j == axis_list[k])
         {
             k++;
             md.dims[j] = 1;

@@ -1436,8 +1436,6 @@ namespace ngraph
                             skip_reshape = true;
                             skip_input_reorder = true;
                         }
-                        // Temporarily disable until we fix issues with ONNX unit tests
-                        /*
                         else if (can_be_squeezed(reshape, input_md, squeezed_axis))
                         {
                             auto output_md =
@@ -1454,7 +1452,6 @@ namespace ngraph
                             skip_reshape = true;
                             skip_input_reorder = true;
                         }
-                        */
                         else
                         {
                             if (!reshape->get_is_transpose())
