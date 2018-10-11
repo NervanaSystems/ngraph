@@ -1,8 +1,5 @@
 # nGraph Library [![Build Status][build-status-badge]][build-status]
 
-## Release Notes 
-
-See the [Release Notes] for recent changes.
 
 Welcome to the open-source repository for the Intel® nGraph™ Library. Our code 
 base provides a Compiler and runtime suite of tools (APIs) designed to give 
@@ -26,6 +23,8 @@ whatever scenario you need.
 
 nGraph provides both  a C++ API for framework developers and a Python API which 
 can run inference on models imported from ONNX. 
+
+See the [Release Notes] for recent changes.
 
 
 |  Framework     | bridge available? | ONNX support?  |
