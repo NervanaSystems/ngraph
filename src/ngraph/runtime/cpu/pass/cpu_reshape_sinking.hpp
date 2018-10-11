@@ -16,27 +16,22 @@
 
 #pragma once
 
-#include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    namespace op
+    namespace runtime
     {
-        /// \brief Elementwise hyperbolic sine (sinh) operation.
-        class Sinh : public util::UnaryElementwiseArithmetic
+        namespace cpu
         {
-        public:
-            /// \brief Constructs a hyperbolic sine operation.
-            ///
-            /// \param arg Node that produces the input tensor.
-            Sinh(const std::shared_ptr<Node>& arg);
-
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-        };
+            namespace pass
+            {
+                class CPUReshapeSinking : public ngraph::pass::FunctionPass
+                {
+                public:
+                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                };
+            }
+        }
     }
 }
