@@ -6568,3 +6568,471 @@ TEST(type_prop, topk_invalid_k)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, quantize_f32_to_i8_nchw_per_channel_ok)
+{
+    Shape batch_shape{64, 3, 480, 640};
+    Shape scale_shape{3};
+    Shape offset_shape{3};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{1};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+
+    ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
+    ASSERT_EQ(quant->get_output_shape(0), batch_shape);
+}
+
+TEST(type_prop, quantize_f32_to_i8_nchw_per_image_ok)
+{
+    Shape batch_shape{64, 3, 480, 640};
+    Shape scale_shape{64};
+    Shape offset_shape{64};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{0};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+
+    ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
+    ASSERT_EQ(quant->get_output_shape(0), batch_shape);
+}
+
+TEST(type_prop, quantize_f32_to_i8_nchw_per_row_ok)
+{
+    Shape batch_shape{64, 3, 480, 640};
+    Shape scale_shape{480};
+    Shape offset_shape{480};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{2};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+
+    ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
+    ASSERT_EQ(quant->get_output_shape(0), batch_shape);
+}
+
+TEST(type_prop, quantize_f32_to_i8_nchw_per_image_channel_ok)
+{
+    Shape batch_shape{64, 3, 480, 640};
+    Shape scale_shape{64, 3};
+    Shape offset_shape{64, 3};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{0, 1};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+
+    ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
+    ASSERT_EQ(quant->get_output_shape(0), batch_shape);
+}
+
+TEST(type_prop, quantize_f32_to_i8_nchw_whole_batch_ok)
+{
+    Shape batch_shape{64, 3, 480, 640};
+    Shape scale_shape{};
+    Shape offset_shape{};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+
+    ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
+    ASSERT_EQ(quant->get_output_shape(0), batch_shape);
+}
+
+TEST(type_prop, quantize_f64_to_i8_ok)
+{
+    Shape batch_shape{64, 3, 480, 640};
+    Shape scale_shape{};
+    Shape offset_shape{};
+    element::Type unquantized_type = element::f64;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+
+    ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
+    ASSERT_EQ(quant->get_output_shape(0), batch_shape);
+}
+
+TEST(type_prop, quantize_f64_to_u8_ok)
+{
+    Shape batch_shape{64, 3, 480, 640};
+    Shape scale_shape{};
+    Shape offset_shape{};
+    element::Type unquantized_type = element::f64;
+    element::Type quantized_type = element::u8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+
+    ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
+    ASSERT_EQ(quant->get_output_shape(0), batch_shape);
+}
+
+TEST(type_prop, quantize_i8_to_u8_fails)
+{
+    Shape batch_shape{64, 3, 480, 640};
+    Shape scale_shape{};
+    Shape offset_shape{};
+    element::Type unquantized_type = element::i8;
+    element::Type quantized_type = element::u8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+
+    try
+    {
+        auto quant =
+            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+        FAIL() << "Attempt to quantize non-floating point type not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Input element type (element::Type{8, 0, 1, 1, \"int8_t\"}) must be a "
+                             "floating point number");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, quantize_f32_to_f32_fails)
+{
+    Shape batch_shape{64, 3, 480, 640};
+    Shape scale_shape{};
+    Shape offset_shape{};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::f32;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+
+    try
+    {
+        auto quant =
+            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+        FAIL() << "Attempt to quantize to non-quantized type not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Output element type (element::Type{32, 1, 1, 0, \"float\"}) must be a quantized type");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, quantize_batch_scale_type_mismatch_fails)
+{
+    Shape batch_shape{64, 3, 480, 640};
+    Shape scale_shape{};
+    Shape offset_shape{};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = element::f64;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+
+    try
+    {
+        auto quant =
+            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+        FAIL() << "Mismatch of batch and scale element types not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Scale element type (element::Type{64, 1, 1, 0, \"double\"}) must "
+                             "match input element type (element::Type{32, 1, 1, 0, \"float\"})");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, quantize_offset_type_mismatch_fails)
+{
+    Shape batch_shape{64, 3, 480, 640};
+    Shape scale_shape{};
+    Shape offset_shape{};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = element::u8;
+    AxisSet axes{};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+
+    try
+    {
+        auto quant =
+            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+        FAIL() << "Mismatch of offset element type with offset argument not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Offset element type (element::Type{8, 0, 0, 1, \"uint8_t\"}) must "
+                             "match output element type (element::Type{8, 0, 1, 1, \"int8_t\"})");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, quantize_oob_axis_fails)
+{
+    Shape batch_shape{64, 3, 480, 640};
+    Shape scale_shape{320};
+    Shape offset_shape{320};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{3, 4};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+
+    try
+    {
+        auto quant =
+            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+        FAIL() << "Out-of-bounds quantization axis not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Quantization axis (4) must be less than input shape rank (4)");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, quantize_scale_shape_mismatch_same_rank)
+{
+    Shape batch_shape{64, 3, 480, 640};
+    Shape scale_shape{64, 4};
+    Shape offset_shape{64, 3};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{0, 1};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+
+    try
+    {
+        auto quant =
+            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+        FAIL() << "Mismatch of scale argument shape with required shape not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Scale shape (Shape{64, 4}) must match input shape projected along "
+                             "the quantization axes (Shape{64, 3})");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, quantize_scale_shape_mismatch_different_rank)
+{
+    Shape batch_shape{64, 3, 480, 640};
+    Shape scale_shape{64, 3, 2};
+    Shape offset_shape{64, 3};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{0, 1};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+
+    try
+    {
+        auto quant =
+            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+        FAIL() << "Mismatch of scale argument shape with required shape not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Scale shape (Shape{64, 3, 2}) must match input shape projected along "
+                             "the quantization axes (Shape{64, 3})");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, quantize_offset_shape_mismatch_same_rank)
+{
+    Shape batch_shape{64, 3, 480, 640};
+    Shape scale_shape{64, 3};
+    Shape offset_shape{64, 4};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{0, 1};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+
+    try
+    {
+        auto quant =
+            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+        FAIL() << "Mismatch of offset argument shape with required shape not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Offset shape (Shape{64, 4}) must match input shape projected along "
+                             "the quantization axes (Shape{64, 3})");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, quantize_offset_shape_mismatch_different_rank)
+{
+    Shape batch_shape{64, 3, 480, 640};
+    Shape scale_shape{64, 3};
+    Shape offset_shape{64, 3, 2};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{0, 1};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+
+    try
+    {
+        auto quant =
+            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+        FAIL() << "Mismatch of offset argument shape with required shape not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Offset shape (Shape{64, 3, 2}) must match input shape projected "
+                             "along the quantization axes (Shape{64, 3})");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
