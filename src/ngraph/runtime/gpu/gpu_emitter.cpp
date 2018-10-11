@@ -792,13 +792,17 @@ void runtime::gpu::GPU_Emitter::emit_OneHot(EMIT_ARGS)
     auto onehot = static_cast<const ngraph::op::OneHot*>(node);
     auto arg_shape = args[0].get_shape();
     auto result_shape = out[0].get_shape();
+    auto output_datatype_size = out[0].get_element_type().size();
     size_t idx = onehot->get_one_hot_axis();
 
     writer.block_begin();
     {
         auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
-        auto index = cuda_emitter->build_onehot(
-            {{args[0].get_type(), out[0].get_type()}}, arg_shape, result_shape, idx);
+        auto index = cuda_emitter->build_onehot({{args[0].get_type(), out[0].get_type()}},
+                                                arg_shape,
+                                                result_shape,
+                                                idx,
+                                                output_datatype_size);
 
         writer.block_begin();
         writer << "void* input[] = {" << node_names(args) << "};\n";
@@ -827,12 +831,12 @@ void runtime::gpu::GPU_Emitter::emit_Pad(EMIT_ARGS)
 
         auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
 
-        auto pad_index = cuda_emitter->build_pad({{args[0].get_type(), out[0].get_type()}},
-                                                 input_shape,
-                                                 output_shape,
-                                                 padding_below,
-                                                 padding_above,
-                                                 padding_interior);
+        auto pad_index = cuda_emitter->build_pad_fill(
+            {{args[0].get_type(), args[1].get_type(), out[0].get_type()}},
+            input_shape,
+            output_shape,
+            padding_below,
+            padding_interior);
         writer << "void* input[] = {" << node_names(args) << "};\n";
         writer << "void* output[] = {" << node_names(out) << "};\n";
         writer << "gpu::invoke_primitive(ctx, " << pad_index << ", input, output);\n";

@@ -63,7 +63,7 @@ endif()
 
 if (NGRAPH_CPU_ENABLE)
     set(SRC ${SRC} core_fusion.cpp quantize_cpu.cpp)
-    set(SRC ${SRC} backend_performance.cpp cpu_fusion.cpp cpu_test.cpp)
+    set(SRC ${SRC} backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_reshape_sinking.cpp)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
 endif()

@@ -418,8 +418,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
     Shape padding_interior(data_dilation_strides);
 
     size_t idx_workspace = std::numeric_limits<size_t>::max();
-    size_t pad_dynamic_index = std::numeric_limits<size_t>::max();
-    bool can_find_algo = true;
+    size_t pad_index = std::numeric_limits<size_t>::max();
+    auto algo_policy = algo_search::EXPLICIT;
     if (pad_required || is_deconvolution)
     {
         input_shape_padded = runtime::gpu::get_padded_shape(
@@ -431,8 +431,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
         idx_workspace = allocator.reserve_workspace(temp_size, true);
 
         auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
-        pad_dynamic_index =
-            cuda_emitter->build_pad_dynamic({{args[0].get_element_type().c_type_string(),
+        pad_index = cuda_emitter->build_pad({{args[0].get_element_type().c_type_string(),
                                               out[0].get_element_type().c_type_string()}},
                                             input_shape,
                                             input_shape_padded,
@@ -443,7 +442,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
         // ensure cudnn does not assume padding
         std::fill(padding_below.begin(), padding_below.end(), 0);
         // padding will make find_algorithm for convolution get wrong result
-        can_find_algo = false;
+        algo_policy = algo_search::NONE;
     }
 
     size_t conv_index = build_convolution(dtype,
@@ -453,16 +452,16 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
                                           window_movement_strides,
                                           window_dilation_strides,
                                           padding_below,
-                                          can_find_algo);
+                                          algo_policy);
 
     std::unique_ptr<gpu::primitive> kernel_launch(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
             if (idx_workspace != std::numeric_limits<size_t>::max() &&
-                pad_dynamic_index != std::numeric_limits<size_t>::max())
+                pad_index != std::numeric_limits<size_t>::max())
             {
                 void* pad_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, idx_workspace);
                 gpu::invoke_primitive(m_ctx,
-                                      pad_dynamic_index,
+                                      pad_index,
                                       std::vector<void*>{inputs[0]}.data(),
                                       std::vector<void*>{pad_buffer}.data());
                 gpu::invoke_primitive(
@@ -542,9 +541,9 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
     Shape padding_interior(data_dilation_strides);
 
     size_t idx_workspace = std::numeric_limits<size_t>::max();
-    size_t pad_dynamic_index = std::numeric_limits<size_t>::max();
+    size_t pad_index = std::numeric_limits<size_t>::max();
     size_t slice_index = std::numeric_limits<size_t>::max();
-    bool can_find_algo = true;
+    auto algo_policy = algo_search::EXPLICIT;
     if (pad_required || is_deconvolution)
     {
         output_shape_padded =
@@ -556,11 +555,11 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
         idx_workspace = allocator.reserve_workspace(temp_size, true);
 
         auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
-        pad_dynamic_index = cuda_emitter->build_pad_dynamic({{input_type, output_type}},
-                                                            output_shape,
-                                                            output_shape_padded,
-                                                            padding_below,
-                                                            padding_interior);
+        pad_index = cuda_emitter->build_pad({{input_type, output_type}},
+                                            output_shape,
+                                            output_shape_padded,
+                                            padding_below,
+                                            padding_interior);
 
         slice_index = cuda_emitter->build_slice({{input_type, output_type}},
                                                 output_shape_padded,
@@ -572,7 +571,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
         // ensure cudnn does not assume padding
         std::fill(padding_below.begin(), padding_below.end(), 0);
         // padding will make find_algorithm for convolution get wrong result
-        can_find_algo = false;
+        algo_policy = algo_search::NONE;
     }
 
     size_t conv_index = build_convolution_backward_data(output_type,
@@ -582,17 +581,17 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
                                                         window_movement_strides,
                                                         window_dilation_strides,
                                                         padding_below,
-                                                        can_find_algo);
+                                                        algo_policy);
 
     std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](void** inputs,
                                                                          void** outputs) mutable {
         if (idx_workspace != std::numeric_limits<size_t>::max() &&
-            pad_dynamic_index != std::numeric_limits<size_t>::max() &&
+            pad_index != std::numeric_limits<size_t>::max() &&
             slice_index != std::numeric_limits<size_t>::max())
         {
             void* pad_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, idx_workspace);
             gpu::invoke_primitive(m_ctx,
-                                  pad_dynamic_index,
+                                  pad_index,
                                   std::vector<void*>{inputs[0]}.data(),
                                   std::vector<void*>{pad_buffer}.data());
             gpu::invoke_primitive(m_ctx, conv_index, inputs, std::vector<void*>{pad_buffer}.data());
@@ -662,8 +661,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
     Shape padding_interior(data_dilation_strides);
 
     size_t idx_workspace = std::numeric_limits<size_t>::max();
-    size_t pad_dynamic_index = std::numeric_limits<size_t>::max();
-    bool can_find_algo = true;
+    size_t pad_index = std::numeric_limits<size_t>::max();
+    auto algo_policy = algo_search::EXPLICIT;
     if (pad_required || is_deconvolution)
     {
         input_shape_padded = runtime::gpu::get_padded_shape(
@@ -675,17 +674,17 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
         idx_workspace = allocator.reserve_workspace(temp_size, true);
 
         auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
-        pad_dynamic_index = cuda_emitter->build_pad_dynamic({{input_type, output_type}},
-                                                            input_shape_0,
-                                                            input_shape_padded,
-                                                            padding_below,
-                                                            padding_interior);
+        pad_index = cuda_emitter->build_pad({{input_type, output_type}},
+                                            input_shape_0,
+                                            input_shape_padded,
+                                            padding_below,
+                                            padding_interior);
 
         // asymetric padding has been applied, zero out padding vectors to
         // ensure cudnn does not assume padding
         std::fill(padding_below.begin(), padding_below.end(), 0);
         // padding will make find_algorithm for convolution get wrong result
-        can_find_algo = false;
+        algo_policy = algo_search::NONE;
     }
 
     size_t conv_index = build_convolution_backward_filter(output_type,
@@ -695,16 +694,16 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
                                                           window_movement_strides,
                                                           window_dilation_strides,
                                                           padding_below,
-                                                          can_find_algo);
+                                                          algo_policy);
 
     std::unique_ptr<gpu::primitive> kernel_launch(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
             if (idx_workspace != std::numeric_limits<size_t>::max() &&
-                pad_dynamic_index != std::numeric_limits<size_t>::max())
+                pad_index != std::numeric_limits<size_t>::max())
             {
                 void* pad_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, idx_workspace);
                 gpu::invoke_primitive(m_ctx,
-                                      pad_dynamic_index,
+                                      pad_index,
                                       std::vector<void*>{inputs[0]}.data(),
                                       std::vector<void*>{pad_buffer}.data());
                 gpu::invoke_primitive(
@@ -768,11 +767,11 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
                                                    padded_size * args[0].get_element_type().size());
 
         auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
-        pad_index = cuda_emitter->build_pad_dynamic({{input_type, output_type}},
-                                                    input_shape,
-                                                    input_shape_padded,
-                                                    padding_below,
-                                                    padding_interior);
+        pad_index = cuda_emitter->build_pad({{input_type, output_type}},
+                                            input_shape,
+                                            input_shape_padded,
+                                            padding_below,
+                                            padding_interior);
 
         // asymetric padding has been applied, zero out padding vectors to
         // ensure cuDNN does not assume padding during pooling
@@ -1156,9 +1155,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
             debug_sync();
         }});
 
-    primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
-    m_primitive_emitter->cache(hash, primitive_index);
-    return primitive_index;
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 #endif
 
@@ -1169,7 +1166,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const std::string& dtype,
                                                      const Strides& window_movement_strides,
                                                      const Strides& window_dilation_strides,
                                                      const Shape& padding_below,
-                                                     const bool find_algo)
+                                                     const algo_search find_algo)
 {
     cudnnDataType_t data_type = get_cudnn_datatype(dtype);
     const cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
@@ -1182,18 +1179,29 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const std::string& dtype,
     auto& filter_desc = get_cudnn_filter_descriptor(input_filter_shape, data_type, tensor_format);
     auto& conv_desc = get_cudnn_convolution_descriptor(
         padding_below, window_movement_strides, window_dilation_strides, mode, data_type);
-
     cudnnConvolutionFwdAlgo_t conv_fwd_algo = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM;
-    if (find_algo)
+
+    if (find_algo != algo_search::NONE)
     {
-        CUDNN_SAFE_CALL(cudnnGetConvolutionForwardAlgorithm(*m_ctx->cudnn_handle,
-                                                            tensor_desc_0,
-                                                            filter_desc,
-                                                            conv_desc,
-                                                            tensor_desc_1,
-                                                            CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
-                                                            /*memoryLimitInBytes=*/0,
-                                                            &conv_fwd_algo));
+        int num_algos;
+        int max_algos = 0;
+        CUDNN_SAFE_CALL(
+            cudnnGetConvolutionForwardAlgorithmMaxCount(*m_ctx->cudnn_handle, &max_algos));
+        std::vector<cudnnConvolutionFwdAlgoPerf_t> results(max_algos);
+        auto cudnn_algo_search = (find_algo == algo_search::EXPLICIT)
+                                     ? cudnnFindConvolutionForwardAlgorithm
+                                     : cudnnGetConvolutionForwardAlgorithm_v7;
+        CUDNN_SAFE_CALL((*cudnn_algo_search)(*m_ctx->cudnn_handle,
+                                             tensor_desc_0,
+                                             filter_desc,
+                                             conv_desc,
+                                             tensor_desc_1,
+                                             static_cast<int>(results.size()),
+                                             &num_algos,
+                                             results.data()));
+        results.resize(num_algos);
+        conv_fwd_algo =
+            select_cudnn_algo<cudnnConvolutionFwdAlgoPerf_t, cudnnConvolutionFwdAlgo_t>(results);
     }
 
     void* alpha = m_host_parameters.allocate_by_datatype(data_type, 1.0);
@@ -1244,7 +1252,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
     const Strides& window_movement_strides,
     const Strides& window_dilation_strides,
     const Shape& padding_below,
-    const bool find_algo)
+    const algo_search find_algo)
 {
     const cudnnDataType_t data_type = get_cudnn_datatype(dtype);
     const cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
@@ -1257,18 +1265,30 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
     auto& filter_desc = get_cudnn_filter_descriptor(input_filter_shape, data_type, tensor_format);
     auto& conv_desc = get_cudnn_convolution_descriptor(
         padding_below, window_movement_strides, window_dilation_strides, mode, data_type);
+
     cudnnConvolutionBwdDataAlgo_t conv_bwd_data_algo = CUDNN_CONVOLUTION_BWD_DATA_ALGO_0;
-    if (find_algo)
+    if (find_algo != algo_search::NONE)
     {
+        int num_algos;
+        int max_algos = 0;
         CUDNN_SAFE_CALL(
-            cudnnGetConvolutionBackwardDataAlgorithm(*m_ctx->cudnn_handle,
-                                                     filter_desc,
-                                                     tensor_desc_0,
-                                                     conv_desc,
-                                                     tensor_desc_1,
-                                                     CUDNN_CONVOLUTION_BWD_DATA_PREFER_FASTEST,
-                                                     0,
-                                                     &conv_bwd_data_algo));
+            cudnnGetConvolutionBackwardDataAlgorithmMaxCount(*m_ctx->cudnn_handle, &max_algos));
+        std::vector<cudnnConvolutionBwdDataAlgoPerf_t> results(max_algos);
+        auto cudnn_algo_search = (find_algo == algo_search::EXPLICIT)
+                                     ? cudnnFindConvolutionBackwardDataAlgorithm
+                                     : cudnnGetConvolutionBackwardDataAlgorithm_v7;
+        CUDNN_SAFE_CALL((*cudnn_algo_search)(*m_ctx->cudnn_handle,
+                                             filter_desc,
+                                             tensor_desc_0,
+                                             conv_desc,
+                                             tensor_desc_1,
+                                             static_cast<int>(results.size()),
+                                             &num_algos,
+                                             results.data()));
+        results.resize(num_algos);
+        conv_bwd_data_algo =
+            select_cudnn_algo<cudnnConvolutionBwdDataAlgoPerf_t, cudnnConvolutionBwdDataAlgo_t>(
+                results);
     }
 
     void* alpha = m_host_parameters.allocate_by_datatype(data_type, 1.0);
@@ -1319,7 +1339,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(
     const Strides& window_movement_strides,
     const Strides& window_dilation_strides,
     const Shape& padding_below,
-    const bool find_algo)
+    const algo_search find_algo)
 {
     const cudnnDataType_t data_type = get_cudnn_datatype(dtype);
     const cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
@@ -1332,19 +1352,32 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(
     auto& filter_desc = get_cudnn_filter_descriptor(output_filter_shape, data_type, tensor_format);
     auto& conv_desc = get_cudnn_convolution_descriptor(
         padding_below, window_movement_strides, window_dilation_strides, mode, data_type);
+
     cudnnConvolutionBwdFilterAlgo_t conv_bwd_filter_algo = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0;
-    if (find_algo)
+    if (find_algo != algo_search::NONE)
     {
+        int num_algos;
+        int max_algos = 0;
         CUDNN_SAFE_CALL(
-            cudnnGetConvolutionBackwardFilterAlgorithm(*m_ctx->cudnn_handle,
-                                                       tensor_desc_0,
-                                                       tensor_desc_1,
-                                                       conv_desc,
-                                                       filter_desc,
-                                                       CUDNN_CONVOLUTION_BWD_FILTER_PREFER_FASTEST,
-                                                       0,
-                                                       &conv_bwd_filter_algo));
+            cudnnGetConvolutionBackwardFilterAlgorithmMaxCount(*m_ctx->cudnn_handle, &max_algos));
+        std::vector<cudnnConvolutionBwdFilterAlgoPerf_t> results(max_algos);
+        auto cudnn_algo_search = (find_algo == algo_search::EXPLICIT)
+                                     ? cudnnFindConvolutionBackwardFilterAlgorithm
+                                     : cudnnGetConvolutionBackwardFilterAlgorithm_v7;
+        CUDNN_SAFE_CALL((*cudnn_algo_search)(*m_ctx->cudnn_handle,
+                                             tensor_desc_0,
+                                             tensor_desc_1,
+                                             conv_desc,
+                                             filter_desc,
+                                             static_cast<int>(results.size()),
+                                             &num_algos,
+                                             results.data()));
+        results.resize(num_algos);
+        conv_bwd_filter_algo =
+            select_cudnn_algo<cudnnConvolutionBwdFilterAlgoPerf_t, cudnnConvolutionBwdFilterAlgo_t>(
+                results);
     }
+
     size_t workspace_size_in_bytes = 0;
     CUDNN_SAFE_CALL(cudnnGetConvolutionBackwardFilterWorkspaceSize(*m_ctx->cudnn_handle,
                                                                    tensor_desc_0,
