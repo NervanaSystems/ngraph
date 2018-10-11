@@ -362,10 +362,15 @@ namespace ngraph
 
 #define TI(x) type_index(typeid(x))
 
-            BuildOpMap build_dispatcher{
-                {TI(ngraph::op::Parameter), &runtime::cpu::Builder::nop},
-                {TI(ngraph::runtime::cpu::op::ConvertLayout),
-                 &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::ConvertLayout>}};
+            BuildOpMap& GetGlobalBuildDispatcher()
+            {
+                static BuildOpMap build_dispatcher{
+                    {TI(ngraph::op::Parameter), &runtime::cpu::Builder::nop},
+                    {TI(ngraph::runtime::cpu::op::ConvertLayout),
+                     &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::ConvertLayout>}};
+
+                return build_dispatcher;
+            }
 
             REGISTER_OP_BUILDER(Constant);
             REGISTER_OP_BUILDER(Result);

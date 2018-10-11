@@ -51,7 +51,11 @@ namespace ngraph
         public:
             Type() {}
             Type(const Type&) = default;
-            Type(size_t bitwidth, bool is_real, bool is_signed, const std::string& cname);
+            Type(size_t bitwidth,
+                 bool is_real,
+                 bool is_signed,
+                 bool is_quantized,
+                 const std::string& cname);
             Type& operator=(const Type&);
             virtual ~Type() {}
             const std::string& c_type_string() const;
@@ -59,6 +63,7 @@ namespace ngraph
             size_t hash() const;
             bool is_real() const { return m_is_real; }
             bool is_signed() const { return m_is_signed; }
+            bool is_quantized() const { return m_is_quantized; }
             size_t bitwidth() const { return m_bitwidth; }
             bool operator==(const Type& other) const;
             bool operator!=(const Type& other) const { return !(*this == other); }
@@ -72,6 +77,7 @@ namespace ngraph
             size_t m_bitwidth{0};
             bool m_is_real{false};
             bool m_is_signed{false};
+            bool m_is_quantized{false};
             std::string m_cname{"unspecified"};
         };
 

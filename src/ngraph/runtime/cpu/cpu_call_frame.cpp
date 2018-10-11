@@ -39,8 +39,8 @@ runtime::cpu::CPU_CallFrame::~CPU_CallFrame()
 }
 
 void runtime::cpu::CPU_CallFrame::call(
-    const std::vector<std::shared_ptr<runtime::TensorView>>& output_tvs,
-    const std::vector<std::shared_ptr<runtime::TensorView>>& input_tvs)
+    const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
+    const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
 {
     vector<void*> inputs;
     vector<void*> outputs;
@@ -80,7 +80,7 @@ void runtime::cpu::CPU_CallFrame::call(
 }
 
 void runtime::cpu::CPU_CallFrame::propagate_layouts(
-    const std::vector<std::shared_ptr<runtime::TensorView>>& tvs,
+    const std::vector<std::shared_ptr<runtime::Tensor>>& tvs,
     const LayoutDescriptorPtrs& layouts) const
 {
     if (layouts.size() != tvs.size())
@@ -95,7 +95,7 @@ void runtime::cpu::CPU_CallFrame::propagate_layouts(
             throw ngraph_error(
                 "Error propagating layouts - layout information missing from tensor view");
         }
-        tvs[i]->get_descriptor()->set_tensor_layout(layouts[i]);
+        tvs[i]->set_tensor_layout(layouts[i]);
     }
 }
 

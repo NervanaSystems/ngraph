@@ -12,7 +12,6 @@ divide_by_zero_int32
 dot_matrix_vector_int64
 #no mkldnn on GPU
 #error throw is not the same on GPU, not supported yet
-lrn
 one_hot_scalar_fp_nonint_in_3
 one_hot_scalar_oob_in_3
 one_hot_vector_1_barely_oob
@@ -52,3 +51,10 @@ topk_3d_max_one
 topk_3d_min_all
 topk_3d_min_partial
 topk_3d_min_one
+quantize
+quantize_axes
+quantize_int8
+quantize_clamp
+dequantize
+dequantize_axes
+dequantize_int8

@@ -47,6 +47,17 @@ struct Type
     };
 };
 
+//constructs (x*W + bias)
+static std::shared_ptr<pattern::Matcher>
+    construct_rnn_input_linear_transformation(std::shared_ptr<pattern::op::Label> labels[])
+{
+    auto skip =
+        std::make_shared<pattern::op::Skip>(labels[Type::DATA], pattern::has_class<op::Reshape>());
+    auto dot = std::make_shared<op::Dot>(skip, labels[Type::WEIGHTS]);
+    auto add_bias = std::make_shared<op::Add>(dot, labels[Type::BIAS]);
+    return std::make_shared<pattern::Matcher>(add_bias);
+}
+
 static std::shared_ptr<Node> construct_data_pattern(std::shared_ptr<pattern::op::Label> data_slice)
 {
     auto reshape_slice =
@@ -75,55 +86,88 @@ static std::shared_ptr<Node>
 
 bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Function> function)
 {
-    bool modified = false;
+    bool modify_graph = false;
 
-    auto data_pred = [](std::shared_ptr<Node> n) {
-        return std::dynamic_pointer_cast<op::Slice>(n) != nullptr;
-    };
-    auto data_slice = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 2, 4}, data_pred);
+    //--------------------------------------------------------
+    // Construct pattern version_1 for RNN input linear transformation
+    auto data_slice = std::make_shared<pattern::op::Label>(
+        element::f32, Shape{1, 2, 4}, pattern::has_class<op::Slice>());
     auto data_pattern = construct_data_pattern(data_slice);
 
-    auto weights_pred = [](std::shared_ptr<Node> n) {
-        return std::dynamic_pointer_cast<op::Reshape>(n) != nullptr;
-    };
-    auto weights_reshape =
-        std::make_shared<pattern::op::Label>(element::f32, Shape{4, 1}, weights_pred);
+    auto weights_reshape = std::make_shared<pattern::op::Label>(
+        element::f32, Shape{4, 1}, pattern::has_class<op::Reshape>());
     auto weights_pattern = construct_weights_pattern(weights_reshape);
 
     // we don't really need a broadcast node but
     // labelling a Broadcast allows us to extract
     // params from all 3 labels in the same fashion
     //(i.e. via get_argument(0))
-    auto broadcast_pred = [](std::shared_ptr<Node> n) {
-        return std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr;
-    };
-    auto bias_broadcast =
-        std::make_shared<pattern::op::Label>(element::f32, Shape{2, 1}, broadcast_pred);
+    auto bias_broadcast = std::make_shared<pattern::op::Label>(
+        element::f32, Shape{2, 1}, pattern::has_class<op::Broadcast>());
     auto bias_pattern = construct_bias_pattern(bias_broadcast);
 
     const size_t NUM_MMB_ARGS = 3;
-    std::shared_ptr<pattern::op::Label> labels[] = {data_slice, weights_reshape, bias_broadcast};
+    std::shared_ptr<pattern::op::Label> labels_v1[] = {data_slice, weights_reshape, bias_broadcast};
     // Matchers' ordering is important! Don't change!
-    std::shared_ptr<pattern::Matcher> matchers[] = {
+    std::shared_ptr<pattern::Matcher> matchers_v1[] = {
         std::make_shared<pattern::Matcher>(data_pattern),
         std::make_shared<pattern::Matcher>(weights_pattern),
         std::make_shared<pattern::Matcher>(bias_pattern)};
 
+    // this DS will be used to hold the matched attributes from matchers_v1
     std::map<std::shared_ptr<Node>, NodeVector> op_seg_map; // add to list of params
     std::map<NodeVector, NodeVector> param_list;
+    //--------------------------------------------------------
+
+    //--------------------------------------------------------
+    // Construct pattern version_2 for RNN input linear transformation
+    auto input_data = std::make_shared<pattern::op::Label>(
+        element::f32, Shape{10, 50}, pattern::has_class<op::Parameter>());
+    auto W = std::make_shared<pattern::op::Label>(
+        element::f32, Shape{50, 400}, pattern::has_class<op::Reshape>());
+    auto b = std::make_shared<pattern::op::Label>(
+        element::f32, Shape{10, 400}, pattern::has_class<op::Broadcast>());
+    std::shared_ptr<pattern::op::Label> labels_v2[] = {input_data, W, b};
+    auto matcher_v2 = construct_rnn_input_linear_transformation(labels_v2);
+
+    // this DS will be used to hold the matched attributes from matcher_v2
+    std::map<std::shared_ptr<Node>, NodeVector> map_weights_to_pattern;
+    std::map<std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>, NodeVector>
+        map_weights_bias_to_data;
+    //--------------------------------------------------------
+
     for (auto n : function->get_ordered_ops())
     {
         NodeVector params;
         NodeVector matched_nodes;
+
+        // checks if the graph matches to pattern defined in the matcher_v2
+        if (matcher_v2->match(n))
+        {
+            auto matched_weight = matcher_v2->get_pattern_map()[W]->get_argument(0);
+            auto matched_data = matcher_v2->get_pattern_map()[input_data];
+            auto matched_bias = matcher_v2->get_pattern_map()[b]->get_argument(0);
+            if (matcher_v2->get_match_root()->get_shape().size() != 2 &&
+                matcher_v2->get_match_root()->get_shape().size() != 3)
+            {
+                NGRAPH_DEBUG << "mat fusion (v2) root " << matcher_v2->get_match_root()->get_name()
+                             << " isn't 2D or 3D";
+                continue;
+            }
+            map_weights_to_pattern[matched_weight].push_back(matcher_v2->get_match_root());
+            map_weights_bias_to_data[std::make_pair(matched_weight, matched_bias)].push_back(
+                matched_data);
+        }
+
         for (size_t i = 0; i < NUM_MMB_ARGS; i++)
         {
-            auto matcher = matchers[i];
+            auto matcher = matchers_v1[i];
             if (matcher->match(n))
             {
                 // if we get all 3 matches they will all fall
                 // in the right spots (e.g. DATA, WEIGHTS, BIAS) since matchers are ordered
                 // if we have less than 3 matches we skip this node anyways
-                auto matched = matcher->get_pattern_map()[labels[i]];
+                auto matched = matcher->get_pattern_map()[labels_v1[i]];
                 params.push_back(matched->get_argument(0));
                 matched_nodes.push_back(matched);
             }
@@ -152,54 +196,141 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         }
     }
 
-    // Expecting input data shape D=[x, y, z], weights W=[u, v], bias B = [w]
-    // where y is the time step. We are computing R=dot(D,W)=[x,y,v]. We can reshape D to D'=[x*y, z], then we have dot(D',W), result
-    // in R=[x*y, v], then add(R,B). We need to slice the result by strided by time steps.
-    // iterate each unique set of parameters, replace original operations
-    for (auto& p : param_list)
-    {
-        NodeVector params = p.first;
-        NodeVector& op_nodes = p.second;
-
-        auto data_node = params.at(Type::DATA);
-        auto weights_node = params.at(Type::WEIGHTS);
-        auto bias_node = params.at(Type::BIAS);
-
-        const auto& data_shape = data_node->get_shape();
-        // construct new op nodes
-        auto data_order = ngraph::get_default_order(data_node->get_shape());
-        auto data_reshape_node = std::make_shared<op::Reshape>(
-            data_node, data_order, Shape{data_shape[0] * data_shape[1], data_shape[2]});
-
-        auto old_weights_reshape_node = op_seg_map.at(op_nodes.at(0)).at(Type::WEIGHTS);
-        auto weights_reshape_node = old_weights_reshape_node->copy_with_new_args({weights_node});
-        auto dot_node = std::make_shared<op::Dot>(data_reshape_node, weights_reshape_node);
-        const auto& dot_shape = dot_node->get_shape();
-
-        auto bias_broadcast_node =
-            std::make_shared<op::Broadcast>(bias_node, dot_shape, AxisSet{0});
-        auto add_node = std::make_shared<op::Add>(dot_node, bias_broadcast_node);
-        const auto& add_shape = add_node->get_shape();
-
-        // create a slice for each user of the dot op matching the original dot op's output
-        for (auto op : op_nodes)
+    auto callback_matcher_v2 = [&]() -> void {
+        // fuse the input vector to a matrix
+        for (auto& it : map_weights_bias_to_data)
         {
-            const auto old_slice =
-                std::dynamic_pointer_cast<op::Slice>(op_seg_map[op].at(Type::DATA));
-            const auto& old_lower_bounds = old_slice->get_lower_bounds();
-            // lower bound matching the current time step
-            const Coordinate lower_bounds{old_lower_bounds[1], 0};
-            // striding by the number of data
-            const Strides strides{data_shape[1], 1};
-            auto slice_node =
-                std::make_shared<op::Slice>(add_node, lower_bounds, add_shape, strides);
+            auto weights = it.first.first;
+            auto bias = it.first.second;
 
-            // replace old nodes
-            function->replace_node(op, slice_node);
+            if (map_weights_to_pattern[weights].size() !=
+                map_weights_bias_to_data[std::make_pair(weights, bias)].size())
+            {
+                NGRAPH_DEBUG << "number of input data param's doesnt match the number of matched "
+                                "pattern root "
+                             << "nodes";
+                return;
+            }
+            auto& w_shape = weights->get_shape();
+            if (w_shape.size() != 2)
+            {
+                NGRAPH_DEBUG << "weights shape for linear transformation of input is not 2D";
+                return;
+            }
+
+            auto& data_param_nodes = it.second;
+            // we will not fuse if the batch_size are not same across all inputs of time step
+            for (auto& node : data_param_nodes)
+            {
+                if (shape_size(data_param_nodes[0]->get_shape()) != shape_size(node->get_shape()))
+                {
+                    return;
+                }
+            }
+            // now concat the parameter hashed to the same weights
+            auto concated_data = std::make_shared<op::Concat>(data_param_nodes, 0);
+
+            auto& data_shape = concated_data->get_shape();
+            auto data_order = ngraph::get_default_order(concated_data->get_shape());
+
+            // insert reshape on the concated data to make it 2D, if its 3D
+            std::shared_ptr<Node> input_reshape_node = nullptr;
+            if (data_shape.size() == 3)
+            {
+                input_reshape_node = std::make_shared<op::Reshape>(
+                    concated_data, data_order, Shape{data_shape[0] * data_shape[1], data_shape[2]});
+            }
+            auto new_input_node = data_shape.size() == 2 ? concated_data : input_reshape_node;
+            auto w_reshape_node = std::make_shared<op::Reshape>(
+                weights, AxisVector{1, 0}, Shape{w_shape[1], w_shape[0]});
+            auto new_dot = std::make_shared<op::Dot>(new_input_node, w_reshape_node);
+            auto bias_broadcast_node =
+                std::make_shared<op::Broadcast>(bias, new_dot->get_shape(), AxisSet{0});
+            auto new_add_bias = std::make_shared<op::Add>(new_dot, bias_broadcast_node);
+
+            // now slice the new_add and feed the corrosponding root nodes
+            auto batch_size = new_add_bias->get_shape()[0] / data_param_nodes.size();
+            auto shape_axis_1 = new_add_bias->get_shape()[1];
+            size_t start_index = 0;
+            size_t end_index = batch_size;
+            for (auto& matched_root_node : map_weights_to_pattern[weights])
+            {
+                std::shared_ptr<Node> slice_node = std::make_shared<op::Slice>(
+                    new_add_bias, Coordinate{start_index, 0}, Coordinate{end_index, shape_axis_1});
+
+                if (matched_root_node->get_shape().size() != 2)
+                {
+                    NGRAPH_ASSERT(matched_root_node->get_shape().size() == 3);
+                    slice_node = std::make_shared<op::Reshape>(
+                        slice_node, AxisVector{0, 1}, matched_root_node->get_shape());
+                }
+                start_index += batch_size;
+                end_index += batch_size;
+                NGRAPH_DEBUG << "Replacing op " << matched_root_node->get_name() << " with "
+                             << slice_node->get_name() << std::endl;
+                function->replace_node(matched_root_node, slice_node);
+            }
+            modify_graph = true;
         }
-        modified = true;
-    }
-    return modified;
+    };
+
+    auto callback_matcher_v1 = [&]() -> void {
+
+        // Expecting input data shape D=[x, y, z], weights W=[u, v], bias B = [w]
+        // where y is the time step. We are computing R=dot(D,W)=[x,y,v]. We can reshape D to D'=[x*y, z], then we have dot(D',W), result
+        // in R=[x*y, v], then add(R,B). We need to slice the result by strided by time steps.
+        // iterate each unique set of parameters, replace original operations
+        for (auto& p : param_list)
+        {
+            NodeVector params = p.first;
+            NodeVector& op_nodes = p.second;
+
+            auto data_node = params.at(Type::DATA);
+            auto weights_node = params.at(Type::WEIGHTS);
+            auto bias_node = params.at(Type::BIAS);
+
+            const auto& data_shape = data_node->get_shape();
+            // construct new op nodes
+            auto data_order = ngraph::get_default_order(data_node->get_shape());
+            auto data_reshape_node = std::make_shared<op::Reshape>(
+                data_node, data_order, Shape{data_shape[0] * data_shape[1], data_shape[2]});
+
+            auto old_weights_reshape_node = op_seg_map.at(op_nodes.at(0)).at(Type::WEIGHTS);
+            auto weights_reshape_node =
+                old_weights_reshape_node->copy_with_new_args({weights_node});
+            auto dot_node = std::make_shared<op::Dot>(data_reshape_node, weights_reshape_node);
+            const auto& dot_shape = dot_node->get_shape();
+
+            auto bias_broadcast_node =
+                std::make_shared<op::Broadcast>(bias_node, dot_shape, AxisSet{0});
+            auto add_node = std::make_shared<op::Add>(dot_node, bias_broadcast_node);
+            const auto& add_shape = add_node->get_shape();
+
+            // create a slice for each user of the dot op matching the original dot op's output
+            for (auto op : op_nodes)
+            {
+                const auto old_slice =
+                    std::dynamic_pointer_cast<op::Slice>(op_seg_map[op].at(Type::DATA));
+                const auto& old_lower_bounds = old_slice->get_lower_bounds();
+                // lower bound matching the current time step
+                const Coordinate lower_bounds{old_lower_bounds[1], 0};
+                // striding by the number of data
+                const Strides strides{data_shape[1], 1};
+                auto slice_node =
+                    std::make_shared<op::Slice>(add_node, lower_bounds, add_shape, strides);
+
+                // replace old nodes
+                function->replace_node(op, slice_node);
+            }
+            modify_graph = true;
+        }
+    };
+
+    // Based the matched pattern, this callback's fuse the input across time steps and replaces with
+    // single DOT operation <X0|X1|X2|..... Xt>*W
+    callback_matcher_v2();
+    callback_matcher_v1();
+    return modify_graph;
 }
 
 #define TI(x) std::type_index(typeid(x))

@@ -51,12 +51,9 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
                     auto input = &node->get_inputs().at(oi_pair.input).get_tensor();
                     auto input_node = node->get_inputs().at(oi_pair.input).get_output().get_node();
 
-                    // an input tensor can be reused if this is the last use or
-                    // an op isn't destructive (i.e. Reshape(DimShuffle))
-                    if ((node->liveness_free_list.count(input) != 0 &&
-                         node->liveness_new_list.count(output) != 0) ||
-                        (!oi_pair.destructive && !input_node->is_parameter() &&
-                         !input_node->is_constant()))
+                    // an input tensor can be reused if this is the last use
+                    if (node->liveness_free_list.count(input) != 0 &&
+                        node->liveness_new_list.count(output) != 0)
                     {
                         in_place_outputs.insert({output, input});
                         reused_inputs.insert(input);
@@ -100,7 +97,10 @@ pass::MemoryManager::MemoryManager(size_t alignment, bool disable_memory_reuse)
     , m_scheme{disable_memory_reuse ? allocation_scheme::NO_REUSE : allocation_scheme::FIRST_FIT}
     , m_max_allocated{0}
 {
-    // assert(m_base_offset % m_alignment == 0);
+    if (m_alignment == 0)
+    {
+        throw invalid_argument("Memory alignment must be > 0");
+    }
     m_node_list.emplace_back(numeric_limits<size_t>::max(), block_state::FREE);
 }
 

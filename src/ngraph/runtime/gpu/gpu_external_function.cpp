@@ -24,6 +24,7 @@
 #include <string>
 #include <tuple>
 
+#include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
@@ -36,6 +37,8 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/argmax.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -60,6 +63,7 @@
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
+#include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
@@ -93,10 +97,13 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/op/topk.hpp"
+#include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/common_function_collection.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
@@ -104,7 +111,10 @@
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
+#include "ngraph/runtime/gpu/op/rnn.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_layout.hpp"
+#include "ngraph/runtime/gpu/pass/gpu_rnn_fusion.hpp"
 #include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
 
 using namespace std;
@@ -157,105 +167,25 @@ static string emit_string_array(const vector<string>& s, size_t max_line_length)
 
 static GPUStaticInitializers s_static_initializers;
 
-#define TI(x) type_index(typeid(x))
-
-static const runtime::gpu::OpMap dispatcher{
-    {TI(ngraph::op::Add), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Add>},
-    {TI(ngraph::op::Dot), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Dot>},
-    {TI(ngraph::op::Multiply), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Multiply>},
-    {TI(ngraph::op::Parameter), &runtime::gpu::GPU_Emitter::nop},
-    {TI(ngraph::op::Abs), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Abs>},
-    {TI(ngraph::op::Concat), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Concat>},
-    {TI(ngraph::op::Divide), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Divide>},
-    {TI(ngraph::op::Equal), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Equal>},
-    {TI(ngraph::op::GetOutputElement),
-     &runtime::gpu::GPU_Emitter::emit<ngraph::op::GetOutputElement>},
-    {TI(ngraph::op::Greater), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Greater>},
-    {TI(ngraph::op::GreaterEq),
-     &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::GreaterEq>},
-    {TI(ngraph::op::Less), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Less>},
-    {TI(ngraph::op::LessEq), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::LessEq>},
-    {TI(ngraph::op::Log), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Log>},
-    {TI(ngraph::op::Maximum), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Maximum>},
-    {TI(ngraph::op::Minimum), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Minimum>},
-    {TI(ngraph::op::Negative), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Negative>},
-    {TI(ngraph::op::NotEqual), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::NotEqual>},
-    {TI(ngraph::op::Power), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Power>},
-    {TI(ngraph::op::Select), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Select>},
-    {TI(ngraph::op::Subtract), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Subtract>},
-    {TI(ngraph::op::Broadcast), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Broadcast>},
-    {TI(ngraph::op::Convert), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Convert>},
-    {TI(ngraph::op::Constant), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Constant>},
-    {TI(ngraph::op::Reshape), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Reshape>},
-    {TI(ngraph::op::FunctionCall), &runtime::gpu::GPU_Emitter::emit<ngraph::op::FunctionCall>},
-    {TI(ngraph::op::Reduce), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Reduce>},
-    {TI(ngraph::op::Sign), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sign>},
-    {TI(ngraph::op::Slice), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Slice>},
-    {TI(ngraph::op::Sum), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Sum>},
-    {TI(ngraph::op::Exp), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Exp>},
-    {TI(ngraph::op::Sin), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sin>},
-    {TI(ngraph::op::Sinh), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sinh>},
-    {TI(ngraph::op::Cos), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Cos>},
-    {TI(ngraph::op::Cosh), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Cosh>},
-    {TI(ngraph::op::Tan), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Tan>},
-    {TI(ngraph::op::Tanh), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Tanh>},
-    {TI(ngraph::op::Asin), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Asin>},
-    {TI(ngraph::op::Acos), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Acos>},
-    {TI(ngraph::op::Atan), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Atan>},
-    {TI(ngraph::op::ReplaceSlice), &runtime::gpu::GPU_Emitter::emit<ngraph::op::ReplaceSlice>},
-    {TI(ngraph::op::OneHot), &runtime::gpu::GPU_Emitter::emit<ngraph::op::OneHot>},
-    {TI(ngraph::op::Floor), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Floor>},
-    {TI(ngraph::op::Ceiling), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Ceiling>},
-    {TI(ngraph::op::Sqrt), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sqrt>},
-    {TI(ngraph::op::Convolution), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Convolution>},
-    {TI(ngraph::op::ConvolutionBackpropFilters),
-     &runtime::gpu::GPU_Emitter::emit<ngraph::op::ConvolutionBackpropFilters>},
-    {TI(ngraph::op::ConvolutionBackpropData),
-     &runtime::gpu::GPU_Emitter::emit<ngraph::op::ConvolutionBackpropData>},
-    {TI(ngraph::op::Not), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Not>},
-    {TI(ngraph::op::MaxPool), &runtime::gpu::GPU_Emitter::emit<ngraph::op::MaxPool>},
-    {TI(ngraph::op::Reverse), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Reverse>},
-    {TI(ngraph::op::ReverseSequence),
-     &runtime::gpu::GPU_Emitter::emit<ngraph::op::ReverseSequence>},
-    {TI(ngraph::op::Result), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Result>},
-    {TI(ngraph::op::ReduceWindow), &runtime::gpu::GPU_Emitter::emit<ngraph::op::ReduceWindow>},
-    {TI(ngraph::op::SelectAndScatter),
-     &runtime::gpu::GPU_Emitter::emit<ngraph::op::SelectAndScatter>},
-    {TI(ngraph::op::AvgPool), &runtime::gpu::GPU_Emitter::emit<ngraph::op::AvgPool>},
-    {TI(ngraph::op::AvgPoolBackprop),
-     &runtime::gpu::GPU_Emitter::emit<ngraph::op::AvgPoolBackprop>},
-    {TI(ngraph::op::Pad), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Pad>},
-    {TI(ngraph::op::BatchNorm), &runtime::gpu::GPU_Emitter::emit<ngraph::op::BatchNorm>},
-    {TI(ngraph::op::BatchNormBackprop),
-     &runtime::gpu::GPU_Emitter::emit<ngraph::op::BatchNormBackprop>},
-    {TI(ngraph::op::MaxPoolBackprop),
-     &runtime::gpu::GPU_Emitter::emit<ngraph::op::MaxPoolBackprop>},
-    {TI(ngraph::op::Product), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Product>},
-    {TI(ngraph::op::Max), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Max>},
-    {TI(ngraph::op::Min), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Min>},
-    {TI(ngraph::op::Relu), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Relu>},
-    {TI(ngraph::op::ReluBackprop),
-     &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::ReluBackprop>},
-    {TI(ngraph::op::Softmax), &runtime::gpu::GPU_Emitter::emit<ngraph::op::Softmax>},
-    {TI(ngraph::op::Sigmoid), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Sigmoid>},
-    {TI(ngraph::op::SigmoidBackprop),
-     &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::SigmoidBackprop>},
-    {TI(ngraph::op::And), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::And>},
-    {TI(ngraph::op::Or), &runtime::gpu::GPU_Emitter::emit_elementwise<ngraph::op::Or>}};
+void runtime::gpu::GPU_ExternalFunction::emit_op(GPU_ExternalFunction* external_function,
+                                                 codegen::CodeWriter& writer,
+                                                 const ngraph::Node* node,
+                                                 const std::vector<GPUTensorWrapper>& args,
+                                                 const std::vector<GPUTensorWrapper>& out)
+{
+    auto emit_function = GPU_Emitter::get_emit_function(*node);
+    emit_function(external_function, writer, node, args, out);
+};
 
 const size_t runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction::s_memory_pool_alignment = 64;
 
 runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function,
-    std::shared_ptr<GPU_Backend::BackendContext>& shared_context,
-    bool release_function)
+    std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
     : m_compiled_function(nullptr)
     , m_function(function)
     , m_emit_timing(false)
     , m_is_compiled(false)
-    , m_release_function(release_function)
-    , m_temporaries_used(false)
-    , m_tensor_memory_buffers(new std::unordered_map<std::string, size_t>)
     , m_shared_context(shared_context)
 {
 }
@@ -264,51 +194,44 @@ runtime::gpu::GPU_ExternalFunction::~GPU_ExternalFunction()
 {
 }
 
-void runtime::gpu::GPU_ExternalFunction::emit_header()
+const string& runtime::gpu::GPU_ExternalFunction::get_pch_header_source()
 {
-    m_writer += R"(
+    static string s_pch_header_source = R"(
 // Generated by the nGraph GPU backend
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cudnn.h>
 
-#include "ngraph/descriptor/input.hpp"
-#include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
-#include "ngraph/descriptor/output.hpp"
-#include "ngraph/file_util.hpp"
-#include "ngraph/function.hpp"
-#include "ngraph/graph_util.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/pass/assign_layout.hpp"
-#include "ngraph/pass/dump_sorted.hpp"
-#include "ngraph/pass/like_replacement.hpp"
-#include "ngraph/pass/liveness.hpp"
-#include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/memory_layout.hpp"
-#include "ngraph/runtime/aligned_buffer.hpp"
-#include "ngraph/runtime/gpu/cudnn_descriptors.hpp"
-#include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
+#include "ngraph/runtime/gpu/cuda_error_check.hpp"
 #include "ngraph/runtime/gpu/gpu_invoke.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
-#include "ngraph/util.hpp"
 )";
+    return s_pch_header_source;
+}
 
-    m_pch_header_source = m_writer.get_code();
-
-    m_writer += R"(
+const string& runtime::gpu::GPU_ExternalFunction::get_header_source()
+{
+    static string s_header_source =
+        get_pch_header_source() + R"(
 using namespace ngraph;
 using namespace ngraph::runtime;
 using namespace std;
-)";
+)"
+        // The "dso_handle" symbol is required by __cxa_atexit()
+        // which is enabled because the JIT uses it as the default mechanism
+        // to register cleanup handlers. We use it, and not atexit(), because
+        // atexit() happens too late, when the JIT is no longer alive
+        + "void *__dso_handle = 0;\n\n" +
+        "static gpu::GPURuntimeContext* m_runtime_context = nullptr;\n";
 
-    // The "dso_handle" symbol is required by __cxa_atexit()
-    // which is enabled because the JIT uses it as the default mechanism
-    // to register cleanup handlers. We use it, and not atexit(), because
-    // atexit() happens too late, when the JIT is no longer alive
-    m_writer << "void *__dso_handle = 0;\n\n";
-    m_writer << "static gpu::GPURuntimeContext* m_runtime_context = nullptr;\n";
+    return s_header_source;
+}
+
+void runtime::gpu::GPU_ExternalFunction::emit_header()
+{
+    m_writer << get_header_source();
 }
 
 void runtime::gpu::GPU_ExternalFunction::emit_timer_functions()
@@ -437,26 +360,26 @@ void runtime::gpu::GPU_ExternalFunction::emit_function_declarations()
 void runtime::gpu::GPU_ExternalFunction::emit_temp_mem_pool_allocation(
     shared_ptr<Function> current_function)
 {
-    m_temporaries_used = false;
+    bool temporaries_used = false;
     size_t worst_case_tmp_size = 0;
     for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
     {
         if (node->liveness_new_list.size() > 0)
         {
-            m_temporaries_used = true;
+            temporaries_used = true;
             for (descriptor::Tensor* tensor : node->liveness_new_list)
             {
                 worst_case_tmp_size += tensor->size();
             }
         }
     }
-    if (m_temporaries_used)
+    if (temporaries_used)
     {
         m_writer << "// Allocate the memory pool\n";
         // TODO memory pool malloc.
         m_writer
             << "char* pool_base_ptr = (char*)ngraph::runtime::gpu::invoke_memory_primitive(ctx, "
-            << m_tensor_memory_buffers->at(current_function->get_name()) << ");\n";
+            << m_tensor_memory_buffers.at(current_function->get_name()) << ");\n";
 
         // Add temporaries to the variable name map
         for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
@@ -482,7 +405,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
             shared_ptr<descriptor::Tensor> tv = op->get_output_tensor_ptr();
             output_names.insert(tv->get_name());
         }
-        set<descriptor::TensorView*> constants;
+        set<descriptor::Tensor*> constants;
         for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
         {
             if (dynamic_cast<ngraph::op::Constant*>(node.get()))
@@ -548,29 +471,21 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
 
             for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
             {
-                auto& n = *node;
-                // Work around a compiler warning (*node inside typeid may have effects
-                // with shared pointers, which is fine here but clang doesn't like it.)
-                auto handler = dispatcher.find(type_index(typeid(n)));
-                if (handler == dispatcher.end())
-                {
-                    throw ngraph::unsupported_op(node->description());
-                }
-                vector<GPU_TensorViewWrapper> in;
+                vector<GPUTensorWrapper> in;
                 vector<string> node_input_names;
                 vector<string> node_output_names;
                 for (const descriptor::Input& input : node->get_inputs())
                 {
                     const descriptor::Output& output = input.get_output();
                     shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-                    in.push_back(GPU_TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
+                    in.push_back(GPUTensorWrapper(tv, m_variable_name_map[tv->get_name()]));
                     node_input_names.emplace_back(tv->get_name());
                 }
-                vector<GPU_TensorViewWrapper> out;
+                vector<GPUTensorWrapper> out;
                 for (const descriptor::Output& output : node->get_outputs())
                 {
                     shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-                    out.push_back(GPU_TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
+                    out.push_back(GPUTensorWrapper(tv, m_variable_name_map[tv->get_name()]));
                     node_output_names.emplace_back(tv->get_name());
                 }
 
@@ -590,18 +505,18 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 auto it = m_node_function_map.find(node.get());
                 if (it == m_node_function_map.end())
                 {
-                    handler->second(this, m_writer, node.get(), in, out);
+                    emit_op(this, m_writer, node.get(), in, out);
                 }
                 else
                 {
                     string func_name =
                         ngraph::pass::CommonFunctionCollection::create_function_name(*it->second);
                     vector<string> names;
-                    for (const GPU_TensorViewWrapper& tv : in)
+                    for (const GPUTensorWrapper& tv : in)
                     {
                         names.push_back(tv.get_name());
                     }
-                    for (const GPU_TensorViewWrapper& tv : out)
+                    for (const GPUTensorWrapper& tv : out)
                     {
                         names.push_back(tv.get_name());
                     }
@@ -642,18 +557,23 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     auto allocator = std::make_shared<runtime::gpu::GPUAllocator>(
         m_shared_context->m_primitive_emitter->get_memory_allocator());
 
+#if CUDNN_VERSION >= 7200
+    // recurrent network fusion
+    m_pass_manager.register_pass<runtime::gpu::pass::LSTMFusion>();
+    m_pass_manager.register_pass<runtime::gpu::pass::RNNFusion>();
+    m_pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    m_pass_manager.register_pass<runtime::gpu::pass::MultiLayerRNNFusion>();
+#else
+    m_pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+#endif
     m_pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     m_pass_manager
         .register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();
-
     m_pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
     m_pass_manager.register_pass<ngraph::pass::Liveness>();
-
     m_pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
-
     m_pass_manager.register_pass<runtime::gpu::pass::TensorMemoryReservation>(
-        allocator, m_tensor_memory_buffers);
-
+        *allocator, m_tensor_memory_buffers);
     std::string common_function_string;
     auto femitter = bind(&ngraph::runtime::gpu::GPU_ExternalFunction::emit_op_as_function,
                          this,
@@ -661,7 +581,6 @@ void runtime::gpu::GPU_ExternalFunction::compile()
                          placeholders::_2);
     m_pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
         femitter, m_node_function_map, common_function_string);
-
     string dump_filename = file_util::path_join(s_output_dir, m_function_name + "_ops.txt");
     m_pass_manager.register_pass<ngraph::pass::DumpSorted>(dump_filename);
 
@@ -688,7 +607,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 
     m_compiler.reset(new codegen::Compiler());
     m_execution_engine.reset(new codegen::ExecutionEngine());
-    m_compiler->set_precompiled_header_source(m_pch_header_source);
+    m_compiler->set_precompiled_header_source(get_pch_header_source());
 
     auto codegen_module = m_compiler->compile(code);
     if (codegen_module == nullptr)
@@ -706,21 +625,6 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     }
 
     m_is_compiled = true;
-    if (m_release_function)
-    {
-        release_function();
-    }
-}
-
-shared_ptr<ngraph::runtime::gpu::GPU_CallFrame>
-    runtime::gpu::GPU_ExternalFunction::make_call_frame()
-{
-    if (!m_is_compiled)
-    {
-        compile();
-    }
-
-    return make_shared<GPU_CallFrame>(shared_from_this(), m_compiled_function);
 }
 
 void runtime::gpu::GPU_ExternalFunction::emit_debug_function_entry(Node* node)
@@ -747,21 +651,14 @@ string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
     codegen::CodeWriter writer;
     writer << "static void " << function_name << "(";
     writer.indent++;
-    // Work around a compiler warning (*node inside typeid may have effects
-    // with shared pointers, which is fine here but clang doesn't like it.)
-    auto handler = dispatcher.find(type_index(typeid(node)));
-    if (handler == dispatcher.end())
-    {
-        throw ngraph::unsupported_op(node.description());
-    }
-    vector<GPU_TensorViewWrapper> in;
+    vector<GPUTensorWrapper> in;
     size_t arg_index = 0;
     set<string> arg_names;
     for (const descriptor::Input& input : node.get_inputs())
     {
         const descriptor::Output& output = input.get_output();
         shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-        GPU_TensorViewWrapper tvw{tv, "_arg" + to_string(arg_index)};
+        GPUTensorWrapper tvw{tv, "_arg" + to_string(arg_index)};
         if (!contains(arg_names, tvw.get_name()))
         {
             arg_names.insert(tvw.get_name());
@@ -774,11 +671,11 @@ string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
         }
         in.push_back(tvw);
     }
-    vector<GPU_TensorViewWrapper> out;
+    vector<GPUTensorWrapper> out;
     for (const descriptor::Output& output : node.get_outputs())
     {
         shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-        GPU_TensorViewWrapper tvw{tv, "_out" + to_string(arg_index)};
+        GPUTensorWrapper tvw{tv, "_out" + to_string(arg_index)};
         if (arg_index++ > 0)
         {
             writer << ",";
@@ -791,7 +688,7 @@ string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
     writer.indent--;
     writer << "\n)\n";
     codegen::CodeWriter tmp_writer;
-    handler->second(this, tmp_writer, &node, in, out);
+    emit_op(this, tmp_writer, &node, in, out);
     string body = tmp_writer.get_code();
     if (body.size() > 0 && body[0] == '{')
     {

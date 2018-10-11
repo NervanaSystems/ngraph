@@ -283,6 +283,8 @@ if (NGRAPH_HALIDE)
     include(cmake/external_halide.cmake)
 endif()
 
+add_definitions(-DPROJECT_ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
 add_subdirectory(src)
 
 if (NGRAPH_UNIT_TEST_ENABLE)

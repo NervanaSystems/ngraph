@@ -88,7 +88,7 @@ def PrepareEnvironment(configurationMaps) {
         UTILS.PropagateStatus("Run_docker_containers", configMap["dockerContainerName"])
         sh """
             docker cp ${CI_ROOT}/utils/docker.sh ${configMap["dockerContainerName"]}:/home
-            docker exec ${configMap["dockerContainerName"]} bash -c "/root/${CI_ROOT}/prepare_environment.sh --ngraph-branch=$ghprbSourceBranch"
+            docker exec ${configMap["dockerContainerName"]} bash -c "/root/${CI_ROOT}/prepare_environment.sh"
         """
     }
     UTILS.CreateStage("Prepare_environment", prepareEnvironmentMethod, configurationMaps)
@@ -101,7 +101,9 @@ def RunToxTests(configurationMaps) {
             NGRAPH_WHL=\$(docker exec ${configMap["dockerContainerName"]} find /root/ngraph/python/dist/ -name 'ngraph*.whl')
             docker exec -e TOX_INSTALL_NGRAPH_FROM=\${NGRAPH_WHL} ${configMap["dockerContainerName"]} tox -c /root/
             mkdir -p ${HOME}/ONNX_CI/onnx_models/
-            docker cp ${configMap["dockerContainerName"]}:/root/.onnx/ ${HOME}/ONNX_CI/onnx_models/
+            if [ -e ${WORKDIR}/.onnx ]; then
+                docker cp ${configMap["dockerContainerName"]}:/root/.onnx/ ~/ONNX_CI/onnx_models/
+            fi
         """
     }
     UTILS.CreateStage("Run_tox_tests", runToxTestsMethod, configurationMaps)

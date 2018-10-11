@@ -71,7 +71,7 @@ void Node::delayed_validate_and_infer_types()
 
 void Node::set_output_size(size_t n)
 {
-    m_outputs.clear();
+    NGRAPH_ASSERT(n >= m_outputs.size()) << "shrinking " << m_outputs.size() << " to " << n;
     for (size_t i = m_outputs.size(); i < n; ++i)
     {
         auto tensor_descriptor = make_shared<descriptor::Tensor>(
@@ -86,7 +86,7 @@ void Node::validate_and_infer_types()
 
 void Node::set_output_type(size_t i, const element::Type& element_type, const Shape& shape)
 {
-    m_outputs.at(i).get_tensor_ptr()->set_tensor_view_type(element_type, shape);
+    m_outputs.at(i).get_tensor_ptr()->set_tensor_type(element_type, shape);
 }
 
 std::deque<descriptor::Output>& Node::get_outputs()
@@ -154,10 +154,8 @@ std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
     for (auto& i : get_inputs())
     {
-        if (i.get_output().get_node()->get_outputs().size() != 1)
-        {
-            throw "get_argument called on an argument w/ multiple outputs";
-        }
+        NGRAPH_ASSERT(i.get_output().get_node()->get_outputs().size() == 1)
+            << "child " << i.get_output().get_node()->get_name() << " has multiple outputs";
     }
     return m_inputs.at(index).get_output().get_node();
 }
@@ -248,6 +246,11 @@ const Shape& Node::get_output_shape(size_t i) const
     return m_outputs.at(i).get_shape();
 }
 
+const PartialShape& Node::get_output_partial_shape(size_t i) const
+{
+    return m_outputs.at(i).get_partial_shape();
+}
+
 const Shape& Node::get_shape() const
 {
     if (get_output_size() != 1)
@@ -307,6 +310,11 @@ const element::Type& Node::get_input_element_type(size_t i) const
 const Shape& Node::get_input_shape(size_t i) const
 {
     return m_inputs.at(i).get_shape();
+}
+
+const PartialShape& Node::get_input_partial_shape(size_t i) const
+{
+    return m_inputs.at(i).get_partial_shape();
 }
 
 bool Node::has_same_type(std::shared_ptr<const Node> node) const

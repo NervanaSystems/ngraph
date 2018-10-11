@@ -16,17 +16,16 @@
 
 #pragma once
 
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
-#include <stdint.h>
-#include <string>
-
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cudnn.h>
+#include <iostream>
 #include <nvrtc.h>
+#include <sstream>
+#include <stdexcept>
+#include <stdint.h>
+#include <string>
 
 //why use "do...while.."
 //https://stackoverflow.com/questions/154136/why-use-apparently-meaningless-do-while-and-if-else-statements-in-macros

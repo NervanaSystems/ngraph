@@ -22,14 +22,8 @@
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
 
-#define EMITTER_DECL(op_name)                                                                      \
-    emit<op_name>(GPU_ExternalFunction * external_function,                                        \
-                  codegen::CodeWriter & writer,                                                    \
-                  const ngraph::Node* node,                                                        \
-                  const std::vector<GPU_TensorViewWrapper>& args,                                  \
-                  const std::vector<GPU_TensorViewWrapper>& out)
 namespace ngraph
 {
     namespace runtime
@@ -39,31 +33,17 @@ namespace ngraph
             class GPU_Emitter
             {
             public:
-                template <typename OP>
-                static void emit(GPU_ExternalFunction* external_function,
-                                 codegen::CodeWriter& writer,
-                                 const ngraph::Node* node,
-                                 const std::vector<GPU_TensorViewWrapper>& args,
-                                 const std::vector<GPU_TensorViewWrapper>& out)
-                {
-                    throw std::runtime_error("Unimplemented op '" + node->description() +
-                                             "' in GPU emitter");
-                }
+                static std::function<void(EMIT_ARGS)> get_emit_function(const Node& node);
 
-                static void nop(GPU_ExternalFunction* external_function,
-                                codegen::CodeWriter& writer,
-                                const ngraph::Node* node,
-                                const std::vector<GPU_TensorViewWrapper>& args,
-                                const std::vector<GPU_TensorViewWrapper>& out)
-                {
-                }
+// This defines a collection of function declarations like this
+// static void emit_Abs(EMIT_ARGS);
+// static void emit_Acos(EMIT_ARGS);
+#define NGRAPH_OP(a, b) static void emit_##a(EMIT_ARGS);
+#include "ngraph/runtime/gpu/op/op_tbl.hpp"
+#undef NGRAPH_OP
 
                 template <typename T>
-                static void emit_elementwise(GPU_ExternalFunction* external_function,
-                                             codegen::CodeWriter& writer,
-                                             const ngraph::Node* node,
-                                             const std::vector<GPU_TensorViewWrapper>& args,
-                                             const std::vector<GPU_TensorViewWrapper>& out)
+                static void emit_elementwise(EMIT_ARGS)
                 {
                     if (out[0].get_size() == 0)
                     {
@@ -101,9 +81,10 @@ namespace ngraph
                 /// \param arg_indexes a list of indexes into args for which args to include in
                 ///    the output list, so {1, 2} will include args 1 and 2 and skip 0.
                 /// \ return returns a string containing "arg0_name, arg1_name, etc."
-                static std::string node_names(const std::vector<GPU_TensorViewWrapper>& args,
+                static std::string node_names(const std::vector<GPUTensorWrapper>& args,
                                               std::initializer_list<int> arg_indexes = {});
             };
+
             Shape get_padded_shape(const Shape& input_shape,
                                    const Shape& padding_below,
                                    const Shape& padding_above,

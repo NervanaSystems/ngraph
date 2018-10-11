@@ -16,10 +16,9 @@
 
 #pragma once
 
+#include <cuda.h>
 #include <memory>
 #include <string>
-
-#include "ngraph/runtime/gpu/gpu_util.hpp"
 
 namespace ngraph
 {

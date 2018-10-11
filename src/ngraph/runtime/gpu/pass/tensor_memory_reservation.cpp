@@ -17,30 +17,24 @@
 #include <memory>
 
 #include "ngraph/function.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/pass/manager_state.hpp"
-
-#include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/gpu/gpu_memory_manager.hpp"
 #include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
 
 using namespace ngraph;
+using namespace std;
 
-bool ngraph::runtime::gpu::pass::TensorMemoryReservation::run_on_function(
-    std::shared_ptr<Function> f)
+bool runtime::gpu::pass::TensorMemoryReservation::run_on_function(shared_ptr<Function> f)
 {
-    auto allocator = m_allocator.lock();
-    auto buffers = m_memory_buffers.lock();
-    if (allocator && buffers)
+    size_t mem_pool_size = f->get_temporary_pool_size();
+    if (mem_pool_size)
     {
-        size_t mem_pool_size = f->get_temporary_pool_size();
-        if (mem_pool_size)
-        {
-            size_t pool_idx = allocator->reserve_workspace(mem_pool_size, false);
-            buffers->insert({f->get_name(), pool_idx});
+        size_t pool_idx = m_allocator.reserve_workspace(mem_pool_size, false);
+        m_memory_buffers.insert({f->get_name(), pool_idx});
 
-            return true;
-        }
+        return true;
     }
     return false;
 }
