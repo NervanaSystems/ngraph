@@ -60,6 +60,10 @@ if (NGRAPH_INTERPRETER_ENABLE)
     set(SRC ${SRC} backend_debug_api.cpp builder.cpp backend_api.cpp)
 endif()
 
+if (NGRAPH_HYBRID_ENABLE)
+    set(SRC ${SRC} hybrid_backend.cpp)
+endif()
+
 if (NGRAPH_CPU_ENABLE)
     set(SRC ${SRC} core_fusion.cpp quantize_cpu.cpp)
 endif()
@@ -148,6 +152,11 @@ endif()
 if (NGRAPH_INTERPRETER_ENABLE)
     add_definitions(-DNGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(unit-test interpreter_backend)
+endif()
+
+if (NGRAPH_HYBRID_ENABLE)
+    add_definitions(-DNGRAPH_HYBRID_ENABLE)
+    target_link_libraries(unit-test hybrid_backend)
 endif()
 
 if (NGRAPH_GPU_ENABLE)

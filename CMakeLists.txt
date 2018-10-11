@@ -92,6 +92,7 @@ option(NGRAPH_CPU_ENABLE "Control the building of the CPU backend" TRUE)
 option(NGRAPH_INTELGPU_ENABLE "Control the building of the Intel GPU backend with clDNN" FALSE)
 option(NGRAPH_GPU_ENABLE "Control the building of the GPU backend" FALSE)
 option(NGRAPH_INTERPRETER_ENABLE "Control the building of the INTERPRETER backend" TRUE)
+option(NGRAPH_HYBRID_ENABLE "Control the building of the HYBRID backend" TRUE)
 option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
@@ -201,6 +202,10 @@ set(UNIT_TEST_CONFIG_LIST "" CACHE INTERNAL "")
 
 if (NGRAPH_INTERPRETER_ENABLE)
     unit_test_control(BACKEND INTERPRETER MANIFEST src/ngraph/runtime/interpreter/unit_test.manifest)
+endif()
+
+if (NGRAPH_HYBRID_ENABLE)
+    unit_test_control(BACKEND HYBRID MANIFEST src/ngraph/runtime/hybrid/unit_test.manifest)
 endif()
 
 # Set true if CPU backend is built by default

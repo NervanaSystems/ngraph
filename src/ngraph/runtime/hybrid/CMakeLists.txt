@@ -14,18 +14,14 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_subdirectory(interpreter)
-add_subdirectory(hybrid)
+if (NGRAPH_HYBRID_ENABLE)
+    add_library(hybrid_backend SHARED hybrid_backend.cpp)
+    set_target_properties(hybrid_backend PROPERTIES VERSION ${NGRAPH_VERSION})
+    target_link_libraries(hybrid_backend PUBLIC ngraph)
+    set_target_properties(hybrid_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
-
-if (NGRAPH_CPU_ENABLE)
-    add_subdirectory(cpu)
-endif()
-
-if (NGRAPH_INTELGPU_ENABLE)
-    add_subdirectory(intelgpu)
-endif()
-
-if (NGRAPH_GPU_ENABLE)
-    add_subdirectory(gpu)
+    install(TARGETS hybrid_backend
+        LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
+        ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
+    )
 endif()
