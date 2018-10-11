@@ -16,4 +16,6 @@
 
 add_subdirectory(nbench)
 add_subdirectory(reserialize)
-add_subdirectory(serialize_onnx)
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    add_subdirectory(serialize_onnx)
+endif()
