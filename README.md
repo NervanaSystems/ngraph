@@ -1,7 +1,6 @@
 # nGraph Library [![Build Status][build-status-badge]][build-status]
 
-
-Welcome to the open-source repository for the Intel® nGraph™ Library. Our code 
+Welcome to the open-source repository for the **Intel® nGraph Library**. Our code 
 base provides a Compiler and runtime suite of tools (APIs) designed to give 
 developers maximum flexibility for their software design, allowing them to 
 create or customize a scalable solution using any framework while also avoiding 
@@ -11,7 +10,9 @@ backends, and it will be able to run on any backends we support in the future
 with minimal disruption to your model. With nGraph, you can co-evolve your 
 software and hardware's capabilities to stay at the forefront of your industry. 
 
-The nGraph Compiler is Intel's graph compiler for Artificial Neural Networks. 
+![nGraph ecosystem][ngraph-ecosystem]
+
+The **nGraph Compiler** is Intel's graph compiler for Artificial Neural Networks. 
 Documentation in this repo describes how you can program any framework 
 to run training and inference computations on a variety of Backends including 
 Intel® Architecture Processors (CPUs), Intel® Nervana™ Neural Network Processors 
@@ -47,9 +48,6 @@ See the [Release Notes] for recent changes.
 | AMD* GPUs                                     | via PlaidML       | yes            |
 | NVIDIA* GPUs                                  | via PlaidML       | some           | 
 | Field Programmable Gate Arrays (FPGA)         | no                | yes            |
-
-
-![nGraph ecosystem][ngraph-ecosystem]
 
 
 ## Documentation
