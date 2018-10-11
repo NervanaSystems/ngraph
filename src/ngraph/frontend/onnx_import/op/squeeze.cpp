@@ -23,10 +23,11 @@
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "utils/reshape.hpp"
+#include "ngraph/shape.hpp"
 
 #include "exceptions.hpp"
 #include "squeeze.hpp"
+#include "utils/reshape.hpp"
 
 namespace ngraph
 {
@@ -42,18 +43,17 @@ namespace ngraph
                 auto axes = node.get_attribute_value<std::vector<std::size_t>>("axes", {});
                 AxisVector input_order{reshape::get_default_axis_vector(data_shape.size())};
 
-                // Default behaviour is to squeeze all single dimension axes.
+                // Prepare set of unique axes marked to be removed from input data.
                 if (axes.empty())
                 {
-                    auto it = std::begin(data_shape);
-                    while (it != std::end(data_shape))
+                    // Default behaviour is to remove all single dimension axes.
+                    for (std::size_t idx = 0; idx < data_shape.size(); ++idx)
                     {
-                        if (*it == 1)
+                        if (data_shape.at(idx) == 1)
                         {
-                            data_shape.erase(it);
-                            continue;
+                            // Mark with zero elements to remove;
+                            data_shape.at(idx) = 0;
                         }
-                        ++it;
                     }
                 }
                 else
@@ -65,11 +65,22 @@ namespace ngraph
                         ASSERT_VALID_ARGUMENT(node, data_shape.at(axis) == 1)
                             << "provided axis value is invalid. Only single dimension axes may "
                                "be removed.";
-                        data_shape.erase(std::next(std::begin(data_shape), axis));
+                        // Mark with zero elements to remove;
+                        data_shape.at(axis) = 0;
                     }
                 }
 
-                return {std::make_shared<ngraph::op::Reshape>(data, input_order, data_shape)};
+                Shape output_data_shape;
+                for (std::size_t idx = 0; idx < data_shape.size(); ++idx)
+                {
+                    if (data_shape.at(idx) != 0)
+                    {
+                        output_data_shape.push_back(data_shape.at(idx));
+                    }
+                }
+
+                return {
+                    std::make_shared<ngraph::op::Reshape>(data, input_order, output_data_shape)};
             }
 
         } // namespace  op
