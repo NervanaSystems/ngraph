@@ -14,6 +14,8 @@
 # limitations under the License.
 # ******************************************************************************
 
+include(FindOpenMP)
+
 set(SRC
     cpu_backend.cpp
     cpu_builder.cpp
@@ -24,6 +26,7 @@ set(SRC
     cpu_tensor_view_wrapper.cpp
     cpu_tensor_view.cpp
     cpu_tracing.cpp
+    cpu_visualize_tree.cpp
     builder/add.cpp
     builder/allreduce.cpp
     builder/avg_pool.cpp
@@ -35,6 +38,7 @@ set(SRC
     builder/concat.cpp
     builder/convert.cpp
     builder/convert_layout.cpp
+    builder/quantized_conv.cpp
     builder/convolution.cpp
     builder/dequantize.cpp
     builder/quantize.cpp
@@ -80,6 +84,7 @@ set(SRC
     op/group_conv.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
+    op/quantized_conv.cpp
     op/convert_layout.cpp
     op/dequantize.cpp
     op/quantize.cpp
@@ -89,6 +94,8 @@ set(SRC
     op/max_pool_with_indices.cpp
     op/quantized_max_pool.cpp
     op/quantized_avg_pool.cpp
+    op/quantized_conv_relu.cpp
+    op/quantized_conv_bias.cpp
     op/rnn.cpp
     op/sigmoid_mul.cpp
     op/conv_add.cpp
@@ -96,12 +103,14 @@ set(SRC
     pass/cpu_collapse_dims.cpp
     pass/cpu_concat_inputs.cpp
     pass/cpu_fusion.cpp
+    pass/cpu_horizontal_fusion.cpp
     pass/cpu_layout.cpp
     pass/cpu_loop_kernel_fusion.cpp
     pass/cpu_mat_fusion.cpp
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
     pass/cpu_workspace_insertion.cpp
+    pass/cpu_reshape_sinking.cpp
 )
 
 if (NOT NGRAPH_DEX_ONLY)
@@ -149,6 +158,13 @@ if (NGRAPH_CPU_ENABLE)
     set_target_properties(cpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
     if (NGRAPH_DEX_ONLY)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
+    endif()
+
+    if(OPENMP_FOUND)
+        target_compile_options(cpu_backend PRIVATE "${OpenMP_CXX_FLAGS}")
+        target_compile_definitions(cpu_backend PRIVATE EIGEN_OPENMP)
+    else()
+         message(WARNING "The build toolset doesn't support OpenMP. This will impact performance and lead to slowdowns.")
     endif()
 
     if(NGRAPH_DISTRIBUTED_ENABLE)

@@ -89,7 +89,6 @@ namespace ngraph
 
     protected:
         /// Throws if the node is invalid.
-        virtual void validate_and_infer_types();
 
         // Called in constructors during transition
         void constructor_validate_and_infer_types();
@@ -107,6 +106,7 @@ namespace ngraph
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
     public:
+        virtual void validate_and_infer_types();
         // Called after transition
         void delayed_validate_and_infer_types();
 
@@ -168,6 +168,9 @@ namespace ngraph
         /// Returns the shape for output i
         const Shape& get_output_shape(size_t i) const;
 
+        /// Returns the partial shape for output i
+        const PartialShape& get_output_partial_shape(size_t i) const;
+
         /// Checks that there is exactly one output and returns its shape
         const Shape& get_shape() const;
 
@@ -194,6 +197,9 @@ namespace ngraph
 
         /// Returns the shape of input i
         const Shape& get_input_shape(size_t i) const;
+
+        /// Returns the partial shape of input i
+        const PartialShape& get_input_partial_shape(size_t i) const;
 
         std::unordered_set<descriptor::Tensor*> liveness_new_list;
         std::unordered_set<descriptor::Tensor*> liveness_free_list;

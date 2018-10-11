@@ -155,9 +155,32 @@ void print_results(vector<PerfShape> perf_data, bool timing_detail)
     }
 }
 
+element::Type get_op_element_type(const Node& op)
+{
+    element::Type type;
+    if (op.description() == "Convert")
+    {
+        type = op.get_input_element_type(0);
+    }
+    else if (op.description() == "Equal" || op.description() == "Greater" ||
+             op.description() == "GreaterEq" || op.description() == "Less" ||
+             op.description() == "LessEq" || op.description() == "NotEqual")
+    {
+        // Get the type of the second input, not the first
+        // All BinaryElementwiseComparision ops have the same type for inputs
+        // Select has bool for first input and the type we are interested in for the second
+        type = op.get_input_element_type(1);
+    }
+    else
+    {
+        type = op.get_outputs().at(0).get_element_type();
+    }
+    return type;
+}
+
 int main(int argc, char** argv)
 {
-    string model;
+    string model_arg;
     string backend;
     string directory;
     int iterations = 10;
@@ -173,7 +196,7 @@ int main(int argc, char** argv)
         string arg = argv[i];
         if (arg == "-f" || arg == "--file")
         {
-            model = argv[++i];
+            model_arg = argv[++i];
         }
         else if (arg == "-b" || arg == "--backend")
         {
@@ -229,24 +252,19 @@ int main(int argc, char** argv)
             failed = true;
         }
     }
-    if (!model.empty() && !file_util::exists(model))
+    if (!model_arg.empty() && !file_util::exists(model_arg))
     {
-        cout << "File " << model << " not found\n";
+        cout << "File " << model_arg << " not found\n";
         failed = true;
     }
     else if (!directory.empty() && !file_util::exists(directory))
     {
-        cout << "Directory " << model << " not found\n";
+        cout << "Directory " << directory << " not found\n";
         failed = true;
     }
-    else if (directory.empty() && model.empty())
+    else if (directory.empty() && model_arg.empty())
     {
         cout << "Either file or directory must be specified\n";
-        failed = true;
-    }
-    else if (backend.empty())
-    {
-        cout << "Backend missing\n";
         failed = true;
     }
 
@@ -277,56 +295,9 @@ OPTIONS
         ngraph::Distributed dist;
     #endif
 
-    if (visualize)
+    vector<string> models;
+    if (!directory.empty())
     {
-        shared_ptr<Function> f = deserialize(model);
-        auto model_file_name = ngraph::file_util::get_file_name(model) + std::string(".") +
-                               pass::VisualizeTree::get_file_ext();
-
-        pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>(model_file_name);
-        pass_manager.run_passes(f);
-    }
-
-    if (statistics)
-    {
-        shared_ptr<Function> f = deserialize(model);
-
-        cout << "statistics:" << endl;
-        cout << "total nodes: " << f->get_ops().size() << endl;
-        size_t total_constant_bytes = 0;
-        unordered_map<string, size_t> op_list;
-        for (shared_ptr<Node> node : f->get_ordered_ops())
-        {
-            string name = node->get_name();
-            string op_name = name.substr(0, name.find('_'));
-            string shape_name = "{" + join(node->get_outputs()[0].get_shape()) + "}";
-            op_list[op_name + shape_name]++;
-
-            if (op_name == "Constant")
-            {
-                const Shape& shape = node->get_outputs()[0].get_shape();
-                size_t const_size = node->get_outputs()[0].get_element_type().size();
-                if (shape.size() == 0)
-                {
-                    total_constant_bytes += const_size;
-                }
-                else
-                {
-                    total_constant_bytes +=
-                        (const_size * shape_size(node->get_outputs()[0].get_shape()));
-                }
-            }
-        }
-        cout << "Total Constant size: " << total_constant_bytes << " bytes\n";
-        for (const pair<string, size_t>& op_info : op_list)
-        {
-            cout << op_info.first << ": " << op_info.second << " ops" << endl;
-        }
-    }
-    else if (!directory.empty())
-    {
-        vector<string> models;
         vector<PerfShape> aggregate_perf_data;
         file_util::iterate_files(directory,
                                  [&](const string& file, bool is_dir) {
@@ -336,58 +307,111 @@ OPTIONS
                                      }
                                  },
                                  true);
-        unordered_map<string, Shape> shape_info;
-        cout << "Benchmarking " << endl;
-        cout << "    Backend: " << backend << endl;
-        cout << "    Iterations: " << iterations << endl;
-        cout << "    Warmup: " << warmup_iterations << endl;
-        cout << "    Copy Data: " << (copy_data ? "true" : "false") << endl;
-        for (const string& m : models)
+    }
+    else
+    {
+        // Error case where model is missing already checked above
+        models.push_back(model_arg);
+    }
+
+    vector<PerfShape> aggregate_perf_data;
+    for (const string& model : models)
+    {
+        cout << "\n";
+        cout << "============================================================================\n";
+        cout << "---- Processing '" << model << "'\n";
+        cout << "============================================================================\n";
+        try
         {
-            cout << "Benchmarking " << m << endl;
-            try
+            if (visualize)
             {
-                shared_ptr<Function> f = deserialize(m);
+                shared_ptr<Function> f = deserialize(model);
+                auto model_file_name = ngraph::file_util::get_file_name(model) + std::string(".") +
+                                       pass::VisualizeTree::get_file_ext();
+
+                pass::Manager pass_manager;
+                pass_manager.register_pass<pass::VisualizeTree>(model_file_name);
+                pass_manager.run_passes(f);
+            }
+
+            if (statistics)
+            {
+                shared_ptr<Function> f = deserialize(model);
+
+                cout << "\n---- Source Graph Statistics ----\n";
+                cout << "Total nodes: " << f->get_ops().size() << endl;
+                size_t total_constant_bytes = 0;
+                unordered_map<string, size_t> op_list;
+                set<string> type_list;
+                for (shared_ptr<Node> node : f->get_ordered_ops())
+                {
+                    string name = node->get_name();
+                    string op_name = name.substr(0, name.find('_'));
+                    string shape_name = "{" + join(node->get_outputs()[0].get_shape()) + "}";
+                    op_list[op_name + shape_name]++;
+                    auto et = get_op_element_type(*node);
+                    string type_string = et.c_type_string();
+                    type_list.insert(type_string);
+
+                    if (op_name == "Constant")
+                    {
+                        const Shape& shape = node->get_outputs()[0].get_shape();
+                        size_t const_size = node->get_outputs()[0].get_element_type().size();
+                        if (shape.size() == 0)
+                        {
+                            total_constant_bytes += const_size;
+                        }
+                        else
+                        {
+                            total_constant_bytes +=
+                                (const_size * shape_size(node->get_outputs()[0].get_shape()));
+                        }
+                    }
+                }
+                cout << "--\n";
+                cout << "Total Constant size: " << total_constant_bytes << " bytes\n";
+                cout << "--\n";
+                cout << "Types used:\n";
+                for (const string& type : type_list)
+                {
+                    cout << "    " << type << "\n";
+                }
+                cout << "--\n";
+                for (const pair<string, size_t>& op_info : op_list)
+                {
+                    cout << op_info.first << ": " << op_info.second << " ops" << endl;
+                }
+            }
+
+            if (!backend.empty())
+            {
+                cout << "\n---- Benchmark ----\n";
+                shared_ptr<Function> f = deserialize(model);
                 auto perf_data = run_benchmark(
                     f, backend, iterations, timing_detail, warmup_iterations, copy_data);
                 auto perf_shape = to_perf_shape(f, perf_data);
                 aggregate_perf_data.insert(
                     aggregate_perf_data.end(), perf_shape.begin(), perf_shape.end());
-            }
-            catch (ngraph::unsupported_op ue)
-            {
-                cout << "Unsupported op '" << ue.what() << "' in model " << m << endl;
-            }
-            catch (exception e)
-            {
-                cout << "Exception caught on '" << m << "'\n" << e.what() << endl;
+                print_results(perf_shape, timing_detail);
             }
         }
-        print_results(aggregate_perf_data, timing_detail);
+        catch (ngraph::unsupported_op& ue)
+        {
+            cout << "Unsupported op '" << ue.what() << "' in model " << model << endl;
+        }
+        catch (exception& e)
+        {
+            cout << "Exception caught on '" << model << "'\n" << e.what() << endl;
+        }
     }
-    else if (iterations > 0)
+
+    if (models.size() > 1)
     {
-        try
-        {
-            shared_ptr<Function> f = deserialize(model);
-            cout << "Benchmarking " << model << endl;
-            cout << "    Backend: " << backend << endl;
-            cout << "    Iterations: " << iterations << endl;
-            cout << "    Warmup: " << warmup_iterations << endl;
-            cout << "    Copy Data: " << (copy_data ? "true" : "false") << endl;
-            auto perf_data =
-                run_benchmark(f, backend, iterations, timing_detail, warmup_iterations, copy_data);
-            auto perf_shape = to_perf_shape(f, perf_data);
-            print_results(perf_shape, timing_detail);
-        }
-        catch (ngraph::unsupported_op ue)
-        {
-            cout << "Unsupported op '" << ue.what() << endl;
-        }
-        catch (exception e)
-        {
-            cout << e.what() << endl;
-        }
+        cout << "\n";
+        cout << "============================================================================\n";
+        cout << "---- Aggregate over all models\n";
+        cout << "============================================================================\n";
+        print_results(aggregate_perf_data, timing_detail);
     }
 
     return 0;
