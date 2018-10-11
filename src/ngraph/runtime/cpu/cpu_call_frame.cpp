@@ -97,6 +97,19 @@ bool runtime::cpu::CPU_CallFrame::step(
     return true;
 }
 
+void runtime::cpu::CPU_CallFrame::kontinue(
+    const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
+    const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
+{
+    if (ctx->pc >= m_external_function->op_names.size())
+    {
+        return;
+    }
+
+    inner_call(output_tvs, input_tvs);
+    return;
+}
+
 void runtime::cpu::CPU_CallFrame::call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)

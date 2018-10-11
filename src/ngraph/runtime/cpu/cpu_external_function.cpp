@@ -1525,9 +1525,11 @@ void runtime::cpu::CPU_ExternalFunction::build()
         else
         {
             std::advance(functor, ctx->pc);
-            for (const auto& p : enables)
+            auto enable = enables.begin();
+            std::advance(enable, ctx->pc);
+            while (functor != functors.end())
             {
-                if (p(ctx) || ctx->first_iteration)
+                if ((*enable)(ctx) || ctx->first_iteration)
                 {
                     // Each Op will have exactly one functor, start the clock before the exceution of functor
                     // and collect the profiler_count once the execution complets

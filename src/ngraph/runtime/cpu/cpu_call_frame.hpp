@@ -50,14 +50,20 @@ namespace ngraph
                 /// \brief Invoke the function with values matching the signature of the function.
                 ///
                 /// Tuples will be expanded into their tensor views to build the call frame.
-
                 void call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
+                /// \brief Execute a single operation
                 bool step(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
+                /// \brief Continue to execute from the current PC
+                void kontinue(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                              const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+
+                /// \brief Add a breakpoint to a node
                 bool add_breakpoint(std::shared_ptr<Node> op);
+                /// \brief Remove a breakpoint to a node
                 bool delete_breakpoint(std::shared_ptr<Node> op);
 
                 void* inspect(std::shared_ptr<Node> op, size_t output_index = 0);
