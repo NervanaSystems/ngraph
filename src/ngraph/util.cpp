@@ -488,3 +488,13 @@ AxisVector ngraph::get_default_order(size_t rank)
     std::iota(begin(default_order), end(default_order), 0);
     return default_order;
 }
+
+AxisVector ngraph::get_permutation_to_default_order(const AxisVector& axis_order)
+{
+    AxisVector out(axis_order.size());
+    for (size_t i = 0; i < axis_order.size(); i++)
+    {
+        out.at(axis_order[i]) = i;
+    }
+    return out;
+}

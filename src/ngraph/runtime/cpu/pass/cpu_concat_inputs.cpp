@@ -94,16 +94,11 @@ void ngraph::runtime::cpu::pass::ConcatInputs::concat_lstm_inputs()
 
             // dst_iter of lstm mkldnn output holds the results of both recurrent state
             // tensor outputs. we need to slice the ct.
-            auto ht_slice =
-                std::make_shared<op::Slice>(lstm_ht_ct_out,
-                                            Coordinate{0, 0},
-                                            Coordinate{static_cast<unsigned long>(batch_size),
-                                                       static_cast<unsigned long>(feature_size)});
-            auto ct_slice =
-                std::make_shared<op::Slice>(lstm_ht_ct_out,
-                                            Coordinate{static_cast<unsigned long>(batch_size), 0},
-                                            Coordinate{static_cast<unsigned long>(2 * batch_size),
-                                                       static_cast<unsigned long>(feature_size)});
+            auto ht_slice = std::make_shared<op::Slice>(
+                lstm_ht_ct_out, Coordinate{0, 0}, Coordinate{batch_size, feature_size});
+            auto ct_slice = std::make_shared<op::Slice>(lstm_ht_ct_out,
+                                                        Coordinate{batch_size, 0},
+                                                        Coordinate{(2 * batch_size), feature_size});
 
             // now go through the GOE'sand replace the slices(ht)
             std::set<std::shared_ptr<ngraph::Node>> lstm_outputs;

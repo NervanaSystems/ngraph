@@ -41,8 +41,8 @@ namespace ngraph
 
             /// \brief Randomly initialize a tensor
             /// \param ptv The tensor to initialize
-            const std::shared_ptr<runtime::TensorView>
-                initialize(const std::shared_ptr<runtime::TensorView>& ptv)
+            const std::shared_ptr<runtime::Tensor>
+                initialize(const std::shared_ptr<runtime::Tensor>& ptv)
             {
                 std::vector<T> vec = read_vector<T>(ptv);
                 initialize(vec);

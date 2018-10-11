@@ -68,8 +68,8 @@ op::Lstm::Lstm(std::shared_ptr<Node> input_xt_1,
     , m_num_timesteps(1)
     , m_num_gates_per_cell(4)
     , m_src_sequence_length(1)
-    , m_src_layer_feature_size(static_cast<int>(input_xt_1->get_shape()[1]))
-    , m_src_iter_feature_size(static_cast<int>(hidden_state_ht_1->get_shape()[1]))
+    , m_src_layer_feature_size(input_xt_1->get_shape()[1])
+    , m_src_iter_feature_size(hidden_state_ht_1->get_shape()[1])
     , m_num_cell_states(2)
     , m_direction(1)
     , m_num_fused_layers(1)
@@ -89,7 +89,7 @@ op::Lstm::Lstm(std::shared_ptr<Node> input_xt_1,
 
     if (input_xt_1->get_shape().size() == 2)
     {
-        m_batch_size = static_cast<int>(input_xt_1->get_shape()[0]);
+        m_batch_size = input_xt_1->get_shape()[0];
     }
     else
     {
@@ -132,8 +132,8 @@ op::Lstm::Lstm(std::shared_ptr<Node> src_layer,
     , m_num_timesteps(1)
     , m_num_gates_per_cell(4)
     , m_src_sequence_length(1)
-    , m_src_layer_feature_size(static_cast<int>(src_layer->get_shape()[1]))
-    , m_src_iter_feature_size(static_cast<int>(src_iter->get_shape()[1]))
+    , m_src_layer_feature_size(src_layer->get_shape()[1])
+    , m_src_iter_feature_size(src_iter->get_shape()[1])
     , m_num_cell_states(2)
     , m_direction(1)
     , m_num_fused_layers(1)
@@ -153,7 +153,7 @@ op::Lstm::Lstm(std::shared_ptr<Node> src_layer,
 
     if (src_layer->get_shape().size() == 2)
     {
-        m_batch_size = static_cast<int>(src_layer->get_shape()[0] / m_num_timesteps);
+        m_batch_size = src_layer->get_shape()[0] / m_num_timesteps;
     }
     else
     {
@@ -184,10 +184,8 @@ op::Lstm::Lstm(std::shared_ptr<Node> src_layer,
     set_output_size(2);
     set_output_type(0,
                     src_layer->get_element_type(),
-                    Shape{static_cast<unsigned long>(m_num_timesteps * m_batch_size),
-                          static_cast<unsigned long>(m_src_iter_feature_size)});
+                    Shape{(m_num_timesteps * m_batch_size), m_src_iter_feature_size});
     set_output_type(1,
                     src_layer->get_element_type(),
-                    Shape{static_cast<unsigned long>(m_num_cell_states * m_batch_size),
-                          static_cast<unsigned long>(m_src_iter_feature_size)});
+                    Shape{(m_num_cell_states * m_batch_size), m_src_iter_feature_size});
 }
