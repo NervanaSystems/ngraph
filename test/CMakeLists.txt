@@ -109,7 +109,7 @@ foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
 
     foreach(TEST_SRC ${MULTI_TEST_SRC})
         string(REPLACE ".in." "_${BACKEND_NAME}." TARGET_NAME ${TEST_SRC})
-        configure_file(backend/${TEST_SRC} ${TARGET_NAME})
+        configure_file(${TEST_SRC} ${TARGET_NAME})
         set(SRC ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} ${SRC})
     endforeach()
 
