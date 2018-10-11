@@ -1151,31 +1151,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
     static StaticInitializers s_static_initializers(s_debug_dir);
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
     ngraph::pass::Manager pass_manager;
-<<<<<<< HEAD
-
-    // nv_cwi is required only by some frontends
-    // in which case they should run this pass(CPUWorkspaceInsertion) explicitly
-    NodeVector nv_cwi;
-    pass_manager.register_pass<ngraph::pass::NopElimination>();
-    // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
-    // failing mxnet unit tests.
-    // pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
-    // pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
-    // pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
-    ///pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    ///pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-    ///pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
-    ///pass_manager.register_pass<ngraph::pass::CoreFusion>();
-    ///pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    ///pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
-    ///pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
-    pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
-    pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
-    ///pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
-    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
-=======
     register_common_passes(pass_manager);
->>>>>>> origin/master
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
     pass_manager.run_passes(m_function, false);
