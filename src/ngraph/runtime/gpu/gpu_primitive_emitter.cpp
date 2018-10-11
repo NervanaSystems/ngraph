@@ -61,9 +61,18 @@ size_t GPUPrimitiveEmitter::insert(std::unique_ptr<gpu::primitive>&& f)
 }
 size_t GPUPrimitiveEmitter::insert(gpu::memory_primitive& f)
 {
+    std::cout << "lvalue ref is being called " << std::endl;
     m_gpu_mem_primitives.push_back(f);
     return m_gpu_mem_primitives.size() - 1;
 }
+
+size_t GPUPrimitiveEmitter::insert(gpu::memory_primitive&& f)
+{
+    std::cout << "rvalue ref is being called " << std::endl;
+    m_gpu_mem_primitives.push_back(f);
+    return m_gpu_mem_primitives.size() - 1;
+}
+
 size_t GPUPrimitiveEmitter::lookup(std::string hash)
 {
     if (m_primitive_map.count(hash) > 0)
