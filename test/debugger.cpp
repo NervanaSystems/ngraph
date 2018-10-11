@@ -178,7 +178,7 @@ TEST(debugger, while_stepping)
     cf->call({result}, {a, b});
 }
 
-TEST(debugger, kontinue)
+TEST(debugger, resume)
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -207,7 +207,7 @@ TEST(debugger, kontinue)
     cf->add_breakpoint(absn);
     cf->call({result}, {a, b});
     ASSERT_EQ(*static_cast<int*>(cf->inspect(add)), -777);
-    cf->kontinue({result}, {a, b});
+    cf->resume({result}, {a, b});
     ASSERT_EQ(*static_cast<int*>(cf->inspect(absn)), 777);
     ASSERT_EQ(*static_cast<int*>(cf->inspect(neg)), -777);
 }

@@ -58,8 +58,8 @@ namespace ngraph
                           const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
                 /// \brief Continue to execute from the current PC
-                void kontinue(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                              const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+                void resume(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                            const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
                 /// \brief Add a breakpoint to a node
                 bool add_breakpoint(std::shared_ptr<Node> op);

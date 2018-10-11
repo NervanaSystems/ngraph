@@ -1529,6 +1529,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
             std::advance(enable, ctx->pc);
             while (functor != functors.end())
             {
+                ctx->pc++;
                 if ((*enable)(ctx) || ctx->first_iteration)
                 {
                     // Each Op will have exactly one functor, start the clock before the exceution of functor
@@ -1540,7 +1541,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
 
                     (*functor)(ctx);
 
-                    ctx->pc++;
                     if (ctx->breakpoints.count(ctx->pc))
                     {
                         break;
@@ -1562,6 +1562,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
                     }
                 }
                 std::advance(functor, 1);
+                std::advance(enable, 1);
             }
         }
         ctx->first_iteration = false;

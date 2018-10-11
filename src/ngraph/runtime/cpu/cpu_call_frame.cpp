@@ -97,7 +97,7 @@ bool runtime::cpu::CPU_CallFrame::step(
     return true;
 }
 
-void runtime::cpu::CPU_CallFrame::kontinue(
+void runtime::cpu::CPU_CallFrame::resume(
     const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
 {
