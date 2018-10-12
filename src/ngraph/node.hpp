@@ -89,6 +89,7 @@ namespace ngraph
 
     protected:
         /// Throws if the node is invalid.
+        virtual void validate_and_infer_types();
 
         // Called in constructors during transition
         void constructor_validate_and_infer_types();
@@ -102,11 +103,11 @@ namespace ngraph
         void validate_and_infer_elementwise_logical();
 
         Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
-        virtual ~Node();
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
     public:
-        virtual void validate_and_infer_types();
+        virtual ~Node();
+        void revalidate_and_infer_types() { validate_and_infer_types(); }
         // Called after transition
         void delayed_validate_and_infer_types();
 
