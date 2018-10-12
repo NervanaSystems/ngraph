@@ -68,7 +68,7 @@ function build_ngraph() {
     make install || return 1
     cd "${ngraph_directory}/ngraph/python"
     if [ ! -d ./pybind11 ]; then
-        git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
+        git clone --recursive https://github.com/pybind/pybind11.git
     fi
     export PYBIND_HEADERS_PATH="${ngraph_directory}/ngraph/python/pybind11"
     export NGRAPH_CPP_BUILD_PATH="${ngraph_directory}/ngraph_dist"
